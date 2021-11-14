@@ -1,0 +1,9 @@
+PROC test:
+	PRINT "hello world"
+	wat:
+	GET
+ENDP
+
+PROC wat:
+	PRINT "Waaaat"
+ENDP
