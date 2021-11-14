@@ -1,0 +1,11 @@
+PROC main:
+	GLOBAL foo$(4)
+	foo$ = "Baa"
+	fn:(123)
+	GET
+ENDP
+
+PROC fn:(x%)
+	PRINT foo$
+	PRINT x%
+ENDP

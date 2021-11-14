@@ -128,8 +128,8 @@ function parseProc(proc)
         end
         assert(dataPos == endPos, "dataPos != endPos!?")
     end
-    -- printf("Externals start at %X\n", proc.offset+2+dataPos-1)
 
+    -- printf("Externals start at %X\n", proc.offset+2+dataPos-1)
     while true do
         local name = readString()
         if #name == 0 then
@@ -138,9 +138,17 @@ function parseProc(proc)
         local type = readByte()
         table.insert(proc.externals, { name = name, type = type })
     end
-    -- assert(readByte() == 0, "Externals not supported yet!")
 
-    assert(readWord() == 0, "String fixups not supported yet!")
+    -- Since we don't care about max lengths we can ignore string fixups (which
+    -- exist to set the maxLength field of local strings declared in iFrameCell)
+    while true do
+        local offset = readWord()
+        if offset == 0 then
+            break
+        end
+        local maxLen = readByte()
+    end
+
     assert(readWord() == 0, "Array fixups not supported yet!")
     -- print(dataPos, #dataDefinitions + 1)
     assert(dataPos == #dataDefinitions + 1, "Data header size not right?")
