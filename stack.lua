@@ -10,7 +10,7 @@ Stack = {}
 Stack.__index = Stack
 
 function Stack:push(val)
-    assert(self.n < kMaxStackSize, "Stack hsa too many items!")
+    assert(self.n < kMaxStackSize, "Stack has too many items!")
     self.n = self.n + 1
     self[self.n] = val
 end
@@ -26,12 +26,6 @@ end
 function Stack:popString()
     local result = self:pop()
     assert(type(result) == "string", "popString on non-string value!")
-    return result
-end
-
-function Stack:popBoolean()
-    local result = self:pop()
-    assert(type(result) == "boolean", "popString on non-boolean value!")
     return result
 end
 

@@ -46,8 +46,15 @@ function printProc(proc)
         printf("    Param %d: %s\n", numParams + 1 - i, DataTypes[param])
     end
     for _, subproc in ipairs(proc.subprocs) do
-        printf("    Subproc 0x%04X: %s nargs=%d\n", subproc.offset, subproc.name, subproc.numParams)
+        printf('    Subproc "%s" offset=0x%04X nargs=%d\n', subproc.name, subproc.offset, subproc.numParams)
     end
+    for _, global in ipairs(proc.globals) do
+        printf('    Global "%s" (%s) offset=0x%04X\n', global.name, DataTypes[global.type], global.offset)
+    end
+    for _, external in ipairs(proc.externals) do
+        printf('    External "%s" (%s)\n', external.name, DataTypes[external.type])
+    end
+    printf("    iTotalTableSize: %d (0x%08X)\n", proc.iTotalTableSize, proc.iTotalTableSize)
 end
 
 if arg then main(arg) end

@@ -1,0 +1,19 @@
+PROC main:
+	GLOBAL foo%
+	LOCAL bar%
+	foo% = 6
+	bar% = 124
+	fn:(bar%)
+	GET
+ENDP
+
+PROC fn:(x%)
+	GLOBAL nest% 
+	PRINT foo%
+	REM PRINT x%
+	PRINT fn2%: + x%
+ENDP
+
+PROC fn2%:
+	RETURN nest% + 3
+ENDP

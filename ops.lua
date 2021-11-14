@@ -524,49 +524,85 @@ function IllegalOpCode(stack)
     end
 end
 
-function SimpleDirectRightSideInt(stack, runtime)
+--[[
+xxRightSide<TYPE> means basically push the value onto the stack, the name I
+assume coming from the fact that this is what you'd call when the value
+appears on the right hand side of an assignment operation.
+
+xxLeftSide<TYPE> means push a reference of some sort to the variable, such
+that a subsequent Assign<TYPE> call can assign to it.
+
+We aren't concerned with database fields or type checking so we simplify the
+stack usage considerably from what COplRuntime does.
+]]
+
+function SimpleDirectRightSideTyped(stack, runtime, type)
     local index = runtime:ipWord()
     if stack then
-        -- TODO
+        local var = runtime:getLocalVar(index, type)
+        local val = var()
+        stack:push(val)
     else
         return fmt("0x%04X", index)
     end
 end
 
-function SimpleDirectLeftSideInt(stack, runtime)
+function SimpleDirectRightSideInt(stack, runtime)
+    return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EWord)
+end
+
+function SimpleDirectRightSideLong(stack, runtime)
+    return SimpleDirectRightSideTyped(stack, runtime, DataTypes.ELong)
+end
+
+function SimpleDirectRightSideFloat(stack, runtime)
+    return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EFloat)
+end
+
+function SimpleDirectRightSideString(stack, runtime)
+    return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EString)
+end
+
+function SimpleDirectLeftSideUntyped(stack, runtime)
     local index = runtime:ipWord()
     if stack then
-        -- TODO
+        local var = runtime:getLocalVar(index) 
+        stack:push(var)
+    else
+        return fmt("0x%04X", index)
+    end
+end
+
+SimpleDirectLeftSideInt = SimpleDirectLeftSideUntyped
+SimpleDirectLeftSideLong = SimpleDirectLeftSideUntyped
+SimpleDirectLeftSideFloat = SimpleDirectLeftSideUntyped
+SimpleDirectLeftSideString = SimpleDirectLeftSideUntyped
+
+function SimpleInDirectRightSideTyped(stack, runtime, type)
+    local index = runtime:ipWord()
+    if stack then
+        local var = runtime:getIndirectVar(index, type)
+        local val = var()
+        stack:push(val)
     else
         return fmt("0x%04X", index)
     end
 end
 
 function SimpleInDirectRightSideInt(stack, runtime)
-    local index = runtime:ipWord()
-    if stack then
-        -- TODO
-    else
-        return fmt("0x%04X", index)
-    end
+    return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EWord)
 end
 
 function SimpleInDirectRightSideLong(stack, runtime)
-    local index = runtime:ipWord()
-    if stack then
-        -- TODO
-    else
-        return fmt("0x%04X", index)
-    end
+    return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.ELong)
+end
+
+function SimpleInDirectRightSideFloat(stack, runtime)
+    return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EFloat)
 end
 
 function SimpleInDirectRightSideString(stack, runtime)
-    local index = runtime:ipWord()
-    if stack then
-        -- TODO
-    else
-        return fmt("0x%04X", index)
-    end
+    return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EString)
 end
 
 function ConstantString(stack, runtime)
@@ -578,7 +614,7 @@ function ConstantString(stack, runtime)
     end
 end
 
-function CompareGreaterThanLong(stack)
+function CompareGreaterThanUntyped(stack)
     if stack then
         local right = stack:pop()
         local left = stack:pop()
@@ -586,7 +622,12 @@ function CompareGreaterThanLong(stack)
     end
 end
 
-function AddInt(stack)
+CompareGreaterThanInt = CompareGreaterThanUntyped
+CompareGreaterThanLong = CompareGreaterThanUntyped
+CompareGreaterThanFloat = CompareGreaterThanUntyped
+CompareGreaterThanString = CompareGreaterThanUntyped
+
+function AddUntyped(stack)
     if stack then
         local right = stack:pop()
         local left = stack:pop()
@@ -594,21 +635,9 @@ function AddInt(stack)
     end
 end
 
-function AddLong(stack)
-    if stack then
-        local right = stack:pop()
-        local left = stack:pop()
-        stack:push(left + right)
-    end
-end
-
-function AddFloat(stack)
-    if stack then
-        local right = stack:pop()
-        local left = stack:pop()
-        stack:push(left + right)
-    end
-end
+AddInt = AddUntyped
+AddLong = AddUntyped
+AddFloat = AddUntyped
 
 function StackByteAsWord(stack, runtime)
     local val = runtime:ipByte()
@@ -619,10 +648,11 @@ function StackByteAsWord(stack, runtime)
     end
 end
 
-function RunProcedure(stack, runtime, frame)
+function RunProcedure(stack, runtime)
     local procIdx = runtime:ipWord()
     local name, numParams
-    for _, subproc in ipairs(frame.proc.subprocs) do
+    local proc = runtime:currentProc()
+    for _, subproc in ipairs(proc.subprocs) do
         if subproc.offset == procIdx then
             name = subproc.name
             numParams = subproc.numParams
@@ -633,20 +663,21 @@ function RunProcedure(stack, runtime, frame)
     if stack then
         assert(name, "Subproc not found for index "..tostring(procIdx))
         local proc = runtime:findProc(name)
-        runtime:newFrame(stack, proc)
+        assert(#proc.params == numParams, "Wrong number of arguments for proc "..name)
+        runtime:pushNewFrame(stack, proc)
     else
-        return fmt("idx=0x%04X name=%s nargs=%s", procIdx, name or "?", tostring(numParams or "?"))
+        return fmt('0x%04X (name="%s" nargs=%s)', procIdx, name or "?", tostring(numParams or "?"))
     end
 end
 
-function CallFunction(stack, runtime, frame)
+function CallFunction(stack, runtime)
     local fnIdx = runtime:ipByte()
     local fnName = fns.codes[fnIdx]
     if stack then
         local fn = assert(fns[fnName], "Function "..fnName.. " not implemented!")
-        fn(stack, runtime, frame)
+        fn(stack, runtime)
     else
-        return fmt("idx=0x%02X %s()", fnIdx, fnName or "?")
+        return fmt("0x%02X (%s)", fnIdx, fnName or "?")
     end
 end
 
@@ -654,7 +685,7 @@ function BranchIfFalse(stack, runtime)
     local ip = runtime.ip - 1 -- Because ip points to just after us
     local relJmp = runtime:ipWord()
     if stack then
-        if not stack:popBoolean() then
+        if stack:pop() == 0 then
             runtime:relJmp(relJmp)
         end
     else
@@ -671,7 +702,7 @@ function StackByteAsLong(stack, runtime)
     end
 end
 
-function ZeroReturnFloat(stack, runtime, frame)
+function ZeroReturnFloat(stack, runtime)
     if stack then
         runtime:returnFromFrame(stack, 0.0)
     end
@@ -699,29 +730,29 @@ function DropString(stack)
     end
 end
 
-function AssignInt(stack, runtime)
+function AssignUntyped(stack, runtime)
     if stack then
-        --TODO
+        local val = stack:pop()
+        local var = stack:pop()
+        var(val)
     end
 end
 
-function PrintInt(stack)
+AssignInt = AssignUntyped
+AssignLong = AssignUntyped
+AssignFloat = AssignUntyped
+AssignString = AssignUntyped
+
+function PrintUntyped(stack)
     if stack then
-        printf("%d", stack:pop())
+        printf("%s", stack:pop())
     end
 end
 
-function PrintLong(stack)
-    if stack then
-        printf("%d", stack:pop())
-    end
-end
-
-function PrintString(stack)
-    if stack then
-        printf("%s", stack:popString())
-    end
-end
+PrintInt = PrintUntyped
+PrintLong = PrintUntyped
+PrintFloat = PrintUntyped
+PrintString = PrintUntyped
 
 function PrintSpace(stack)
     if stack then
@@ -735,10 +766,23 @@ function PrintCarriageReturn(stack)
     end
 end
 
-function Return(stack, runtime, frame)
+function Return(stack, runtime)
     if stack then
         local val = stack:pop()
-        runtime:returnFromFrame(val)
+        runtime:returnFromFrame(stack, val)
+    end
+end
+
+function NextOpcodeTable(stack, runtime)
+    local extendedCode = runtime:ipByte()
+    local realOpcode = 256 + extendedCode
+    local fnName = fns.codes[realOpcode]
+    local realFn = _ENV[fnName]
+    assert(realFn, "No function for "..fnName)
+    if stack then
+        realFn(stack, runtime)
+    else
+        return fmt("%02X %s %s", extendedCode, fnName, realFn(stack, runtime))
     end
 end
 

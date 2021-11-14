@@ -66,6 +66,7 @@ function parseProc(proc)
     proc.params = {}
     proc.globals = {}
     proc.subprocs = {} -- This should really be "callables" or something
+    proc.externals = {}
 
     local dataDefinitions, qcodePos = string.unpack("<s2", proc.data, proc.offset+1)
     local dataSize, qcodeSize, maxStack, paramsCount, dataPos = string.unpack("<HHHB", dataDefinitions)
@@ -91,7 +92,7 @@ function parseProc(proc)
         proc.params[i] = readByte()
     end
 
-    -- printf("globalsTableStart=0x%08X\n", offset+dataPos-1) 
+    -- printf("globalsTableStart=0x%08X\n", proc.offset+2+dataPos-1) 
     local globalsTableSize = readWord()
     local startOfGlobals = dataPos-1
     -- printf("globalsTableSize=%d\n", globalsTableSize)
@@ -99,14 +100,20 @@ function parseProc(proc)
         local endPos = dataPos + globalsTableSize
         while dataPos < endPos do
             local name = readString()
-            local type = readWord()
+            local type = readByte()
             local offset = readWord()
-            table.insert(proc.globals, { name = name, type = type, offset = offset })
+            local global = { name = name, type = type, offset = offset }
+            table.insert(proc.globals, global)
+            proc.globals[name] = global -- support lookup by name too
         end
         assert(dataPos == endPos, "dataPos != endPos!?")
     end
     
     local subProcTableSize = readWord()
+    local iTotalTableSize = dataPos-1 - startOfGlobals + subProcTableSize - 2
+    -- CProcedure defines iTotalTableSize weirdly, this is an easier to understand definition
+    assert(iTotalTableSize == globalsTableSize + subProcTableSize, "Bad table size calculation!")
+    proc.iTotalTableSize = iTotalTableSize
     if subProcTableSize > 0 then
         local endPos = dataPos + subProcTableSize
         while dataPos < endPos do
@@ -121,7 +128,18 @@ function parseProc(proc)
         end
         assert(dataPos == endPos, "dataPos != endPos!?")
     end
-    assert(readByte() == 0, "Externals not supported yet!")
+    -- printf("Externals start at %X\n", proc.offset+2+dataPos-1)
+
+    while true do
+        local name = readString()
+        if #name == 0 then
+            break
+        end
+        local type = readByte()
+        table.insert(proc.externals, { name = name, type = type })
+    end
+    -- assert(readByte() == 0, "Externals not supported yet!")
+
     assert(readWord() == 0, "String fixups not supported yet!")
     assert(readWord() == 0, "Array fixups not supported yet!")
     -- print(dataPos, #dataDefinitions + 1)
