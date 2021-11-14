@@ -25,3 +25,10 @@ DataTypes = enum {
     ERealArray = 0x82,
     EStringArray = 0x83,
 }
+
+local function OPLERR(val)
+    return 0xabcd0000 | val
+end
+
+KOplErrInvalidArgs = OPLERR(-2)
+KOplErrDivideByZero = OPLERR(-8)

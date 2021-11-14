@@ -10,6 +10,14 @@ Stack = {}
 Stack.__index = Stack
 
 function Stack:push(val)
+    if type(val) == "boolean" then
+        -- As a convenience allow this and map to how it's expected to be represented
+        if val then
+            val = -1
+        else
+            val = 0
+        end
+    end
     assert(self.n < kMaxStackSize, "Stack has too many items!")
     self.n = self.n + 1
     self[self.n] = val
@@ -38,6 +46,12 @@ function Stack:popTo(sz)
     while self.n > sz do
         self:pop()
     end
+end
+
+function Stack:remove(idx)
+    assert(idx > 0 and idx <= self.n, "Bad index to Stack:remove()")
+    self.n = self.n - 1
+    return table.remove(self, idx)
 end
 
 function newStack()

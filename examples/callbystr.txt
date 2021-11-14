@@ -1,0 +1,8 @@
+PROC main:
+	@("woop"):(1)
+ENDP
+
+PROC woop:(x%)
+	PRINT "Woop", x%
+	GET
+ENDP

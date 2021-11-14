@@ -30,12 +30,32 @@ function Runtime:ipString()
     return self:ipUnpack("s1")
 end
 
-function Runtime:ipByte()
+function Runtime:IP8()
     return self:ipUnpack("B")
 end
 
-function Runtime:ipWord()
+function Runtime:IPs8()
+    return self:ipUnpack("b")
+end
+
+function Runtime:IPs16()
+    return self:ipUnpack("<h")
+end
+
+function Runtime:IP16()
     return self:ipUnpack("<H")
+end
+
+function Runtime:IP32()
+    return self:ipUnpack("<I4")
+end
+
+function Runtime:IPs32()
+    return self:ipUnpack("<i4")
+end
+
+function Runtime:IPReal()
+    return self:ipUnpack("<d")
 end
 
 -- Returns a function which tracks a value using a unique upval
