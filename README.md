@@ -39,11 +39,11 @@ This interpreter is not 100% behavior compatible with the original Psion. The mo
 [simple.txt](examples/simple.txt) compiled on a Psion Series 5:
 
 ```
-$ ./runopo.lua examples/simple.opo 
+$ ./src/runopo.lua examples/simple.opo 
 Hello world!
 Waaaat
 
-$ ./dumpopo.lua examples/simple.opo --all
+$ ./src/dumpopo.lua examples/simple.opo --all
 Source name: D:\Program
 procTableIdx: 0x0000006B
 1: TEST @ 0x0000001F code=0x00000036 line=0
