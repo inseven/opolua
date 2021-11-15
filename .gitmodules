@@ -1,0 +1,4 @@
+[submodule "lua"]
+	path = lua
+	url = git@github.com:lua/lua.git
+	branch = v5.3
