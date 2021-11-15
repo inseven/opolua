@@ -1,0 +1,11 @@
+PROC main:
+	LOCAL r%
+	r% = ALERT("line 1", "line 2", "die", "the barrel", "SPAAACE!")
+	PRINT r%
+	others:
+ENDP
+
+PROC others:
+	ALERT("single")
+	ALERT("line1", "line2", "b1", "b2")
+ENDP

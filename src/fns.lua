@@ -1,5 +1,7 @@
 _ENV = module()
 
+local fmt = string.format
+
 codes = {
     [0x00] = "Addr",
     [0x01] = "Asc",
@@ -228,8 +230,41 @@ codes = {
 }
 
 function Get(stack, runtime)
-    local ch = io.stdin:read(1)
-    stack:push(ch:byte(1, 1))
+    if stack then
+        local ch = io.stdin:read(1)
+        stack:push(ch:byte(1, 1))
+    end
+end
+
+function Alert(stack, runtime)
+    local nargs = runtime:IP8()
+    if stack then
+        local line1, line2, but1, but2, but3
+        if nargs >= 5 then but3 = stack:pop() end
+        if nargs >= 4 then but2 = stack:pop() end
+        if nargs >= 3 then but1 = stack:pop() end
+        if nargs >= 2 then line2 = stack:pop() end
+        if nargs >= 1 then line1 = stack:pop() end
+
+        printf("---ALERT---\n%s\n", line1)
+        if line2 then
+            printf("%s\n", line2)
+        end
+        printf("[1]: %s\n", but1 or "Continue")
+        if but2 then
+            printf("[2]: %s\n", but2)
+        end
+        if but3 then
+            printf("[3]: %s\n", but3)
+        end
+        local choice = tonumber(io.stdin:read())
+        if choice == nil or choice > 3 or choice < 1 then
+            choice = 1
+        end
+        stack:push(choice)
+    else
+        return fmt(" nargs=%d", nargs)
+    end
 end
 
 return _ENV

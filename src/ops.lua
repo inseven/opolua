@@ -819,11 +819,11 @@ end
 function CallFunction(stack, runtime)
     local fnIdx = runtime:IP8()
     local fnName = fns.codes[fnIdx]
+    local fn = assert(fns[fnName], "Function "..fnName.. " not implemented!")
     if stack then
-        local fn = assert(fns[fnName], "Function "..fnName.. " not implemented!")
         fn(stack, runtime)
     else
-        return fmt("0x%02X (%s)", fnIdx, fnName or "?")
+        return fmt("0x%02X (%s)%s", fnIdx, fnName, fn(nil, runtime) or "")
     end
 end
 
