@@ -32,3 +32,7 @@ end
 
 KOplErrInvalidArgs = OPLERR(-2)
 KOplErrDivideByZero = OPLERR(-8)
+
+-- Give these global names so native code can potentially get to them easily
+_Ops = require("ops")
+_Fns = require("fns")

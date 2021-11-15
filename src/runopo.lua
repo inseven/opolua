@@ -1,11 +1,10 @@
 #!/usr/local/bin/lua-5.3
 
 require("init")
-_ENV = module()
-opofile = require("opofile")
-runtime = require("runtime")
+local opofile = require("opofile")
+local runtime = require("runtime")
 
-function main(args)
+function runOpo(args)
     local filename = args[1]
     local f = assert(io.open(filename, "rb"))
     local data = f:read("a")
@@ -18,4 +17,4 @@ function main(args)
     rt:runProc(procTable[1], verbose)
 end
 
-if arg then main(arg) end
+if arg then runOpo(arg) end
