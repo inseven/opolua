@@ -27,9 +27,13 @@ DataTypes = enum {
 }
 
 local function OPLERR(val)
-    return 0xabcd0000 | val
+    -- return 0xabcd0000 | val
+    return val
 end
 
+-- Since we never have to worry about acual epoc error codes (eg -8 meaning
+-- KErrBadHandle) we can just always use the OPL1993 values
+KErrNone = 0
 KOplErrInvalidArgs = OPLERR(-2)
 KOplErrDivideByZero = OPLERR(-8)
 

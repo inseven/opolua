@@ -7,6 +7,7 @@ Runtime = {}
 Runtime.__index = Runtime
 
 local sbyte = string.byte
+local fmt = string.format
 
 function Runtime:nextOp()
     local ip = self.ip
@@ -212,6 +213,23 @@ function Runtime:setFrame(newFrame, ip)
     end
 end
 
+function Runtime:setFrameErrIp(errIp)
+    self.frame.errIp = errIp
+end
+
+function Runtime:getErrorValue()
+    return self.errorValue
+end
+
+function Runtime:getIp()
+    return self.ip
+end
+
+function Runtime:setIp(ip)
+    -- TODO should check it's still within the current frame
+    self.ip = ip
+end
+
 function Runtime:currentProc()
     assert(self.frame and self.frame.proc, "No current process!")
     return self.frame.proc
@@ -244,28 +262,45 @@ function Runtime:dumpProc(procName)
     self:setFrame(nil)
 end
 
-function Runtime:runProc(proc, instructionDebug)
-    assert(self.frame == nil, "Cannnot call runProc while still executing something else!")
-    assert(#proc.params == 0, "Cannot run a procedure that expects arguments")
-    self.ip = proc.codeOffset
-    local stack = newStack()
-    self:pushNewFrame(stack, proc) -- sets self.frame and self.ip
+local function run(self, stack)
     while self.ip do
-        local currentOpIdx = self.ip
+        self.lastIp = self.ip
         local opCode, op = self:nextOp()
         local opFn = ops[op]
         if not opFn then
-            printf("No implementation of op %s at codeOffset 0x%08X in %s\n", op, currentOpIdx, self.frame.proc.name)
-            return
+            error(fmt("No implementation of op %s at codeOffset 0x%08X in %s\n", op, self.lastIp, self.frame.proc.name))
         end
         if instructionDebug then
             local savedIp = self.ip
             local extra = ops[op](nil, self)
             self.ip = savedIp
-            printInstruction(currentOpIdx, opCode, op, extra)
+            printInstruction(self.lastIp, opCode, op, extra)
         end
         ops[op](stack, self)
     end
+end
+
+function Runtime:runProc(proc, instructionDebug)
+    assert(self.frame == nil, "Cannnot call runProc while still executing something else!")
+    assert(#proc.params == 0, "Cannot run a procedure that expects arguments")
+    self.ip = proc.codeOffset
+    self.errorValue = KErrNone
+    local stack = newStack()
+    self:pushNewFrame(stack, proc) -- sets self.frame and self.ip
+    while self.ip do
+        local ok, err = pcall(run, self, stack)
+        if not ok then
+            if type(err) == "number" and self.frame.errIp then
+                self.errorValue = err
+                self.ip = self.frame.errIp
+                -- And keep going from there
+            else
+                printf("Error from instruction at 0x%08X: %s\n", self.lastIp, tostring(err))
+                return false
+            end
+        end
+    end
+    return true -- no error
 end
 
 return _ENV

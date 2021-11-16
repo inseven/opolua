@@ -1,0 +1,21 @@
+PROC tryonerr:
+	ONERR doom::
+	PRINT 1/0
+	
+	doom::
+	ONERR OFF
+	PRINT"DOOM",ERR
+	GET
+ENDP
+
+PROC trap:
+	LOCAL i%
+	INPUT i%
+	TRAP INPUT i%
+	IF ERR <> 0
+		PRINT "Error: ", ERR
+	ELSE
+		PRINT "Read: ", i%
+	ENDIF
+	GET
+ENDP

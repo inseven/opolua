@@ -229,6 +229,12 @@ codes = {
     [0xDF] = "IllegalFuncOpCode",
 }
 
+function Err(stack, runtime)
+    if stack then
+        stack:push(runtime:getErrorValue())
+    end
+end
+
 function Get(stack, runtime)
     if stack then
         local ch = io.stdin:read(1)

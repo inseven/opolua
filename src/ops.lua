@@ -844,11 +844,11 @@ PowerOfLong = PowerOfUntyped
 PowerOfFloat = PowerOfUntyped
 
 function BranchIfFalse(stack, runtime)
-    local ip = runtime.ip - 1 -- Because ip points to just after us
+    local ip = runtime:getIp() - 1 -- Because ip points to just after us
     local relJmp = runtime:IPs16()
     if stack then
         if stack:pop() == 0 then
-            runtime:relJmp(relJmp)
+            runtime:setIp(ip + relJmp)
         end
     else
         return fmt("%d (->0x%08X)", relJmp, ip + relJmp)
@@ -1029,6 +1029,45 @@ end
 function PrintCarriageReturn(stack)
     if stack then
         printf("\n")
+    end
+end
+
+function InputInt(stack, runtime)
+    if stack then
+        print("TODO")
+    end
+end
+
+function OnErr(stack, runtime)
+    local offset = runtime:IP16()
+    local newIp
+    if offset ~= 0 then
+        newIp = runtime:getIp() + offset - 3
+    end
+    if stack then
+        runtime:setFrameErrIp(newIp)
+    else
+        return newIp and fmt("%d (->0x%08X)", offset, newIp) or "OFF"
+    end
+end
+
+function Raise(stack, runtime)
+    if stack then
+        error(stack:pop())
+    end
+end
+
+function Trap(stack, runtime)
+    -- TODO
+end
+
+function GoTo(stack, runtime)
+    local ip = runtime:getIp() - 1 -- Because ip points to just after us
+    local relJmp = runtime:IPs16()
+    if stack then
+        runtime:setIp(ip + relJmp)
+    else
+        return fmt("%d (->0x%08X)", relJmp, ip + relJmp)
     end
 end
 
