@@ -33,9 +33,19 @@ end
 
 -- Since we never have to worry about acual epoc error codes (eg -8 meaning
 -- KErrBadHandle) we can just always use the OPL1993 values
-KErrNone = 0
-KOplErrInvalidArgs = OPLERR(-2)
-KOplErrDivideByZero = OPLERR(-8)
+Errors = {
+    KErrNone = 0,
+    KOplErrGenFail = OPLERR(-1),
+    KOplErrInvalidArgs = OPLERR(-2),
+    KOplErrDivideByZero = OPLERR(-8),
+    KOplErrIllegal = OPLERR(-96),
+    KOplErrEsc = OPLERR(-114),
+}
+
+-- Errors are global for convenience
+for k, v in pairs(Errors) do _ENV[k] = v end
+-- And allow reverse lookup
+Errors = enum(Errors)
 
 -- Give these global names so native code can potentially get to them easily
 _Ops = require("ops")

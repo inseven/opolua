@@ -121,8 +121,10 @@ function Runtime:getIndirectVar(index, type)
     return result
 end
 
-function Runtime:addModule(procTable)
-    local mod = {}
+function Runtime:addModule(name, procTable)
+    local mod = {
+        [1] = name:upper()
+    }
     for _, proc in ipairs(procTable) do
         mod[proc.name] = proc
     end
@@ -138,6 +140,17 @@ function Runtime:findProc(procName)
         end
     end
     error("No proc named "..procName.." found in loaded modules")
+end
+
+function Runtime:moduleForProc(proc)
+    for _, mod in ipairs(self.modules) do
+        for k, v in pairs(mod) do
+            if v == proc then
+                return mod
+            end
+        end
+    end
+    return nil
 end
 
 function Runtime:pushNewFrame(stack, proc)
@@ -217,8 +230,8 @@ function Runtime:setFrameErrIp(errIp)
     self.frame.errIp = errIp
 end
 
-function Runtime:getErrorValue()
-    return self.errorValue
+function Runtime:getLastError()
+    return self.errorValue, self.errorLocation
 end
 
 function Runtime:getIp()
@@ -228,6 +241,22 @@ end
 function Runtime:setIp(ip)
     -- TODO should check it's still within the current frame
     self.ip = ip
+    if ip == nil then
+        -- Allowed for eg by STOP cmd
+        setFrame(nil)
+    end
+end
+
+function Runtime:setTrap(flag)
+    self.trap = flag
+    if trap then
+        -- Setting trap also clears current error
+        self.errorValue = 0
+    end
+end
+
+function Runtime:getTrap()
+    return self.trap
 end
 
 function Runtime:currentProc()
@@ -280,6 +309,12 @@ local function run(self, stack)
     end
 end
 
+function Runtime:unhandledErr(err)
+    printf("Error from instruction at 0x%08X: %s\n", self.lastIp, tostring(err))
+    self:setFrame(nil)
+    return false
+end
+
 function Runtime:runProc(proc, instructionDebug)
     assert(self.frame == nil, "Cannnot call runProc while still executing something else!")
     assert(#proc.params == 0, "Cannot run a procedure that expects arguments")
@@ -290,16 +325,38 @@ function Runtime:runProc(proc, instructionDebug)
     while self.ip do
         local ok, err = pcall(run, self, stack)
         if not ok then
-            if type(err) == "number" and self.frame.errIp then
+            self.errorLocation = fmt("Error in %s\\%s", self:moduleForProc(self.frame.proc)[1], self.frame.proc.name)
+            if type(err) == "number" then
                 self.errorValue = err
-                self.ip = self.frame.errIp
-                -- And keep going from there
+                -- An error code that might potentially be handled by a Trap or OnErr
+                if self.trap then
+                    self.trap = false
+                    stack:popTo(self.frame.returnStackSize)
+                    -- And continue to next instruction
+                else
+                    -- See if this frame *or any parent* has an error handler
+                    while true do
+                        if self.frame.errIp then
+                            stack:popTo(self.frame.returnStackSize)
+                            self.ip = self.frame.errIp
+                            break
+                        else
+                            local prevFrame = self.frame.prevFrame
+                            self:setFrame(prevFrame)
+                            if prevFrame then
+                                -- And loop again
+                            else
+                                return self:unhandledErr(err)
+                            end
+                        end
+                    end
+                end
             else
-                printf("Error from instruction at 0x%08X: %s\n", self.lastIp, tostring(err))
-                return false
+                return self:unhandledErr(err)
             end
         end
     end
+    assert(self.frame == nil, "Frame was not nil on runProc exit!")
     return true -- no error
 end
 

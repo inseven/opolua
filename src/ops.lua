@@ -520,7 +520,7 @@ codes = {
 
 function IllegalOpCode(stack)
     if stack then
-        error("IllegalOpCode")
+        error(KOplErrIllegal)
     end
 end
 
@@ -1034,7 +1034,45 @@ end
 
 function InputInt(stack, runtime)
     if stack then
-        print("TODO")
+        local trapped = runtime:getTrap()
+        while true do
+            local line = io.stdin:read()
+            local result = tonumber(line)
+            if result == nil and trapped then
+                -- We can error and the trap check in runtime will deal with it
+                if line:byte(1, 1) == 27 then
+                    error(KOplErrEsc)
+                else
+                    error(KOplErrGenFail)
+                end
+            elseif result then
+                local var = stack:pop()
+                var(result)
+                break
+            else
+                printf("?")
+                -- And go round again
+            end
+        end
+        runtime:setTrap(false)
+    end
+end
+
+InputLong = InputInt
+InputFloat = InputInt
+
+function InputString(stack, runtime)
+    if stack then
+        local trapped = runtime:getTrap()
+        -- We don't support pressing esc to clear the line when untrapped
+        local line = io.stdin:read()
+        if trapped and line:byte(1, 1) == 27 then
+            error(KOplErrEsc)
+        else
+            local var = stack:pop()
+            var(line)
+        end
+        runtime:setTrap(false)
     end
 end
 
@@ -1057,8 +1095,18 @@ function Raise(stack, runtime)
     end
 end
 
-function Trap(stack, runtime)
-    -- TODO
+function Stop(stack, runtime) -- 0xBB
+    if stack then
+        -- OPL uses User::Leave(0) for this (and for returning from the main fn)
+        -- but we use setting ip to nil for both instead.
+        runtime:setIp(nil)
+    end
+end
+
+function Trap(stack, runtime) -- 0xBC
+    if stack then
+        runtime:setTrap(true)
+    end
 end
 
 function GoTo(stack, runtime)

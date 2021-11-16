@@ -23,7 +23,7 @@ function runOpo(args)
 
     local procTable = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime()
-    rt:addModule(procTable)
+    rt:addModule(filename, procTable)
     local proc = procName and rt:findProc(procName:upper()) or procTable[1]
     rt:runProc(proc, verbose)
 end

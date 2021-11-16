@@ -23,7 +23,7 @@ function main(args)
     local verbose = all or fnName == nil
     local procTable = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime()
-    rt:addModule(procTable)
+    rt:addModule(filename, procTable)
     if fnName then
         rt:dumpProc(fnName:upper())
     else

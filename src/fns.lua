@@ -231,7 +231,7 @@ codes = {
 
 function Err(stack, runtime)
     if stack then
-        stack:push(runtime:getErrorValue())
+        stack:push(runtime:getLastError())
     end
 end
 
@@ -270,6 +270,20 @@ function Alert(stack, runtime)
         stack:push(choice)
     else
         return fmt(" nargs=%d", nargs)
+    end
+end
+
+function ErrStr(stack, runtime) -- 0xC4
+    if stack then
+        local err = stack:pop()
+        stack:push(Errors[err] or fmt("Unknown error %d", err))
+    end
+end
+
+function ErrxStr(stack, runtime) -- 0xD8
+    if stack then
+        local _, desc = runtime:getLastError()
+        stack:push(desc)
     end
 end
 

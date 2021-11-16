@@ -1,3 +1,7 @@
+PROC main:
+	printerr:
+ENDP
+
 PROC tryonerr:
 	ONERR doom::
 	PRINT 1/0
@@ -9,13 +13,35 @@ PROC tryonerr:
 ENDP
 
 PROC trap:
-	LOCAL i%
+	LOCAL i%, s$(10)
+	PRINT "Untrapped input:",
 	INPUT i%
+	PRINT "Trapped input:",
 	TRAP INPUT i%
 	IF ERR <> 0
 		PRINT "Error: ", ERR
 	ELSE
 		PRINT "Read: ", i%
 	ENDIF
+	PRINT "String:",
+	INPUT s$
+	PRINT "String val:", s$
+	GET
+ENDP
+
+PROC boom:
+	return 1/0
+ENDP
+
+PROC printerr:
+	ONERR doom::
+	boom:
+
+doom::
+	ONERR OFF
+	PRINT ERR, ERR$(ERR)
+	PRINT ERRX
+	TRAP RAISE 0
+	PRINT "Error cleared?", ERR
 	GET
 ENDP
