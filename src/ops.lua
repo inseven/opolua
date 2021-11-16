@@ -547,19 +547,19 @@ function SimpleDirectRightSideTyped(stack, runtime, type)
     end
 end
 
-function SimpleDirectRightSideInt(stack, runtime)
+function SimpleDirectRightSideInt(stack, runtime) -- 0x00
     return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EWord)
 end
 
-function SimpleDirectRightSideLong(stack, runtime)
+function SimpleDirectRightSideLong(stack, runtime) -- 0x01
     return SimpleDirectRightSideTyped(stack, runtime, DataTypes.ELong)
 end
 
-function SimpleDirectRightSideFloat(stack, runtime)
+function SimpleDirectRightSideFloat(stack, runtime) -- 0x02
     return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EFloat)
 end
 
-function SimpleDirectRightSideString(stack, runtime)
+function SimpleDirectRightSideString(stack, runtime) -- 0x03
     return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EString)
 end
 
@@ -573,10 +573,10 @@ function SimpleDirectLeftSideUntyped(stack, runtime)
     end
 end
 
-SimpleDirectLeftSideInt = SimpleDirectLeftSideUntyped
-SimpleDirectLeftSideLong = SimpleDirectLeftSideUntyped
-SimpleDirectLeftSideFloat = SimpleDirectLeftSideUntyped
-SimpleDirectLeftSideString = SimpleDirectLeftSideUntyped
+SimpleDirectLeftSideInt = SimpleDirectLeftSideUntyped -- 0x04
+SimpleDirectLeftSideLong = SimpleDirectLeftSideUntyped -- 0x05
+SimpleDirectLeftSideFloat = SimpleDirectLeftSideUntyped -- 0x06
+SimpleDirectLeftSideString = SimpleDirectLeftSideUntyped -- 0x07
 
 function SimpleInDirectRightSideTyped(stack, runtime, type)
     local index = runtime:IP16()
@@ -589,23 +589,23 @@ function SimpleInDirectRightSideTyped(stack, runtime, type)
     end
 end
 
-function SimpleInDirectRightSideInt(stack, runtime)
+function SimpleInDirectRightSideInt(stack, runtime) -- 0x08
     return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EWord)
 end
 
-function SimpleInDirectRightSideLong(stack, runtime)
+function SimpleInDirectRightSideLong(stack, runtime) -- 0x09
     return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.ELong)
 end
 
-function SimpleInDirectRightSideFloat(stack, runtime)
+function SimpleInDirectRightSideFloat(stack, runtime) -- 0x0A
     return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EFloat)
 end
 
-function SimpleInDirectRightSideString(stack, runtime)
+function SimpleInDirectRightSideString(stack, runtime) -- 0x0B
     return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EString)
 end
 
-function ConstantInt(stack, runtime)
+function ConstantInt(stack, runtime) -- 0x28
     local val = runtime:IPs16()
     if stack then
         stack:push(val)
@@ -614,7 +614,7 @@ function ConstantInt(stack, runtime)
     end
 end
 
-function ConstantLong(stack, runtime)
+function ConstantLong(stack, runtime) -- 0x29
     local val = runtime:IPs32()
     if stack then
         stack:push(val)
@@ -623,7 +623,7 @@ function ConstantLong(stack, runtime)
     end
 end
 
-function ConstantFloat(stack, runtime)
+function ConstantFloat(stack, runtime) -- 0x2A
     local val = runtime:IPReal()
     if stack then
         stack:push(val)
@@ -632,7 +632,7 @@ function ConstantFloat(stack, runtime)
     end
 end
 
-function ConstantString(stack, runtime)
+function ConstantString(stack, runtime) -- 0x2B
     local str = runtime:ipString()
     if stack then
         stack:push(str)
@@ -649,10 +649,10 @@ function CompareLessThanUntyped(stack)
     end
 end
 
-CompareLessThanInt = CompareLessThanUntyped
-CompareLessThanLong = CompareLessThanUntyped
-CompareLessThanFloat = CompareLessThanUntyped
-CompareLessThanString = CompareLessThanUntyped
+CompareLessThanInt = CompareLessThanUntyped -- 0x30
+CompareLessThanLong = CompareLessThanUntyped -- 0x31
+CompareLessThanFloat = CompareLessThanUntyped -- 0x32
+CompareLessThanString = CompareLessThanUntyped -- 0x33
 
 function CompareLessOrEqualUntyped(stack)
     if stack then
@@ -662,10 +662,10 @@ function CompareLessOrEqualUntyped(stack)
     end
 end
 
-CompareLessOrEqualInt = CompareLessOrEqualUntyped
-CompareLessOrEqualLong = CompareLessOrEqualUntyped
-CompareLessOrEqualFloat = CompareLessOrEqualUntyped
-CompareLessOrEqualString = CompareLessOrEqualUntyped
+CompareLessOrEqualInt = CompareLessOrEqualUntyped -- 0x34
+CompareLessOrEqualLong = CompareLessOrEqualUntyped -- 0x35
+CompareLessOrEqualFloat = CompareLessOrEqualUntyped -- 0x36
+CompareLessOrEqualString = CompareLessOrEqualUntyped -- 0x37
 
 function CompareGreaterThanUntyped(stack)
     if stack then
@@ -675,10 +675,10 @@ function CompareGreaterThanUntyped(stack)
     end
 end
 
-CompareGreaterThanInt = CompareGreaterThanUntyped
-CompareGreaterThanLong = CompareGreaterThanUntyped
-CompareGreaterThanFloat = CompareGreaterThanUntyped
-CompareGreaterThanString = CompareGreaterThanUntyped
+CompareGreaterThanInt = CompareGreaterThanUntyped -- 0x38
+CompareGreaterThanLong = CompareGreaterThanUntyped -- 0x39
+CompareGreaterThanFloat = CompareGreaterThanUntyped -- 0x3A
+CompareGreaterThanString = CompareGreaterThanUntyped -- 0x3B
 
 function CompareGreaterOrEqualUntyped(stack)
     if stack then
@@ -688,10 +688,10 @@ function CompareGreaterOrEqualUntyped(stack)
     end
 end
 
-CompareGreaterOrEqualInt = CompareGreaterOrEqualUntyped
-CompareGreaterOrEqualLong = CompareGreaterOrEqualUntyped
-CompareGreaterOrEqualFloat = CompareGreaterOrEqualUntyped
-CompareGreaterOrEqualString = CompareGreaterOrEqualUntyped
+CompareGreaterOrEqualInt = CompareGreaterOrEqualUntyped -- 0x3C
+CompareGreaterOrEqualLong = CompareGreaterOrEqualUntyped -- 0x3D
+CompareGreaterOrEqualFloat = CompareGreaterOrEqualUntyped -- 0x3E
+CompareGreaterOrEqualString = CompareGreaterOrEqualUntyped -- 0x3F
 
 function CompareEqualUntyped(stack)
     if stack then
@@ -701,10 +701,10 @@ function CompareEqualUntyped(stack)
     end
 end
 
-CompareEqualInt = CompareEqualUntyped
-CompareEqualLong = CompareEqualUntyped
-CompareEqualFloat = CompareEqualUntyped
-CompareEqualString = CompareEqualUntyped
+CompareEqualInt = CompareEqualUntyped -- 0x40
+CompareEqualLong = CompareEqualUntyped -- 0x41
+CompareEqualFloat = CompareEqualUntyped -- 0x42
+CompareEqualString = CompareEqualUntyped -- 0x43
 
 function CompareNotEqualUntyped(stack)
     if stack then
@@ -714,10 +714,10 @@ function CompareNotEqualUntyped(stack)
     end
 end
 
-CompareNotEqualInt = CompareNotEqualUntyped
-CompareNotEqualLong = CompareNotEqualUntyped
-CompareNotEqualFloat = CompareNotEqualUntyped
-CompareNotEqualString = CompareNotEqualUntyped
+CompareNotEqualInt = CompareNotEqualUntyped -- 0x44
+CompareNotEqualLong = CompareNotEqualUntyped -- 0x45
+CompareNotEqualFloat = CompareNotEqualUntyped -- 0x46
+CompareNotEqualString = CompareNotEqualUntyped -- 0x47
 
 function AddUntyped(stack)
     if stack then
@@ -727,11 +727,11 @@ function AddUntyped(stack)
     end
 end
 
-AddInt = AddUntyped
-AddLong = AddUntyped
-AddFloat = AddUntyped
+AddInt = AddUntyped -- 0x48
+AddLong = AddUntyped -- 0x49
+AddFloat = AddUntyped -- 0x4A
 
-function AddString(stack)
+function AddString(stack) -- 0x4B
     if stack then
         local right = stack:pop()
         local left = stack:pop()
@@ -747,11 +747,11 @@ function SubtractUntyped(stack)
     end
 end
 
-SubtractInt = SubtractUntyped
-SubtractLong = SubtractUntyped
-SubtractFloat = SubtractUntyped
+SubtractInt = SubtractUntyped -- 0x4C
+SubtractLong = SubtractUntyped -- 0x4D
+SubtractFloat = SubtractUntyped -- 0x4E
 
-function StackByteAsWord(stack, runtime)
+function StackByteAsWord(stack, runtime) -- 0x4F
     local val = runtime:IPs8()
     if stack then
         stack:push(val)
@@ -768,11 +768,11 @@ function MultiplyUntyped(stack)
     end
 end
 
-MultiplyInt = MultiplyUntyped
-MultiplyLong = MultiplyUntyped
-MultiplyFloat = MultiplyUntyped
+MultiplyInt = MultiplyUntyped -- 0x50
+MultiplyLong = MultiplyUntyped -- 0x51
+MultiplyFloat = MultiplyUntyped -- 0x52
 
-function RunProcedure(stack, runtime)
+function RunProcedure(stack, runtime) -- 0x53
     local procIdx = runtime:IP16()
     local name, numParams
     local proc = runtime:currentProc()
@@ -794,7 +794,7 @@ function RunProcedure(stack, runtime)
     end
 end
 
-function DivideInt(stack)
+function DivideInt(stack) -- 0x54
     if stack then
         local denominator = stack:pop()
         if denominator == 0 then
@@ -804,9 +804,9 @@ function DivideInt(stack)
     end
 end
 
-DivideLong = DivideInt
+DivideLong = DivideInt -- 0x55
 
-function DivideFloat(stack)
+function DivideFloat(stack) -- 0x56
     if stack then
         local denominator = stack:pop()
         if denominator == 0 then
@@ -816,7 +816,7 @@ function DivideFloat(stack)
     end
 end
 
-function CallFunction(stack, runtime)
+function CallFunction(stack, runtime) -- 0x57
     local fnIdx = runtime:IP8()
     local fnName = fns.codes[fnIdx]
     local fn = assert(fns[fnName], "Function "..fnName.. " not implemented!")
@@ -839,11 +839,11 @@ function PowerOfUntyped(stack)
     end
 end
 
-PowerOfInt = PowerOfUntyped
-PowerOfLong = PowerOfUntyped
-PowerOfFloat = PowerOfUntyped
+PowerOfInt = PowerOfUntyped -- 0x58
+PowerOfLong = PowerOfUntyped -- 0x59
+PowerOfFloat = PowerOfUntyped -- 0x5A
 
-function BranchIfFalse(stack, runtime)
+function BranchIfFalse(stack, runtime) -- 0x5B
     local ip = runtime:getIp() - 1 -- Because ip points to just after us
     local relJmp = runtime:IPs16()
     if stack then
@@ -855,7 +855,7 @@ function BranchIfFalse(stack, runtime)
     end
 end
 
-function AndInt(stack)
+function AndInt(stack) -- 0x5C
     if stack then
         local right = stack:pop()
         local left = stack:pop()
@@ -863,9 +863,9 @@ function AndInt(stack)
     end
 end
 
-AndLong = AndInt
+AndLong = AndInt -- 0x5D
 
-function AndFloat(stack)
+function AndFloat(stack) -- 0x5E
     if stack then
         local right = stack:pop()
         local left = stack:pop()
@@ -874,9 +874,9 @@ function AndFloat(stack)
     end
 end
 
-StackByteAsLong = StackByteAsWord
+StackByteAsLong = StackByteAsWord -- 0x5F
 
-function OrInt(stack)
+function OrInt(stack) -- 0x60
     if stack then
         local right = stack:pop()
         local left = stack:pop()
@@ -884,9 +884,9 @@ function OrInt(stack)
     end
 end
 
-OrLong = OrInt
+OrLong = OrInt -- 0x61
 
-function OrFloat(stack)
+function OrFloat(stack) -- 0x62
     if stack then
         local right = stack:pop()
         local left = stack:pop()
@@ -894,7 +894,7 @@ function OrFloat(stack)
     end
 end
 
-function StackWordAsLong(stack, runtime)
+function StackWordAsLong(stack, runtime) -- 0x63
     local val = runtime:IPs16()
     if stack then
         stack:push(val)
@@ -903,15 +903,15 @@ function StackWordAsLong(stack, runtime)
     end
 end
 
-function NotInt(stack)
+function NotInt(stack) -- 0x64
     if stack then
         stack:push(~stack:pop())
     end
 end
 
-NotLong = NotInt
+NotLong = NotInt -- 0x65
 
-function NotFloat(stack)
+function NotFloat(stack) -- 0x66
     if stack then
         stack:push(stack:pop() ~= 0)
     end
@@ -921,7 +921,7 @@ function OplDebug(pos)
     printf("Statement number %d\n", pos)
 end
 
-function Statement16(stack, runtime)
+function Statement16(stack, runtime) -- 0x67
     local pos = runtime:IP16()
     if stack then
         OplDebug(pos)
@@ -936,11 +936,11 @@ function UnaryMinusUntyped(stack)
     end
 end
 
-UnaryMinusInt = UnaryMinusUntyped
-UnaryMinusLong = UnaryMinusUntyped
-UnaryMinusFloat = UnaryMinusUntyped
+UnaryMinusInt = UnaryMinusUntyped -- 0x68
+UnaryMinusLong = UnaryMinusUntyped -- 0x69
+UnaryMinusFloat = UnaryMinusUntyped -- 0x6A
 
-function CallProcByStringExpr(stack, runtime)
+function CallProcByStringExpr(stack, runtime) -- 0x6B
     local numParams = runtime:IP8()
     local type = runtime:IP8()
     if stack then
@@ -955,15 +955,15 @@ end
 
 function ZeroReturn(stack, runtime)
     if stack then
-        runtime:returnFromFrame(stack, 0.0)
+        runtime:returnFromFrame(stack, 0)
     end
 end
 
-ZeroReturnInt = ZeroReturn
-ZeroReturnLong = ZeroReturn
-ZeroReturnFloat = ZeroReturn
+ZeroReturnInt = ZeroReturn -- 0x74
+ZeroReturnLong = ZeroReturn -- 0x75
+ZeroReturnFloat = ZeroReturn -- 0x76
 
-function NullReturnString(stack, runtime)
+function NullReturnString(stack, runtime) -- 0x77
     if stack then
         runtime:returnFromFrame(stack, "")
     end
@@ -972,18 +972,14 @@ end
 function NoOp()
 end
 
-LongToInt = NoOp
-FloatToInt = NoOp
-FloatToLong = NoOp
-IntToLong = NoOp
-IntToFloat = NoOp
-LongToFloat = NoOp
-LongToUInt = NoOp
-FloatToUInt = NoOp
-
-function IntToLong()
-    -- Nothing needed
-end
+LongToInt = NoOp -- 0x78
+FloatToInt = NoOp -- 0x79
+FloatToLong = NoOp -- 0x7A
+IntToLong = NoOp -- 0x7B
+IntToFloat = NoOp -- 0x7C
+LongToFloat = NoOp -- 0x7D
+LongToUInt = NoOp -- 0x7E
+FloatToUInt = NoOp -- 0x7F
 
 function DropUntyped(stack)
     if stack then
@@ -991,10 +987,10 @@ function DropUntyped(stack)
     end
 end
 
-DropInt = DropUntyped
-DropLong = DropUntyped
-DropFloat = DropUntyped
-DropString = DropUntyped
+DropInt = DropUntyped -- 0x80
+DropLong = DropUntyped -- 0x81
+DropFloat = DropUntyped -- 0x82
+DropString = DropUntyped -- 0x83
 
 function AssignUntyped(stack, runtime)
     if stack then
@@ -1004,10 +1000,10 @@ function AssignUntyped(stack, runtime)
     end
 end
 
-AssignInt = AssignUntyped
-AssignLong = AssignUntyped
-AssignFloat = AssignUntyped
-AssignString = AssignUntyped
+AssignInt = AssignUntyped -- 0x84
+AssignLong = AssignUntyped -- 0x85
+AssignFloat = AssignUntyped -- 0x86
+AssignString = AssignUntyped -- 0x87
 
 function PrintUntyped(stack)
     if stack then
@@ -1015,24 +1011,24 @@ function PrintUntyped(stack)
     end
 end
 
-PrintInt = PrintUntyped
-PrintLong = PrintUntyped
-PrintFloat = PrintUntyped
-PrintString = PrintUntyped
+PrintInt = PrintUntyped -- 0x88
+PrintLong = PrintUntyped -- 0x89
+PrintFloat = PrintUntyped -- 0x8A
+PrintString = PrintUntyped -- 0x8B
 
-function PrintSpace(stack)
+function PrintSpace(stack) -- 0x90
     if stack then
         printf(" ")
     end
 end
 
-function PrintCarriageReturn(stack)
+function PrintCarriageReturn(stack) -- 0x92
     if stack then
         printf("\n")
     end
 end
 
-function InputInt(stack, runtime)
+function InputInt(stack, runtime) -- 0x94
     if stack then
         local trapped = runtime:getTrap()
         while true do
@@ -1058,10 +1054,10 @@ function InputInt(stack, runtime)
     end
 end
 
-InputLong = InputInt
-InputFloat = InputInt
+InputLong = InputInt -- 0x95
+InputFloat = InputInt -- 0x96
 
-function InputString(stack, runtime)
+function InputString(stack, runtime) -- 0x97
     if stack then
         local trapped = runtime:getTrap()
         -- We don't support pressing esc to clear the line when untrapped
@@ -1076,7 +1072,7 @@ function InputString(stack, runtime)
     end
 end
 
-function OnErr(stack, runtime)
+function OnErr(stack, runtime) -- 0xB1
     local offset = runtime:IP16()
     local newIp
     if offset ~= 0 then
@@ -1089,7 +1085,7 @@ function OnErr(stack, runtime)
     end
 end
 
-function Raise(stack, runtime)
+function Raise(stack, runtime) -- 0xB8
     if stack then
         error(stack:pop())
     end
@@ -1109,7 +1105,7 @@ function Trap(stack, runtime) -- 0xBC
     end
 end
 
-function GoTo(stack, runtime)
+function GoTo(stack, runtime) -- 0xBF
     local ip = runtime:getIp() - 1 -- Because ip points to just after us
     local relJmp = runtime:IPs16()
     if stack then
@@ -1119,14 +1115,14 @@ function GoTo(stack, runtime)
     end
 end
 
-function Return(stack, runtime)
+function Return(stack, runtime) -- 0xC0
     if stack then
         local val = stack:pop()
         runtime:returnFromFrame(stack, val)
     end
 end
 
-function NextOpcodeTable(stack, runtime)
+function NextOpcodeTable(stack, runtime) -- 0xFF
     local extendedCode = runtime:IP8()
     local realOpcode = 256 + extendedCode
     local fnName = fns.codes[realOpcode]

@@ -229,20 +229,20 @@ codes = {
     [0xDF] = "IllegalFuncOpCode",
 }
 
-function Err(stack, runtime)
+function Err(stack, runtime) -- 0x07
     if stack then
         stack:push(runtime:getLastError())
     end
 end
 
-function Get(stack, runtime)
+function Get(stack, runtime) -- 0x0A
     if stack then
         local ch = io.stdin:read(1)
         stack:push(ch:byte(1, 1))
     end
 end
 
-function Alert(stack, runtime)
+function Alert(stack, runtime) -- 0x38
     local nargs = runtime:IP8()
     if stack then
         local line1, line2, but1, but2, but3
