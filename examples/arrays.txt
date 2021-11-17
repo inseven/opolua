@@ -1,0 +1,17 @@
+PROC main:
+	GLOBAL a%(5)
+	GLOBAL gs$(4, 4)
+	REM LOCAL b&(16400)
+	LOCAL s$(4)
+	a%(5) = 3
+	sub:
+	PRINT a%(1), a%(5), gs$(2)
+	
+	s$ = "woop"
+	PRINT a%(6)
+ENDP
+
+PROC sub:
+	a%(5) = a%(5) * 2
+	gs$(2) = "yem"
+ENDP
