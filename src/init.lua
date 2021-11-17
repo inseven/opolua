@@ -26,6 +26,17 @@ DataTypes = enum {
     EStringArray = 0x83,
 }
 
+function isArrayType(t)
+    return t & 0x80 > 0
+end
+
+DefaultSimpleTypes = {
+    [DataTypes.EWord] = 0,
+    [DataTypes.ELong] = 0,
+    [DataTypes.EReal] = 0.0,
+    [DataTypes.EString] = "",
+}
+
 local function OPLERR(val)
     -- return 0xabcd0000 | val
     return val
@@ -39,6 +50,7 @@ Errors = {
     KOplErrInvalidArgs = OPLERR(-2),
     KOplErrDivideByZero = OPLERR(-8),
     KOplErrIllegal = OPLERR(-96),
+    KOplErrSubs = OPLERR(-111),
     KOplErrEsc = OPLERR(-114),
 }
 
@@ -46,6 +58,15 @@ Errors = {
 for k, v in pairs(Errors) do _ENV[k] = v end
 -- And allow reverse lookup
 Errors = enum(Errors)
+
+function sortedKeys(tbl)
+    local result = {}
+    for k in pairs(tbl) do
+        table.insert(result, k)
+    end
+    table.sort(result)
+    return result
+end
 
 -- Give these global names so native code can potentially get to them easily
 _Ops = require("ops")

@@ -1,11 +1,11 @@
 PROC main:
 	GLOBAL foo$(4)
 	foo$ = "Baa"
-	fn:(123)
+	fn:(123, "yarp")
 	GET
 ENDP
 
-PROC fn:(x%)
+PROC fn:(x%, y$)
 	PRINT foo$
-	PRINT x%
+	PRINT x%, y$
 ENDP

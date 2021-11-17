@@ -61,7 +61,7 @@ end
 
 -- Returns a function which tracks a value using a unique upval
 -- call fn() to get the val, call fn(newVal) to set it
-local function makeVar(initialVal)
+local function makeVar()
     local makerFn = function()
         local val
         local fn = function(newVal)
@@ -73,29 +73,57 @@ local function makeVar(initialVal)
         end
         return fn
     end
-    local var = makerFn()
-    if initialVal ~= nil then
-        var(initialVal)
+    return makerFn()
+end
+
+-- To get the var at the given (1-based) pos, do arrayVar()[pos]. This will do
+-- the bounds check and create a var if necessary. It is an error to assign
+-- directly to the array, do arrayVar()[pos](newVal) instead - ie get the val,
+-- then assign to it using the function syntax.
+local ArrayMt = {
+    __index = function(val, k)
+        local len = rawget(val, "len")
+        assert(len, "Array length has not been set!")
+        assert(k > 0 and k <= len, KOplErrSubs)
+        local result = makeVar()
+        rawset(val, k, result)
+        -- And default initialize the array value
+        result(DefaultSimpleTypes[rawget(val, "type")])
+        return result
+    end,
+    __newindex = function(val, k, v)
+        error("Runtime should never be assigning to a array var index!")
     end
-    return var
+}
+
+local function newArrayVal(valueType, len)
+    return setmetatable({ type = valueType, len = len }, ArrayMt)
 end
 
 function Runtime:getLocalVar(index, type, frame)
     -- ie things where index is just an offset from iFrameCell
-    local vars = (frame or self.frame).vars
+    assert(type, "getLocalVar requires a type argument!")
+    if not frame then
+        frame = self.frame
+    end
+    local vars = frame.vars
     local var = vars[index]
     if not var then
-        local initialVal = nil
-        if type then
-            assert(type < DataTypes.EWordArray, "Array type storage not done yet!")
-            if type == DataTypes.EString then
-                initialVal = ""
-            else
-                initialVal = 0
-            end
-        end
-        var = makeVar(initialVal)
+        var = makeVar()
         vars[index] = var
+    end
+    if var() == nil then
+        -- Even though the caller might be a LeftSide op and thus is about to
+        -- assign to the var, so initialising the var might not actually be
+        -- necessary, we'll do it anyway just to simplify the interface
+        if isArrayType(type) then
+            -- Have to apply array fixup (ie find array length from proc definition)
+            local arrayFixupIndex = (type == DataTypes.EStringArray) and index - 3 or index - 2
+            local len = assert(frame.proc.arrays[arrayFixupIndex], "Failed to find array fixup!")
+            var(newArrayVal(type & 0xF, len))
+        else
+            var(DefaultSimpleTypes[type])
+        end
     end
     return var
 end
@@ -103,22 +131,33 @@ end
 function Runtime:popParameter(stack)
     local type = stack:pop()
     assert(DataTypes[type], "Expected parameter type on stack")
+    assert(not isArrayType(type), "Can't pass arrays on the stack?")
+    local var = makeVar()
     local val = stack:pop()
-    return makeVar(val)
+    var(val)
+    return var
 end
 
-function Runtime:getIndirectVar(index, type)
+function Runtime:getIndirectVar(index)
     -- Yep, magic numbers abound...
     local arrIdx = (index - (self.frame.proc.iTotalTableSize + 18)) // 2
     local result = self.frame.indirects[arrIdx + 1]
     if not result then
-        for i, var in ipairs(self.frame.indirects) do
-            printf("Indirect %i: %s\n", i, var())
-        end
+        -- for i, var in ipairs(self.frame.indirects) do
+        --     printf("Indirect %i: %s\n", i, var())
+        -- end
         error(string.format("Failed to resolve indirect index 0x%04x", index))
     end
     assert(result(), "Indirect has not yet been initialised?")
     return result
+end
+
+function Runtime:getVar(index, type, indirect)
+    if indirect then
+        return self:getIndirectVar(index)
+    else
+        return self:getLocalVar(index, type)
+    end
 end
 
 function Runtime:addModule(name, procTable)
@@ -168,13 +207,8 @@ function Runtime:pushNewFrame(stack, proc)
         return
     end
 
-    -- First, define all globals that this new fn declares
-    for _, global in ipairs(proc.globals) do
-        self:getLocalVar(global.offset, global.type)
-    end
-
-    -- Locals will get defined the first time they're accessed (COplRuntime
-    -- relies on iFrameCell being zero-initialised for this).
+    -- We don't need to define any globals, arrays or strings at this point,
+    -- they are constructed when needed.
 
     -- COplRuntime leaves parameters stored on the stack and allocates a
     -- pointer in iIndirectTbl to access them. Since they're accessed the
@@ -183,10 +217,9 @@ function Runtime:pushNewFrame(stack, proc)
     -- pop them here. We're ignoring the type-checking extra values that
     -- were pushed onto the stack prior to the RunProcedure call.
 
-    -- Args are pushed in reverse order, ie first arg is on top of stack
     for i = 1, #proc.params do
         local var = self:popParameter(stack)
-        frame.indirects[i] = var
+        table.insert(frame.indirects, 1, var)
     end
     frame.returnStackSize = stack:getSize()
 
@@ -201,7 +234,13 @@ function Runtime:pushNewFrame(stack, proc)
             local parentProc = parentFrame.proc
             found = parentProc.globals[external.name]
         end
-        table.insert(frame.indirects, self:getLocalVar(found.offset, nil, parentFrame))
+        table.insert(frame.indirects, self:getLocalVar(found.offset, found.type, parentFrame))
+        -- DEBUG
+        -- printf("Fixed up external offset=0x%04X to indirect #%d\n", found.offset, #frame.indirects)
+        -- for i, var in ipairs(self.frame.indirects) do
+        --     printf("Indirect %i: %s\n", i, var())
+        -- end
+
     end
 end
 
@@ -310,7 +349,14 @@ local function run(self, stack)
 end
 
 function Runtime:unhandledErr(err)
-    printf("Error from instruction at 0x%08X: %s\n", self.lastIp, tostring(err))
+    printf("Error from instruction at 0x%08X: %s", self.lastIp, tostring(err))
+    if type(err) == "number" then
+        local errStr = Errors[err]
+        if errStr then
+            printf(" (%s)", errStr)
+        end
+    end
+    printf("\n")
     self:setFrame(nil)
     return false
 end

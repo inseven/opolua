@@ -2,6 +2,8 @@ _ENV = module()
 
 local fns = require("fns")
 local fmt = string.format
+local Word, Long, Real, String = DataTypes.EWord, DataTypes.ELong, DataTypes.EReal, DataTypes.EString
+local WordArray, LongArray, RealArray, StringArray = DataTypes.EWordArray, DataTypes.ELongArray, DataTypes.ERealArray, DataTypes.EStringArray
 
 codes = {
     [0x00] = "SimpleDirectRightSideInt",
@@ -536,73 +538,155 @@ We aren't concerned with database fields or type checking so we simplify the
 stack usage considerably from what COplRuntime does.
 ]]
 
-function SimpleDirectRightSideTyped(stack, runtime, type)
+local function leftSide(stack, runtime, type, indirect)
     local index = runtime:IP16()
     if stack then
-        local var = runtime:getLocalVar(index, type)
-        local val = var()
-        stack:push(val)
-    else
-        return fmt("0x%04X", index)
-    end
-end
-
-function SimpleDirectRightSideInt(stack, runtime) -- 0x00
-    return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EWord)
-end
-
-function SimpleDirectRightSideLong(stack, runtime) -- 0x01
-    return SimpleDirectRightSideTyped(stack, runtime, DataTypes.ELong)
-end
-
-function SimpleDirectRightSideFloat(stack, runtime) -- 0x02
-    return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EFloat)
-end
-
-function SimpleDirectRightSideString(stack, runtime) -- 0x03
-    return SimpleDirectRightSideTyped(stack, runtime, DataTypes.EString)
-end
-
-function SimpleDirectLeftSideUntyped(stack, runtime)
-    local index = runtime:IP16()
-    if stack then
-        local var = runtime:getLocalVar(index) 
+        local var = runtime:getVar(index, type, indirect)
+        if isArrayType(type) then
+            local pos = stack:pop()
+            var = var()[pos]
+        end
         stack:push(var)
     else
         return fmt("0x%04X", index)
     end
 end
 
-SimpleDirectLeftSideInt = SimpleDirectLeftSideUntyped -- 0x04
-SimpleDirectLeftSideLong = SimpleDirectLeftSideUntyped -- 0x05
-SimpleDirectLeftSideFloat = SimpleDirectLeftSideUntyped -- 0x06
-SimpleDirectLeftSideString = SimpleDirectLeftSideUntyped -- 0x07
-
-function SimpleInDirectRightSideTyped(stack, runtime, type)
-    local index = runtime:IP16()
+local function rightSide(stack, runtime, type, indirect)
     if stack then
-        local var = runtime:getIndirectVar(index, type)
-        local val = var()
-        stack:push(val)
+        leftSide(stack, runtime, type, indirect)
+        stack:push(stack:pop()())
     else
-        return fmt("0x%04X", index)
+        return fmt("0x%04X", runtime:IP16())
     end
 end
 
+function SimpleDirectRightSideInt(stack, runtime) -- 0x00
+    return rightSide(stack, runtime, Word, false)
+end
+
+function SimpleDirectRightSideLong(stack, runtime) -- 0x01
+    return rightSide(stack, runtime, Long, false)
+end
+
+function SimpleDirectRightSideFloat(stack, runtime) -- 0x02
+    return rightSide(stack, runtime, Real, false)
+end
+
+function SimpleDirectRightSideString(stack, runtime) -- 0x03
+    return rightSide(stack, runtime, String, false)
+end
+
+function SimpleDirectLeftSideInt(stack, runtime) -- 0x04
+    return leftSide(stack, runtime, Word, false)
+end
+
+function SimpleDirectLeftSideLong(stack, runtime) -- 0x05
+    return leftSide(stack, runtime, Long, false)
+end
+
+function SimpleDirectLeftSideFloat(stack, runtime) -- 0x06
+    return leftSide(stack, runtime, Real, false)
+end
+
+function SimpleDirectLeftSideString(stack, runtime) -- 0x07
+    return leftSide(stack, runtime, String, false)
+end
+
 function SimpleInDirectRightSideInt(stack, runtime) -- 0x08
-    return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EWord)
+    return rightSide(stack, runtime, Word, true)
 end
 
 function SimpleInDirectRightSideLong(stack, runtime) -- 0x09
-    return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.ELong)
+    return rightSide(stack, runtime, Long, true)
 end
 
 function SimpleInDirectRightSideFloat(stack, runtime) -- 0x0A
-    return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EFloat)
+    return rightSide(stack, runtime, Real, true)
 end
 
 function SimpleInDirectRightSideString(stack, runtime) -- 0x0B
-    return SimpleInDirectRightSideTyped(stack, runtime, DataTypes.EString)
+    return rightSide(stack, runtime, String, true)
+end
+
+function SimpleInDirectLeftSideInt(stack, runtime) -- 0x0C
+    return leftSide(stack, runtime, Word, true)
+end
+
+function SimpleInDirectLeftSideLong(stack, runtime) -- 0x0D
+    return leftSide(stack, runtime, Long, true)
+end
+
+function SimpleInDirectLeftSideFloat(stack, runtime) -- 0x0E
+    return leftSide(stack, runtime, Real, true)
+end
+
+function SimpleInDirectLeftSideString(stack, runtime) -- 0x0F
+    return leftSide(stack, runtime, String, true)
+end
+
+function ArrayDirectRightSideInt(stack, runtime) -- 0x10
+    return rightSide(stack, runtime, WordArray, false)
+end
+
+function ArrayDirectRightSideLong(stack, runtime) -- 0x11
+    return rightSide(stack, runtime, LongArray, false)
+end
+
+function ArrayDirectRightSideFloat(stack, runtime) -- 0x12
+    return rightSide(stack, runtime, RealArray, false)
+end
+
+function ArrayDirectRightSideString(stack, runtime) -- 0x13
+    return rightSide(stack, runtime, StringArray, false)
+end
+
+function ArrayDirectLeftSideInt(stack, runtime) -- 0x14
+    return leftSide(stack, runtime, WordArray, false)
+end
+
+function ArrayDirectLeftSideLong(stack, runtime) -- 0x15
+    return leftSide(stack, runtime, LongArray, false)
+end
+
+function ArrayDirectLeftSideFloat(stack, runtime) -- 0x16
+    return leftSide(stack, runtime, RealArray, false)
+end
+
+function ArrayDirectLeftSideString(stack, runtime) -- 0x17
+    return leftSide(stack, runtime, StringArray, false)
+end
+
+function ArrayInDirectRightSideInt(stack, runtime) -- 0x18
+    return rightSide(stack, runtime, WordArray, true)
+end
+
+function ArrayInDirectRightSideLong(stack, runtime) -- 0x19
+    return rightSide(stack, runtime, LongArray, true)
+end
+
+function ArrayInDirectRightSideFloat(stack, runtime) -- 0x1A
+    return rightSide(stack, runtime, RealArray, true)
+end
+
+function ArrayInDirectRightSideString(stack, runtime) -- 0x1B
+    return rightSide(stack, runtime, StringArray, true)
+end
+
+function ArrayInDirectLeftSideInt(stack, runtime) -- 0x1C
+    return leftSide(stack, runtime, WordArray, true)
+end
+
+function ArrayInDirectLeftSideLong(stack, runtime) -- 0x1D
+    return leftSide(stack, runtime, LongArray, true)
+end
+
+function ArrayInDirectLeftSideFloat(stack, runtime) -- 0x1E
+    return leftSide(stack, runtime, RealArray, true)
+end
+
+function ArrayInDirectLeftSideString(stack, runtime) -- 0x1F
+    return leftSide(stack, runtime, StringArray, true)
 end
 
 function ConstantInt(stack, runtime) -- 0x28

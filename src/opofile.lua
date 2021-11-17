@@ -67,6 +67,8 @@ function parseProc(proc)
     proc.globals = {}
     proc.subprocs = {} -- This should really be "callables" or something
     proc.externals = {}
+    proc.strings = {}
+    proc.arrays = {}
 
     local dataDefinitions, qcodePos = string.unpack("<s2", proc.data, proc.offset+1)
     local dataSize, qcodeSize, maxStack, paramsCount, dataPos = string.unpack("<HHHB", dataDefinitions)
@@ -141,15 +143,26 @@ function parseProc(proc)
 
     -- Since we don't care about max lengths we can ignore string fixups (which
     -- exist to set the maxLength field of local strings declared in iFrameCell)
+    -- But we'll record them anyway in case we start enforcing that later.
     while true do
         local offset = readWord()
         if offset == 0 then
             break
         end
         local maxLen = readByte()
+        table.insert(proc.strings, { offset = offset , maxLen = maxLen })
     end
 
-    assert(readWord() == 0, "Array fixups not supported yet!")
+    -- Array fixups
+    while true do
+        local offset = readWord()
+        if offset == 0 then
+            break
+        end
+        local len = readWord()
+        proc.arrays[offset] = len
+    end
+
     -- print(dataPos, #dataDefinitions + 1)
     assert(dataPos == #dataDefinitions + 1, "Data header size not right?")
     return proc

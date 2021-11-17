@@ -40,10 +40,14 @@ end
 function printProc(proc)
     printf("%s @ 0x%08X code=0x%08X line=%d\n", proc.name, proc.offset, proc.codeOffset, proc.lineNumber)
     local numParams = #proc.params
-    for i, param in ipairs(proc.params) do
+    for i = #proc.params, 1, -1 do
+        local param = proc.params[i]
         -- Params are listed in reverse order (ie as per how they'd be pushed
-        -- onto the stack) so reflect that in the indexes we print here
-        printf("    Param %d: %s\n", numParams + 1 - i, DataTypes[param])
+        -- onto the stack) so reflect that in the indexes we print here and the
+        -- order we iterate
+        local paramIdx = numParams - i
+        local indirectIdx = paramIdx * 2 + proc.iTotalTableSize + 18 -- inverse of Runtime:getIndirectVar() logic
+        printf("    Param %d: %s indirectIdx=0x%04x\n", paramIdx + 1, DataTypes[param], indirectIdx)
     end
     for _, subproc in ipairs(proc.subprocs) do
         printf('    Subproc "%s" offset=0x%04X nargs=%d\n', subproc.name, subproc.offset, subproc.numParams)
@@ -51,8 +55,16 @@ function printProc(proc)
     for _, global in ipairs(proc.globals) do
         printf('    Global "%s" (%s) offset=0x%04X\n', global.name, DataTypes[global.type], global.offset)
     end
-    for _, external in ipairs(proc.externals) do
-        printf('    External "%s" (%s)\n', external.name, DataTypes[external.type])
+    for i, external in ipairs(proc.externals) do
+        local indirectIdx = (#proc.params + i - 1) * 2 + proc.iTotalTableSize + 18
+        printf('    External "%s" (%s) indirectIdx=0x%04X\n', external.name, DataTypes[external.type], indirectIdx)
+    end
+    for _, str in ipairs(proc.strings) do
+        printf("    String offset=0x%04X maxLen=%d\n", str.offset, str.maxLen)
+    end
+    for _, offset in ipairs(sortedKeys(proc.arrays)) do
+        local len = proc.arrays[offset]
+        printf("    Array offset=0x%04X len=%d\n", offset, len)
     end
     printf("    iTotalTableSize: %d (0x%08X)\n", proc.iTotalTableSize, proc.iTotalTableSize)
 end
