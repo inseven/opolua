@@ -273,6 +273,12 @@ function Alert(stack, runtime) -- 0x38
     end
 end
 
+function ChrStr(stack)
+    if stack then
+        return stack:push(string.char(stack:pop()))
+    end
+end
+
 function ErrStr(stack, runtime) -- 0xC4
     if stack then
         local err = stack:pop()
