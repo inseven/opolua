@@ -237,8 +237,7 @@ end
 
 function Get(stack, runtime) -- 0x0A
     if stack then
-        local ch = io.stdin:read(1)
-        stack:push(ch:byte(1, 1))
+        stack:push(runtime:iohandler().getch())
     end
 end
 
@@ -252,21 +251,7 @@ function Alert(stack, runtime) -- 0x38
         if nargs >= 2 then line2 = stack:pop() end
         if nargs >= 1 then line1 = stack:pop() end
 
-        printf("---ALERT---\n%s\n", line1)
-        if line2 then
-            printf("%s\n", line2)
-        end
-        printf("[1]: %s\n", but1 or "Continue")
-        if but2 then
-            printf("[2]: %s\n", but2)
-        end
-        if but3 then
-            printf("[3]: %s\n", but3)
-        end
-        local choice = tonumber(io.stdin:read())
-        if choice == nil or choice > 3 or choice < 1 then
-            choice = 1
-        end
+        local choice = runtime:iohandler().alert({line1, line2}, {but1, but2, but3})
         stack:push(choice)
     else
         return fmt(" nargs=%d", nargs)

@@ -298,13 +298,20 @@ function Runtime:getTrap()
     return self.trap
 end
 
+function Runtime:iohandler()
+    return self.ioh
+end
+
 function Runtime:currentProc()
     assert(self.frame and self.frame.proc, "No current process!")
     return self.frame.proc
 end
 
-function newRuntime()
-    return setmetatable({modules = {}}, Runtime)
+function newRuntime(handler)
+    return setmetatable({
+        modules = {},
+        ioh = handler or require("defaultiohandler"),
+    }, Runtime)
 end
 
 function printInstruction(currentOpIdx, opCode, op, extra)

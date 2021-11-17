@@ -1089,9 +1089,9 @@ AssignLong = AssignUntyped -- 0x85
 AssignFloat = AssignUntyped -- 0x86
 AssignString = AssignUntyped -- 0x87
 
-function PrintUntyped(stack)
+function PrintUntyped(stack, runtime)
     if stack then
-        printf("%s", stack:pop())
+        runtime:iohandler().print(stack:pop())
     end
 end
 
@@ -1100,40 +1100,38 @@ PrintLong = PrintUntyped -- 0x89
 PrintFloat = PrintUntyped -- 0x8A
 PrintString = PrintUntyped -- 0x8B
 
-function PrintSpace(stack) -- 0x90
+function PrintSpace(stack, runtime) -- 0x90
     if stack then
-        printf(" ")
+        runtime:iohandler().print(" ")
     end
 end
 
-function PrintCarriageReturn(stack) -- 0x92
+function PrintCarriageReturn(stack, runtime) -- 0x92
     if stack then
-        printf("\n")
+        runtime:iohandler().print("\n")
     end
 end
 
 function InputInt(stack, runtime) -- 0x94
     if stack then
         local trapped = runtime:getTrap()
-        while true do
-            local line = io.stdin:read()
-            local result = tonumber(line)
-            if result == nil and trapped then
-                -- We can error and the trap check in runtime will deal with it
-                if line:byte(1, 1) == 27 then
-                    error(KOplErrEsc)
-                else
+        local result
+        while result == nil do
+            local line = runtime:iohandler().readLine(trapped)
+            result = tonumber(line)
+            if result == nil then
+                if trapped then
+                    -- We can error and the trap check in runtime will deal with it
                     error(KOplErrGenFail)
+                else
+                    -- iohandler is responsible for outputting a linefeed after reading the line
+                    runtime:iohandler().print("?")
+                    -- And go round again
                 end
-            elseif result then
-                local var = stack:pop()
-                var(result)
-                break
-            else
-                printf("?")
-                -- And go round again
             end
         end
+        local var = stack:pop()
+        var(result)
         runtime:setTrap(false)
     end
 end
@@ -1144,14 +1142,9 @@ InputFloat = InputInt -- 0x96
 function InputString(stack, runtime) -- 0x97
     if stack then
         local trapped = runtime:getTrap()
-        -- We don't support pressing esc to clear the line when untrapped
-        local line = io.stdin:read()
-        if trapped and line:byte(1, 1) == 27 then
-            error(KOplErrEsc)
-        else
-            local var = stack:pop()
-            var(line)
-        end
+        local line = runtime:iohandler().readLine(trapped)
+        local var = stack:pop()
+        var(line)
         runtime:setTrap(false)
     end
 end
