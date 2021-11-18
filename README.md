@@ -20,7 +20,9 @@ This interpreter largely ignores types and specific memory layout restrictions. 
 
 Right now it runs in minimal Lua 5.3. At some point graphics integration etc will require some native code integration.
 
-Globals and locals are represented by functions with a unique upvalue holding the actual value (which like the stack is a simple Lua number or string value. Calling `var()` gets the value, and calling `var(newVal)` sets it. This is a quick-and-dirty way to represent passable-by-reference values (the other option being Lua tables, which will be reserved for arrays whenever I get round to that). Using plain Lua values and the garbage collector means a lot of memory juggling can be avoided when resolving externals and similar.
+Variables (ie, values not on the stack) are represented by functions with a unique upvalue holding the actual value. Calling `var()` gets the value, and calling `var(newVal)` sets it. This is a quick-and-dirty way to represent passable-by-reference values, which is important for external (ie, global) variables. Arrays are represented using the above function with a table rather than a Lua number or string value. Array tables have a custom metatable `ArrayMt` which enforces array sizes. Each item in an Array table is itself a function var.
+
+Using plain Lua values and the garbage collector means a lot of memory juggling can be avoided when resolving externals and similar.
 
 This interpreter is not 100% behavior compatible with the original Psion. The more relaxed typing will mean that code which errored on a Psion may execute fine on here. Any non-erroring program (which also doesn't rely on expecting errors to occur and trapping them) should run OK here. Except for...
 
@@ -28,7 +30,6 @@ This interpreter is not 100% behavior compatible with the original Psion. The mo
 
 ## Missing features
 
-* Arrays
 * Database/file support
 * Graphics support
 * Various other opcodes and functions
