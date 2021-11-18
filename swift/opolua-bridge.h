@@ -15,121 +15,126 @@
 // Reimplement some things that are macros, so the bridge can see them
 
 #undef lua_pop
-void lua_pop(lua_State* L, int n) {
+static inline void lua_pop(lua_State* L, int n) {
     lua_settop(L, -(n) - 1);
 }
 
 #undef lua_call
-void lua_call(lua_State* L, int narg, int nrec) {
+static inline void lua_call(lua_State* L, int narg, int nrec) {
     lua_callk(L, narg, nrec, 0, NULL);
 }
 
 #undef lua_pcall
-int lua_pcall(lua_State* L, int narg, int nrec, int errfunc) {
+static inline int lua_pcall(lua_State* L, int narg, int nrec, int errfunc) {
     return lua_pcallk(L, narg, nrec, errfunc, 0, NULL);
 }
 
 #undef lua_yield
-int lua_yield(lua_State* L, int nresults) {
+static inline int lua_yield(lua_State* L, int nresults) {
     return lua_yieldk(L, nresults, 0, NULL);
 }
 
 #undef lua_newtable
-void lua_newtable(lua_State* L) {
+static inline void lua_newtable(lua_State* L) {
     lua_createtable(L, 0, 0);
 }
 
 #undef lua_register
-void lua_register(lua_State* L, const char *name, lua_CFunction f) {
+static inline void lua_register(lua_State* L, const char *name, lua_CFunction f) {
     lua_pushcfunction(L, f);
     lua_setglobal(L, name);
 }
 
 #undef lua_pushcfunction
-void lua_pushcfunction(lua_State* L, lua_CFunction fn) {
+static inline void lua_pushcfunction(lua_State* L, lua_CFunction fn) {
     lua_pushcclosure(L, fn, 0);
 }
 
 #undef lua_isfunction
-int lua_isfunction(lua_State* L, int n) {
+static inline int lua_isfunction(lua_State* L, int n) {
     return lua_type(L, n) == LUA_TFUNCTION;
 }
 
 #undef lua_istable
-int lua_istable(lua_State* L, int idx) {
+static inline int lua_istable(lua_State* L, int idx) {
     return lua_type(L, idx) == LUA_TTABLE;
 }
 
 #undef lua_islightuserdata
-int lua_islightuserdata(lua_State* L, int idx) {
+static inline int lua_islightuserdata(lua_State* L, int idx) {
     return lua_type(L, idx) == LUA_TLIGHTUSERDATA;
 }
 
 #undef lua_isnil
-int lua_isnil(lua_State* L, int idx) {
+static inline int lua_isnil(lua_State* L, int idx) {
     return lua_type(L, idx) == LUA_TNIL;
 }
 
 #undef lua_isboolean
-int lua_isboolean(lua_State* L, int idx) {
+static inline int lua_isboolean(lua_State* L, int idx) {
     return lua_type(L, idx) == LUA_TBOOLEAN;
 }
 
 #undef lua_isthread
-int lua_isthread(lua_State* L, int idx) {
+static inline int lua_isthread(lua_State* L, int idx) {
     return lua_type(L, idx) == LUA_TTHREAD;
 }
 
 #undef lua_isnone
-int lua_isnone(lua_State* L, int idx) {
+static inline int lua_isnone(lua_State* L, int idx) {
     return lua_type(L, idx) == LUA_TNONE;
 }
 
 #undef lua_isnoneornil
-int lua_isnoneornil(lua_State* L, int idx) {
+static inline int lua_isnoneornil(lua_State* L, int idx) {
     return lua_type(L, idx) <= 0;
 }
 
 #undef lua_pushliteral
-void lua_pushliteral(lua_State* L, const char* s) {
+static inline void lua_pushliteral(lua_State* L, const char* s) {
     lua_pushstring(L, s);
 }
 
 #undef lua_pushglobaltable
-void lua_pushglobaltable(lua_State* L) {
+static inline void lua_pushglobaltable(lua_State* L) {
     (void)lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
 }
 
 #undef luaL_dofile
-int luaL_dofile(lua_State* L, const char *filename) {
+static inline int luaL_dofile(lua_State* L, const char *filename) {
     return luaL_loadfile(L, filename) || lua_pcall(L, 0, LUA_MULTRET, 0);
 }
 
 #undef lua_tostring
-const char* lua_tostring(lua_State* L, int index) {
+static inline const char* lua_tostring(lua_State* L, int index) {
     return lua_tolstring(L, index, NULL);
 }
 
 #undef lua_insert
-void lua_insert(lua_State* L, int index) {
+static inline void lua_insert(lua_State* L, int index) {
     lua_rotate(L, index, 1);
 }
 
 #undef lua_remove
-void lua_remove(lua_State* L, int index) {
+static inline void lua_remove(lua_State* L, int index) {
     lua_rotate(L, index, -1);
     lua_pop(L, 1);
 }
 
 #undef lua_replace
-void lua_replace(lua_State* L, int index) {
+static inline void lua_replace(lua_State* L, int index) {
     lua_copy(L, -1, index);
     lua_pop(L, 1);
 }
 
 #undef luaL_typename
-const char* luaL_typename(lua_State* L, int index) {
+static inline const char* luaL_typename(lua_State* L, int index) {
     return lua_typename(L, lua_type(L, index));
+}
+
+#undef lua_upvalueindex
+static inline int lua_upvalueindex(int i) {
+    return LUA_REGISTRYINDEX - i;
 }
 
 #endif /* opolua_bridge_h */

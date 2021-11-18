@@ -7,7 +7,7 @@
 
 import Foundation
 
-func traceHandler(_ L: OpaquePointer?) -> Int32 {
+private func traceHandler(_ L: OpaquePointer?) -> Int32 {
     var msg = lua_tostring(L, 1)
     if msg == nil {  /* is error object not a string? */
         if luaL_callmeta(L, 1, "__tostring") != 0 &&  /* does it have a metamethod */
@@ -22,10 +22,39 @@ func traceHandler(_ L: OpaquePointer?) -> Int32 {
     return 1  /* return the traceback */
 }
 
+private func getInterpreterUpval(_ L: OpaquePointer?) -> OpoInterpreter {
+    let rawPtr = lua_topointer(L, lua_upvalueindex(1))!
+    return Unmanaged<OpoInterpreter>.fromOpaque(rawPtr).takeUnretainedValue()
+}
+
+private func alert(_ L: OpaquePointer?) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    let luaHelper = lua_State(L)
+    let lines = luaHelper.tostringarray(1)
+    let buttons = luaHelper.tostringarray(2)
+    let ret = iohandler.alert(lines: lines, buttons: buttons)
+    lua_pushinteger(L, Int64(ret))
+    return 1
+}
+
+private func getch(_ L: OpaquePointer?) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    lua_pushinteger(L, Int64(iohandler.getch()))
+    return 1
+}
+
+private func print_lua(_ L: OpaquePointer?) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    iohandler.print(lua_State(L).tostring(1) ?? "")
+    return 0
+}
+
 class OpoInterpreter {
     private let L: OpaquePointer
+    var iohandler: OpoIoHandler
 
     init() {
+        iohandler = DummyIoHandler() // For now...
         L = luaL_newstate()
         let libs: [(String, lua_CFunction)] = [
             ("_G", luaopen_base),
@@ -58,28 +87,7 @@ class OpoInterpreter {
             lua_pop(L, 1)
         }
 
-        // The default impl using io.stdin:read() isn't gonna go well, supply a dummy for now
-        registerFunctionHandler(functionName: "Get") { L in
-            print("Ignoring GET!")
-            luaL_getmetafield(L, 1, "push")
-            lua_pushvalue(L, 1)
-            lua_pushinteger(L, 32) // space
-            lua_call(L, 2, 0) // push(stack, 32)
-            return 0
-        }
-
         assert(lua_gettop(L) == 0) // In case we failed to balance stack during init
-    }
-
-    // TODO
-    // func registerOpcodeHandler(opCodeName: String, handler: lua_CFunction) {
-    // }
-
-    func registerFunctionHandler(functionName: String, handler: @escaping lua_CFunction) {
-        lua_getglobal(L, "_Fns")
-        lua_pushcfunction(L, handler)
-        lua_setfield(L, -2, functionName)
-        lua_pop(L, 1)
     }
 
     deinit {
@@ -101,15 +109,28 @@ class OpoInterpreter {
         return true
     }
 
+    func makeIoHandlerBridge() {
+        lua_newtable(L)
+        let val = Unmanaged<OpoInterpreter>.passUnretained(self)
+        func pushFn(_ name: String, _ fn: @escaping lua_CFunction) {
+            lua_pushlightuserdata(L, val.toOpaque())
+            lua_pushcclosure(L, fn, 1)
+            lua_setfield(L, -2, name)
+        }
+        pushFn("alert", alert)
+        pushFn("getch", getch)
+        pushFn("print", print_lua)
+    }
+
     func run(file: String) {
         guard luaL_dofile(L, Bundle.main.path(forResource: "runopo", ofType: "lua")!) == 0 else {
             fatalError(String(validatingUTF8: lua_tostring(L, -1))!)
         }
         lua_settop(L, 0)
         lua_getglobal(L, "runOpo")
-        lua_newtable(L)
         lua_pushstring(L, file)
-        lua_rawseti(L, -2, 1)
-        let _ = pcall(1, 0) // runOpo( {file} )
+        lua_pushnil(L)
+        makeIoHandlerBridge()
+        let _ = pcall(3, 0) // runOpo(file, nil, iohandler)
     }
 }

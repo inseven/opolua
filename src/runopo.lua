@@ -4,7 +4,7 @@ require("init")
 local opofile = require("opofile")
 local runtime = require("runtime")
 
-function runOpo(args)
+function main(args)
     local verbose = false
     local i = 1
     while i < #args do
@@ -17,16 +17,20 @@ function runOpo(args)
     end
     local filename = args[1]
     local procName = args[2]
+    return runOpo(filename, procName, nil, verbose)
+end
+
+function runOpo(filename, procName, iohandler, verbose)
     local f = assert(io.open(filename, "rb"))
     local data = f:read("a")
     f:close()
 
     local procTable = opofile.parseOpo(data, verbose)
-    local rt = runtime.newRuntime()
+    local rt = runtime.newRuntime(iohandler)
     rt:addModule(filename, procTable)
     local proc = procName and rt:findProc(procName:upper()) or procTable[1]
     rt:runProc(proc, verbose)
 end
 
 -- Syntax: runopo.lua filename [fnName]
-if arg then runOpo(arg) end
+if arg then main(arg) end
