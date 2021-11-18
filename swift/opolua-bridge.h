@@ -105,6 +105,11 @@ static inline int luaL_dofile(lua_State* L, const char *filename) {
     return luaL_loadfile(L, filename) || lua_pcall(L, 0, LUA_MULTRET, 0);
 }
 
+#undef lua_tonumber
+static inline lua_Number lua_tonumber(lua_State* L, int index) {
+    return lua_tonumberx(L, index, NULL);
+}
+
 #undef lua_tostring
 static inline const char* lua_tostring(lua_State* L, int index) {
     return lua_tolstring(L, index, NULL);

@@ -1,0 +1,4 @@
+PROC main:
+	BEEP 5, 300
+	PRINT CHR$(7)
+ENDP

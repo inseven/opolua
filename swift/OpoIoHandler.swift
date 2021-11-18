@@ -9,7 +9,7 @@ import Foundation
 
 protocol OpoIoHandler {
 
-    func print(_ val: String) -> Void
+    func printValue(_ val: String) -> Void
 
     // nil return means escape (must only return nil if escapeShouldErrorEmptyInput is true)
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
@@ -21,12 +21,14 @@ protocol OpoIoHandler {
     // return char code (should probably be in ER5 charset...)
     func getch() -> Int
 
+    func beep(frequency: Double, duration: Double) -> Void
+
 }
 
 class DummyIoHandler : OpoIoHandler {
 
-    func print(_ val: String) -> Void {
-        Swift.print(val, terminator: "")
+    func printValue(_ val: String) -> Void {
+        print(val, terminator: "")
     }
 
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
@@ -39,5 +41,9 @@ class DummyIoHandler : OpoIoHandler {
 
     func getch() -> Int {
         return 0
+    }
+
+    func beep(frequency: Double, duration: Double) -> Void {
+        print("BEEP \(frequency)kHz \(duration)s")
     }
 }

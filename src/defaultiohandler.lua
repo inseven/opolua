@@ -42,4 +42,8 @@ function getch()
     return ch:byte(1, 1)
 end
 
+function beep(freq, duration)
+    printf("BEEP %gkHz for %gs", freq, duration)
+end
+
 return _ENV

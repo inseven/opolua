@@ -1149,6 +1149,15 @@ function InputString(stack, runtime) -- 0x97
     end
 end
 
+function Beep(stack, runtime) -- 0xA0
+    if stack then
+        local pitch = stack:pop()
+        local freq = 512 / (pitch + 1) -- in Khz
+        local duration = stack:pop() * 1/32 -- in seconds
+        runtime:iohandler().beep(freq, duration)
+    end
+end
+
 function OnErr(stack, runtime) -- 0xB1
     local offset = runtime:IP16()
     local newIp

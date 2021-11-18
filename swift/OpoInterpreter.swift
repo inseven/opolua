@@ -45,7 +45,13 @@ private func getch(_ L: OpaquePointer?) -> Int32 {
 
 private func print_lua(_ L: OpaquePointer?) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    iohandler.print(lua_State(L).tostring(1) ?? "")
+    iohandler.printValue(lua_State(L).tostring(1) ?? "")
+    return 0
+}
+
+private func beep(_ L: OpaquePointer?) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    iohandler.beep(frequency: lua_tonumber(L, 1), duration: lua_tonumber(L, 2))
     return 0
 }
 
@@ -120,6 +126,7 @@ class OpoInterpreter {
         pushFn("alert", alert)
         pushFn("getch", getch)
         pushFn("print", print_lua)
+        pushFn("beep", beep)
     }
 
     func run(file: String) {
