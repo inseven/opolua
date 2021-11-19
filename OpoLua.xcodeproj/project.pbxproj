@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D8C679BA27483B5600BD8720 /* PickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* PickerViewController.swift */; };
+		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		DB7900002742E6F6005E904F /* ldebug.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7B2742D5BD005E904F /* ldebug.c */; };
 		DB7900012742E6F6005E904F /* ldo.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6F2742D5BD005E904F /* ldo.c */; };
 		DB7900022742E6F6005E904F /* ldump.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF602742D5BB005E904F /* ldump.c */; };
@@ -31,7 +32,6 @@
 		DB7900162742E6F6005E904F /* lutf8lib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF622742D5BB005E904F /* lutf8lib.c */; };
 		DB7900172742E6F6005E904F /* lvm.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF5F2742D5BB005E904F /* lvm.c */; };
 		DB7900182742E6F6005E904F /* lzio.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6A2742D5BC005E904F /* lzio.c */; };
-		DB79001A27430641005E904F /* simple.opo in Resources */ = {isa = PBXBuildFile; fileRef = DB79001927430604005E904F /* simple.opo */; };
 		DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79001B2746B88F005E904F /* OpoIoHandler.swift */; };
 		DB7900232746C771005E904F /* lua_State.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7900212746C771005E904F /* lua_State.swift */; };
 		DB7900262746D915005E904F /* defaultiohandler.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB7900242746D915005E904F /* defaultiohandler.lua */; };
@@ -58,7 +58,7 @@
 
 /* Begin PBXFileReference section */
 		D8C679B927483B5600BD8720 /* PickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerViewController.swift; sourceTree = "<group>"; };
-		DB79001927430604005E904F /* simple.opo */ = {isa = PBXFileReference; lastKnownFileType = file; name = simple.opo; path = examples/simple.opo; sourceTree = "<group>"; };
+		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		DB79001B2746B88F005E904F /* OpoIoHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler.swift; sourceTree = "<group>"; };
 		DB7900212746C771005E904F /* lua_State.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = lua_State.swift; sourceTree = "<group>"; };
 		DB7900242746D915005E904F /* defaultiohandler.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = defaultiohandler.lua; sourceTree = "<group>"; };
@@ -134,11 +134,11 @@
 		DB79FE5627428292005E904F = {
 			isa = PBXGroup;
 			children = (
+				D8C679BC27484BF400BD8720 /* examples */,
 				DB79FE6127428292005E904F /* OpoLua */,
 				DB79FEB527429761005E904F /* lua */,
 				DB79FFE72742E631005E904F /* src */,
 				DB79FFE12742E52B005E904F /* swift */,
-				DB79001927430604005E904F /* simple.opo */,
 				DB79FE6027428292005E904F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -285,8 +285,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DB79001A27430641005E904F /* simple.opo in Resources */,
 				DB79FFF22742E631005E904F /* fns.lua in Resources */,
+				D8C679BD27484BF400BD8720 /* examples in Resources */,
 				DB79FFF72742E631005E904F /* ops.lua in Resources */,
 				DB79FFF52742E631005E904F /* dumpopo.lua in Resources */,
 				DB79FFF62742E631005E904F /* stack.lua in Resources */,

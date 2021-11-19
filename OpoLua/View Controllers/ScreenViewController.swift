@@ -89,7 +89,7 @@ extension ScreenViewController: OpoIoHandler {
     }
     
     func beep(frequency: Double, duration: Double) {
-        
+        print("BEEP")
     }
         
 }

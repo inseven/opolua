@@ -12,7 +12,7 @@ class PickerViewController : UITableViewController {
     var programs: [URL]
     
     init() {
-        programs = Bundle.main.urls(forResourcesWithExtension: "opo", subdirectory: nil) ?? []
+        programs = Bundle.main.urls(forResourcesWithExtension: "opo", subdirectory: "examples") ?? []
         super.init(style: .grouped)
         navigationItem.title = "Programs"
     }
