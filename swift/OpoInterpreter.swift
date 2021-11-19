@@ -7,7 +7,7 @@
 
 import Foundation
 
-private func traceHandler(_ L: OpaquePointer?) -> Int32 {
+private func traceHandler(_ L: LuaState!) -> Int32 {
     var msg = lua_tostring(L, 1)
     if msg == nil {  /* is error object not a string? */
         if luaL_callmeta(L, 1, "__tostring") != 0 &&  /* does it have a metamethod */
@@ -22,41 +22,40 @@ private func traceHandler(_ L: OpaquePointer?) -> Int32 {
     return 1  /* return the traceback */
 }
 
-private func getInterpreterUpval(_ L: OpaquePointer?) -> OpoInterpreter {
+private func getInterpreterUpval(_ L: LuaState!) -> OpoInterpreter {
     let rawPtr = lua_topointer(L, lua_upvalueindex(1))!
     return Unmanaged<OpoInterpreter>.fromOpaque(rawPtr).takeUnretainedValue()
 }
 
-private func alert(_ L: OpaquePointer?) -> Int32 {
+private func alert(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    let luaHelper = lua_State(L)
-    let lines = luaHelper.tostringarray(1)
-    let buttons = luaHelper.tostringarray(2)
+    let lines = L.tostringarray(1)
+    let buttons = L.tostringarray(2)
     let ret = iohandler.alert(lines: lines, buttons: buttons)
     lua_pushinteger(L, Int64(ret))
     return 1
 }
 
-private func getch(_ L: OpaquePointer?) -> Int32 {
+private func getch(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     lua_pushinteger(L, Int64(iohandler.getch()))
     return 1
 }
 
-private func print_lua(_ L: OpaquePointer?) -> Int32 {
+private func print_lua(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    iohandler.printValue(lua_State(L).tostring(1) ?? "")
+    iohandler.printValue(L.tostring(1) ?? "")
     return 0
 }
 
-private func beep(_ L: OpaquePointer?) -> Int32 {
+private func beep(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.beep(frequency: lua_tonumber(L, 1), duration: lua_tonumber(L, 2))
     return 0
 }
 
 class OpoInterpreter {
-    private let L: OpaquePointer
+    private let L: LuaState
     var iohandler: OpoIoHandler
 
     init() {

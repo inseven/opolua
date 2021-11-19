@@ -7,15 +7,12 @@
 
 import Foundation
 
-struct lua_State {
+typealias LuaState = UnsafeMutablePointer<lua_State>
 
-    let L: OpaquePointer
-
-    init(_ L: OpaquePointer?) {
-        self.L = L!
-    }
+extension UnsafeMutablePointer where Pointee == lua_State {
 
     func tostring(_ index: Int32) -> String? {
+        let L = self
         let ret = luaL_tolstring(L, index, nil)! // luaL_tolstring never returns NULL
         let result = String(validatingUTF8: ret) // But it might not be valid UTF-8
         lua_pop(L, 1)
@@ -23,6 +20,7 @@ struct lua_State {
     }
 
     func tostringarray(_ index: Int32) -> [String] {
+        let L = self
         var i: lua_Integer = 1
         var result: [String] = []
         while true {

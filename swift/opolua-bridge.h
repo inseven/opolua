@@ -12,6 +12,12 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
+// Define this as a concrete type so that lua_State* gets typed on the Swift side
+// as UnsafeMutablePointer<lua_State>? instead of OpaquePointer? so that we can have
+// better type-safety. This is technically wrong but makes for so much nicer code
+// it's worth it.
+struct lua_State {};
+
 // Reimplement some things that are macros, so the bridge can see them
 
 #undef lua_pop
