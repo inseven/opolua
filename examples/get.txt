@@ -1,0 +1,5 @@
+PROC main:
+	LOCAL x%
+	x% = GET
+	PRINT "got char", x%
+ENDP
