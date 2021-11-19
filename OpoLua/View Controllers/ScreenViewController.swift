@@ -81,7 +81,27 @@ extension ScreenViewController: OpoIoHandler {
     }
     
     func alert(lines: [String], buttons: [String]) -> Int {
-        return 1
+        let semaphore = DispatchSemaphore(value: 0)
+        var result = 1
+        DispatchQueue.main.async {
+            let message = lines.joined(separator: "\n")
+            let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+            if buttons.count > 0 {
+                for (index, button) in buttons.enumerated() {
+                    alert.addAction(.init(title: button, style: .default) { action in
+                        result = index + 1
+                        semaphore.signal()
+                    })
+                }
+            } else {
+                alert.addAction(.init(title: "Continue", style: .default) { action in
+                    semaphore.signal()
+                })
+            }
+            self.present(alert, animated: true, completion: nil)
+        }
+        semaphore.wait()
+        return result
     }
     
     func getch() -> Int {
