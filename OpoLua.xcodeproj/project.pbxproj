@@ -122,6 +122,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D8C679BB27484BB800BD8720 /* View Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				D8C679B927483B5600BD8720 /* PickerViewController.swift */,
+				DB79FFBD2742D99C005E904F /* ScreenViewController.swift */,
+			);
+			path = "View Controllers";
+			sourceTree = "<group>";
+		};
 		DB79FE5627428292005E904F = {
 			isa = PBXGroup;
 			children = (
@@ -148,9 +157,8 @@
 				DB79FE6A27428294005E904F /* OpoLua.entitlements */,
 				DB79FE6927428294005E904F /* Info.plist */,
 				DB79FE6227428292005E904F /* AppDelegate.swift */,
-				D8C679B927483B5600BD8720 /* PickerViewController.swift */,
-				DB79FFBD2742D99C005E904F /* ScreenViewController.swift */,
 				DB79FE6427428294005E904F /* Assets.xcassets */,
+				D8C679BB27484BB800BD8720 /* View Controllers */,
 			);
 			path = OpoLua;
 			sourceTree = "<group>";
