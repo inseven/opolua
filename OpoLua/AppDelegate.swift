@@ -60,16 +60,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        let viewController = ScreenViewController()
+        let viewController = PickerViewController()
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.navigationBar.prefersLargeTitles = true
-
-        let window = UIWindow()
-        window.rootViewController = navigationController
-        window.tintColor = UIColor(named: "TintColor")
-        window.makeKeyAndVisible()
-        self.window = window
+        
+        window = UIWindow()
+        window?.rootViewController = navigationController
+        window?.tintColor = UIColor(named: "TintColor")
+        window?.makeKeyAndVisible()
 
         return true
     }
+    
 }

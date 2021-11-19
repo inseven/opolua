@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D8C679BA27483B5600BD8720 /* PickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* PickerViewController.swift */; };
 		DB7900002742E6F6005E904F /* ldebug.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7B2742D5BD005E904F /* ldebug.c */; };
 		DB7900012742E6F6005E904F /* ldo.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6F2742D5BD005E904F /* ldo.c */; };
 		DB7900022742E6F6005E904F /* ldump.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF602742D5BB005E904F /* ldump.c */; };
@@ -31,45 +32,9 @@
 		DB7900172742E6F6005E904F /* lvm.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF5F2742D5BB005E904F /* lvm.c */; };
 		DB7900182742E6F6005E904F /* lzio.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6A2742D5BC005E904F /* lzio.c */; };
 		DB79001A27430641005E904F /* simple.opo in Resources */ = {isa = PBXBuildFile; fileRef = DB79001927430604005E904F /* simple.opo */; };
-		DB79001C2746B88F005E904F /* OpoIoHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79001B2746B88F005E904F /* OpoIoHandler.swift */; };
 		DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79001B2746B88F005E904F /* OpoIoHandler.swift */; };
-		DB7900222746C771005E904F /* lua_State.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7900212746C771005E904F /* lua_State.swift */; };
 		DB7900232746C771005E904F /* lua_State.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7900212746C771005E904F /* lua_State.swift */; };
-		DB7900252746D915005E904F /* defaultiohandler.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB7900242746D915005E904F /* defaultiohandler.lua */; };
 		DB7900262746D915005E904F /* defaultiohandler.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB7900242746D915005E904F /* defaultiohandler.lua */; };
-		DB79FE6327428292005E904F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FE6227428292005E904F /* AppDelegate.swift */; };
-		DB79FE6527428294005E904F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB79FE6427428294005E904F /* Assets.xcassets */; };
-		DB79FF7D2742D5BE005E904F /* llex.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF5C2742D5BA005E904F /* llex.c */; };
-		DB79FF7E2742D5BE005E904F /* lstrlib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF5D2742D5BB005E904F /* lstrlib.c */; };
-		DB79FF7F2742D5BE005E904F /* lundump.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF5E2742D5BB005E904F /* lundump.c */; };
-		DB79FF802742D5BE005E904F /* lvm.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF5F2742D5BB005E904F /* lvm.c */; };
-		DB79FF812742D5BE005E904F /* ldump.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF602742D5BB005E904F /* ldump.c */; };
-		DB79FF822742D5BE005E904F /* lmathlib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF612742D5BB005E904F /* lmathlib.c */; };
-		DB79FF832742D5BE005E904F /* lutf8lib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF622742D5BB005E904F /* lutf8lib.c */; };
-		DB79FF842742D5BE005E904F /* lopcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF632742D5BC005E904F /* lopcodes.c */; };
-		DB79FF852742D5BE005E904F /* lfunc.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF642742D5BC005E904F /* lfunc.c */; };
-		DB79FF862742D5BE005E904F /* lparser.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF652742D5BC005E904F /* lparser.c */; };
-		DB79FF872742D5BE005E904F /* lcorolib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF662742D5BC005E904F /* lcorolib.c */; };
-		DB79FF892742D5BE005E904F /* ltm.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF682742D5BC005E904F /* ltm.c */; };
-		DB79FF8A2742D5BE005E904F /* ldblib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF692742D5BC005E904F /* ldblib.c */; };
-		DB79FF8B2742D5BE005E904F /* lzio.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6A2742D5BC005E904F /* lzio.c */; };
-		DB79FF8C2742D5BE005E904F /* lctype.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6B2742D5BC005E904F /* lctype.c */; };
-		DB79FF8D2742D5BE005E904F /* lmem.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6C2742D5BC005E904F /* lmem.c */; };
-		DB79FF8E2742D5BE005E904F /* lapi.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6D2742D5BC005E904F /* lapi.c */; };
-		DB79FF8F2742D5BE005E904F /* lcode.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6E2742D5BC005E904F /* lcode.c */; };
-		DB79FF902742D5BE005E904F /* ldo.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6F2742D5BD005E904F /* ldo.c */; };
-		DB79FF912742D5BE005E904F /* liolib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF702742D5BD005E904F /* liolib.c */; };
-		DB79FF922742D5BE005E904F /* lgc.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF712742D5BD005E904F /* lgc.c */; };
-		DB79FF932742D5BE005E904F /* loadlib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF722742D5BD005E904F /* loadlib.c */; };
-		DB79FF942742D5BE005E904F /* lstate.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF732742D5BD005E904F /* lstate.c */; };
-		DB79FF952742D5BE005E904F /* ltablib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF742742D5BD005E904F /* ltablib.c */; };
-		DB79FF962742D5BE005E904F /* lbitlib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF752742D5BD005E904F /* lbitlib.c */; };
-		DB79FF982742D5BE005E904F /* ltable.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF772742D5BD005E904F /* ltable.c */; };
-		DB79FF992742D5BE005E904F /* lobject.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF782742D5BD005E904F /* lobject.c */; };
-		DB79FF9A2742D5BE005E904F /* lstring.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF792742D5BD005E904F /* lstring.c */; };
-		DB79FF9B2742D5BE005E904F /* lauxlib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7A2742D5BD005E904F /* lauxlib.c */; };
-		DB79FF9C2742D5BE005E904F /* ldebug.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7B2742D5BD005E904F /* ldebug.c */; };
-		DB79FF9D2742D5BE005E904F /* lbaselib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7C2742D5BE005E904F /* lbaselib.c */; };
 		DB79FFBE2742D99C005E904F /* ScreenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFBD2742D99C005E904F /* ScreenViewController.swift */; };
 		DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FE6227428292005E904F /* AppDelegate.swift */; };
 		DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFE52742E596005E904F /* OpoInterpreter.swift */; };
@@ -92,11 +57,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		D8C679B927483B5600BD8720 /* PickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerViewController.swift; sourceTree = "<group>"; };
 		DB79001927430604005E904F /* simple.opo */ = {isa = PBXFileReference; lastKnownFileType = file; name = simple.opo; path = examples/simple.opo; sourceTree = "<group>"; };
 		DB79001B2746B88F005E904F /* OpoIoHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler.swift; sourceTree = "<group>"; };
 		DB7900212746C771005E904F /* lua_State.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = lua_State.swift; sourceTree = "<group>"; };
 		DB7900242746D915005E904F /* defaultiohandler.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = defaultiohandler.lua; sourceTree = "<group>"; };
-		DB79FE5F27428292005E904F /* OpoLua-Cocoa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "OpoLua-Cocoa.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB79FE6227428292005E904F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		DB79FE6427428294005E904F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DB79FE6927428294005E904F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -147,13 +112,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		DB79FE5C27428292005E904F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		DB79FFA32742D88A005E904F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -179,7 +137,6 @@
 		DB79FE6027428292005E904F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				DB79FE5F27428292005E904F /* OpoLua-Cocoa.app */,
 				DB79FFA62742D88A005E904F /* OpoLua.app */,
 			);
 			name = Products;
@@ -188,11 +145,12 @@
 		DB79FE6127428292005E904F /* OpoLua */ = {
 			isa = PBXGroup;
 			children = (
+				DB79FE6A27428294005E904F /* OpoLua.entitlements */,
+				DB79FE6927428294005E904F /* Info.plist */,
 				DB79FE6227428292005E904F /* AppDelegate.swift */,
+				D8C679B927483B5600BD8720 /* PickerViewController.swift */,
 				DB79FFBD2742D99C005E904F /* ScreenViewController.swift */,
 				DB79FE6427428294005E904F /* Assets.xcassets */,
-				DB79FE6927428294005E904F /* Info.plist */,
-				DB79FE6A27428294005E904F /* OpoLua.entitlements */,
 			);
 			path = OpoLua;
 			sourceTree = "<group>";
@@ -265,23 +223,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		DB79FE5E27428292005E904F /* OpoLua-Cocoa */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = DB79FE6D27428294005E904F /* Build configuration list for PBXNativeTarget "OpoLua-Cocoa" */;
-			buildPhases = (
-				DB79FE5B27428292005E904F /* Sources */,
-				DB79FE5C27428292005E904F /* Frameworks */,
-				DB79FE5D27428292005E904F /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "OpoLua-Cocoa";
-			productName = OpoLua;
-			productReference = DB79FE5F27428292005E904F /* OpoLua-Cocoa.app */;
-			productType = "com.apple.product-type.application";
-		};
 		DB79FFA52742D88A005E904F /* OpoLua */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DB79FFB72742D88B005E904F /* Build configuration list for PBXNativeTarget "OpoLua" */;
@@ -308,9 +249,6 @@
 				LastSwiftUpdateCheck = 1250;
 				LastUpgradeCheck = 1250;
 				TargetAttributes = {
-					DB79FE5E27428292005E904F = {
-						CreatedOnToolsVersion = 12.5.1;
-					};
 					DB79FFA52742D88A005E904F = {
 						CreatedOnToolsVersion = 12.5.1;
 					};
@@ -329,22 +267,12 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				DB79FE5E27428292005E904F /* OpoLua-Cocoa */,
 				DB79FFA52742D88A005E904F /* OpoLua */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		DB79FE5D27428292005E904F /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DB79FE6527428294005E904F /* Assets.xcassets in Resources */,
-				DB7900252746D915005E904F /* defaultiohandler.lua in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		DB79FFA42742D88A005E904F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -365,47 +293,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		DB79FE5B27428292005E904F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DB79FF8F2742D5BE005E904F /* lcode.c in Sources */,
-				DB79FF822742D5BE005E904F /* lmathlib.c in Sources */,
-				DB79FF7D2742D5BE005E904F /* llex.c in Sources */,
-				DB79FF8A2742D5BE005E904F /* ldblib.c in Sources */,
-				DB79FF842742D5BE005E904F /* lopcodes.c in Sources */,
-				DB79FF8E2742D5BE005E904F /* lapi.c in Sources */,
-				DB79FF962742D5BE005E904F /* lbitlib.c in Sources */,
-				DB79FF7E2742D5BE005E904F /* lstrlib.c in Sources */,
-				DB79FF832742D5BE005E904F /* lutf8lib.c in Sources */,
-				DB79FF9D2742D5BE005E904F /* lbaselib.c in Sources */,
-				DB79FF912742D5BE005E904F /* liolib.c in Sources */,
-				DB79FF9C2742D5BE005E904F /* ldebug.c in Sources */,
-				DB79FF812742D5BE005E904F /* ldump.c in Sources */,
-				DB79FF932742D5BE005E904F /* loadlib.c in Sources */,
-				DB79FF952742D5BE005E904F /* ltablib.c in Sources */,
-				DB79FF922742D5BE005E904F /* lgc.c in Sources */,
-				DB79FF992742D5BE005E904F /* lobject.c in Sources */,
-				DB79FF9B2742D5BE005E904F /* lauxlib.c in Sources */,
-				DB79FF942742D5BE005E904F /* lstate.c in Sources */,
-				DB79001C2746B88F005E904F /* OpoIoHandler.swift in Sources */,
-				DB79FF902742D5BE005E904F /* ldo.c in Sources */,
-				DB79FF862742D5BE005E904F /* lparser.c in Sources */,
-				DB79FF892742D5BE005E904F /* ltm.c in Sources */,
-				DB79FF982742D5BE005E904F /* ltable.c in Sources */,
-				DB79FF852742D5BE005E904F /* lfunc.c in Sources */,
-				DB79FF802742D5BE005E904F /* lvm.c in Sources */,
-				DB79FF7F2742D5BE005E904F /* lundump.c in Sources */,
-				DB79FF8B2742D5BE005E904F /* lzio.c in Sources */,
-				DB7900222746C771005E904F /* lua_State.swift in Sources */,
-				DB79FE6327428292005E904F /* AppDelegate.swift in Sources */,
-				DB79FF8C2742D5BE005E904F /* lctype.c in Sources */,
-				DB79FF9A2742D5BE005E904F /* lstring.c in Sources */,
-				DB79FF872742D5BE005E904F /* lcorolib.c in Sources */,
-				DB79FF8D2742D5BE005E904F /* lmem.c in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		DB79FFA22742D88A005E904F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -431,6 +318,7 @@
 				DB7900092742E6F6005E904F /* lmem.c in Sources */,
 				DB79000A2742E6F6005E904F /* loadlib.c in Sources */,
 				DB79000B2742E6F6005E904F /* lobject.c in Sources */,
+				D8C679BA27483B5600BD8720 /* PickerViewController.swift in Sources */,
 				DB79000C2742E6F6005E904F /* lopcodes.c in Sources */,
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
 				DB79000F2742E6F6005E904F /* lstate.c in Sources */,
@@ -571,64 +459,6 @@
 			};
 			name = Release;
 		};
-		DB79FE6E27428294005E904F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = OpoLua/OpoLua.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = ZZZ2575N68;
-				ENABLE_HARDENED_RUNTIME = YES;
-				HEADER_SEARCH_PATHS = lua;
-				INFOPLIST_FILE = OpoLua/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.me.tomsci.OpoLua;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "OpoLua/opolua-bridge.h";
-				SWIFT_VERSION = 5.0;
-				WARNING_CFLAGS = (
-					"-Wno-string-plus-int",
-					"-Wno-comma",
-					"-Wno-deprecated-declarations",
-					"-Wno-conditional-uninitialized",
-				);
-			};
-			name = Debug;
-		};
-		DB79FE6F27428294005E904F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = OpoLua/OpoLua.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = ZZZ2575N68;
-				ENABLE_HARDENED_RUNTIME = YES;
-				HEADER_SEARCH_PATHS = lua;
-				INFOPLIST_FILE = OpoLua/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.me.tomsci.OpoLua;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "OpoLua/opolua-bridge.h";
-				SWIFT_VERSION = 5.0;
-				WARNING_CFLAGS = (
-					"-Wno-string-plus-int",
-					"-Wno-comma",
-					"-Wno-deprecated-declarations",
-					"-Wno-conditional-uninitialized",
-				);
-			};
-			name = Release;
-		};
 		DB79FFB82742D88B005E904F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -686,15 +516,6 @@
 			buildConfigurations = (
 				DB79FE6B27428294005E904F /* Debug */,
 				DB79FE6C27428294005E904F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		DB79FE6D27428294005E904F /* Build configuration list for PBXNativeTarget "OpoLua-Cocoa" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				DB79FE6E27428294005E904F /* Debug */,
-				DB79FE6F27428294005E904F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
