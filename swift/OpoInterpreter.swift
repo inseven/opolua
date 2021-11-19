@@ -7,6 +7,26 @@
 
 import Foundation
 
+// ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
+private let kEnc = String.Encoding.windowsCP1252
+
+extension UnsafeMutablePointer where Pointee == lua_State {
+
+    func tostring(_ index: Int32) -> String? {
+        return tostring(index, encoding: kEnc)
+    }
+    func tostringarray(_ index: Int32) -> [String] {
+        return tostringarray(index, encoding: kEnc)
+    }
+    func tostring(_ index: Int32, key: String) -> String? {
+        return tostring(index, key: key, encoding: kEnc)
+    }
+    func push(_ string: String) {
+        push(string, encoding: kEnc)
+    }
+
+}
+
 private func traceHandler(_ L: LuaState!) -> Int32 {
     var msg = lua_tostring(L, 1)
     if msg == nil {  /* is error object not a string? */
@@ -32,7 +52,7 @@ private func alert(_ L: LuaState!) -> Int32 {
     let lines = L.tostringarray(1)
     let buttons = L.tostringarray(2)
     let ret = iohandler.alert(lines: lines, buttons: buttons)
-    lua_pushinteger(L, Int64(ret))
+    L.push(ret)
     return 1
 }
 
