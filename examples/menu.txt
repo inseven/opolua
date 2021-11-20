@@ -1,10 +1,20 @@
 PROC main:
+	local k%
+	DO
+		k% = GET
+		PRINT "Pressed key", k%
+	UNTIL k% = 290
+	menu:
+	GET
+ENDP
+
+PROC menu:
 	LOCAL x%, ret%
 	x% = 257
 	mINIT
-	mCARD "File", "Quit", %q
+	mCASC "More", "Explode", 1, "Fly", 2
+	mCARD "File", "More>", -16, "Quit", %q
 	mCARD "Edit", "Cut", %x, "Copy", %c, "Paste", %v
 	ret% = MENU(x%)
 	PRINT ret%, x%
-	GET
 ENDP

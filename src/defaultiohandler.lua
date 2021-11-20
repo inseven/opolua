@@ -71,13 +71,22 @@ function dialog(d)
 end
 
 function menu(m)
+    local function printCard(idx, card, lvl)
+        local indent = string.rep(" ", lvl * 4)
+        for i, item in ipairs(card) do
+            local hightlightIdx = idx and 256 * (idx - 1) + (i - 1)
+            local shortcut = item.keycode >= 32 and string.format("[Ctrl-%c]", item.keycode) or string.format("[%d]", item.keycode)
+            printf("%s%d. %s %s\n", indent, hightlightIdx or -1, item.text, item.keycode)
+            if item.submenu then
+                printCard(nil, item.submenu, lvl + 1)
+            end
+        end
+    end
+
     printf("---MENU---\n")
     for menuIdx, card in ipairs(m) do
         printf("%s:\n", card.title)
-        for i, item in ipairs(card) do
-            local hightlightIdx = 256 * (menuIdx - 1) + (i - 1)
-            printf("%d. %s [Ctrl-%c]\n", hightlightIdx, item.text, item.key)
-        end
+        printCard(menuIdx, card, 0)
     end
     printf("---END MENU---\n")
     return 0, 0 -- ie cancelled

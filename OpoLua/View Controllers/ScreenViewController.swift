@@ -108,7 +108,7 @@ extension ScreenViewController: OpoIoHandler {
     }
     
     func getch() -> Int {
-        return 0
+        return 290 // Menu key!
     }
     
     func beep(frequency: Double, duration: Double) {
@@ -120,7 +120,7 @@ extension ScreenViewController: OpoIoHandler {
         return 0
     }
 
-    func menu(_ m: Menu) -> Menu.Result {
+    func menu(_ m: Menu.Bar) -> Menu.Result {
         // TODO
         return Menu.Result(selected: 0, highlighted: 0)
     }

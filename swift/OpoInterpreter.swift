@@ -149,20 +149,28 @@ private func dialog(_ L: LuaState!) -> Int32 {
 }
 
 private func menu(_ L: LuaState!) -> Int32 {
-    let iohandler = getInterpreterUpval(L).iohandler
-    var cards: [Menu.Card] = []
-    for _ in L.ipairs(1, requiredType: .table) {
+    func getMenu() -> Menu { // Assumes a menu table is on top of stack
         let title = L.tostring(-1, key: "title") ?? ""
-        var cmds: [Menu.Command] = []
+        var items: [Menu.Item] = []
         for _ in L.ipairs(-1, requiredType: .table) {
-            let key = L.toint(-1, key: "key") ?? 0
+            let keycode = L.toint(-1, key: "keycode") ?? 0
             let text = L.tostring(-1, key: "text") ?? ""
-            cmds.append(Menu.Command(text: text, keycode: key))
+            var submenu: Menu? = nil
+            if lua_getfield(L, -1, "submenu") == LUA_TTABLE {
+                submenu = getMenu()
+            }
+            L.pop()
+            items.append(Menu.Item(text: text, keycode: keycode, submenu: submenu))
         }
-        cards.append(Menu.Card(title: title, items: cmds))
+        return Menu(title: title, items: items)
+    }
+    let iohandler = getInterpreterUpval(L).iohandler
+    var menus: [Menu] = []
+    for _ in L.ipairs(1, requiredType: .table) {
+        menus.append(getMenu())
     }
     let highlight = L.toint(1, key: "highlight") ?? 0
-    let m = Menu(items: cards, highlight: highlight)
+    let m = Menu.Bar(menus: menus, highlight: highlight)
     let result = iohandler.menu(m)
     L.push(result.selected)
     L.push(result.highlighted)

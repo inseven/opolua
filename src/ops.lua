@@ -1210,22 +1210,37 @@ end
 
 function mInit(stack, runtime) -- 0xEA
     if stack then
-        runtime:setMenu({})
+        runtime:setMenu({
+            cascades = {},
+        })
     end
 end
 
 function mCard(stack, runtime) -- 0xEB
     local numParams = runtime:IP8()
     if stack then
+        local menu = runtime:getMenu()
         local card = {}
         for i = 1, numParams do
-            local key = stack:pop()
-            local text = stack:pop()
+            local item = {}
+            item.keycode = stack:pop()
+            item.text = stack:pop()
+            if item.text:match(">$") then
+                -- It's a cascade
+                local cascade = menu.cascades[item.text]
+                if cascade then
+                    item.text = item.text:sub(1, -2)
+                    item.submenu = cascade
+                else
+                    -- We're suppose to just ignore its cascadiness
+                    print("CASCADE NOT FOUND")
+                end
+            end
             -- Last item is popped first
-            table.insert(card, 1, { key = key, text = text })
+            table.insert(card, 1, item)
         end
         card.title = stack:pop()
-        table.insert(runtime:getMenu(), card)
+        table.insert(menu, card)
     else
         return fmt("%d", numParams)
     end
@@ -1335,6 +1350,24 @@ function NextOpcodeTable(stack, runtime) -- 0xFF
     else
         return fmt("%02X %s %s", extendedCode, fnName, realFn(stack, runtime) or "")
     end
+end
+
+function mCasc(stack, runtime) -- 0x130
+    local numParams = runtime:IP8()
+    if stack then
+        local card = {}
+        for i = 1, numParams do
+            local keycode = stack:pop()
+            local text = stack:pop()
+            -- Last item is popped first
+            table.insert(card, 1, { keycode = keycode, text = text })
+        end
+        local title = stack:pop()
+        runtime:getMenu().cascades[title..">"] = card
+    else
+        return fmt("%d", numParams)
+    end
+
 end
 
 function dEditCheckbox(stack, runtime) -- 0x133

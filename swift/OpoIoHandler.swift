@@ -74,20 +74,21 @@ class Dialog {
 }
 
 struct Menu {
-    struct Command {
+    struct Item {
         let text: String
         let keycode: Int
+        let submenu: Menu?
     }
-    struct Card {
-        let title: String
-        let items: [Command]
+    struct Bar {
+        let menus: [Menu]
+        let highlight: Int // What item should start highlighted
     }
     struct Result {
         let selected: Int // Zero if menu cancelled, otherwise keycode of selected command
         let highlighted: Int // Index of highlighted item (even if cancelled)
     }
-    let items: [Card]
-    let highlight: Int // What item should start highlighted
+    let title: String
+    let items: [Item]
 }
 
 protocol OpoIoHandler {
@@ -113,7 +114,7 @@ protocol OpoIoHandler {
     // of the line that was highlighted when the dialog was dismissed
     func dialog(_ d: Dialog) -> Int
 
-    func menu(_ m: Menu) -> Menu.Result
+    func menu(_ m: Menu.Bar) -> Menu.Result
 
 }
 
@@ -143,7 +144,7 @@ class DummyIoHandler : OpoIoHandler {
         return 0
     }
 
-    func menu(_ m: Menu) -> Menu.Result {
+    func menu(_ m: Menu.Bar) -> Menu.Result {
         return Menu.Result(selected: 0, highlighted: 0)
     }
 }
