@@ -57,8 +57,17 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         }
     }
 
-    func tostring(_ index: Int32, encoding: String.Encoding) -> String? {
-        if let data = todata(index) {
+    // If convert is true, any value that is not a string will be converted to
+    // one (invoking __tostring metamethods if necessary)
+    func tostring(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> String? {
+        if convert && type(index) != .string {
+            var len: Int = 0
+            let ptr = luaL_tolstring(self, index, &len)!
+            let buf = UnsafeBufferPointer(start: ptr, count: len)
+            let result = String(data: Data(buffer: buf), encoding: encoding)
+            pop() // the val from luaL_tolstring
+            return result
+        } else if let data = todata(index) {
             return String(data: data, encoding: encoding)
         } else {
             return nil
@@ -87,6 +96,11 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         }
     }
 
+    func toboolean(_ index: Int32) -> Bool {
+        let b = lua_toboolean(self, index)
+        return b != 0
+    }
+
     func getfield<T>(_ index: Int32, key: String, _ accessor: (Int32) -> T?) -> T? {
         let _ = lua_getfield(self, index, key)
         let result = accessor(-1)
@@ -104,8 +118,8 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return getfield(index, key: key, self.tonumber)
     }
 
-    func tostring(_ index: Int32, key: String, encoding: String.Encoding) -> String? {
-        return getfield(index, key: key, { tostring($0, encoding: encoding) })
+    func tostring(_ index: Int32, key: String, encoding: String.Encoding, convert: Bool = false) -> String? {
+        return getfield(index, key: key, { tostring($0, encoding: encoding, convert: convert) })
     }
 
     // iterators

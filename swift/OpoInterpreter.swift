@@ -12,14 +12,14 @@ private let kEnc = String.Encoding.windowsCP1252
 
 extension UnsafeMutablePointer where Pointee == lua_State {
 
-    func tostring(_ index: Int32) -> String? {
-        return tostring(index, encoding: kEnc)
+    func tostring(_ index: Int32, convert: Bool = false) -> String? {
+        return tostring(index, encoding: kEnc, convert: convert)
     }
     func tostringarray(_ index: Int32) -> [String]? {
         return tostringarray(index, encoding: kEnc)
     }
-    func tostring(_ index: Int32, key: String) -> String? {
-        return tostring(index, key: key, encoding: kEnc)
+    func tostring(_ index: Int32, key: String, convert: Bool = false) -> String? {
+        return tostring(index, key: key, encoding: kEnc, convert: convert)
     }
     func push(_ string: String) {
         push(string, encoding: kEnc)
@@ -64,7 +64,7 @@ private func getch(_ L: LuaState!) -> Int32 {
 
 private func print_lua(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    iohandler.printValue(L.tostring(1) ?? "")
+    iohandler.printValue(L.tostring(1, convert: true) ?? "<<STRING DECODE ERR>>")
     return 0
 }
 
@@ -72,6 +72,17 @@ private func beep(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.beep(frequency: lua_tonumber(L, 1), duration: lua_tonumber(L, 2))
     return 0
+}
+
+private func readLine(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    let b = L.toboolean(1)
+    if let result = iohandler.readLine(escapeShouldErrorEmptyInput: b) {
+        L.push(result)
+    } else {
+        lua_pushnil(L)
+    }
+    return 1
 }
 
 class OpoInterpreter {
@@ -142,6 +153,7 @@ class OpoInterpreter {
             lua_pushcclosure(L, fn, 1)
             lua_setfield(L, -2, name)
         }
+        pushFn("readLine", readLine)
         pushFn("alert", alert)
         pushFn("getch", getch)
         pushFn("print", print_lua)

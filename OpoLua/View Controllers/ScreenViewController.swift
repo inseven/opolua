@@ -69,7 +69,7 @@ class ScreenViewController: UIViewController {
 }
 
 extension ScreenViewController: OpoIoHandler {
-    
+
     func printValue(_ val: String) {
         DispatchQueue.main.async {
             self.textView.text?.append(val)
@@ -77,7 +77,8 @@ extension ScreenViewController: OpoIoHandler {
     }
     
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
-        return ""
+        // TODO
+        return "123" // Have to return something valid here otherwise INPUT might keep on asking us
     }
     
     func alert(lines: [String], buttons: [String]) -> Int {

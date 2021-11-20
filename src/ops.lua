@@ -1114,6 +1114,7 @@ end
 
 function InputInt(stack, runtime) -- 0x94
     if stack then
+        local var = stack:pop()
         local trapped = runtime:getTrap()
         local result
         while result == nil do
@@ -1130,7 +1131,6 @@ function InputInt(stack, runtime) -- 0x94
                 end
             end
         end
-        local var = stack:pop()
         var(result)
         runtime:setTrap(false)
     end
@@ -1141,9 +1141,9 @@ InputFloat = InputInt -- 0x96
 
 function InputString(stack, runtime) -- 0x97
     if stack then
+        local var = stack:pop()
         local trapped = runtime:getTrap()
         local line = runtime:iohandler().readLine(trapped)
-        local var = stack:pop()
         var(line)
         runtime:setTrap(false)
     end
