@@ -240,18 +240,17 @@ class OpoInterpreter {
     func makeIoHandlerBridge() {
         lua_newtable(L)
         let val = Unmanaged<OpoInterpreter>.passUnretained(self)
-        func pushFn(_ name: String, _ fn: @escaping lua_CFunction) {
-            lua_pushlightuserdata(L, val.toOpaque())
-            lua_pushcclosure(L, fn, 1)
-            lua_setfield(L, -2, name)
-        }
-        pushFn("readLine", readLine)
-        pushFn("alert", alert)
-        pushFn("getch", getch)
-        pushFn("print", print_lua)
-        pushFn("beep", beep)
-        pushFn("dialog", dialog)
-        pushFn("menu", menu)
+        lua_pushlightuserdata(L, val.toOpaque())
+        let fns: [(String, lua_CFunction)] = [
+            ("readLine", readLine),
+            ("alert", alert),
+            ("getch", getch),
+            ("print", print_lua),
+            ("beep", beep),
+            ("dialog", dialog),
+            ("menu", menu),
+        ]
+        L.setfuncs(fns, nup: 1)
     }
 
     enum ValType: Int {

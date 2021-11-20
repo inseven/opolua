@@ -47,7 +47,7 @@ extension UnsafeMutablePointer where Pointee == lua_State {
 
     func todata(_ index: Int32) -> Data? {
         let L = self
-        if lua_type(L, index) == LUA_TSTRING {
+        if type(index) == .string {
             var len: Int = 0
             let ptr = lua_tolstring(L, index, &len)!
             let buf = UnsafeBufferPointer(start: ptr, count: len)
@@ -60,15 +60,15 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     // If convert is true, any value that is not a string will be converted to
     // one (invoking __tostring metamethods if necessary)
     func tostring(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> String? {
-        if convert && type(index) != .string {
+        if let data = todata(index) {
+           return String(data: data, encoding: encoding)
+        } else if convert {
             var len: Int = 0
             let ptr = luaL_tolstring(self, index, &len)!
             let buf = UnsafeBufferPointer(start: ptr, count: len)
             let result = String(data: Data(buffer: buf), encoding: encoding)
             pop() // the val from luaL_tolstring
             return result
-        } else if let data = todata(index) {
-            return String(data: data, encoding: encoding)
         } else {
             return nil
         }
@@ -101,11 +101,40 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return b != 0
     }
 
+    func tostringarray(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> [String]? {
+        guard type(index) == .table else {
+            return nil
+        }
+        var result: [String] = []
+        for _ in ipairs(index) {
+            if let val = tostring(-1, encoding: encoding, convert: convert) {
+                result.append(val)
+            } else {
+                break
+            }
+        }
+        return result
+    }
+
     func getfield<T>(_ index: Int32, key: String, _ accessor: (Int32) -> T?) -> T? {
         let _ = lua_getfield(self, index, key)
         let result = accessor(-1)
         pop()
         return result
+    }
+
+    func setfuncs(_ fns: [(String, lua_CFunction)], nup: Int32) {
+        // It's easier to just do what luaL_setfuncs does rather than massage
+        // fns in to a format that would work with it
+        for (name, fn) in fns {
+            for _ in 0 ..< nup {
+                // copy upvalues to the top
+                lua_pushvalue(self, -nup)
+            }
+            lua_pushcclosure(self, fn, nup)
+            lua_setfield(self, -(nup + 2), name)
+        }
+        pop(nup)
     }
 
     // Convenience dict fns (assumes key is an ascii string)
@@ -215,21 +244,6 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return PairsIterator(self, index)
     }
 
-    func tostringarray(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> [String]? {
-        guard lua_type(self, index) == LUA_TTABLE else {
-            return nil
-        }
-        var result: [String] = []
-        for _ in ipairs(index) {
-            if let val = tostring(-1, encoding: encoding, convert: convert) {
-                result.append(val)
-            } else {
-                break
-            }
-        }
-        return result
-    }
-
     func push(_ int: Int) {
         lua_pushinteger(self, lua_Integer(int))
     }
@@ -241,7 +255,7 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     func push(_ string: String, encoding: String.Encoding) {
         guard let data = string.data(using: encoding) else {
             assertionFailure("Cannot represent string in the given encoding?!")
-            lua_pushnil(self)
+            pushnil()
             return
         }
         push(data)
