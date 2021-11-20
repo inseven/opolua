@@ -307,6 +307,19 @@ function Runtime:currentProc()
     return self.frame.proc
 end
 
+function Runtime:setDialog(dlg)
+    if dlg then
+        dlg.frame = self.frame
+    end
+    self.dialog = dlg
+end
+
+function Runtime:getDialog()
+    -- A dialog must always be setup and shown from the same frame
+    assert(self.dialog and self.dialog.frame == self.frame, KOplStructure)
+    return self.dialog
+end
+
 function newRuntime(handler)
     return setmetatable({
         modules = {},

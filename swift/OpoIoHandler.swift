@@ -7,6 +7,72 @@
 
 import Foundation
 
+class DialogItem {
+    enum ItemType: Int {
+        case text = 0
+        case choice = 1
+        case long = 2
+        case float = 3
+        case time = 4
+        case date = 5
+        case edit = 6
+        case xinput = 8
+        case checkbox = 12
+        case separator = 13 // OPL uses empty dTEXT with the Text Separator flag set for this but we will make it distinct
+    }
+    enum Alignment: String {
+        case left = "left"
+        case center = "center"
+        case right = "right"
+    }
+    let type: ItemType
+    let prompt: String
+    var value: String
+    let alignment: Alignment? // For .text
+    let min: Double? // For .long, .float, .time, .date
+    let max: Double? // Ditto, plus .edit (meaning max number of characters)
+    let choices: [String]? // For .choice
+
+    init(type: ItemType, prompt: String, value: String, alignment: Alignment? = nil, min: Double? = nil, max: Double? = nil, choices: [String]? = nil) {
+        self.type = type
+        self.prompt = prompt
+        self.value = value
+        self.alignment = alignment
+        self.min = min
+        self.max = max
+        self.choices = choices
+    }
+}
+
+struct DialogButton {
+    let key: Int
+    let text: String
+}
+
+class Dialog {
+    struct Flags: OptionSet {
+        let rawValue: Int
+        // Values as defined by dINIT() API 
+        static let buttonsOnRight = Flags(rawValue: 1)
+        static let noTitleBar = Flags(rawValue: 2)
+        static let fullscreen = Flags(rawValue: 4)
+        static let noDrag = Flags(rawValue: 8)
+        static let packDense = Flags(rawValue: 16)
+    }
+
+    let title: String
+    let items: [DialogItem]
+    let buttons: [DialogButton]
+    let flags: Flags
+
+    init(title: String, items: [DialogItem], buttons: [DialogButton], flags: Flags) {
+        self.title = title
+        self.items = items
+        self.buttons = buttons
+        self.flags = flags
+    }
+}
+
 protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
@@ -22,6 +88,13 @@ protocol OpoIoHandler {
     func getch() -> Int
 
     func beep(frequency: Double, duration: Double) -> Void
+
+    // return 0 means cancelled (eg escape pressed)
+    // If there's buttons, non-zero return is the key of the
+    // selected button.
+    // If there aren't any buttons, the return value should be the 1-based index
+    // of the line that was highlighted when the dialog was dismissed
+    func dialog(_ d: Dialog) -> Int
 
 }
 
@@ -45,5 +118,9 @@ class DummyIoHandler : OpoIoHandler {
 
     func beep(frequency: Double, duration: Double) -> Void {
         print("BEEP \(frequency)kHz \(duration)s")
+    }
+
+    func dialog(_ d: Dialog) -> Int {
+        return 0 // TODO
     }
 }

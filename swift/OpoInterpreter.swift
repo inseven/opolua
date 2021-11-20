@@ -21,6 +21,9 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     func tostring(_ index: Int32, key: String, convert: Bool = false) -> String? {
         return tostring(index, key: key, encoding: kEnc, convert: convert)
     }
+    func tostringarray(_ index: Int32, key: String, convert: Bool = false) -> [String]? {
+        return tostringarray(index, key: key, encoding: kEnc, convert: convert)
+    }
     func push(_ string: String) {
         push(string, encoding: kEnc)
     }
@@ -84,6 +87,68 @@ private func readLine(_ L: LuaState!) -> Int32 {
     }
     return 1
 }
+
+private func dialog(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    let title = L.tostring(1, key: "title")
+    let flags = Dialog.Flags(rawValue: L.toint(1, key: "flags") ?? 0)
+    var items: [DialogItem] = []
+    precondition(lua_getfield(L, 1, "items") == LUA_TTABLE, "Expected items table!")
+    for _ in L.ipairs(-1) {
+        let prompt = L.tostring(-1, key: "prompt") ?? ""
+        let value = L.tostring(-1, key: "value") ?? ""
+        let align: DialogItem.Alignment?
+        if let rawAlign = L.tostring(-1, key: "value") {
+            align = .init(rawValue: rawAlign)
+        } else {
+            align = nil
+        }
+        let min = L.tonumber(-1, key: "min")
+        let max = L.tonumber(-1, key: "max")
+        let choices = L.tostringarray(-1, key: "choices")
+
+        if let t = DialogItem.ItemType(rawValue: L.toint(-1, key: "type") ?? -1) {
+            let item = DialogItem(
+                type: t,
+                prompt: prompt,
+                value: value,
+                alignment: align,
+                min: min,
+                max: max,
+                choices: choices)
+            items.append(item)
+        } else {
+            print("Unknown dialog item type!")
+        }
+    }
+    // leave items on the stack for doing fixups at the end
+
+    var buttons: [DialogButton] = []
+    let t = lua_getfield(L, 1, "buttons")
+    if t == LUA_TTABLE {
+        for _ in L.ipairs(-1) {
+            let key = L.toint(-1, key: "key") ?? 0
+            let text = L.tostring(-1, key: "text") ?? ""
+            buttons.append(DialogButton(key: key, text: text))
+        }
+    }
+    L.pop() // buttons
+    let d = Dialog(title: title ?? "", items: items, buttons: buttons, flags: flags)
+    let result = iohandler.dialog(d)
+    // items is still on top of Lua stack here
+    if result != 0 {
+        // Update the values Lua-side
+        for (i, item) in d.items.enumerated() {
+            lua_rawgeti(L, -1, lua_Integer(i) + 1) // items[i]
+            L.push(item.value)
+            lua_setfield(L, -2, "value")
+            L.pop() // items[i]
+        }
+    }
+    L.push(result)
+    return 1
+}
+
 
 class OpoInterpreter {
     private let L: LuaState
@@ -158,6 +223,7 @@ class OpoInterpreter {
         pushFn("getch", getch)
         pushFn("print", print_lua)
         pushFn("beep", beep)
+        pushFn("dialog", dialog)
     }
 
     func run(file: String) {

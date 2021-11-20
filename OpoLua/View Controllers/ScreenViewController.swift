@@ -112,5 +112,10 @@ extension ScreenViewController: OpoIoHandler {
     func beep(frequency: Double, duration: Double) {
         print("BEEP")
     }
-        
+
+    func dialog(_ d: Dialog) -> Int {
+        // TODO
+        return 0
+    }
+
 }

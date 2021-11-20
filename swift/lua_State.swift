@@ -122,6 +122,10 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return getfield(index, key: key, { tostring($0, encoding: encoding, convert: convert) })
     }
 
+    func tostringarray(_ index: Int32, key: String, encoding: String.Encoding, convert: Bool = false) -> [String]? {
+        return getfield(index, key: key, { tostringarray($0, encoding: encoding, convert: convert) })
+    }
+
     // iterators
 
     private class IPairsIterator : Sequence, IteratorProtocol {
@@ -211,13 +215,13 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return PairsIterator(self, index)
     }
 
-    func tostringarray(_ index: Int32, encoding: String.Encoding) -> [String]? {
+    func tostringarray(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> [String]? {
         guard lua_type(self, index) == LUA_TTABLE else {
             return nil
         }
         var result: [String] = []
         for _ in ipairs(index) {
-            if let val = tostring(-1, encoding: encoding) {
+            if let val = tostring(-1, encoding: encoding, convert: convert) {
                 result.append(val)
             } else {
                 break

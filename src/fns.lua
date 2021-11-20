@@ -241,6 +241,36 @@ function Get(stack, runtime) -- 0x0A
     end
 end
 
+function Dialog(stack, runtime) -- 0x37
+    if stack then
+        local dialog = runtime:getDialog()
+        runtime:setDialog(nil)
+        local varMap = {} -- maps dialog item to variable
+        for _, item in ipairs(dialog.items) do
+            if item.variable ~= nil then
+                varMap[item] = item.variable
+                item.variable = nil -- Don't expose this to iohandler
+            end
+        end
+        local result = runtime:iohandler().dialog(dialog)
+        if result ~= 0 then
+            -- Assign any variables eg `dCHOICE choice%`
+            for item, var in pairs(varMap) do
+                if item.value then
+                    -- Have to reconstruct type because item.value will always be a string
+                    -- (But the type of var() will still be correct)
+                    local isnum = type(var()) == "number"
+                    if isnum then
+                        item.value = tonumber(item.value)
+                    end
+                    var(item.value)
+                end
+            end
+        end
+        stack:push(result)
+    end
+end
+
 function Alert(stack, runtime) -- 0x38
     local nargs = runtime:IP8()
     if stack then

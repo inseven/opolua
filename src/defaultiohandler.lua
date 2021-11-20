@@ -38,12 +38,36 @@ end
 
 function getch()
     -- Can't really do this with what Lua's io provides, as stdin is always in line mode
+    printf("GET called:")
     local ch = io.stdin:read(1)
     return ch:byte(1, 1)
 end
 
 function beep(freq, duration)
     printf("BEEP %gkHz for %gs", freq, duration)
+end
+
+
+function dialog(d)
+    printf("---DIALOG---\n%s\n", d.title)
+    for i, item in ipairs(d.items) do
+        -- printf("ITEM:%d\n", item.type)
+        printf("% 2d. ", i)
+        if item.prompt and #item.prompt > 0 then
+            printf("%s: ", item.prompt)
+        end
+        if item.type == dItemTypes.dCHOICE then
+            printf("%s: %s (default=%d)\n", item.prompt, table.concat(item.choices, " / "), item.value)
+        elseif item.value then
+            printf("%s\n", item.value)
+        else        end
+    end
+    for _, button in ipairs(d.buttons) do
+        printf("[Button %d]: %s\n", button.key, button.text)
+    end
+    -- TODO some actual editing support?
+    printf("---END DIALOG---\n")
+    return 0 -- meaning cancelled
 end
 
 return _ENV

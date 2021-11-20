@@ -42,16 +42,35 @@ local function OPLERR(val)
     return val
 end
 
--- Since we never have to worry about acual epoc error codes (eg -8 meaning
+-- Since we never have to worry about actual epoc error codes (eg -8 meaning
 -- KErrBadHandle) we can just always use the OPL1993 values
 Errors = {
     KErrNone = 0,
     KOplErrGenFail = OPLERR(-1),
     KOplErrInvalidArgs = OPLERR(-2),
     KOplErrDivideByZero = OPLERR(-8),
+    KOplStructure = OPLERR(-85),
     KOplErrIllegal = OPLERR(-96),
     KOplErrSubs = OPLERR(-111),
     KOplErrEsc = OPLERR(-114),
+}
+
+dItemTypes = enum {
+    dTEXT = 0,
+    dCHOICE = 1,
+    dLONG = 2,
+    dFLOAT = 3,
+    dTIME = 4,
+    dDATE = 5,
+    dEDIT = 6,
+    dEDITlen = 7,
+    dXINPUT = 8,
+    dFILE = 9,
+    dBUTTONS = 10,
+    dPOSITION = 11,
+    dCHECKBOX = 12,
+    -- simulated types, not actually used by OPL
+    dSEPARATOR = 13,
 }
 
 -- Errors are global for convenience

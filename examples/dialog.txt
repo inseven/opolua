@@ -1,0 +1,70 @@
+PROC main:
+	LOCAL choice%, dlg%
+	dINIT "Dialog test", 0
+	dTEXT "", "Pick a dialog type to test"
+	REM dTEXT "", "", $800
+	dCHOICE choice%, "Choose", "long,edit,checkbox,text,password"
+	dBUTTONS "OK", 13
+	choice% = 2
+	dlg% = DIALOG
+	PRINT "Dislog returned ", dlg%
+	PRINT "Choice was ", choice%
+	IF dlg% = 0
+		PRINT "(dialog cancelled)"
+	ELSEIF choice% = 1
+		longDlg:
+	ELSEIF choice% = 2
+		editDlg:
+	ELSEIF choice% = 3
+		checkDlg:
+	ELSEIF choice% = 4
+		textDlg:
+	ELSEIF choice% = 5
+		xDlg:
+	ENDIF
+	GET
+ENDP
+
+PROC longDlg:
+	LOCAL val&
+	dINIT "Long input"
+	dLONG val&, "Long", -1, 5
+	dBUTTONS "OK", 13
+	DIALOG
+ENDP
+
+PROC editDlg:
+	LOCAL val$(16)
+	dINIT "Text edit"
+	dEDIT val$, "Text"
+	dBUTTONS "OK", 13
+	DIALOG
+ENDP
+
+PROC checkDlg:
+	LOCAL chk%
+	dINIT "Checkbox"
+	dCHECKBOX chk%, "check"
+	DIALOG
+ENDP
+
+PROC textDlg:
+	LOCAL x%
+	dINIT "Text test"
+	dTEXT "", "Right aligned linebelow", $601
+	dTEXT "", "Full width text that isn't selectable"
+	dTEXT "", "", $800
+	dTEXT "Prompt", "Body text", $600
+	dTEXT "Another", "Option", $400
+	x% = DIALOG
+	PRINT "Selected", x%
+ENDP
+
+PROC xDlg:
+	LOCAL x$(8)
+	x$ = "woop"
+	dINIT "Password test"
+	dXINPUT x$, "Pass"
+	DIALOG
+	PRINT "Entered:", x$
+ENDP

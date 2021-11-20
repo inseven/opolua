@@ -313,7 +313,7 @@ codes = {
     [0x130] = "mCasc",
     [0x131] = "EvalExternalRightSideRef",
     [0x132] = "EvalExternalLeftSideRef",
-    [0x133] = "gSetPenWidth",
+    [0x133] = "dEditCheckbox", -- In 6.0 this opcode has actually been REDEFINED to gSetPenWidth
     [0x134] = "dEditMulti",
     [0x135] = "gColorInfo",
     [0x136] = "gColorBackground",
@@ -1208,16 +1208,120 @@ function Return(stack, runtime) -- 0xC0
     end
 end
 
+function dInit(stack, runtime) -- 0xEC
+    local numParams = runtime:IP8()
+    if stack then
+        local dialog = {
+            flags = 0,
+            items = {}
+        }
+        if numParams == 2 then
+            dialog.flags = stack:pop()
+        end
+        if numParams >= 1 then
+            dialog.title = stack:pop()
+        end
+        runtime:setDialog(dialog)
+    else
+        return fmt("%d", numParams)
+    end        
+end
+
+function dItem(stack, runtime) -- 0xED
+    local itemType = runtime:IP8()
+    if stack then
+        local dialog = runtime:getDialog()
+        local item = { type = itemType }
+        if itemType == dItemTypes.dTEXT then
+            local flagToAlign = { [0] = "left", [1] = "right", [2] = "center" }
+            local flags = 0
+            if runtime:IP8() ~= 0 then
+                flags = stack:pop()
+            end
+            item.align = flagToAlign[flags & 3]
+            item.value = stack:pop()
+            item.prompt = stack:pop()
+            if item.prompt == "" and item.value == "" and (flags & 0x800) > 0 then
+                item = { type = dItemTypes.dSEPARATOR }
+            end
+            -- Ignoring the other flags for now
+        elseif itemType == dItemTypes.dCHOICE then
+            local commaList = stack:pop()
+            item.choices = {}
+            for choice in commaList:gmatch("[^,]+") do
+                table.insert(item.choices, choice)
+            end
+            item.prompt = stack:pop()
+            item.variable = stack:pop()
+            -- Have to resolve default choice here, and _not_ at the point of the DIALOG call!
+            item.value = tostring(item.variable())
+        elseif itemType == dItemTypes.dLONG or itemType == dItemTypes.dFloat or itemType == dItemTypes.dDATE then
+            item.max = stack:pop()
+            item.min = stack:pop()
+            assert(max >= min, KOplErrInvalidArgs)
+            item.prompt = stack:pop()
+            item.variable = stack:pop()
+            item.value = tostring(item.variable())
+        elseif itemType == dItemTypes.dEDIT or itemType == dItemTypes.dEDITlen then
+            item.max = 0
+            if itemType == dItemTypes.dEDITlen then
+                max = stack:pop()
+            end
+            item.prompt = stack:pop()
+            item.variable = stack:pop()
+            item.value = tostring(item.variable())
+            item.type = dItemTypes.dEDIT -- No need to distinguish in higher layers
+        elseif itemType == dItemTypes.dXINPUT then
+            item.prompt = stack:pop()
+            item.variable = stack:pop()
+        elseif itemType == dItemTypes.dBUTTONS then
+            assert(dialog.buttons == nil, KOplStructure)
+            local numButtons = runtime:IP8()
+            assert(numButtons <= 4, KOplStructure)
+            dialog.buttons = {}
+            for i = 1, numButtons do
+                local key = stack:pop()
+                local text = stack:pop()
+                table.insert(dialog.buttons, 1, { key = key, text = text })
+            end
+        else
+            error("Unsupported dItem type "..itemType)
+        end
+        if itemType ~= dItemTypes.dBUTTONS then
+            table.insert(dialog.items, item)
+        end
+    else
+        local extra = ""
+        if itemType == dItemTypes.dBUTTONS then
+            extra = fmt(" numButtons=%d", runtime:IP8())
+        elseif itemType == dItemTypes.dTEXT then
+            extra = fmt(" hasFlags=%d", runtime:IP8())
+        end
+        return fmt("%d (%s)%s", itemType, dItemTypes[itemType] or "?", extra)
+    end
+end
+
 function NextOpcodeTable(stack, runtime) -- 0xFF
     local extendedCode = runtime:IP8()
     local realOpcode = 256 + extendedCode
-    local fnName = fns.codes[realOpcode]
+    local fnName = codes[realOpcode]
     local realFn = _ENV[fnName]
     assert(realFn, "No function for "..fnName)
     if stack then
         realFn(stack, runtime)
     else
-        return fmt("%02X %s %s", extendedCode, fnName, realFn(stack, runtime))
+        return fmt("%02X %s %s", extendedCode, fnName, realFn(stack, runtime) or "")
+    end
+end
+
+function dEditCheckbox(stack, runtime) -- 0x133
+    if stack then
+        local dialog = runtime:getDialog()
+        local item = { type = dItemTypes.dCHECKBOX }
+        item.prompt = stack:pop()
+        item.variable = stack:pop()
+        item.value = tostring(item.variable())
+        table.insert(dialog.items, item)
     end
 end
 
