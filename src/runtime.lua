@@ -320,6 +320,19 @@ function Runtime:getDialog()
     return self.dialog
 end
 
+function Runtime:setMenu(m)
+    if m then
+        m.frame = self.frame
+    end
+    self.menu = m
+end
+
+function Runtime:getMenu()
+    -- A menu must always be setup and shown from the same frame
+    assert(self.menu and self.menu.frame == self.frame, KOplStructure)
+    return self.menu
+end
+
 function newRuntime(handler)
     return setmetatable({
         modules = {},

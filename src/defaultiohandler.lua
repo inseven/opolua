@@ -70,4 +70,17 @@ function dialog(d)
     return 0 -- meaning cancelled
 end
 
+function menu(m)
+    printf("---MENU---\n")
+    for menuIdx, card in ipairs(m) do
+        printf("%s:\n", card.title)
+        for i, item in ipairs(card) do
+            local hightlightIdx = 256 * (menuIdx - 1) + (i - 1)
+            printf("%d. %s [Ctrl-%c]\n", hightlightIdx, item.text, item.key)
+        end
+    end
+    printf("---END MENU---\n")
+    return 0, 0 -- ie cancelled
+end
+
 return _ENV

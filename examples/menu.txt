@@ -1,0 +1,10 @@
+PROC main:
+	LOCAL x%, ret%
+	x% = 257
+	mINIT
+	mCARD "File", "Quit", %q
+	mCARD "Edit", "Cut", %x, "Copy", %c, "Paste", %v
+	ret% = MENU(x%)
+	PRINT ret%, x%
+	GET
+ENDP

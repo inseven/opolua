@@ -229,6 +229,18 @@ codes = {
     [0xDF] = "IllegalFuncOpCode",
 }
 
+function Addr(stack, runtime) -- 0x00
+    -- We only support Addr followed immediately by MenuWithMemory call (because
+    -- supporting general-purpose Addr is a pita)
+    if stack then
+        local nextOp = runtime:IP8()
+        local nextFn = runtime:IP8()
+        assert(nextOp == 0x57 and codes[nextFn] == "MenuWithMemory",
+            "Addr fncalls are not supported except as part of MENU()")
+        AddrPlusMenuWithMemory(stack, runtime)
+    end
+end
+
 function Err(stack, runtime) -- 0x07
     if stack then
         stack:push(runtime:getLastError())
@@ -286,6 +298,30 @@ function Alert(stack, runtime) -- 0x38
     else
         return fmt(" nargs=%d", nargs)
     end
+end
+
+function Menu(stack, runtime) -- 0x36
+    local menu = runtime:getMenu()
+    runtime:setMenu(nil)
+    local result = runtime:iohandler().menu(menu)
+    stack:push(result)
+end
+
+function MenuWithMemory(stack, runtime) -- 0x3A
+    if stack then
+        -- This should've been picked up by Addr and translated into a AddrPlusMenuWithMemory call
+        error("Unexpected MenuWithMemory fncall!")
+    end
+end
+
+function AddrPlusMenuWithMemory(stack, runtime)
+    local var = stack:pop() -- The highlighted item
+    local menu = runtime:getMenu()
+    runtime:setMenu(nil)
+    menu.highlight = var()
+    local selected, highlighted = runtime:iohandler().menu(menu)
+    var(highlighted) -- Update this
+    stack:push(selected)
 end
 
 function ChrStr(stack)

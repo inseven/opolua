@@ -1208,6 +1208,29 @@ function Return(stack, runtime) -- 0xC0
     end
 end
 
+function mInit(stack, runtime) -- 0xEA
+    if stack then
+        runtime:setMenu({})
+    end
+end
+
+function mCard(stack, runtime) -- 0xEB
+    local numParams = runtime:IP8()
+    if stack then
+        local card = {}
+        for i = 1, numParams do
+            local key = stack:pop()
+            local text = stack:pop()
+            -- Last item is popped first
+            table.insert(card, 1, { key = key, text = text })
+        end
+        card.title = stack:pop()
+        table.insert(runtime:getMenu(), card)
+    else
+        return fmt("%d", numParams)
+    end
+end
+
 function dInit(stack, runtime) -- 0xEC
     local numParams = runtime:IP8()
     if stack then

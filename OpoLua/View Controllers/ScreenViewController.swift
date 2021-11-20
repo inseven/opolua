@@ -120,4 +120,9 @@ extension ScreenViewController: OpoIoHandler {
         return 0
     }
 
+    func menu(_ m: Menu) -> Menu.Result {
+        // TODO
+        return Menu.Result(selected: 0, highlighted: 0)
+    }
+
 }

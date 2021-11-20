@@ -148,6 +148,26 @@ private func dialog(_ L: LuaState!) -> Int32 {
     return 1
 }
 
+private func menu(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    var cards: [Menu.Card] = []
+    for _ in L.ipairs(1, requiredType: .table) {
+        let title = L.tostring(-1, key: "title") ?? ""
+        var cmds: [Menu.Command] = []
+        for _ in L.ipairs(-1, requiredType: .table) {
+            let key = L.toint(-1, key: "key") ?? 0
+            let text = L.tostring(-1, key: "text") ?? ""
+            cmds.append(Menu.Command(text: text, keycode: key))
+        }
+        cards.append(Menu.Card(title: title, items: cmds))
+    }
+    let highlight = L.toint(1, key: "highlight") ?? 0
+    let m = Menu(items: cards, highlight: highlight)
+    let result = iohandler.menu(m)
+    L.push(result.selected)
+    L.push(result.highlighted)
+    return 2
+}
 
 class OpoInterpreter {
     private let L: LuaState
@@ -223,6 +243,7 @@ class OpoInterpreter {
         pushFn("print", print_lua)
         pushFn("beep", beep)
         pushFn("dialog", dialog)
+        pushFn("menu", menu)
     }
 
     enum ValType: Int {
