@@ -56,46 +56,6 @@ static inline void lua_pushcfunction(lua_State* L, lua_CFunction fn) {
     lua_pushcclosure(L, fn, 0);
 }
 
-#undef lua_isfunction
-static inline int lua_isfunction(lua_State* L, int n) {
-    return lua_type(L, n) == LUA_TFUNCTION;
-}
-
-#undef lua_istable
-static inline int lua_istable(lua_State* L, int idx) {
-    return lua_type(L, idx) == LUA_TTABLE;
-}
-
-#undef lua_islightuserdata
-static inline int lua_islightuserdata(lua_State* L, int idx) {
-    return lua_type(L, idx) == LUA_TLIGHTUSERDATA;
-}
-
-#undef lua_isnil
-static inline int lua_isnil(lua_State* L, int idx) {
-    return lua_type(L, idx) == LUA_TNIL;
-}
-
-#undef lua_isboolean
-static inline int lua_isboolean(lua_State* L, int idx) {
-    return lua_type(L, idx) == LUA_TBOOLEAN;
-}
-
-#undef lua_isthread
-static inline int lua_isthread(lua_State* L, int idx) {
-    return lua_type(L, idx) == LUA_TTHREAD;
-}
-
-#undef lua_isnone
-static inline int lua_isnone(lua_State* L, int idx) {
-    return lua_type(L, idx) == LUA_TNONE;
-}
-
-#undef lua_isnoneornil
-static inline int lua_isnoneornil(lua_State* L, int idx) {
-    return lua_type(L, idx) <= 0;
-}
-
 #undef lua_pushliteral
 static inline void lua_pushliteral(lua_State* L, const char* s) {
     lua_pushstring(L, s);

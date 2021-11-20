@@ -15,7 +15,7 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     func tostring(_ index: Int32) -> String? {
         return tostring(index, encoding: kEnc)
     }
-    func tostringarray(_ index: Int32) -> [String] {
+    func tostringarray(_ index: Int32) -> [String]? {
         return tostringarray(index, encoding: kEnc)
     }
     func tostring(_ index: Int32, key: String) -> String? {
@@ -49,8 +49,8 @@ private func getInterpreterUpval(_ L: LuaState!) -> OpoInterpreter {
 
 private func alert(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    let lines = L.tostringarray(1)
-    let buttons = L.tostringarray(2)
+    let lines = L.tostringarray(1) ?? []
+    let buttons = L.tostringarray(2) ?? []
     let ret = iohandler.alert(lines: lines, buttons: buttons)
     L.push(ret)
     return 1
@@ -58,7 +58,7 @@ private func alert(_ L: LuaState!) -> Int32 {
 
 private func getch(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    lua_pushinteger(L, Int64(iohandler.getch()))
+    L.push(iohandler.getch())
     return 1
 }
 
