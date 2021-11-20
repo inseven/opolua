@@ -87,6 +87,3 @@ function sortedKeys(tbl)
     return result
 end
 
--- Give these global names so native code can potentially get to them easily
-_Ops = require("ops")
-_Fns = require("fns")

@@ -60,6 +60,8 @@ class ScreenViewController: UIViewController {
         }
         state = .running
         let url = self.url
+        // let procs = opo.getProcedures(file: url.path)
+        // print(procs)
         runtimeQueue.async {
             self.opo.iohandler = self
             self.opo.run(file: url.path)

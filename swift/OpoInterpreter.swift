@@ -83,7 +83,7 @@ private func readLine(_ L: LuaState!) -> Int32 {
     if let result = iohandler.readLine(escapeShouldErrorEmptyInput: b) {
         L.push(result)
     } else {
-        lua_pushnil(L)
+        L.pushnil()
     }
     return 1
 }
@@ -94,7 +94,7 @@ private func dialog(_ L: LuaState!) -> Int32 {
     let flags = Dialog.Flags(rawValue: L.toint(1, key: "flags") ?? 0)
     var items: [DialogItem] = []
     precondition(lua_getfield(L, 1, "items") == LUA_TTABLE, "Expected items table!")
-    for _ in L.ipairs(-1) {
+    for _ in L.ipairs(-1, requiredType: .table) {
         let prompt = L.tostring(-1, key: "prompt") ?? ""
         let value = L.tostring(-1, key: "value") ?? ""
         let align: DialogItem.Alignment?
@@ -124,9 +124,8 @@ private func dialog(_ L: LuaState!) -> Int32 {
     // leave items on the stack for doing fixups at the end
 
     var buttons: [DialogButton] = []
-    let t = lua_getfield(L, 1, "buttons")
-    if t == LUA_TTABLE {
-        for _ in L.ipairs(-1) {
+    if lua_getfield(L, 1, "buttons") == LUA_TTABLE {
+        for _ in L.ipairs(-1, requiredType: .table) {
             let key = L.toint(-1, key: "key") ?? 0
             let text = L.tostring(-1, key: "text") ?? ""
             buttons.append(DialogButton(key: key, text: text))
@@ -202,9 +201,9 @@ class OpoInterpreter {
         let err = lua_pcall(L, narg, nret, base);
         lua_remove(L, base)
         if err != 0 {
-            let errStr = String(validatingUTF8: lua_tostring(L, -1))!
+            let errStr = L.tostring(-1, convert: true)!
             print("Error: \(errStr)")
-            lua_pop(L, 1)
+            L.pop()
             return false
         }
         return true
@@ -226,15 +225,65 @@ class OpoInterpreter {
         pushFn("dialog", dialog)
     }
 
-    func run(file: String) {
+    enum ValType: Int {
+        case Word = 0
+        case Long = 1
+        case Real = 2
+        case String = 3
+        case WordArray = 0x80
+        case ELongArray = 0x81
+        case ERealArray = 0x82
+        case EStringArray = 0x83
+    }
+
+    struct Procedure {
+        let name: String
+        let arguments: [ValType]
+    }
+
+    func getProcedures(file: String) -> [Procedure]? {
+        guard let data = FileManager.default.contents(atPath: file) else {
+            return nil
+        }
+        lua_getglobal(L, "require")
+        L.push("opofile")
+        guard pcall(1, 1) else { return nil }
+        lua_getfield(L, -1, "parseOpo")
+        L.push(data)
+        guard pcall(1, 1) else {
+            L.pop() // opofile
+            return nil
+        }
+        var procs: [Procedure] = []
+        for _ in L.ipairs(-1, requiredType: .table) {
+            let name = L.tostring(-1, key: "name")!
+            var args: [ValType] = []
+            if lua_getfield(L, -1, "params") == LUA_TTABLE {
+                for _ in L.ipairs(-1, requiredType: .number) {
+                    // insert at front because params are listed bass-ackwards
+                    args.insert(ValType(rawValue: L.toint(-1)!)!, at: 0)
+                }
+            }
+            L.pop() // params
+            procs.append(Procedure(name: name, arguments: args))
+        }
+        L.pop(2) // procs, opofile
+        return procs
+    }
+
+    func run(file: String, procedureName: String? = nil) {
         guard luaL_dofile(L, Bundle.main.path(forResource: "runopo", ofType: "lua")!) == 0 else {
-            fatalError(String(validatingUTF8: lua_tostring(L, -1))!)
+            fatalError(L.tostring(-1, convert: true) ?? "Oh so much doom")
         }
         lua_settop(L, 0)
         lua_getglobal(L, "runOpo")
-        lua_pushstring(L, file)
-        lua_pushnil(L)
+        L.push(file, encoding: .utf8)
+        if let proc = procedureName {
+            L.push(proc)
+        } else {
+            L.pushnil()
+        }
         makeIoHandlerBridge()
-        let _ = pcall(3, 0) // runOpo(file, nil, iohandler)
+        let _ = pcall(3, 0) // runOpo(file, proc, iohandler)
     }
 }

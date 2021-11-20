@@ -244,10 +244,18 @@ extension UnsafeMutablePointer where Pointee == lua_State {
             lua_pushnil(self)
             return
         }
+        push(data)
+    }
+
+    func push(_ data: Data) {
         data.withUnsafeBytes { (buf: UnsafeRawBufferPointer) -> Void in
             let chars = buf.bindMemory(to: CChar.self)
             lua_pushlstring(self, chars.baseAddress, chars.count)
         }
+    }
+
+    func pushnil() {
+        lua_pushnil(self)
     }
 
     func pop(_ nitems: Int32 = 1) {
