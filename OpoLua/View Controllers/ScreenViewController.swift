@@ -29,15 +29,15 @@ class ScreenViewController: UIViewController {
     init(url: URL) {
         self.url = url
         super.init(nibName: nil, bundle: nil)
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = .systemBackground
         navigationItem.title = FileManager.default.displayName(atPath: url.path)
         
         view.addSubview(textView)
         NSLayoutConstraint.activate([
-            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            textView.topAnchor.constraint(equalTo: view.topAnchor),
-            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            textView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            textView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            textView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
         ])
     }
 
