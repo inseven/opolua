@@ -7,12 +7,11 @@
 
 import UIKit
 
-class PickerViewController : UITableViewController {
+class LibraryViewController : UITableViewController {
     
-    var programs: [URL]
+    let library = Library()
     
     init() {
-        programs = Bundle.main.urls(forResourcesWithExtension: "opo", subdirectory: "examples") ?? []
         super.init(style: .grouped)
         navigationItem.title = "Programs"
     }
@@ -30,19 +29,19 @@ class PickerViewController : UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return programs.count
+        return library.objects.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
-        let url = programs[indexPath.row]
-        cell.textLabel?.text = FileManager.default.displayName(atPath: url.path)
+        let object = library.objects[indexPath.row]
+        cell.textLabel?.text = object.name
         cell.accessoryType = .disclosureIndicator
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let viewController = ScreenViewController(url: programs[indexPath.row])
+        let viewController = ScreenViewController(object: library.objects[indexPath.row])
         navigationController?.pushViewController(viewController, animated: true)
     }
     

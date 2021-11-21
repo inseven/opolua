@@ -14,7 +14,7 @@ class ScreenViewController: UIViewController {
         case running
     }
     
-    var url: URL
+    var object: OPLObject
     
     var state: State = .idle
     let opo = OpoInterpreter()
@@ -26,11 +26,11 @@ class ScreenViewController: UIViewController {
         return textView
     }()
 
-    init(url: URL) {
-        self.url = url
+    init(object: OPLObject) {
+        self.object = object
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
-        navigationItem.title = FileManager.default.displayName(atPath: url.path)
+        navigationItem.title = object.name
         
         view.addSubview(textView)
         NSLayoutConstraint.activate([
@@ -59,12 +59,11 @@ class ScreenViewController: UIViewController {
             return
         }
         state = .running
-        let url = self.url
-        // let procs = opo.getProcedures(file: url.path)
-        // print(procs)
+        let object = self.object
+        print(object.procedures ?? [])
         runtimeQueue.async {
             self.opo.iohandler = self
-            self.opo.run(file: url.path)
+            self.opo.run(file: object.url.path)
         }
     }
 
