@@ -3,7 +3,7 @@ PROC main:
 	dINIT "Dialog test", 0
 	dTEXT "", "Pick a dialog type to test"
 	REM dTEXT "", "", $800
-	dCHOICE choice%, "Choose", "long,edit,checkbox,text,password"
+	dCHOICE choice%, "Choose", "long,edit,checkbox,text,password,empty,date,time"
 	dBUTTONS "OK", 13
 	choice% = 2
 	dlg% = DIALOG
@@ -21,6 +21,12 @@ PROC main:
 		textDlg:
 	ELSEIF choice% = 5
 		xDlg:
+	ELSEIF choice% = 6
+		emptyDlg:
+	ELSEIF choice% = 7
+		dateDlg:
+	ELSEIF choice% = 8
+		timeDlg:
 	ENDIF
 	GET
 ENDP
@@ -67,4 +73,27 @@ PROC xDlg:
 	dXINPUT x$, "Pass"
 	DIALOG
 	PRINT "Entered:", x$
+ENDP
+
+PROC emptyDlg:
+	dINIT "No items dialog"
+	PRINT DIALOG
+ENDP
+
+PROC dateDlg:
+	LOCAL x&
+	x& = DAYS(DAY, MONTH, YEAR)
+	dINIT "Date test"
+	dDATE x&, "Date", x& - 1, x& + 6
+	DIALOG
+	PRINT "Entered:", x&
+ENDP
+
+PROC timeDlg:
+	LOCAL x&
+	x& = HOUR * INT(3600) + MINUTE * 60 + SECOND
+	dINIT "Time test"
+	dTIME x&, "Time", 1, 0, &1517F
+	DIALOG
+	PRINT "Entered:", x&
 ENDP

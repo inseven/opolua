@@ -62,7 +62,7 @@ function dialog(d)
             printf("%s\n", item.value)
         else        end
     end
-    for _, button in ipairs(d.buttons) do
+    for _, button in ipairs(d.buttons or {}) do
         printf("[Button %d]: %s\n", button.key, button.text)
     end
     -- TODO some actual editing support?
