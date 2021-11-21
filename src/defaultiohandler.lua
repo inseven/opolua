@@ -3,6 +3,8 @@ _ENV = module()
 -- A default implementation of the iohandler interface, mapping to basic console
 -- interactions using io.stdin and stdout.
 
+local fmt = string.format
+
 function print(val)
     printf("%s", val)
 end
@@ -103,6 +105,22 @@ function menu(m)
     end
     printf("---END MENU---\n")
     return 0, 0 -- ie cancelled
+end
+
+local function describeOp(op)
+    local ret = fmt("%s x=%d y=%d", op.type, op.x, op.y)
+    if op.type == "circle" then
+        ret = ret .. fmt(" radius=%d fill=%d", op.r, op.fill)
+    elseif op.type == "line" then
+        ret = ret .. fmt(" x2=%d y2=%d", op.x2, op.y2)
+    end
+    return ret
+end
+
+function graphics(id, ops)
+    for _, op in ipairs(ops) do
+        printf("%s\n", describeOp(op))
+    end
 end
 
 return _ENV

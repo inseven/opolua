@@ -1,0 +1,6 @@
+PROC main:
+	REM gCLS
+	gAT 50, 50
+	gCIRCLE 20
+	GET
+ENDP

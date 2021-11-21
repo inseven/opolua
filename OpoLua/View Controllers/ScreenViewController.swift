@@ -180,5 +180,9 @@ extension ScreenViewController: OpoIoHandler {
         semaphore.wait()
         return result
     }
-    
+
+    func draw(ops: [GraphicsOperation]) {
+        // TODO
+    }
+
 }

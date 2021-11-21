@@ -106,6 +106,19 @@ struct Menu {
     let items: [Item]
 }
 
+struct GraphicsOperation {
+    enum OpType {
+        case circle(Int, Bool) // radius, fill
+        case line(Int, Int) // x2, y2
+    }
+    let displayId: Int
+    let type: OpType
+    let x: Int
+    let y: Int
+    let color: UInt8 // greyscale currently
+    let bgcolor: UInt8 // greyscale currently
+}
+
 protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
@@ -117,7 +130,7 @@ protocol OpoIoHandler {
     // return should be 1, 2, or 3
     func alert(lines: [String], buttons: [String]) -> Int
 
-    // return char code (should probably be in ER5 charset...)
+    // return char code
     func getch() -> Int
 
     func beep(frequency: Double, duration: Double) -> Void
@@ -136,6 +149,7 @@ protocol OpoIoHandler {
 
     func menu(_ m: Menu.Bar) -> Menu.Result
 
+    func draw(ops: [GraphicsOperation])
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -167,4 +181,8 @@ class DummyIoHandler : OpoIoHandler {
     func menu(_ m: Menu.Bar) -> Menu.Result {
         return Menu.Result(selected: 0, highlighted: 0)
     }
+
+    func draw(ops: [GraphicsOperation]) {
+    }
+
 }

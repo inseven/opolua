@@ -185,6 +185,30 @@ private func menu(_ L: LuaState!) -> Int32 {
     return 2
 }
 
+private func graphics(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    var ops: [GraphicsOperation] = []
+    for _ in L.ipairs(1, requiredType: .table) {
+        let id = L.toint(-1, key: "type") ?? 1
+        let t = L.tostring(-1, key: "type") ?? ""
+        let x = L.toint(-1, key: "x") ?? 0
+        let y = L.toint(-1, key: "y") ?? 0
+        let color = UInt8(L.toint(-1, key: "color") ?? 0)
+        let bgcolor = UInt8(L.toint(-1, key: "bgcolor") ?? 255)
+        let optype: GraphicsOperation.OpType
+        switch (t) {
+            case "circle": optype = .circle(L.toint(-1, key: "r") ?? 0, (L.toint(-1, key: "fill") ?? 0) != 0)
+            case "line": optype = .line(L.toint(-1, key: "x2") ?? 0, L.toint(-1, key: "y2") ?? 0)
+            default:
+                print("Unknown GraphicsOperation.OpType \(t)")
+                continue
+        }
+        ops.append(GraphicsOperation(displayId: id, type: optype, x: x, y: y, color: color, bgcolor: bgcolor))
+    }
+    iohandler.draw(ops: ops)
+    return 0
+}
+
 class OpoInterpreter {
     private let L: LuaState
     var iohandler: OpoIoHandler
@@ -258,6 +282,7 @@ class OpoInterpreter {
             ("beep", beep),
             ("dialog", dialog),
             ("menu", menu),
+            ("graphics", graphics),
         ]
         L.setfuncs(fns, nup: 1)
     }

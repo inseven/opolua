@@ -1208,6 +1208,84 @@ function Return(stack, runtime) -- 0xC0
     end
 end
 
+function gCls(stack, runtime) -- 0xD1
+    if stack then
+        local graphics = runtime:getGraphics()
+        local context = graphics.current
+        context.pos = { x = 0, y = 0 }
+        runtime:graphicsOp("cls")
+    end
+end
+
+function gAt(stack, runtime) -- 0xD2
+    if stack then
+        runtime:getGraphics().current.pos = stack:popPoint()
+    end
+end
+
+function gLineBy(stack, runtime) -- 0xDA
+    if stack then
+        local graphics = runtime:getGraphics()
+        local context = graphics.current
+        local endPoint = stack:popPoint()
+        -- relative pos; make abs
+        endPoint.x = context.pos.x + endPoint.x
+        endPoint.y = context.pos.y + endPoint.y
+        runtime:graphicsOp("line", { x2 = endPoint.x, y2 = endPoint.y })
+        context.pos = endPoint
+    end
+end
+
+function gCircle(stack, runtime) -- 0xDC
+    local fill = runtime:IP8()
+    if stack then
+        local graphics = runtime:getGraphics()
+        local context = graphics.current
+        local radius = stack:pop()
+        runtime:graphicsOp("circle", { r = radius, fill = fill })
+    else
+        return fmt("fill=%d", fill)
+    end
+end
+
+function gUpdate(stack, runtime) -- 0xE3
+    local flag = stack:IP8()
+    if stack then
+        local graphics = runtime:getGraphics()
+        local context = graphics.current
+        if flag == 255 then -- gUPDATE
+            -- Flush now
+            if graphics.buffer and graphics.buffer[1] then
+                self.ioh.graphics(graphics.buffer)
+                graphics.buffer = {}
+            end
+            return
+        end
+        if flag == 0 then -- gUPDATE OFF
+            if not graphics.buffer then
+                graphics.buffer = {}
+            end
+        else -- gUPDATE ON
+            if graphics.buffer and graphics.buffer[1] then
+                self.ioh.graphics(graphics.buffer)
+            end
+            graphics.buffer = nil
+        end
+    else
+        return fmt("flag=%d", flag)
+    end
+end
+
+function gLineTo(stack, runtime) -- 0xE5
+    if stack then
+        local graphics = runtime:getGraphics()
+        local context = graphics.current
+        local endPoint = stack:popPoint()
+        runtime:graphicsOp("line", { x2 = endPoint.x, y2 = endPoint.y })
+        context.pos = endPoint
+    end
+end
+
 function mInit(stack, runtime) -- 0xEA
     if stack then
         runtime:setMenu({
@@ -1354,6 +1432,25 @@ function NextOpcodeTable(stack, runtime) -- 0xFF
         realFn(stack, runtime)
     else
         return fmt("%02X %s %s", extendedCode, fnName, realFn(stack, runtime) or "")
+    end
+end
+
+function gGrey(stack, runtime) -- 0x100
+    if stack then
+        local mode = stack:pop()
+        local val = mode == 1 and 0xAA or 0
+        runtime:getGraphics().current.color = val
+    end
+end
+
+function gColor(stack, runtime) -- 0x124
+    if stack then
+        local blue = stack:pop()
+        local green = stack:pop()
+        local red = stack:pop()
+        -- Not gonna bother too much about exact luminosity right now
+        local val = (red + green + blue) // 3
+        runtime:getGraphics().current.color = val
     end
 end
 

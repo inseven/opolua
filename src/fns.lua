@@ -289,6 +289,36 @@ function Year(stack, runtime) -- 0x1E
     end
 end
 
+function gIdentity(stack, runtime) -- 0x2B
+    if stack then
+        stack:push(runtime:getGraphics().current.id)
+    end
+end
+
+function gX(stack, runtime) -- 0x2C
+    if stack then
+        stack:push(runtime:getGraphics().current.pos.x)
+    end
+end
+
+function gY(stack, runtime) -- 0x2D
+    if stack then
+        stack:push(runtime:getGraphics().current.pos.y)
+    end
+end
+
+function gWidth(stack, runtime) -- 0x2E
+    if stack then
+        stack:push(runtime:getGraphics().current.width)
+    end
+end
+
+function gHeight(stack, runtime) -- 0x2F
+    if stack then
+        stack:push(runtime:getGraphics().current.height)
+    end
+end
+
 function Menu(stack, runtime) -- 0x36
     local menu = runtime:getMenu()
     runtime:setMenu(nil)

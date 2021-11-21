@@ -31,10 +31,10 @@ function Stack:pop()
     return result
 end
 
-function Stack:popString()
-    local result = self:pop()
-    assert(type(result) == "string", "popString on non-string value!")
-    return result
+function Stack:popPoint()
+    local y = self:pop()
+    local x = self:pop()
+    return { x = x, y = y }
 end
 
 function Stack:getSize()

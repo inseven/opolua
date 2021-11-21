@@ -333,6 +333,43 @@ function Runtime:getMenu()
     return self.menu
 end
 
+function Runtime:getGraphics()
+    if not self.graphics then
+        self.graphics = {
+            [1] = {
+                id = 1,
+                mode = 0, -- set
+                color = 0, -- black
+                bgcolor = 255, -- white
+                width = 640,
+                height = 240,
+                pos = { x = 0, y = 0 },
+            },
+        }
+        self.graphics.current = self.graphics[1]
+    end
+    return self.graphics
+end
+
+function Runtime:graphicsOp(type, op)
+    if not op then op = {} end
+    local graphics = self:getGraphics()
+    local context = graphics.current
+    op.id = context.id
+    op.type = type
+    op.mode = context.mode
+    op.color = context.color
+    op.bgcolor = context.bgcolor
+    op.x = context.pos.x
+    op.y = context.pos.y
+
+    if graphics.buffer then
+        table.insert(graphics.buffer, op)
+    else
+        self.ioh.graphics({ op })
+    end
+end
+
 function newRuntime(handler)
     return setmetatable({
         modules = {},
