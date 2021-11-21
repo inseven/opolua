@@ -241,6 +241,12 @@ function Addr(stack, runtime) -- 0x00
     end
 end
 
+function Day(stack, runtime) -- 0x04
+    if stack then
+        stack:push(os.date("*t").day)
+    end
+end
+
 function Err(stack, runtime) -- 0x07
     if stack then
         stack:push(runtime:getLastError())
@@ -250,6 +256,36 @@ end
 function Get(stack, runtime) -- 0x0A
     if stack then
         stack:push(runtime:iohandler().getch())
+    end
+end
+
+function Hour(stack, runtime) -- 0x12
+    if stack then
+        stack:push(os.date("*t").hour)
+    end
+end
+
+function Minute(stack, runtime) -- 0x16
+    if stack then
+        stack:push(os.date("*t").min)
+    end
+end
+
+function Month(stack, runtime) -- 0x17
+    if stack then
+        stack:push(os.date("*t").month)
+    end
+end
+
+function Second(stack, runtime) -- 0x1C
+    if stack then
+        stack:push(os.date("*t").sec)
+    end
+end
+
+function Year(stack, runtime) -- 0x1E
+    if stack then
+        stack:push(os.date("*t").year)
     end
 end
 
@@ -324,7 +360,31 @@ function AddrPlusMenuWithMemory(stack, runtime)
     stack:push(selected)
 end
 
-function ChrStr(stack)
+local epoch
+local function getEpoch()
+    if not epoch then
+        epoch = os.time({ year = 1900, month = 1, day = 1 })
+    end
+    return epoch
+end
+
+function Days(stack, runtime) -- 0x37
+    if stack then
+        local year = stack:pop()
+        local month = stack:pop()
+        local day = stack:pop()
+        local t = os.time({ year = year, month = month, day = day })
+        -- Result needs to be days since 1900
+        t = (t - getEpoch()) // (24 * 60 * 60)
+        stack:push(t)
+    end
+end
+
+function IntLong(stack, runtime) -- 0x42
+    -- Nothing needed
+end
+
+function ChrStr(stack) -- C0
     if stack then
         return stack:push(string.char(stack:pop()))
     end
