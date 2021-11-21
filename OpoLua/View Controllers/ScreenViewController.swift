@@ -159,9 +159,26 @@ extension ScreenViewController: OpoIoHandler {
     }
 
     func menu(_ menu: Menu.Bar) -> Menu.Result {
-        // TODO
-        print("Show menu: \(menu)")
-        return Menu.Result(selected: 0, highlighted: 0)
+        let semaphore = DispatchSemaphore(value: 0)
+        var result = Menu.Result(selected: 0, highlighted: 0) // TODO: .none
+        DispatchQueue.main.async {
+            let viewController = MenuBarViewController(bar: menu) { item in
+                if let item = item {
+                    result = Menu.Result(selected: item.keycode, highlighted: 0)
+                }
+                semaphore.signal()
+            }
+            let navigationController = UINavigationController(rootViewController: viewController)
+            if #available(iOS 15.0, *) {
+                if let presentationController = navigationController.presentationController
+                    as? UISheetPresentationController {
+                    presentationController.detents = [.medium(), .large()]
+                }
+            }
+            self.present(navigationController, animated: true)
+        }
+        semaphore.wait()
+        return result
     }
-
+    
 }

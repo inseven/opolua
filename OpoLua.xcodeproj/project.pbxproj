@@ -10,6 +10,8 @@
 		D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DA274A819D003C8D3D /* OPLObject.swift */; };
 		D861E8DD274A81B4003C8D3D /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Library.swift */; };
 		D861E8DF274A8D70003C8D3D /* KeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DE274A8D70003C8D3D /* KeyCode.swift */; };
+		D861E8E1274AB1CB003C8D3D /* MenuBarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8E0274AB1CB003C8D3D /* MenuBarViewController.swift */; };
+		D861E8E3274AB1E8003C8D3D /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8E2274AB1E8003C8D3D /* MenuViewController.swift */; };
 		D8C679BA27483B5600BD8720 /* LibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* LibraryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		DB7900002742E6F6005E904F /* ldebug.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7B2742D5BD005E904F /* ldebug.c */; };
@@ -64,6 +66,8 @@
 		D861E8DA274A819D003C8D3D /* OPLObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OPLObject.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
 		D861E8DE274A8D70003C8D3D /* KeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCode.swift; sourceTree = "<group>"; };
+		D861E8E0274AB1CB003C8D3D /* MenuBarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarViewController.swift; sourceTree = "<group>"; };
+		D861E8E2274AB1E8003C8D3D /* MenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* LibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		DB79001B2746B88F005E904F /* OpoIoHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler.swift; sourceTree = "<group>"; };
@@ -145,6 +149,8 @@
 			isa = PBXGroup;
 			children = (
 				D8C679B927483B5600BD8720 /* LibraryViewController.swift */,
+				D861E8E0274AB1CB003C8D3D /* MenuBarViewController.swift */,
+				D861E8E2274AB1E8003C8D3D /* MenuViewController.swift */,
 				DB79FFBD2742D99C005E904F /* ScreenViewController.swift */,
 			);
 			path = "View Controllers";
@@ -364,6 +370,7 @@
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
 				DB79000F2742E6F6005E904F /* lstate.c in Sources */,
 				DB7900102742E6F6005E904F /* lstring.c in Sources */,
+				D861E8E3274AB1E8003C8D3D /* MenuViewController.swift in Sources */,
 				DB7900112742E6F6005E904F /* lstrlib.c in Sources */,
 				DB7900122742E6F6005E904F /* ltable.c in Sources */,
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,
@@ -376,6 +383,7 @@
 				DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */,
 				DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */,
 				DB79FFBE2742D99C005E904F /* ScreenViewController.swift in Sources */,
+				D861E8E1274AB1CB003C8D3D /* MenuBarViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

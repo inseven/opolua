@@ -13,7 +13,7 @@ class LibraryViewController : UITableViewController {
     
     init() {
         super.init(style: .grouped)
-        navigationItem.title = "Programs"
+        title = "Programs"
     }
     
     required init?(coder: NSCoder) {
