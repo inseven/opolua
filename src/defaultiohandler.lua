@@ -71,14 +71,27 @@ function dialog(d)
 end
 
 function menu(m)
+    local function fmtCode(code)
+        local keycode = math.abs(code) & 0xFF
+        if keycode >= string.byte("A") and keycode <= string.byte("Z") then
+            return string.format("Ctrl-Shift-%s", string.char(keycode):upper())
+        elseif keycode > 32 then
+            return string.format("Ctrl-%s", string.char(keycode):upper())
+        else
+            return tostring(keycode)
+        end
+    end
     local function printCard(idx, card, lvl)
         local indent = string.rep(" ", lvl * 4)
         for i, item in ipairs(card) do
             local hightlightIdx = idx and 256 * (idx - 1) + (i - 1)
-            local shortcut = item.keycode >= 32 and string.format("[Ctrl-%c]", item.keycode) or string.format("[%d]", item.keycode)
-            printf("%s%d. %s %s\n", indent, hightlightIdx or -1, item.text, item.keycode)
+            printf("%s%s. %s [%s]\n", indent, hightlightIdx or "", item.text, fmtCode(item.keycode))
             if item.submenu then
                 printCard(nil, item.submenu, lvl + 1)
+            end
+            if item.keycode < 0 then
+                -- separator after
+                printf("--\n")
             end
         end
     end

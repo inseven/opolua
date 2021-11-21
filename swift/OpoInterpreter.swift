@@ -153,14 +153,21 @@ private func menu(_ L: LuaState!) -> Int32 {
         let title = L.tostring(-1, key: "title") ?? ""
         var items: [Menu.Item] = []
         for _ in L.ipairs(-1, requiredType: .table) {
-            let keycode = L.toint(-1, key: "keycode") ?? 0
+            var rawcode = L.toint(-1, key: "keycode") ?? 0
+            var flags = 0
+            if rawcode < 0 {
+                flags |= Menu.Item.Flags.separatorAfter.rawValue
+                rawcode = -rawcode
+            }
+            flags = flags | (rawcode & ~0xFF)
+            let keycode = rawcode & 0xFF
             let text = L.tostring(-1, key: "text") ?? ""
             var submenu: Menu? = nil
             if lua_getfield(L, -1, "submenu") == LUA_TTABLE {
                 submenu = getMenu()
             }
             L.pop()
-            items.append(Menu.Item(text: text, keycode: keycode, submenu: submenu))
+            items.append(Menu.Item(text: text, keycode: keycode, submenu: submenu, flags: flags))
         }
         return Menu(title: title, items: items)
     }
