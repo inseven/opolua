@@ -1,20 +1,24 @@
 PROC main:
-	local k%
+	local k%, m%
+	m% = 1
 	DO
+		PRINT "Press a key..."
 		k% = GET
 		PRINT "Pressed key", k%
-	UNTIL k% = 290
-	menu:
-	GET
+		IF k% = 290
+			m% = menu%:
+		ENDIF
+	UNTIL m% = %q
 ENDP
 
-PROC menu:
+PROC menu%:
 	LOCAL x%, ret%
-	x% = 257
+	x% = 2
 	mINIT
 	mCASC "More", "Explode", 1, "Fly", 2
 	mCARD "File", "More>", -16, "Quit", %q
 	mCARD "Edit", "Cut", %x, "Copy", %c, "Paste", %v
 	ret% = MENU(x%)
-	PRINT ret%, x%
+	PRINT "Menu selected:", ret%, "highlight=", x%
+	RETURN ret%
 ENDP
