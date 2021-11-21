@@ -1293,10 +1293,15 @@ function dItem(stack, runtime) -- 0xED
             item.variable = stack:pop()
             -- Have to resolve default choice here, and _not_ at the point of the DIALOG call!
             item.value = tostring(item.variable())
-        elseif itemType == dItemTypes.dLONG or itemType == dItemTypes.dFloat or itemType == dItemTypes.dDATE then
+        elseif itemType == dItemTypes.dLONG or itemType == dItemTypes.dFLOAT or itemType == dItemTypes.dDATE or itemType == dItemTypes.dTIME then
             item.max = stack:pop()
             item.min = stack:pop()
-            assert(max >= min, KOplErrInvalidArgs)
+            assert(item.max >= item.min, KOplErrInvalidArgs)
+            local timeFlags
+            if itemType == dItemTypes.dTIME then
+                timeFlags = stack:pop()
+                -- TODO something with timeFlags
+            end
             item.prompt = stack:pop()
             item.variable = stack:pop()
             item.value = tostring(item.variable())
