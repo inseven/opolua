@@ -1368,6 +1368,7 @@ function mCasc(stack, runtime) -- 0x130
             table.insert(card, 1, { keycode = keycode, text = text })
         end
         local title = stack:pop()
+        card.title = title
         runtime:getMenu().cascades[title..">"] = card
     else
         return fmt("%d", numParams)
