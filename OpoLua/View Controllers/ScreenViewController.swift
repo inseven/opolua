@@ -114,9 +114,9 @@ extension ScreenViewController: OpoIoHandler {
         print("BEEP")
     }
 
-    func dialog(_ d: Dialog) -> Int {
+    func dialog(_ d: Dialog) -> Dialog.Result {
         // TODO
-        return 0
+        return Dialog.Result(result: 0, values: [])
     }
 
     func menu(_ m: Menu.Bar) -> Menu.Result {

@@ -91,13 +91,13 @@ private func readLine(_ L: LuaState!) -> Int32 {
 private func dialog(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let title = L.tostring(1, key: "title")
-    let flags = Dialog.Flags(rawValue: L.toint(1, key: "flags") ?? 0)
-    var items: [DialogItem] = []
+    let flags = Dialog.Flags(flags: L.toint(1, key: "flags") ?? 0)
+    var items: [Dialog.Item] = []
     precondition(lua_getfield(L, 1, "items") == LUA_TTABLE, "Expected items table!")
     for _ in L.ipairs(-1, requiredType: .table) {
         let prompt = L.tostring(-1, key: "prompt") ?? ""
         let value = L.tostring(-1, key: "value") ?? ""
-        let align: DialogItem.Alignment?
+        let align: Dialog.Item.Alignment?
         if let rawAlign = L.tostring(-1, key: "value") {
             align = .init(rawValue: rawAlign)
         } else {
@@ -107,8 +107,8 @@ private func dialog(_ L: LuaState!) -> Int32 {
         let max = L.tonumber(-1, key: "max")
         let choices = L.tostringarray(-1, key: "choices")
 
-        if let t = DialogItem.ItemType(rawValue: L.toint(-1, key: "type") ?? -1) {
-            let item = DialogItem(
+        if let t = Dialog.Item.ItemType(rawValue: L.toint(-1, key: "type") ?? -1) {
+            let item = Dialog.Item(
                 type: t,
                 prompt: prompt,
                 value: value,
@@ -123,28 +123,29 @@ private func dialog(_ L: LuaState!) -> Int32 {
     }
     // leave items on the stack for doing fixups at the end
 
-    var buttons: [DialogButton] = []
+    var buttons: [Dialog.Button] = []
     if lua_getfield(L, 1, "buttons") == LUA_TTABLE {
         for _ in L.ipairs(-1, requiredType: .table) {
             let key = L.toint(-1, key: "key") ?? 0
             let text = L.tostring(-1, key: "text") ?? ""
-            buttons.append(DialogButton(key: key, text: text))
+            buttons.append(Dialog.Button(key: key, text: text))
         }
     }
     L.pop() // buttons
     let d = Dialog(title: title ?? "", items: items, buttons: buttons, flags: flags)
     let result = iohandler.dialog(d)
     // items is still on top of Lua stack here
-    if result != 0 {
+    if result.result != 0 {
         // Update the values Lua-side
-        for (i, item) in d.items.enumerated() {
+        precondition(result.values.count == d.items.count, "Bad number of result values!")
+        for (i, value) in result.values.enumerated() {
             lua_rawgeti(L, -1, lua_Integer(i) + 1) // items[i]
-            L.push(item.value)
+            L.push(value)
             lua_setfield(L, -2, "value")
             L.pop() // items[i]
         }
     }
-    L.push(result)
+    L.push(result.result)
     return 1
 }
 
