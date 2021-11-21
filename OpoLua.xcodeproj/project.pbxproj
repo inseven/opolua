@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DA274A819D003C8D3D /* OPLObject.swift */; };
 		D861E8DD274A81B4003C8D3D /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Library.swift */; };
+		D861E8DF274A8D70003C8D3D /* KeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DE274A8D70003C8D3D /* KeyCode.swift */; };
 		D8C679BA27483B5600BD8720 /* LibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* LibraryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		DB7900002742E6F6005E904F /* ldebug.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7B2742D5BD005E904F /* ldebug.c */; };
@@ -62,6 +63,7 @@
 /* Begin PBXFileReference section */
 		D861E8DA274A819D003C8D3D /* OPLObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OPLObject.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
+		D861E8DE274A8D70003C8D3D /* KeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCode.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* LibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		DB79001B2746B88F005E904F /* OpoIoHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler.swift; sourceTree = "<group>"; };
@@ -132,8 +134,9 @@
 		D861E8D9274A818D003C8D3D /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				D861E8DA274A819D003C8D3D /* OPLObject.swift */,
+				D861E8DE274A8D70003C8D3D /* KeyCode.swift */,
 				D861E8DC274A81B4003C8D3D /* Library.swift */,
+				D861E8DA274A819D003C8D3D /* OPLObject.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -333,6 +336,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DB7900232746C771005E904F /* lua_State.swift in Sources */,
+				D861E8DF274A8D70003C8D3D /* KeyCode.swift in Sources */,
 				DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */,
 				DB79FFF82742E6F6005E904F /* lapi.c in Sources */,
 				DB79FFF92742E6F6005E904F /* lauxlib.c in Sources */,

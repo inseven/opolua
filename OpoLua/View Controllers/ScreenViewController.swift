@@ -20,10 +20,26 @@ class ScreenViewController: UIViewController {
     let opo = OpoInterpreter()
     let runtimeQueue = DispatchQueue(label: "ScreenViewController.runtimeQueue")
     
+    var getCompletion: ((Int) -> Void)? {
+        didSet {
+            dispatchPrecondition(condition: .onQueue(.main))
+            menuBarButtonItem.isEnabled = (getCompletion != nil)
+        }
+    }
+    
     lazy var textView: UITextView = {
         let textView = UITextView()
+        textView.isEditable = false
         textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
+    }()
+    
+    lazy var menuBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(title: "Menu",
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(menuTapped(sender:)))
+        return barButtonItem
     }()
 
     init(object: OPLObject) {
@@ -39,6 +55,9 @@ class ScreenViewController: UIViewController {
             textView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             textView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
         ])
+        
+        setToolbarItems([menuBarButtonItem], animated: false)
+        menuBarButtonItem.isEnabled = false
     }
 
     required init?(coder: NSCoder) {
@@ -47,6 +66,11 @@ class ScreenViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.isToolbarHidden = false
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -65,6 +89,11 @@ class ScreenViewController: UIViewController {
             self.opo.iohandler = self
             self.opo.run(file: object.url.path)
         }
+    }
+    
+    @objc func menuTapped(sender: UIBarButtonItem) {
+        getCompletion?(KeyCode.menu.rawValue)
+        print("Show menu!")
     }
 
 }
@@ -107,7 +136,17 @@ extension ScreenViewController: OpoIoHandler {
     }
     
     func getch() -> Int {
-        return 290 // Menu key!
+        let semaphore = DispatchSemaphore(value: 0)
+        var keyCode = 0
+        DispatchQueue.main.async {
+            self.getCompletion = { result in
+                keyCode = result
+                self.getCompletion = nil
+                semaphore.signal()
+            }
+        }
+        semaphore.wait()
+        return keyCode
     }
     
     func beep(frequency: Double, duration: Double) {
@@ -119,8 +158,9 @@ extension ScreenViewController: OpoIoHandler {
         return Dialog.Result(result: 0, values: [])
     }
 
-    func menu(_ m: Menu.Bar) -> Menu.Result {
+    func menu(_ menu: Menu.Bar) -> Menu.Result {
         // TODO
+        print("Show menu: \(menu)")
         return Menu.Result(selected: 0, highlighted: 0)
     }
 

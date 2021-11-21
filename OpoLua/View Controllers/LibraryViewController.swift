@@ -22,6 +22,7 @@ class LibraryViewController : UITableViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.isToolbarHidden = true
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
