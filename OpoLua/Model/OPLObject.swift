@@ -12,7 +12,7 @@ class OPLObject {
     let url: URL
     
     var name: String {
-        return FileManager.default.displayName(atPath: url.path)
+        return (FileManager.default.displayName(atPath: url.path) as NSString).deletingPathExtension
     }
     
     var procedures: [OpoInterpreter.Procedure]? {
