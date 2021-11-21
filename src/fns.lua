@@ -289,6 +289,13 @@ function Year(stack, runtime) -- 0x1E
     end
 end
 
+function Menu(stack, runtime) -- 0x36
+    local menu = runtime:getMenu()
+    runtime:setMenu(nil)
+    local result = runtime:iohandler().menu(menu)
+    stack:push(result)
+end
+
 function Dialog(stack, runtime) -- 0x37
     if stack then
         local dialog = runtime:getDialog()
@@ -334,13 +341,6 @@ function Alert(stack, runtime) -- 0x38
     else
         return fmt(" nargs=%d", nargs)
     end
-end
-
-function Menu(stack, runtime) -- 0x36
-    local menu = runtime:getMenu()
-    runtime:setMenu(nil)
-    local result = runtime:iohandler().menu(menu)
-    stack:push(result)
 end
 
 function MenuWithMemory(stack, runtime) -- 0x3A
