@@ -88,9 +88,16 @@ class ScreenViewController: UIViewController {
         runtimeQueue.async {
             self.opo.iohandler = self
             self.opo.run(file: object.url.path)
+            DispatchQueue.main.async {
+                self.programDidFinish()
+            }
         }
     }
     
+    func programDidFinish() {
+        navigationController?.popViewController(animated: true)
+    }
+
     @objc func menuTapped(sender: UIBarButtonItem) {
         getCompletion?(KeyCode.menu.rawValue)
     }
