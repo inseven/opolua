@@ -58,6 +58,7 @@ class MenuViewController: UITableViewController {
         let item = menu.items[indexPath.row]
         let cell = UITableViewCell()
         cell.textLabel?.text = item.text
+        cell.textLabel?.textColor = item.submenu == nil ? view.tintColor : UIColor.label
         return cell
     }
     

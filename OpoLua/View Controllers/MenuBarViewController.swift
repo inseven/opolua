@@ -63,6 +63,7 @@ class MenuBarViewController: UITableViewController {
         cell.textLabel?.text = item.text
         cell.accessoryType = item.submenu == nil ? .none : .disclosureIndicator
         cell.backgroundColor = item.flags.contains(.separatorAfter) ? .red : .systemBackground
+        cell.textLabel?.textColor = item.submenu == nil ? view.tintColor : UIColor.label
         return cell
     }
     
