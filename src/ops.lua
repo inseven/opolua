@@ -1250,14 +1250,18 @@ function gLineBy(stack, runtime) -- 0xDA
 end
 
 function gCircle(stack, runtime) -- 0xDC
-    local fill = runtime:IP8()
+    local hasFill = runtime:IP8()
     if stack then
         local graphics = runtime:getGraphics()
         local context = graphics.current
+        local fill = 0
+        if hasFill ~= 0 then
+            fill = stack:pop()
+        end
         local radius = stack:pop()
         runtime:graphicsOp("circle", { r = radius, fill = fill })
     else
-        return fmt("fill=%d", fill)
+        return fmt("hasfill=%d", hasFill)
     end
 end
 
