@@ -18,6 +18,13 @@ class Canvas: UIView {
         return imageView
     }()
 
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let bytesPerPixel = 4
+
+    lazy var buffer: Data = {
+        return Data(count: Int(screenSize.width) * Int(screenSize.height) * bytesPerPixel)
+    }()
+
     init(screenSize: CGSize) {
         self.screenSize = screenSize
         super.init(frame: .zero)
@@ -36,14 +43,22 @@ class Canvas: UIView {
     }
 
     func draw(_ operations: [Graphics.Operation]) {
-        let renderer = UIGraphicsImageRenderer(size: screenSize)
-        let image = renderer.image { context in
-            context.cgContext.draw(self.imageView.image!.cgImage!, in: CGRect(origin: .zero, size: imageView.image!.size))
+        let bytesPerRow = bytesPerPixel * Int(screenSize.width)
+        let bitsPerComponent = 8
+        let bitmapInfo: UInt32 = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        buffer.withUnsafeMutableBytes { data in
+            let context = CGContext(data: data.baseAddress,
+                                    width: Int(screenSize.width),
+                                    height: Int(screenSize.height),
+                                    bitsPerComponent: bitsPerComponent,
+                                    bytesPerRow: bytesPerRow,
+                                    space: colorSpace,
+                                    bitmapInfo: bitmapInfo)!
             for operation in operations {
-                context.cgContext.draw(operation)
+                context.draw(operation)
             }
+            self.imageView.image = UIImage(cgImage: context.makeImage()!)
         }
-        self.imageView.image = image
     }
 
 }
