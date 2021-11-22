@@ -5,7 +5,7 @@
 //  Created by Tom Sutcliffe on 18/11/2021.
 //
 
-import Foundation
+import CoreGraphics
 
 protocol FlagEnum: RawRepresentable, Hashable, CaseIterable {}
 
