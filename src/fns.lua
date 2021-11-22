@@ -229,94 +229,71 @@ codes = {
     [0xDF] = "IllegalFuncOpCode",
 }
 
+local function numParams_dump(runtime)
+    local numParams = runtime:IP8()
+    return fmt(" numParams=%d", numParams)
+end
+
 function Addr(stack, runtime) -- 0x00
     -- We only support Addr followed immediately by MenuWithMemory call (because
     -- supporting general-purpose Addr is a pita)
-    if stack then
-        local nextOp = runtime:IP8()
-        local nextFn = runtime:IP8()
-        assert(nextOp == 0x57 and codes[nextFn] == "MenuWithMemory",
-            "Addr fncalls are not supported except as part of MENU()")
-        AddrPlusMenuWithMemory(stack, runtime)
-    end
+    local nextOp = runtime:IP8()
+    local nextFn = runtime:IP8()
+    assert(nextOp == 0x57 and codes[nextFn] == "MenuWithMemory",
+        "Addr fncalls are not supported except as part of MENU()")
+    AddrPlusMenuWithMemory(stack, runtime)
 end
 
 function Day(stack, runtime) -- 0x04
-    if stack then
-        stack:push(os.date("*t").day)
-    end
+    stack:push(os.date("*t").day)
 end
 
 function Err(stack, runtime) -- 0x07
-    if stack then
-        stack:push(runtime:getLastError())
-    end
+    stack:push(runtime:getLastError())
 end
 
 function Get(stack, runtime) -- 0x0A
-    if stack then
-        stack:push(runtime:iohandler().getch())
-    end
+    stack:push(runtime:iohandler().getch())
 end
 
 function Hour(stack, runtime) -- 0x12
-    if stack then
-        stack:push(os.date("*t").hour)
-    end
+    stack:push(os.date("*t").hour)
 end
 
 function Minute(stack, runtime) -- 0x16
-    if stack then
-        stack:push(os.date("*t").min)
-    end
+    stack:push(os.date("*t").min)
 end
 
 function Month(stack, runtime) -- 0x17
-    if stack then
-        stack:push(os.date("*t").month)
-    end
+    stack:push(os.date("*t").month)
 end
 
 function Second(stack, runtime) -- 0x1C
-    if stack then
-        stack:push(os.date("*t").sec)
-    end
+    stack:push(os.date("*t").sec)
 end
 
 function Year(stack, runtime) -- 0x1E
-    if stack then
-        stack:push(os.date("*t").year)
-    end
+    stack:push(os.date("*t").year)
 end
 
 function gIdentity(stack, runtime) -- 0x2B
-    if stack then
-        stack:push(runtime:getGraphics().current.id)
-    end
+    stack:push(runtime:getGraphics().current.id)
 end
 
 function gX(stack, runtime) -- 0x2C
-    if stack then
-        stack:push(runtime:getGraphics().current.pos.x)
-    end
+    stack:push(runtime:getGraphics().current.pos.x)
 end
 
 function gY(stack, runtime) -- 0x2D
-    if stack then
-        stack:push(runtime:getGraphics().current.pos.y)
-    end
+    stack:push(runtime:getGraphics().current.pos.y)
 end
 
 function gWidth(stack, runtime) -- 0x2E
-    if stack then
-        stack:push(runtime:getGraphics().current.width)
-    end
+    stack:push(runtime:getGraphics().current.width)
 end
 
 function gHeight(stack, runtime) -- 0x2F
-    if stack then
-        stack:push(runtime:getGraphics().current.height)
-    end
+    stack:push(runtime:getGraphics().current.height)
 end
 
 function Menu(stack, runtime) -- 0x36
@@ -327,57 +304,51 @@ function Menu(stack, runtime) -- 0x36
 end
 
 function Dialog(stack, runtime) -- 0x37
-    if stack then
-        local dialog = runtime:getDialog()
-        runtime:setDialog(nil)
-        local varMap = {} -- maps dialog item to variable
-        for _, item in ipairs(dialog.items) do
-            if item.variable ~= nil then
-                varMap[item] = item.variable
-                item.variable = nil -- Don't expose this to iohandler
-            end
+    local dialog = runtime:getDialog()
+    runtime:setDialog(nil)
+    local varMap = {} -- maps dialog item to variable
+    for _, item in ipairs(dialog.items) do
+        if item.variable ~= nil then
+            varMap[item] = item.variable
+            item.variable = nil -- Don't expose this to iohandler
         end
-        local result = runtime:iohandler().dialog(dialog)
-        if result ~= 0 then
-            -- Assign any variables eg `dCHOICE choice%`
-            for item, var in pairs(varMap) do
-                if item.value then
-                    -- Have to reconstruct type because item.value will always be a string
-                    -- (But the type of var() will still be correct)
-                    local isnum = type(var()) == "number"
-                    if isnum then
-                        item.value = tonumber(item.value)
-                    end
-                    var(item.value)
-                end
-            end
-        end
-        stack:push(result)
     end
+    local result = runtime:iohandler().dialog(dialog)
+    if result ~= 0 then
+        -- Assign any variables eg `dCHOICE choice%`
+        for item, var in pairs(varMap) do
+            if item.value then
+                -- Have to reconstruct type because item.value will always be a string
+                -- (But the type of var() will still be correct)
+                local isnum = type(var()) == "number"
+                if isnum then
+                    item.value = tonumber(item.value)
+                end
+                var(item.value)
+            end
+        end
+    end
+    stack:push(result)
 end
 
 function Alert(stack, runtime) -- 0x38
     local nargs = runtime:IP8()
-    if stack then
-        local line1, line2, but1, but2, but3
-        if nargs >= 5 then but3 = stack:pop() end
-        if nargs >= 4 then but2 = stack:pop() end
-        if nargs >= 3 then but1 = stack:pop() end
-        if nargs >= 2 then line2 = stack:pop() end
-        if nargs >= 1 then line1 = stack:pop() end
+    local line1, line2, but1, but2, but3
+    if nargs >= 5 then but3 = stack:pop() end
+    if nargs >= 4 then but2 = stack:pop() end
+    if nargs >= 3 then but1 = stack:pop() end
+    if nargs >= 2 then line2 = stack:pop() end
+    if nargs >= 1 then line1 = stack:pop() end
 
-        local choice = runtime:iohandler().alert({line1, line2}, {but1, but2, but3})
-        stack:push(choice)
-    else
-        return fmt(" nargs=%d", nargs)
-    end
+    local choice = runtime:iohandler().alert({line1, line2}, {but1, but2, but3})
+    stack:push(choice)
 end
 
+Alert_dump = numParams_dump
+
 function MenuWithMemory(stack, runtime) -- 0x3A
-    if stack then
-        -- This should've been picked up by Addr and translated into a AddrPlusMenuWithMemory call
-        error("Unexpected MenuWithMemory fncall!")
-    end
+    -- This should've been picked up by Addr and translated into a AddrPlusMenuWithMemory call
+    error("Unexpected MenuWithMemory fncall!")
 end
 
 function AddrPlusMenuWithMemory(stack, runtime)
@@ -399,157 +370,114 @@ local function getEpoch()
 end
 
 function Days(stack, runtime) -- 0x37
-    if stack then
-        local year = stack:pop()
-        local month = stack:pop()
-        local day = stack:pop()
-        local t = os.time({ year = year, month = month, day = day })
-        -- Result needs to be days since 1900
-        t = (t - getEpoch()) // (24 * 60 * 60)
-        stack:push(t)
-    end
+    local year = stack:pop()
+    local month = stack:pop()
+    local day = stack:pop()
+    local t = os.time({ year = year, month = month, day = day })
+    -- Result needs to be days since 1900
+    t = (t - getEpoch()) // (24 * 60 * 60)
+    stack:push(t)
 end
 
 function IntLong(stack, runtime) -- 0x42
-    if stack then
-        local val = stack:pop()
-        if val > 0 then
-            val = math.floor(val)
-        else
-            val = math.ceil(val)
-        end
-        stack:push(val)
+    local val = stack:pop()
+    if val > 0 then
+        val = math.floor(val)
+    else
+        val = math.ceil(val)
     end
+    stack:push(val)
 end
 
 function Abs(stack, runtime) -- 0x80
-    if stack then
-        stack:push(math.abs(stack:pop()))
-    end
+    stack:push(math.abs(stack:pop()))
 end
 
 function ACos(stack, runtime) -- 0x81
-    if stack then
-        stack:push(math.acos(stack:pop()))
-    end
+    stack:push(math.acos(stack:pop()))
 end
 
 function ASin(stack, runtime) -- 0x82
-    if stack then
-        stack:push(math.asin(stack:pop()))
-    end
+    stack:push(math.asin(stack:pop()))
 end
 
 function ATan(stack, runtime) -- 0x83
-    if stack then
-        stack:push(math.atan(stack:pop()))
-    end
+    stack:push(math.atan(stack:pop()))
 end
 
 function Cos(stack, runtime) -- 0x84
-    if stack then
-        stack:push(math.cos(stack:pop())) 
-    end
+    stack:push(math.cos(stack:pop())) 
 end
 
 function Deg(stack, runtime) -- 0x85
-    if stack then
-        stack:push(math.deg(stack:pop()))
-    end
+    stack:push(math.deg(stack:pop()))
 end
 
 function Exp(stack, runtime) -- 0x86
-    if stack then
-        stack:push(math.exp(stack:pop()))
-    end
+    stack:push(math.exp(stack:pop()))
 end
 
-function Flt(stack, runtime) -- 0x87
-    if stack then
-    end
-end
+-- function Flt(stack, runtime) -- 0x87
+--     -- TODO
+-- end
 
 function Intf(stack, runtime) -- 0x88
     return IntLong(stack, runtime) -- Same difference
 end
 
 function Ln(stack, runtime) -- 0x89
-    if stack then
-        stack:push(math.log(stack:pop()))
-    end
+    stack:push(math.log(stack:pop()))
 end
 
 function Log(stack, runtime) -- 0x8A
-    if stack then
-        stack:push(math.log(stack:pop(), 10))
-    end
+    stack:push(math.log(stack:pop(), 10))
 end
 
 function Pi(stack, runtime) -- 0x8C
-    if stack then
-        stack:push(math.pi)
-    end
+    stack:push(math.pi)
 end
 
 function Rad(stack, runtime) -- 0x8D
-    if stack then
-        stack:push(math.rad(stack:pop()))
-    end
+    stack:push(math.rad(stack:pop()))
 end
 
 function Rnd(stack, runtime) -- 0x8E
-    if stack then
-        stack:push(math.random())
-    end
+    stack:push(math.random())
 end
 
 function Sin(stack, runtime) -- 0x8F
-    if stack then
-        stack:push(math.sin(stack:pop())) 
-    end
+    stack:push(math.sin(stack:pop())) 
 end
 
 function Sqr(stack, runtime) -- 0x90
-    if stack then
-        stack:push(math.sqrt(stack:pop()))
-    end
+    stack:push(math.sqrt(stack:pop()))
 end
 
 function Tan(stack, runtime) -- 0x91
-    if stack then
-        stack:push(math.tan(stack:pop())) 
-    end
+    stack:push(math.tan(stack:pop())) 
 end
 
 function ChrStr(stack) -- 0xC0
-    if stack then
-        return stack:push(string.char(stack:pop()))
-    end
+    return stack:push(string.char(stack:pop()))
 end
 
 function ErrStr(stack, runtime) -- 0xC4
-    if stack then
-        local err = stack:pop()
-        stack:push(Errors[err] or fmt("Unknown error %d", err))
-    end
+    local err = stack:pop()
+    stack:push(Errors[err] or fmt("Unknown error %d", err))
 end
 
 function GenStr(stack, runtime) -- 0xC6
-    if stack then
-        local width = stack:pop()
-        local val = fmt("%g", stack:pop())
-        if #val > width then
-            val = string.rep("*", width)
-        end
-        stack:push(val)
+    local width = stack:pop()
+    local val = fmt("%g", stack:pop())
+    if #val > width then
+        val = string.rep("*", width)
     end
+    stack:push(val)
 end
 
 function ErrxStr(stack, runtime) -- 0xD8
-    if stack then
-        local _, desc = runtime:getLastError()
-        stack:push(desc)
-    end
+    local _, desc = runtime:getLastError()
+    stack:push(desc)
 end
 
 return _ENV

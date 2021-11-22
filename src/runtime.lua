@@ -395,7 +395,8 @@ function Runtime:dumpProc(procName)
             printf("No implementation of op %s\n", op)
             return
         end
-        local extra = ops[op](nil, self)
+        local opDump = op.."_dump"
+        local extra = ops[opDump] and ops[opDump](self)
         printInstruction(currentOpIdx, opCode, op, extra)
     end
     self:setFrame(nil)
