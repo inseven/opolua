@@ -27,30 +27,30 @@ class MenuViewController: UITableViewController {
         return barButtonItem
     }()
 
-    private init(groups: [MenuGroup], completion: @escaping (Menu.Item?) -> Void) {
+    private init(title: String, groups: [MenuGroup], completion: @escaping (Menu.Item?) -> Void) {
         self.groups = groups
         self.completion = completion
         super.init(style: .insetGrouped)
-        title = "Menu"
+        self.title = title
         navigationItem.rightBarButtonItem = closeBarButtonItem
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
     }
     
-    convenience init(bar: Menu.Bar, completion: @escaping (Menu.Item?) -> Void) {
+    convenience init(title: String, menu: Menu.Bar, completion: @escaping (Menu.Item?) -> Void) {
         var groups: [MenuGroup] = []
-        for menu in bar.menus {
+        for menu in menu.menus {
             var title: String? = menu.title
             for item in menu.items {
                 groups.append(MenuGroup(title: title, item: item))
                 title = nil
             }
         }
-        self.init(groups: groups, completion: completion)
+        self.init(title: title, groups: groups, completion: completion)
     }
 
     convenience init(menu: Menu, completion: @escaping (Menu.Item?) -> Void) {
         let groups = menu.items.map { MenuGroup(title: nil, item: $0) }
-        self.init(groups: groups, completion: completion)
+        self.init(title: menu.title, groups: groups, completion: completion)
     }
     
     required init?(coder: NSCoder) {
@@ -93,7 +93,6 @@ class MenuViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let item = groups[indexPath.section].item
         let cell = UITableViewCell()
-        cell.backgroundColor = .secondarySystemBackground
         cell.textLabel?.text = item.text
         cell.accessoryType = item.submenu == nil ? .none : .disclosureIndicator
         cell.textLabel?.textColor = item.submenu == nil ? view.tintColor : UIColor.label

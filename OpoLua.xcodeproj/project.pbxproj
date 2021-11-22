@@ -11,6 +11,10 @@
 		D861E8DD274A81B4003C8D3D /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Library.swift */; };
 		D861E8DF274A8D70003C8D3D /* KeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DE274A8D70003C8D3D /* KeyCode.swift */; };
 		D861E8E1274AB1CB003C8D3D /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */; };
+		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
+		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
+		D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891346274BF2D200794D55 /* DialogViewController.swift */; };
+		D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */; };
 		D8C679BA27483B5600BD8720 /* LibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* LibraryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		DB7900002742E6F6005E904F /* ldebug.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7B2742D5BD005E904F /* ldebug.c */; };
@@ -66,6 +70,10 @@
 		D861E8DC274A81B4003C8D3D /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
 		D861E8DE274A8D70003C8D3D /* KeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCode.swift; sourceTree = "<group>"; };
 		D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
+		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
+		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
+		D8891346274BF2D200794D55 /* DialogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewController.swift; sourceTree = "<group>"; };
+		D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslucentNavigationController.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* LibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		DB79001B2746B88F005E904F /* OpoIoHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler.swift; sourceTree = "<group>"; };
@@ -143,12 +151,23 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
+		D8891343274BF24D00794D55 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		D8C679BB27484BB800BD8720 /* View Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
+				D8891346274BF2D200794D55 /* DialogViewController.swift */,
 				D8C679B927483B5600BD8720 /* LibraryViewController.swift */,
 				D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */,
 				DB79FFBD2742D99C005E904F /* ScreenViewController.swift */,
+				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
 			);
 			path = "View Controllers";
 			sourceTree = "<group>";
@@ -183,6 +202,7 @@
 				DB79FE6427428294005E904F /* Assets.xcassets */,
 				D861E8D9274A818D003C8D3D /* Model */,
 				D8C679BB27484BB800BD8720 /* View Controllers */,
+				D8891343274BF24D00794D55 /* Views */,
 			);
 			path = OpoLua;
 			sourceTree = "<group>";
@@ -351,7 +371,9 @@
 				DB79FFFF2742E6F6005E904F /* ldblib.c in Sources */,
 				DB7900002742E6F6005E904F /* ldebug.c in Sources */,
 				DB7900012742E6F6005E904F /* ldo.c in Sources */,
+				D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */,
 				DB7900022742E6F6005E904F /* ldump.c in Sources */,
+				D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */,
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
@@ -369,12 +391,14 @@
 				DB7900102742E6F6005E904F /* lstring.c in Sources */,
 				DB7900112742E6F6005E904F /* lstrlib.c in Sources */,
 				DB7900122742E6F6005E904F /* ltable.c in Sources */,
+				D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */,
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,
 				DB7900132742E6F6005E904F /* ltablib.c in Sources */,
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
 				DB7900162742E6F6005E904F /* lutf8lib.c in Sources */,
 				DB7900172742E6F6005E904F /* lvm.c in Sources */,
+				D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */,
 				DB7900182742E6F6005E904F /* lzio.c in Sources */,
 				DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */,
 				DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */,

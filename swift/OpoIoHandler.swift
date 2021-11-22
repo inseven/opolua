@@ -51,7 +51,7 @@ struct Dialog {
         }
         let type: ItemType
         let prompt: String
-        let value: String
+        var value: String
         let alignment: Alignment? // For .text
         let min: Double? // For .long, .float, .time, .date
         let max: Double? // Ditto, plus .edit (meaning max number of characters)
@@ -69,7 +69,7 @@ struct Dialog {
     }
 
     let title: String
-    let items: [Item]
+    var items: [Item]
     let buttons: [Button]
     let flags: Flags
 }
@@ -103,6 +103,9 @@ struct Menu {
     }
 
     struct Result {
+
+        static let none = Result(selected: 0, highlighted: 0)
+
         let selected: Int // Zero if menu cancelled, otherwise keycode of selected command
         let highlighted: Int // Index of highlighted item (even if cancelled)
     }

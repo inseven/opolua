@@ -159,22 +159,33 @@ extension ScreenViewController: OpoIoHandler {
         print("BEEP")
     }
 
-    func dialog(_ d: Dialog) -> Dialog.Result {
-        // TODO
-        return Dialog.Result(result: 0, values: [])
+    func dialog(_ dialog: Dialog) -> Dialog.Result {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result = Dialog.Result(result: 0, values: [])
+        DispatchQueue.main.async {
+            result = Dialog.Result(result: 0, values: [])
+            let viewController = DialogViewController(dialog: dialog) { key, values in
+                result = Dialog.Result(result: key, values: values)
+                semaphore.signal()
+            }
+            let navigationController = UINavigationController(rootViewController: viewController)
+            self.present(navigationController, animated: true)
+        }
+        semaphore.wait()
+        return result
     }
 
     func menu(_ menu: Menu.Bar) -> Menu.Result {
         let semaphore = DispatchSemaphore(value: 0)
-        var result = Menu.Result(selected: 0, highlighted: 0) // TODO: .none
+        var result: Menu.Result = .none
         DispatchQueue.main.async {
-            let viewController = MenuViewController(bar: menu) { item in
+            let viewController = MenuViewController(title: "Menu", menu: menu) { item in
                 if let item = item {
                     result = Menu.Result(selected: item.keycode, highlighted: item.keycode)
                 }
                 semaphore.signal()
             }
-            let navigationController = UINavigationController(rootViewController: viewController)
+            let navigationController = TranslucentNavigationController(rootViewController: viewController)
             if #available(iOS 15.0, *) {
                 if let presentationController = navigationController.presentationController
                     as? UISheetPresentationController {
