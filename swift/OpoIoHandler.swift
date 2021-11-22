@@ -128,6 +128,7 @@ struct Graphics {
 
     struct Operation {
         enum OpType {
+            case cls
             case circle(Int, Bool) // radius, fill
             case line(Int, Int) // x2, y2
         }

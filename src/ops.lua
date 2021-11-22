@@ -1266,14 +1266,14 @@ function gCircle(stack, runtime) -- 0xDC
 end
 
 function gUpdate(stack, runtime) -- 0xE3
-    local flag = stack:IP8()
+    local flag = runtime:IP8()
     if stack then
         local graphics = runtime:getGraphics()
         local context = graphics.current
         if flag == 255 then -- gUPDATE
             -- Flush now
             if graphics.buffer and graphics.buffer[1] then
-                self.ioh.graphics(graphics.buffer)
+                runtime:iohandler().graphics(graphics.buffer)
                 graphics.buffer = {}
             end
             return
@@ -1284,7 +1284,7 @@ function gUpdate(stack, runtime) -- 0xE3
             end
         else -- gUPDATE ON
             if graphics.buffer and graphics.buffer[1] then
-                self.ioh.graphics(graphics.buffer)
+                runtime:iohandler().graphics(graphics.buffer)
             end
             graphics.buffer = nil
         end

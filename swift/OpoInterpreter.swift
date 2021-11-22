@@ -199,6 +199,7 @@ private func graphics(_ L: LuaState!) -> Int32 {
         let bgcolor = Graphics.Color(r: bgcol, g: bgcol, b: bgcol)
         let optype: Graphics.Operation.OpType
         switch (t) {
+            case "cls": optype = .cls
             case "circle": optype = .circle(L.toint(-1, key: "r") ?? 0, (L.toint(-1, key: "fill") ?? 0) != 0)
             case "line": optype = .line(L.toint(-1, key: "x2") ?? 0, L.toint(-1, key: "y2") ?? 0)
             default:

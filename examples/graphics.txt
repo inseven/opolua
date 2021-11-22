@@ -2,6 +2,16 @@ CONST kRadius = 100
 CONST kStep = 0.3
 
 PROC main:
+	draw:
+	GET
+	gCLS
+	gUPDATE OFF
+	draw:
+	gUPDATE ON
+	GET
+ENDP
+
+PROC draw:
 	REM	DEFAULTWIN 1
 	LOCAL i
 	
@@ -19,5 +29,4 @@ PROC main:
 		gLINEBY kRadius * COS(i), kRadius * SIN(i)	
 		i = i + kStep
 	ENDWH
-	GET
 ENDP

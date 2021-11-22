@@ -21,6 +21,9 @@ extension CGContext {
         // TODO: Scale for the iOS screensize
         // TODO: Set the stroke and fill colours
         switch operation.type {
+        case .cls:
+            setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
+            fill(CGRect(origin: .zero, size: CGSize(width: width, height: height)))
         case .circle(let radius, let fill):
             let path = CGMutablePath()
             path.addArc(center: operation.origin,
