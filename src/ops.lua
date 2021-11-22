@@ -1059,15 +1059,7 @@ end
 LongToInt = NoOp -- 0x78
 
 function FloatToInt(stack, runtime) -- 0x79
-    if stack then
-        local val = stack:pop()
-        if val > 0 then
-            val = math.floor(val)
-        else
-            val = math.ceil(val)
-        end
-        stack:push(val)
-    end
+    return fns.IntLong(stack, runtime) -- no idea why these are duplicated
 end
 
 FloatToLong = FloatToInt -- 0x7A

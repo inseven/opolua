@@ -411,30 +411,38 @@ function Days(stack, runtime) -- 0x37
 end
 
 function IntLong(stack, runtime) -- 0x42
-    -- Nothing needed
+    if stack then
+        local val = stack:pop()
+        if val > 0 then
+            val = math.floor(val)
+        else
+            val = math.ceil(val)
+        end
+        stack:push(val)
+    end
 end
 
 function Abs(stack, runtime) -- 0x80
     if stack then
-
+        stack:push(math.abs(stack:pop()))
     end
 end
 
 function ACos(stack, runtime) -- 0x81
     if stack then
-
+        stack:push(math.acos(stack:pop()))
     end
 end
 
 function ASin(stack, runtime) -- 0x82
     if stack then
-
+        stack:push(math.asin(stack:pop()))
     end
 end
 
 function ATan(stack, runtime) -- 0x83
     if stack then
-
+        stack:push(math.atan(stack:pop()))
     end
 end
 
@@ -446,43 +454,34 @@ end
 
 function Deg(stack, runtime) -- 0x85
     if stack then
-
+        stack:push(math.deg(stack:pop()))
     end
 end
 
 function Exp(stack, runtime) -- 0x86
     if stack then
-
+        stack:push(math.exp(stack:pop()))
     end
 end
 
 function Flt(stack, runtime) -- 0x87
     if stack then
-
     end
 end
 
 function Intf(stack, runtime) -- 0x88
-    if stack then
-
-    end
+    return IntLong(stack, runtime) -- Same difference
 end
 
 function Ln(stack, runtime) -- 0x89
     if stack then
-
+        stack:push(math.log(stack:pop()))
     end
 end
 
 function Log(stack, runtime) -- 0x8A
     if stack then
-
-    end
-end
-
-function PeekF(stack, runtime) -- 0x8B
-    if stack then
-
+        stack:push(math.log(stack:pop(), 10))
     end
 end
 
@@ -494,13 +493,13 @@ end
 
 function Rad(stack, runtime) -- 0x8D
     if stack then
-
+        stack:push(math.rad(stack:pop()))
     end
 end
 
 function Rnd(stack, runtime) -- 0x8E
     if stack then
-
+        stack:push(math.random())
     end
 end
 
@@ -512,7 +511,7 @@ end
 
 function Sqr(stack, runtime) -- 0x90
     if stack then
-
+        stack:push(math.sqrt(stack:pop()))
     end
 end
 
@@ -532,6 +531,17 @@ function ErrStr(stack, runtime) -- 0xC4
     if stack then
         local err = stack:pop()
         stack:push(Errors[err] or fmt("Unknown error %d", err))
+    end
+end
+
+function GenStr(stack, runtime) -- 0xC6
+    if stack then
+        local width = stack:pop()
+        local val = fmt("%g", stack:pop())
+        if #val > width then
+            val = string.rep("*", width)
+        end
+        stack:push(val)
     end
 end
 
