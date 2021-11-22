@@ -35,7 +35,7 @@ class ScreenViewController: UIViewController {
     }()
     
     lazy var menuBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(title: "Menu",
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "filemenu.and.selection"),
                                             style: .plain,
                                             target: self,
                                             action: #selector(menuTapped(sender:)))
