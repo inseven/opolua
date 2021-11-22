@@ -414,7 +414,115 @@ function IntLong(stack, runtime) -- 0x42
     -- Nothing needed
 end
 
-function ChrStr(stack) -- C0
+function Abs(stack, runtime) -- 0x80
+    if stack then
+
+    end
+end
+
+function ACos(stack, runtime) -- 0x81
+    if stack then
+
+    end
+end
+
+function ASin(stack, runtime) -- 0x82
+    if stack then
+
+    end
+end
+
+function ATan(stack, runtime) -- 0x83
+    if stack then
+
+    end
+end
+
+function Cos(stack, runtime) -- 0x84
+    if stack then
+        stack:push(math.cos(stack:pop())) 
+    end
+end
+
+function Deg(stack, runtime) -- 0x85
+    if stack then
+
+    end
+end
+
+function Exp(stack, runtime) -- 0x86
+    if stack then
+
+    end
+end
+
+function Flt(stack, runtime) -- 0x87
+    if stack then
+
+    end
+end
+
+function Intf(stack, runtime) -- 0x88
+    if stack then
+
+    end
+end
+
+function Ln(stack, runtime) -- 0x89
+    if stack then
+
+    end
+end
+
+function Log(stack, runtime) -- 0x8A
+    if stack then
+
+    end
+end
+
+function PeekF(stack, runtime) -- 0x8B
+    if stack then
+
+    end
+end
+
+function Pi(stack, runtime) -- 0x8C
+    if stack then
+        stack:push(math.pi)
+    end
+end
+
+function Rad(stack, runtime) -- 0x8D
+    if stack then
+
+    end
+end
+
+function Rnd(stack, runtime) -- 0x8E
+    if stack then
+
+    end
+end
+
+function Sin(stack, runtime) -- 0x8F
+    if stack then
+        stack:push(math.sin(stack:pop())) 
+    end
+end
+
+function Sqr(stack, runtime) -- 0x90
+    if stack then
+
+    end
+end
+
+function Tan(stack, runtime) -- 0x91
+    if stack then
+        stack:push(math.tan(stack:pop())) 
+    end
+end
+
+function ChrStr(stack) -- 0xC0
     if stack then
         return stack:push(string.char(stack:pop()))
     end

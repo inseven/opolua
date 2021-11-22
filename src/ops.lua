@@ -1057,8 +1057,21 @@ function NoOp()
 end
 
 LongToInt = NoOp -- 0x78
-FloatToInt = NoOp -- 0x79
-FloatToLong = NoOp -- 0x7A
+
+function FloatToInt(stack, runtime) -- 0x79
+    if stack then
+        local val = stack:pop()
+        if val > 0 then
+            val = math.floor(val)
+        else
+            val = math.ceil(val)
+        end
+        stack:push(val)
+    end
+end
+
+FloatToLong = FloatToInt -- 0x7A
+
 IntToLong = NoOp -- 0x7B
 IntToFloat = NoOp -- 0x7C
 LongToFloat = NoOp -- 0x7D
