@@ -168,9 +168,9 @@ extension ScreenViewController: OpoIoHandler {
         let semaphore = DispatchSemaphore(value: 0)
         var result = Menu.Result(selected: 0, highlighted: 0) // TODO: .none
         DispatchQueue.main.async {
-            let viewController = MenuBarViewController(bar: menu) { item in
+            let viewController = MenuViewController(bar: menu) { item in
                 if let item = item {
-                    result = Menu.Result(selected: item.keycode, highlighted: 0)
+                    result = Menu.Result(selected: item.keycode, highlighted: item.keycode)
                 }
                 semaphore.signal()
             }

@@ -8,10 +8,15 @@
 import UIKit
 
 class MenuViewController: UITableViewController {
-    
-    let menu: Menu
-    var completion: ((Menu.Item?) -> Void)?
 
+    struct MenuGroup {
+
+        var title: String?
+        var item: Menu.Item
+    }
+    
+    let groups: [MenuGroup]
+    var completion: ((Menu.Item?) -> Void)?
 
     lazy var closeBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "xmark.circle.fill"),
@@ -21,13 +26,31 @@ class MenuViewController: UITableViewController {
         barButtonItem.tintColor = .secondaryLabel
         return barButtonItem
     }()
-    
-    init(menu: Menu, completion: @escaping (Menu.Item?) -> Void) {
-        self.menu = menu
+
+    private init(groups: [MenuGroup], completion: @escaping (Menu.Item?) -> Void) {
+        self.groups = groups
         self.completion = completion
         super.init(style: .insetGrouped)
-        title = menu.title
+        title = "Menu"
         navigationItem.rightBarButtonItem = closeBarButtonItem
+        view.backgroundColor = .systemBackground
+    }
+    
+    convenience init(bar: Menu.Bar, completion: @escaping (Menu.Item?) -> Void) {
+        var groups: [MenuGroup] = []
+        for menu in bar.menus {
+            var title: String? = menu.title
+            for item in menu.items {
+                groups.append(MenuGroup(title: title, item: item))
+                title = nil
+            }
+        }
+        self.init(groups: groups, completion: completion)
+    }
+
+    convenience init(menu: Menu, completion: @escaping (Menu.Item?) -> Void) {
+        let groups = menu.items.map { MenuGroup(title: nil, item: $0) }
+        self.init(groups: groups, completion: completion)
     }
     
     required init?(coder: NSCoder) {
@@ -47,26 +70,47 @@ class MenuViewController: UITableViewController {
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return groups.count
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return menu.items.count
+        return 1
+    }
+    
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return groups[section].title
+    }
+
+    override func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        return UIView()
+    }
+
+    override func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        let item = groups[section].item
+        return item.flags.contains(.separatorAfter) ? 16 : 0
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let item = menu.items[indexPath.row]
+        let item = groups[indexPath.section].item
         let cell = UITableViewCell()
+        cell.backgroundColor = .secondarySystemBackground
         cell.textLabel?.text = item.text
+        cell.accessoryType = item.submenu == nil ? .none : .disclosureIndicator
         cell.textLabel?.textColor = item.submenu == nil ? view.tintColor : UIColor.label
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let item = menu.items[indexPath.row]
-        completion?(item)
-        completion = nil
-        self.dismiss(animated: true)
+        let item = groups[indexPath.section].item
+        if let submenu = item.submenu {
+            let viewController = MenuViewController(menu: submenu, completion: completion!)
+            navigationController?.pushViewController(viewController, animated: true)
+        } else {
+            print("Cheese")
+            completion?(item)
+            completion = nil
+            self.dismiss(animated: true)
+        }
     }
     
 }
