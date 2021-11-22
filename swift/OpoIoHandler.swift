@@ -76,20 +76,25 @@ struct Dialog {
 
 struct Menu {
     struct Item {
-        enum Flags : Int {
-            case dimmed = 0x1000
-            case checkbox = 0x800
-            case optionStart = 0x100 // plus checkbox
-            case optionMiddle = 0x200 // plus checkbox
-            case optionEnd = 0x300 // plus checkbox
-            case checked = 0x2000 // for option or checkbox
-            case inteterminate = 0x4000 // for option or checkbox
-            case separatorAfter = 0x10000
+
+        struct Flags: OptionSet {
+
+            let rawValue: Int
+
+            static let dimmed = Flags(rawValue: 0x1000)
+            static let checkbox = Flags(rawValue: 0x800)
+            static let optionStart = Flags(rawValue: 0x100) // plus checkbox
+            static let optionMiddle = Flags(rawValue: 0x200) // plus checkbox
+            static let optionEnd = Flags(rawValue: 0x300) // plus checkbox
+            static let checked = Flags(rawValue: 0x2000) // for option or checkbox
+            static let inteterminate = Flags(rawValue: 0x4000) // for option or checkbox
+            static let separatorAfter = Flags(rawValue: 0x10000)
         }
+
         let text: String
         let keycode: Int
         let submenu: Menu?
-        let flags: Int // Bitmask of Flags, OptionsSet is clunky
+        let flags: Flags
     }
 
     struct Bar {

@@ -168,7 +168,7 @@ private func menu(_ L: LuaState!) -> Int32 {
                 submenu = getMenu()
             }
             L.pop()
-            items.append(Menu.Item(text: text, keycode: keycode, submenu: submenu, flags: flags))
+            items.append(Menu.Item(text: text, keycode: keycode, submenu: submenu, flags: Menu.Item.Flags(rawValue: flags)))
         }
         return Menu(title: title, items: items)
     }
