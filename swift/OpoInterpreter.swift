@@ -211,6 +211,14 @@ private func graphics(_ L: LuaState!) -> Int32 {
     return 0
 }
 
+private func getScreenSize(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    let sz = iohandler.getScreenSize()
+    L.push(sz.width)
+    L.push(sz.height)
+    return 2
+}
+
 class OpoInterpreter {
     private let L: LuaState
     var iohandler: OpoIoHandler
@@ -285,6 +293,7 @@ class OpoInterpreter {
             ("dialog", dialog),
             ("menu", menu),
             ("graphics", graphics),
+            ("getScreenSize", getScreenSize),
         ]
         L.setfuncs(fns, nup: 1)
     }

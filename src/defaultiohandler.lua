@@ -117,10 +117,14 @@ local function describeOp(op)
     return ret
 end
 
-function graphics(id, ops)
+function graphics(ops)
     for _, op in ipairs(ops) do
         printf("%s\n", describeOp(op))
     end
+end
+
+function getScreenSize()
+    return 640, 240
 end
 
 return _ENV

@@ -177,6 +177,8 @@ protocol OpoIoHandler {
     func menu(_ m: Menu.Bar) -> Menu.Result
 
     func draw(operations: [Graphics.Operation])
+
+    func getScreenSize() -> Graphics.Size
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -210,6 +212,10 @@ class DummyIoHandler : OpoIoHandler {
     }
 
     func draw(operations: [Graphics.Operation]) {
+    }
+
+    func getScreenSize() -> Graphics.Size {
+        return Graphics.Size(width: 640, height: 240)
     }
 
 }

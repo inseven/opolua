@@ -36,7 +36,8 @@ class ScreenViewController: UIViewController {
     }()
 
     lazy var canvas: Canvas = {
-        let canvas = Canvas()
+        let sz = getScreenSize()
+        let canvas = Canvas(screenSize: CGSize(width: sz.width, height: sz.height))
         canvas.translatesAutoresizingMaskIntoConstraints = false
         return canvas
     }()
@@ -98,7 +99,7 @@ class ScreenViewController: UIViewController {
         }
         state = .running
         let object = self.object
-        print(object.procedures ?? [])
+        // print(object.procedures ?? [])
         runtimeQueue.async {
             self.opo.iohandler = self
             self.opo.run(file: object.url.path)
@@ -219,6 +220,10 @@ extension ScreenViewController: OpoIoHandler {
             semaphore.signal()
         }
         semaphore.wait()
+    }
+
+    func getScreenSize() -> Graphics.Size {
+        return Graphics.Size(width:640, height: 240)
     }
 
 }

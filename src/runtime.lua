@@ -335,14 +335,15 @@ end
 
 function Runtime:getGraphics()
     if not self.graphics then
+        local w, h = self.ioh.getScreenSize()
         self.graphics = {
             [1] = {
                 id = 1,
                 mode = 0, -- set
                 color = 0, -- black
                 bgcolor = 255, -- white
-                width = 640,
-                height = 240,
+                width = w,
+                height = h,
                 pos = { x = 0, y = 0 },
             },
         }

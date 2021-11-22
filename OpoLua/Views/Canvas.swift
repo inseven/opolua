@@ -9,7 +9,7 @@ import UIKit
 
 class Canvas: UIView {
 
-    let screenSize = CGSize(width: 640, height: 240)
+    let screenSize: CGSize
 
     lazy var imageView: UIImageView = {
         let imageView = UIImageView()
@@ -18,7 +18,8 @@ class Canvas: UIView {
         return imageView
     }()
 
-    init() {
+    init(screenSize: CGSize) {
+        self.screenSize = screenSize
         super.init(frame: .zero)
         addSubview(imageView)
         NSLayoutConstraint.activate([
