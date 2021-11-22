@@ -93,7 +93,6 @@ class ScreenViewController: UIViewController {
     
     @objc func menuTapped(sender: UIBarButtonItem) {
         getCompletion?(KeyCode.menu.rawValue)
-        print("Show menu!")
     }
 
 }
