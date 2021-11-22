@@ -11,12 +11,22 @@ class MenuBarViewController: UITableViewController {
     
     let bar: Menu.Bar
     var completion: ((Menu.Item?) -> Void)?
+
+    lazy var closeBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "xmark.circle.fill"),
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(closeTapped(sender:)))
+        barButtonItem.tintColor = .secondaryLabel
+        return barButtonItem
+    }()
     
     init(bar: Menu.Bar, completion: @escaping (Menu.Item?) -> Void) {
         self.bar = bar
         self.completion = completion
         super.init(style: .insetGrouped)
         title = "Menu"
+        navigationItem.rightBarButtonItem = closeBarButtonItem
     }
     
     required init?(coder: NSCoder) {
@@ -29,6 +39,10 @@ class MenuBarViewController: UITableViewController {
             completion = nil
         }
         super.viewDidDisappear(animated)
+    }
+
+    @objc func closeTapped(sender: UIBarButtonItem) {
+        self.dismiss(animated: true)
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
