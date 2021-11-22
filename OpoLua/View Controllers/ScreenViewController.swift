@@ -31,7 +31,14 @@ class ScreenViewController: UIViewController {
         let textView = UITextView()
         textView.isEditable = false
         textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.backgroundColor = .clear
         return textView
+    }()
+
+    lazy var canvas: Canvas = {
+        let canvas = Canvas()
+        canvas.translatesAutoresizingMaskIntoConstraints = false
+        return canvas
     }()
     
     lazy var menuBarButtonItem: UIBarButtonItem = {
@@ -47,9 +54,16 @@ class ScreenViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
         navigationItem.title = object.name
-        
+
+        view.addSubview(canvas)
         view.addSubview(textView)
         NSLayoutConstraint.activate([
+
+            canvas.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            canvas.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            canvas.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            canvas.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
             textView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             textView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
             textView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
@@ -198,8 +212,14 @@ extension ScreenViewController: OpoIoHandler {
         return result
     }
 
-    func draw(ops: [GraphicsOperation]) {
-        // TODO
+    // TODO: Rename ops
+    func draw(ops operations: [GraphicsOperation]) {
+        let semaphore = DispatchSemaphore(value: 0)
+        DispatchQueue.main.async {
+            self.canvas.draw(operations)
+            semaphore.signal()
+        }
+        semaphore.wait()
     }
 
 }

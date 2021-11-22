@@ -2,5 +2,6 @@ PROC main:
 	REM gCLS
 	gAT 50, 50
 	gCIRCLE 20
+	gLINEBY 100, 100
 	GET
 ENDP

@@ -15,6 +15,10 @@
 		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
 		D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891346274BF2D200794D55 /* DialogViewController.swift */; };
 		D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */; };
+		D889134D274C17FF00794D55 /* CGContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134C274C17FF00794D55 /* CGContext.swift */; };
+		D889134F274C181F00794D55 /* CGPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134E274C181F00794D55 /* CGPoint.swift */; };
+		D8891351274C184C00794D55 /* UIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891350274C184C00794D55 /* UIImage.swift */; };
+		D8891353274C186E00794D55 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891352274C186E00794D55 /* Canvas.swift */; };
 		D8C679BA27483B5600BD8720 /* LibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* LibraryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		DB7900002742E6F6005E904F /* ldebug.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7B2742D5BD005E904F /* ldebug.c */; };
@@ -74,6 +78,10 @@
 		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
 		D8891346274BF2D200794D55 /* DialogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewController.swift; sourceTree = "<group>"; };
 		D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslucentNavigationController.swift; sourceTree = "<group>"; };
+		D889134C274C17FF00794D55 /* CGContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGContext.swift; sourceTree = "<group>"; };
+		D889134E274C181F00794D55 /* CGPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPoint.swift; sourceTree = "<group>"; };
+		D8891350274C184C00794D55 /* UIImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImage.swift; sourceTree = "<group>"; };
+		D8891352274C186E00794D55 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* LibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		DB79001B2746B88F005E904F /* OpoIoHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler.swift; sourceTree = "<group>"; };
@@ -154,9 +162,20 @@
 		D8891343274BF24D00794D55 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				D8891352274C186E00794D55 /* Canvas.swift */,
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		D889134B274C17F300794D55 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				D889134C274C17FF00794D55 /* CGContext.swift */,
+				D889134E274C181F00794D55 /* CGPoint.swift */,
+				D8891350274C184C00794D55 /* UIImage.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		D8C679BB27484BB800BD8720 /* View Controllers */ = {
@@ -200,6 +219,7 @@
 				DB79FE6927428294005E904F /* Info.plist */,
 				DB79FE6227428292005E904F /* AppDelegate.swift */,
 				DB79FE6427428294005E904F /* Assets.xcassets */,
+				D889134B274C17F300794D55 /* Extensions */,
 				D861E8D9274A818D003C8D3D /* Model */,
 				D8C679BB27484BB800BD8720 /* View Controllers */,
 				D8891343274BF24D00794D55 /* Views */,
@@ -371,7 +391,9 @@
 				DB79FFFF2742E6F6005E904F /* ldblib.c in Sources */,
 				DB7900002742E6F6005E904F /* ldebug.c in Sources */,
 				DB7900012742E6F6005E904F /* ldo.c in Sources */,
+				D8891353274C186E00794D55 /* Canvas.swift in Sources */,
 				D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */,
+				D889134D274C17FF00794D55 /* CGContext.swift in Sources */,
 				DB7900022742E6F6005E904F /* ldump.c in Sources */,
 				D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */,
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
@@ -385,11 +407,13 @@
 				DB79000B2742E6F6005E904F /* lobject.c in Sources */,
 				D8C679BA27483B5600BD8720 /* LibraryViewController.swift in Sources */,
 				DB79000C2742E6F6005E904F /* lopcodes.c in Sources */,
+				D889134F274C181F00794D55 /* CGPoint.swift in Sources */,
 				D861E8DD274A81B4003C8D3D /* Library.swift in Sources */,
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
 				DB79000F2742E6F6005E904F /* lstate.c in Sources */,
 				DB7900102742E6F6005E904F /* lstring.c in Sources */,
 				DB7900112742E6F6005E904F /* lstrlib.c in Sources */,
+				D8891351274C184C00794D55 /* UIImage.swift in Sources */,
 				DB7900122742E6F6005E904F /* ltable.c in Sources */,
 				D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */,
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,
