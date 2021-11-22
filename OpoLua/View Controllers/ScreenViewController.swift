@@ -212,8 +212,7 @@ extension ScreenViewController: OpoIoHandler {
         return result
     }
 
-    // TODO: Rename ops
-    func draw(ops operations: [GraphicsOperation]) {
+    func draw(operations: [Graphics.Operation]) {
         let semaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
             self.canvas.draw(operations)

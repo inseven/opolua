@@ -187,25 +187,27 @@ private func menu(_ L: LuaState!) -> Int32 {
 
 private func graphics(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    var ops: [GraphicsOperation] = []
+    var ops: [Graphics.Operation] = []
     for _ in L.ipairs(1, requiredType: .table) {
         let id = L.toint(-1, key: "type") ?? 1
         let t = L.tostring(-1, key: "type") ?? ""
         let x = L.toint(-1, key: "x") ?? 0
         let y = L.toint(-1, key: "y") ?? 0
-        let color = UInt8(L.toint(-1, key: "color") ?? 0)
-        let bgcolor = UInt8(L.toint(-1, key: "bgcolor") ?? 255)
-        let optype: GraphicsOperation.OpType
+        let col = UInt8(L.toint(-1, key: "color") ?? 0)
+        let color = Graphics.Color(r: col, g: col, b: col)
+        let bgcol = UInt8(L.toint(-1, key: "bgcolor") ?? 255)
+        let bgcolor = Graphics.Color(r: bgcol, g: bgcol, b: bgcol)
+        let optype: Graphics.Operation.OpType
         switch (t) {
             case "circle": optype = .circle(L.toint(-1, key: "r") ?? 0, (L.toint(-1, key: "fill") ?? 0) != 0)
             case "line": optype = .line(L.toint(-1, key: "x2") ?? 0, L.toint(-1, key: "y2") ?? 0)
             default:
-                print("Unknown GraphicsOperation.OpType \(t)")
+                print("Unknown Graphics.Operation.OpType \(t)")
                 continue
         }
-        ops.append(GraphicsOperation(displayId: id, type: optype, x: x, y: y, color: color, bgcolor: bgcolor))
+        ops.append(Graphics.Operation(displayId: id, type: optype, x: x, y: y, color: color, bgcolor: bgcolor))
     }
-    iohandler.draw(ops: ops)
+    iohandler.draw(operations: ops)
     return 0
 }
 

@@ -114,17 +114,36 @@ struct Menu {
     let items: [Item]
 }
 
-struct GraphicsOperation {
-    enum OpType {
-        case circle(Int, Bool) // radius, fill
-        case line(Int, Int) // x2, y2
+struct Graphics {
+    struct Size {
+        let width: Int
+        let height: Int
     }
-    let displayId: Int
-    let type: OpType
-    let x: Int
-    let y: Int
-    let color: UInt8 // greyscale currently
-    let bgcolor: UInt8 // greyscale currently
+
+    struct Color {
+        let r: UInt8
+        let g: UInt8
+        let b: UInt8
+    }
+
+    struct Operation {
+        enum OpType {
+            case circle(Int, Bool) // radius, fill
+            case line(Int, Int) // x2, y2
+        }
+        let displayId: Int
+        let type: OpType
+        let x: Int
+        let y: Int
+        let color: Color
+        let bgcolor: Color
+    }
+}
+
+extension Graphics.Color {
+    func cgColor() -> CGColor {
+        return CGColor(red: CGFloat(self.r) / 256, green: CGFloat(self.g) / 256, blue: CGFloat(self.b) / 256, alpha: 1)
+    }
 }
 
 protocol OpoIoHandler {
@@ -157,7 +176,7 @@ protocol OpoIoHandler {
 
     func menu(_ m: Menu.Bar) -> Menu.Result
 
-    func draw(ops: [GraphicsOperation])
+    func draw(operations: [Graphics.Operation])
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -190,7 +209,7 @@ class DummyIoHandler : OpoIoHandler {
         return Menu.Result(selected: 0, highlighted: 0)
     }
 
-    func draw(ops: [GraphicsOperation]) {
+    func draw(operations: [Graphics.Operation]) {
     }
 
 }

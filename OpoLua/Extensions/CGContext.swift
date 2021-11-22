@@ -7,7 +7,7 @@
 
 import CoreGraphics
 
-extension GraphicsOperation {
+extension Graphics.Operation {
 
     var origin: CGPoint {
         return CGPoint(x: x, y: y)
@@ -17,7 +17,7 @@ extension GraphicsOperation {
 
 extension CGContext {
 
-    func draw(_ operation: GraphicsOperation) {
+    func draw(_ operation: Graphics.Operation) {
         // TODO: Scale for the iOS screensize
         // TODO: Set the stroke and fill colours
         switch operation.type {

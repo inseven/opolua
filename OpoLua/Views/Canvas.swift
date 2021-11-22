@@ -34,7 +34,7 @@ class Canvas: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func draw(_ operations: [GraphicsOperation]) {
+    func draw(_ operations: [Graphics.Operation]) {
         let renderer = UIGraphicsImageRenderer(size: screenSize)
         let image = renderer.image { context in
             context.cgContext.draw(self.imageView.image!.cgImage!, in: CGRect(origin: .zero, size: imageView.image!.size))
