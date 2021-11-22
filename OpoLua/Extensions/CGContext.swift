@@ -38,7 +38,7 @@ extension CGContext {
         case .line(let x, let y):
             let path = CGMutablePath()
             path.move(to: operation.origin)
-            path.addLine(to: operation.origin.move(x: x, y: y))
+            path.addLine(to: CGPoint(x: x, y: y))
             addPath(path)
             strokePath()
             break
