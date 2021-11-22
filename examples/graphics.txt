@@ -1,7 +1,23 @@
+CONST kRadius = 100
+CONST kStep = 0.3
+
 PROC main:
-	REM gCLS
+	REM	DEFAULTWIN 1
+	LOCAL i
+	
 	gAT 50, 50
-	gCIRCLE 20
-	gLINEBY 100, 100
+	gGREY 1
+	gCIRCLE 20, 1
+	gAT gWIDTH - 50, 50
+	gCOLOR 200, 200, 200
+	gCIRCLE 20, 1
+
+	gGREY 0
+	
+	WHILE i < 6.23
+		gAT gWIDTH / 2, gHEIGHT / 2
+		gLINEBY kRadius * COS(i), kRadius * SIN(i)	
+		i = i + kStep
+	ENDWH
 	GET
 ENDP
