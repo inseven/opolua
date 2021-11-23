@@ -726,6 +726,38 @@ function ArrayInDirectLeftSideString(stack, runtime) -- 0x1F
 end
 ArrayInDirectLeftSideString_dump = index_dump
 
+function FieldRightSideInt(stack, runtime) -- 0x20
+    error("Unimplemented opcode FieldRightSideInt!")
+end
+
+function FieldRightSideLong(stack, runtime) -- 0x21
+    error("Unimplemented opcode FieldRightSideLong!")
+end
+
+function FieldRightSideFloat(stack, runtime) -- 0x22
+    error("Unimplemented opcode FieldRightSideFloat!")
+end
+
+function FieldRightSideString(stack, runtime) -- 0x23
+    error("Unimplemented opcode FieldRightSideString!")
+end
+
+function FieldLeftSide(stack, runtime) -- 0x24
+    error("Unimplemented opcode FieldLeftSide!")
+end
+
+function FieldLeftSide(stack, runtime) -- 0x25
+    error("Unimplemented opcode FieldLeftSide!")
+end
+
+function FieldLeftSide(stack, runtime) -- 0x26
+    error("Unimplemented opcode FieldLeftSide!")
+end
+
+function FieldLeftSide(stack, runtime) -- 0x27
+    error("Unimplemented opcode FieldLeftSide!")
+end
+
 function ConstantInt(stack, runtime) -- 0x28
     local val = runtime:IPs16()
     stack:push(val)
@@ -1045,6 +1077,30 @@ function CallProcByStringExpr_dump(runtime)
     return fmt("nargs=%d type=%s", numParams, type)
 end
 
+function PercentLessThan(stack, runtime) -- 0x6C
+    error("Unimplemented opcode PercentLessThan!")
+end
+
+function PercentGreaterThan(stack, runtime) -- 0x6D
+    error("Unimplemented opcode PercentGreaterThan!")
+end
+
+function PercentAdd(stack, runtime) -- 0x6E
+    error("Unimplemented opcode PercentAdd!")
+end
+
+function PercentSubtract(stack, runtime) -- 0x6F
+    error("Unimplemented opcode PercentSubtract!")
+end
+
+function PercentMultiply(stack, runtime) -- 0x70
+    error("Unimplemented opcode PercentMultiply!")
+end
+
+function PercentDivide(stack, runtime) -- 0x71
+    error("Unimplemented opcode PercentDivide!")
+end
+
 function ZeroReturn(stack, runtime)
     runtime:returnFromFrame(stack, 0)
 end
@@ -1105,12 +1161,36 @@ PrintLong = PrintUntyped -- 0x89
 PrintFloat = PrintUntyped -- 0x8A
 PrintString = PrintUntyped -- 0x8B
 
+function LPrintInt(stack, runtime) -- 0x8C
+    error("Unimplemented opcode LPrintInt!")
+end
+
+function LPrintLong(stack, runtime) -- 0x8D
+    error("Unimplemented opcode LPrintLong!")
+end
+
+function LPrintFloat(stack, runtime) -- 0x8E
+    error("Unimplemented opcode LPrintFloat!")
+end
+
+function LPrintString(stack, runtime) -- 0x8F
+    error("Unimplemented opcode LPrintString!")
+end
+
 function PrintSpace(stack, runtime) -- 0x90
     runtime:iohandler().print(" ")
 end
 
+function LPrintSpace(stack, runtime) -- 0x91
+    error("Unimplemented opcode LPrintSpace!")
+end
+
 function PrintCarriageReturn(stack, runtime) -- 0x92
     runtime:iohandler().print("\n")
+end
+
+function LPrintCarriageReturn(stack, runtime) -- 0x93
+    error("Unimplemented opcode LPrintCarriageReturn!")
 end
 
 function InputInt(stack, runtime) -- 0x94
@@ -1146,6 +1226,38 @@ function InputString(stack, runtime) -- 0x97
     runtime:setTrap(false)
 end
 
+function PokeW(stack, runtime) -- 0x98
+    error("Unimplemented opcode PokeW!")
+end
+
+function PokeL(stack, runtime) -- 0x99
+    error("Unimplemented opcode PokeL!")
+end
+
+function PokeD(stack, runtime) -- 0x9A
+    error("Unimplemented opcode PokeD!")
+end
+
+function PokeStr(stack, runtime) -- 0x9B
+    error("Unimplemented opcode PokeStr!")
+end
+
+function PokeB(stack, runtime) -- 0x9C
+    error("Unimplemented opcode PokeB!")
+end
+
+function Append(stack, runtime) -- 0x9D
+    error("Unimplemented opcode Append!")
+end
+
+function At(stack, runtime) -- 0x9E
+    error("Unimplemented opcode At!")
+end
+
+function Back(stack, runtime) -- 0x9F
+    error("Unimplemented opcode Back!")
+end
+
 function Beep(stack, runtime) -- 0xA0
     local pitch = stack:pop()
     local freq = 512 / (pitch + 1) -- in Khz
@@ -1162,6 +1274,66 @@ local function decodeOnErr(runtime)
     return newIP, offset
 end
 
+function Close(stack, runtime) -- 0xA1
+    error("Unimplemented opcode Close!")
+end
+
+function Cls(stack, runtime) -- 0xA2
+    error("Unimplemented opcode Cls!")
+end
+
+function Copy(stack, runtime) -- 0xA4
+    error("Unimplemented opcode Copy!")
+end
+
+function Create(stack, runtime) -- 0xA5
+    error("Unimplemented opcode Create!")
+end
+
+function Cursor(stack, runtime) -- 0xA6
+    error("Unimplemented opcode Cursor!")
+end
+
+function Delete(stack, runtime) -- 0xA7
+    error("Unimplemented opcode Delete!")
+end
+
+function Erase(stack, runtime) -- 0xA8
+    error("Unimplemented opcode Erase!")
+end
+
+function Escape(stack, runtime) -- 0xA9
+    error("Unimplemented opcode Escape!")
+end
+
+function First(stack, runtime) -- 0xAA
+    error("Unimplemented opcode First!")
+end
+
+function Vector(stack, runtime) -- 0xAB
+    error("Unimplemented opcode Vector!")
+end
+
+function Last(stack, runtime) -- 0xAC
+    error("Unimplemented opcode Last!")
+end
+
+function LClose(stack, runtime) -- 0xAD
+    error("Unimplemented opcode LClose!")
+end
+
+function LoadM(stack, runtime) -- 0xAE
+    error("Unimplemented opcode LoadM!")
+end
+
+function LOpen(stack, runtime) -- 0xAF
+    error("Unimplemented opcode LOpen!")
+end
+
+function Next(stack, runtime) -- 0xB0
+    error("Unimplemented opcode Next!")
+end
+
 function OnErr(stack, runtime) -- 0xB1
     runtime:setFrameErrIp(decodeOnErr(runtime))
 end
@@ -1171,8 +1343,40 @@ function OnErr_dump(runtime)
     return newIp and fmt("%d (->0x%08X)", offset, newIp) or "OFF"
 end
 
+function Off(stack, runtime) -- 0xB2
+    error("Unimplemented opcode Off!")
+end
+
+function OffFor(stack, runtime) -- 0xB3
+    error("Unimplemented opcode OffFor!")
+end
+
+function Open(stack, runtime) -- 0xB4
+    error("Unimplemented opcode Open!")
+end
+
+function Pause(stack, runtime) -- 0xB5
+    error("Unimplemented opcode Pause!")
+end
+
+function Position(stack, runtime) -- 0xB6
+    error("Unimplemented opcode Position!")
+end
+
+function IoSignal(stack, runtime) -- 0xB7
+    error("Unimplemented opcode IoSignal!")
+end
+
 function Raise(stack, runtime) -- 0xB8
     error(stack:pop())
+end
+
+function Randomize(stack, runtime) -- 0xB9
+    error("Unimplemented opcode Randomize!")
+end
+
+function Rename(stack, runtime) -- 0xBA
+    error("Unimplemented opcode Rename!")
 end
 
 function Stop(stack, runtime) -- 0xBB
@@ -1183,6 +1387,19 @@ end
 
 function Trap(stack, runtime) -- 0xBC
     runtime:setTrap(true)
+end
+
+function Update(stack, runtime) -- 0xBD
+    error("Unimplemented opcode Update!")
+end
+
+function Use(stack, runtime) -- 0xBE
+    error("Unimplemented opcode Use!")
+end
+
+function Use_dump(runtime)
+    local device = runtime:IP8()
+    return fmt("device=%d", device)
 end
 
 function GoTo(stack, runtime) -- 0xBF
@@ -1202,6 +1419,66 @@ function Return(stack, runtime) -- 0xC0
     runtime:returnFromFrame(stack, val)
 end
 
+function UnLoadM(stack, runtime) -- 0xC1
+    error("Unimplemented opcode UnLoadM!")
+end
+
+function Edit(stack, runtime) -- 0xC2
+    error("Unimplemented opcode Edit!")
+end
+
+function Screen2(stack, runtime) -- 0xC3
+    error("Unimplemented opcode Screen2!")
+end
+
+function OpenR(stack, runtime) -- 0xC4
+    error("Unimplemented opcode OpenR!")
+end
+
+function gSaveBit(stack, runtime) -- 0xC5
+    error("Unimplemented opcode gSaveBit!")
+end
+
+function gClose(stack, runtime) -- 0xC6
+    error("Unimplemented opcode gClose!")
+end
+
+function gUse(stack, runtime) -- 0xC7
+    error("Unimplemented opcode gUse!")
+end
+
+function gSetWin(stack, runtime) -- 0xC8
+    error("Unimplemented opcode gSetWin!")
+end
+
+function gVisible(stack, runtime) -- 0xC9
+    error("Unimplemented opcode gVisible!")
+end
+
+function gFont(stack, runtime) -- 0xCA
+    error("Unimplemented opcode gFont!")
+end
+
+function gUnloadFont(stack, runtime) -- 0xCB
+    error("Unimplemented opcode gUnloadFont!")
+end
+
+function gGMode(stack, runtime) -- 0xCC
+    getGraphics().current.mode = stack:pop()
+end
+
+function gTMode(stack, runtime) -- 0xCD
+    error("Unimplemented opcode gTMode!")
+end
+
+function gStyle(stack, runtime) -- 0xCE
+    error("Unimplemented opcode gStyle!")
+end
+
+function gOrder(stack, runtime) -- 0xCF
+    error("Unimplemented opcode gOrder!")
+end
+
 function gCls(stack, runtime) -- 0xD1
     local graphics = runtime:getGraphics()
     local context = graphics.current
@@ -1213,6 +1490,34 @@ function gAt(stack, runtime) -- 0xD2
     runtime:getGraphics().current.pos = stack:popPoint()
 end
 
+function gMove(stack, runtime) -- 0xD3
+    error("Unimplemented opcode gMove!")
+end
+
+function gPrintWord(stack, runtime) -- 0xD4
+    error("Unimplemented opcode gPrintWord!")
+end
+
+function gPrintLong(stack, runtime) -- 0xD5
+    error("Unimplemented opcode gPrintLong!")
+end
+
+function gPrintDbl(stack, runtime) -- 0xD6
+    error("Unimplemented opcode gPrintDbl!")
+end
+
+function gPrintStr(stack, runtime) -- 0xD7
+    error("Unimplemented opcode gPrintStr!")
+end
+
+function gPrintSpace(stack, runtime) -- 0xD8
+    error("Unimplemented opcode gPrintSpace!")
+end
+
+function gPrintBoxText(stack, runtime) -- 0xD9
+    error("Unimplemented opcode gPrintBoxText!")
+end
+
 function gLineBy(stack, runtime) -- 0xDA
     local graphics = runtime:getGraphics()
     local context = graphics.current
@@ -1222,6 +1527,10 @@ function gLineBy(stack, runtime) -- 0xDA
     endPoint.y = context.pos.y + endPoint.y
     runtime:graphicsOp("line", { x2 = endPoint.x, y2 = endPoint.y })
     context.pos = endPoint
+end
+
+function gBox(stack, runtime) -- 0xDB
+    error("Unimplemented opcode gBox!")
 end
 
 function gCircle(stack, runtime) -- 0xDC
@@ -1239,6 +1548,30 @@ end
 function gCircle_dump(runtime)
     local hasFill = runtime:IP8()
     return fmt("hasfill=%d", hasFill)
+end
+
+function gEllipse(stack, runtime) -- 0xDD
+    error("Unimplemented opcode gEllipse!")
+end
+
+function gPoly(stack, runtime) -- 0xDE
+    error("Unimplemented opcode gPoly!")
+end
+
+function gFill(stack, runtime) -- 0xDF
+    error("Unimplemented opcode gFill!")
+end
+
+function gPatt(stack, runtime) -- 0xE0
+    error("Unimplemented opcode gPatt!")
+end
+
+function gCopy(stack, runtime) -- 0xE1
+    error("Unimplemented opcode gCopy!")
+end
+
+function gScroll(stack, runtime) -- 0xE2
+    error("Unimplemented opcode gScroll!")
 end
 
 function gUpdate(stack, runtime) -- 0xE3
@@ -1270,12 +1603,32 @@ function gUpdate_dump(runtime)
     return fmt("flag=%d", flag)
 end
 
+function GetEvent(stack, runtime) -- 0xE4
+    error("Unimplemented opcode GetEvent!")
+end
+
 function gLineTo(stack, runtime) -- 0xE5
     local graphics = runtime:getGraphics()
     local context = graphics.current
     local endPoint = stack:popPoint()
     runtime:graphicsOp("line", { x2 = endPoint.x, y2 = endPoint.y })
     context.pos = endPoint
+end
+
+function gPeekLine(stack, runtime) -- 0xE6
+    error("Unimplemented opcode gPeekLine!")
+end
+
+function Screen4(stack, runtime) -- 0xE7
+    error("Unimplemented opcode Screen4!")
+end
+
+function IoWaitStat(stack, runtime) -- 0xE8
+    error("Unimplemented opcode IoWaitStat!")
+end
+
+function IoYield(stack, runtime) -- 0xE9
+    error("Unimplemented opcode IoYield!")
 end
 
 function mInit(stack, runtime) -- 0xEA
@@ -1409,6 +1762,53 @@ function dItem_dump(runtime)
     return fmt("%d (%s)%s", itemType, dItemTypes[itemType] or "?", extra)
 end
 
+function Busy(stack, runtime) -- 0xF0
+    error("Unimplemented opcode Busy!")
+end
+
+Busy_dump = numParams_dump
+
+
+function Lock(stack, runtime) -- 0xF1
+    error("Unimplemented opcode Lock!")
+end
+
+function gInvert(stack, runtime) -- 0xF2
+    error("Unimplemented opcode gInvert!")
+end
+
+function gXPrint(stack, runtime) -- 0xF3
+    error("Unimplemented opcode gXPrint!")
+end
+
+function gBorder(stack, runtime) -- 0xF4
+    error("Unimplemented opcode gBorder!")
+end
+
+function gClock(stack, runtime) -- 0xF5
+    error("Unimplemented opcode gClock!")
+end
+
+function MkDir(stack, runtime) -- 0xF8
+    error("Unimplemented opcode MkDir!")
+end
+
+function RmDir(stack, runtime) -- 0xF9
+    error("Unimplemented opcode RmDir!")
+end
+
+function SetPath(stack, runtime) -- 0xFA
+    error("Unimplemented opcode SetPath!")
+end
+
+function SecsToDate(stack, runtime) -- 0xFB
+    error("Unimplemented opcode SecsToDate!")
+end
+
+function gIPrint(stack, runtime) -- 0xFC
+    error("Unimplemented opcode gIPrint!")
+end
+
 function NextOpcodeTable(stack, runtime) -- 0xFF
     local realOpcode = 256 + runtime:IP8()
     local fnName = codes[realOpcode]
@@ -1431,6 +1831,82 @@ function gGrey(stack, runtime) -- 0x100
     runtime:getGraphics().current.color = val
 end
 
+function DefaultWin(stack, runtime) -- 0x101
+    error("Unimplemented opcode DefaultWin!")
+end
+
+function Font(stack, runtime) -- 0x104
+    error("Unimplemented opcode Font!")
+end
+
+function Style(stack, runtime) -- 0x105
+    error("Unimplemented opcode Style!")
+end
+
+function FreeAlloc(stack, runtime) -- 0x10C
+    error("Unimplemented opcode FreeAlloc!")
+end
+
+function gButton(stack, runtime) -- 0x10F
+    error("Unimplemented opcode gButton!")
+end
+
+function gXBorder(stack, runtime) -- 0x110
+    error("Unimplemented opcode gXBorder!")
+end
+
+function ScreenInfo(stack, runtime) -- 0x114
+    error("Unimplemented opcode ScreenInfo!")
+end
+
+function CallOpxFunc(stack, runtime) -- 0x118
+    error("Unimplemented opcode CallOpxFunc!")
+end
+
+function Statement32(stack, runtime) -- 0x119
+    error("Unimplemented opcode Statement32!")
+end
+
+function Modify(stack, runtime) -- 0x11A
+    error("Unimplemented opcode Modify!")
+end
+
+function Insert(stack, runtime) -- 0x11B
+    error("Unimplemented opcode Insert!")
+end
+
+function Cancel(stack, runtime) -- 0x11C
+    error("Unimplemented opcode Cancel!")
+end
+
+function Put(stack, runtime) -- 0x11D
+    error("Unimplemented opcode Put!")
+end
+
+function DeleteTable(stack, runtime) -- 0x11E
+    error("Unimplemented opcode DeleteTable!")
+end
+
+function GotoMark(stack, runtime) -- 0x11F
+    error("Unimplemented opcode GotoMark!")
+end
+
+function KillMark(stack, runtime) -- 0x120
+    error("Unimplemented opcode KillMark!")
+end
+
+function ReturnFromEval(stack, runtime) -- 0x121
+    error("Unimplemented opcode ReturnFromEval!")
+end
+
+function GetEvent32(stack, runtime) -- 0x122
+    error("Unimplemented opcode GetEvent32!")
+end
+
+function GetEventA32(stack, runtime) -- 0x123
+    error("Unimplemented opcode GetEventA32!")
+end
+
 function gColor(stack, runtime) -- 0x124
     local blue = stack:pop()
     local green = stack:pop()
@@ -1438,6 +1914,50 @@ function gColor(stack, runtime) -- 0x124
     -- Not gonna bother too much about exact luminosity right now
     local val = (red + green + blue) // 3
     runtime:getGraphics().current.color = val
+end
+
+function SetFlags(stack, runtime) -- 0x125
+    error("Unimplemented opcode SetFlags!")
+end
+
+function SetDoc(stack, runtime) -- 0x126
+    error("Unimplemented opcode SetDoc!")
+end
+
+function DaysToDate(stack, runtime) -- 0x127
+    error("Unimplemented opcode DaysToDate!")
+end
+
+function gInfo32(stack, runtime) -- 0x128
+    error("Unimplemented opcode gInfo32!")
+end
+
+function IoWaitStat32(stack, runtime) -- 0x129
+    error("Unimplemented opcode IoWaitStat32!")
+end
+
+function Compact(stack, runtime) -- 0x12A
+    error("Unimplemented opcode Compact!")
+end
+
+function BeginTrans(stack, runtime) -- 0x12B
+    error("Unimplemented opcode BeginTrans!")
+end
+
+function CommitTrans(stack, runtime) -- 0x12C
+    error("Unimplemented opcode CommitTrans!")
+end
+
+function Rollback(stack, runtime) -- 0x12D
+    error("Unimplemented opcode Rollback!")
+end
+
+function ClearFlags(stack, runtime) -- 0x12E
+    error("Unimplemented opcode ClearFlags!")
+end
+
+function PointerFilter(stack, runtime) -- 0x12F
+    error("Unimplemented opcode PointerFilter!")
 end
 
 function mCasc(stack, runtime) -- 0x130
@@ -1456,6 +1976,14 @@ end
 
 mCasc_dump = numParams_dump
 
+function EvalExternalRightSideRef(stack, runtime) -- 0x131
+    error("Unimplemented opcode EvalExternalRightSideRef!")
+end
+
+function EvalExternalLeftSideRef(stack, runtime) -- 0x132
+    error("Unimplemented opcode EvalExternalLeftSideRef!")
+end
+
 function dEditCheckbox(stack, runtime) -- 0x133
     local dialog = runtime:getDialog()
     local item = { type = dItemTypes.dCHECKBOX }
@@ -1463,6 +1991,38 @@ function dEditCheckbox(stack, runtime) -- 0x133
     item.variable = stack:pop()
     item.value = tostring(item.variable())
     table.insert(dialog.items, item)
+end
+
+function gXBorder32(stack, runtime) -- 0x13B
+    error("Unimplemented opcode gXBorder32!")
+end
+
+function SetHelpUid(stack, runtime) -- 0x13A
+    error("Unimplemented opcode SetHelpUid!")
+end
+
+function ShowHelp(stack, runtime) -- 0x139
+    error("Unimplemented opcode ShowHelp!")
+end
+
+function SetHelp(stack, runtime) -- 0x138
+    error("Unimplemented opcode SetHelp!")
+end
+
+function mCardX(stack, runtime) -- 0x137
+    error("Unimplemented opcode mCardX!")
+end
+
+function gColorBackground(stack, runtime) -- 0x136
+    error("Unimplemented opcode gColorBackground!")
+end
+
+function gColorInfo(stack, runtime) -- 0x135
+    error("Unimplemented opcode gColorInfo!")
+end
+
+function dEditMulti(stack, runtime) -- 0x134
+    error("Unimplemented opcode dEditMulti!")
 end
 
 return _ENV

@@ -248,20 +248,84 @@ function IllegalFuncOpCode(stack, runtime)
     error(KOplErrIllegal)
 end
 
+function Asc(stack, runtime) -- 0x01
+    error("Unimplemented function Asc!")
+end
+
+function Count(stack, runtime) -- 0x03
+    error("Unimplemented function Count!")
+end
+
 function Day(stack, runtime) -- 0x04
     stack:push(os.date("*t").day)
+end
+
+function Dow(stack, runtime) -- 0x05
+    error("Unimplemented function Dow!")
+end
+
+function Eof(stack, runtime) -- 0x06
+    error("Unimplemented function Eof!")
 end
 
 function Err(stack, runtime) -- 0x07
     stack:push(runtime:getLastError())
 end
 
+function Exist(stack, runtime) -- 0x08
+    error("Unimplemented function Exist!")
+end
+
+function Find(stack, runtime) -- 0x09
+    error("Unimplemented function Find!")
+end
+
 function Get(stack, runtime) -- 0x0A
     stack:push(runtime:iohandler().getch())
 end
 
+function Ioa(stack, runtime) -- 0x0B
+    error("Unimplemented function Ioa!")
+end
+
+function Iow(stack, runtime) -- 0x0C
+    error("Unimplemented function Iow!")
+end
+
+function IoOpen(stack, runtime) -- 0x0D
+    error("Unimplemented function IoOpen!")
+end
+
+function IoWrite(stack, runtime) -- 0x0E
+    error("Unimplemented function IoWrite!")
+end
+
+function IoRead(stack, runtime) -- 0x0F
+    error("Unimplemented function IoRead!")
+end
+
+function IoClose(stack, runtime) -- 0x10
+    error("Unimplemented function IoClose!")
+end
+
+function IoWait(stack, runtime) -- 0x11
+    error("Unimplemented function IoWait!")
+end
+
 function Hour(stack, runtime) -- 0x12
     stack:push(os.date("*t").hour)
+end
+
+function Key(stack, runtime) -- 0x13
+    error("Unimplemented function Key!")
+end
+
+function Len(stack, runtime) -- 0x14
+    error("Unimplemented function Len!")
+end
+
+function Loc(stack, runtime) -- 0x15
+    error("Unimplemented function Loc!")
 end
 
 function Minute(stack, runtime) -- 0x16
@@ -272,12 +336,72 @@ function Month(stack, runtime) -- 0x17
     stack:push(os.date("*t").month)
 end
 
+function PeekB(stack, runtime) -- 0x18
+    error("Unimplemented function PeekB!")
+end
+
+function PeekW(stack, runtime) -- 0x19
+    error("Unimplemented function PeekW!")
+end
+
+function Pos(stack, runtime) -- 0x1A
+    error("Unimplemented function Pos!")
+end
+
 function Second(stack, runtime) -- 0x1C
     stack:push(os.date("*t").sec)
 end
 
 function Year(stack, runtime) -- 0x1E
     stack:push(os.date("*t").year)
+end
+
+function SAddr(stack, runtime) -- 0x1F
+    error("Unimplemented function SAddr!")
+end
+
+function Week(stack, runtime) -- 0x20
+    error("Unimplemented function Week!")
+end
+
+function IoSeek(stack, runtime) -- 0x21
+    error("Unimplemented function IoSeek!")
+end
+
+function Kmod(stack, runtime) -- 0x22
+    error("Unimplemented function Kmod!")
+end
+
+function KeyA(stack, runtime) -- 0x23
+    error("Unimplemented function KeyA!")
+end
+
+function KeyC(stack, runtime) -- 0x24
+    error("Unimplemented function KeyC!")
+end
+
+function IoOpenUnique(stack, runtime) -- 0x25
+    error("Unimplemented function IoOpenUnique!")
+end
+
+function gCreate(stack, runtime) -- 0x26
+    error("Unimplemented function gCreate!")
+end
+
+function gCreateBit(stack, runtime) -- 0x27
+    error("Unimplemented function gCreateBit!")
+end
+
+function gLoadBit(stack, runtime) -- 0x28
+    error("Unimplemented function gLoadBit!")
+end
+
+function gLoadFont(stack, runtime) -- 0x29
+    error("Unimplemented function gLoadFont!")
+end
+
+function gRank(stack, runtime) -- 0x2A
+    error("Unimplemented function gRank!")
 end
 
 function gIdentity(stack, runtime) -- 0x2B
@@ -298,6 +422,26 @@ end
 
 function gHeight(stack, runtime) -- 0x2F
     stack:push(runtime:getGraphics().current.height)
+end
+
+function gOriginX(stack, runtime) -- 0x30
+    error("Unimplemented function gOriginX!")
+end
+
+function gOriginY(stack, runtime) -- 0x31
+    error("Unimplemented function gOriginY!")
+end
+
+function gTWidth(stack, runtime) -- 0x32
+    error("Unimplemented function gTWidth!")
+end
+
+function gPrintClip(stack, runtime) -- 0x33
+    error("Unimplemented function gPrintClip!")
+end
+
+function TestEvent(stack, runtime) -- 0x34
+    error("Unimplemented function TestEvent!")
 end
 
 function Menu(stack, runtime) -- 0x36
@@ -350,6 +494,10 @@ end
 
 Alert_dump = numParams_dump
 
+function gCreateEnhanced(stack, runtime) -- 0x39
+    error("Unimplemented function gCreateEnhanced!")
+end
+
 function MenuWithMemory(stack, runtime) -- 0x3A
     -- This should've been picked up by Addr and translated into a AddrPlusMenuWithMemory call
     error("Unexpected MenuWithMemory fncall!")
@@ -383,6 +531,10 @@ function Days(stack, runtime) -- 0x37
     stack:push(t)
 end
 
+function IAbs(stack, runtime) -- 0x41
+    error("Unimplemented function IAbs!")
+end
+
 function IntLong(stack, runtime) -- 0x42
     local val = stack:pop()
     if val > 0 then
@@ -391,6 +543,70 @@ function IntLong(stack, runtime) -- 0x42
         val = math.ceil(val)
     end
     stack:push(val)
+end
+
+function PeekL(stack, runtime) -- 0x43
+    error("Unimplemented function PeekL!")
+end
+
+function Space(stack, runtime) -- 0x44
+    error("Unimplemented function Space!")
+end
+
+function DateToSecs(stack, runtime) -- 0x45
+    error("Unimplemented function DateToSecs!")
+end
+
+function Alloc(stack, runtime) -- 0x4B
+    error("Unimplemented function Alloc!")
+end
+
+function ReAlloc(stack, runtime) -- 0x4C
+    error("Unimplemented function ReAlloc!")
+end
+
+function AdjustAlloc(stack, runtime) -- 0x4D
+    error("Unimplemented function AdjustAlloc!")
+end
+
+function LenAlloc(stack, runtime) -- 0x4E
+    error("Unimplemented function LenAlloc!")
+end
+
+function Ioc(stack, runtime) -- 0x4F
+    error("Unimplemented function Ioc!")
+end
+
+function Uadd(stack, runtime) -- 0x50
+    error("Unimplemented function Uadd!")
+end
+
+function Usub(stack, runtime) -- 0x51
+    error("Unimplemented function Usub!")
+end
+
+function IoCancel(stack, runtime) -- 0x52
+    error("Unimplemented function IoCancel!")
+end
+
+function FindField(stack, runtime) -- 0x54
+    error("Unimplemented function FindField!")
+end
+
+function Bookmark(stack, runtime) -- 0x55
+    error("Unimplemented function Bookmark!")
+end
+
+function GetEventC(stack, runtime) -- 0x56
+    error("Unimplemented function GetEventC!")
+end
+
+function InTrans(stack, runtime) -- 0x57
+    error("Unimplemented function InTrans!")
+end
+
+function mPopup(stack, runtime) -- 0x58
+    error("Unimplemented function mPopup!")
 end
 
 function Abs(stack, runtime) -- 0x80
@@ -425,6 +641,10 @@ end
 --     -- TODO
 -- end
 
+function Flt(stack, runtime) -- 0x87
+    error("Unimplemented function Flt!")
+end
+
 function Intf(stack, runtime) -- 0x88
     return IntLong(stack, runtime) -- Same difference
 end
@@ -435,6 +655,10 @@ end
 
 function Log(stack, runtime) -- 0x8A
     stack:push(math.log(stack:pop(), 10))
+end
+
+function PeekF(stack, runtime) -- 0x8B
+    error("Unimplemented function PeekF!")
 end
 
 function Pi(stack, runtime) -- 0x8C
@@ -461,13 +685,61 @@ function Tan(stack, runtime) -- 0x91
     stack:push(math.tan(stack:pop())) 
 end
 
+function Val(stack, runtime) -- 0x92
+    error("Unimplemented function Val!")
+end
+
+function Max(stack, runtime) -- 0x93
+    error("Unimplemented function Max!")
+end
+
+function Mean(stack, runtime) -- 0x94
+    error("Unimplemented function Mean!")
+end
+
+function Min(stack, runtime) -- 0x95
+    error("Unimplemented function Min!")
+end
+
+function Std(stack, runtime) -- 0x96
+    error("Unimplemented function Std!")
+end
+
+function Sum(stack, runtime) -- 0x97
+    error("Unimplemented function Sum!")
+end
+
+function Var(stack, runtime) -- 0x98
+    error("Unimplemented function Var!")
+end
+
+function Eval(stack, runtime) -- 0x99
+    error("Unimplemented function Eval!")
+end
+
 function ChrStr(stack) -- 0xC0
     return stack:push(string.char(stack:pop()))
+end
+
+function DatimStr(stack, runtime) -- 0xC1
+    error("Unimplemented function DatimStr!")
+end
+
+function DayNameStr(stack, runtime) -- 0xC2
+    error("Unimplemented function DayNameStr!")
+end
+
+function DirStr(stack, runtime) -- 0xC3
+    error("Unimplemented function DirStr!")
 end
 
 function ErrStr(stack, runtime) -- 0xC4
     local err = stack:pop()
     stack:push(Errors[err] or fmt("Unknown error %d", err))
+end
+
+function FixStr(stack, runtime) -- 0xC5
+    error("Unimplemented function FixStr!")
 end
 
 function GenStr(stack, runtime) -- 0xC6
@@ -479,9 +751,89 @@ function GenStr(stack, runtime) -- 0xC6
     stack:push(val)
 end
 
+function GetStr(stack, runtime) -- 0xC7
+    error("Unimplemented function GetStr!")
+end
+
+function HexStr(stack, runtime) -- 0xC8
+    error("Unimplemented function HexStr!")
+end
+
+function KeyStr(stack, runtime) -- 0xC9
+    error("Unimplemented function KeyStr!")
+end
+
+function LeftStr(stack, runtime) -- 0xCA
+    error("Unimplemented function LeftStr!")
+end
+
+function LowerStr(stack, runtime) -- 0xCB
+    error("Unimplemented function LowerStr!")
+end
+
+function MidStr(stack, runtime) -- 0xCC
+    error("Unimplemented function MidStr!")
+end
+
+function MonthStr(stack, runtime) -- 0xCD
+    error("Unimplemented function MonthStr!")
+end
+
+function NumStr(stack, runtime) -- 0xCE
+    error("Unimplemented function NumStr!")
+end
+
+function PeekStr(stack, runtime) -- 0xCF
+    error("Unimplemented function PeekStr!")
+end
+
+function ReptStr(stack, runtime) -- 0xD0
+    error("Unimplemented function ReptStr!")
+end
+
+function RightStr(stack, runtime) -- 0xD1
+    error("Unimplemented function RightStr!")
+end
+
+function SciStr(stack, runtime) -- 0xD2
+    error("Unimplemented function SciStr!")
+end
+
+function UpperStr(stack, runtime) -- 0xD3
+    error("Unimplemented function UpperStr!")
+end
+
+function WCmd(stack, runtime) -- 0xD5
+    error("Unimplemented function WCmd!")
+end
+
+function CmdStr(stack, runtime) -- 0xD6
+    error("Unimplemented function CmdStr!")
+end
+
+function ParseStr(stack, runtime) -- 0xD7
+    error("Unimplemented function ParseStr!")
+end
+
 function ErrxStr(stack, runtime) -- 0xD8
     local _, desc = runtime:getLastError()
     stack:push(desc)
+end
+
+function gPixel(stack, runtime) -- 0xDC
+    error("Unimplemented function gPixel!")
+end
+
+function LocWithCase(stack, runtime) -- 0xDB
+    error("Unimplemented function LocWithCase!")
+end
+
+function Size(stack, runtime) -- 0xDA
+    error("Unimplemented function Size!")
+end
+
+function GetDocStr(stack, runtime) -- 0xD9
+    error("Unimplemented function GetDocStr!")
 end
 
 return _ENV
