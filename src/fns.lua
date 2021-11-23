@@ -244,6 +244,10 @@ function Addr(stack, runtime) -- 0x00
     AddrPlusMenuWithMemory(stack, runtime)
 end
 
+function IllegalFuncOpCode(stack, runtime)
+    error(KOplErrIllegal)
+end
+
 function Day(stack, runtime) -- 0x04
     stack:push(os.date("*t").day)
 end
