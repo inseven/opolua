@@ -11,6 +11,7 @@
 		D861E8DD274A81B4003C8D3D /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Library.swift */; };
 		D861E8DF274A8D70003C8D3D /* KeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DE274A8D70003C8D3D /* KeyCode.swift */; };
 		D861E8E1274AB1CB003C8D3D /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */; };
+		D87A9249274C517000254DE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB79FE6427428294005E904F /* Assets.xcassets */; };
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
 		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
 		D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891346274BF2D200794D55 /* DialogViewController.swift */; };
@@ -358,6 +359,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D87A9249274C517000254DE9 /* Assets.xcassets in Resources */,
 				DB79FFF22742E631005E904F /* fns.lua in Resources */,
 				D8C679BD27484BF400BD8720 /* examples in Resources */,
 				DB79FFF72742E631005E904F /* ops.lua in Resources */,
