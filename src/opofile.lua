@@ -90,8 +90,9 @@ function parseProc(proc)
         return result
     end
     -- print(dataSize, qcodeSize, maxStack, paramsCount, dataPos)
+    -- Params are in reverse order in memory (ie last first) so flip them in proc.params
     for i = 1, paramsCount do
-        proc.params[i] = readByte()
+        table.insert(proc.params, 1, readByte())
     end
 
     -- printf("globalsTableStart=0x%08X\n", proc.offset+2+dataPos-1) 

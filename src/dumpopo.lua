@@ -40,14 +40,9 @@ end
 function printProc(proc)
     printf("%s @ 0x%08X code=0x%08X line=%d\n", proc.name, proc.offset, proc.codeOffset, proc.lineNumber)
     local numParams = #proc.params
-    for i = #proc.params, 1, -1 do
-        local param = proc.params[i]
-        -- Params are listed in reverse order (ie as per how they'd be pushed
-        -- onto the stack) so reflect that in the indexes we print here and the
-        -- order we iterate
-        local paramIdx = numParams - i
-        local indirectIdx = paramIdx * 2 + proc.iTotalTableSize + 18 -- inverse of Runtime:getIndirectVar() logic
-        printf("    Param %d: %s indirectIdx=0x%04x\n", paramIdx + 1, DataTypes[param], indirectIdx)
+    for i, param in ipairs(proc.params) do
+        local indirectIdx = (i - 1) * 2 + proc.iTotalTableSize + 18 -- inverse of Runtime:getIndirectVar() logic
+        printf("    Param %d: %s indirectIdx=0x%04x\n", i, DataTypes[param], indirectIdx)
     end
     for _, subproc in ipairs(proc.subprocs) do
         printf('    Subproc "%s" offset=0x%04X nargs=%d\n', subproc.name, subproc.offset, subproc.numParams)
