@@ -113,6 +113,7 @@ function Runtime:getLocalVar(index, type, frame)
         vars[index] = var
     end
     if var() == nil then
+        assert(frame.proc.fn == nil, "Cannot have an uninitialized local var in a Lua frame!")
         -- Even though the caller might be a LeftSide op and thus is about to
         -- assign to the var, so initialising the var might not actually be
         -- necessary, we'll do it anyway just to simplify the interface
@@ -192,7 +193,12 @@ function Runtime:moduleForProc(proc)
     return nil
 end
 
-function Runtime:pushNewFrame(stack, proc)
+function Runtime:pushNewFrame(stack, proc, numParams)
+    assert(numParams, "Must specify numParams!")
+    if proc.params then
+        assert(#proc.params == numParams, "Wrong number of arguments for proc "..proc.name)
+    end
+
     local frame = {
         returnIP = self.ip,
         proc = proc,
@@ -217,13 +223,13 @@ function Runtime:pushNewFrame(stack, proc)
     -- pop them here. We're ignoring the type-checking extra values that
     -- were pushed onto the stack prior to the RunProcedure call.
 
-    for i = 1, #proc.params do
+    for i = 1, numParams do
         local var = self:popParameter(stack)
         table.insert(frame.indirects, 1, var)
     end
     frame.returnStackSize = stack:getSize()
 
-    for _, external in ipairs(proc.externals) do
+    for _, external in ipairs(proc.externals or {}) do
         -- Now resolve externals in the new fn by walking up the frame procs until
         -- we find a global with a matching name
         local parentFrame = frame
@@ -232,7 +238,15 @@ function Runtime:pushNewFrame(stack, proc)
             parentFrame = parentFrame.prevFrame
             assert(parentFrame, "Failed to resolve external "..external.name)
             local parentProc = parentFrame.proc
-            found = parentProc.globals[external.name]
+            local globals
+            if parentProc.fn then
+                -- In Lua fns, globals are declared at runtime on a per-frame
+                -- basis, rather than being a property of the proc
+                globals = parentFrame.globals
+            else
+                globals = parentProc.globals
+            end
+            found = globals[external.name]
         end
         table.insert(frame.indirects, self:getLocalVar(found.offset, found.type, parentFrame))
         -- DEBUG
@@ -240,7 +254,19 @@ function Runtime:pushNewFrame(stack, proc)
         -- for i, var in ipairs(self.frame.indirects) do
         --     printf("Indirect %i: %s\n", i, var())
         -- end
+    end
 
+    if proc.fn then
+        -- It's a Lua-implemented proc meaning we don't just set ip and return
+        -- to the event loop, we have to invoke it here. Conveniently
+        -- frame.indirects contains exactly the proc args, in the right format.
+        frame.globals = {}
+        local args = {}
+        for i, var in ipairs(frame.indirects) do
+            args[i] = var()
+        end
+        local result = proc.fn(self, table.unpack(args))
+        self:returnFromFrame(stack, result or 0)
     end
 end
 
@@ -382,11 +408,13 @@ function printInstruction(currentOpIdx, opCode, op, extra)
     printf("%08X: %02X [%s] %s\n", currentOpIdx, opCode, op, extra or "")
 end
 
-function Runtime:dumpProc(procName)
+function Runtime:dumpProc(procName, startAddr)
     local proc = self:findProc(procName)
-    self.ip = proc.codeOffset
     local endIdx = proc.codeOffset + proc.codeSize
-    self:pushNewFrame(nil, proc)
+    self:pushNewFrame(nil, proc, #proc.params)
+    if startAddr then
+        self.ip = startAddr
+    end
     while self.ip < endIdx do
         local currentOpIdx = self.ip
         local opCode, op = self:nextOp()
@@ -410,7 +438,7 @@ local function run(self, stack)
         if not opFn then
             error(fmt("No implementation of op %s at codeOffset 0x%08X in %s\n", op, self.lastIp, self.frame.proc.name))
         end
-        if instructionDebug then
+        if self.instructionDebug then
             local savedIp = self.ip
             local extra = ops[op](nil, self)
             self.ip = savedIp
@@ -433,13 +461,27 @@ function Runtime:unhandledErr(err)
     return false
 end
 
-function Runtime:runProc(proc, instructionDebug)
-    assert(self.frame == nil, "Cannnot call runProc while still executing something else!")
-    assert(#proc.params == 0, "Cannot run a procedure that expects arguments")
+function Runtime:setInstructionDebug(flag)
+    self.instructionDebug = flag
+end
+
+function Runtime:callProc(procName, ...)
+    local callingFrame = self.frame
+    assert(callingFrame == nil or callingFrame.proc.fn, "Cannnot callProc while still executing something else!")
+
+    local proc = self:findProc(procName)
+    local args = table.pack(...)
+    assert(args.n == #proc.params, "Wrong number of arguments in call to "..procName)
+
     self.ip = proc.codeOffset
     self.errorValue = KErrNone
     local stack = newStack()
-    self:pushNewFrame(stack, proc) -- sets self.frame and self.ip
+    for i = 1, args.n do
+        stack:push(args[i])
+        stack:push(proc.params[i]) -- Hope this matches, should probably check...
+    end
+
+    self:pushNewFrame(stack, proc, args.n) -- sets self.frame and self.ip
     while self.ip do
         local ok, err = pcall(run, self, stack)
         if not ok then
@@ -452,7 +494,7 @@ function Runtime:runProc(proc, instructionDebug)
                     stack:popTo(self.frame.returnStackSize)
                     -- And continue to next instruction
                 else
-                    -- See if this frame *or any parent* has an error handler
+                    -- See if this frame or any parent frame up to callingFrame has an error handler
                     while true do
                         if self.frame.errIp then
                             stack:popTo(self.frame.returnStackSize)
@@ -461,8 +503,13 @@ function Runtime:runProc(proc, instructionDebug)
                         else
                             local prevFrame = self.frame.prevFrame
                             self:setFrame(prevFrame)
-                            if prevFrame then
+                            if prevFrame ~= callingFrame then
                                 -- And loop again
+                            elseif prevFrame ~= nil then
+                                -- We have unwound to a non-nil calling frame
+                                -- which must therefore be a Lua fn, in which case we can just re-throw the error
+                                assert(prevFrame.proc.fn, "prevFrame is not a Lua fn!?")
+                                error(err, 0)
                             else
                                 return self:unhandledErr(err)
                             end
@@ -470,12 +517,68 @@ function Runtime:runProc(proc, instructionDebug)
                     end
                 end
             else
-                return self:unhandledErr(err)
+                if callingFrame then
+                    assert(callingFrame.proc.fn, "callingFrame is not a Lua fn!?")
+                    error(err, 0)
+                else
+                    return self:unhandledErr(err)
+                end
             end
         end
     end
-    assert(self.frame == nil, "Frame was not nil on runProc exit!")
+    assert(self.frame == callingFrame, "Frame was not restored on callProc exit!")
     return true -- no error
+end
+
+function Runtime:loadModule(path)
+    local basename = path:lower():match("([^%.\\]+)%.opo$")
+    assert(basename, "Failed to parse module name from "..path)
+    local ok, mod = pcall(require, "modules."..basename)
+    assert(ok, KOplErrNoMod)
+    local procTable = {}
+    for k, v in pairs(mod) do
+        assert(type(v) == "function", "Unexpected top-level value in module that isn't a function")
+        local proc = {
+            name = k:upper(),
+            fn = v
+        }
+        table.insert(procTable, proc)
+    end
+    self:addModule(basename, procTable)
+end
+
+function Runtime:declareGlobal(name, arrayLen)
+    local frame = self.frame
+    name = name:upper()
+    assert(self.ip == nil and frame.proc.fn and frame.globals, "Can only declareGlobal from within a Lua module!")
+
+    local valType
+    if name:match("%%$") then
+        valType = DataTypes.EWord
+    elseif name:match("&$") then
+        valType = DataTypes.ELong
+    elseif name:match("%$$") then
+        valType = DataTypes.EString
+    else -- no suffix means float
+        valType = DataTypes.EReal
+    end
+
+    -- We define our indexes (which are how externals map to locals) as simply
+    -- being the position of the item in the frame vars table. We can skip
+    -- figuring out a byte-exact frame index because nothing actually needs to
+    -- know it.
+    local index = #frame.vars + 1
+
+    local var = makeVar()
+    frame.globals[name] = { offset = index, type = valType }
+    frame.vars[index] = var
+
+    if arrayLen then
+        var(newArrayVal(valType, arrayLen))
+    else
+        var(DefaultSimpleTypes[valType])
+    end
+    return var
 end
 
 return _ENV

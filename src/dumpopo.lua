@@ -20,12 +20,17 @@ function main(args)
     if not all then
         fnName = args[2]
     end
+    local startAddr
+    if args[3] then
+        startAddr = tonumber(args[3], 16)
+    end
     local verbose = all or fnName == nil
     local procTable = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime()
     rt:addModule(filename, procTable)
     if fnName then
-        rt:dumpProc(fnName:upper())
+        printProc(rt:findProc(fnName:upper()))
+        rt:dumpProc(fnName:upper(), startAddr)
     else
         for i, proc in ipairs(procTable) do
             printf("%d: ", i)

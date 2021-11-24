@@ -27,9 +27,10 @@ function runOpo(filename, procName, iohandler, verbose)
 
     local procTable = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime(iohandler)
+    rt:setInstructionDebug(verbose)
     rt:addModule(filename, procTable)
-    local proc = procName and rt:findProc(procName:upper()) or procTable[1]
-    rt:runProc(proc, verbose)
+    local procToCall = procName and procName:upper() or procTable[1].name
+    rt:callProc(procToCall)
 end
 
 -- Syntax: runopo.lua filename [fnName]

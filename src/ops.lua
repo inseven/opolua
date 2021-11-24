@@ -529,9 +529,19 @@ local function index_dump(runtime)
     return fmt("0x%04X", index)
 end
 
+local function IPs8_dump(runtime)
+    local val = runtime:IPs8()
+    return fmt("%d (0x%s)", val, fmt("%02X", val):sub(-2))
+end
+
 local function IPs16_dump(runtime)
     local val = runtime:IPs16()
     return fmt("%d (0x%s)", val, fmt("%04X", val):sub(-4))
+end
+
+local function IPs32_dump(runtime)
+    local val = runtime:IPs32()
+    return fmt("%d (0x%s)", val, fmt("%08X", val):sub(-8))
 end
 
 local function numParams_dump(runtime)
@@ -891,10 +901,7 @@ function StackByteAsWord(stack, runtime) -- 0x4F
     stack:push(val)
 end
 
-function StackByteAsWord_dump(runtime)
-    local val = runtime:IPs8()
-    return fmt("%d (0x%02X)", val, val)
-end
+StackByteAsWord_dump = IPs8_dump
 
 function MultiplyUntyped(stack)
     if stack then
@@ -926,8 +933,7 @@ function RunProcedure(stack, runtime) -- 0x53
     local procIdx, name, numParams = decodeRunProc(runtime)
     assert(name, "Subproc not found for index "..tostring(procIdx))
     local proc = runtime:findProc(name)
-    assert(#proc.params == numParams, "Wrong number of arguments for proc "..name)
-    runtime:pushNewFrame(stack, proc)
+    runtime:pushNewFrame(stack, proc, numParams)
 end
 
 function RunProcedure_dump(runtime)
@@ -1067,8 +1073,7 @@ function CallProcByStringExpr(stack, runtime) -- 0x6B
     local type = runtime:IP8()
     local procName = stack:remove(stack:getSize() - numParams*2)
     local proc = runtime:findProc(procName:upper())
-    assert(#proc.params == numParams, "Wrong number of arguments for proc "..procName)
-    runtime:pushNewFrame(stack, proc)
+    runtime:pushNewFrame(stack, proc, numParams)
 end
 
 function CallProcByStringExpr_dump(runtime)
@@ -1113,7 +1118,7 @@ function NullReturnString(stack, runtime) -- 0x77
     runtime:returnFromFrame(stack, "")
 end
 
-function NoOp()
+local function NoOp()
 end
 
 LongToInt = NoOp -- 0x78
@@ -1323,7 +1328,8 @@ function LClose(stack, runtime) -- 0xAD
 end
 
 function LoadM(stack, runtime) -- 0xAE
-    error("Unimplemented opcode LoadM!")
+    runtime:loadModule(stack:pop())
+    runtime:setTrap(false)
 end
 
 function LOpen(stack, runtime) -- 0xAF

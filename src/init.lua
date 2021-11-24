@@ -51,6 +51,7 @@ Errors = {
     KOplErrDivideByZero = OPLERR(-8),
     KOplStructure = OPLERR(-85),
     KOplErrIllegal = OPLERR(-96),
+    KOplErrNoMod = OPLERR(-106),
     KOplErrSubs = OPLERR(-111),
     KOplErrEsc = OPLERR(-114),
 }
