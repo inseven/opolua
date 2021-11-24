@@ -30,7 +30,10 @@ function runOpo(filename, procName, iohandler, verbose)
     rt:setInstructionDebug(verbose)
     rt:addModule(filename, procTable)
     local procToCall = procName and procName:upper() or procTable[1].name
-    rt:callProc(procToCall)
+    local err = rt:pcallProc(procToCall)
+    if err then
+        print("Error: "..tostring(err))
+    end
 end
 
 -- Syntax: runopo.lua filename [fnName]

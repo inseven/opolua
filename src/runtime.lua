@@ -161,9 +161,15 @@ function Runtime:getVar(index, type, indirect)
     end
 end
 
-function Runtime:addModule(name, procTable)
+function Runtime:addModule(path, procTable)
+    local name = splitext(basename(path)):upper()
     local mod = {
-        [1] = name:upper()
+        -- Since 'name' isn't a legal procname (they're always uppercase in
+        -- definitions, even though they're not necessarily when they are
+        -- called) it is safe to use the same namespace as for the module's
+        -- procnames.
+        name = name,
+        path = path,
     }
     for _, proc in ipairs(procTable) do
         mod[proc.name] = proc
@@ -408,6 +414,16 @@ function printInstruction(currentOpIdx, opCode, op, extra)
     printf("%08X: %02X [%s] %s\n", currentOpIdx, opCode, op, extra or "")
 end
 
+function Runtime:decodeNextInstruction()
+    local currentIp = self.ip
+    local opCode = sbyte(self.data, currentIp + 1)
+    local op = ops.codes[opCode]
+    self.ip = currentIp + 1
+    local opDump = op and op.."_dump"
+    local extra = ops[opDump] and ops[opDump](self)
+    return fmt("%08X: %02X [%s] %s", currentIp, opCode, op or "?", extra or "")
+end
+
 function Runtime:dumpProc(procName, startAddr)
     local proc = self:findProc(procName)
     local endIdx = proc.codeOffset + proc.codeSize
@@ -416,56 +432,111 @@ function Runtime:dumpProc(procName, startAddr)
         self.ip = startAddr
     end
     while self.ip < endIdx do
-        local currentOpIdx = self.ip
-        local opCode, op = self:nextOp()
-        local opFn = ops[op]
-        if not opFn then
-            printf("No implementation of op %s\n", op)
-            return
-        end
-        local opDump = op.."_dump"
-        local extra = ops[opDump] and ops[opDump](self)
-        printInstruction(currentOpIdx, opCode, op, extra)
+        print(self:decodeNextInstruction())
     end
     self:setFrame(nil)
 end
 
 local function run(self, stack)
     while self.ip do
-        self.lastIp = self.ip
+        self.frame.lastIp = self.ip
         local opCode, op = self:nextOp()
         local opFn = ops[op]
         if not opFn then
-            error(fmt("No implementation of op %s at codeOffset 0x%08X in %s\n", op, self.lastIp, self.frame.proc.name))
+            error(fmt("No implementation of op %s at codeOffset 0x%08X in %s\n", op, self.frame.lastIp, self.frame.proc.name))
         end
         if self.instructionDebug then
             local savedIp = self.ip
-            local extra = ops[op](nil, self)
+            self.ip = self.frame.lastIp
+            print(self:decodeNextInstruction())
             self.ip = savedIp
-            printInstruction(self.lastIp, opCode, op, extra)
         end
         ops[op](stack, self)
     end
-end
-
-function Runtime:unhandledErr(err)
-    printf("Error from instruction at 0x%08X: %s", self.lastIp, tostring(err))
-    if type(err) == "number" then
-        local errStr = Errors[err]
-        if errStr then
-            printf(" (%s)", errStr)
-        end
-    end
-    printf("\n")
-    self:setFrame(nil)
-    return false
 end
 
 function Runtime:setInstructionDebug(flag)
     self.instructionDebug = flag
 end
 
-function Runtime:callProc(procName, ...)
+ErrObj = {
+    __tostring = function(self)
+        return fmt("%s\n%s\n%s", self.msg or self.code, self.opoStack, self.luaStack)
+    end
+}
+ErrObj.__index = ErrObj
+
+local function findLocationOfFnOnStack(fn)
+    local lvl = 2
+    while true do
+        local dbgInfo = debug.getinfo(lvl, "f")
+        if dbgInfo == nil then
+            -- fn not found on stack, shouldn't happen...
+            return "?"
+        elseif dbgInfo.func == fn then
+            dbgInfo = debug.getinfo(lvl, "Sl")
+            return fmt("%s:%d", dbgInfo.source:sub(2), dbgInfo.currentline)
+        end
+        lvl = lvl + 1
+    end
+end
+
+local function addStacktraceToError(self, err, callingFrame)
+    if callingFrame then
+        -- Save caller info for later, when we're (potentially) adding this
+        -- frame to a callstack in a subsequent higher-level error call. This
+        -- avoids us having to do it every time there's a call to pcallProc
+        -- which doesn't result in an error.
+        assert(callingFrame.proc.fn, "There's a calling frame but no Lua fn?!")
+        callingFrame.lastPcallSite = findLocationOfFnOnStack(callingFrame.proc.fn)
+    end
+
+    local frameDescs = {}
+    local erroringFrame = self.frame
+    local savedIp = self.ip
+    -- In order to get instruction decode in the stacktrace we must swizzle
+    -- frames around, but note we don't actually unwind them.
+    while self.frame ~= callingFrame do
+        local mod = self:moduleForProc(self.frame.proc)
+        local info
+        if self.frame.proc.fn then
+            info = fmt("%s\\%s: [Lua] %s", mod.name, self.frame.proc.name, self.frame.lastPcallSite or "?")
+        else
+            self.ip = self.frame.lastIp
+            info = fmt("%s\\%s:%s", mod.name, self.frame.proc.name, self:decodeNextInstruction())
+        end
+        table.insert(frameDescs, info)
+        self:setFrame(self.frame.prevFrame)
+    end
+    self:setFrame(erroringFrame, savedIp) -- Restore correct stack frame
+    local stack = table.concat(frameDescs, "\n")
+    if err.opoStack then
+        err.opoStack = err.opoStack.."\n"..stack
+    else
+        err.opoStack = stack
+    end
+end
+
+local function traceback(msgOrCode)
+    local t = type(msgOrCode)
+    if t == "table" then
+        -- We've already got the Lua stacktrace, nothing more to do here
+        return msgOrCode
+    end
+
+    local err = setmetatable({
+        code = t == "number" and msgOrCode,
+        luaStack = debug.traceback(nil, 2),
+    }, ErrObj)
+    if err.code then
+        err.msg = fmt("%d (%s)", err.code, Errors[err.code] or "?")
+    else
+        err.msg = msgOrCode
+    end
+    return err
+end
+
+function Runtime:pcallProc(procName, ...)
     local callingFrame = self.frame
     assert(callingFrame == nil or callingFrame.proc.fn, "Cannnot callProc while still executing something else!")
 
@@ -483,11 +554,12 @@ function Runtime:callProc(procName, ...)
 
     self:pushNewFrame(stack, proc, args.n) -- sets self.frame and self.ip
     while self.ip do
-        local ok, err = pcall(run, self, stack)
+        local ok, err = xpcall(run, traceback, self, stack)
         if not ok then
-            self.errorLocation = fmt("Error in %s\\%s", self:moduleForProc(self.frame.proc)[1], self.frame.proc.name)
-            if type(err) == "number" then
-                self.errorValue = err
+            addStacktraceToError(self, err, callingFrame)
+            self.errorLocation = fmt("Error in %s\\%s", self:moduleForProc(self.frame.proc).name, self.frame.proc.name)
+            if err.code then
+                self.errorValue = err.code
                 -- An error code that might potentially be handled by a Trap or OnErr
                 if self.trap then
                     self.trap = false
@@ -505,35 +577,32 @@ function Runtime:callProc(procName, ...)
                             self:setFrame(prevFrame)
                             if prevFrame ~= callingFrame then
                                 -- And loop again
-                            elseif prevFrame ~= nil then
-                                -- We have unwound to a non-nil calling frame
-                                -- which must therefore be a Lua fn, in which case we can just re-throw the error
-                                assert(prevFrame.proc.fn, "prevFrame is not a Lua fn!?")
-                                error(err, 0)
                             else
-                                return self:unhandledErr(err)
+                                return err
                             end
                         end
                     end
                 end
             else
-                if callingFrame then
-                    assert(callingFrame.proc.fn, "callingFrame is not a Lua fn!?")
-                    error(err, 0)
-                else
-                    return self:unhandledErr(err)
-                end
+                self:setFrame(callingFrame)
+                return err
             end
         end
     end
-    assert(self.frame == callingFrame, "Frame was not restored on callProc exit!")
-    return true -- no error
+    assert(self.frame == callingFrame, "Frame was not restored on pcallProc exit!")
+    return nil -- no error
+end
+
+function Runtime:callProc(procName, ...)
+    local err = self:pcallProc(procName, ...)
+    if err then
+        error(err)
+    end
 end
 
 function Runtime:loadModule(path)
-    local basename = path:lower():match("([^%.\\]+)%.opo$")
-    assert(basename, "Failed to parse module name from "..path)
-    local ok, mod = pcall(require, "modules."..basename)
+    local modName = splitext(basename(path:lower()))
+    local ok, mod = pcall(require, "modules."..modName)
     assert(ok, KOplErrNoMod)
     local procTable = {}
     for k, v in pairs(mod) do
@@ -544,7 +613,7 @@ function Runtime:loadModule(path)
         }
         table.insert(procTable, proc)
     end
-    self:addModule(basename, procTable)
+    self:addModule(path, procTable)
 end
 
 function Runtime:declareGlobal(name, arrayLen)

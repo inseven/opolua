@@ -1270,15 +1270,6 @@ function Beep(stack, runtime) -- 0xA0
     runtime:iohandler().beep(freq, duration)
 end
 
-local function decodeOnErr(runtime)
-    local offset = runtime:IP16()
-    local newIp
-    if offset ~= 0 then
-        newIp = runtime:getIp() + offset - 3
-    end
-    return newIP, offset
-end
-
 function Close(stack, runtime) -- 0xA1
     error("Unimplemented opcode Close!")
 end
@@ -1338,6 +1329,15 @@ end
 
 function Next(stack, runtime) -- 0xB0
     error("Unimplemented opcode Next!")
+end
+
+local function decodeOnErr(runtime)
+    local offset = runtime:IP16()
+    local newIp
+    if offset ~= 0 then
+        newIp = runtime:getIp() + offset - 3
+    end
+    return newIp, offset
 end
 
 function OnErr(stack, runtime) -- 0xB1

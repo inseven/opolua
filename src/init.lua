@@ -88,3 +88,35 @@ function sortedKeys(tbl)
     return result
 end
 
+function splitpath(path)
+    local dir, sep, name = path:match([[(.*)([/\])(.*)$]])
+    if not dir then
+        return "", path
+    else
+        local dirLen = #dir
+        if dirLen == 0 or (dirLen == 2 and dir:match("[a-zA-Z]:")) then
+            -- Roots always have have a trailing slash
+            dir = dir..sep
+        end
+        return dir, name
+    end
+end
+
+function dirname(path)
+    local dir, file = splitpath(path)
+    return dir
+end
+
+function basename(path)
+    local dir, file = splitpath(path)
+    return file
+end
+
+function splitext(path)
+    local base, ext = path:match("(.+)(%.[^%.]*)")
+    if not base then
+        return path, ""
+    else
+        return base, ext
+    end
+end
