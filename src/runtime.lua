@@ -59,21 +59,39 @@ function Runtime:IPReal()
     return self:ipUnpack("<d")
 end
 
--- Returns a function which tracks a value using a unique upval
--- call fn() to get the val, call fn(newVal) to set it
-local function makeVar()
-    local makerFn = function()
-        local val
-        local fn = function(newVal)
-            if newVal ~= nil then
-                val = newVal
-            else
-                return val
-            end
+local VarMt = {
+    __call = function(self, val)
+        if val ~= nil then
+            self._val = val
+        else
+            return self._val
         end
-        return fn
+    end,
+    type = function(self)
+        return self._type
+    end,
+    addressOf = function(self)
+        -- For array items, addressOf yields a table of all the values in the
+        -- array from this item onward, kinda like how & operator in C
+        -- technically doesn't allow you to index that pointer beyond the array
+        -- bounds (even though most people ignore that, undefined behaviour oh
+        -- well).
+        if self._parent then
+            -- Return the slice of variables from this item up
+            local result = {}
+            for i = self._idx, self._parent.len do
+                result[1 + i - self._idx] = self._parent[i]
+            end
+            return result
+        else
+            return { self }
+        end
     end
-    return makerFn()
+}
+VarMt.__index = VarMt
+
+local function makeVar(type, parentArray, parentIdx)
+    return setmetatable({ _type = type, _parent = parentArray, _idx = parentIdx }, VarMt)
 end
 
 -- To get the var at the given (1-based) pos, do arrayVar()[pos]. This will do
@@ -85,10 +103,11 @@ local ArrayMt = {
         local len = rawget(val, "len")
         assert(len, "Array length has not been set!")
         assert(k > 0 and k <= len, KOplErrSubs)
-        local result = makeVar()
+        local valType = rawget(val, "type")
+        local result = makeVar(valType, val, k)
         rawset(val, k, result)
         -- And default initialize the array value
-        result(DefaultSimpleTypes[rawget(val, "type")])
+        result(DefaultSimpleTypes[valType])
         return result
     end,
     __newindex = function(val, k, v)
@@ -109,7 +128,7 @@ function Runtime:getLocalVar(index, type, frame)
     local vars = frame.vars
     local var = vars[index]
     if not var then
-        var = makeVar()
+        var = makeVar(type)
         vars[index] = var
     end
     if var() == nil then
@@ -133,7 +152,7 @@ function Runtime:popParameter(stack)
     local type = stack:pop()
     assert(DataTypes[type], "Expected parameter type on stack")
     assert(not isArrayType(type), "Can't pass arrays on the stack?")
-    local var = makeVar()
+    local var = makeVar(type)
     local val = stack:pop()
     var(val)
     return var
@@ -634,7 +653,7 @@ function Runtime:declareGlobal(name, arrayLen)
     -- know it.
     local index = #frame.vars + 1
 
-    local var = makeVar()
+    local var = makeVar(valType)
     frame.globals[name] = { offset = index, type = valType }
     frame.vars[index] = var
 

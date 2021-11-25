@@ -235,13 +235,8 @@ local function numParams_dump(runtime)
 end
 
 function Addr(stack, runtime) -- 0x00
-    -- We only support Addr followed immediately by MenuWithMemory call (because
-    -- supporting general-purpose Addr is a pita)
-    local nextOp = runtime:IP8()
-    local nextFn = runtime:IP8()
-    assert(nextOp == 0x57 and codes[nextFn] == "MenuWithMemory",
-        "Addr fncalls are not supported except as part of MENU()")
-    AddrPlusMenuWithMemory(stack, runtime)
+    local var = stack:pop()
+    stack:push(var:addressOf())
 end
 
 function IllegalFuncOpCode(stack, runtime)
@@ -501,12 +496,7 @@ function gCreateEnhanced(stack, runtime) -- 0x39
 end
 
 function MenuWithMemory(stack, runtime) -- 0x3A
-    -- This should've been picked up by Addr and translated into a AddrPlusMenuWithMemory call
-    error("Unexpected MenuWithMemory fncall!")
-end
-
-function AddrPlusMenuWithMemory(stack, runtime)
-    local var = stack:pop() -- The highlighted item
+    local var = stack:pop()[1] -- The stack contains &(the highlighted item) and addressOf always returns a table.
     local menu = runtime:getMenu()
     runtime:setMenu(nil)
     menu.highlight = var()
