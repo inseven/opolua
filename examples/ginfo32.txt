@@ -1,0 +1,12 @@
+PROC main:
+	ginf:
+	GET
+ENDP
+
+PROC ginf:
+	LOCAL i&(48)
+	LOCAL x%
+	x% = 1234
+	gINFO32 i&()
+	PRINT i&(3), x%
+ENDP

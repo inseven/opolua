@@ -1928,7 +1928,7 @@ function gColor(stack, runtime) -- 0x124
 end
 
 function SetFlags(stack, runtime) -- 0x125
-    error("Unimplemented opcode SetFlags!")
+    -- We don't care atm
 end
 
 function SetDoc(stack, runtime) -- 0x126
@@ -1940,7 +1940,64 @@ function DaysToDate(stack, runtime) -- 0x127
 end
 
 function gInfo32(stack, runtime) -- 0x128
-    error("Unimplemented opcode gInfo32!")
+    -- error("Unimplemented opcode gInfo32!")
+    local resultArray = stack:pop()
+    -- Heh, ER5 doesn't have this bounds check but we can
+    assert(#resultArray >= 48, "Too small an array passed to gInfo32!")
+    local graphics = runtime:getGraphics()
+    local data = {
+        0, -- 1 reserved
+        0, -- 2 reserved
+        15, -- 3 font height
+        15, -- 4 font descent
+        12, -- 5 font ascent
+        17, -- 6 width of '0' (really?)
+        17, -- 7 max character width
+        17, -- 8 font flags
+        0, -- 9 font uid
+        0, -- 10
+        0, -- 11
+        0, -- 12
+        0, -- 13
+        0, -- 14
+        0, -- 15
+        0, -- 16
+        0, -- 17
+        graphics.current.mode, -- 18
+        0, -- 19 gTMode
+        0, -- 20 gStyle
+        0, -- 21 cursor state
+        -1, -- 22 ID of window containing cursor
+        0, -- 23 cursor width
+        0, -- 24 cursor height
+        0, -- 25 cursor ascent
+        0, -- 26 cursor x
+        0, -- 27 cursor y
+        0, -- 28 drawableIsBitmap
+        6, -- 29 cursor effects
+        0, -- 30 color mode of current window
+        0, -- 31 fg r
+        0, -- 32 fg g
+        0, -- 33 fg b
+        255, -- 34 bg r
+        255, -- 35 bg g
+        255, -- 36 bg b
+        0, -- 37
+        0, -- 38
+        0, -- 39
+        0, -- 40
+        0, -- 41
+        0, -- 42
+        0, -- 43
+        0, -- 44
+        0, -- 45
+        0, -- 46
+        0, -- 47
+        0, -- 48
+    }
+    for i, val in ipairs(data) do
+        resultArray[i](val)
+    end
 end
 
 function IoWaitStat32(stack, runtime) -- 0x129
