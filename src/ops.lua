@@ -801,6 +801,7 @@ end
 
 function ConstantString_dump(runtime)
     local str = runtime:ipString()
+    str = str:gsub("[\x00-\x1F\x7F-\xFF]", function(ch) return fmt("\\x%02X", ch:byte()) end)
     return fmt('"%s"', str)
 end
 
@@ -1813,8 +1814,11 @@ function SecsToDate(stack, runtime) -- 0xFB
 end
 
 function gIPrint(stack, runtime) -- 0xFC
-    error("Unimplemented opcode gIPrint!")
+    runtime:IP8() -- TODO
+    runtime:iohandler().print(stack:pop())
 end
+
+gIPrint_dump = numParams_dump
 
 function NextOpcodeTable(stack, runtime) -- 0xFF
     local realOpcode = 256 + runtime:IP8()

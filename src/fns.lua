@@ -273,7 +273,9 @@ function Err(stack, runtime) -- 0x07
 end
 
 function Exist(stack, runtime) -- 0x08
-    error("Unimplemented function Exist!")
+    local path = stack:pop()
+    printf("Exist: %s\n", path)
+    stack:push(0)
 end
 
 function Find(stack, runtime) -- 0x09
