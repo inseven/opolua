@@ -534,6 +534,11 @@ local function IPs8_dump(runtime)
     return fmt("%d (0x%s)", val, fmt("%02X", val):sub(-2))
 end
 
+local function IP16_dump(runtime)
+    local index = runtime:IP16()
+    return fmt("0x%04X", index)
+end
+
 local function IPs16_dump(runtime)
     local val = runtime:IPs16()
     return fmt("%d (0x%s)", val, fmt("%04X", val):sub(-4))
@@ -1018,6 +1023,7 @@ function AndFloat(stack) -- 0x5E
 end
 
 StackByteAsLong = StackByteAsWord -- 0x5F
+StackByteAsLong_dump = IPs8_dump
 
 function OrInt(stack) -- 0x60
     local right = stack:pop()
@@ -1059,7 +1065,7 @@ function Statement16(stack, runtime) -- 0x67
     OplDebug(pos)
 end
 
-Statement16_dump = index_dump
+Statement16_dump = IP16_dump
 
 function UnaryMinusUntyped(stack)
     stack:push(-stack:pop())
@@ -1292,7 +1298,10 @@ function Cursor(stack, runtime) -- 0xA6
 end
 
 function Delete(stack, runtime) -- 0xA7
-    error("Unimplemented opcode Delete!")
+    local filename = stack:pop()
+    assert(#filename > 0, KOplErrName)
+    runtime:iohandler().fsop("delete", filename)
+    runtime:setTrap(false)
 end
 
 function Erase(stack, runtime) -- 0xA8
@@ -1815,7 +1824,7 @@ end
 
 function gIPrint(stack, runtime) -- 0xFC
     runtime:IP8() -- TODO
-    runtime:iohandler().print(stack:pop())
+    runtime:iohandler().print(stack:pop() .. "\n")
 end
 
 gIPrint_dump = numParams_dump

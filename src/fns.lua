@@ -269,8 +269,8 @@ end
 
 function Exist(stack, runtime) -- 0x08
     local path = stack:pop()
-    printf("Exist: %s\n", path)
-    stack:push(0)
+    local ret = runtime:iohandler().fsop("stat", path)
+    stack:push(ret == nil and 0 or 1)
 end
 
 function Find(stack, runtime) -- 0x09

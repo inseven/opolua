@@ -127,4 +127,47 @@ function getScreenSize()
     return 640, 240
 end
 
+local fsmaps = {}
+
+function fsmap(devicePath, hostPath)
+    table.insert(fsmaps, { devicePath = devicePath, hostPath = hostPath })
+end
+
+local function mapDevicePath(path) 
+    for _, m in ipairs(fsmaps) do
+        if path:sub(1, #m.devicePath) == m.devicePath then
+            return m.hostPath .. path:sub(#m.devicePath + 1):gsub("\\", "/")
+        end
+    end
+    error("No device path mapping for "..path)
+end
+
+local function stat(path)
+    local h = io.popen(fmt('stat -qs "%s"', path))
+    local data = h:read("a")
+    local ok = h:close()
+    if ok then
+        local vals = {}
+        for k, v in data:gmatch("(%w+)=(%w+)") do
+            vals[k] = v
+        end
+        return vals
+    else
+        return nil
+    end
+end
+
+function fsop(cmd, ...)
+    if cmd == "stat" then
+        local filename = mapDevicePath(...)
+        -- printf("stat %s\n", filename)
+        return stat(filename)
+    elseif cmd == "delete" then
+        local filename = mapDevicePath(...)
+        printf("Ignoring delete of %s\n", filename)
+    else
+        error("Unrecognised fsop "..cmd)
+    end
+end
+
 return _ENV

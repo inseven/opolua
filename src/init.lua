@@ -49,6 +49,7 @@ Errors = {
     KOplErrGenFail = OPLERR(-1),
     KOplErrInvalidArgs = OPLERR(-2),
     KOplErrDivideByZero = OPLERR(-8),
+    KOplErrName = OPLERR(-38),
     KOplStructure = OPLERR(-85),
     KOplErrIllegal = OPLERR(-96),
     KOplErrNoMod = OPLERR(-106),
