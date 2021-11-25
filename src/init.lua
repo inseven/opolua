@@ -54,6 +54,7 @@ Errors = {
     KOplErrNoMod = OPLERR(-106),
     KOplErrSubs = OPLERR(-111),
     KOplErrEsc = OPLERR(-114),
+    KStopErr = -999, -- Made this one up
 }
 
 dItemTypes = enum {

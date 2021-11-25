@@ -31,7 +31,7 @@ function runOpo(filename, procName, iohandler, verbose)
     rt:addModule(filename, procTable)
     local procToCall = procName and procName:upper() or procTable[1].name
     local err = rt:pcallProc(procToCall)
-    if err then
+    if err and err.code ~= KStopErr then
         print("Error: "..tostring(err))
     end
 end

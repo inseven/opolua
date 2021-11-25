@@ -311,11 +311,7 @@ end
 
 function Runtime:setIp(ip)
     -- TODO should check it's still within the current frame
-    self.ip = ip
-    if ip == nil then
-        -- Allowed for eg by STOP cmd
-        setFrame(nil)
-    end
+    self.ip = assert(ip, "Cannot set a nil ip!")
 end
 
 function Runtime:setTrap(flag)

@@ -1386,9 +1386,10 @@ function Rename(stack, runtime) -- 0xBA
 end
 
 function Stop(stack, runtime) -- 0xBB
-    -- OPL uses User::Leave(0) for this (and for returning from the main fn)
-    -- but we use setting ip to nil for both instead.
-    runtime:setIp(nil)
+    -- OPL uses User::Leave(0) for this (and for returning from the main fn) but
+    -- I can't bring myself to error with a zero code so KStopErr is a made-up
+    -- value that's somthing more obvious
+    error(KStopErr)
 end
 
 function Trap(stack, runtime) -- 0xBC
