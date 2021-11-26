@@ -28,6 +28,7 @@ class ScreenViewController: UIViewController {
     }
     
     var object: OPLObject
+    var procedureName: String?
     
     var state: State = .idle
     let opo = OpoInterpreter()
@@ -63,8 +64,9 @@ class ScreenViewController: UIViewController {
         return barButtonItem
     }()
 
-    init(object: OPLObject) {
+    init(object: OPLObject, procedureName: String? = nil) {
         self.object = object
+        self.procedureName = procedureName
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
         navigationItem.title = object.name
@@ -111,11 +113,9 @@ class ScreenViewController: UIViewController {
             return
         }
         state = .running
-        let object = self.object
-        // print(object.procedures ?? [])
         runtimeQueue.async {
             self.opo.iohandler = self
-            self.opo.run(file: object.url.path)
+            self.opo.run(file: self.object.url.path, procedureName: self.procedureName)
             DispatchQueue.main.async {
                 self.programDidFinish()
             }

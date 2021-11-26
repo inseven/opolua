@@ -28,12 +28,16 @@ class DialogViewController: UITableViewController {
 
     lazy var barButtonItem: UIBarButtonItem = {
         // TODO: Work out what is default?
-        let barButtonItem = UIBarButtonItem(title: "OK", style: .plain, target: self, action: #selector(buttonTapped(sender:)))
+        let barButtonItem = UIBarButtonItem(title: "OK",
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(buttonTapped(sender:)))
         barButtonItem.tag = dialog.buttons.first?.key ?? 0
         return barButtonItem
     }()
 
     init(dialog: Dialog, completion: @escaping (Int, [String]) -> Void) {
+        print(dialog.items)
         self.dialog = dialog
         self.completion = completion
         self.values = dialog.items.map { $0.value }
@@ -68,6 +72,18 @@ class DialogViewController: UITableViewController {
             cell.textLabel?.text = item.value
             cell.selectionStyle = .none
             cell.accessoryType = .none
+            if let alignment = item.alignment {
+                switch alignment {
+                case .left:
+                    cell.textLabel?.textAlignment = .left
+                case .right:
+                    cell.textLabel?.textAlignment = .right
+                case .center:
+                    cell.textLabel?.textAlignment = .center
+                }
+            } else {
+                cell.textLabel?.textAlignment = .natural
+            }
             return cell
         case .choice:
             let selection = selection(for: indexPath)
@@ -80,13 +96,61 @@ class DialogViewController: UITableViewController {
             return cell
         case .checkbox:
             let cell = SwitchTableViewCell()
+            cell.tag = indexPath.row
             cell.label.text = item.prompt
+            cell.switchView.addTarget(self, action: #selector(choiceValueDidChange(sender:)), for: .valueChanged)
             return cell
-        default:
+        case .edit:
+            let cell = TextFieldTableViewCell()
+            cell.tag = indexPath.row
+            cell.textField.clearButtonMode = .whileEditing
+            cell.textField.placeholder = item.prompt
+            cell.textField.text = values[indexPath.row]
+            cell.textField.addTarget(self, action: #selector(editValueDidChange(sender:)), for: .editingChanged)
+            return cell
+        case .xinput:
+            let cell = TextFieldTableViewCell()
+            cell.tag = indexPath.row
+            cell.textField.isSecureTextEntry = true
+            cell.textField.clearButtonMode = .whileEditing
+            cell.textField.placeholder = item.prompt
+            cell.textField.text = values[indexPath.row]
+            cell.textField.addTarget(self, action: #selector(editValueDidChange(sender:)), for: .editingChanged)
+            return cell
+        case .long:
             let cell = UITableViewCell()
             cell.textLabel?.text = "\(item.type)"
             cell.selectionStyle = .none
             cell.accessoryType = .none
+            cell.backgroundColor = .cyan
+            return cell
+        case .float:
+            let cell = UITableViewCell()
+            cell.textLabel?.text = "\(item.type)"
+            cell.selectionStyle = .none
+            cell.accessoryType = .none
+            cell.backgroundColor = .magenta
+            return cell
+        case .time:
+            let cell = UITableViewCell()
+            cell.textLabel?.text = "\(item.type)"
+            cell.selectionStyle = .none
+            cell.accessoryType = .none
+            cell.backgroundColor = .yellow
+            return cell
+        case .date:
+            let cell = UITableViewCell()
+            cell.textLabel?.text = "\(item.type)"
+            cell.selectionStyle = .none
+            cell.accessoryType = .none
+            cell.backgroundColor = .red
+            return cell
+        case .separator:
+            let cell = UITableViewCell()
+            cell.textLabel?.text = "\(item.type)"
+            cell.selectionStyle = .none
+            cell.accessoryType = .none
+            cell.backgroundColor = .green
             return cell
         }
     }
@@ -99,6 +163,14 @@ class DialogViewController: UITableViewController {
             return 0
         }
         return selection - 1
+    }
+
+    @objc func choiceValueDidChange(sender: UISwitch) {
+        values[sender.tag] = String(sender.isOn ? String.true : String.false)
+    }
+
+    @objc func editValueDidChange(sender: UITextField) {
+        values[sender.tag] = sender.text!
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

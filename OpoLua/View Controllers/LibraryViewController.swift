@@ -58,5 +58,26 @@ class LibraryViewController : UITableViewController {
         let viewController = ScreenViewController(object: library.objects[indexPath.row])
         navigationController?.pushViewController(viewController, animated: true)
     }
+
+    override func tableView(_ tableView: UITableView,
+                            contextMenuConfigurationForRowAt indexPath: IndexPath,
+                            point: CGPoint) -> UIContextMenuConfiguration? {
+        let object = library.objects[indexPath.row]
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+            let runAction = UIAction(title: "Run", image: UIImage(systemName: "play")) { action in
+                let viewController = ScreenViewController(object: object)
+                self.navigationController?.pushViewController(viewController, animated: true)
+            }
+            let procedureActions = object.procedures.map { procedure in
+                UIAction(title: procedure.name, image: UIImage(systemName: "function")) { action in
+                    let viewController = ScreenViewController(object: object, procedureName: procedure.name)
+                    self.navigationController?.pushViewController(viewController, animated: true)
+                }
+            }
+            let procedureMenu = UIMenu(title: "", image: nil, identifier: nil, options: .displayInline, children: procedureActions)
+
+            return UIMenu(title: "", children: [runAction, procedureMenu])
+        }
+    }
     
 }

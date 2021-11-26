@@ -20,32 +20,21 @@
 
 import UIKit
 
-class SwitchTableViewCell: UITableViewCell {
+class TextFieldTableViewCell: UITableViewCell {
 
-    lazy var label: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = UIFont.preferredFont(forTextStyle: .body)
-        label.adjustsFontForContentSizeCategory = true
-        return label
-    }()
-
-    lazy var switchView: UISwitch = {
-        let view = UISwitch()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+    lazy var textField: UITextField = {
+        let textField = UITextField()
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
     }()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .default, reuseIdentifier: reuseIdentifier)
-        contentView.addSubview(label)
-        contentView.addSubview(switchView)
+        contentView.addSubview(textField)
         NSLayoutConstraint.activate([
-            label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            label.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            switchView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            switchView.leadingAnchor.constraint(equalTo: label.trailingAnchor),
-            switchView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            textField.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            textField.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            textField.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
         ])
         selectionStyle = .none
     }
