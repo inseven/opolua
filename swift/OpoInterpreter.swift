@@ -111,7 +111,7 @@ private func dialog(_ L: LuaState!) -> Int32 {
         let prompt = L.tostring(-1, key: "prompt") ?? ""
         let value = L.tostring(-1, key: "value") ?? ""
         let align: Dialog.Item.Alignment?
-        if let rawAlign = L.tostring(-1, key: "value") {
+        if let rawAlign = L.tostring(-1, key: "align") {
             align = .init(rawValue: rawAlign)
         } else {
             align = nil
