@@ -23,26 +23,41 @@ import UIKit
 class DialogViewController: UITableViewController {
 
     var dialog: Dialog
-    var completion: (Int, [String]) -> Void
+    var completion: ((Int, [String]) -> Void)?
     var values: [String]
 
+    lazy var cancelBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel,
+                                            target: self,
+                                            action: #selector(buttonTapped(sender:)))
+        return barButtonItem
+    }()
+
     lazy var barButtonItem: UIBarButtonItem = {
-        // TODO: Work out what is default?
-        let barButtonItem = UIBarButtonItem(title: "OK",
+        // TODO: Support multiple buttons.
+        let barButtonItem = UIBarButtonItem(title: dialog.buttons.first?.text ?? "OK",
                                             style: .plain,
                                             target: self,
                                             action: #selector(buttonTapped(sender:)))
-        barButtonItem.tag = dialog.buttons.first?.key ?? 0
+        barButtonItem.tag = dialog.buttons.first?.key ?? 1
         return barButtonItem
     }()
 
     init(dialog: Dialog, completion: @escaping (Int, [String]) -> Void) {
-        print(dialog.items)
         self.dialog = dialog
         self.completion = completion
-        self.values = dialog.items.map { $0.value }
+        self.values = dialog.items.map { item in
+            switch item.type {
+            case .choice:
+                // It's necessary to pre-popualte the initially selected value from the choice.
+                return "1"
+            default:
+                return item.value
+            }
+        }
         super.init(style: .insetGrouped)
         title = dialog.title
+        navigationItem.leftBarButtonItem = cancelBarButtonItem
         navigationItem.rightBarButtonItem = barButtonItem
     }
 
@@ -50,9 +65,21 @@ class DialogViewController: UITableViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func viewDidDisappear(_ animated: Bool) {
+        if navigationController?.isBeingDismissed ?? false {
+            completion?(0, self.values)
+            completion = nil
+        }
+        super.viewDidDisappear(animated)
+    }
+
     @objc func buttonTapped(sender: UIBarButtonItem) {
+        guard let completion = completion else {
+            return
+        }
+        self.completion = nil
         dismiss(animated: true) {
-            self.completion(sender.tag, self.values)
+            completion(sender.tag, self.values)
         }
     }
 
