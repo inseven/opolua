@@ -239,4 +239,8 @@ extension ScreenViewController: OpoIoHandler {
         return Graphics.Size(width:640, height: 240)
     }
 
+    func fsop(_ op: Fs.Operation) -> Fs.Result {
+        // TODO
+        return .err(.notReady)
+    }
 }

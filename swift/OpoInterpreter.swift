@@ -246,6 +246,48 @@ private func getScreenSize(_ L: LuaState!) -> Int32 {
     return 2
 }
 
+private func fsop(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    guard let cmd = L.tostring(1) else {
+        return 0
+    }
+    guard let path = L.tostring(2) else {
+        return 0
+    }
+    let op: Fs.Operation.OpType
+    switch cmd {
+    case "exists":
+        op = .exists
+    case "delete":
+        op = .delete
+    case "mkdir":
+        op = .mkdir
+    case "rmdir":
+        op = .rmdir
+    case "write":
+        if let data = L.todata(3) {
+            op = .write(data)
+        } else {
+            return 0
+        }
+    case "read":
+        op = .read
+    default:
+        print("Unimplemented fsop \(cmd)!")
+        L.push(Fs.Err.notReady.rawValue)
+        return 1
+    }
+
+    let result = iohandler.fsop(Fs.Operation(path: path, type: op))
+    switch (result) {
+    case .err(let err):
+        L.push(err.rawValue)
+    case .data(let data):
+        L.push(data)
+    }
+    return 1
+}
+
 class OpoInterpreter {
     private let L: LuaState
     var iohandler: OpoIoHandler
@@ -321,6 +363,7 @@ class OpoInterpreter {
             ("menu", menu),
             ("graphics", graphics),
             ("getScreenSize", getScreenSize),
+            ("fsop", fsop),
         ]
         L.setfuncs(fns, nup: 1)
     }

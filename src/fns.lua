@@ -269,8 +269,8 @@ end
 
 function Exist(stack, runtime) -- 0x08
     local path = stack:pop()
-    local ret = runtime:iohandler().fsop("stat", path)
-    stack:push(ret == nil and 0 or 1)
+    local ret = runtime:iohandler().fsop("exists", path)
+    stack:push(ret == KOplErrExists and 1 or 0)
 end
 
 function Find(stack, runtime) -- 0x09

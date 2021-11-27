@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 import CoreGraphics
+import Foundation
 
 protocol FlagEnum: RawRepresentable, Hashable, CaseIterable {}
 
@@ -171,6 +172,35 @@ extension Graphics.Color {
     }
 }
 
+struct Fs {
+    struct Operation {
+        enum OpType {
+            case exists // return notFound or alreadyExists (any access issue should result in notFound)
+            case delete // return none, notFound, notReady
+            case mkdir // return none, alreadyExists, notReady
+            case rmdir // return none, notFound, inUse if it isn't empty, notReady
+            case write(Data) // return none, notReady
+            case read // return none, notFound, accessDenied
+        }
+        let path: String
+        let type: OpType
+    }
+
+    enum Err: Int {
+        case none = 0
+        case inUse = -9
+        case notFound = -33
+        case alreadyExists = -32
+        case notReady = -62 // For any op outside our sandbox
+        //case accessDenied = -39
+    }
+
+    enum Result {
+        case err(Err)
+        case data(Data)
+    }
+}
+
 protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
@@ -204,6 +234,8 @@ protocol OpoIoHandler {
     func draw(operations: [Graphics.Operation])
 
     func getScreenSize() -> Graphics.Size
+
+    func fsop(_ op: Fs.Operation) -> Fs.Result
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -242,5 +274,10 @@ class DummyIoHandler : OpoIoHandler {
     func getScreenSize() -> Graphics.Size {
         return Graphics.Size(width: 640, height: 240)
     }
+
+    func fsop(_ op: Fs.Operation) -> Fs.Result {
+        return .err(.notReady)
+    }
+
 
 }

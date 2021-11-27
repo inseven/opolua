@@ -1300,7 +1300,10 @@ end
 function Delete(stack, runtime) -- 0xA7
     local filename = stack:pop()
     assert(#filename > 0, KOplErrName)
-    runtime:iohandler().fsop("delete", filename)
+    local err = runtime:iohandler().fsop("delete", filename)
+    if err ~= 0 then
+        error(err)
+    end
     runtime:setTrap(false)
 end
 
@@ -1785,7 +1788,6 @@ end
 
 Busy_dump = numParams_dump
 
-
 function Lock(stack, runtime) -- 0xF1
     error("Unimplemented opcode Lock!")
 end
@@ -1807,7 +1809,12 @@ function gClock(stack, runtime) -- 0xF5
 end
 
 function MkDir(stack, runtime) -- 0xF8
-    error("Unimplemented opcode MkDir!")
+    local path = stack:pop()
+    local err = runtime:iohandler().fsop("mkdir", path)
+    if err ~= KErrNone then
+        error(err)
+    end
+    runtime:setTrap(false)
 end
 
 function RmDir(stack, runtime) -- 0xF9

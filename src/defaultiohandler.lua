@@ -142,29 +142,59 @@ local function mapDevicePath(path)
     error("No device path mapping for "..path)
 end
 
-local function stat(path)
-    local h = io.popen(fmt('stat -qs "%s"', path))
-    local data = h:read("a")
-    local ok = h:close()
-    if ok then
-        local vals = {}
-        for k, v in data:gmatch("(%w+)=(%w+)") do
-            vals[k] = v
-        end
-        return vals
+-- Look away now, horrible hack to try and distinguish errors
+local function fileErrToOpl(errStr)
+    if errStr:match(" 2$") then -- ENOENT = 2
+        return KOplErrNotExists
     else
-        return nil
+        return KOplErrNotReady
     end
 end
 
-function fsop(cmd, ...)
-    if cmd == "stat" then
-        local filename = mapDevicePath(...)
-        -- printf("stat %s\n", filename)
-        return stat(filename)
+function fsop(cmd, path, ...)
+    local filename = mapDevicePath(path)
+    if cmd == "exists" then
+        -- printf("exists %s\n", filename)
+        local f = io.open(filename, "r")
+        if f then
+            f:close()
+            return KOplErrExists
+        else
+            return KOplErrNotExists
+        end
     elseif cmd == "delete" then
-        local filename = mapDevicePath(...)
-        printf("Ignoring delete of %s\n", filename)
+        printf("delete %s\n", filename)
+        local ok, err = os.remove(filename)
+        return ok and KErrNone or fileErrToOpl(err)
+    elseif cmd == "mkdir" then
+        printf("mkdir %s\n", filename)
+        local ret, err = os.execute(fmt('mkdir -p "%s"', filename))
+        -- Not handling the already exists case, because mkdir -p doesn't. Don't care.
+        if ret then
+            return KErrNone
+        else
+            return KOplErrNotReady
+        end
+    elseif cmd == "write" then
+        printf("write %s\n", filename)
+        local data = ...
+        local f, err = io.open(filename, "wb")
+        if f then
+            f:write(data)
+            f:close()
+            return KErrNone
+        else
+            return fileErrToOpl(err)
+        end
+    elseif cmd == "read" then
+        local f, err = io.open(filename, "rb")
+        if f then
+            local data = f:read("a")
+            f:close()
+            return data
+        else
+            return fileErrToOpl(err)
+        end
     else
         error("Unrecognised fsop "..cmd)
     end
