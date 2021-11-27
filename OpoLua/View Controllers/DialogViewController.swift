@@ -154,6 +154,7 @@ class DialogViewController: UITableViewController {
             } else {
                 cell.textLabel?.text = item.value
             }
+            cell.selectionStyle = item.selectable ? .default : .none
             cell.accessoryType = .none
             if let alignment = item.alignment {
                 switch alignment {
@@ -260,6 +261,9 @@ class DialogViewController: UITableViewController {
         let item = dialog.items[indexPath.row]
         switch item.type {
         case .text:
+            guard item.selectable else {
+                return
+            }
             // TODO: Double check what should happen if there's a selectable item and user defined buttons!
             complete(key: indexPath.row + 2)
         case .choice:

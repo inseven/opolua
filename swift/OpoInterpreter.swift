@@ -119,6 +119,7 @@ private func dialog(_ L: LuaState!) -> Int32 {
         let min = L.tonumber(-1, key: "min")
         let max = L.tonumber(-1, key: "max")
         let choices = L.tostringarray(-1, key: "choices")
+        let selectable = L.toboolean(-1, key: "selectable") ?? false
 
         if let t = Dialog.Item.ItemType(rawValue: L.toint(-1, key: "type") ?? -1) {
             let item = Dialog.Item(
@@ -128,7 +129,8 @@ private func dialog(_ L: LuaState!) -> Int32 {
                 alignment: align,
                 min: min,
                 max: max,
-                choices: choices)
+                choices: choices,
+                selectable: selectable)
             items.append(item)
         } else {
             print("Unknown dialog item type!")

@@ -1712,6 +1712,7 @@ function dItem(stack, runtime) -- 0xED
         item.align = flagToAlign[flags & 3]
         item.value = stack:pop()
         item.prompt = stack:pop()
+        item.selectable = (flags & 0x400) > 0
         if item.prompt == "" and item.value == "" and (flags & 0x800) > 0 then
             item = { type = dItemTypes.dSEPARATOR }
         end

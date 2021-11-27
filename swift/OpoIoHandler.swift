@@ -45,6 +45,7 @@ struct Dialog {
     typealias Flags = Set<Flag>
 
     struct Item {
+        
         enum ItemType: Int {
             case text = 0
             case choice = 1
@@ -69,6 +70,7 @@ struct Dialog {
         let min: Double? // For .long, .float, .time, .date
         let max: Double? // Ditto, plus .edit (meaning max number of characters)
         let choices: [String]? // For .choice
+        let selectable: Bool
     }
 
     struct Button {
