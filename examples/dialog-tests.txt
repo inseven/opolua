@@ -20,6 +20,25 @@ PROC main:
 	dTEXT "Introduction", "Hello, World!"
 	dBUTTONS "Pass", 13, "Fail", -27
 	expectEqual:(DIALOG, 13, "dTEXT with prompt and value")
+	
+	dINIT "Dialog"
+	dTEXT "Check that the following text is bold.", ""
+	dTEXT "Cheese", "", $100
+	dBUTTONS "Pass", 13, "Fail", -27
+	expectEqual:(DIALOG, 13, "Bold dTEXT")
+	
+	dINIT "Dialog"
+	dTEXT "Check that the following text is bold.", ""
+	dTEXT "", "Fromage", $100
+	dBUTTONS "Pass", 13, "Fail", -27
+	expectEqual:(DIALOG, 13, "Bold dTEXT")
+	
+	dINIT "Dialog"
+	dTEXT "Check that the next items appear in a bulleted list.", ""
+	dTEXT "", "Item One", $400
+	dTEXT "", "Item Two", $400
+	REM dBUTTONS "Pass", 13, "Fail", -27
+	expectEqual:(DIALOG, 13, "dTEXT with only values")
 
 	GET
 		
