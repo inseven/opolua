@@ -26,51 +26,15 @@ class DialogViewController: UITableViewController {
     var completion: ((Int, [String]) -> Void)?
     var values: [String]
 
-    func designatedCancelButton() -> Int? {
-        // Returns the index of the first button with the cancel flag, if there is one
-        for (i, button) in dialog.buttons.enumerated() {
-            if button.flags.contains(.isCancelButton) {
-                return i
-            }
-        }
-        return nil
-    }
-
-    lazy var cancelBarButtonItem: UIBarButtonItem = {
-        let barButtonItem: UIBarButtonItem
-        if let cancelButton = designatedCancelButton() {
-            barButtonItem = UIBarButtonItem(title: dialog.buttons[cancelButton].text,
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(buttonTapped(sender:)))
-            barButtonItem.tag = dialog.buttons[cancelButton].key
-
-        } else {
-            // Simulates the hardware escape key.
-            barButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel,
-                                            target: self,
-                                            action: #selector(buttonTapped(sender:)))
-            barButtonItem.tag = 0
-        }
-        return barButtonItem
-    }()
-
-    lazy var continueBarButtonItem: UIBarButtonItem? = {
+    lazy var continueBarButtonItem: UIBarButtonItem = {
 
         // OPL dialogs support multiple positive and negative buttons making a little difficult to represent on iOS.
         // This implementation attempts to simulate the correct EPOC behaviour, switching the layout a little in the
         // different scenarios.
 
-        let cancelButtonIndex = designatedCancelButton()
-        var unhandledButtonCount = dialog.buttons.count
-        if cancelButtonIndex != nil {
-            unhandledButtonCount = unhandledButtonCount - 1
-        }
-
-        if dialog.buttons.count == 0 {
+        if dialog.buttons.count < 1 {
 
             // 1) If the user has specified no buttons then we synthesize an OK button.
-            //    TODO: Support selectable items and ensure this returns the correct index.
 
             let barButtonItem = UIBarButtonItem(title: "OK",
                                                 style: .plain,
@@ -79,40 +43,15 @@ class DialogViewController: UITableViewController {
             barButtonItem.tag = 1
             return barButtonItem
 
-        } else if unhandledButtonCount == 0 {
-
-            // 1a) The user supplied just a cancel button. In which case we shouldn't create any extra buttons
-            return nil
-
-        } else if unhandledButtonCount == 1 {
-
-            // 2) If there is only one button we show this button directly.
-            //    TODO: What if the only button is a destructive button? Should enter still work?
-
-            let barButtonItem = UIBarButtonItem(title: dialog.buttons.first!.text,
-                                                style: .plain,
-                                                target: self,
-                                                action: #selector(buttonTapped(sender:)))
-            barButtonItem.tag = dialog.buttons.first!.key
-            return barButtonItem
-
         } else {
 
-            // 3) If there are multiple buttons, we show them all as a drop-down menu that forces the user to pick one.
-            //    TODO: Consider grouping the positive and negative buttons.
-            var actions: [UIAction] = []
-            for (i, button) in dialog.buttons.enumerated() {
-                if i == cancelButtonIndex ?? -1 {
-                    // This button has already been shown in the cancelBarButtonItem slot
-                    continue
-                }
-                // TODO: not sure if a cancel button really should be considered destructive...
-                let attributes: UIMenuElement.Attributes = button.flags.contains(.isCancelButton) ? .destructive : .none
-                actions.append(UIAction(title: button.text, attributes: attributes) { action in
+            // 2) If there are multiple buttons, we show them all as a drop-down menu that forces the user to pick one.
+
+            let menu = UIMenu(title: "", children: dialog.buttons.map { button in
+                UIAction(title: button.text, attributes: button.flags.contains(.isCancelButton) ? .destructive : .none) { action in
                     self.complete(key: button.key)
-                })
-            }
-            let menu = UIMenu(title: "", children: actions)
+                }
+            })
             return UIBarButtonItem(title: "Continue", image: UIImage(systemName: "ellipsis.circle"), menu: menu)
 
         }
@@ -132,7 +71,6 @@ class DialogViewController: UITableViewController {
         }
         super.init(style: .insetGrouped)
         title = dialog.title
-        navigationItem.leftBarButtonItem = cancelBarButtonItem
         navigationItem.rightBarButtonItem = continueBarButtonItem
     }
 
