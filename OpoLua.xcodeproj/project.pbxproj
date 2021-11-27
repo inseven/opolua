@@ -11,6 +11,8 @@
 		D861E8DD274A81B4003C8D3D /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Library.swift */; };
 		D861E8DF274A8D70003C8D3D /* KeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DE274A8D70003C8D3D /* KeyCode.swift */; };
 		D861E8E1274AB1CB003C8D3D /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */; };
+		D87A62742752A67500075CB8 /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62732752A67500075CB8 /* CGSize.swift */; };
+		D87A62762752A6F400075CB8 /* BorderedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62752752A6F400075CB8 /* BorderedButton.swift */; };
 		D87A9249274C517000254DE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB79FE6427428294005E904F /* Assets.xcassets */; };
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
 		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
@@ -79,6 +81,8 @@
 		D861E8DC274A81B4003C8D3D /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
 		D861E8DE274A8D70003C8D3D /* KeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCode.swift; sourceTree = "<group>"; };
 		D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
+		D87A62732752A67500075CB8 /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
+		D87A62752752A6F400075CB8 /* BorderedButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BorderedButton.swift; sourceTree = "<group>"; };
 		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
 		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
 		D8891346274BF2D200794D55 /* DialogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewController.swift; sourceTree = "<group>"; };
@@ -171,6 +175,7 @@
 		D8891343274BF24D00794D55 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				D87A62752752A6F400075CB8 /* BorderedButton.swift */,
 				D8891352274C186E00794D55 /* Canvas.swift */,
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
 				D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */,
@@ -183,6 +188,7 @@
 			children = (
 				D889134C274C17FF00794D55 /* CGContext.swift */,
 				D889134E274C181F00794D55 /* CGPoint.swift */,
+				D87A62732752A67500075CB8 /* CGSize.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
 				D8BA09712751BBEA00F4730D /* UIElement.swift */,
 				D8891350274C184C00794D55 /* UIImage.swift */,
@@ -423,10 +429,12 @@
 				D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */,
 				DB79000B2742E6F6005E904F /* lobject.c in Sources */,
 				D8C679BA27483B5600BD8720 /* LibraryViewController.swift in Sources */,
+				D87A62762752A6F400075CB8 /* BorderedButton.swift in Sources */,
 				DB79000C2742E6F6005E904F /* lopcodes.c in Sources */,
 				D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */,
 				D889134F274C181F00794D55 /* CGPoint.swift in Sources */,
 				D861E8DD274A81B4003C8D3D /* Library.swift in Sources */,
+				D87A62742752A67500075CB8 /* CGSize.swift in Sources */,
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
 				DB79000F2742E6F6005E904F /* lstate.c in Sources */,
 				DB7900102742E6F6005E904F /* lstring.c in Sources */,
@@ -593,7 +601,7 @@
 				DEVELOPMENT_TEAM = S4WXAUZQEV;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = OpoLua/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -617,7 +625,7 @@
 				DEVELOPMENT_TEAM = S4WXAUZQEV;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = OpoLua/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

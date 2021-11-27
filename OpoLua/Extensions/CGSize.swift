@@ -18,23 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import CoreGraphics
 
-extension UIImage {
+extension CGSize {
 
-    static func emptyImage(with size: CGSize) -> UIImage? {
-        UIGraphicsBeginImageContext(size)
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return image
-    }
-
-    static func image(color: UIColor, size: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { context in
-            context.cgContext.setFillColor(color.cgColor)
-            context.cgContext.fill(CGRect(origin: .zero, size: size))
-        }
-    }
+    static var unit = CGSize(width: 1.0, height: 1.0)
 
 }

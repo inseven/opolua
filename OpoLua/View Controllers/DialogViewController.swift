@@ -20,41 +20,58 @@
 
 import UIKit
 
-class DialogViewController: UITableViewController {
+class DialogViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     var dialog: Dialog
     var completion: ((Int, [String]) -> Void)?
     var values: [String]
 
-    lazy var continueBarButtonItem: UIBarButtonItem = {
-
-        // OPL dialogs support multiple positive and negative buttons making a little difficult to represent on iOS.
-        // This implementation attempts to simulate the correct EPOC behaviour, switching the layout a little in the
-        // different scenarios.
-
-        if dialog.buttons.count < 1 {
-
-            // 1) If the user has specified no buttons then we synthesize an OK button.
-
-            let barButtonItem = UIBarButtonItem(title: "OK",
-                                                style: .plain,
-                                                target: self,
-                                                action: #selector(buttonTapped(sender:)))
-            barButtonItem.tag = 1
-            return barButtonItem
-
-        } else {
-
-            // 2) If there are multiple buttons, we show them all as a drop-down menu that forces the user to pick one.
-
-            let menu = UIMenu(title: "", children: dialog.buttons.map { button in
-                UIAction(title: button.text, attributes: button.flags.contains(.isCancelButton) ? .destructive : .none) { action in
-                    self.complete(key: button.key)
-                }
-            })
-            return UIBarButtonItem(title: "Continue", image: UIImage(systemName: "ellipsis.circle"), menu: menu)
-
+    var buttons: [Dialog.Button] {
+        guard dialog.buttons.count > 0 else {
+            return [Dialog.Button(key: 1, text: "Continue", flags: Set())]
         }
+        return dialog.buttons
+    }
+
+    lazy var tableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .insetGrouped)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.delegate = self
+        tableView.dataSource = self
+        return tableView
+    }()
+
+    lazy var buttonView: UIView = {
+        let buttonView = UIView()
+        buttonView.translatesAutoresizingMaskIntoConstraints = false
+
+        var previousButton: UIButton? = nil
+        let spacing = 8.0
+        for button in buttons {
+            let view = BorderedButton(style: .gray)
+            view.translatesAutoresizingMaskIntoConstraints = false
+            view.tintColor = button.flags.contains(.isCancelButton) ? .systemRed : view.tintColor
+            view.setTitle(button.text, for: .normal)
+            view.addAction(UIAction(handler: { action in
+                self.complete(key: button.key)
+            }), for: .touchUpInside)
+            buttonView.addSubview(view)
+            NSLayoutConstraint.activate([
+                view.leadingAnchor.constraint(equalTo: buttonView.layoutMarginsGuide.leadingAnchor, constant: 12.0),
+                view.trailingAnchor.constraint(equalTo: buttonView.layoutMarginsGuide.trailingAnchor, constant: -12.0),
+                view.heightAnchor.constraint(greaterThanOrEqualToConstant: 48.0)
+            ])
+            if let previousButton = previousButton {
+                view.topAnchor.constraint(equalTo: previousButton.bottomAnchor, constant: spacing).isActive = true
+            } else {
+                view.topAnchor.constraint(equalTo: buttonView.layoutMarginsGuide.topAnchor).isActive = true
+            }
+            previousButton = view
+        }
+        if let previousButton = previousButton {
+            previousButton.bottomAnchor.constraint(equalTo: buttonView.layoutMarginsGuide.bottomAnchor).isActive = true
+        }
+        return buttonView
     }()
 
     init(dialog: Dialog, completion: @escaping (Int, [String]) -> Void) {
@@ -69,9 +86,27 @@ class DialogViewController: UITableViewController {
                 return item.value
             }
         }
-        super.init(style: .insetGrouped)
+
+        super.init(nibName: nil, bundle: nil)
+
+        view.backgroundColor = .systemGroupedBackground
         title = dialog.title
-        navigationItem.rightBarButtonItem = continueBarButtonItem
+
+        view.addSubview(tableView)
+        view.addSubview(buttonView)
+        NSLayoutConstraint.activate([
+
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.bottomAnchor.constraint(equalTo: buttonView.topAnchor),
+
+            buttonView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            buttonView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            buttonView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+        ])
+
     }
 
     required init?(coder: NSCoder) {
@@ -110,15 +145,15 @@ class DialogViewController: UITableViewController {
         }
     }
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return dialog.items.count
     }
 
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let item = dialog.items[indexPath.row]
         switch item.type {
         case .text:
@@ -238,7 +273,7 @@ class DialogViewController: UITableViewController {
         values[sender.tag] = sender.text!
     }
 
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let item = dialog.items[indexPath.row]
         switch item.type {
         case .text:
