@@ -67,6 +67,9 @@ class Canvas: UIView {
                                     bytesPerRow: bytesPerRow,
                                     space: colorSpace,
                                     bitmapInfo: bitmapInfo)!
+            context.scaleBy(x: 1.0, y: -1.0)
+            context.translateBy(x: 0, y: -screenSize.height)
+
             for operation in operations {
                 context.draw(operation)
             }

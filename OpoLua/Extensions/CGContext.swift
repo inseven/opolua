@@ -32,7 +32,8 @@ extension CGContext {
 
     func draw(_ operation: Graphics.Operation) {
         // TODO: Scale for the iOS screensize
-        // TODO: Set the stroke and fill colours
+        setStrokeColor(operation.color.cgColor())
+        setFillColor(operation.color.cgColor())
         switch operation.type {
         case .cls:
             setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
@@ -46,9 +47,10 @@ extension CGContext {
                         clockwise: true)
             setLineWidth(1.0)
             addPath(path)
-            strokePath()
             if fill {
                 fillPath()
+            } else {
+                strokePath()
             }
             break
         case .line(let x, let y):
