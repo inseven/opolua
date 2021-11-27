@@ -1,9 +1,5 @@
 _ENV = module()
 
-KUidDirectFileStore = 0x10000037 -- uid1
-KUidOPO = 0x10000073 -- pre-unicode uid2
-KUidOplInterpreter = 0x10000168
-
 -- POS MEANS 1-BASED LUA STRING POSITION. OFFSET OR INDEX MEANS ZERO BASED
 
 function parseOpo(data, verbose)

@@ -37,26 +37,38 @@ DefaultSimpleTypes = {
     [DataTypes.EString] = "",
 }
 
-local function OPLERR(val)
-    -- return 0xabcd0000 | val
-    return val
-end
-
 -- Since we never have to worry about actual epoc error codes (eg -8 meaning
 -- KErrBadHandle) we can just always use the OPL1993 values
 Errors = {
     KErrNone = 0,
-    KOplErrGenFail = OPLERR(-1),
-    KOplErrInvalidArgs = OPLERR(-2),
-    KOplErrDivideByZero = OPLERR(-8),
-    KOplErrName = OPLERR(-38),
-    KOplStructure = OPLERR(-85),
-    KOplErrIllegal = OPLERR(-96),
-    KOplErrNoMod = OPLERR(-106),
-    KOplErrSubs = OPLERR(-111),
-    KOplErrEsc = OPLERR(-114),
+    KOplErrGenFail = -1,
+    KOplErrInvalidArgs = -2,
+    KOplErrDivideByZero = -8,
+    KOplErrInUse = -9,
+    KOplErrExists = -32,
+    KOplErrNotExists = -33,
+    KOplErrName = -38,
+    KOplErrAccess = -39,
+    KOplErrNotReady = -62,
+    KOplStructure = -85,
+    KOplErrIllegal = -96,
+    KOplErrNoFld = -100,
+    KOplErrOpen = -101,
+    KOplErrClosed = -102,
+    KOplErrNoMod = -106,
+    KOplErrSubs = -111,
+    KOplErrEsc = -114,
     KStopErr = -999, -- Made this one up
 }
+
+-- Some misc uids used for file formats
+KUidDirectFileStore = 0x10000037 -- OPO file uid1
+-- KUidAppDllDoc8 = 0x1000006D
+KUidOPO = 0x10000073 -- pre-unicode OPO uid2
+KUidOplInterpreter = 0x10000168
+
+KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
+KUidExternalOplFile = 0x1000008A -- DB file UID2
 
 dItemTypes = enum {
     dTEXT = 0,
