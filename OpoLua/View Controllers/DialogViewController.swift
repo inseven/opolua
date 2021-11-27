@@ -22,8 +22,14 @@ import UIKit
 
 class DialogViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    var dialog: Dialog
+    struct Row {
+        let index: Int
+        let item: Dialog.Item
+    }
+
+    let dialog: Dialog
     var completion: ((Int, [String]) -> Void)?
+    let sections: [[Row]]
     var values: [String]
 
     var buttons: [Dialog.Button] {
@@ -77,6 +83,22 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
     init(dialog: Dialog, completion: @escaping (Int, [String]) -> Void) {
         self.dialog = dialog
         self.completion = completion
+
+        var sections: [[Row]] = []
+        var currentSection: [Row] = []
+        for (index, item) in dialog.items.enumerated() {
+            if item.type == .separator {
+                sections.append(currentSection)
+                currentSection = []
+            } else {
+                print(item)
+                currentSection.append(Row(index: index, item: item))
+            }
+            print(currentSection)
+        }
+        sections.append(currentSection)
+        self.sections = sections
+
         self.values = dialog.items.map { item in
             switch item.type {
             case .choice:
@@ -146,16 +168,17 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
     }
 
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return sections.count
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return dialog.items.count
+        return sections[section].count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let item = dialog.items[indexPath.row]
-        switch item.type {
+        let row = row(for: indexPath)
+        let item = row.item
+        switch row.item.type {
         case .text:
             let cell: UITableViewCell
             if !item.prompt.isEmpty && !item.value.isEmpty {
@@ -196,25 +219,25 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
             return cell
         case .checkbox:
             let cell = SwitchTableViewCell()
-            cell.tag = indexPath.row
+            cell.tag = row.index
             cell.label.text = item.prompt
             cell.switchView.addTarget(self, action: #selector(choiceValueDidChange(sender:)), for: .valueChanged)
             return cell
         case .edit:
             let cell = TextFieldTableViewCell()
-            cell.tag = indexPath.row
+            cell.tag = row.index
             cell.textField.clearButtonMode = .whileEditing
             cell.textField.placeholder = item.prompt
-            cell.textField.text = values[indexPath.row]
+            cell.textField.text = values[row.index]
             cell.textField.addTarget(self, action: #selector(editValueDidChange(sender:)), for: .editingChanged)
             return cell
         case .xinput:
             let cell = TextFieldTableViewCell()
-            cell.tag = indexPath.row
+            cell.tag = row.index
             cell.textField.isSecureTextEntry = true
             cell.textField.clearButtonMode = .whileEditing
             cell.textField.placeholder = item.prompt
-            cell.textField.text = values[indexPath.row]
+            cell.textField.text = values[row.index]
             cell.textField.addTarget(self, action: #selector(editValueDidChange(sender:)), for: .editingChanged)
             return cell
         case .long:
@@ -255,9 +278,14 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
         }
     }
 
+    func row(for indexPath: IndexPath) -> Row {
+        return sections[indexPath.section][indexPath.row]
+    }
+
     // TODO: Initial value before changing.
     func selection(for indexPath: IndexPath) -> Int {
-        guard let selection = Int(values[indexPath.row]),
+        let row = row(for: indexPath)
+        guard let selection = Int(values[row.index]),
               selection > 0
         else {
             return 0
@@ -274,19 +302,20 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let item = dialog.items[indexPath.row]
+        let row = row(for: indexPath)
+        let item = row.item
         switch item.type {
         case .text:
             guard item.selectable else {
                 return
             }
             // TODO: Double check what should happen if there's a selectable item and user defined buttons!
-            complete(key: indexPath.row + 2)
+            complete(key: row.index + 2)
         case .choice:
             let choices = item.choices ?? []
             let selection = selection(for: indexPath)
             let viewController = ChoiceViewController(item.prompt, choices: choices, selection: selection) { value in
-                self.values[indexPath.row] = String(value + 1)
+                self.values[row.index] = String(value + 1)
                 tableView.reloadRows(at: [indexPath], with: .none)
             }
             navigationController?.pushViewController(viewController, animated: true)
