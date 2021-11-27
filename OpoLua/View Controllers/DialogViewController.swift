@@ -110,6 +110,16 @@ class DialogViewController: UITableViewController {
         super.viewDidDisappear(animated)
     }
 
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        super.pressesBegan(presses, with: event)
+        guard let key = presses.first?.key else {
+            return
+        }
+        if key.keyCode == .keyboardReturnOrEnter {
+            complete(key: 1)
+        }
+    }
+
     @objc func buttonTapped(sender: UIBarButtonItem) {
         complete(key: sender.tag)
     }
