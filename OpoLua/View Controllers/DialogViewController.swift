@@ -136,9 +136,14 @@ class DialogViewController: UITableViewController {
         let item = dialog.items[indexPath.row]
         switch item.type {
         case .text:
-            let cell = UITableViewCell()
-            cell.textLabel?.text = item.value
-            cell.selectionStyle = .none
+            let cell = UITableViewCell(style: .value1, reuseIdentifier: nil)
+            cell.textLabel?.numberOfLines = 0
+            if !item.prompt.isEmpty {
+                cell.textLabel?.text = item.prompt
+                cell.detailTextLabel?.text = item.value
+            } else {
+                cell.textLabel?.text = item.value
+            }
             cell.accessoryType = .none
             if let alignment = item.alignment {
                 switch alignment {
@@ -244,6 +249,9 @@ class DialogViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let item = dialog.items[indexPath.row]
         switch item.type {
+        case .text:
+            // TODO: Double check what should happen if there's a selectable item and user defined buttons!
+            complete(key: indexPath.row + 2)
         case .choice:
             let choices = item.choices ?? []
             let selection = selection(for: indexPath)
