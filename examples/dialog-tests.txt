@@ -11,10 +11,28 @@ PROC main:
 	expectEqual:(DIALOG, 4, "Dialog with no buttons, selecting second item")
 	
 	dINIT "Dialog"
-	dTEXT "Try selecting this text; it should not be selectable.", ""
-	dTEXT "Press 'Enter'.", ""
-	expectEqual:(DIALOG, 1, "Dialog with no buttons and unselectable text")
+	dTEXT "This text should not be selectable.", ""
+	dBUTTONS "Pass", 13, "Fail", -27
+	expectEqual:(DIALOG, 13, "dTEXT with prompt and value")
 	
+	dINIT "Dialog"
+	dTEXT "The following prompt text should ignore the center flag.", ""
+	dTEXT "Prompt text", "", $2
+	dBUTTONS "Pass", 13, "Fail", -27
+	expectEqual:(DIALOG, 13, "dTEXT with prompt and value")
+	
+	dINIT "Dialog"
+	dTEXT "The following body text should be centered.", ""
+	dTEXT "", "Body text", $2
+	dBUTTONS "Pass", 13, "Fail", -27
+	expectEqual:(DIALOG, 13, "dTEXT with prompt and value")
+	
+	dINIT "Dialog"
+	dTEXT "The body should ignore the center flag if there is also a prompt.", ""
+	dTEXT "Prompt", "Body", $2
+	dBUTTONS "Pass", 13, "Fail", -27
+	expectEqual:(DIALOG, 13, "dTEXT with prompt and value")
+		
 	dINIT "Dialog"
 	dTEXT "Check that this shows dialog shows a prompt and value.", ""
 	dTEXT "Introduction", "Hello, World!"

@@ -146,7 +146,12 @@ class DialogViewController: UITableViewController {
         let item = dialog.items[indexPath.row]
         switch item.type {
         case .text:
-            let cell = UITableViewCell(style: .value1, reuseIdentifier: nil)
+            let cell: UITableViewCell
+            if !item.prompt.isEmpty && !item.value.isEmpty {
+                cell = UITableViewCell(style: .value1, reuseIdentifier: nil)
+            } else {
+                cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+            }
             cell.textLabel?.numberOfLines = 0
             if !item.prompt.isEmpty {
                 cell.textLabel?.text = item.prompt
@@ -156,7 +161,7 @@ class DialogViewController: UITableViewController {
             }
             cell.selectionStyle = item.selectable ? .default : .none
             cell.accessoryType = .none
-            if let alignment = item.alignment {
+            if item.prompt.isEmpty, let alignment = item.alignment {
                 switch alignment {
                 case .left:
                     cell.textLabel?.textAlignment = .left
