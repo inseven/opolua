@@ -74,8 +74,17 @@ struct Dialog {
     }
 
     struct Button {
+        enum Flag : Int, FlagEnum {
+            case isCancelButton = 0x10000
+            case noShortcutLabel = 0x100
+            case bareShortcutKey = 0x200 // Ie just 'Q' instead of assume 'ctrl-Q'
+        }
+        static let FlagsKeyMask: Int = 0x300
+        typealias Flags = Set<Flag>
+
         let key: Int
         let text: String
+        let flags: Flags
     }
 
     struct Result {

@@ -3,11 +3,11 @@ PROC main:
 	dINIT "Dialog test", 0
 	dTEXT "", "Pick a dialog type to test"
 	REM dTEXT "", "", $800
-	dCHOICE choice%, "Choose", "long,edit,checkbox,text,password,empty,date,time,buttons"
-	dBUTTONS "OK", 13
+	dCHOICE choice%, "Choose", "long,edit,checkbox,text,password,empty,date,time,buttons,cancelDlg"
+	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
 	choice% = 2
 	dlg% = DIALOG
-	PRINT "Dislog returned ", dlg%
+	PRINT "Dialog returned ", dlg%
 	PRINT "Choice was ", choice%
 	IF dlg% = 0
 		PRINT "(dialog cancelled)"
@@ -29,6 +29,8 @@ PROC main:
 		timeDlg:
 	ELSEIF choice% = 9
 		buttonDlg:
+	ELSEIF choice% = 10
+		cancelDlg:
 	ENDIF
 ENDP
 
@@ -121,5 +123,15 @@ PROC timeDlg:
 	dTIME x&, "Time", 1, 0, &1517F
 	DIALOG
 	PRINT "Entered:", x&
+	GET
+ENDP
+
+PROC cancelDlg:
+	LOCAL result%
+	dINIT "Doom"
+	dTEXT "", "EVERYTHING IS DOOMED"
+	dBUTTONS "Sob", -27
+	result% = DIALOG
+	PRINT "Dialog returned", result%
 	GET
 ENDP

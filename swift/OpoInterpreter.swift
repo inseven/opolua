@@ -141,16 +141,26 @@ private func dialog(_ L: LuaState!) -> Int32 {
     var buttons: [Dialog.Button] = []
     if lua_getfield(L, 1, "buttons") == LUA_TTABLE {
         for _ in L.ipairs(-1, requiredType: .table) {
-            let key = L.toint(-1, key: "key") ?? 0
+            var key = L.toint(-1, key: "key") ?? 0
             let text = L.tostring(-1, key: "text") ?? ""
-            buttons.append(Dialog.Button(key: key, text: text))
+            var flags = Dialog.Button.Flags(flags: abs(key) & Dialog.Button.FlagsKeyMask)
+            if key < 0 {
+                flags.insert(.isCancelButton)
+                // The documentation says we should return the negative keycode (without flags) as the dialog result,
+                // but what actually happens on the Psion 5 is you alway get 0 returned. Oh well. We'll fix this up
+                // below and pretend to the upper layers that we obey the docs.
+                key = -(-key & 0xFF)
+            } else {
+                key = key & 0xFF
+            }
+            buttons.append(Dialog.Button(key: key, text: text, flags: flags))
         }
     }
     L.pop() // buttons
     let d = Dialog(title: title ?? "", items: items, buttons: buttons, flags: flags)
     let result = iohandler.dialog(d)
     // items is still on top of Lua stack here
-    if result.result != 0 {
+    if result.result > 0 {
         // Update the values Lua-side
         precondition(result.values.count == d.items.count, "Bad number of result values!")
         for (i, value) in result.values.enumerated() {
@@ -160,7 +170,8 @@ private func dialog(_ L: LuaState!) -> Int32 {
             L.pop() // items[i]
         }
     }
-    L.push(result.result)
+    // Be bug compatible with Psion 5 and return 0 if a negative-keycode button was pressed
+    L.push(result.result < 0 ? 0 : result.result)
     return 1
 }
 

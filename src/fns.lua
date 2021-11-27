@@ -459,7 +459,7 @@ function Dialog(stack, runtime) -- 0x37
         end
     end
     local result = runtime:iohandler().dialog(dialog)
-    if result ~= 0 then
+    if result > 0 then
         -- Assign any variables eg `dCHOICE choice%`
         for item, var in pairs(varMap) do
             if item.value then
