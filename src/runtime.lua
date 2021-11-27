@@ -447,6 +447,21 @@ function Runtime:dumpProc(procName, startAddr)
         self.ip = startAddr
     end
     while self.ip < endIdx do
+        if self.ip == proc.codeOffset and string.unpack("B", self.data, 1 + self.ip) == 0xBF then
+            -- Workaround for a main proc starting with a goto that jumps over some non-code
+            -- data.
+            local jmp = string.unpack("<i2", self.data, 1 + self.ip + 1)
+            local newIp = self.ip + jmp
+            print(self:decodeNextInstruction()) -- prints the goto
+            -- Now raw dump everything up to newIp
+            while self.ip < newIp do
+                local val = string.unpack("b", self.data, 1 + self.ip)
+                local valu = string.unpack("B", self.data, 1 + self.ip)
+                local ch = string.char(valu):gsub("[\x00-\x1F\x7F-\xFF]", "?")
+                printf("%08X: %02X (%d) '%s'\n", self.ip, valu, val, ch)
+                self.ip = self.ip + 1
+            end
+        end
         print(self:decodeNextInstruction())
     end
     self:setFrame(nil)
