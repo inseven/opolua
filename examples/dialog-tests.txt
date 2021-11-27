@@ -1,0 +1,31 @@
+PROC main:
+
+	dINIT "Dialog"
+	dTEXT "Press 'Enter'", ""
+	expectEqual:(DIALOG, 1, "Dialog with no buttons or text")
+	
+	dINIT "Dialog"
+	dTEXT "Select second item ('Two'), then press 'Enter'.", ""
+	dTEXT "One", "", $402
+	dTEXT "Two", "", $402
+	expectEqual:(DIALOG, 4, "Dialog with no buttons, selecting second item")
+	
+	REM TODO: Text with prompt and value
+	
+ENDP
+
+PROC expectEqual:(a%, b%, description$)
+	PRINT description$;
+	PRINT ": ";
+	IF a% = b%
+		PRINT "Success"
+	ELSE
+		PRINT "Failure"
+		PRINT "  ";
+		PRINT a%;
+		PRINT " != ";
+		PRINT b%
+		GET
+		STOP
+	ENDIF
+ENDP
