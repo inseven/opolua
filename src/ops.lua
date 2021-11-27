@@ -1753,7 +1753,6 @@ function dItem(stack, runtime) -- 0xED
     elseif itemType == dItemTypes.dBUTTONS then
         assert(dialog.buttons == nil, KOplStructure)
         local numButtons = runtime:IP8()
-        assert(numButtons <= 4, KOplStructure)
         dialog.buttons = {}
         for i = 1, numButtons do
             local key = stack:pop()

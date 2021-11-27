@@ -27,20 +27,57 @@ class DialogViewController: UITableViewController {
     var values: [String]
 
     lazy var cancelBarButtonItem: UIBarButtonItem = {
+        // Simulates the hardware escape key.
         let barButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel,
                                             target: self,
                                             action: #selector(buttonTapped(sender:)))
+        barButtonItem.tag = -27
         return barButtonItem
     }()
 
-    lazy var barButtonItem: UIBarButtonItem = {
-        // TODO: Support multiple buttons.
-        let barButtonItem = UIBarButtonItem(title: dialog.buttons.first?.text ?? "OK",
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(buttonTapped(sender:)))
-        barButtonItem.tag = dialog.buttons.first?.key ?? 1
-        return barButtonItem
+    lazy var continueBarButtonItem: UIBarButtonItem = {
+
+        // OPL dialogs support multiple positive and negative buttons making a little difficult to represent on iOS.
+        // This implementation attempts to simulate the correct EPOC behaviour, switching the layout a little in the
+        // different scenarios.
+
+        if dialog.buttons.count < 1 {
+
+            // 1) If the user has specified no buttons then we synthesize an OK button.
+            //    TODO: Support selectable items and ensure this returns the correct index.
+
+            let barButtonItem = UIBarButtonItem(title: "OK",
+                                                style: .plain,
+                                                target: self,
+                                                action: #selector(buttonTapped(sender:)))
+            barButtonItem.tag = 1
+            return barButtonItem
+
+        } else if dialog.buttons.count == 1 {
+
+            // 2) If there is only one button we show this button directly.
+            //    TODO: What if the only button is a destructive button? Should enter still work?
+
+            let barButtonItem = UIBarButtonItem(title: dialog.buttons.first!.text,
+                                                style: .plain,
+                                                target: self,
+                                                action: #selector(buttonTapped(sender:)))
+            barButtonItem.tag = dialog.buttons.first!.key
+            return barButtonItem
+
+        } else {
+
+            // 3) If there are multiple buttons, we show them all as a drop-down menu that forces the user to pick one.
+            //    TODO: Consider grouping the positive and negative buttons.
+
+            let menu = UIMenu(title: "", children: dialog.buttons.map { button in
+                UIAction(title: button.text, attributes: button.key < 1 ? .destructive : .none) { action in
+                    self.complete(key: button.key)
+                }
+            })
+            return UIBarButtonItem(title: "Continue", image: UIImage(systemName: "ellipsis.circle"), menu: menu)
+
+        }
     }()
 
     init(dialog: Dialog, completion: @escaping (Int, [String]) -> Void) {
@@ -58,7 +95,7 @@ class DialogViewController: UITableViewController {
         super.init(style: .insetGrouped)
         title = dialog.title
         navigationItem.leftBarButtonItem = cancelBarButtonItem
-        navigationItem.rightBarButtonItem = barButtonItem
+        navigationItem.rightBarButtonItem = continueBarButtonItem
     }
 
     required init?(coder: NSCoder) {
@@ -74,12 +111,16 @@ class DialogViewController: UITableViewController {
     }
 
     @objc func buttonTapped(sender: UIBarButtonItem) {
+        complete(key: sender.tag)
+    }
+
+    func complete(key: Int) {
         guard let completion = completion else {
             return
         }
         self.completion = nil
         dismiss(animated: true) {
-            completion(sender.tag, self.values)
+            completion(key > 0 ? key : 0, self.values)
         }
     }
 

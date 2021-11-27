@@ -3,7 +3,7 @@ PROC main:
 	dINIT "Dialog test", 0
 	dTEXT "", "Pick a dialog type to test"
 	REM dTEXT "", "", $800
-	dCHOICE choice%, "Choose", "long,edit,checkbox,text,password,empty,date,time"
+	dCHOICE choice%, "Choose", "long,edit,checkbox,text,password,empty,date,time,buttons"
 	dBUTTONS "OK", 13
 	choice% = 2
 	dlg% = DIALOG
@@ -27,6 +27,24 @@ PROC main:
 		dateDlg:
 	ELSEIF choice% = 8
 		timeDlg:
+	ELSEIF choice% = 9
+		buttonDlg:
+	ENDIF
+ENDP
+
+PROC buttonDlg:
+	LOCAL result%
+	dINIT "Buttons"
+	dBUTTONS "OK", 13, "Cancel", -27, "A", %a, "B", %b, "C", -%c
+	result% = DIALOG
+	IF result% = 13:
+		PRINT "OK"
+	ELSEIF result% = %a
+		PRINT "A"
+	ELSEIF result% = %b
+		PRINT "B"
+	ELSEIF result% = 0
+		PRINT "Dialog Cancelled (Esc or Ctrl+C Pressed)"
 	ENDIF
 	GET
 ENDP
@@ -37,6 +55,7 @@ PROC longDlg:
 	dLONG val&, "Long", -1, 5
 	dBUTTONS "OK", 13
 	DIALOG
+	GET
 ENDP
 
 PROC editDlg:
@@ -45,6 +64,7 @@ PROC editDlg:
 	dEDIT val$, "Text"
 	dBUTTONS "OK", 13
 	DIALOG
+	GET
 ENDP
 
 PROC checkDlg:
@@ -52,6 +72,7 @@ PROC checkDlg:
 	dINIT "Checkbox"
 	dCHECKBOX chk%, "check"
 	DIALOG
+	GET
 ENDP
 
 PROC textDlg:
@@ -64,6 +85,7 @@ PROC textDlg:
 	dTEXT "Another", "Option", $400
 	x% = DIALOG
 	PRINT "Selected", x%
+	GET
 ENDP
 
 PROC xDlg:
@@ -73,11 +95,13 @@ PROC xDlg:
 	dXINPUT x$, "Pass"
 	DIALOG
 	PRINT "Entered:", x$
+	GET
 ENDP
 
 PROC emptyDlg:
 	dINIT "No items dialog"
 	PRINT DIALOG
+	GET
 ENDP
 
 PROC dateDlg:
@@ -87,6 +111,7 @@ PROC dateDlg:
 	dDATE x&, "Date", x& - 1, x& + 6
 	DIALOG
 	PRINT "Entered:", x&
+	GET
 ENDP
 
 PROC timeDlg:
@@ -96,4 +121,5 @@ PROC timeDlg:
 	dTIME x&, "Time", 1, 0, &1517F
 	DIALOG
 	PRINT "Entered:", x&
+	GET
 ENDP
