@@ -2,6 +2,7 @@ _ENV = module()
 
 local ops = require("ops")
 local newStack = require("stack").newStack
+local database = require("database")
 
 Runtime = {}
 Runtime.__index = Runtime
@@ -93,6 +94,8 @@ VarMt.__index = VarMt
 local function makeVar(type, parentArray, parentIdx)
     return setmetatable({ _type = type, _parent = parentArray, _idx = parentIdx }, VarMt)
 end
+
+database.makeVar = makeVar
 
 -- To get the var at the given (1-based) pos, do arrayVar()[pos]. This will do
 -- the bounds check and create a var if necessary. It is an error to assign
@@ -418,8 +421,82 @@ function Runtime:graphicsOp(type, op)
     end
 end
 
+function Runtime:openDb(logName, tableSpec, variables, op)
+    assert(self.dbs[logName] == nil, KOplErrOpen)
+    local path, tableName, fields = database.parseTableSpec(tableSpec)
+    if fields == nil then
+        -- SIBO-style call where field names are derived from the variable names
+        fields = {}
+        for i, var in ipairs(variables) do
+            local fieldName = var.name:gsub("[%%&$]$", {
+                ["%"] = "i",
+                ["&"] = "a",
+                ["$"] = "s",
+            })
+            fields[i] = {
+                name = fieldName,
+                type = var.type,
+                -- TODO string maxlen?
+            }
+        end
+    end
+
+    local readonly = op == "OpenR"
+    -- Check if there are already any other open handles to this db
+    local cpath = canonPath(path)
+    for _, db in pairs(self.dbs) do
+        if canonPath(db:getPath()) == cpath then
+            if not readonly or db:isWriteable() then
+                error(KOplErrInUse)
+            end
+        end
+    end
+
+    local db = database.new(path, readonly)
+    -- See if db already exists
+    local dbData, err = self.ioh.fsop("read", path)
+    if dbData then
+        db:load(dbData)
+    elseif err == KOplErrNotExists and op == "Create" then
+        -- This is fine
+    else
+        error(err)
+    end
+
+    if op == "Create" then
+        db:createTable(tableName, fields)
+    end
+
+    db:setView(tableName, fields, variables)
+    self.dbs[logName] = db
+    self.dbs.current = logName
+end
+
+function Runtime:getDb(logName)
+    local db = self.dbs[logName or self.dbs.current]
+    assert(db, KOplErrClosed)
+    return db
+end
+
+function Runtime:useDb(logName)
+    self:getDb(logName) -- Check it's valid
+    self.dbs.current = logName
+end
+
+function Runtime:closeDb()
+    local db = self:getDb()
+    if db:isModified() then
+        local data = db:save()
+        local err = self.ioh.fsop("write", db:getPath(), data)
+        assert(err == KErrNone, err)
+    end
+    self.dbs[self.dbs.current] = nil
+    self.dbs.current = nil
+end
+
 function newRuntime(handler)
     return setmetatable({
+        dbs = {},
         modules = {},
         ioh = handler or require("defaultiohandler"),
     }, Runtime)

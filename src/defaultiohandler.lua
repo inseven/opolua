@@ -142,9 +142,8 @@ local function mapDevicePath(path)
     error("No device path mapping for "..path)
 end
 
--- Look away now, horrible hack to try and distinguish errors
-local function fileErrToOpl(errStr)
-    if errStr:match(" 2$") then -- ENOENT = 2
+local function fileErrToOpl(errno)
+    if errno == 2 then -- ENOENT = 2
         return KOplErrNotExists
     else
         return KOplErrNotReady
@@ -164,8 +163,8 @@ function fsop(cmd, path, ...)
         end
     elseif cmd == "delete" then
         printf("delete %s\n", filename)
-        local ok, err = os.remove(filename)
-        return ok and KErrNone or fileErrToOpl(err)
+        local ok, err, errno = os.remove(filename)
+        return ok and KErrNone or fileErrToOpl(errno)
     elseif cmd == "mkdir" then
         printf("mkdir %s\n", filename)
         local ret, err = os.execute(fmt('mkdir -p "%s"', filename))
@@ -178,22 +177,22 @@ function fsop(cmd, path, ...)
     elseif cmd == "write" then
         printf("write %s\n", filename)
         local data = ...
-        local f, err = io.open(filename, "wb")
+        local f, err, errno = io.open(filename, "wb")
         if f then
             f:write(data)
             f:close()
             return KErrNone
         else
-            return fileErrToOpl(err)
+            return fileErrToOpl(errno)
         end
     elseif cmd == "read" then
-        local f, err = io.open(filename, "rb")
+        local f, err, errno = io.open(filename, "rb")
         if f then
             local data = f:read("a")
             f:close()
             return data
         else
-            return fileErrToOpl(err)
+            return nil, fileErrToOpl(errno)
         end
     else
         error("Unrecognised fsop "..cmd)

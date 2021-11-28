@@ -42,10 +42,10 @@ codes = {
     [0x21] = "FieldRightSideLong",
     [0x22] = "FieldRightSideFloat",
     [0x23] = "FieldRightSideString",
-    [0x24] = "FieldLeftSide",
-    [0x25] = "FieldLeftSide",
-    [0x26] = "FieldLeftSide",
-    [0x27] = "FieldLeftSide",
+    [0x24] = "FieldLeftSideInt",
+    [0x25] = "FieldLeftSideLong",
+    [0x26] = "FieldLeftSideFloat",
+    [0x27] = "FieldLeftSideString",
     [0x28] = "ConstantInt",
     [0x29] = "ConstantLong",
     [0x2A] = "ConstantFloat",
@@ -554,6 +554,11 @@ local function numParams_dump(runtime)
     return fmt("numParams=%d", numParams)
 end
 
+local function logName_dump(runtime)
+    local logName = runtime:IP8()
+    return fmt("%c", string.byte("A") + logName)
+end
+
 --[[
 xxRightSide<TYPE> means basically push the value onto the stack, the name I
 assume coming from the fact that this is what you'd call when the value
@@ -741,37 +746,42 @@ function ArrayInDirectLeftSideString(stack, runtime) -- 0x1F
 end
 ArrayInDirectLeftSideString_dump = index_dump
 
-function FieldRightSideInt(stack, runtime) -- 0x20
-    error("Unimplemented opcode FieldRightSideInt!")
+local function fieldLeftSide(stack, runtime)
+    local logName = runtime:IP8()
+    local fieldName = stack:pop()
+    local db = runtime:getDb(logName)
+    local var = assert(db.currentVars[fieldName], KOplErrNoFld)
+    stack:push(var)
 end
 
-function FieldRightSideLong(stack, runtime) -- 0x21
-    error("Unimplemented opcode FieldRightSideLong!")
+local function fieldRightSide(stack, runtime)
+    fieldLeftSide(stack, runtime)
+    stack:push(stack:pop()())
 end
 
-function FieldRightSideFloat(stack, runtime) -- 0x22
-    error("Unimplemented opcode FieldRightSideFloat!")
-end
+FieldRightSideInt = fieldRightSide -- 0x20
+FieldRightSideInt_dump = logName_dump
 
-function FieldRightSideString(stack, runtime) -- 0x23
-    error("Unimplemented opcode FieldRightSideString!")
-end
+FieldRightSideLong = fieldRightSide -- 0x21
+FieldRightSideLong_dump = logName_dump
 
-function FieldLeftSide(stack, runtime) -- 0x24
-    error("Unimplemented opcode FieldLeftSide!")
-end
+FieldRightSideFloat = fieldRightSide -- 0x22
+FieldRightSideFloat_dump = logName_dump
 
-function FieldLeftSide(stack, runtime) -- 0x25
-    error("Unimplemented opcode FieldLeftSide!")
-end
+FieldRightSideString = fieldRightSide -- 0x23
+FieldRightSideString_dump = logName_dump
 
-function FieldLeftSide(stack, runtime) -- 0x26
-    error("Unimplemented opcode FieldLeftSide!")
-end
+FieldLeftSideInt = fieldLeftSide -- 0x24
+FieldLeftSideInt_dump = logName_dump
 
-function FieldLeftSide(stack, runtime) -- 0x27
-    error("Unimplemented opcode FieldLeftSide!")
-end
+FieldLeftSideLong = fieldLeftSide -- 0x25
+FieldLeftSideLong_dump = logName_dump
+
+FieldLeftSideFloat = fieldLeftSide -- 0x26
+FieldLeftSideFloat_dump = logName_dump
+
+FieldLeftSideString = fieldLeftSide -- 0x27
+FieldLeftSideString_dump = logName_dump
 
 function ConstantInt(stack, runtime) -- 0x28
     local val = runtime:IPs16()
@@ -806,8 +816,7 @@ end
 
 function ConstantString_dump(runtime)
     local str = runtime:ipString()
-    str = str:gsub("[\x00-\x1F\x7F-\xFF]", function(ch) return fmt("\\x%02X", ch:byte()) end)
-    return fmt('"%s"', str)
+    return fmt('"%s"', hexEscape(str))
 end
 
 function CompareLessThanUntyped(stack)
@@ -1259,7 +1268,9 @@ function PokeB(stack, runtime) -- 0x9C
 end
 
 function Append(stack, runtime) -- 0x9D
-    error("Unimplemented opcode Append!")
+    local db = runtime:getDb()
+    db:appendRecord()
+    runtime:setTrap(false)
 end
 
 function At(stack, runtime) -- 0x9E
@@ -1267,7 +1278,8 @@ function At(stack, runtime) -- 0x9E
 end
 
 function Back(stack, runtime) -- 0x9F
-    error("Unimplemented opcode Back!")
+    local db = runtime:getDb()
+    db:setPos(db:getPos() - 1)
 end
 
 function Beep(stack, runtime) -- 0xA0
@@ -1278,7 +1290,8 @@ function Beep(stack, runtime) -- 0xA0
 end
 
 function Close(stack, runtime) -- 0xA1
-    error("Unimplemented opcode Close!")
+    runtime:closeDb()
+    runtime:setTrap(false)
 end
 
 function Cls(stack, runtime) -- 0xA2
@@ -1289,8 +1302,32 @@ function Copy(stack, runtime) -- 0xA4
     error("Unimplemented opcode Copy!")
 end
 
+local function parseOpenOrCreate(runtime)
+    local logName = runtime:IP8()
+    local fields = {}
+    while true do
+        local type = runtime:IP8()
+        if type == 0xFF then
+            break
+        end
+        local field = runtime:ipString()
+        table.insert(fields, { name = field, type = type })
+    end
+    return logName, fields
+end
+
 function Create(stack, runtime) -- 0xA5
-    error("Unimplemented opcode Create!")
+    local logName, fields = parseOpenOrCreate(runtime)
+    local tableSpec = stack:pop()
+    runtime:openDb(logName, tableSpec, fields, "Create")
+    runtime:setTrap(false)
+end
+
+function Create_dump(runtime)
+    local logName, fields = parseOpenOrCreate(runtime)
+    local fieldNames = {}
+    for i, field in ipairs(fields) do fieldNames[i] = field.name end
+    return fmt("logName=%d fields=%s", logName, table.concat(fieldNames, ", "))
 end
 
 function Cursor(stack, runtime) -- 0xA6
@@ -1308,7 +1345,9 @@ function Delete(stack, runtime) -- 0xA7
 end
 
 function Erase(stack, runtime) -- 0xA8
-    error("Unimplemented opcode Erase!")
+    local db = runtime:getDb()
+    db:deleteRecord()
+    runtime:setTrap(false)
 end
 
 function Escape(stack, runtime) -- 0xA9
@@ -1316,7 +1355,8 @@ function Escape(stack, runtime) -- 0xA9
 end
 
 function First(stack, runtime) -- 0xAA
-    error("Unimplemented opcode First!")
+    local db = runtime:getDb()
+    db:setPos(1)
 end
 
 function Vector(stack, runtime) -- 0xAB
@@ -1324,7 +1364,8 @@ function Vector(stack, runtime) -- 0xAB
 end
 
 function Last(stack, runtime) -- 0xAC
-    error("Unimplemented opcode Last!")
+    local db = runtime:getDb()
+    db:setPos(db:getCount())
 end
 
 function LClose(stack, runtime) -- 0xAD
@@ -1341,7 +1382,8 @@ function LOpen(stack, runtime) -- 0xAF
 end
 
 function Next(stack, runtime) -- 0xB0
-    error("Unimplemented opcode Next!")
+    local db = runtime:getDb()
+    db:setPos(db:getPos() + 1)
 end
 
 local function decodeOnErr(runtime)
@@ -1371,15 +1413,23 @@ function OffFor(stack, runtime) -- 0xB3
 end
 
 function Open(stack, runtime) -- 0xB4
-    error("Unimplemented opcode Open!")
+    local logName, fields = parseOpenOrCreate(runtime)
+    local tableSpec = stack:pop()
+    runtime:openDb(logName, tableSpec, fields, "Open")
+    runtime:setTrap(false)
 end
+
+Open_dump = Create_dump
 
 function Pause(stack, runtime) -- 0xB5
     error("Unimplemented opcode Pause!")
 end
 
 function Position(stack, runtime) -- 0xB6
-    error("Unimplemented opcode Position!")
+    local pos = stack:pop()
+    local db = runtime:getDb()
+    db:setPos(pos)
+    runtime:setTrap(false)
 end
 
 function IoSignal(stack, runtime) -- 0xB7
@@ -1410,17 +1460,17 @@ function Trap(stack, runtime) -- 0xBC
 end
 
 function Update(stack, runtime) -- 0xBD
-    error("Unimplemented opcode Update!")
+    local db = runtime:getDb()
+    db:updateRecord()
+    runtime:setTrap(false)
 end
 
 function Use(stack, runtime) -- 0xBE
-    error("Unimplemented opcode Use!")
+    runtime:useDb(runtime:IP8())
+    runtime:setTrap(false)
 end
 
-function Use_dump(runtime)
-    local device = runtime:IP8()
-    return fmt("device=%d", device)
-end
+Use_dump = logName_dump
 
 function GoTo(stack, runtime) -- 0xBF
     local ip = runtime:getIp() - 1 -- Because ip points to just after us
@@ -1452,8 +1502,13 @@ function Screen2(stack, runtime) -- 0xC3
 end
 
 function OpenR(stack, runtime) -- 0xC4
-    error("Unimplemented opcode OpenR!")
+    local logName, fields = parseOpenOrCreate(runtime)
+    local tableSpec = stack:pop()
+    runtime:openDb(logName, tableSpec, fields, "OpenR")
+    runtime:setTrap(false)
 end
+
+OpenR_dump = Open_dump
 
 function gSaveBit(stack, runtime) -- 0xC5
     error("Unimplemented opcode gSaveBit!")

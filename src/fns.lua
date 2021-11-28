@@ -248,7 +248,8 @@ function Asc(stack, runtime) -- 0x01
 end
 
 function Count(stack, runtime) -- 0x03
-    error("Unimplemented function Count!")
+    local db = runtime:getDb()
+    stack:push(db:getCount())
 end
 
 function Day(stack, runtime) -- 0x04
@@ -260,7 +261,8 @@ function Dow(stack, runtime) -- 0x05
 end
 
 function Eof(stack, runtime) -- 0x06
-    error("Unimplemented function Eof!")
+    local db = runtime:getDb()
+    stack:push(db:eof())
 end
 
 function Err(stack, runtime) -- 0x07
@@ -270,7 +272,7 @@ end
 function Exist(stack, runtime) -- 0x08
     local path = stack:pop()
     local ret = runtime:iohandler().fsop("exists", path)
-    stack:push(ret == KOplErrExists and 1 or 0)
+    stack:push(ret == KOplErrExists)
 end
 
 function Find(stack, runtime) -- 0x09
@@ -342,7 +344,8 @@ function PeekW(stack, runtime) -- 0x19
 end
 
 function Pos(stack, runtime) -- 0x1A
-    error("Unimplemented function Pos!")
+    local db = runtime:getDb()
+    stack:push(db:getPos())
 end
 
 function Second(stack, runtime) -- 0x1C

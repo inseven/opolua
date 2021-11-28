@@ -281,11 +281,18 @@ private func fsop(_ L: LuaState!) -> Int32 {
     let result = iohandler.fsop(Fs.Operation(path: path, type: op))
     switch (result) {
     case .err(let err):
-        L.push(err.rawValue)
+        if cmd == "read" {
+            L.pushnil()
+            L.push(err.rawValue)
+            return 2
+        } else {
+            L.push(err.rawValue)
+            return 1
+        }
     case .data(let data):
         L.push(data)
+        return 1
     }
-    return 1
 }
 
 class OpoInterpreter {

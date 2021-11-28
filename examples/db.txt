@@ -1,0 +1,22 @@
+PROC main:
+	LOCAL file$(16)
+	file$ = "D:\dbtest.ini"
+	IF NOT EXIST(file$)
+		CREATE file$, A, fint%, fstr$, fflt
+		PRINT "Pos after create =", POS
+		PRINT "Count after create =", COUNT
+		A.fint% = 1
+		A.fstr$ = "hello\world"
+		A.fflt = 3.14
+		APPEND
+		CLOSE
+	ENDIF
+	
+	OPEN file$, A, fint%, fstr$, fflt
+	PRINT A.fint%
+	PRINT A.fflt
+	PRINT A.fstr$
+	CLOSE
+
+	GET
+ENDP

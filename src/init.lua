@@ -47,6 +47,7 @@ Errors = {
     KOplErrInUse = -9,
     KOplErrExists = -32,
     KOplErrNotExists = -33,
+    KOplErrWrite = -34,
     KOplErrName = -38,
     KOplErrAccess = -39,
     KOplErrNotReady = -62,
@@ -58,6 +59,7 @@ Errors = {
     KOplErrNoMod = -106,
     KOplErrSubs = -111,
     KOplErrEsc = -114,
+    KOplErrIncompatibleUpdateMode = -125,
     KStopErr = -999, -- Made this one up
 }
 
@@ -133,4 +135,21 @@ function splitext(path)
     else
         return base, ext
     end
+end
+
+-- For whenever you need to compare paths for equality - not to be used for anything else
+function canonPath(path)
+    return path:upper():gsub("[\\/]+", "/")
+end
+
+-- Simplest most unambiguous escaping you can get - anything that's not
+-- printable ascii is converted to \xNN, including newlines and (to avoid
+-- ambiguity) backslash.
+function hexEscape(str)
+    local pattern = "[\x00-\x1F\x7F-\xFF\\]"
+    return str:gsub(pattern, function(ch) return string.format("\\x%02X", ch:byte()) end)
+end
+
+function hexUnescape(str)
+    return str:gsub("\\x(%x%x)", function(hexcode) return string.char(tonumber(hexcode, 16)) end)
 end
