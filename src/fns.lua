@@ -308,7 +308,8 @@ function IoClose(stack, runtime) -- 0x10
 end
 
 function IoWait(stack, runtime) -- 0x11
-    error("Unimplemented function IoWait!")
+    runtime:iohandler().waitForAnyRequest()
+    stack:push(0)
 end
 
 function Hour(stack, runtime) -- 0x12

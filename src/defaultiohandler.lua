@@ -5,6 +5,8 @@ _ENV = module()
 
 local fmt = string.format
 
+local statusRequests = {}
+
 function print(val)
     printf("%s", val)
 end
@@ -197,6 +199,29 @@ function fsop(cmd, path, ...)
     else
         error("Unrecognised fsop "..cmd)
     end
+end
+
+function asyncRequest(name, statusVar, ...)
+    local req = { name = name, statusVar = statusVar }
+    if name == "getevent" then
+        req.eventArray = ...
+    else
+        error("Unknown asyncRequest "..name)
+    end
+    statusRequests[name] = req
+end
+
+function waitForAnyRequest()
+    -- This is a very cut-down implementation that doesn't handle much
+    local eventRequest = statusRequests["getevent"]
+    if not eventRequest then
+        error("No outstanding requests we can complete, gonna error instead")
+    end
+
+    local ch = getch()
+    eventRequest.eventArray[1](ch)
+    eventRequest.statusVar(0)
+    statusRequests["getevent"] = nil
 end
 
 return _ENV

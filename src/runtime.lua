@@ -183,6 +183,11 @@ function Runtime:getVar(index, type, indirect)
     end
 end
 
+-- Only for things that need to simulate a var (such as for making sync versions of async requests)
+function Runtime:makeTemporaryVar(type)
+    return makeVar(type)
+end
+
 function Runtime:addModule(path, procTable)
     local name = splitext(basename(path)):upper()
     local mod = {

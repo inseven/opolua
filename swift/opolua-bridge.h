@@ -39,18 +39,18 @@ static inline void lua_pop(lua_State* L, int n) {
 }
 
 #undef lua_call
-static inline void lua_call(lua_State* L, int narg, int nrec) {
-    lua_callk(L, narg, nrec, 0, NULL);
+static inline void lua_call(lua_State* L, int narg, int nret) {
+    lua_callk(L, narg, nret, 0, NULL);
 }
 
 #undef lua_pcall
-static inline int lua_pcall(lua_State* L, int narg, int nrec, int errfunc) {
-    return lua_pcallk(L, narg, nrec, errfunc, 0, NULL);
+static inline int lua_pcall(lua_State* L, int narg, int nret, int errfunc) {
+    return lua_pcallk(L, narg, nret, errfunc, 0, NULL);
 }
 
 #undef lua_yield
-static inline int lua_yield(lua_State* L, int nresults) {
-    return lua_yieldk(L, nresults, 0, NULL);
+static inline int lua_yield(lua_State* L, int nret) {
+    return lua_yieldk(L, nret, 0, NULL);
 }
 
 #undef lua_newtable
@@ -120,5 +120,8 @@ static inline const char* luaL_typename(lua_State* L, int index) {
 static inline int lua_upvalueindex(int i) {
     return LUA_REGISTRYINDEX - i;
 }
+
+#undef LUA_REGISTRYINDEX
+static const int LUA_REGISTRYINDEX = -LUAI_MAXSTACK - 1000;
 
 #endif /* opolua_bridge_h */

@@ -201,6 +201,53 @@ struct Fs {
     }
 }
 
+struct Async {
+    enum RequestType {
+        case getevent
+        // This is going to seem like overkill if we never end up implementing any other events...
+    }
+    struct Request {
+        let type: RequestType
+        let requestHandle: Int32
+    }
+    struct KeyPressEvent {
+        let timestamp: Int // Microseconds since boot, or something
+        let keycode: Int
+        let scancode: Int
+        let modifiers: Int
+        let isRepeat: Bool
+    }
+    struct KeyUpDownEvent {
+        let timestamp: Int // Microseconds since boot, or something
+        let scancode: Int
+        let modifiers: Int
+    }
+    enum PenEventType: Int {
+        case down = 0
+        case up = 1
+        case drag = 6
+    }
+    struct PenEvent {
+        let timestamp: Int // Microseconds since boot, or something
+        let windowId: Int
+        let type: PenEventType
+        let modifiers: Int
+        let x: Int
+        let y: Int
+    }
+    enum ResponseValue {
+        case keypressevent(KeyPressEvent)
+        case keydownevent(KeyUpDownEvent)
+        case keyupevent(KeyUpDownEvent)
+        case penevent(PenEvent)
+    }
+    struct Response {
+        let type: RequestType
+        let requestHandle: Int32
+        let value: ResponseValue
+    }
+}
+
 protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
@@ -236,6 +283,9 @@ protocol OpoIoHandler {
     func getScreenSize() -> Graphics.Size
 
     func fsop(_ op: Fs.Operation) -> Fs.Result
+
+    func asyncRequest(_ request: Async.Request)
+    func waitForAnyRequest() -> Async.Response
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -279,5 +329,11 @@ class DummyIoHandler : OpoIoHandler {
         return .err(.notReady)
     }
 
+    func asyncRequest(_ request: Async.Request) {
+    }
+
+    func waitForAnyRequest() -> Async.Response {
+        fatalError("No support for waitForAnyRequest in DummyIoHandler")
+    }
 
 }

@@ -50,6 +50,7 @@ Errors = {
     KOplErrWrite = -34,
     KOplErrName = -38,
     KOplErrAccess = -39,
+    KOplErrFilePending = -46,
     KOplErrNotReady = -62,
     KOplStructure = -85,
     KOplErrIllegal = -96,

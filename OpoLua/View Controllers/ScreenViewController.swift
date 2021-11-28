@@ -33,7 +33,9 @@ class ScreenViewController: UIViewController {
     var state: State = .idle
     let opo = OpoInterpreter()
     let runtimeQueue = DispatchQueue(label: "ScreenViewController.runtimeQueue")
-    
+
+    var getEventHandle: Int32? = nil
+
     var getCompletion: ((Int) -> Void)? {
         didSet {
             dispatchPrecondition(condition: .onQueue(.main))
@@ -250,4 +252,15 @@ extension ScreenViewController: OpoIoHandler {
         // TODO
         return .err(.notReady)
     }
+
+    func asyncRequest(_ request: Async.Request) {
+        if request.type == .getevent {
+            getEventHandle = request.requestHandle
+        }
+    }
+
+    func waitForAnyRequest() -> Async.Response {
+        fatalError("waitForAnyRequest not implemented yet!")
+    }
+
 }

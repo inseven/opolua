@@ -295,6 +295,77 @@ private func fsop(_ L: LuaState!) -> Int32 {
     }
 }
 
+private func asyncRequest(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    guard let name = L.tostring(1) else { return 0 }
+    let req: Async.Request
+    switch name {
+    case "getevent":
+        lua_createtable(L, 2, 0) // tbl
+        lua_pushvalue(L, 2) // statusVar
+        lua_rawseti(L, -2, 1) // tbl[1] = statusVar
+        lua_pushvalue(L, 3) // eventArray
+        lua_rawseti(L, -2, 2) // tbl[2] = eventArray
+        let requestHandle = luaL_ref(L, LUA_REGISTRYINDEX)
+        req = Async.Request(type: .getevent, requestHandle: requestHandle)
+    default:
+        fatalError("Unhandled asyncRequest type \(name)")
+    }
+    iohandler.asyncRequest(req)
+    return 0
+}
+
+private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    let response = iohandler.waitForAnyRequest()
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // pushes { statusVar, eventArray }
+    luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle)
+    lua_rawgeti(L, -1, 1) // pushes statusVar
+    L.push(0) // Assuming everything is a success completion atm...
+    lua_call(L, 1, 0) // statusVar(0)
+    switch (response.type) {
+    case .getevent:
+        var ev = Array<Int>(repeating: 0, count: 16)
+        switch (response.value) {
+        case .keypressevent(let event):
+            // Remember, ev[0] here means ev[1] in the OPL docs because they're one-based
+            ev[0] = event.keycode
+            ev[1] = event.timestamp
+            ev[2] = event.scancode
+            ev[3] = event.modifiers
+            ev[4] = event.isRepeat ? 1 : 0
+        case .keydownevent(let event):
+            ev[0] = 0x406
+            ev[1] = event.timestamp
+            ev[2] = event.scancode
+            ev[3] = event.modifiers
+        case .keyupevent(let event):
+            ev[0] = 0x407
+            ev[1] = event.timestamp
+            ev[2] = event.scancode
+            ev[3] = event.modifiers
+        case .penevent(let event):
+            ev[0] = 0x408
+            ev[1] = event.timestamp
+            ev[2] = event.windowId
+            ev[3] = event.type.rawValue
+            ev[4] = event.modifiers
+            // TODO distinguish window relative and abs coords
+            ev[5] = event.x
+            ev[6] = event.y
+            ev[7] = event.x
+            ev[8] = event.y
+        }
+        lua_rawgeti(L, -2, 2) // Pushes eventArray
+        for i in 0 ..< ev.count {
+            lua_rawgeti(L, -1, lua_Integer(i + 1))
+            L.push(ev[i])
+            lua_call(L, 1, 0)
+        }
+        return 0
+    }
+}
+
 class OpoInterpreter {
     private let L: LuaState
     var iohandler: OpoIoHandler
@@ -371,6 +442,8 @@ class OpoInterpreter {
             ("graphics", graphics),
             ("getScreenSize", getScreenSize),
             ("fsop", fsop),
+            ("asyncRequest", asyncRequest),
+            ("waitForAnyRequest", waitForAnyRequest),
         ]
         L.setfuncs(fns, nup: 1)
     }

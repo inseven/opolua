@@ -1,0 +1,36 @@
+PROC main:
+	local ev&(16), status%, k%
+	WHILE 1
+		GETEVENTA32 status%, ev&()
+		IOWAIT
+		k% = ev&(1)
+		IF ev&(1) < $400
+			PRINT "Key press", k%
+		ELSE
+			k% = ev&(1)- $400
+			VECTOR k%
+				nop, nop, nop, nop, nop
+				keyDown, keyUp
+				pen, penDown, penUp
+			ENDV
+		nop::
+			PRINT "Got event", ev&(1)
+			CONTINUE
+		keyDown::
+			PRINT "Key down", ev&(3)
+			CONTINUE
+		keyUp::
+			PRINT "Key up", ev&(3)
+			CONTINUE
+		pen::
+			PRINT "Pen", ev&(6), ev&(7)
+			CONTINUE
+		penDown::
+			PRINT "Pen down"
+			CONTINUE
+		penUp::
+			PRINT "Pen up"
+			CONTINUE
+		ENDIF
+	ENDWH
+ENDP

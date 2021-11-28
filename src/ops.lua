@@ -794,10 +794,7 @@ function ConstantLong(stack, runtime) -- 0x29
     stack:push(val)
 end
 
-function ConstantLong_dump(runtime)
-    local val = runtime:IPs32()
-    return fmt("%d", val)
-end
+ConstantLong_dump = IPs32_dump
 
 function ConstantFloat(stack, runtime) -- 0x2A
     local val = runtime:IPReal()
@@ -1703,7 +1700,7 @@ function IoWaitStat(stack, runtime) -- 0xE8
 end
 
 function IoYield(stack, runtime) -- 0xE9
-    error("Unimplemented opcode IoYield!")
+    runtime:iohandler().waitForAnyRequest()
 end
 
 function mInit(stack, runtime) -- 0xEA
@@ -1982,11 +1979,18 @@ function ReturnFromEval(stack, runtime) -- 0x121
 end
 
 function GetEvent32(stack, runtime) -- 0x122
-    error("Unimplemented opcode GetEvent32!")
+    local stat = makeTemporaryVar(DataTypes.EWord)
+    stack:push(stat)
+    GetEventA32(stack, runtime)
+    stack:push(stat)
+    IoWaitStat(stack, runtime)
 end
 
 function GetEventA32(stack, runtime) -- 0x123
-    error("Unimplemented opcode GetEventA32!")
+    local ev = stack:pop()
+    local stat = stack:pop()[1]
+    stat(KOplErrFilePending)
+    runtime:iohandler().asyncRequest("getevent", stat, ev)
 end
 
 function gColor(stack, runtime) -- 0x124
