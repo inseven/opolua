@@ -115,15 +115,22 @@ class ScreenViewController: UIViewController {
         state = .running
         runtimeQueue.async {
             self.opo.iohandler = self
-            let _ = self.opo.run(file: self.object.url.path, procedureName: self.procedureName)
+            let result = self.opo.run(file: self.object.url.path, procedureName: self.procedureName)
             DispatchQueue.main.async {
-                self.programDidFinish()
+                self.programDidFinish(result: result)
             }
         }
     }
     
-    func programDidFinish() {
-        navigationController?.popViewController(animated: true)
+    func programDidFinish(result: OpoInterpreter.Result) {
+        // navigationController?.popViewController(animated: true)
+        self.textView.backgroundColor = UIColor.lightGray
+        switch result {
+        case .none:
+            self.textView.text?.append("\n---Completed---")
+        case .error(let err):
+            self.textView.text?.append("\n---Error occurred:---\n\(err.description)")
+        }
     }
 
     @objc func menuTapped(sender: UIBarButtonItem) {
