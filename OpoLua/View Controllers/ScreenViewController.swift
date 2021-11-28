@@ -115,7 +115,7 @@ class ScreenViewController: UIViewController {
         state = .running
         runtimeQueue.async {
             self.opo.iohandler = self
-            self.opo.run(file: self.object.url.path, procedureName: self.procedureName)
+            let _ = self.opo.run(file: self.object.url.path, procedureName: self.procedureName)
             DispatchQueue.main.async {
                 self.programDidFinish()
             }

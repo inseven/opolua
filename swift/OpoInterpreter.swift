@@ -421,7 +421,18 @@ class OpoInterpreter {
         return procs
     }
 
-    func run(file: String, procedureName: String? = nil) {
+    struct Error {
+        let code: Int?
+        let opoStack: String?
+        let luaStack: String
+        let description: String
+    }
+    enum Result {
+        case none
+        case error(Error)
+    }
+
+    func run(file: String, procedureName: String? = nil) -> Result {
         guard luaL_dofile(L, Bundle.main.path(forResource: "runopo", ofType: "lua")!) == 0 else {
             fatalError(L.tostring(-1, convert: true) ?? "Oh so much doom")
         }
@@ -434,6 +445,32 @@ class OpoInterpreter {
             L.pushnil()
         }
         makeIoHandlerBridge()
-        let _ = pcall(3, 0) // runOpo(file, proc, iohandler)
+        let ok = pcall(3, 1) // runOpo(file, proc, iohandler)
+        if ok {
+            let t = L.type(-1)
+            let result: Result
+            switch(L.type(-1)) {
+            case nil:
+                result = .none
+            case .nilType:
+                result = .none
+            case .table:
+                // An error
+                let code = L.toint(-1, key: "code")
+                let opoStack = L.tostring(-1, key: "opoStack")
+                let luaStack = L.tostring(-1, key: "luaStack") ?? "Missing Lua stack trace!"
+                let description = L.tostring(-1, convert: true) ?? "Missing description!"
+                result = .error(Error(code: code, opoStack: opoStack, luaStack: luaStack, description: description))
+            default:
+                print("Unexpected return type \(t!.rawValue)")
+                result = .none
+            }
+            L.pop()
+            return result
+        } else {
+            // pcall has already logged it
+            let err = Error(code: nil, opoStack: nil, luaStack: "", description: "Check console for error.")
+            return Result.error(err)
+        }
     }
 }
