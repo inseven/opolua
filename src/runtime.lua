@@ -338,7 +338,13 @@ end
 
 function Runtime:setIp(ip)
     -- TODO should check it's still within the current frame
-    self.ip = assert(ip, "Cannot set a nil ip!")
+    local proc = self.frame.proc
+    assert(ip, "Cannot set a nil ip!")
+    if ip < proc.codeOffset or ip >= proc.codeOffset + proc.codeSize then
+        error(fmt("Cannot jump to 0x%08X which is outside the current proc %s 0x%08X+%X",
+            ip, proc.name, proc.codeOffset, proc.codeSize))
+    end
+    self.ip = ip
 end
 
 function Runtime:setTrap(flag)
@@ -514,6 +520,9 @@ end
 function Runtime:decodeNextInstruction()
     local currentIp = self.ip
     local opCode = sbyte(self.data, currentIp + 1)
+    if not opCode then
+        return fmt("%08X: ???", currentIp)
+    end
     local op = ops.codes[opCode]
     self.ip = currentIp + 1
     local opDump = op and op.."_dump"

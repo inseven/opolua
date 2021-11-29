@@ -1,0 +1,28 @@
+PROC main:
+	vec:(5)
+ENDP
+
+PROC vec0:
+	vec:(0)
+ENDP
+
+PROC vec:(k%)	
+	LOCAL ret%
+	VECTOR k%
+		a, b, c, d, e, f
+	ENDV
+	PRINT "Out of range"
+	a::
+	b::
+	c::
+	d::
+		GOTO nope
+	e::
+		PRINT "YES"
+		GOTO exit
+	f::
+	nope::
+		PRINT "OH NO"
+	exit::
+	GET
+ENDP

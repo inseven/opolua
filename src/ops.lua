@@ -1357,7 +1357,27 @@ function First(stack, runtime) -- 0xAA
 end
 
 function Vector(stack, runtime) -- 0xAB
-    error("Unimplemented opcode Vector!")
+    local ip = runtime:getIp()
+    local maxIndex = runtime:IP16()
+    local index = stack:pop()
+    if index == 0 or index > maxIndex then
+        runtime:setIp(ip + 2 + maxIndex * 2)
+    else
+        runtime:setIp(ip + index * 2)
+        local relJmp = runtime:IPs16()
+        runtime:setIp(ip - 1 + relJmp)
+    end
+end
+
+function Vector_dump(runtime)
+    local ip = runtime:getIp() - 1
+    local maxIndex = runtime:IP16()
+    local strings = {}
+    for i = 1, maxIndex do
+        local relJmp = runtime:IPs16()
+        strings[i] = fmt("%08X     %d (->0x%08X)", runtime:getIp() - 2, relJmp, ip + relJmp)
+    end
+    return fmt("maxIndex=%d\n%s", maxIndex, table.concat(strings, "\n"))
 end
 
 function Last(stack, runtime) -- 0xAC
