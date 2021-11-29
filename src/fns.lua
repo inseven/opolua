@@ -321,7 +321,7 @@ function Key(stack, runtime) -- 0x13
 end
 
 function Len(stack, runtime) -- 0x14
-    error("Unimplemented function Len!")
+    stack:push(#stack:pop())
 end
 
 function Loc(stack, runtime) -- 0x15

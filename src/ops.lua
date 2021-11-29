@@ -1348,7 +1348,12 @@ function Erase(stack, runtime) -- 0xA8
 end
 
 function Escape(stack, runtime) -- 0xA9
-    error("Unimplemented opcode Escape!")
+    local state = runtime:IP8()
+    -- We don't care
+end
+
+function Escape_dump(runtime)
+    return fmt("state=%d", runtime:IP8())
 end
 
 function First(stack, runtime) -- 0xAA
@@ -1458,7 +1463,7 @@ function Raise(stack, runtime) -- 0xB8
 end
 
 function Randomize(stack, runtime) -- 0xB9
-    error("Unimplemented opcode Randomize!")
+    math.randomseed(stack:pop())
 end
 
 function Rename(stack, runtime) -- 0xBA
