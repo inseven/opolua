@@ -26,7 +26,7 @@ class ScreenViewController: UIViewController {
         case idle
         case running
     }
-    
+
     var object: OPLObject
     var procedureName: String?
     
@@ -70,8 +70,13 @@ class ScreenViewController: UIViewController {
         self.object = object
         self.procedureName = procedureName
         super.init(nibName: nil, bundle: nil)
+        navigationItem.largeTitleDisplayMode = .never
         view.backgroundColor = .systemBackground
-        navigationItem.title = object.name
+        if let procedureName = procedureName {
+            navigationItem.title = [object.name, procedureName].joined(separator: "\\")
+        } else {
+            navigationItem.title = object.name
+        }
 
         view.addSubview(canvas)
         view.addSubview(textView)

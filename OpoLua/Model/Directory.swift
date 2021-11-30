@@ -20,20 +20,45 @@
 
 import Foundation
 
-class OPLObject {
-    
+class Directory {
+
+    struct Item {
+
+        enum `Type` {
+            case object(OPLObject)
+            case directory
+        }
+
+        let url: URL
+        let type: `Type`
+
+        var name: String {
+            return url.name
+        }
+
+    }
+
     let url: URL
-    
+    let objects: [Item]
+
     var name: String {
         return url.name
     }
     
-    var procedures: [OpoInterpreter.Procedure] {
-        return OpoInterpreter().getProcedures(file: url.path) ?? []
+    init(url: URL) throws {
+        self.url = url
+        objects = try FileManager.default.contentsOfDirectory(atPath: url.path)
+            .map { url.appendingPathComponent($0) }
+            .compactMap { url -> Item? in
+                if FileManager.default.directoryExists(atPath: url.path) {
+                    return Item(url: url, type: .directory)
+                } else if url.pathExtension == "opo" {
+                    return Item(url: url, type: .object(OPLObject(url: url)))
+                } else {
+                    return nil
+                }
+            }
+            .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
     }
     
-    init(url: URL) {
-        self.url = url
-    }
-        
 }

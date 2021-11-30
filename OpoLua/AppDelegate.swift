@@ -32,7 +32,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        let viewController = LibraryViewController()
+        let examplesUrl = Bundle.main.resourceURL!.appendingPathComponent("examples", isDirectory: true)
+        let viewController = DirectoryViewController(directory: try! Directory(url: examplesUrl), title: "Examples")
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.navigationBar.prefersLargeTitles = true
         

@@ -18,22 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import Foundation
+import UIKit
 
-class Library {
-    
-    var objects: [OPLObject] = []
-    
-    init() {
-        self.load()
+extension UIViewController {
+
+    func present(error: Error) {
+        let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+        alert.addAction(.init(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
     }
-    
-    private func load() {
-        guard let programs = Bundle.main.urls(forResourcesWithExtension: "opo", subdirectory: "examples") else {
-            return
-        }
-        objects = programs
-            .map { OPLObject(url: $0) }
-            .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
-    }
+
 }

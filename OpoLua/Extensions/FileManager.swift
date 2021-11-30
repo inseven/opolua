@@ -20,20 +20,14 @@
 
 import Foundation
 
-class OPLObject {
-    
-    let url: URL
-    
-    var name: String {
-        return url.name
+extension FileManager {
+
+    func directoryExists(atPath path: String) -> Bool {
+        var isDirectory: ObjCBool = false
+        if fileExists(atPath: path, isDirectory: &isDirectory) {
+            return isDirectory.boolValue
+        }
+        return false
     }
-    
-    var procedures: [OpoInterpreter.Procedure] {
-        return OpoInterpreter().getProcedures(file: url.path) ?? []
-    }
-    
-    init(url: URL) {
-        self.url = url
-    }
-        
+
 }

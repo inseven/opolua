@@ -20,20 +20,10 @@
 
 import Foundation
 
-class OPLObject {
-    
-    let url: URL
-    
+extension URL {
+
     var name: String {
-        return url.name
+        return (FileManager.default.displayName(atPath: path) as NSString).deletingPathExtension
     }
-    
-    var procedures: [OpoInterpreter.Procedure] {
-        return OpoInterpreter().getProcedures(file: url.path) ?? []
-    }
-    
-    init(url: URL) {
-        self.url = url
-    }
-        
+
 }
