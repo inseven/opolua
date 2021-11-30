@@ -252,6 +252,16 @@ extension ScreenViewController: OpoIoHandler {
                     opsPerId[op.displayId] = []
                 }
                 switch (op.type) {
+                case .copy(let src):
+                    // These need some massaging to shoehorn in the src Drawable pointer
+                    guard let srcCanvas = self.drawables[src.displayId] else {
+                        print("Copy operation with unknown source \(src.displayId)!")
+                        continue
+                    }
+                    let newSrc = Graphics.CopySource(displayId: src.displayId, rect: src.rect, extra: srcCanvas)
+                    let newOp = Graphics.Operation(displayId: op.displayId, type: .copy(newSrc),
+                        x: op.x, y: op.y, color: op.color, bgcolor: op.bgcolor)
+                    opsPerId[op.displayId]!.append(newOp)
                 default:
                     opsPerId[op.displayId]!.append(op)
                 }

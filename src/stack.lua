@@ -37,6 +37,20 @@ function Stack:popPoint()
     return { x = x, y = y }
 end
 
+function Stack:popSize()
+    local h = self:pop()
+    local w = self:pop()
+    return { w = w, h = h }
+end
+
+function Stack:popRect()
+    local size = self:popSize()
+    local ret = self:popPoint()
+    ret.w = size.w
+    ret.h = size.h
+    return ret
+end
+
 function Stack:getSize()
     return self.n
 end

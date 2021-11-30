@@ -244,6 +244,21 @@ private func graphics(_ L: LuaState!) -> Int32 {
                 print("Missing params in bitblt!")
                 continue
             }
+        case "copy":
+            if let width = L.toint(-1, key: "width"),
+               let height = L.toint(-1, key: "height"),
+               let srcx = L.toint(-1, key: "srcx"),
+               let srcy = L.toint(-1, key: "srcy"),
+               let srcid = L.toint(-1, key: "srcid"),
+               let _ = L.toint(-1, key: "mode") {
+                let size = Graphics.Size(width: width, height: height)
+                let rect = Graphics.Rect(position: Graphics.Position(x: srcx, y: srcy), size: size)
+                let info = Graphics.CopySource(displayId: srcid, rect: rect, extra: nil)
+                optype = .copy(info)
+            } else {
+                print("Missing params in copy!")
+                continue
+            }
         default:
             print("Unknown Graphics.Operation.OpType \(t)")
             continue

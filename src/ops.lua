@@ -1541,7 +1541,11 @@ function gClose(stack, runtime) -- 0xC6
 end
 
 function gUse(stack, runtime) -- 0xC7
-    error("Unimplemented opcode gUse!")
+    local graphics = runtime:getGraphics()
+    local drawable = graphics[stack:pop()]
+    assert(drawable, KOplErrDrawNotOpen)
+    graphics.current = drawable
+    runtime:setTrap(false)
 end
 
 function gSetWin(stack, runtime) -- 0xC8
@@ -1664,7 +1668,18 @@ function gPatt(stack, runtime) -- 0xE0
 end
 
 function gCopy(stack, runtime) -- 0xE1
-    error("Unimplemented opcode gCopy!")
+    local mode = stack:pop()
+    local srcRect = stack:popRect()
+    local srcId = stack:pop()
+    runtime:graphicsOp("copy", {
+        srcid = srcId,
+        srcx = srcRect.x,
+        srcy = srcRect.y,
+        mode = mode,
+        width = srcRect.w,
+        height = srcRect.h
+    })
+    runtime:setTrap(false)
 end
 
 function gScroll(stack, runtime) -- 0xE2

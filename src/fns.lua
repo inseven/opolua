@@ -419,13 +419,11 @@ function gLoadBit(stack, runtime) -- 0x28
     local bitmap = bitmaps[idx]
     assert(bitmap, KOplErrNotExists)
     -- (2)
-    local handle = iohandler.createBitmap(bitmap.width, bitmap.height) -- always greyscale atm
-    assert(handle, "Failed to createBitmap!") -- Shouldn't ever fail...
+    local id = iohandler.createBitmap(bitmap.width, bitmap.height) -- always greyscale atm
+    assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
+    runtime:newGraphicsContext(id)
     -- (3)
     runtime:graphicsOp("bitblt", {
-        x = 0,
-        y = 0,
-        id = handle,
         bmpWidth = bitmap.width,
         bmpHeight = bitmap.height,
         bmpBpp = bitmap.bpp,
@@ -433,7 +431,7 @@ function gLoadBit(stack, runtime) -- 0x28
         bmpData = mbm.decodeBitmap(bitmap, data),
     })
     runtime:flushGraphicsOps() -- just in case
-    stack:push(handle)
+    stack:push(id)
 end
 
 gLoadBit_dump = numParams_dump

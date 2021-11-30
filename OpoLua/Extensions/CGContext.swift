@@ -84,6 +84,13 @@ extension CGContext {
             } else {
                 print("Unhandled bpp \(pxInfo.bpp) in bitblt operation!")
             }
+        case .copy(let src):
+            guard let srcDrawable = src.extra as? Drawable, let srcImage = srcDrawable.image else {
+                print("Couldn't get source drawable from extra!")
+                return
+            }
+            let img = srcImage.cropping(to: src.rect.cgRect())!
+            drawUnflippedImage(img, in: CGRect(x: operation.x, y: operation.y, width: src.rect.width, height: src.rect.height))
         }
     }
 

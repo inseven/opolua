@@ -144,6 +144,16 @@ struct Graphics {
         let width: Int
         let height: Int
     }
+    struct Position {
+        let x: Int
+        let y: Int
+    }
+    struct Rect {
+        let position: Position
+        let size: Size
+        var width: Int { return size.width}
+        var height: Int { return size.height}
+    }
 
     struct Color {
         let r: UInt8
@@ -159,12 +169,19 @@ struct Graphics {
         // TODO colour depth and/or palette info also needed, in due course
     }
 
+    struct CopySource {
+        let displayId: Int
+        let rect: Rect
+        let extra: AnyObject?
+    }
+
     struct Operation {
         enum OpType {
             case cls
             case circle(Int, Bool) // radius, fill
             case line(Int, Int) // x2, y2
             case bitblt(PixelData)
+            case copy(CopySource)
         }
         let displayId: Int
         let type: OpType
@@ -178,6 +195,11 @@ struct Graphics {
 extension Graphics.Color {
     func cgColor() -> CGColor {
         return CGColor(red: CGFloat(self.r) / 256, green: CGFloat(self.g) / 256, blue: CGFloat(self.b) / 256, alpha: 1)
+    }
+}
+extension Graphics.Rect {
+    func cgRect() -> CGRect {
+        return CGRect(x: self.position.x, y: self.position.y, width: self.width, height: self.height)
     }
 }
 

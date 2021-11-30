@@ -394,21 +394,29 @@ function Runtime:getMenu()
     return self.menu
 end
 
+function Runtime:newGraphicsContext(id, width, height)
+    local graphics = self:getGraphics()
+    assert(graphics[id] == nil, "Graphics context already exists!")
+    local newCtx = {
+        id = id,
+        mode = 0, -- set
+        color = 0, -- black
+        bgcolor = 255, -- white
+        width = width,
+        height = height,
+        pos = { x = 0, y = 0 },
+    }
+    graphics[id] = newCtx
+    -- Creating a new drawable always seems to update current
+    graphics.current = newCtx
+    return newCtx
+end
+
 function Runtime:getGraphics()
     if not self.graphics then
+        self.graphics = {}
         local w, h = self.ioh.getScreenSize()
-        self.graphics = {
-            [1] = {
-                id = 1,
-                mode = 0, -- set
-                color = 0, -- black
-                bgcolor = 255, -- white
-                width = w,
-                height = h,
-                pos = { x = 0, y = 0 },
-            },
-        }
-        self.graphics.current = self.graphics[1]
+        self:newGraphicsContext(1, w, h)
     end
     return self.graphics
 end
@@ -417,19 +425,15 @@ function Runtime:graphicsOp(type, op)
     if not op then op = {} end
     local graphics = self:getGraphics()
     local context = graphics.current
-    if not op.id then
-        op.id = context.id
-    end
+    op.id = context.id
     op.type = type
     if not op.mode then
         op.mode = context.mode
     end
     op.color = context.color
     op.bgcolor = context.bgcolor
-    if not op.x and not op.y then
-        op.x = context.pos.x
-        op.y = context.pos.y
-    end
+    op.x = context.pos.x
+    op.y = context.pos.y
 
     if graphics.buffer then
         table.insert(graphics.buffer, op)
