@@ -1876,8 +1876,11 @@ end
 Busy_dump = numParams_dump
 
 function Lock(stack, runtime) -- 0xF1
-    error("Unimplemented opcode Lock!")
+    runtime:IP8()
+    -- Don't care
 end
+
+Lock_dump = IPs8_dump
 
 function gInvert(stack, runtime) -- 0xF2
     error("Unimplemented opcode gInvert!")
