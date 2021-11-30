@@ -25,6 +25,7 @@
 		D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A60792756A2CC00C9757F /* FileManager.swift */; };
 		D89A607C2756A6A300C9757F /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607B2756A6A300C9757F /* URL.swift */; };
 		D89A607E2756A98200C9757F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607D2756A98200C9757F /* ViewController.swift */; };
+		D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607F2756AE8800C9757F /* LibraryViewController.swift */; };
 		D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */; };
 		D8BA0970275196CA00F4730D /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096F275196CA00F4730D /* String.swift */; };
 		D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA09712751BBEA00F4730D /* UIElement.swift */; };
@@ -98,6 +99,7 @@
 		D89A60792756A2CC00C9757F /* FileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManager.swift; sourceTree = "<group>"; };
 		D89A607B2756A6A300C9757F /* URL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
 		D89A607D2756A98200C9757F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		D89A607F2756AE8800C9757F /* LibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewController.swift; sourceTree = "<group>"; };
 		D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldTableViewCell.swift; sourceTree = "<group>"; };
 		D8BA096F275196CA00F4730D /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		D8BA09712751BBEA00F4730D /* UIElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIElement.swift; sourceTree = "<group>"; };
@@ -213,6 +215,7 @@
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
 				D8891346274BF2D200794D55 /* DialogViewController.swift */,
 				D8C679B927483B5600BD8720 /* DirectoryViewController.swift */,
+				D89A607F2756AE8800C9757F /* LibraryViewController.swift */,
 				D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */,
 				DB79FFBD2742D99C005E904F /* ScreenViewController.swift */,
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
@@ -450,6 +453,7 @@
 				D889134F274C181F00794D55 /* CGPoint.swift in Sources */,
 				D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */,
 				D87A62742752A67500075CB8 /* CGSize.swift in Sources */,
+				D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */,
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
 				DB79000F2742E6F6005E904F /* lstate.c in Sources */,
 				DB7900102742E6F6005E904F /* lstring.c in Sources */,

@@ -26,7 +26,7 @@ class DirectoryViewController : UITableViewController {
     
     init(directory: Directory, title: String? = nil) {
         self.directory = directory
-        super.init(style: .grouped)
+        super.init(style: .plain)
         self.title = title ?? directory.name
     }
     
