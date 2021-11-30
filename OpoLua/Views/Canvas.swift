@@ -18,62 +18,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import CoreGraphics
+import Foundation
 
-class Canvas: UIView {
+protocol Drawable: AnyObject {
 
-    let screenSize: CGSize
+    var image: CGImage? { get }
+    func draw(_ operations: [Graphics.Operation])
 
-    lazy var imageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        return imageView
-    }()
+}
+
+class Canvas: Drawable {
+
+    let size: CGSize
+    var buffer: Data
+    var image: CGImage?
 
     let colorSpace = CGColorSpaceCreateDeviceRGB()
     let bytesPerPixel = 4
 
-    lazy var buffer: Data = {
-        return Data(count: Int(screenSize.width) * Int(screenSize.height) * bytesPerPixel)
-    }()
-
-    init(screenSize: CGSize) {
-        self.screenSize = screenSize
-        super.init(frame: .zero)
-        addSubview(imageView)
-        NSLayoutConstraint.activate([
-            imageView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor),
-            imageView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor),
-            imageView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor),
-        ])
-        imageView.image = .emptyImage(with: screenSize)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    init(size: CGSize) {
+        self.size = size
+        self.buffer = Data(count: Int(size.width) * Int(size.height) * bytesPerPixel)
     }
 
     func draw(_ operations: [Graphics.Operation]) {
-        let bytesPerRow = bytesPerPixel * Int(screenSize.width)
+        let bytesPerRow = bytesPerPixel * Int(size.width)
         let bitsPerComponent = 8
         let bitmapInfo: UInt32 = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
         buffer.withUnsafeMutableBytes { data in
             let context = CGContext(data: data.baseAddress,
-                                    width: Int(screenSize.width),
-                                    height: Int(screenSize.height),
+                                    width: Int(size.width),
+                                    height: Int(size.height),
                                     bitsPerComponent: bitsPerComponent,
                                     bytesPerRow: bytesPerRow,
                                     space: colorSpace,
                                     bitmapInfo: bitmapInfo)!
-            context.scaleBy(x: 1.0, y: -1.0)
-            context.translateBy(x: 0, y: -screenSize.height)
+            context.concatenate(context.coordinateFlipTransform)
 
             for operation in operations {
                 context.draw(operation)
             }
-            self.imageView.image = UIImage(cgImage: context.makeImage()!)
+            image = context.makeImage()
         }
     }
 

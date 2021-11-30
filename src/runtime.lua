@@ -417,13 +417,19 @@ function Runtime:graphicsOp(type, op)
     if not op then op = {} end
     local graphics = self:getGraphics()
     local context = graphics.current
-    op.id = context.id
+    if not op.id then
+        op.id = context.id
+    end
     op.type = type
-    op.mode = context.mode
+    if not op.mode then
+        op.mode = context.mode
+    end
     op.color = context.color
     op.bgcolor = context.bgcolor
-    op.x = context.pos.x
-    op.y = context.pos.y
+    if not op.x and not op.y then
+        op.x = context.pos.x
+        op.y = context.pos.y
+    end
 
     if graphics.buffer then
         table.insert(graphics.buffer, op)

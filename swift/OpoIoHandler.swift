@@ -151,11 +151,20 @@ struct Graphics {
         let b: UInt8
     }
 
+    struct PixelData {
+        let size: Size
+        let bpp: Int
+        let stride: Int
+        let data: Data
+        // TODO colour depth and/or palette info also needed, in due course
+    }
+
     struct Operation {
         enum OpType {
             case cls
             case circle(Int, Bool) // radius, fill
             case line(Int, Int) // x2, y2
+            case bitblt(PixelData)
         }
         let displayId: Int
         let type: OpType
@@ -286,6 +295,8 @@ protocol OpoIoHandler {
 
     func asyncRequest(_ request: Async.Request)
     func waitForAnyRequest() -> Async.Response
+
+    func createBitmap(width: Int, height: Int) -> Int?
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -334,6 +345,10 @@ class DummyIoHandler : OpoIoHandler {
 
     func waitForAnyRequest() -> Async.Response {
         fatalError("No support for waitForAnyRequest in DummyIoHandler")
+    }
+
+    func createBitmap(width: Int, height: Int) -> Int? {
+        return nil
     }
 
 }

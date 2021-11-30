@@ -68,6 +68,7 @@ Errors = {
 KUidDirectFileStore = 0x10000037 -- OPO file uid1
 -- KUidAppDllDoc8 = 0x1000006D
 KUidOPO = 0x10000073 -- pre-unicode OPO uid2
+KUidMultiBitmapFileImage = 0x10000042
 KUidOplInterpreter = 0x10000168
 
 KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1

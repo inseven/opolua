@@ -215,7 +215,7 @@ private func graphics(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     var ops: [Graphics.Operation] = []
     for _ in L.ipairs(1, requiredType: .table) {
-        let id = L.toint(-1, key: "type") ?? 1
+        let id = L.toint(-1, key: "id") ?? 1
         let t = L.tostring(-1, key: "type") ?? ""
         let x = L.toint(-1, key: "x") ?? 0
         let y = L.toint(-1, key: "y") ?? 0
@@ -225,12 +225,28 @@ private func graphics(_ L: LuaState!) -> Int32 {
         let bgcolor = Graphics.Color(r: bgcol, g: bgcol, b: bgcol)
         let optype: Graphics.Operation.OpType
         switch (t) {
-            case "cls": optype = .cls
-            case "circle": optype = .circle(L.toint(-1, key: "r") ?? 0, (L.toint(-1, key: "fill") ?? 0) != 0)
-            case "line": optype = .line(L.toint(-1, key: "x2") ?? 0, L.toint(-1, key: "y2") ?? 0)
-            default:
-                print("Unknown Graphics.Operation.OpType \(t)")
+        case "cls":
+            optype = .cls
+        case "circle":
+            optype = .circle(L.toint(-1, key: "r") ?? 0, (L.toint(-1, key: "fill") ?? 0) != 0)
+        case "line":
+            optype = .line(L.toint(-1, key: "x2") ?? 0, L.toint(-1, key: "y2") ?? 0)
+        case "bitblt":
+            if let width = L.toint(-1, key: "bmpWidth"),
+               let height = L.toint(-1, key: "bmpHeight"),
+               let bpp = L.toint(-1, key: "bmpBpp"),
+               let stride = L.toint(-1, key: "bmpStride"),
+               let data = L.todata(-1, key: "bmpData") {
+                let size = Graphics.Size(width: width, height: height)
+                let info = Graphics.PixelData(size: size, bpp: bpp, stride: stride, data: data)
+                optype = .bitblt(info)
+            } else {
+                print("Missing params in bitblt!")
                 continue
+            }
+        default:
+            print("Unknown Graphics.Operation.OpType \(t)")
+            continue
         }
         ops.append(Graphics.Operation(displayId: id, type: optype, x: x, y: y, color: color, bgcolor: bgcolor))
     }
@@ -366,6 +382,19 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     }
 }
 
+private func createBitmap(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    guard let width = L.toint(1), let height = L.toint(2) else {
+        return 0
+    }
+    if let handle = iohandler.createBitmap(width: width, height: height) {
+        L.push(handle)
+    } else {
+        L.pushnil()
+    }
+    return 1
+}
+
 class OpoInterpreter {
     private let L: LuaState
     var iohandler: OpoIoHandler
@@ -444,6 +473,7 @@ class OpoInterpreter {
             ("fsop", fsop),
             ("asyncRequest", asyncRequest),
             ("waitForAnyRequest", waitForAnyRequest),
+            ("createBitmap", createBitmap),
         ]
         L.setfuncs(fns, nup: 1)
     }

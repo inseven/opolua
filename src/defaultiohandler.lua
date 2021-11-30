@@ -224,4 +224,8 @@ function waitForAnyRequest()
     statusRequests["getevent"] = nil
 end
 
+function createBitmap(width, height)
+    return 0 -- Pretend we succeeded
+end
+
 return _ENV

@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
 import CoreGraphics
 
 extension Graphics.Operation {
@@ -29,6 +30,10 @@ extension Graphics.Operation {
 }
 
 extension CGContext {
+
+    var coordinateFlipTransform: CGAffineTransform {
+        return CGAffineTransform(scaleX: 1.0, y: -1.0).translatedBy(x: 0.0, y: -CGFloat(self.height))
+    }
 
     func draw(_ operation: Graphics.Operation) {
         // TODO: Scale for the iOS screensize
@@ -52,15 +57,43 @@ extension CGContext {
             } else {
                 strokePath()
             }
-            break
         case .line(let x, let y):
             let path = CGMutablePath()
             path.move(to: operation.origin)
             path.addLine(to: CGPoint(x: x, y: y))
             addPath(path)
             strokePath()
-            break
+        case .bitblt(let pxInfo):
+            if pxInfo.bpp == 4 {
+                // CoreGraphics doesn't seem to like 4bpp, so expand it
+                var wdat = Data()
+                wdat.reserveCapacity(pxInfo.data.count * 2)
+                for b in pxInfo.data {
+                    wdat.append((b & 0xF) << 4)
+                    wdat.append(b & 0xF0)
+                }
+                let provider = CGDataProvider(data: wdat as CFData)!
+                let sp = CGColorSpaceCreateDeviceGray()
+                let cgImg = CGImage(width: pxInfo.size.width, height: pxInfo.size.height,
+                    bitsPerComponent: 8, bitsPerPixel: 8,
+                    bytesPerRow: pxInfo.stride * 2, space: sp,
+                    bitmapInfo: CGBitmapInfo.byteOrder32Little,
+                    provider: provider, decode: nil, shouldInterpolate: false,
+                    intent: .defaultIntent)!
+                drawUnflippedImage(cgImg, in: CGRect(x: operation.x, y: operation.y, width: pxInfo.size.width, height: pxInfo.size.height))
+            } else {
+                print("Unhandled bpp \(pxInfo.bpp) in bitblt operation!")
+            }
         }
     }
 
+    func drawUnflippedImage(_ img: CGImage, in rect: CGRect) {
+        // Need to make sure the image draws the right way up so we have to flip back to normal coords, and
+        // apply the y coordinate conversion ourselves
+        self.concatenate(self.coordinateFlipTransform.inverted())
+        let unflippedRect = CGRect(x: rect.minX, y: CGFloat(self.height) - rect.minY - rect.height, width: rect.width, height: rect.height)
+        self.draw(img, in: unflippedRect)
+        // And restore for other ops
+        self.concatenate(self.coordinateFlipTransform)
+    }
 }

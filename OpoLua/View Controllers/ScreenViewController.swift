@@ -31,6 +31,9 @@ class ScreenViewController: UIViewController {
     var procedureName: String?
     
     var state: State = .idle
+    var nextHandle: Int
+    var drawables: [Int: Drawable] = [:]
+
     let opo = OpoInterpreter()
     let runtimeQueue = DispatchQueue(label: "ScreenViewController.runtimeQueue")
 
@@ -50,13 +53,6 @@ class ScreenViewController: UIViewController {
         textView.backgroundColor = .clear
         return textView
     }()
-
-    lazy var canvas: Canvas = {
-        let sz = getScreenSize()
-        let canvas = Canvas(screenSize: CGSize(width: sz.width, height: sz.height))
-        canvas.translatesAutoresizingMaskIntoConstraints = false
-        return canvas
-    }()
     
     lazy var menuBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "filemenu.and.selection"),
@@ -69,6 +65,7 @@ class ScreenViewController: UIViewController {
     init(object: OPLObject, procedureName: String? = nil) {
         self.object = object
         self.procedureName = procedureName
+        self.nextHandle = 2
         super.init(nibName: nil, bundle: nil)
         navigationItem.largeTitleDisplayMode = .never
         view.backgroundColor = .systemBackground
@@ -77,6 +74,11 @@ class ScreenViewController: UIViewController {
         } else {
             navigationItem.title = object.name
         }
+
+        let sz = getScreenSize()
+        let canvas = CanvasView(screenSize: CGSize(width: sz.width, height: sz.height))
+        canvas.translatesAutoresizingMaskIntoConstraints = false
+        drawables[1] = canvas // 1 is always the main window
 
         view.addSubview(canvas)
         view.addSubview(textView)
@@ -243,7 +245,26 @@ extension ScreenViewController: OpoIoHandler {
     func draw(operations: [Graphics.Operation]) {
         let semaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
-            self.canvas.draw(operations)
+            // Split ops into per drawable
+            var opsPerId: [Int: [Graphics.Operation]] = [:]
+            for op in operations {
+                if opsPerId[op.displayId] == nil {
+                    opsPerId[op.displayId] = []
+                }
+                switch (op.type) {
+                default:
+                    opsPerId[op.displayId]!.append(op)
+                }
+
+            }
+            for (id, ops) in opsPerId  {
+                if let drawable = self.drawables[id] {
+                    drawable.draw(ops)
+                } else {
+                    print("\(ops.count) operations for unknown displayId!")
+                }
+            }
+
             semaphore.signal()
         }
         semaphore.wait()
@@ -253,8 +274,55 @@ extension ScreenViewController: OpoIoHandler {
         return Graphics.Size(width:640, height: 240)
     }
 
+    func mapToNative(path: String) -> URL? {
+        // For now assume if we're running foo.opo then we're running it from a simulated
+        // C:\System\Apps\Foo\ path and make everything in the foo.opo dir available
+        // under that path.
+        let appName = object.url.deletingPathExtension().lastPathComponent
+        let prefix = "C:\\SYSTEM\\APPS\\" + appName.uppercased() + "\\"
+        if path.uppercased().starts(with: prefix) {
+            let pathComponents = path.split(separator: "\\")[4...]
+            var result = object.url.deletingLastPathComponent()
+            for component in pathComponents {
+                if component == "." || component == ".." {
+                    continue
+                }
+                result.appendPathComponent(String(component))
+            }
+            return result.absoluteURL
+        } else {
+            return nil
+        }
+    }
+
     func fsop(_ op: Fs.Operation) -> Fs.Result {
-        // TODO
+        guard let nativePath = mapToNative(path: op.path) else {
+            return .err(.notReady)
+        }
+        let path = nativePath.path
+        print("Got op for \(nativePath.path)")
+        let fm = FileManager.default
+        switch (op.type) {
+        case .exists:
+            let exists = fm.fileExists(atPath: path)
+            return .err(exists ? .alreadyExists : .notFound)
+        case .delete:
+            print("TODO delete")
+        case .mkdir:
+            print("TODO mkdir")
+        case .rmdir:
+            print("TODO rmdir")
+        case .write(_):
+            print("TODO write")
+        case .read:
+            if let result = fm.contents(atPath: nativePath.path) {
+                return .data(result)
+            } else if !fm.fileExists(atPath: path) {
+                return .err(.notFound)
+            } else {
+                return .err(.notReady)
+            }
+        }
         return .err(.notReady)
     }
 
@@ -268,4 +336,10 @@ extension ScreenViewController: OpoIoHandler {
         fatalError("waitForAnyRequest not implemented yet!")
     }
 
+    func createBitmap(width: Int, height: Int) -> Int? {
+        let h = self.nextHandle
+        self.nextHandle += 1
+        drawables[h] = Canvas(size: CGSize(width: width, height: height))
+        return h
+    }
 }

@@ -1,5 +1,6 @@
 _ENV = module()
 
+local mbm = require("mbm")
 local fmt = string.format
 
 codes = {
@@ -394,8 +395,47 @@ function gCreateBit(stack, runtime) -- 0x27
 end
 
 function gLoadBit(stack, runtime) -- 0x28
-    error("Unimplemented function gLoadBit!")
+    -- We implment this in 3 phases:
+    -- (1) Get the mbm data and decode it
+    -- (2) Tell iohandler to create an empty bitmap
+    -- (3) Tell iohandler to blit the decoded MBM data into it
+
+    -- (1)
+    local numParams = runtime:IP8()
+    local write = 1
+    local idx = 1
+    if numParams > 2 then
+        idx = 1 + stack:pop()
+    end
+    if numParams > 1 then
+        write = stack:pop()
+    end
+    local path = stack:pop()
+    local iohandler = runtime:iohandler()
+    local data, err = iohandler.fsop("read", path)
+    assert(data, err)
+    local bitmaps = mbm.parseMbmHeader(data)
+    assert(bitmaps, KOplErrGenFail)
+    local bitmap = bitmaps[idx]
+    assert(bitmap, KOplErrNotExists)
+    -- (2)
+    local handle = iohandler.createBitmap(bitmap.width, bitmap.height) -- always greyscale atm
+    assert(handle, "Failed to createBitmap!") -- Shouldn't ever fail...
+    -- (3)
+    runtime:graphicsOp("bitblt", {
+        x = 0,
+        y = 0,
+        id = handle,
+        bmpWidth = bitmap.width,
+        bmpHeight = bitmap.height,
+        bmpBpp = bitmap.bpp,
+        bmpStride = bitmap.stride,
+        bmpData = mbm.decodeBitmap(bitmap, data),
+    })
+    stack:push(handle)
 end
+
+gLoadBit_dump = numParams_dump
 
 function gLoadFont(stack, runtime) -- 0x29
     error("Unimplemented function gLoadFont!")
