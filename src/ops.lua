@@ -1677,10 +1677,7 @@ function gUpdate(stack, runtime) -- 0xE3
     local context = graphics.current
     if flag == 255 then -- gUPDATE
         -- Flush now
-        if graphics.buffer and graphics.buffer[1] then
-            runtime:iohandler().graphics(graphics.buffer)
-            graphics.buffer = {}
-        end
+        runtime:flushGraphicsOps()
         return
     end
     if flag == 0 then -- gUPDATE OFF
@@ -1688,9 +1685,7 @@ function gUpdate(stack, runtime) -- 0xE3
             graphics.buffer = {}
         end
     else -- gUPDATE ON
-        if graphics.buffer and graphics.buffer[1] then
-            runtime:iohandler().graphics(graphics.buffer)
-        end
+        runtime:flushGraphicsOps()
         graphics.buffer = nil
     end
 end

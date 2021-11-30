@@ -438,6 +438,14 @@ function Runtime:graphicsOp(type, op)
     end
 end
 
+function Runtime:flushGraphicsOps()
+    local graphics = self:getGraphics()
+    if graphics.buffer and graphics.buffer[1] then
+        self.ioh.graphics(graphics.buffer)
+        graphics.buffer = {}
+    end
+end
+
 function Runtime:openDb(logName, tableSpec, variables, op)
     assert(self.dbs[logName] == nil, KOplErrOpen)
     local path, tableName, fields = database.parseTableSpec(tableSpec)

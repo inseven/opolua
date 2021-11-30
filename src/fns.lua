@@ -432,6 +432,7 @@ function gLoadBit(stack, runtime) -- 0x28
         bmpStride = bitmap.stride,
         bmpData = mbm.decodeBitmap(bitmap, data),
     })
+    runtime:flushGraphicsOps() -- just in case
     stack:push(handle)
 end
 
