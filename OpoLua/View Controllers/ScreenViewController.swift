@@ -318,20 +318,27 @@ extension ScreenViewController: OpoIoHandler {
             return .err(.notReady)
         }
         let path = nativePath.path
-        print("Got op for \(nativePath.path)")
+        // print("Got op for \(path)")
         let fm = FileManager.default
         switch (op.type) {
         case .exists:
             let exists = fm.fileExists(atPath: path)
             return .err(exists ? .alreadyExists : .notFound)
         case .delete:
-            print("TODO delete")
+            // Should probably prevent this from accidentally deleting a directory...
+            do {
+                try fm.removeItem(atPath: path)
+                return .err(.none)
+            } catch {
+                return .err(.notReady)
+            }
         case .mkdir:
-            print("TODO mkdir")
+            print("TODO mkdir \(path)")
         case .rmdir:
-            print("TODO rmdir")
-        case .write(_):
-            print("TODO write")
+            print("TODO rmdir \(path)")
+        case .write(let data):
+            let ok = fm.createFile(atPath: path, contents: data)
+            return .err(ok ? .none : .notReady)
         case .read:
             if let result = fm.contents(atPath: nativePath.path) {
                 return .data(result)
