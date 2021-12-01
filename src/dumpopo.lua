@@ -25,9 +25,9 @@ function main(args)
         startAddr = tonumber(args[3], 16)
     end
     local verbose = all or fnName == nil
-    local procTable = opofile.parseOpo(data, verbose)
+    local procTable, opxTable = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime()
-    rt:addModule(filename, procTable)
+    rt:addModule(filename, procTable, opxTable)
     if fnName then
         printProc(rt:findProc(fnName:upper()))
         rt:dumpProc(fnName:upper(), startAddr)

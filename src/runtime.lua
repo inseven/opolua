@@ -188,7 +188,7 @@ function Runtime:makeTemporaryVar(type)
     return makeVar(type)
 end
 
-function Runtime:addModule(path, procTable)
+function Runtime:addModule(path, procTable, opxTable)
     local name = splitext(basename(path)):upper()
     local mod = {
         -- Since 'name' isn't a legal procname (they're always uppercase in
@@ -197,6 +197,7 @@ function Runtime:addModule(path, procTable)
         -- procnames.
         name = name,
         path = path,
+        opxTable = opxTable,
     }
     for _, proc in ipairs(procTable) do
         mod[proc.name] = proc
@@ -791,10 +792,10 @@ function Runtime:declareGlobal(name, arrayLen)
 end
 
 function runOpo(fileName, data, procName, iohandler, verbose)
-    local procTable = require("opofile").parseOpo(data, verbose)
+    local procTable, opxTable = require("opofile").parseOpo(data, verbose)
     local rt = newRuntime(iohandler)
     rt:setInstructionDebug(verbose)
-    rt:addModule(fileName, procTable)
+    rt:addModule(fileName, procTable, opxTable)
     local procToCall = procName and procName:upper() or procTable[1].name
     local err = rt:pcallProc(procToCall)
     if err and err.code == KStopErr then

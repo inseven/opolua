@@ -54,7 +54,25 @@ function parseOpo(data, verbose)
         parseProc(proc)
     end
 
-    return procTable
+    local opxTable = nil
+    if opxTableIdx ~= 0 then
+        opxTable = {}
+        local nopx, pos = string.unpack("<I2", data, 1 + opxTableIdx)
+        vprintf("opxTableIdx: 0x%08X count=%d\n", opxTableIdx, nopx)
+        for i = 1, nopx do
+            local filename, uid, version
+            filename, uid, version, pos = string.unpack("<s1I4I2", data, pos)
+            vprintf("OPX %d: %s 0x%08X v%d\n", i - 1, filename, uid, version)
+            table.insert(opxTable, {
+                filename = filename,
+                uid = uid,
+                version = version
+            })
+        end
+
+    end
+
+    return procTable, opxTable
 end
 
 function parseProc(proc)

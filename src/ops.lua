@@ -1986,7 +1986,33 @@ function ScreenInfo(stack, runtime) -- 0x114
 end
 
 function CallOpxFunc(stack, runtime) -- 0x118
-    error("Unimplemented opcode CallOpxFunc!")
+    local opxNo = runtime:IP8()
+    local fnIdx = runtime:IP16()
+    local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
+    assert(opx, "Bad opx id?")
+    if not opx.module then
+        opx.module = require("opx."..opx.filename:lower())
+    end
+    local fnName = opx.module.fns[fnIdx]
+    assert(fnName, fmt("OPX function id %d now found in %s!", fnIdx, opx.filename))
+    local fn = opx.module[fnName]
+    assert(fn, "Unimplemented OPX function "..fnName.. " in "..opx.filename)
+    fn(stack, runtime)
+end
+
+function CallOpxFunc_dump(runtime)
+    local opxNo = runtime:IP8()
+    local fnIdx = runtime:IP16()
+    local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
+    local fnName
+    if opx then
+        local ok, module = pcall(require, fmt("opx.%s", opx.filename:lower()))
+        if ok then
+            fnName = module.fns[fnIdx]
+        end
+    end
+
+    return fmt("%d %d (%s %s)", opxNo, fnIdx, opx and opx.filename or "?", fnName or "?")
 end
 
 function Statement32(stack, runtime) -- 0x119
