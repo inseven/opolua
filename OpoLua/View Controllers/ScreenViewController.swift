@@ -75,8 +75,8 @@ class ScreenViewController: UIViewController {
             navigationItem.title = object.name
         }
 
-        let sz = getScreenSize()
-        let canvas = CanvasView(screenSize: CGSize(width: sz.width, height: sz.height))
+        let sz = getScreenSize().cgSize()
+        let canvas = CanvasView(size: sz)
         canvas.translatesAutoresizingMaskIntoConstraints = false
         drawables[1] = canvas // 1 is always the main window
 
@@ -260,7 +260,7 @@ extension ScreenViewController: OpoIoHandler {
                     }
                     let newSrc = Graphics.CopySource(displayId: src.displayId, rect: src.rect, extra: srcCanvas)
                     let newOp = Graphics.Operation(displayId: op.displayId, type: .copy(newSrc),
-                        x: op.x, y: op.y, color: op.color, bgcolor: op.bgcolor)
+                                                   origin: op.origin, color: op.color, bgcolor: op.bgcolor)
                     opsPerId[op.displayId]!.append(newOp)
                 default:
                     opsPerId[op.displayId]!.append(op)

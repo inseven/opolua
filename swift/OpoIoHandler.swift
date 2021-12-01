@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import CoreGraphics
 import Foundation
 
 protocol FlagEnum: RawRepresentable, Hashable, CaseIterable {}
@@ -144,15 +143,15 @@ struct Graphics {
         let width: Int
         let height: Int
     }
-    struct Position {
+    struct Point {
         let x: Int
         let y: Int
     }
     struct Rect {
-        let position: Position
+        let origin: Point
         let size: Size
-        var width: Int { return size.width}
-        var height: Int { return size.height}
+        var width: Int { return size.width }
+        var height: Int { return size.height }
     }
 
     struct Color {
@@ -185,21 +184,15 @@ struct Graphics {
         }
         let displayId: Int
         let type: OpType
-        let x: Int
-        let y: Int
+        let origin: Point
         let color: Color
         let bgcolor: Color
     }
 }
 
-extension Graphics.Color {
-    func cgColor() -> CGColor {
-        return CGColor(red: CGFloat(self.r) / 256, green: CGFloat(self.g) / 256, blue: CGFloat(self.b) / 256, alpha: 1)
-    }
-}
 extension Graphics.Rect {
-    func cgRect() -> CGRect {
-        return CGRect(x: self.position.x, y: self.position.y, width: self.width, height: self.height)
+    init(x: Int, y: Int, width: Int, height: Int) {
+        self.init(origin: Graphics.Point(x: x, y: y), size: Graphics.Size(width: width, height: height))
     }
 }
 

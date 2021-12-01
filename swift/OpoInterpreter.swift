@@ -219,6 +219,7 @@ private func graphics(_ L: LuaState!) -> Int32 {
         let t = L.tostring(-1, key: "type") ?? ""
         let x = L.toint(-1, key: "x") ?? 0
         let y = L.toint(-1, key: "y") ?? 0
+        let origin = Graphics.Point(x: x, y: y)
         let col = UInt8(L.toint(-1, key: "color") ?? 0)
         let color = Graphics.Color(r: col, g: col, b: col)
         let bgcol = UInt8(L.toint(-1, key: "bgcolor") ?? 255)
@@ -252,7 +253,7 @@ private func graphics(_ L: LuaState!) -> Int32 {
                let srcid = L.toint(-1, key: "srcid"),
                let _ = L.toint(-1, key: "mode") {
                 let size = Graphics.Size(width: width, height: height)
-                let rect = Graphics.Rect(position: Graphics.Position(x: srcx, y: srcy), size: size)
+                let rect = Graphics.Rect(origin: Graphics.Point(x: srcx, y: srcy), size: size)
                 let info = Graphics.CopySource(displayId: srcid, rect: rect, extra: nil)
                 optype = .copy(info)
             } else {
@@ -263,7 +264,7 @@ private func graphics(_ L: LuaState!) -> Int32 {
             print("Unknown Graphics.Operation.OpType \(t)")
             continue
         }
-        ops.append(Graphics.Operation(displayId: id, type: optype, x: x, y: y, color: color, bgcolor: bgcolor))
+        ops.append(Graphics.Operation(displayId: id, type: optype, origin: origin, color: color, bgcolor: bgcolor))
     }
     iohandler.draw(operations: ops)
     return 0

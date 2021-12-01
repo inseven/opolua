@@ -21,14 +21,6 @@
 import Foundation
 import CoreGraphics
 
-extension Graphics.Operation {
-
-    var origin: CGPoint {
-        return CGPoint(x: x, y: y)
-    }
-
-}
-
 extension CGContext {
 
     var coordinateFlipTransform: CGAffineTransform {
@@ -45,7 +37,7 @@ extension CGContext {
             fill(CGRect(origin: .zero, size: CGSize(width: width, height: height)))
         case .circle(let radius, let fill):
             let path = CGMutablePath()
-            path.addArc(center: operation.origin,
+            path.addArc(center: operation.origin.cgPoint(),
                         radius: CGFloat(radius),
                         startAngle: 0,
                         endAngle: Double.pi * 2,
@@ -59,7 +51,7 @@ extension CGContext {
             }
         case .line(let x, let y):
             let path = CGMutablePath()
-            path.move(to: operation.origin)
+            path.move(to: operation.origin.cgPoint())
             path.addLine(to: CGPoint(x: x, y: y))
             addPath(path)
             strokePath()
@@ -80,7 +72,7 @@ extension CGContext {
                     bitmapInfo: CGBitmapInfo.byteOrder32Little,
                     provider: provider, decode: nil, shouldInterpolate: false,
                     intent: .defaultIntent)!
-                drawUnflippedImage(cgImg, in: CGRect(x: operation.x, y: operation.y, width: pxInfo.size.width, height: pxInfo.size.height))
+                drawUnflippedImage(cgImg, in: CGRect(origin: operation.origin.cgPoint(), size: pxInfo.size.cgSize()))
             } else {
                 print("Unhandled bpp \(pxInfo.bpp) in bitblt operation!")
             }
@@ -90,7 +82,7 @@ extension CGContext {
                 return
             }
             let img = srcImage.cropping(to: src.rect.cgRect())!
-            drawUnflippedImage(img, in: CGRect(x: operation.x, y: operation.y, width: src.rect.width, height: src.rect.height))
+            drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: src.rect.size.cgSize()))
         }
     }
 

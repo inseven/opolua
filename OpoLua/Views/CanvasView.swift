@@ -32,8 +32,8 @@ class CanvasView : UIView, Drawable {
         fatalError("init(coder:) has not been implemented")
     }
 
-    init(screenSize: CGSize) {
-        canvas = Canvas(size: screenSize)
+    init(size: CGSize) {
+        canvas = Canvas(size: size)
         imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFit
@@ -45,7 +45,7 @@ class CanvasView : UIView, Drawable {
             imageView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor),
             imageView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor),
         ])
-        imageView.image = .emptyImage(with: screenSize)
+        imageView.image = .emptyImage(with: size)
     }
 
     func draw(_ operations: [Graphics.Operation]) {
