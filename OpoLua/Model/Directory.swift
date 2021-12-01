@@ -49,6 +49,7 @@ class Directory {
         self.url = url
         objects = try FileManager.default.contentsOfDirectory(atPath: url.path)
             .map { url.appendingPathComponent($0) }
+            .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
                 if FileManager.default.directoryExists(atPath: url.path) {
                     return Item(url: url, type: .directory)
