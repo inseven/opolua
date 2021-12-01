@@ -31,6 +31,10 @@
 		D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA09712751BBEA00F4730D /* UIElement.swift */; };
 		D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* DirectoryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
+		D8FE60032757106300711717 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* Location.swift */; };
+		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
+		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
+		D8FE60092757208000711717 /* ApplicationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60082757208000711717 /* ApplicationError.swift */; };
 		DB5AC970275198A20043FE5C /* database.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC96F275198A20043FE5C /* database.lua */; };
 		DB5AC972275577990043FE5C /* mbm.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC971275577980043FE5C /* mbm.lua */; };
 		DB5AC974275681510043FE5C /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC973275681510043FE5C /* CanvasView.swift */; };
@@ -107,6 +111,10 @@
 		D8BA09712751BBEA00F4730D /* UIElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIElement.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* DirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
+		D8FE60022757106300711717 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
+		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
+		D8FE60082757208000711717 /* ApplicationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationError.swift; sourceTree = "<group>"; };
 		DB5AC96F275198A20043FE5C /* database.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = database.lua; sourceTree = "<group>"; };
 		DB5AC971275577980043FE5C /* mbm.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mbm.lua; sourceTree = "<group>"; };
 		DB5AC973275681510043FE5C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
@@ -182,6 +190,9 @@
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
 				D861E8DE274A8D70003C8D3D /* KeyCode.swift */,
 				D861E8DA274A819D003C8D3D /* OPLObject.swift */,
+				D8FE60022757106300711717 /* Location.swift */,
+				D8FE60042757177200711717 /* Settings.swift */,
+				D8FE60082757208000711717 /* ApplicationError.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -210,6 +221,7 @@
 				D8891350274C184C00794D55 /* UIImage.swift */,
 				D89A607B2756A6A300C9757F /* URL.swift */,
 				D89A607D2756A98200C9757F /* ViewController.swift */,
+				D8FE60062757201600711717 /* Bundle.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -435,8 +447,10 @@
 				DB79FFFE2742E6F6005E904F /* lctype.c in Sources */,
 				DB79FFFF2742E6F6005E904F /* ldblib.c in Sources */,
 				DB7900002742E6F6005E904F /* ldebug.c in Sources */,
+				D8FE60052757177200711717 /* Settings.swift in Sources */,
 				DB7900012742E6F6005E904F /* ldo.c in Sources */,
 				D8BA0970275196CA00F4730D /* String.swift in Sources */,
+				D8FE60032757106300711717 /* Location.swift in Sources */,
 				D8891353274C186E00794D55 /* Canvas.swift in Sources */,
 				D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */,
 				D889134D274C17FF00794D55 /* CGContext.swift in Sources */,
@@ -455,6 +469,7 @@
 				D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */,
 				D87A62762752A6F400075CB8 /* BorderedButton.swift in Sources */,
 				D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */,
+				D8FE60072757201600711717 /* Bundle.swift in Sources */,
 				DB79000C2742E6F6005E904F /* lopcodes.c in Sources */,
 				D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */,
 				D889134F274C181F00794D55 /* CGPoint.swift in Sources */,
@@ -472,6 +487,7 @@
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,
 				DB7900132742E6F6005E904F /* ltablib.c in Sources */,
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,
+				D8FE60092757208000711717 /* ApplicationError.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
 				DB7900162742E6F6005E904F /* lutf8lib.c in Sources */,
 				DB7900172742E6F6005E904F /* lvm.c in Sources */,

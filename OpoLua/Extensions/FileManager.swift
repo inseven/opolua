@@ -30,4 +30,40 @@ extension FileManager {
         return false
     }
 
+    var documentsUrl: URL {
+        return urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+
+    var secureBookmarksUrl: URL {
+        return documentsUrl.appendingPathComponent("SecureBookmarks")
+    }
+
+    func prepareUrlForSecureAccess(_ url: URL) throws {
+        guard url.startAccessingSecurityScopedResource() else {
+            throw ApplicationError.accessDenied
+        }
+        guard isReadableFile(atPath: url.path) else {
+            throw ApplicationError.accessDenied
+        }
+    }
+
+    func writeSecureBookmark(_ url: URL, to backingUrl: URL) throws {
+        try prepareUrlForSecureAccess(url)
+        let data = try url.bookmarkData(options: .suitableForBookmarkFile,
+                                        includingResourceValuesForKeys: nil,
+                                        relativeTo: nil)
+        try URL.writeBookmarkData(data, to: backingUrl)
+    }
+
+    func readSecureBookmark(url: URL) throws -> URL {
+        let bookmarkData = try URL.bookmarkData(withContentsOf: url)
+        var isStale: Bool = true
+        let url = try URL(resolvingBookmarkData: bookmarkData,
+                          options: [],
+                          relativeTo: nil,
+                          bookmarkDataIsStale: &isStale)
+        try prepareUrlForSecureAccess(url)
+        return url
+    }
+
 }
