@@ -27,29 +27,16 @@ function main(args)
     for _, m in ipairs(maps) do
         iohandler.fsmap(m[1], m[2]) -- Not part of iohandler interface, specific to defaultiohandler
     end
-    local err = runOpo(filename, procName, iohandler, verbose)
-    if err then
-        print("Error: "..tostring(err))
-    end
-    return err and 1 or 0
-end
 
-function runOpo(filename, procName, iohandler, verbose)
     local f = assert(io.open(filename, "rb"))
     local data = f:read("a")
     f:close()
 
-    local procTable = opofile.parseOpo(data, verbose)
-    local rt = runtime.newRuntime(iohandler)
-    rt:setInstructionDebug(verbose)
-    rt:addModule(filename, procTable)
-    local procToCall = procName and procName:upper() or procTable[1].name
-    local err = rt:pcallProc(procToCall)
-    if err and err.code == KStopErr then
-        -- Don't care about the distinction
-        err = nil
+    local err = runtime.runOpo(data, procName, iohandler, verbose)
+    if err then
+        print("Error: "..tostring(err))
     end
-    return err
+    return err and 1 or 0
 end
 
 -- Syntax: runopo.lua filename [fnName]

@@ -43,6 +43,35 @@ extension UnsafeMutablePointer where Pointee == lua_State {
 
 }
 
+private func searcher(_ L: LuaState!) -> Int32 {
+    guard let module = L.tostring(1, encoding: .utf8) else {
+        L.pushnil()
+        return 1
+    }
+
+    let parts = module.split(separator: ".", omittingEmptySubsequences: false)
+    let subdir = parts.count > 1 ? parts[0...parts.count-2].joined(separator: "/") : nil
+    let name = String(parts.last!)
+
+    if let url = Bundle.main.url(forResource: name, withExtension: "lua", subdirectory: subdir),
+       let data = FileManager.default.contents(atPath: url.path) {
+        let shortPath = "@" + url.lastPathComponent
+        var err: Int32 = 0
+        data.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) -> Void in
+            let chars = ptr.bindMemory(to: CChar.self)
+            err = luaL_loadbufferx(L, chars.baseAddress, chars.count, shortPath, "t")
+        }
+        if err == 0 {
+            return 1
+        } else {
+            return lua_error(L) // errors with the string error pushed by luaL_loadbufferx
+        }
+    } else {
+        L.push("\n\tno resource '\(module)'")
+        return 1
+    }
+}
+
 private func traceHandler(_ L: LuaState!) -> Int32 {
     var msg = lua_tostring(L, 1)
     if msg == nil {  /* is error object not a string? */
@@ -458,19 +487,19 @@ class OpoInterpreter {
         }
 
         // Now configure the require path
-        let resources = Bundle.main.resourcePath!
-        let searchPath = resources + "/?.lua"
         lua_getglobal(L, "package")
-        lua_pushstring(L, searchPath)
-        lua_setfield(L, -2, "path")
-        lua_pop(L, 1) // package
+        lua_getfield(L, -1, "searchers")
+        lua_pushcfunction(L, searcher)
+        lua_rawseti(L, -2, 2) // 2nd searcher is the .lua lookup one
+        lua_pushnil(L)
+        lua_rawseti(L, -2, 3) // And prevent 3 (or 4) from being used
+        lua_pop(L, 2) // searchers, package
 
         // Finally, run init.lua
-        let err = luaL_dofile(L, resources + "/init.lua")
-        if err != 0 {
-            let errStr = String(validatingUTF8: lua_tostring(L, -1))!
-            print(errStr)
-            lua_pop(L, 1)
+        lua_getglobal(L, "require")
+        L.push("init")
+        guard pcall(1, 0) else {
+            fatalError("Failed to load init.lua!")
         }
 
         assert(lua_gettop(L) == 0) // In case we failed to balance stack during init
@@ -576,19 +605,25 @@ class OpoInterpreter {
     }
 
     func run(file: String, procedureName: String? = nil) -> Result {
-        guard luaL_dofile(L, Bundle.main.path(forResource: "runopo", ofType: "lua")!) == 0 else {
-            fatalError(L.tostring(-1, convert: true) ?? "Oh so much doom")
+        guard let data = FileManager.default.contents(atPath: file) else {
+            fatalError("File \(file) not found!")
         }
+
         lua_settop(L, 0)
-        lua_getglobal(L, "runOpo")
-        L.push(file, encoding: .utf8)
+
+        lua_getglobal(L, "require")
+        L.push("runtime")
+        guard pcall(1, 1) else { fatalError("Couldn't load runtime") }
+        lua_getfield(L, -1, "runOpo")
+        L.push(file)
+        L.push(data)
         if let proc = procedureName {
             L.push(proc)
         } else {
             L.pushnil()
         }
         makeIoHandlerBridge()
-        let ok = pcall(3, 1) // runOpo(file, proc, iohandler)
+        let ok = pcall(4, 1) // runOpo(filename, data, proc, iohandler)
         if ok {
             let t = L.type(-1)
             let result: Result

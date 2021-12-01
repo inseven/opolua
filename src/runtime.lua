@@ -790,4 +790,18 @@ function Runtime:declareGlobal(name, arrayLen)
     return var
 end
 
+function runOpo(fileName, data, procName, iohandler, verbose)
+    local procTable = require("opofile").parseOpo(data, verbose)
+    local rt = newRuntime(iohandler)
+    rt:setInstructionDebug(verbose)
+    rt:addModule(fileName, procTable)
+    local procToCall = procName and procName:upper() or procTable[1].name
+    local err = rt:pcallProc(procToCall)
+    if err and err.code == KStopErr then
+        -- Don't care about the distinction
+        err = nil
+    end
+    return err
+end
+
 return _ENV
