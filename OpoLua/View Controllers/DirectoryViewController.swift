@@ -57,6 +57,8 @@ class DirectoryViewController : UITableViewController {
             cell.imageView?.image = UIImage(systemName: "applescript")
         case .directory:
             cell.imageView?.image = UIImage(systemName: "folder")
+        case .app:
+            cell.imageView?.image = UIImage(systemName: "app")
         }
         return cell
     }
@@ -64,7 +66,8 @@ class DirectoryViewController : UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let item = directory.objects[indexPath.row]
         switch item.type {
-        case .object(let object):
+        case .object, .app:
+            let object = OPLObject(url: item.url)
             let viewController = ScreenViewController(object: object)
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
@@ -84,7 +87,8 @@ class DirectoryViewController : UITableViewController {
                             point: CGPoint) -> UIContextMenuConfiguration? {
         let item = directory.objects[indexPath.row]
         switch item.type {
-        case .object(let object):
+        case .object, .app:
+            let object = OPLObject(url: item.url)
             return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
                 let runAction = UIAction(title: "Run", image: UIImage(systemName: "play")) { action in
                     let viewController = ScreenViewController(object: object)

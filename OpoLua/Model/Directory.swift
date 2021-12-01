@@ -25,8 +25,9 @@ class Directory {
     struct Item {
 
         enum `Type` {
-            case object(OPLObject)
+            case object
             case directory
+            case app
         }
 
         let url: URL
@@ -54,7 +55,9 @@ class Directory {
                 if FileManager.default.directoryExists(atPath: url.path) {
                     return Item(url: url, type: .directory)
                 } else if url.pathExtension == "opo" {
-                    return Item(url: url, type: .object(OPLObject(url: url)))
+                    return Item(url: url, type: .object)
+                } else if url.pathExtension == "app" {
+                    return Item(url: url, type: .app)
                 } else {
                     return nil
                 }
