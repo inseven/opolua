@@ -232,6 +232,9 @@ private func graphics(_ L: LuaState!) -> Int32 {
             optype = .circle(L.toint(-1, key: "r") ?? 0, (L.toint(-1, key: "fill") ?? 0) != 0)
         case "line":
             optype = .line(L.toint(-1, key: "x2") ?? 0, L.toint(-1, key: "y2") ?? 0)
+        case "box":
+            let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
+            optype = .box(size)
         case "bitblt":
             if let width = L.toint(-1, key: "bmpWidth"),
                let height = L.toint(-1, key: "bmpHeight"),

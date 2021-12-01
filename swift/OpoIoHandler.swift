@@ -179,6 +179,7 @@ struct Graphics {
             case cls
             case circle(Int, Bool) // radius, fill
             case line(Int, Int) // x2, y2
+            case box(Size)
             case bitblt(PixelData)
             case copy(CopySource)
         }

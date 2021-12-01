@@ -55,6 +55,10 @@ extension CGContext {
             path.addLine(to: CGPoint(x: x, y: y))
             addPath(path)
             strokePath()
+        case .box(let size):
+            let rect = CGRect(origin: operation.origin.cgPoint(), size: size.cgSize())
+            addPath(CGPath(rect: rect, transform: nil))
+            strokePath()
         case .bitblt(let pxInfo):
             if pxInfo.bpp == 4 {
                 // CoreGraphics doesn't seem to like 4bpp, so expand it

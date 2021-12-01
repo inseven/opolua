@@ -1631,7 +1631,9 @@ function gLineBy(stack, runtime) -- 0xDA
 end
 
 function gBox(stack, runtime) -- 0xDB
-    error("Unimplemented opcode gBox!")
+    local height = stack:pop()
+    local width = stack:pop()
+    runtime:graphicsOp("box", { width = width, height = height })
 end
 
 function gCircle(stack, runtime) -- 0xDC
