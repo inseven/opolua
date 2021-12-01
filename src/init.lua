@@ -61,6 +61,7 @@ Errors = {
     KOplErrSubs = -111,
     KOplErrEsc = -114,
     KOplErrDrawNotOpen = -118,
+    KOplErrInvalidWindow = -119,
     KOplErrIncompatibleUpdateMode = -125,
     KStopErr = -999, -- Made this one up
 }

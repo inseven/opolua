@@ -394,7 +394,7 @@ function Runtime:getMenu()
     return self.menu
 end
 
-function Runtime:newGraphicsContext(id, width, height)
+function Runtime:newGraphicsContext(id, width, height, isWindow)
     local graphics = self:getGraphics()
     assert(graphics[id] == nil, "Graphics context already exists!")
     local newCtx = {
@@ -405,6 +405,7 @@ function Runtime:newGraphicsContext(id, width, height)
         width = width,
         height = height,
         pos = { x = 0, y = 0 },
+        isWindow = isWindow,
     }
     graphics[id] = newCtx
     -- Creating a new drawable always seems to update current

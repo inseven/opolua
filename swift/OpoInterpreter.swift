@@ -263,6 +263,9 @@ private func graphics(_ L: LuaState!) -> Int32 {
                 print("Missing params in copy!")
                 continue
             }
+        case "showWindow":
+            let flag = L.toboolean(-1, key: "show") ?? false
+            optype = .showWindow(flag)
         default:
             print("Unknown Graphics.Operation.OpType \(t)")
             continue
@@ -406,7 +409,24 @@ private func createBitmap(_ L: LuaState!) -> Int32 {
     guard let width = L.toint(1), let height = L.toint(2) else {
         return 0
     }
-    if let handle = iohandler.createBitmap(width: width, height: height) {
+    if let handle = iohandler.createBitmap(size: Graphics.Size(width: width, height: height)) {
+        L.push(handle)
+    } else {
+        L.pushnil()
+    }
+    return 1
+}
+
+private func createWindow(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    guard let x = L.toint(1), let y = L.toint(2),
+          let width = L.toint(3), let height = L.toint(4),
+          let _ = L.toint(5) /*flags*/ else {
+        return 0
+    }
+    // TODO do something with flags
+    let rect = Graphics.Rect(x: x, y: y, width: width, height: height)
+    if let handle = iohandler.createWindow(rect: rect) {
         L.push(handle)
     } else {
         L.pushnil()
@@ -493,6 +513,7 @@ class OpoInterpreter {
             ("asyncRequest", asyncRequest),
             ("waitForAnyRequest", waitForAnyRequest),
             ("createBitmap", createBitmap),
+            ("createWindow", createWindow),
         ]
         L.setfuncs(fns, nup: 1)
     }

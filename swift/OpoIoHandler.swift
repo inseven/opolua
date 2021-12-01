@@ -182,6 +182,8 @@ struct Graphics {
             case box(Size)
             case bitblt(PixelData)
             case copy(CopySource)
+            case showWindow(Bool) // visible flag
+            // case resizeWindow(Rect)
         }
         let displayId: Int
         let type: OpType
@@ -312,7 +314,8 @@ protocol OpoIoHandler {
     func asyncRequest(_ request: Async.Request)
     func waitForAnyRequest() -> Async.Response
 
-    func createBitmap(width: Int, height: Int) -> Int?
+    func createBitmap(size: Graphics.Size) -> Int?
+    func createWindow(rect: Graphics.Rect) -> Int?
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -363,7 +366,11 @@ class DummyIoHandler : OpoIoHandler {
         fatalError("No support for waitForAnyRequest in DummyIoHandler")
     }
 
-    func createBitmap(width: Int, height: Int) -> Int? {
+    func createBitmap(size: Graphics.Size) -> Int? {
+        return nil
+    }
+
+    func createWindow(rect: Graphics.Rect) -> Int? {
         return nil
     }
 

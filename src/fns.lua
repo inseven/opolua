@@ -235,6 +235,11 @@ local function numParams_dump(runtime)
     return fmt(" numParams=%d", numParams)
 end
 
+function IP8_dump(runtime)
+    local val = runtime:IP8()
+    return fmt("%d (0x%02X)", val, val)
+end
+
 function Addr(stack, runtime) -- 0x00
     local var = stack:pop()
     stack:push(var:addressOf())
@@ -387,12 +392,23 @@ function IoOpenUnique(stack, runtime) -- 0x25
 end
 
 function gCreate(stack, runtime) -- 0x26
-    error("Unimplemented function gCreate!")
+    stack:push(0)
+    gCreateEnhanced(stack, runtime)
 end
 
 function gCreateBit(stack, runtime) -- 0x27
-    error("Unimplemented function gCreateBit!")
+    local mode = 0
+    if runtime:IP8() == 3 then
+        mode = stack:pop()
+    end
+    local size = stack:popSize()
+    local id = iohandler.createBitmap(size.w, size.h) -- always greyscale atm
+    assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
+    runtime:newGraphicsContext(id, size.w, size.h, false)
+    stack:push(id)
 end
+
+gCreateBit_dump = IP8_dump
 
 function gLoadBit(stack, runtime) -- 0x28
     -- We implment this in 3 phases:
@@ -421,7 +437,7 @@ function gLoadBit(stack, runtime) -- 0x28
     -- (2)
     local id = iohandler.createBitmap(bitmap.width, bitmap.height) -- always greyscale atm
     assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
-    runtime:newGraphicsContext(id)
+    runtime:newGraphicsContext(id, bitmap.width, bitmap.height, false)
     -- (3)
     runtime:graphicsOp("bitblt", {
         bmpWidth = bitmap.width,
@@ -535,7 +551,18 @@ end
 Alert_dump = numParams_dump
 
 function gCreateEnhanced(stack, runtime) -- 0x39
-    error("Unimplemented function gCreateEnhanced!")
+    local flags = stack:pop()
+    local visible = stack:pop()
+    local rect = stack:popRect()
+    -- printf("gCreate %d,%d %dx%d visible=%d flags=%d\n", rect.x, rect.y, rect.w, rect.h, visible, flags)
+    local id = runtime:iohandler().createWindow(rect.x, rect.y, rect.w, rect.h, flags)
+    assert(id, "Failed to createWindow!")
+    runtime:newGraphicsContext(id, rect.w, rect.h, true)
+    if visible ~= 0 then
+        runtime:graphicsOp("showWindow", { show = true })
+        runtime:flushGraphicsOps()
+    end
+    stack:push(id)
 end
 
 function MenuWithMemory(stack, runtime) -- 0x3A

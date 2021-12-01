@@ -534,6 +534,8 @@ local function IPs8_dump(runtime)
     return fmt("%d (0x%s)", val, fmt("%02X", val):sub(-2))
 end
 
+IP8_dump = fns.IP8_dump
+
 local function IP16_dump(runtime)
     local index = runtime:IP16()
     return fmt("0x%04X", index)
@@ -1553,8 +1555,13 @@ function gSetWin(stack, runtime) -- 0xC8
 end
 
 function gVisible(stack, runtime) -- 0xC9
-    error("Unimplemented opcode gVisible!")
+    local graphics = runtime:getGraphics()
+    assert(graphics.current.isWindow, KOplErrInvalidWindow)
+    local show = runtime:IP8() == 1
+    runtime:graphicsOp("showWindow", { show = show })
 end
+
+gVisible_dump = IP8_dump
 
 function gFont(stack, runtime) -- 0xCA
     error("Unimplemented opcode gFont!")
