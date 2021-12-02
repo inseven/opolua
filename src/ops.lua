@@ -1547,6 +1547,7 @@ function gClose(stack, runtime) -- 0xC6
     if id == graphics.current.id then
         graphics.current = graphics[1]
     end
+    runtime:setTrap(false)
 end
 
 function gUse(stack, runtime) -- 0xC7
