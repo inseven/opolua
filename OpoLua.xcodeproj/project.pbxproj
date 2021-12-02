@@ -66,7 +66,7 @@
 		DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79001B2746B88F005E904F /* OpoIoHandler.swift */; };
 		DB7900232746C771005E904F /* lua_State.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7900212746C771005E904F /* lua_State.swift */; };
 		DB7900262746D915005E904F /* defaultiohandler.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB7900242746D915005E904F /* defaultiohandler.lua */; };
-		DB79FFBE2742D99C005E904F /* ScreenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFBD2742D99C005E904F /* ScreenViewController.swift */; };
+		DB79FFBE2742D99C005E904F /* ProgramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFBD2742D99C005E904F /* ProgramViewController.swift */; };
 		DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FE6227428292005E904F /* AppDelegate.swift */; };
 		DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFE52742E596005E904F /* OpoInterpreter.swift */; };
 		DB79FFF02742E631005E904F /* runtime.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFE82742E631005E904F /* runtime.lua */; };
@@ -161,7 +161,7 @@
 		DB79FF7B2742D5BD005E904F /* ldebug.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ldebug.c; sourceTree = "<group>"; };
 		DB79FF7C2742D5BE005E904F /* lbaselib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lbaselib.c; sourceTree = "<group>"; };
 		DB79FFA62742D88A005E904F /* OpoLua.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpoLua.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DB79FFBD2742D99C005E904F /* ScreenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenViewController.swift; sourceTree = "<group>"; };
+		DB79FFBD2742D99C005E904F /* ProgramViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramViewController.swift; sourceTree = "<group>"; };
 		DB79FFE22742E52B005E904F /* opolua-bridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "opolua-bridge.h"; sourceTree = "<group>"; };
 		DB79FFE52742E596005E904F /* OpoInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoInterpreter.swift; sourceTree = "<group>"; };
 		DB79FFE82742E631005E904F /* runtime.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = runtime.lua; sourceTree = "<group>"; };
@@ -238,7 +238,7 @@
 				D8C679B927483B5600BD8720 /* DirectoryViewController.swift */,
 				D89A607F2756AE8800C9757F /* LibraryViewController.swift */,
 				D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */,
-				DB79FFBD2742D99C005E904F /* ScreenViewController.swift */,
+				DB79FFBD2742D99C005E904F /* ProgramViewController.swift */,
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
 			);
 			path = "View Controllers";
@@ -504,7 +504,7 @@
 				DB7900182742E6F6005E904F /* lzio.c in Sources */,
 				DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */,
 				DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */,
-				DB79FFBE2742D99C005E904F /* ScreenViewController.swift in Sources */,
+				DB79FFBE2742D99C005E904F /* ProgramViewController.swift in Sources */,
 				D861E8E1274AB1CB003C8D3D /* MenuViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -20,7 +20,7 @@
 
 import UIKit
 
-class ScreenViewController: UIViewController {
+class ProgramViewController: UIViewController {
 
     enum State {
         case idle
@@ -152,7 +152,7 @@ class ScreenViewController: UIViewController {
 
 }
 
-extension ScreenViewController: OpoIoHandler {
+extension ProgramViewController: OpoIoHandler {
 
     func printValue(_ val: String) {
         DispatchQueue.main.async {
