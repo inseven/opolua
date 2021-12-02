@@ -295,6 +295,8 @@ private func graphics(_ L: LuaState!) -> Int32 {
         case "showWindow":
             let flag = L.toboolean(-1, key: "show") ?? false
             optype = .showWindow(flag)
+        case "close":
+            optype = .close
         default:
             print("Unknown Graphics.Operation.OpType \(t)")
             continue

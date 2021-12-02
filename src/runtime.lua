@@ -427,7 +427,9 @@ function Runtime:graphicsOp(type, op)
     if not op then op = {} end
     local graphics = self:getGraphics()
     local context = graphics.current
-    op.id = context.id
+    if not op.id then
+        op.id = context.id
+    end
     op.type = type
     if not op.mode then
         op.mode = context.mode

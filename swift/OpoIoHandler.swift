@@ -183,6 +183,7 @@ struct Graphics {
             case bitblt(PixelData)
             case copy(CopySource)
             case showWindow(Bool) // visible flag
+            case close
             // case resizeWindow(Rect)
         }
         let displayId: Int

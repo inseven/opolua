@@ -262,6 +262,7 @@ extension ProgramViewController: OpoIoHandler {
     func draw(operations: [Graphics.Operation]) {
         let semaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
+            var drawablesToRemove: [Int] = []
             // Split ops into per drawable
             // TODO this is all a bit broken atm allowing out-of-order execution of ops :-(
 
@@ -287,17 +288,27 @@ extension ProgramViewController: OpoIoHandler {
                         continue
                     }
                     view.isHidden = !flag
+                case .close:
+                    if let view = self.drawables[op.displayId] as? CanvasView {
+                        view.removeFromSuperview()
+                    }
+                    drawablesToRemove.append(op.displayId)
+                    // Don't add to opsPerId
                 default:
                     opsPerId[op.displayId]!.append(op)
                 }
 
             }
-            for (id, ops) in opsPerId  {
+            for (id, ops) in opsPerId {
                 if let drawable = self.drawables[id] {
                     drawable.draw(ops)
                 } else {
                     print("\(ops.count) operations for unknown displayId!")
                 }
+            }
+
+            for id in drawablesToRemove {
+                self.drawables[id] = nil
             }
 
             semaphore.signal()

@@ -87,10 +87,9 @@ extension CGContext {
             }
             let img = srcImage.cropping(to: src.rect.cgRect())!
             drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: src.rect.size.cgSize()))
-        case .showWindow(_):
+        case .showWindow(_), .close:
+            // Handled by ProgramViewController
             break
-        // case .resizeWindow(_):
-        //     break
         }
     }
 

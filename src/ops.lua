@@ -1539,7 +1539,14 @@ function gSaveBit(stack, runtime) -- 0xC5
 end
 
 function gClose(stack, runtime) -- 0xC6
-    error("Unimplemented opcode gClose!")
+    local id = stack:pop()
+    local graphics = runtime:getGraphics()
+    assert(id ~= 1, KOplErrInvalidArgs) -- Cannot close the console
+    runtime:graphicsOp("close", { id = id })
+    runtime:flushGraphicsOps()
+    if id == graphics.current.id then
+        graphics.current = graphics[1]
+    end
 end
 
 function gUse(stack, runtime) -- 0xC7
