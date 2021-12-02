@@ -139,8 +139,7 @@ class ScreenViewController: UIViewController {
     }
     
     func programDidFinish(result: OpoInterpreter.Result) {
-        // navigationController?.popViewController(animated: true)
-        self.textView.backgroundColor = UIColor.lightGray
+        self.textView.textColor = .secondaryLabel
         switch result {
         case .none:
             self.textView.text?.append("\n---Completed---")
