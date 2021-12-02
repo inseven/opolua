@@ -85,6 +85,7 @@ class ScreenViewController: UIViewController {
         } else {
             navigationItem.title = object.name
         }
+        view.clipsToBounds = true
         view.addSubview(canvasView)
         view.addSubview(textView)
         NSLayoutConstraint.activate([

@@ -23,9 +23,8 @@ import UIKit
 class CanvasView : UIView, Drawable {
 
     var canvas: Canvas
-    var imageView: UIImageView
-    var image: CGImage? { // required by Drawable
-        return imageView.image?.cgImage
+    var image: CGImage? {
+        return canvas.image
     }
 
     required init?(coder: NSCoder) {
@@ -34,23 +33,28 @@ class CanvasView : UIView, Drawable {
 
     init(size: CGSize) {
         canvas = Canvas(size: size)
-        imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
         super.init(frame: .zero)
-        addSubview(imageView)
-        imageView.image = .emptyImage(with: size)
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        imageView.frame = self.bounds
+        clipsToBounds = true
     }
 
     func draw(_ operations: [Graphics.Operation]) {
         canvas.draw(operations)
-        if let img = canvas.image {
-            self.imageView.image = UIImage(cgImage: img)
+        setNeedsDisplay()
+
+    }
+
+    override func draw(_ rect: CGRect) {
+        guard let image = canvas.image,
+              let context = UIGraphicsGetCurrentContext()
+        else {
+            return
         }
+        context.setFillColor(UIColor.white.cgColor)
+        context.fill(CGRect(origin: .zero, size: canvas.size))
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: canvas.size.height);
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.draw(image, in: CGRect(origin: .zero, size: canvas.size))
     }
 
 }
