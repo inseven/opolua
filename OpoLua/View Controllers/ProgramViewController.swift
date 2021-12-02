@@ -75,7 +75,7 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var canvasView: CanvasView = {
-        let canvas = CanvasView(size: screenSize.cgSize())
+        let canvas = CanvasView(id: 1, size: screenSize.cgSize())
         canvas.translatesAutoresizingMaskIntoConstraints = false
         canvas.layer.borderWidth = 1.0
         canvas.layer.borderColor = UIColor.black.cgColor
@@ -409,7 +409,7 @@ extension ProgramViewController: OpoIoHandler {
         DispatchQueue.main.async {
             h = self.nextHandle
             self.nextHandle += 1
-            let newView = CanvasView(size: rect.size.cgSize())
+            let newView = CanvasView(id: h, size: rect.size.cgSize())
             newView.isHidden = true // by default, will get a showWindow op if needed
             newView.frame = rect.cgRect()
             self.canvasView.addSubview(newView)
@@ -423,16 +423,11 @@ extension ProgramViewController: OpoIoHandler {
 
 extension Scheduler: CanvasViewDelegate {
 
-    func canvasView(_ canvasView: CanvasView, touchesBegan touches: Set<UITouch>, with event: UIEvent?) {
-        guard let event = event,
-            let touch = touches.first
-        else {
-            return
-        }
+    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
         let location = touch.location(in: canvasView)
         serviceRequest(type: .getevent) { request in
             let event = Async.PenEvent(timestamp: Int(event.timestamp),
-                                       windowId: 1,  // TODO: Correct window ID.
+                                       windowId: canvasView.id,
                                        type: .down,
                                        modifiers: 0,
                                        x: Int(location.x),
@@ -443,16 +438,11 @@ extension Scheduler: CanvasViewDelegate {
         }
     }
 
-    func canvasView(_ canvasView: CanvasView, touchesMoved touches: Set<UITouch>, with event: UIEvent?) {
-        guard let event = event,
-            let touch = touches.first
-        else {
-            return
-        }
+    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
         let location = touch.location(in: canvasView)
         serviceRequest(type: .getevent) { request in
             let event = Async.PenEvent(timestamp: Int(event.timestamp),
-                                       windowId: 1,  // TODO: Correct window ID.
+                                       windowId: canvasView.id,
                                        type: .drag,
                                        modifiers: 0,
                                        x: Int(location.x),
@@ -463,16 +453,11 @@ extension Scheduler: CanvasViewDelegate {
         }
     }
 
-    func canvasView(_ canvasView: CanvasView, touchesEnded touches: Set<UITouch>, with event: UIEvent?) {
-        guard let event = event,
-            let touch = touches.first
-        else {
-            return
-        }
+    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
         let location = touch.location(in: canvasView)
         serviceRequest(type: .getevent) { request in
             let event = Async.PenEvent(timestamp: Int(event.timestamp),
-                                       windowId: 1,  // TODO: Correct window ID.
+                                       windowId: canvasView.id,
                                        type: .up,
                                        modifiers: 0,
                                        x: Int(location.x),

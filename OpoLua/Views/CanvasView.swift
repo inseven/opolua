@@ -22,14 +22,15 @@ import UIKit
 
 protocol CanvasViewDelegate: AnyObject {
 
-    func canvasView(_ canvasView: CanvasView, touchesBegan touches: Set<UITouch>, with event: UIEvent?)
-    func canvasView(_ canvasView: CanvasView, touchesMoved touches: Set<UITouch>, with event: UIEvent?)
-    func canvasView(_ canvasView: CanvasView, touchesEnded touches: Set<UITouch>, with event: UIEvent?)
+    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent)
+    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent)
+    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent)
 
 }
 
 class CanvasView : UIView, Drawable {
 
+    var id: Int
     var canvas: Canvas
     weak var delegate: CanvasViewDelegate?
 
@@ -41,7 +42,8 @@ class CanvasView : UIView, Drawable {
         fatalError("init(coder:) has not been implemented")
     }
 
-    init(size: CGSize) {
+    init(id: Int, size: CGSize) {
+        self.id = id
         canvas = Canvas(size: size)
         super.init(frame: .zero)
         clipsToBounds = true
@@ -72,15 +74,28 @@ class CanvasView : UIView, Drawable {
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        delegate?.canvasView(self, touchesBegan: touches, with: event)
+        guard let event = event,
+              let touch = touches.first else {
+            return
+        }
+
+        delegate?.canvasView(self, touchBegan: touch, with: event)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        delegate?.canvasView(self, touchesMoved: touches, with: event)
+        guard let event = event,
+              let touch = touches.first else {
+            return
+        }
+        delegate?.canvasView(self, touchMoved: touch, with: event)
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        delegate?.canvasView(self, touchesEnded: touches, with: event)
+        guard let event = event,
+              let touch = touches.first else {
+            return
+        }
+        delegate?.canvasView(self, touchEnded: touch, with: event)
     }
 
 }
