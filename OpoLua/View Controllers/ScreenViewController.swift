@@ -21,11 +21,13 @@
 import UIKit
 
 class ScreenViewController: UIViewController {
-    
+
     enum State {
         case idle
         case running
     }
+
+    let screenSize = Graphics.Size(width:640, height: 240)
 
     var object: OPLObject
     var procedureName: String?
@@ -62,6 +64,15 @@ class ScreenViewController: UIViewController {
         return barButtonItem
     }()
 
+    lazy var canvasView: CanvasView = {
+        let canvas = CanvasView(size: screenSize.cgSize())
+        canvas.translatesAutoresizingMaskIntoConstraints = false
+        canvas.layer.borderWidth = 1.0
+        canvas.layer.borderColor = UIColor.black.cgColor
+        drawables[1] = canvas // 1 is always the main window
+        return canvas
+    }()
+
     init(object: OPLObject, procedureName: String? = nil) {
         self.object = object
         self.procedureName = procedureName
@@ -74,25 +85,20 @@ class ScreenViewController: UIViewController {
         } else {
             navigationItem.title = object.name
         }
-
-        let sz = getScreenSize().cgSize()
-        let canvas = CanvasView(size: sz)
-        canvas.translatesAutoresizingMaskIntoConstraints = false
-        drawables[1] = canvas // 1 is always the main window
-
-        view.addSubview(canvas)
+        view.addSubview(canvasView)
         view.addSubview(textView)
         NSLayoutConstraint.activate([
 
-            canvas.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            canvas.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            canvas.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            canvas.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+            canvasView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            canvasView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            canvasView.widthAnchor.constraint(equalToConstant: CGFloat(screenSize.width)),
+            canvasView.heightAnchor.constraint(equalToConstant: CGFloat(screenSize.height)),
 
+            textView.topAnchor.constraint(equalTo: canvasView.bottomAnchor, constant: 8.0),
             textView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             textView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            textView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             textView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
         ])
         
         setToolbarItems([menuBarButtonItem], animated: false)
@@ -289,7 +295,7 @@ extension ScreenViewController: OpoIoHandler {
     }
 
     func getScreenSize() -> Graphics.Size {
-        return Graphics.Size(width:640, height: 240)
+        return screenSize
     }
 
     func mapToNative(path: String) -> URL? {
@@ -383,7 +389,7 @@ extension ScreenViewController: OpoIoHandler {
             let newView = CanvasView(size: rect.size.cgSize())
             newView.isHidden = true // by default, will get a showWindow op if needed
             newView.frame = rect.cgRect()
-            self.view.addSubview(newView)
+            self.canvasView.addSubview(newView)
             self.drawables[h] = newView
             semaphore.signal()
         }

@@ -35,17 +35,15 @@ class CanvasView : UIView, Drawable {
     init(size: CGSize) {
         canvas = Canvas(size: size)
         imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFit
         super.init(frame: .zero)
         addSubview(imageView)
-        NSLayoutConstraint.activate([
-            imageView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor),
-            imageView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor),
-            imageView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor),
-        ])
         imageView.image = .emptyImage(with: size)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        imageView.frame = self.bounds
     }
 
     func draw(_ operations: [Graphics.Operation]) {
