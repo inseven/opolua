@@ -54,15 +54,6 @@ class Scheduler {
         }
     }
 
-    func touchesBegan(_ touches: UITouch) {
-        serviceRequest(type: .getevent) { request in
-            let event = Async.PenEvent(timestamp: 0, windowId: 0, type: .down, modifiers: 0, x: 0, y: 0)
-            return Async.Response(type: .getevent,
-                                  requestHandle: request.requestHandle,
-                                  value: .penevent(event))
-        }
-    }
-
     func cancelRequest(_ requestHandle: Int32) {
         lock.lock()
         requests.removeValue(forKey: requestHandle)

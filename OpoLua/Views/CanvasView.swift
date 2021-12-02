@@ -45,6 +45,7 @@ class CanvasView : UIView, Drawable {
         canvas = Canvas(size: size)
         super.init(frame: .zero)
         clipsToBounds = true
+        isMultipleTouchEnabled = false
     }
 
     func draw(_ operations: [Graphics.Operation]) {
