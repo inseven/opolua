@@ -20,9 +20,19 @@
 
 import UIKit
 
+protocol CanvasViewDelegate: AnyObject {
+
+    func canvasView(_ canvasView: CanvasView, touchesBegan touches: Set<UITouch>, with event: UIEvent?)
+    func canvasView(_ canvasView: CanvasView, touchesMoved touches: Set<UITouch>, with event: UIEvent?)
+    func canvasView(_ canvasView: CanvasView, touchesEnded touches: Set<UITouch>, with event: UIEvent?)
+
+}
+
 class CanvasView : UIView, Drawable {
 
     var canvas: Canvas
+    weak var delegate: CanvasViewDelegate?
+
     var image: CGImage? {
         return canvas.image
     }
@@ -58,6 +68,18 @@ class CanvasView : UIView, Drawable {
         context.translateBy(x: 0, y: canvas.size.height);
         context.scaleBy(x: 1.0, y: -1.0)
         context.draw(image, in: CGRect(origin: .zero, size: canvas.size))
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        delegate?.canvasView(self, touchesBegan: touches, with: event)
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        delegate?.canvasView(self, touchesMoved: touches, with: event)
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        delegate?.canvasView(self, touchesEnded: touches, with: event)
     }
 
 }

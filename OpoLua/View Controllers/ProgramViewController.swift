@@ -20,6 +20,18 @@
 
 import UIKit
 
+
+extension Dictionary {
+
+    mutating func removeRandomValue() -> Value? {
+        guard let element = self.randomElement() else {
+            return nil
+        }
+        return removeValue(forKey: element.key)
+    }
+
+}
+
 class ProgramViewController: UIViewController {
 
     enum State {
@@ -38,8 +50,7 @@ class ProgramViewController: UIViewController {
 
     let opo = OpoInterpreter()
     let runtimeQueue = DispatchQueue(label: "ScreenViewController.runtimeQueue")
-
-    var getEventHandle: Int32? = nil
+    let scheduler = Scheduler()
 
     var getCompletion: ((Int) -> Void)? {
         didSet {
@@ -102,6 +113,8 @@ class ProgramViewController: UIViewController {
         
         setToolbarItems([menuBarButtonItem], animated: false)
         menuBarButtonItem.isEnabled = false
+
+        canvasView.delegate = scheduler
     }
 
     required init?(coder: NSCoder) {
@@ -356,9 +369,7 @@ extension ProgramViewController: OpoIoHandler {
     }
 
     func asyncRequest(_ request: Async.Request) {
-        if request.type == .getevent {
-            getEventHandle = request.requestHandle
-        }
+        scheduler.scheduleRequest(request)
     }
 
     func cancelRequest(_ requestHandle: Int32) {
@@ -366,7 +377,7 @@ extension ProgramViewController: OpoIoHandler {
     }
 
     func waitForAnyRequest() -> Async.Response {
-        fatalError("waitForAnyRequest not implemented yet!")
+        return scheduler.waitForAnyRequest()
     }
 
     func createBitmap(size: Graphics.Size) -> Int? {
@@ -398,4 +409,36 @@ extension ProgramViewController: OpoIoHandler {
         semaphore.wait()
         return h
     }
+}
+
+extension Scheduler: CanvasViewDelegate {
+
+    func canvasView(_ canvasView: CanvasView, touchesBegan touches: Set<UITouch>, with event: UIEvent?) {
+        guard let event = event else {
+            return
+        }
+        serviceRequest(type: .getevent) { request in
+
+            // TODO: WindowID
+            let event = Async.PenEvent(timestamp: Int(event.timestamp),
+                                       windowId: 1,
+                                       type: .down,
+                                       modifiers: 0,
+                                       x: 0,
+                                       y: 0)
+            return Async.Response(type: .getevent,
+                                  requestHandle: request.requestHandle,
+                                  value: .penevent(event))
+        }
+    }
+
+    func canvasView(_ canvasView: CanvasView, touchesMoved touches: Set<UITouch>, with event: UIEvent?) {
+        // TODO: Implement me
+    }
+
+    func canvasView(_ canvasView: CanvasView, touchesEnded touches: Set<UITouch>, with event: UIEvent?) {
+        // TODO: Implement me
+    }
+
+
 }

@@ -31,6 +31,7 @@
 		D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA09712751BBEA00F4730D /* UIElement.swift */; };
 		D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* DirectoryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
+		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
 		D8FE60032757106300711717 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* Location.swift */; };
 		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
 		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
@@ -113,6 +114,7 @@
 		D8BA09712751BBEA00F4730D /* UIElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIElement.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* DirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
+		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
 		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
@@ -191,12 +193,13 @@
 		D861E8D9274A818D003C8D3D /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				D8FE60082757208000711717 /* ApplicationError.swift */,
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
 				D861E8DE274A8D70003C8D3D /* KeyCode.swift */,
-				D861E8DA274A819D003C8D3D /* OPLObject.swift */,
 				D8FE60022757106300711717 /* Location.swift */,
+				D861E8DA274A819D003C8D3D /* OPLObject.swift */,
+				D8D50116275928CF008C1BC9 /* Scheduler.swift */,
 				D8FE60042757177200711717 /* Settings.swift */,
-				D8FE60082757208000711717 /* ApplicationError.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -474,6 +477,7 @@
 				DB79000A2742E6F6005E904F /* loadlib.c in Sources */,
 				D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */,
 				DB79000B2742E6F6005E904F /* lobject.c in Sources */,
+				D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */,
 				D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */,
 				D87A62762752A6F400075CB8 /* BorderedButton.swift in Sources */,
 				D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */,
