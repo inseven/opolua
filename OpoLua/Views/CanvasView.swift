@@ -40,7 +40,10 @@ class CanvasView : UIView, Drawable {
     func draw(_ operations: [Graphics.Operation]) {
         canvas.draw(operations)
         setNeedsDisplay()
+    }
 
+    override var intrinsicContentSize: CGSize {
+        return canvas.size
     }
 
     override func draw(_ rect: CGRect) {

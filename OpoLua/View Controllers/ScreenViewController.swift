@@ -92,8 +92,6 @@ class ScreenViewController: UIViewController {
 
             canvasView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             canvasView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            canvasView.widthAnchor.constraint(equalToConstant: CGFloat(screenSize.width)),
-            canvasView.heightAnchor.constraint(equalToConstant: CGFloat(screenSize.height)),
 
             textView.topAnchor.constraint(equalTo: canvasView.bottomAnchor, constant: 8.0),
             textView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
