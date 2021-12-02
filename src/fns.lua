@@ -314,7 +314,8 @@ function IoClose(stack, runtime) -- 0x10
 end
 
 function IoWait(stack, runtime) -- 0x11
-    runtime:iohandler().waitForAnyRequest()
+    local ok = runtime:iohandler().waitForAnyRequest()
+    assert(ok, KStopErr)
     stack:push(0)
 end
 

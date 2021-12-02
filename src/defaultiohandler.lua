@@ -222,6 +222,7 @@ function waitForAnyRequest()
     eventRequest.eventArray[1](ch)
     eventRequest.statusVar(0)
     statusRequests["getevent"] = nil
+    return true
 end
 
 function createWindow(x, y, width, height, flags)

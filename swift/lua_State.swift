@@ -265,6 +265,10 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return PairsIterator(self, index)
     }
 
+    func push(_ bool: Bool) {
+        lua_pushboolean(self, bool ? 1 : 0)
+    }
+
     func push(_ int: Int) {
         lua_pushinteger(self, lua_Integer(int))
     }

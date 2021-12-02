@@ -51,6 +51,7 @@ Errors = {
     KOplErrName = -38,
     KOplErrAccess = -39,
     KOplErrFilePending = -46,
+    KOplErrIOCancelled = -48,
     KOplErrNotReady = -62,
     KOplStructure = -85,
     KOplErrIllegal = -96,

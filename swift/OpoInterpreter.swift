@@ -385,6 +385,8 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
     return 0
 }
 
+private let KOplErrIOCancelled = -48
+
 private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let response = iohandler.waitForAnyRequest()
@@ -392,8 +394,20 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // pushes { statusVar, eventArray } -> 1
     luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle)
     lua_rawgeti(L, 1, 1) // pushes statusVar -> 2
-    L.push(0) // Assuming everything is a success completion atm...
-    lua_call(L, 1, 0) // statusVar(0), pops back to 1
+    switch (response.value) {
+    case .cancelled:
+        L.push(KOplErrIOCancelled)
+        lua_call(L, 1, 0) // statusVar(-48)
+        L.push(true)
+        return 1
+    case .stopped:
+        L.push(false)
+        return 1
+    default:
+        L.push(0) // Assuming everything is a success completion atm...
+        lua_call(L, 1, 0) // statusVar(0), pops back to 1
+    }
+
     switch (response.type) {
     case .getevent:
         var ev = Array<Int>(repeating: 0, count: 16)
@@ -427,8 +441,10 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
             ev[7] = event.x
             ev[8] = event.y
         case .cancelled, .stopped:
-            // TODO
-            return 0
+            break // Already handled above
+        // For when we get more response types
+        // default:
+        //     fatalError("Unexpected repsonse type for getevent request!")
         }
         lua_rawgeti(L, 1, 2) // Pushes eventArray
         for i in 0 ..< ev.count {
@@ -436,7 +452,8 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
             L.push(ev[i])
             lua_call(L, 1, 0)
         }
-        return 0
+        L.push(true)
+        return 1
     }
 }
 
