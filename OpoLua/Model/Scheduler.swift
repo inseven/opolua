@@ -31,7 +31,6 @@ class Scheduler {
     }
 
     func scheduleRequest(_ request: Async.Request) {
-        print("schedule request \(request.type)")
         lock.lock()
         defer {
             lock.broadcast()
@@ -75,15 +74,13 @@ class Scheduler {
 
     func waitForAnyRequest() -> Async.Response {
         lock.lock()
+        defer {
+            lock.unlock()
+        }
         repeat {
-            print("waitForAnyRequest")
-            print("waitForAnyRequest obtained lock")
             if let response = responses.removeRandomValue() {
-                print("sending response \(response.type) for handle \(response.requestHandle)")
-                lock.unlock()
                 return response
             } else {
-                print("no value; waiting")
                 lock.wait()
             }
         } while true

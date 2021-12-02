@@ -20,7 +20,6 @@
 
 import UIKit
 
-
 extension Dictionary {
 
     mutating func removeRandomValue() -> Value? {
@@ -153,9 +152,9 @@ class ProgramViewController: UIViewController {
         self.textView.textColor = .secondaryLabel
         switch result {
         case .none:
-            self.textView.text?.append("\n---Completed---")
+            self.textView.append("\n---Completed---")
         case .error(let err):
-            self.textView.text?.append("\n---Error occurred:---\n\(err.description)")
+            self.textView.append("\n---Error occurred:---\n\(err.description)")
         }
     }
 
@@ -169,7 +168,7 @@ extension ProgramViewController: OpoIoHandler {
 
     func printValue(_ val: String) {
         DispatchQueue.main.async {
-            self.textView.text?.append(val)
+            self.textView.append(val)
         }
     }
     
