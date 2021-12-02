@@ -361,6 +361,10 @@ extension ProgramViewController: OpoIoHandler {
         }
     }
 
+    func cancelRequest(_ requestHandle: Int32) {
+        // TODO
+    }
+
     func waitForAnyRequest() -> Async.Response {
         fatalError("waitForAnyRequest not implemented yet!")
     }

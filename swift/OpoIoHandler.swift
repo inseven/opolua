@@ -263,6 +263,8 @@ struct Async {
         let y: Int
     }
     enum ResponseValue {
+        case cancelled
+        case stopped // ie throw a KStopErr to unwind the thread, do not pass go do not collect £200.
         case keypressevent(KeyPressEvent)
         case keydownevent(KeyUpDownEvent)
         case keyupevent(KeyUpDownEvent)
@@ -312,6 +314,7 @@ protocol OpoIoHandler {
     func fsop(_ op: Fs.Operation) -> Fs.Result
 
     func asyncRequest(_ request: Async.Request)
+    func cancelRequest( _ requestHandle: Int32)
     func waitForAnyRequest() -> Async.Response
 
     func createBitmap(size: Graphics.Size) -> Int?
@@ -360,6 +363,9 @@ class DummyIoHandler : OpoIoHandler {
     }
 
     func asyncRequest(_ request: Async.Request) {
+    }
+
+    func cancelRequest(_ requestHandle: Int32) {
     }
 
     func waitForAnyRequest() -> Async.Response {

@@ -422,6 +422,9 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
             ev[6] = event.y
             ev[7] = event.x
             ev[8] = event.y
+        case .cancelled, .stopped:
+            // TODO
+            return 0
         }
         lua_rawgeti(L, -2, 2) // Pushes eventArray
         for i in 0 ..< ev.count {
