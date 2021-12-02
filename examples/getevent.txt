@@ -1,11 +1,12 @@
 PROC main:
-	local ev&(16), status%, k%
+	local ev&(16), status%, k%, s2%
 	WHILE 1
 		GETEVENTA32 status%, ev&()
 		IOWAIT
 		k% = ev&(1)
+		REM PRINT "Timestamp", ev&(2), " ",
 		IF ev&(1) < $400
-			PRINT "Key press", k%
+			PRINT "Key press", k%, "rep=", ev&(5)
 		ELSE
 			k% = ev&(1)- $400
 			VECTOR k%
@@ -23,7 +24,7 @@ PROC main:
 			PRINT "Key up", ev&(3)
 			CONTINUE
 		pen::
-			PRINT "Pen", ev&(6), ev&(7)
+			PRINT "Pen type="; ev&(4), ev&(6), ev&(7)
 			CONTINUE
 		penDown::
 			PRINT "Pen down"
