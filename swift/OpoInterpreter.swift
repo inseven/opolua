@@ -362,6 +362,7 @@ private func fsop(_ L: LuaState!) -> Int32 {
     }
 }
 
+// asyncRequest("getevent", stat, ev)
 private func asyncRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let name = L.tostring(1) else { return 0 }
@@ -385,11 +386,12 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
 private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let response = iohandler.waitForAnyRequest()
-    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // pushes { statusVar, eventArray }
+    lua_settop(L, 0)
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // pushes { statusVar, eventArray } -> 1
     luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle)
-    lua_rawgeti(L, -1, 1) // pushes statusVar
+    lua_rawgeti(L, 1, 1) // pushes statusVar -> 2
     L.push(0) // Assuming everything is a success completion atm...
-    lua_call(L, 1, 0) // statusVar(0)
+    lua_call(L, 1, 0) // statusVar(0), pops back to 1
     switch (response.type) {
     case .getevent:
         var ev = Array<Int>(repeating: 0, count: 16)
@@ -426,7 +428,7 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
             // TODO
             return 0
         }
-        lua_rawgeti(L, -2, 2) // Pushes eventArray
+        lua_rawgeti(L, 1, 2) // Pushes eventArray
         for i in 0 ..< ev.count {
             lua_rawgeti(L, -1, lua_Integer(i + 1))
             L.push(ev[i])
