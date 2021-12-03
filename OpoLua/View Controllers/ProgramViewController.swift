@@ -243,14 +243,13 @@ extension ProgramViewController: OpoIoHandler {
         return result
     }
 
-    func draw(operations: [Graphics.Operation]) {
+    func draw(operations: [Graphics.DrawCommand]) {
         let semaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
-            var drawablesToRemove: [Int] = []
             // Split ops into per drawable
             // TODO this is all a bit broken atm allowing out-of-order execution of ops :-(
 
-            var opsPerId: [Int: [Graphics.Operation]] = [:]
+            var opsPerId: [Int: [Graphics.DrawCommand]] = [:]
             for op in operations {
                 if opsPerId[op.displayId] == nil {
                     opsPerId[op.displayId] = []
@@ -263,21 +262,9 @@ extension ProgramViewController: OpoIoHandler {
                         continue
                     }
                     let newSrc = Graphics.CopySource(displayId: src.displayId, rect: src.rect, extra: srcCanvas)
-                    let newOp = Graphics.Operation(displayId: op.displayId, type: .copy(newSrc),
+                    let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .copy(newSrc),
                                                    origin: op.origin, color: op.color, bgcolor: op.bgcolor)
                     opsPerId[op.displayId]!.append(newOp)
-                case .showWindow(let flag):
-                    guard let view = self.drawables[op.displayId] as? CanvasView else {
-                        print("No CanvasView for showWindow operation")
-                        continue
-                    }
-                    view.isHidden = !flag
-                case .close:
-                    if let view = self.drawables[op.displayId] as? CanvasView {
-                        view.removeFromSuperview()
-                    }
-                    drawablesToRemove.append(op.displayId)
-                    // Don't add to opsPerId
                 default:
                     opsPerId[op.displayId]!.append(op)
                 }
@@ -291,14 +278,64 @@ extension ProgramViewController: OpoIoHandler {
                 }
             }
 
-            for id in drawablesToRemove {
-                self.drawables[id] = nil
-            }
-
             semaphore.signal()
         }
         semaphore.wait()
     }
+
+    func graphicsop(_ operation: Graphics.Operation) -> Int? {
+        let semaphore = DispatchSemaphore(value: 0)
+        switch (operation) {
+        case .createBitmap(let size):
+            var h = 0
+            DispatchQueue.main.async {
+                h = self.nextHandle
+                self.nextHandle += 1
+                self.drawables[h] = Canvas(size: size.cgSize())
+                semaphore.signal()
+            }
+            semaphore.wait()
+            return h
+        case .createWindow(let rect):
+            var h = 0
+            DispatchQueue.main.async {
+                h = self.nextHandle
+                self.nextHandle += 1
+                let newView = CanvasView(id: h, size: rect.size.cgSize())
+                newView.isHidden = true // by default, will get a showWindow op if needed
+                newView.frame = rect.cgRect()
+                self.canvasView.addSubview(newView)
+                self.drawables[h] = newView
+                semaphore.signal()
+            }
+            semaphore.wait()
+            return h
+        case .close(let displayId):
+            DispatchQueue.main.async {
+                if let view = self.drawables[displayId] as? CanvasView {
+                    view.removeFromSuperview()
+                }
+                self.drawables[displayId] = nil
+                semaphore.signal()
+            }
+            semaphore.wait()
+            return nil
+        case .order(let displayId, let order):
+            return nil//TODO
+        case .show(let displayId, let flag):
+            DispatchQueue.main.async {
+                if let view = self.drawables[displayId] as? CanvasView {
+                    view.isHidden = !flag
+                } else {
+                    print("No CanvasView for showWindow operation")
+                }
+                semaphore.signal()
+            }
+            semaphore.wait()
+            return nil
+        }
+    }
+
 
     func getScreenSize() -> Graphics.Size {
         return screenSize
@@ -375,35 +412,6 @@ extension ProgramViewController: OpoIoHandler {
         return scheduler.waitForAnyRequest()
     }
 
-    func createBitmap(size: Graphics.Size) -> Int? {
-        var h = 0
-        let semaphore = DispatchSemaphore(value: 0)
-        DispatchQueue.main.async {
-            h = self.nextHandle
-            self.nextHandle += 1
-            self.drawables[h] = Canvas(size: size.cgSize())
-            semaphore.signal()
-        }
-        semaphore.wait()
-        return h
-    }
-
-    func createWindow(rect: Graphics.Rect) -> Int? {
-        var h = 0
-        let semaphore = DispatchSemaphore(value: 0)
-        DispatchQueue.main.async {
-            h = self.nextHandle
-            self.nextHandle += 1
-            let newView = CanvasView(id: h, size: rect.size.cgSize())
-            newView.isHidden = true // by default, will get a showWindow op if needed
-            newView.frame = rect.cgRect()
-            self.canvasView.addSubview(newView)
-            self.drawables[h] = newView
-            semaphore.signal()
-        }
-        semaphore.wait()
-        return h
-    }
 }
 
 extension Scheduler: CanvasViewDelegate {
@@ -452,6 +460,5 @@ extension Scheduler: CanvasViewDelegate {
                                   value: .penevent(event))
         }
     }
-
 
 }

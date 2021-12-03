@@ -24,7 +24,7 @@ import Foundation
 protocol Drawable: AnyObject {
 
     var image: CGImage? { get }
-    func draw(_ operations: [Graphics.Operation])
+    func draw(_ operations: [Graphics.DrawCommand])
 
 }
 
@@ -42,7 +42,7 @@ class Canvas: Drawable {
         self.buffer = Data(count: Int(size.width) * Int(size.height) * bytesPerPixel)
     }
 
-    func draw(_ operations: [Graphics.Operation]) {
+    func draw(_ operations: [Graphics.DrawCommand]) {
         let bytesPerRow = bytesPerPixel * Int(size.width)
         let bitsPerComponent = 8
         let bitmapInfo: UInt32 = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue

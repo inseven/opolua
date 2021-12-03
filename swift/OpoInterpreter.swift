@@ -240,9 +240,9 @@ private func menu(_ L: LuaState!) -> Int32 {
     return 2
 }
 
-private func graphics(_ L: LuaState!) -> Int32 {
+private func draw(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    var ops: [Graphics.Operation] = []
+    var ops: [Graphics.DrawCommand] = []
     for _ in L.ipairs(1, requiredType: .table) {
         let id = L.toint(-1, key: "id") ?? 1
         let t = L.tostring(-1, key: "type") ?? ""
@@ -253,7 +253,7 @@ private func graphics(_ L: LuaState!) -> Int32 {
         let color = Graphics.Color(r: col, g: col, b: col)
         let bgcol = UInt8(L.toint(-1, key: "bgcolor") ?? 255)
         let bgcolor = Graphics.Color(r: bgcol, g: bgcol, b: bgcol)
-        let optype: Graphics.Operation.OpType
+        let optype: Graphics.DrawCommand.OpType
         switch (t) {
         case "cls":
             optype = .cls
@@ -292,19 +292,46 @@ private func graphics(_ L: LuaState!) -> Int32 {
                 print("Missing params in copy!")
                 continue
             }
-        case "showWindow":
-            let flag = L.toboolean(-1, key: "show") ?? false
-            optype = .showWindow(flag)
-        case "close":
-            optype = .close
         default:
-            print("Unknown Graphics.Operation.OpType \(t)")
+            print("Unknown Graphics.DrawCommand.OpType \(t)")
             continue
         }
-        ops.append(Graphics.Operation(displayId: id, type: optype, origin: origin, color: color, bgcolor: bgcolor))
+        ops.append(Graphics.DrawCommand(displayId: id, type: optype, origin: origin, color: color, bgcolor: bgcolor))
     }
     iohandler.draw(operations: ops)
     return 0
+}
+
+// graphicsop(cmd, ...)
+// graphicsop("close", displayId)
+// graphicsop("showWindow", displayId, flag)
+private func graphicsop(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    let cmd = L.tostring(1) ?? ""
+    var result: Int? = nil
+    switch cmd {
+    case "close":
+        if let displayId = L.toint(2) {
+            result = iohandler.graphicsop(.close(displayId))
+        } else {
+            print("Bad displayId to close graphicsop!")
+        }
+    case "show":
+        if let displayId = L.toint(2) {
+            let flag = L.toboolean(3)
+            result = iohandler.graphicsop(.show(displayId, flag))
+        } else {
+            print("Bad displayId to show graphicsop!")
+        }
+    default:
+        print("Unknown graphicsop \(cmd)!")
+    }
+    if let result = result {
+        L.push(result)
+    } else {
+        L.pushnil()
+    }
+    return 1
 }
 
 private func getScreenSize(_ L: LuaState!) -> Int32 {
@@ -508,7 +535,8 @@ private func createBitmap(_ L: LuaState!) -> Int32 {
     guard let width = L.toint(1), let height = L.toint(2) else {
         return 0
     }
-    if let handle = iohandler.createBitmap(size: Graphics.Size(width: width, height: height)) {
+    let size = Graphics.Size(width: width, height: height)
+    if let handle = iohandler.graphicsop(.createBitmap(size)) {
         L.push(handle)
     } else {
         L.pushnil()
@@ -525,7 +553,7 @@ private func createWindow(_ L: LuaState!) -> Int32 {
     }
     // TODO do something with flags
     let rect = Graphics.Rect(x: x, y: y, width: width, height: height)
-    if let handle = iohandler.createWindow(rect: rect) {
+    if let handle = iohandler.graphicsop(.createWindow(rect)) {
         L.push(handle)
     } else {
         L.pushnil()
@@ -606,7 +634,8 @@ class OpoInterpreter {
             ("beep", beep),
             ("dialog", dialog),
             ("menu", menu),
-            ("graphics", graphics),
+            ("draw", draw),
+            ("graphicsop", graphicsop),
             ("getScreenSize", getScreenSize),
             ("fsop", fsop),
             ("asyncRequest", asyncRequest),

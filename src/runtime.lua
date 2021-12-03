@@ -423,7 +423,7 @@ function Runtime:getGraphics()
     return self.graphics
 end
 
-function Runtime:graphicsOp(type, op)
+function Runtime:drawCmd(type, op)
     if not op then op = {} end
     local graphics = self:getGraphics()
     local context = graphics.current
@@ -442,14 +442,14 @@ function Runtime:graphicsOp(type, op)
     if graphics.buffer then
         table.insert(graphics.buffer, op)
     else
-        self.ioh.graphics({ op })
+        self.ioh.draw({ op })
     end
 end
 
 function Runtime:flushGraphicsOps()
     local graphics = self:getGraphics()
     if graphics.buffer and graphics.buffer[1] then
-        self.ioh.graphics(graphics.buffer)
+        self.ioh.draw(graphics.buffer)
         graphics.buffer = {}
     end
 end

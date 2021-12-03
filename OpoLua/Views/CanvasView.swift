@@ -50,7 +50,7 @@ class CanvasView : UIView, Drawable {
         isMultipleTouchEnabled = false
     }
 
-    func draw(_ operations: [Graphics.Operation]) {
+    func draw(_ operations: [Graphics.DrawCommand]) {
         canvas.draw(operations)
         setNeedsDisplay()
     }

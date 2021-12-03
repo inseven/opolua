@@ -439,7 +439,7 @@ function gLoadBit(stack, runtime) -- 0x28
     assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
     runtime:newGraphicsContext(id, bitmap.width, bitmap.height, false)
     -- (3)
-    runtime:graphicsOp("bitblt", {
+    runtime:drawCmd("bitblt", {
         bmpWidth = bitmap.width,
         bmpHeight = bitmap.height,
         bmpBpp = bitmap.bpp,
@@ -559,8 +559,7 @@ function gCreateEnhanced(stack, runtime) -- 0x39
     assert(id, "Failed to createWindow!")
     runtime:newGraphicsContext(id, rect.w, rect.h, true)
     if visible ~= 0 then
-        runtime:graphicsOp("showWindow", { show = true })
-        runtime:flushGraphicsOps()
+        runtime:iohandler().graphicsop("show", id, true)
     end
     stack:push(id)
 end

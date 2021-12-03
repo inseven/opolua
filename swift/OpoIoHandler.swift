@@ -174,7 +174,7 @@ struct Graphics {
         let extra: AnyObject?
     }
 
-    struct Operation {
+    struct DrawCommand {
         enum OpType {
             case cls
             case circle(Int, Bool) // radius, fill
@@ -182,15 +182,20 @@ struct Graphics {
             case box(Size)
             case bitblt(PixelData)
             case copy(CopySource)
-            case showWindow(Bool) // visible flag
-            case close
-            // case resizeWindow(Rect)
         }
         let displayId: Int
         let type: OpType
         let origin: Point
         let color: Color
         let bgcolor: Color
+    }
+
+    enum Operation {
+        case close(Int)
+        case createBitmap(Size)
+        case createWindow(Rect)
+        case order(Int, Int) // displayId, position
+        case show(Int, Bool) // displayId, visible flag
     }
 }
 
@@ -308,7 +313,8 @@ protocol OpoIoHandler {
 
     func menu(_ m: Menu.Bar) -> Menu.Result
 
-    func draw(operations: [Graphics.Operation])
+    func draw(operations: [Graphics.DrawCommand])
+    func graphicsop(_ operation: Graphics.Operation) -> Int?
 
     func getScreenSize() -> Graphics.Size
 
@@ -318,8 +324,6 @@ protocol OpoIoHandler {
     func cancelRequest( _ requestHandle: Int32)
     func waitForAnyRequest() -> Async.Response
 
-    func createBitmap(size: Graphics.Size) -> Int?
-    func createWindow(rect: Graphics.Rect) -> Int?
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -352,7 +356,11 @@ class DummyIoHandler : OpoIoHandler {
         return Menu.Result(selected: 0, highlighted: 0)
     }
 
-    func draw(operations: [Graphics.Operation]) {
+    func draw(operations: [Graphics.DrawCommand]) {
+    }
+
+    func graphicsop(_ operation: Graphics.Operation) -> Int? {
+        return nil
     }
 
     func getScreenSize() -> Graphics.Size {
@@ -371,14 +379,6 @@ class DummyIoHandler : OpoIoHandler {
 
     func waitForAnyRequest() -> Async.Response {
         fatalError("No support for waitForAnyRequest in DummyIoHandler")
-    }
-
-    func createBitmap(size: Graphics.Size) -> Int? {
-        return nil
-    }
-
-    func createWindow(rect: Graphics.Rect) -> Int? {
-        return nil
     }
 
 }

@@ -27,7 +27,7 @@ extension CGContext {
         return CGAffineTransform(scaleX: 1.0, y: -1.0).translatedBy(x: 0.0, y: -CGFloat(self.height))
     }
 
-    func draw(_ operation: Graphics.Operation) {
+    func draw(_ operation: Graphics.DrawCommand) {
         // TODO: Scale for the iOS screensize
         setStrokeColor(operation.color.cgColor())
         setFillColor(operation.color.cgColor())
@@ -87,9 +87,6 @@ extension CGContext {
             }
             let img = srcImage.cropping(to: src.rect.cgRect())!
             drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: src.rect.size.cgSize()))
-        case .showWindow(_), .close:
-            // Handled by ProgramViewController
-            break
         }
     }
 

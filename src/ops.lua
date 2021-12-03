@@ -1542,8 +1542,7 @@ function gClose(stack, runtime) -- 0xC6
     local id = stack:pop()
     local graphics = runtime:getGraphics()
     assert(id ~= 1, KOplErrInvalidArgs) -- Cannot close the console
-    runtime:graphicsOp("close", { id = id })
-    runtime:flushGraphicsOps()
+    runtime:iohandler().graphicsop("close", id)
     if id == graphics.current.id then
         graphics.current = graphics[1]
     end
@@ -1566,7 +1565,7 @@ function gVisible(stack, runtime) -- 0xC9
     local graphics = runtime:getGraphics()
     assert(graphics.current.isWindow, KOplErrInvalidWindow)
     local show = runtime:IP8() == 1
-    runtime:graphicsOp("showWindow", { show = show })
+    runtime:iohandler().graphicsop("show", graphics.current.id, show)
 end
 
 gVisible_dump = IP8_dump
@@ -1599,7 +1598,7 @@ function gCls(stack, runtime) -- 0xD1
     local graphics = runtime:getGraphics()
     local context = graphics.current
     context.pos = { x = 0, y = 0 }
-    runtime:graphicsOp("cls")
+    runtime:drawCmd("cls")
 end
 
 function gAt(stack, runtime) -- 0xD2
@@ -1641,14 +1640,14 @@ function gLineBy(stack, runtime) -- 0xDA
     -- relative pos; make abs
     endPoint.x = context.pos.x + endPoint.x
     endPoint.y = context.pos.y + endPoint.y
-    runtime:graphicsOp("line", { x2 = endPoint.x, y2 = endPoint.y })
+    runtime:drawCmd("line", { x2 = endPoint.x, y2 = endPoint.y })
     context.pos = endPoint
 end
 
 function gBox(stack, runtime) -- 0xDB
     local height = stack:pop()
     local width = stack:pop()
-    runtime:graphicsOp("box", { width = width, height = height })
+    runtime:drawCmd("box", { width = width, height = height })
 end
 
 function gCircle(stack, runtime) -- 0xDC
@@ -1660,7 +1659,7 @@ function gCircle(stack, runtime) -- 0xDC
         fill = stack:pop()
     end
     local radius = stack:pop()
-    runtime:graphicsOp("circle", { r = radius, fill = fill })
+    runtime:drawCmd("circle", { r = radius, fill = fill })
 end
 
 function gCircle_dump(runtime)
@@ -1688,7 +1687,7 @@ function gCopy(stack, runtime) -- 0xE1
     local mode = stack:pop()
     local srcRect = stack:popRect()
     local srcId = stack:pop()
-    runtime:graphicsOp("copy", {
+    runtime:drawCmd("copy", {
         srcid = srcId,
         srcx = srcRect.x,
         srcy = srcRect.y,
@@ -1735,7 +1734,7 @@ function gLineTo(stack, runtime) -- 0xE5
     local graphics = runtime:getGraphics()
     local context = graphics.current
     local endPoint = stack:popPoint()
-    runtime:graphicsOp("line", { x2 = endPoint.x, y2 = endPoint.y })
+    runtime:drawCmd("line", { x2 = endPoint.x, y2 = endPoint.y })
     context.pos = endPoint
 end
 

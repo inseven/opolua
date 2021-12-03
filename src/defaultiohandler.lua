@@ -119,10 +119,15 @@ local function describeOp(op)
     return ret
 end
 
-function graphics(ops)
+function draw(ops)
     for _, op in ipairs(ops) do
         printf("%s\n", describeOp(op))
     end
+end
+
+function graphicsop(cmd, ...)
+    printf("graphicsop %s\n", cmd)
+    return 0 -- Pretend we succeed (probably)
 end
 
 function getScreenSize()
