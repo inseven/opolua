@@ -20,17 +20,6 @@
 
 import UIKit
 
-extension Dictionary {
-
-    mutating func removeRandomValue() -> Value? {
-        guard let element = self.randomElement() else {
-            return nil
-        }
-        return removeValue(forKey: element.key)
-    }
-
-}
-
 class ProgramViewController: UIViewController {
 
     enum State {
@@ -120,10 +109,6 @@ class ProgramViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.isToolbarHidden = false
@@ -383,7 +368,7 @@ extension ProgramViewController: OpoIoHandler {
     }
 
     func cancelRequest(_ requestHandle: Int32) {
-        // TODO
+        scheduler.cancelRequest(requestHandle)
     }
 
     func waitForAnyRequest() -> Async.Response {

@@ -48,6 +48,7 @@ class Scheduler {
         for (_, request) in requests {
             if request.type == type {
                 responses[request.requestHandle] = completion(request)
+                requests.removeValue(forKey: request.requestHandle)
                 return
             }
         }
@@ -55,9 +56,12 @@ class Scheduler {
 
     func cancelRequest(_ requestHandle: Int32) {
         lock.lock()
+        defer {
+            lock.broadcast()
+            lock.unlock()
+        }
         requests.removeValue(forKey: requestHandle)
-        // TODO: Signal with an event.
-        lock.unlock()
+        responses[requestHandle] = Async.Response(type: .getevent, requestHandle: requestHandle, value: .cancelled)
     }
 
     func waitForRequest(_ requestHandle: Int32) -> Async.Response {
