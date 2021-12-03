@@ -65,8 +65,8 @@ extension CGContext {
                 var wdat = Data()
                 wdat.reserveCapacity(pxInfo.data.count * 2)
                 for b in pxInfo.data {
-                    wdat.append((b & 0xF) << 4)
-                    wdat.append(b & 0xF0)
+                    wdat.append(((b & 0xF) << 4) | (b & 0xF)) // 0xA -> 0xAA etc
+                    wdat.append((b & 0xF0) | (b >> 4)) // 0x0A -> 0xAA etc
                 }
                 let provider = CGDataProvider(data: wdat as CFData)!
                 let sp = CGColorSpaceCreateDeviceGray()
