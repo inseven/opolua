@@ -364,19 +364,35 @@ private func fsop(_ L: LuaState!) -> Int32 {
     }
 }
 
-// asyncRequest("getevent", stat, ev)
+// asyncRequest("getevent", statusVar, ev)
 private func asyncRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let name = L.tostring(1) else { return 0 }
+
+    lua_createtable(L, 0, 3) // requestTable
+    lua_replace(L, 1) // move requestTable to stack position 1, replacing name
+
+    lua_pushvalue(L, 2) // statusVar
+    lua_setfield(L, 1, "var") // requestTable.var = statusVar
+
+    // Use registry ref to map swift int to statusVar
+    // Then set registry[statusVar] = requestTable
+    // That way both Lua and swift sides can look up the request
+
+    lua_pushvalue(L, 2) // dup statusVar
+    let requestHandle = luaL_ref(L, LUA_REGISTRYINDEX) // pop dup, registry[requestHandle] = statusVar
+    lua_pushinteger(L, lua_Integer(requestHandle))
+    lua_setfield(L, 1, "ref") // requestTable.ref = requestHandle
+
+    lua_pushvalue(L, 2) // dup statusVar
+    lua_pushvalue(L, 1) // dup requestTable
+    lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = requestTable
+
     let req: Async.Request
     switch name {
     case "getevent":
-        lua_createtable(L, 2, 0) // tbl
-        lua_pushvalue(L, 2) // statusVar
-        lua_rawseti(L, -2, 1) // tbl[1] = statusVar
-        lua_pushvalue(L, 3) // eventArray
-        lua_rawseti(L, -2, 2) // tbl[2] = eventArray
-        let requestHandle = luaL_ref(L, LUA_REGISTRYINDEX)
+        lua_settop(L, 3) // so eventArray definitely on top
+        lua_setfield(L, 1, "ev") // requestTable.ev = eventArray
         req = Async.Request(type: .getevent, requestHandle: requestHandle)
     default:
         fatalError("Unhandled asyncRequest type \(name)")
@@ -391,9 +407,20 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let response = iohandler.waitForAnyRequest()
     lua_settop(L, 0)
-    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // pushes { statusVar, eventArray } -> 1
-    luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle)
-    lua_rawgeti(L, 1, 1) // pushes statusVar -> 2
+
+    var t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // 1: registry[requestHandle] -> statusVar
+    assert(t == LUA_TTABLE, "Failed to locate statusVar for requestHandle \(response.requestHandle)!")
+    lua_pushvalue(L, 1) // statusVar
+    t = lua_gettable(L, LUA_REGISTRYINDEX) // 2: registry[statusVar] -> requestTable
+    assert(t == LUA_TTABLE, "Failed to locate requestTable for requestHandle \(response.requestHandle)!")
+
+    lua_pushvalue(L, 1) // statusVar
+    lua_pushnil(L)
+    lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = nil
+
+    luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle) // registry[requestHandle] = nil
+    
+    lua_pushvalue(L, 1) // statusVar
     switch (response.value) {
     case .cancelled:
         L.push(KOplErrIOCancelled)
@@ -405,7 +432,7 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
         return 1
     default:
         L.push(0) // Assuming everything is a success completion atm...
-        lua_call(L, 1, 0) // statusVar(0), pops back to 1
+        lua_call(L, 1, 0) // statusVar(0), pops back to 2
     }
 
     switch (response.type) {
@@ -446,7 +473,7 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
         // default:
         //     fatalError("Unexpected repsonse type for getevent request!")
         }
-        lua_rawgeti(L, 1, 2) // Pushes eventArray
+        lua_getfield(L, 2, "ev") // Pushes eventArray
         for i in 0 ..< ev.count {
             lua_rawgeti(L, -1, lua_Integer(i + 1))
             L.push(ev[i])
@@ -455,6 +482,25 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
         L.push(true)
         return 1
     }
+}
+
+private func cancelRequest(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    lua_settop(L, 1)
+    let t = lua_gettable(L, LUA_REGISTRYINDEX) // 1: registry[statusVar] -> requestTable
+    if t == LUA_TNIL {
+        // Request must've already been completed in waitForAnyRequest
+        return 0
+    } else {
+        assert(t == LUA_TTABLE, "Unexpected type for registry requestTable!")
+    }
+    lua_getfield(L, 1, "ref")
+    if let requestHandle = L.toint(-1) {
+        iohandler.cancelRequest(Int32(requestHandle))
+    } else {
+        print("Bad type for requestTable.ref!")
+    }
+    return 0
 }
 
 private func createBitmap(_ L: LuaState!) -> Int32 {
@@ -565,6 +611,7 @@ class OpoInterpreter {
             ("fsop", fsop),
             ("asyncRequest", asyncRequest),
             ("waitForAnyRequest", waitForAnyRequest),
+            ("cancelRequest", cancelRequest),
             ("createBitmap", createBitmap),
             ("createWindow", createWindow),
         ]

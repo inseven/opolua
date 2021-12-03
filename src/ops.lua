@@ -1457,7 +1457,7 @@ function Position(stack, runtime) -- 0xB6
 end
 
 function IoSignal(stack, runtime) -- 0xB7
-    error("Unimplemented opcode IoSignal!")
+    runtime:requestSignal()
 end
 
 function Raise(stack, runtime) -- 0xB8
@@ -2061,10 +2061,11 @@ end
 
 function GetEvent32(stack, runtime) -- 0x122
     local stat = makeTemporaryVar(DataTypes.EWord)
-    stack:push(stat)
-    GetEventA32(stack, runtime)
-    stack:push(stat)
-    IoWaitStat(stack, runtime)
+    stat(KOplErrFilePending)
+    local ev = stack:pop()
+
+    runtime:iohandler().asyncRequest("getevent", stat, ev)
+    runtime:waitForRequest(stat)
 end
 
 function GetEventA32(stack, runtime) -- 0x123

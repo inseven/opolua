@@ -314,8 +314,7 @@ function IoClose(stack, runtime) -- 0x10
 end
 
 function IoWait(stack, runtime) -- 0x11
-    local ok = runtime:iohandler().waitForAnyRequest()
-    assert(ok, KStopErr)
+    runtime:waitForAnyRequest()
     stack:push(0)
 end
 
@@ -661,7 +660,11 @@ function Bookmark(stack, runtime) -- 0x55
 end
 
 function GetEventC(stack, runtime) -- 0x56
-    error("Unimplemented function GetEventC!")
+    local stat = stack:pop()[1]
+    runtime:iohandler().cancelRequest(stat)
+    -- Unlike IoCancel, GetEventC should do its own waitForRequest.
+    runtime:waitForRequest(stat)
+    stack:push(0) -- why these return something, who knows
 end
 
 function InTrans(stack, runtime) -- 0x57

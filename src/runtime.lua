@@ -532,6 +532,7 @@ function newRuntime(handler)
         dbs = {},
         modules = {},
         ioh = handler or require("defaultiohandler"),
+        signal = 0,
     }, Runtime)
 end
 
@@ -791,6 +792,32 @@ function Runtime:declareGlobal(name, arrayLen)
         var(DefaultSimpleTypes[valType])
     end
     return var
+end
+
+function Runtime:waitForAnyRequest()
+    if self.signal > 0 then
+        self.signal = self.signal - 1
+        return
+    end
+    local ok = self.ioh.waitForAnyRequest()
+    -- A wait technically decrements the signal count, but completing it would
+    -- increment it again hence a call to iohandler.waitForAnyRequest() that
+    -- returns leaves the signal count unchanged.
+    assert(ok, KStopErr)
+end
+
+function Runtime:waitForRequest(stat)
+    local waits = -1
+    repeat
+        waits = waits + 1
+        self:waitForAnyRequest()
+    until stat() ~= KOplErrFilePending
+    -- And balance any waits we did for things that weren't stat
+    self:requestSignal(waits)
+end
+
+function Runtime:requestSignal(num)
+    self.signal = self.signal + (num or 1)
 end
 
 function runOpo(fileName, data, procName, iohandler, verbose)
