@@ -77,6 +77,8 @@ KUidOplInterpreter = 0x10000168
 KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
 KUidExternalOplFile = 0x1000008A -- DB file UID2
 
+KUidSoundData = 0x10000052 -- Not sure what this uid is officially called, can't find a reference...
+
 dItemTypes = enum {
     dTEXT = 0,
     dCHOICE = 1,

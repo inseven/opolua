@@ -42,6 +42,7 @@
 		DB5AC974275681510043FE5C /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC973275681510043FE5C /* CanvasView.swift */; };
 		DB5AC9762757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift */; };
 		DB5AC97827583DC70043FE5C /* opx in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC97727583DC70043FE5C /* opx */; };
+		DB5AC97A275AC72A0043FE5C /* sound.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC979275AC72A0043FE5C /* sound.lua */; };
 		DB7900002742E6F6005E904F /* ldebug.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF7B2742D5BD005E904F /* ldebug.c */; };
 		DB7900012742E6F6005E904F /* ldo.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6F2742D5BD005E904F /* ldo.c */; };
 		DB7900022742E6F6005E904F /* ldump.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF602742D5BB005E904F /* ldump.c */; };
@@ -126,6 +127,7 @@
 		DB5AC973275681510043FE5C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpoIoHandler_CGExtensions.swift; sourceTree = "<group>"; };
 		DB5AC97727583DC70043FE5C /* opx */ = {isa = PBXFileReference; lastKnownFileType = folder; path = opx; sourceTree = "<group>"; };
+		DB5AC979275AC72A0043FE5C /* sound.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sound.lua; sourceTree = "<group>"; };
 		DB79001B2746B88F005E904F /* OpoIoHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler.swift; sourceTree = "<group>"; };
 		DB7900212746C771005E904F /* lua_State.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = lua_State.swift; sourceTree = "<group>"; };
 		DB7900242746D915005E904F /* defaultiohandler.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = defaultiohandler.lua; sourceTree = "<group>"; };
@@ -340,7 +342,6 @@
 		DB79FFE72742E631005E904F /* src */ = {
 			isa = PBXGroup;
 			children = (
-				DB5AC96F275198A20043FE5C /* database.lua */,
 				DB79FFE82742E631005E904F /* runtime.lua */,
 				DB79FFE92742E631005E904F /* init.lua */,
 				DB79FFEA2742E631005E904F /* fns.lua */,
@@ -350,7 +351,9 @@
 				DB79FFEE2742E631005E904F /* stack.lua */,
 				DB79FFEF2742E631005E904F /* ops.lua */,
 				DB7900242746D915005E904F /* defaultiohandler.lua */,
+				DB5AC96F275198A20043FE5C /* database.lua */,
 				DB5AC971275577980043FE5C /* mbm.lua */,
+				DB5AC979275AC72A0043FE5C /* sound.lua */,
 				DBACE9C2274F895D002612DF /* modules */,
 				DB5AC97727583DC70043FE5C /* opx */,
 			);
@@ -424,6 +427,7 @@
 			files = (
 				DBACE9C3274F895D002612DF /* modules in Resources */,
 				D87A9249274C517000254DE9 /* Assets.xcassets in Resources */,
+				DB5AC97A275AC72A0043FE5C /* sound.lua in Resources */,
 				DB5AC970275198A20043FE5C /* database.lua in Resources */,
 				DB5AC97827583DC70043FE5C /* opx in Resources */,
 				DB79FFF22742E631005E904F /* fns.lua in Resources */,

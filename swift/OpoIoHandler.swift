@@ -243,11 +243,12 @@ struct Fs {
 struct Async {
     enum RequestType {
         case getevent
-        // This is going to seem like overkill if we never end up implementing any other events...
+        case playsound
     }
     struct Request {
         let type: RequestType
         let requestHandle: Int32
+        let data: Data? // For playsound
     }
     struct KeyPressEvent {
         let timestamp: Int // Microseconds since boot, or something

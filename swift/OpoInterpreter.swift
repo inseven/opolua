@@ -437,7 +437,11 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
     case "getevent":
         lua_settop(L, 3) // so eventArray definitely on top
         lua_setfield(L, 1, "ev") // requestTable.ev = eventArray
-        req = Async.Request(type: .getevent, requestHandle: requestHandle)
+        req = Async.Request(type: .getevent, requestHandle: requestHandle, data: nil)
+    case "playsound":
+        lua_settop(L, 3)
+        let data = L.todata(3)
+        req = Async.Request(type: .playsound, requestHandle: requestHandle, data: data)
     default:
         fatalError("Unhandled asyncRequest type \(name)")
     }
@@ -478,12 +482,6 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     case .stopped:
         L.push(false)
         return 1
-    case .completed:
-        // Bail out early, probably should refactor this fn...
-        L.push(0)
-        lua_call(L, 1, 0)
-        L.push(true)
-        return 1
     default:
         L.push(0) // Assuming everything is a success completion atm...
         lua_call(L, 1, 0) // statusVar(0), pops back to 2
@@ -523,9 +521,6 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
             ev[8] = event.y
         case .cancelled, .stopped, .completed:
             break // Already handled above
-        // For when we get more response types
-        // default:
-        //     fatalError("Unexpected repsonse type for getevent request!")
         }
         lua_getfield(L, 2, "ev") // Pushes eventArray
         for i in 0 ..< ev.count {
@@ -533,9 +528,12 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
             L.push(ev[i])
             lua_call(L, 1, 0)
         }
-        L.push(true)
-        return 1
+    case .playsound:
+        // Nothing else needed
+        break
     }
+    L.push(true)
+    return 1
 }
 
 private func cancelRequest(_ L: LuaState!) -> Int32 {

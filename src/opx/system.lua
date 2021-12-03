@@ -229,7 +229,14 @@ function KillProcess(stack, runtime) -- 37
 end
 
 function PlaySound(stack, runtime) -- 38
-    error("Unimplemented system.opx function PlaySound!")
+    local var = runtime:makeTemporaryVar(DataTypes.EWord)
+    stack:push({var})
+    PlaySoundA(stack, runtime)
+    runtime:waitForRequest(var)
+    local val = var()
+    if val < 0 then
+        error(val)
+    end
 end
 
 function PlaySoundA(stack, runtime) -- 39
@@ -238,8 +245,15 @@ function PlaySoundA(stack, runtime) -- 39
     local file = stack:pop()
     var(KOplErrFilePending)
 
-    runtime:iohandler().print(string.format("TODO: PlaySoundA %s vol=%d\n", file, volume))
-    var(0)
+    local data, err = runtime:iohandler().fsop("read", file)
+    if not data then
+        var(err)
+        runtime:requestSignal()
+        return
+    end
+
+    local sndData = require("sound").parseWveFile(data)
+    runtime:iohandler().asyncRequest("playsound", var, sndData)
     stack:push(0)
 end
 
