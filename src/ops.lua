@@ -2033,7 +2033,7 @@ function CallOpxFunc(stack, runtime) -- 0x118
         opx.module = require("opx."..opx.filename:lower())
     end
     local fnName = opx.module.fns[fnIdx]
-    assert(fnName, fmt("OPX function id %d now found in %s!", fnIdx, opx.filename))
+    assert(fnName, fmt("OPX function id %d not found in %s!", fnIdx, opx.filename))
     local fn = opx.module[fnName]
     assert(fn, "Unimplemented OPX function "..fnName.. " in "..opx.filename)
     fn(stack, runtime)
