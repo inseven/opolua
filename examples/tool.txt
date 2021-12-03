@@ -1,0 +1,23 @@
+INCLUDE "toolbar.oph"
+
+PROC main:
+	LOADM "Z:\System\OPL\TOOLBAR.OPO"
+	TBarLink:("go")
+ENDP
+
+PROC go:
+	LOCAL ev&(16)
+	TBarInit:("Woop", gWIDTH, gHEIGHT)
+	TBarButt:("n", 1, "New", 0, 0, 0, 0)
+	TBarShow:
+	WHILE 1
+		GETEVENT32 ev&()
+		IF ev&(1) = &408
+			TBarOffer%:(ev&(3), ev&(4), ev&(6), ev&(7))
+		ENDIF
+	ENDWH
+ENDP
+
+PROC CmdN%:
+	PRINT "Got command N!"
+ENDP
