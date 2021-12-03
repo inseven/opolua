@@ -60,8 +60,12 @@ class Scheduler {
             lock.broadcast()
             lock.unlock()
         }
+        guard let request = requests[requestHandle] else {
+            print("Failed to cancel unknown request.")
+            return
+        }
         requests.removeValue(forKey: requestHandle)
-        responses[requestHandle] = Async.Response(type: .getevent, requestHandle: requestHandle, value: .cancelled)
+        responses[requestHandle] = Async.Response(type: request.type, requestHandle: requestHandle, value: .cancelled)
     }
 
     func waitForRequest(_ requestHandle: Int32) -> Async.Response {
