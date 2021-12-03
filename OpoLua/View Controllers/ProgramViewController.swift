@@ -304,6 +304,7 @@ extension ProgramViewController: OpoIoHandler {
                 let newView = CanvasView(id: h, size: rect.size.cgSize())
                 newView.isHidden = true // by default, will get a showWindow op if needed
                 newView.frame = rect.cgRect()
+                newView.delegate = self.scheduler
                 self.canvasView.addSubview(newView)
                 self.drawables[h] = newView
                 semaphore.signal()
