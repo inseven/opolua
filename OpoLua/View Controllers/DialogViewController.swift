@@ -54,13 +54,12 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
         var previousButton: UIButton? = nil
         let spacing = 8.0
         for button in buttons {
-            let view = BorderedButton(style: .gray)
+            let view = UIButton(configuration: .gray(), primaryAction: UIAction { action in
+                self.complete(key: button.key)
+            })
             view.translatesAutoresizingMaskIntoConstraints = false
             view.tintColor = button.flags.contains(.isCancelButton) ? .systemRed : view.tintColor
             view.setTitle(button.text, for: .normal)
-            view.addAction(UIAction(handler: { action in
-                self.complete(key: button.key)
-            }), for: .touchUpInside)
             buttonView.addSubview(view)
             NSLayoutConstraint.activate([
                 view.leadingAnchor.constraint(equalTo: buttonView.layoutMarginsGuide.leadingAnchor, constant: 12.0),

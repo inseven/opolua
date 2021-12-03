@@ -40,12 +40,9 @@ class ProgramViewController: UIViewController {
     let runtimeQueue = DispatchQueue(label: "ScreenViewController.runtimeQueue")
     let scheduler = Scheduler()
 
-    var getCompletion: ((Int) -> Void)? {
-        didSet {
-            dispatchPrecondition(condition: .onQueue(.main))
-            menuBarButtonItem.isEnabled = (getCompletion != nil)
-        }
-    }
+    let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
+    let menuSemaphore: ConcurrentBox<DispatchSemaphore> = ConcurrentBox()
+    let getCharacterCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
     
     lazy var textView: UITextView = {
         let textView = UITextView()
@@ -53,14 +50,6 @@ class ProgramViewController: UIViewController {
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.backgroundColor = .clear
         return textView
-    }()
-    
-    lazy var menuBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "filemenu.and.selection"),
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(menuTapped(sender:)))
-        return barButtonItem
     }()
 
     lazy var canvasView: CanvasView = {
@@ -99,8 +88,39 @@ class ProgramViewController: UIViewController {
 
         ])
         
-        setToolbarItems([menuBarButtonItem], animated: false)
-        menuBarButtonItem.isEnabled = false
+        let items = UIDeferredMenuElement.uncached { completion in
+            self.getCharacterCompletion.tryTake()?(KeyCode.menu.rawValue)
+            DispatchQueue.global(qos: .userInitiated).async {
+                let disabled = UIAction(title: "None", attributes: .disabled) { _ in }
+                let items = self.menu.tryTake(until: Date().addingTimeInterval(1.0)) ?? [disabled]
+                DispatchQueue.main.async {
+                    completion(items)
+                }
+            }
+        }
+        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [items])
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: nil,
+                                                            image: UIImage(systemName: "ellipsis.circle"),
+                                                            primaryAction: nil,
+                                                            menu: menu)
+
+        // Unfortunately there doesn't seem to be a great way to detect when the user dismisses the menu.
+        // This implementation uses SPI to do just that by watching the notificaiton center for presentation dismiss
+        // notifications and ignores notifications for anything that isn't a menu.
+        let UIPresentationControllerDismissalTransitionDidEndNotification = NSNotification.Name(rawValue: "UIPresentationControllerDismissalTransitionDidEndNotification")
+        NotificationCenter.default.addObserver(forName: UIPresentationControllerDismissalTransitionDidEndNotification,
+                                               object: nil,
+                                               queue: .main) { notification in
+            guard let UIContextMenuActionsOnlyViewController = NSClassFromString("_UIContextMenuActionsOnlyViewController"),
+                  let object = notification.object,
+                  type(of: object) == UIContextMenuActionsOnlyViewController
+            else {
+                return
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.menuSemaphore.tryTake()?.signal()
+            }
+        }
 
         canvasView.delegate = scheduler
     }
@@ -109,11 +129,6 @@ class ProgramViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.isToolbarHidden = false
-    }
-    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         start()
@@ -141,10 +156,6 @@ class ProgramViewController: UIViewController {
         case .error(let err):
             self.textView.append("\n---Error occurred:---\n\(err.description)")
         }
-    }
-
-    @objc func menuTapped(sender: UIBarButtonItem) {
-        getCompletion?(KeyCode.menu.rawValue)
     }
 
 }
@@ -189,17 +200,14 @@ extension ProgramViewController: OpoIoHandler {
     func getch() -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var keyCode = 0
-        DispatchQueue.main.async {
-            self.getCompletion = { result in
-                keyCode = result
-                self.getCompletion = nil
-                semaphore.signal()
-            }
+        getCharacterCompletion.put { result in
+            keyCode = result
+            semaphore.signal()
         }
         semaphore.wait()
         return keyCode
     }
-    
+
     func beep(frequency: Double, duration: Double) {
         print("BEEP")
     }
@@ -222,23 +230,13 @@ extension ProgramViewController: OpoIoHandler {
 
     func menu(_ menu: Menu.Bar) -> Menu.Result {
         let semaphore = DispatchSemaphore(value: 0)
+        self.menuSemaphore.put(semaphore)
         var result: Menu.Result = .none
-        DispatchQueue.main.async {
-            let viewController = MenuViewController(title: "Menu", menu: menu) { item in
-                if let item = item {
-                    result = Menu.Result(selected: item.keycode, highlighted: item.keycode)
-                }
-                semaphore.signal()
-            }
-            let navigationController = TranslucentNavigationController(rootViewController: viewController)
-            if #available(iOS 15.0, *) {
-                if let presentationController = navigationController.presentationController
-                    as? UISheetPresentationController {
-                    presentationController.detents = [.medium(), .large()]
-                }
-            }
-            self.present(navigationController, animated: true)
+        let completion: (Int) -> Void = { keycode in
+            result = Menu.Result(selected: keycode, highlighted: keycode)
+            self.menuSemaphore.tryTake()?.signal()
         }
+        self.menu.put(menu.menuElements(completion: completion))
         semaphore.wait()
         return result
     }
@@ -474,6 +472,34 @@ extension Scheduler: CanvasViewDelegate {
             return Async.Response(type: .getevent,
                                   requestHandle: request.requestHandle,
                                   value: .penevent(event))
+        }
+    }
+
+}
+
+
+extension Menu.Bar {
+
+    func menuElements(completion: @escaping (Int) -> Void) -> [UIMenuElement] {
+        return menus.map { menu in
+            return UIMenu(title: menu.title, children: menu.menuElements(completion: completion))
+        }
+
+    }
+
+}
+
+extension Menu {
+
+    func menuElements(completion: @escaping (Int) -> Void) -> [UIMenuElement] {
+        return items.map { item in
+            if let submenu = item.submenu {
+                return UIMenu(title: submenu.title, children: submenu.menuElements(completion: completion))
+            } else {
+                return UIAction(title: item.text) { action in
+                    completion(item.keycode)
+                }
+            }
         }
     }
 

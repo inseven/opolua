@@ -10,9 +10,7 @@
 		D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DA274A819D003C8D3D /* OPLObject.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
 		D861E8DF274A8D70003C8D3D /* KeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DE274A8D70003C8D3D /* KeyCode.swift */; };
-		D861E8E1274AB1CB003C8D3D /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */; };
 		D87A62742752A67500075CB8 /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62732752A67500075CB8 /* CGSize.swift */; };
-		D87A62762752A6F400075CB8 /* BorderedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62752752A6F400075CB8 /* BorderedButton.swift */; };
 		D87A9249274C517000254DE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB79FE6427428294005E904F /* Assets.xcassets */; };
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
 		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
@@ -34,6 +32,7 @@
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
 		D8EB6FF82759682000FC139F /* UITextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF72759682000FC139F /* UITextView.swift */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
+		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8FE60032757106300711717 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* Location.swift */; };
 		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
 		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
@@ -96,9 +95,7 @@
 		D861E8DA274A819D003C8D3D /* OPLObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OPLObject.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		D861E8DE274A8D70003C8D3D /* KeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCode.swift; sourceTree = "<group>"; };
-		D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
 		D87A62732752A67500075CB8 /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
-		D87A62752752A6F400075CB8 /* BorderedButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BorderedButton.swift; sourceTree = "<group>"; };
 		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
 		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
 		D8891346274BF2D200794D55 /* DialogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewController.swift; sourceTree = "<group>"; };
@@ -119,6 +116,7 @@
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		D8EB6FF72759682000FC139F /* UITextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextView.swift; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
+		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
 		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
@@ -198,6 +196,7 @@
 			isa = PBXGroup;
 			children = (
 				D8FE60082757208000711717 /* ApplicationError.swift */,
+				D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */,
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
 				D861E8DE274A8D70003C8D3D /* KeyCode.swift */,
 				D8FE60022757106300711717 /* Location.swift */,
@@ -211,7 +210,6 @@
 		D8891343274BF24D00794D55 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				D87A62752752A6F400075CB8 /* BorderedButton.swift */,
 				D8891352274C186E00794D55 /* Canvas.swift */,
 				DB5AC973275681510043FE5C /* CanvasView.swift */,
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
@@ -246,7 +244,6 @@
 				D8891346274BF2D200794D55 /* DialogViewController.swift */,
 				D8C679B927483B5600BD8720 /* DirectoryViewController.swift */,
 				D89A607F2756AE8800C9757F /* LibraryViewController.swift */,
-				D861E8E0274AB1CB003C8D3D /* MenuViewController.swift */,
 				DB79FFBD2742D99C005E904F /* ProgramViewController.swift */,
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
 			);
@@ -482,11 +479,11 @@
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
 				DB7900092742E6F6005E904F /* lmem.c in Sources */,
 				DB79000A2742E6F6005E904F /* loadlib.c in Sources */,
+				D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */,
 				D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */,
 				DB79000B2742E6F6005E904F /* lobject.c in Sources */,
 				D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */,
 				D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */,
-				D87A62762752A6F400075CB8 /* BorderedButton.swift in Sources */,
 				D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */,
 				D8FE60072757201600711717 /* Bundle.swift in Sources */,
 				DB79000C2742E6F6005E904F /* lopcodes.c in Sources */,
@@ -517,7 +514,6 @@
 				DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */,
 				D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */,
 				DB79FFBE2742D99C005E904F /* ProgramViewController.swift in Sources */,
-				D861E8E1274AB1CB003C8D3D /* MenuViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -581,6 +577,7 @@
 					luaconf,
 					lua,
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MACOSX_DEPLOYMENT_TARGET = 11.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -645,6 +642,7 @@
 					luaconf,
 					lua,
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MACOSX_DEPLOYMENT_TARGET = 11.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -665,7 +663,6 @@
 				DEVELOPMENT_TEAM = S4WXAUZQEV;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = OpoLua/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -689,7 +686,6 @@
 				DEVELOPMENT_TEAM = S4WXAUZQEV;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = OpoLua/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

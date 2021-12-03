@@ -65,9 +65,6 @@ class LibraryViewController: UITableViewController {
         weak var delegate: DataSourceDelegate?
 
         override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-            guard #available(iOS 15.0, *) else {
-                return nil
-            }
             guard let section = sectionIdentifier(for: section) else {
                 return nil
             }
