@@ -205,6 +205,17 @@ function Runtime:addModule(path, procTable, opxTable)
     table.insert(self.modules, mod)
 end
 
+function Runtime:unloadModule(path)
+    for i, mod in ipairs(self.modules) do
+        if mod.path == path then
+            table.remove(self.modules, i)
+            return
+        end
+    end
+    printf("No loaded module found for %s!\n", path)
+    error(KOplErrNotExists)
+end
+
 function Runtime:findProc(procName)
     -- procName must be upper cased
     for _, mod in ipairs(self.modules) do

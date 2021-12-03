@@ -1514,7 +1514,9 @@ function Return(stack, runtime) -- 0xC0
 end
 
 function UnLoadM(stack, runtime) -- 0xC1
-    error("Unimplemented opcode UnLoadM!")
+    local module = stack:pop()
+    runtime:unloadModule(module)
+    runtime:setTrap(false)
 end
 
 function Edit(stack, runtime) -- 0xC2
