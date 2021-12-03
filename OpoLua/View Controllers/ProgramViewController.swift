@@ -320,8 +320,22 @@ extension ProgramViewController: OpoIoHandler {
             }
             semaphore.wait()
             return nil
-        case .order(let displayId, let order):
-            return nil//TODO
+        case .order(let displayId, let position):
+            DispatchQueue.main.async {
+                if let view = self.drawables[displayId] as? CanvasView {
+                    // In OPL terms position=1 means the front, whereas subviews[1] is at the back
+                    let views = self.canvasView.subviews
+                    let uipos = views.count - position
+                    if views.count == 0 || uipos < 0 {
+                        self.canvasView.sendSubviewToBack(view)
+                    } else {
+                        self.canvasView.insertSubview(view, aboveSubview: views[uipos])
+                    }
+                }
+                semaphore.signal()
+            }
+            semaphore.wait()
+            return nil
         case .show(let displayId, let flag):
             DispatchQueue.main.async {
                 if let view = self.drawables[displayId] as? CanvasView {

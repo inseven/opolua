@@ -323,6 +323,13 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         } else {
             print("Bad displayId to show graphicsop!")
         }
+    case "order":
+        if let displayId = L.toint(2),
+           let position = L.toint(3) {
+            result = iohandler.graphicsop(.order(displayId, position))
+        } else {
+            print("order graphicsop missing arguments!")
+        }
     default:
         print("Unknown graphicsop \(cmd)!")
     }

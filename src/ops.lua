@@ -1591,7 +1591,13 @@ function gStyle(stack, runtime) -- 0xCE
 end
 
 function gOrder(stack, runtime) -- 0xCF
-    error("Unimplemented opcode gOrder!")
+    local pos = stack:pop()
+    local id = stack:pop()
+
+    local graphics = runtime:getGraphics()
+    assert(graphics[id] and graphics[id].isWindow, KOplErrInvalidWindow)
+
+    runtime:iohandler().graphicsop("order", id, pos)
 end
 
 function gCls(stack, runtime) -- 0xD1
