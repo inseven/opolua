@@ -32,4 +32,13 @@ function TBarHide(runtime)
     --TODO
 end
 
-return _ENV
+return {
+    TBarLink = TBarLink,
+    TBarInit = TBarInit,
+    TBarSetTitle = TBarSetTitle,
+    TBarButt = TBarButt,
+    ["TBarOffer%"] = TBarOffer,
+    TBarLatch = TBarLatch,
+    TBarShow = TBarShow,
+    TBarHide = TBarHide,
+}

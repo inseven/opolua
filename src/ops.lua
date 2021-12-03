@@ -1573,7 +1573,9 @@ end
 gVisible_dump = IP8_dump
 
 function gFont(stack, runtime) -- 0xCA
-    error("Unimplemented opcode gFont!")
+    local uid = stack:pop()
+    printf("TODO gFont 0x%08X\n", uid)
+    runtime:setTrap(false)
 end
 
 function gUnloadFont(stack, runtime) -- 0xCB
@@ -1589,7 +1591,8 @@ function gTMode(stack, runtime) -- 0xCD
 end
 
 function gStyle(stack, runtime) -- 0xCE
-    error("Unimplemented opcode gStyle!")
+    local style = stack:pop()
+    printf("TODO gStyle %d", style)
 end
 
 function gOrder(stack, runtime) -- 0xCF
@@ -1638,8 +1641,29 @@ function gPrintSpace(stack, runtime) -- 0xD8
 end
 
 function gPrintBoxText(stack, runtime) -- 0xD9
-    error("Unimplemented opcode gPrintBoxText!")
+    local numParams = runtime:IP8()
+    local margin = 0
+    local bottom = 0
+    local top = 0
+    local align = 2 -- left
+    if numParams > 4 then
+        margin = stack:pop()
+    end
+    if numParams > 3 then
+        bottom = stack:pop()
+    end
+    if numParams > 2 then
+        top = stack:pop()
+    end
+    if numParams > 1 then
+        align = stack:pop()
+    end
+    local width = stack:pop()
+    local text = stack:pop()
+    printf("TODO gPrintBoxText %s\n", text)
 end
+
+gPrintBoxText_dmp = numParams_dump
 
 function gLineBy(stack, runtime) -- 0xDA
     local graphics = runtime:getGraphics()
@@ -2067,7 +2091,7 @@ function ReturnFromEval(stack, runtime) -- 0x121
 end
 
 function GetEvent32(stack, runtime) -- 0x122
-    local stat = makeTemporaryVar(DataTypes.EWord)
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
     stat(KOplErrFilePending)
     local ev = stack:pop()
 

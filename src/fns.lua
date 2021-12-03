@@ -596,14 +596,26 @@ function IAbs(stack, runtime) -- 0x41
     error("Unimplemented function IAbs!")
 end
 
+function roundTowardsZero(val)
+    if val > 0 then
+        return math.floor(val)
+    else
+        return math.ceil(val)
+    end
+end
+
+function roundToNearest(val)
+    local int, frac = math.modf(val)
+    if math.abs(frac) >= 0.5 then
+        int = int + (int < 0 and -1 or 1)
+    end
+    return int
+end
+
 function IntLong(stack, runtime) -- 0x42
     local val = stack:pop()
-    if val > 0 then
-        val = math.floor(val)
-    else
-        val = math.ceil(val)
-    end
-    stack:push(val)
+    local result = roundTowardsZero(val)
+    stack:push(result)
 end
 
 function PeekL(stack, runtime) -- 0x43
@@ -851,7 +863,19 @@ function MonthStr(stack, runtime) -- 0xCD
 end
 
 function NumStr(stack, runtime) -- 0xCE
-    error("Unimplemented function NumStr!")
+    local width = stack:pop()
+    local intVal = roundToNearest(stack:pop())
+    local result
+    if width < 0 then
+        result = fmt("%"..tostring(-width).."d", intVal)
+    else
+        result = tostring(intVal)
+    end
+    if #result > width then
+        stack:push(string.rep("*", width))
+    else
+        stack:push(result)
+    end
 end
 
 function PeekStr(stack, runtime) -- 0xCF
