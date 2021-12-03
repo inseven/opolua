@@ -85,8 +85,22 @@ extension CGContext {
                 print("Couldn't get source drawable from extra!")
                 return
             }
-            let img = srcImage.cropping(to: src.rect.cgRect())!
-            drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: src.rect.size.cgSize()))
+            if let img = srcImage.cropping(to: src.rect.cgRect()) {
+                drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: src.rect.size.cgSize()))
+            }
+        case .scroll(let dx, let dy, let rect):
+            let origRect = rect.cgRect()
+            if let img = makeImage()?.cropping(to: origRect) {
+                let newRect = CGRect(x: rect.minX + dx, y: rect.minY + dy, width: rect.width, height: rect.height).standardized
+                let minX = min(origRect.minX, newRect.minX)
+                let minY = min(origRect.minY, newRect.minY)
+                let maxX = max(origRect.maxX, newRect.maxX)
+                let maxY = max(origRect.maxY, newRect.maxY)
+                let clearRect = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY).standardized
+                setFillColor(operation.bgcolor.cgColor())
+                fill(clearRect)
+                drawUnflippedImage(img, in: newRect)
+            }
         }
     }
 

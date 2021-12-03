@@ -292,6 +292,16 @@ private func draw(_ L: LuaState!) -> Int32 {
                 print("Missing params in copy!")
                 continue
             }
+        case "scroll":
+            let dx = L.toint(-1, key: "dx") ?? 0
+            let dy = L.toint(-1, key: "dy") ?? 0
+            lua_getfield(L, -1, "rect")
+            let x = L.toint(-1, key: "x") ?? 0
+            let y = L.toint(-1, key: "y") ?? 0
+            let w = L.toint(-1, key: "w") ?? 0
+            let h = L.toint(-1, key: "h") ?? 0
+            let rect = Graphics.Rect(x: x, y: y, width: w, height: h)
+            optype = .scroll(dx, dy, rect)
         default:
             print("Unknown Graphics.DrawCommand.OpType \(t)")
             continue

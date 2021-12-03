@@ -1731,8 +1731,20 @@ function gCopy(stack, runtime) -- 0xE1
 end
 
 function gScroll(stack, runtime) -- 0xE2
-    error("Unimplemented opcode gScroll!")
+    local numParams = runtime:IP8()
+    local rect
+    if numParams == 6 then
+        rect = stack:popRect()
+    else
+        local ctx = runtime:getGraphics().current
+        rect = { x = 0, y = 0, w = ctx.width, h = ctx.h }
+    end
+    local dy = stack:pop()
+    local dx = stack:pop()
+    runtime:drawCmd("scroll", { dx = dx, dy = dy, rect = rect })
 end
+
+gScroll_dump = numParams_dump
 
 function gUpdate(stack, runtime) -- 0xE3
     local flag = runtime:IP8()

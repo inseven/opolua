@@ -139,17 +139,22 @@ struct Menu {
 }
 
 struct Graphics {
+
     struct Size {
         let width: Int
         let height: Int
     }
+
     struct Point {
         let x: Int
         let y: Int
     }
+
     struct Rect {
         let origin: Point
         let size: Size
+        var minX: Int { return origin.x }
+        var minY: Int { return origin.y }
         var width: Int { return size.width }
         var height: Int { return size.height }
     }
@@ -182,6 +187,7 @@ struct Graphics {
             case box(Size)
             case bitblt(PixelData)
             case copy(CopySource)
+            case scroll(Int, Int, Rect) // dx, dy, rect
         }
         let displayId: Int
         let type: OpType
