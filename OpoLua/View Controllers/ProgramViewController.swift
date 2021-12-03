@@ -423,7 +423,8 @@ extension ProgramViewController: OpoIoHandler {
         scheduler.cancelRequest(requestHandle)
     }
 
-    func waitForAnyRequest() -> Async.Response {
+    func waitForAnyRequest(block: Bool) -> Async.Response? {
+        // TODO handle block=false
         return scheduler.waitForAnyRequest()
     }
 

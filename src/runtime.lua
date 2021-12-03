@@ -824,7 +824,7 @@ function Runtime:waitForAnyRequest()
         self.signal = self.signal - 1
         return
     end
-    local ok = self.ioh.waitForAnyRequest()
+    local ok = self.ioh.waitForAnyRequest(true)
     -- A wait technically decrements the signal count, but completing it would
     -- increment it again hence a call to iohandler.waitForAnyRequest() that
     -- returns leaves the signal count unchanged.

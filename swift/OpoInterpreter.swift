@@ -449,7 +449,11 @@ private let KOplErrIOCancelled = -48
 
 private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    let response = iohandler.waitForAnyRequest()
+    let shouldBlock = L.toboolean(1)
+    guard let response = iohandler.waitForAnyRequest(block: shouldBlock) else {
+        L.pushnil()
+        return 1
+    }
     lua_settop(L, 0)
 
     var t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // 1: registry[requestHandle] -> statusVar
@@ -473,6 +477,12 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
         return 1
     case .stopped:
         L.push(false)
+        return 1
+    case .completed:
+        // Bail out early, probably should refactor this fn...
+        L.push(0)
+        lua_call(L, 1, 0)
+        L.push(true)
         return 1
     default:
         L.push(0) // Assuming everything is a success completion atm...
@@ -511,7 +521,7 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
             ev[6] = event.y
             ev[7] = event.x
             ev[8] = event.y
-        case .cancelled, .stopped:
+        case .cancelled, .stopped, .completed:
             break // Already handled above
         // For when we get more response types
         // default:
