@@ -233,7 +233,14 @@ function PlaySound(stack, runtime) -- 38
 end
 
 function PlaySoundA(stack, runtime) -- 39
-    error("Unimplemented system.opx function PlaySoundA!")
+    local var = stack:pop()[1]
+    local volume = stack:pop()
+    local file = stack:pop()
+    var(KOplErrFilePending)
+
+    runtime:iohandler().print(string.format("TODO: PlaySoundA %s vol=%d\n", file, volume))
+    var(0)
+    stack:push(0)
 end
 
 function StopSound(stack, runtime) -- 40
