@@ -745,9 +745,23 @@ function Runtime:callProc(procName, ...)
 end
 
 function Runtime:loadModule(path)
+    -- First see if this is a real module
+    local data = self.ioh.fsop("read", path)
+    if data then
+        local procTable, opxTable = require("opofile").parseOpo(data, self.instructionDebug)
+        self:addModule(path, procTable, opxTable)
+        return
+    end
+
+    -- If not, see if we have a built-in
     local modName = splitext(basename(path:lower()))
     local ok, mod = pcall(require, "modules."..modName)
-    assert(ok, KOplErrNoMod)
+
+    if not ok then
+        printf("Module %s (from %s) not found\n", modName, path)
+        error(KOplErrNoMod)
+    end
+
     local procTable = {}
     for k, v in pairs(mod) do
         assert(type(v) == "function", "Unexpected top-level value in module that isn't a function")
