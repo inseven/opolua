@@ -751,7 +751,9 @@ function Tan(stack, runtime) -- 0x91
 end
 
 function Val(stack, runtime) -- 0x92
-    error("Unimplemented function Val!")
+    local result = tonumber(stack:pop())
+    assert(result, KOplErrInvalidArgs)
+    stack:push(result)
 end
 
 function Max(stack, runtime) -- 0x93
@@ -837,7 +839,11 @@ function LowerStr(stack, runtime) -- 0xCB
 end
 
 function MidStr(stack, runtime) -- 0xCC
-    error("Unimplemented function MidStr!")
+    local len = stack:pop()
+    local offset = stack:pop()
+    local str = stack:pop()
+    assert(offset >= 1, KOplErrInvalidArgs)
+    stack:push(str:sub(offset, offset + len - 1))
 end
 
 function MonthStr(stack, runtime) -- 0xCD
