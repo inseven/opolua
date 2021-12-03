@@ -1446,7 +1446,12 @@ end
 Open_dump = Create_dump
 
 function Pause(stack, runtime) -- 0xB5
-    error("Unimplemented opcode Pause!")
+    local val = stack:pop() -- pause time in 1/20 seconds
+    printf("TODO Pause %d\n", val)
+    -- error("TODO")
+    -- runtime.instructionDebug = true
+    -- fns.Get(stack, runtime)
+    -- stack:pop()
 end
 
 function Position(stack, runtime) -- 0xB6
@@ -1795,7 +1800,7 @@ function IoWaitStat(stack, runtime) -- 0xE8
 end
 
 function IoYield(stack, runtime) -- 0xE9
-    runtime:iohandler().waitForAnyRequest()
+    -- runtime:iohandler().waitForAnyRequest()
 end
 
 function mInit(stack, runtime) -- 0xEA
