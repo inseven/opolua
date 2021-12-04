@@ -160,8 +160,8 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return getfield(index, key: key, self.tonumber)
     }
 
-    func toboolean(_ index: Int32, key: String) -> Bool? {
-        return getfield(index, key: key, self.toboolean)
+    func toboolean(_ index: Int32, key: String) -> Bool {
+        return getfield(index, key: key, self.toboolean) ?? false
     }
 
     func todata(_ index: Int32, key: String) -> Data? {

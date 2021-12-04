@@ -1,0 +1,47 @@
+INCLUDE "Const.oph"
+PROC fonts:
+	showfont:(4,15,"Courier 8")
+	showfont:(5,25,"Times 8")
+	showfont:(6,38,"Times 11")
+	showfont:(7,53,"Times 13")
+	showfont:(8,71,"Times 15")
+	showfont:(9,81,"Arial 8")
+	showfont:(10,94,"Arial 11")
+	showfont:(11,109,"Arial 13")
+	showfont:(12,127,"Arial 15")
+	showfont:(13,135,"Tiny 44")
+	GET
+	GCLS
+	showfontbyuid:(KFontCourierNormal8&,15,"Courier 8")
+	showfontbyuid:(KFontTimesNormal8&,25,"Times 8")
+	showfontbyuid:(KFontTimesNormal11&,38,"Times 11")
+	showfontbyuid:(KFontTimesNormal13&,53,"Times 13")
+	showfontbyuid:(KFontTimesNormal15&,71,"Times 15")
+	showfontbyuid:(KFontArialNormal8&,81,"Arial 8")
+	showfontbyuid:(KFontArialNormal11&,94,"Arial 11")
+	showfontbyuid:(KFontArialNormal13&,109,"Arial 13")
+	showfontbyuid:(KFontArialNormal15&,127,"Arial 15")
+	showfontbyuid:(KFontTiny4&,135,"Tiny 4")
+	GET
+	GCLS
+	showfontbyuid:(KFontCourierBold8&,15,"Courier 8")
+	showfontbyuid:(KFontTimesBold8&,25,"Times 8")
+	showfontbyuid:(KFontTimesBold11&,38,"Times 11")
+	showfontbyuid:(KFontTimesBold13&,53,"Times 13")
+	showfontbyuid:(KFontArialBold8&,81,"Arial 8")
+	showfontbyuid:(KFontArialBold11&,94,"Arial 11")
+	showfontbyuid:(KFontArialBold13&,109,"Arial 13")
+	GET
+ENDP
+PROC showfont:(font%,y%,str$)
+	gFONT font%
+	gAT 20,y% :gPRINT font%
+	gAT 50,y% :gPRINT str$
+	gAT 150,y% :gPRINT "!!!"
+ENDP
+PROC showfontbyuid:(font&,y%,str$)
+	gFONT font&
+	gAT 20,y% :gPRINT font&
+	gAT 100,y% :gPRINT str$
+	gAT 200,y% :gPRINT "!!!"
+ENDP

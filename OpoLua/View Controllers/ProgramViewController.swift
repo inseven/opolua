@@ -307,8 +307,8 @@ extension ProgramViewController: OpoIoHandler {
                         continue
                     }
                     let newSrc = Graphics.CopySource(displayId: src.displayId, rect: src.rect, extra: srcCanvas)
-                    let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .copy(newSrc),
-                                                   origin: op.origin, color: op.color, bgcolor: op.bgcolor)
+                    let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .copy(newSrc), mode: op.mode,
+                                                     origin: op.origin, color: op.color, bgcolor: op.bgcolor)
                     opsPerId[op.displayId]!.append(newOp)
                 default:
                     opsPerId[op.displayId]!.append(op)
@@ -328,7 +328,7 @@ extension ProgramViewController: OpoIoHandler {
         semaphore.wait()
     }
 
-    func graphicsop(_ operation: Graphics.Operation) -> Int? {
+    func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
         let semaphore = DispatchSemaphore(value: 0)
         switch (operation) {
         case .createBitmap(let size):
@@ -340,7 +340,7 @@ extension ProgramViewController: OpoIoHandler {
                 semaphore.signal()
             }
             semaphore.wait()
-            return h
+            return .handle(h)
         case .createWindow(let rect):
             var h = 0
             DispatchQueue.main.async {
@@ -355,7 +355,7 @@ extension ProgramViewController: OpoIoHandler {
                 semaphore.signal()
             }
             semaphore.wait()
-            return h
+            return .handle(h)
         case .close(let displayId):
             DispatchQueue.main.async {
                 if let view = self.drawables[displayId] as? CanvasView {
@@ -365,7 +365,7 @@ extension ProgramViewController: OpoIoHandler {
                 semaphore.signal()
             }
             semaphore.wait()
-            return nil
+            return .nothing
         case .order(let displayId, let position):
             DispatchQueue.main.async {
                 if let view = self.drawables[displayId] as? CanvasView {
@@ -381,7 +381,7 @@ extension ProgramViewController: OpoIoHandler {
                 semaphore.signal()
             }
             semaphore.wait()
-            return nil
+            return .nothing
         case .show(let displayId, let flag):
             DispatchQueue.main.async {
                 if let view = self.drawables[displayId] as? CanvasView {
@@ -392,10 +392,17 @@ extension ProgramViewController: OpoIoHandler {
                 semaphore.signal()
             }
             semaphore.wait()
-            return nil
+            return .nothing
+        case .textSize(let string, let fontInfo):
+            let font = fontInfo.toUiFont()
+            let attribStr = NSAttributedString(string: string, attributes: [.font: font])
+            let sz = attribStr.size()
+            // This is not really the right definition for ascent but it seems to work for where epoc expects
+            // the text to be, so...
+            let ascent = Int(ceil(sz.height) + font.descender)
+            return .sizeAndAscent(Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))), ascent)
         }
     }
-
 
     func getScreenSize() -> Graphics.Size {
         return screenSize

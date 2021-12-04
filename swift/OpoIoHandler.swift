@@ -179,18 +179,56 @@ struct Graphics {
         let extra: AnyObject?
     }
 
+    enum FontFace: String {
+        case arial
+        case times
+        case courier
+        case tiny
+    }
+
+    enum FontFlag: Int, FlagEnum {
+        case bold = 1
+        case underlined = 2
+        case inverse = 4
+        case doubleHeight = 8
+        case mono = 16
+        case italic = 32
+    }
+    typealias FontFlags = Set<FontFlag>
+
+    struct FontInfo {
+        let face: FontFace
+        let size: Int
+        let flags: FontFlags
+    }
+
+    enum Mode: Int {
+        case set = 0
+        case cleared = 1
+        case inverted = 2
+    }
+
+    enum TMode: Int {
+        case set = 0
+        case cleared = 1
+        case inverted = 2
+        case replaced = 3
+    }
+
     struct DrawCommand {
         enum OpType {
-            case cls
+            case fill(Size)
             case circle(Int, Bool) // radius, fill
             case line(Int, Int) // x2, y2
             case box(Size)
             case bitblt(PixelData)
             case copy(CopySource)
             case scroll(Int, Int, Rect) // dx, dy, rect
+            case text(String, FontInfo, TMode)
         }
         let displayId: Int
         let type: OpType
+        let mode: Mode
         let origin: Point
         let color: Color
         let bgcolor: Color
@@ -198,10 +236,17 @@ struct Graphics {
 
     enum Operation {
         case close(Int)
-        case createBitmap(Size)
-        case createWindow(Rect)
+        case createBitmap(Size) // returns handle
+        case createWindow(Rect) // returns handle
         case order(Int, Int) // displayId, position
         case show(Int, Bool) // displayId, visible flag
+        case textSize(String, FontInfo) // returns size
+    }
+
+    enum Result {
+        case nothing
+        case handle(Int)
+        case sizeAndAscent(Size, Int)
     }
 }
 
@@ -322,7 +367,7 @@ protocol OpoIoHandler {
     func menu(_ m: Menu.Bar) -> Menu.Result
 
     func draw(operations: [Graphics.DrawCommand])
-    func graphicsop(_ operation: Graphics.Operation) -> Int?
+    func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
     func getScreenSize() -> Graphics.Size
 
@@ -367,8 +412,8 @@ class DummyIoHandler : OpoIoHandler {
     func draw(operations: [Graphics.DrawCommand]) {
     }
 
-    func graphicsop(_ operation: Graphics.Operation) -> Int? {
-        return nil
+    func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
+        return .nothing
     }
 
     func getScreenSize() -> Graphics.Size {

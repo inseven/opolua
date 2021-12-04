@@ -148,7 +148,7 @@ private func dialog(_ L: LuaState!) -> Int32 {
         let min = L.tonumber(-1, key: "min")
         let max = L.tonumber(-1, key: "max")
         let choices = L.tostringarray(-1, key: "choices")
-        let selectable = L.toboolean(-1, key: "selectable") ?? false
+        let selectable = L.toboolean(-1, key: "selectable")
 
         if let t = Dialog.Item.ItemType(rawValue: L.toint(-1, key: "type") ?? -1) {
             let item = Dialog.Item(
@@ -253,10 +253,12 @@ private func draw(_ L: LuaState!) -> Int32 {
         let color = Graphics.Color(r: col, g: col, b: col)
         let bgcol = UInt8(L.toint(-1, key: "bgcolor") ?? 255)
         let bgcolor = Graphics.Color(r: bgcol, g: bgcol, b: bgcol)
+        let mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
         let optype: Graphics.DrawCommand.OpType
         switch (t) {
-        case "cls":
-            optype = .cls
+        case "fill":
+            let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
+            optype = .fill(size)
         case "circle":
             optype = .circle(L.toint(-1, key: "r") ?? 0, (L.toint(-1, key: "fill") ?? 0) != 0)
         case "line":
@@ -302,53 +304,92 @@ private func draw(_ L: LuaState!) -> Int32 {
             let h = L.toint(-1, key: "h") ?? 0
             let rect = Graphics.Rect(x: x, y: y, width: w, height: h)
             optype = .scroll(dx, dy, rect)
+        case "text":
+            let str = L.tostring(-1, key: "string") ?? ""
+            var flags = Graphics.FontFlags(flags: L.toint(-1, key: "style") ?? 0)
+            let tmode = Graphics.TMode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
+            let face = Graphics.FontFace(rawValue: L.tostring(-1, key: "fontface") ?? "arial") ?? .arial
+            if L.toboolean(-1, key: "fontbold") {
+                // We're not going to support any of this double-bold nonsense with applying simulated bold on top
+                // of a boldface font. Just set the flag.
+                flags.insert(.bold)
+            }
+            let sz = L.toint(-1, key: "fontsize") ?? 15
+            let fontInfo = Graphics.FontInfo(face: face, size: sz, flags: flags)
+            optype = .text(str, fontInfo, tmode)
         default:
             print("Unknown Graphics.DrawCommand.OpType \(t)")
             continue
         }
-        ops.append(Graphics.DrawCommand(displayId: id, type: optype, origin: origin, color: color, bgcolor: bgcolor))
+        ops.append(Graphics.DrawCommand(displayId: id, type: optype, mode: mode, origin: origin, color: color, bgcolor: bgcolor))
     }
     iohandler.draw(operations: ops)
     return 0
 }
 
+func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Operation) -> Int32 {
+    let result = iohandler.graphicsop(op)
+    switch result {
+    case .nothing:
+        return 0
+    case .handle(let h):
+        L.push(h)
+        return 1
+    case .sizeAndAscent(let sz, let ascent):
+        L.push(sz.width)
+        L.push(sz.height)
+        L.push(ascent)
+        return 3
+    }
+}
+
 // graphicsop(cmd, ...)
 // graphicsop("close", displayId)
 // graphicsop("showWindow", displayId, flag)
+// graphicsop("textsize", str, font)
 private func graphicsop(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""
-    var result: Int? = nil
     switch cmd {
     case "close":
         if let displayId = L.toint(2) {
-            result = iohandler.graphicsop(.close(displayId))
+            return doGraphicsOp(L, iohandler, .close(displayId))
         } else {
             print("Bad displayId to close graphicsop!")
         }
     case "show":
         if let displayId = L.toint(2) {
             let flag = L.toboolean(3)
-            result = iohandler.graphicsop(.show(displayId, flag))
+            return doGraphicsOp(L, iohandler, .show(displayId, flag))
         } else {
             print("Bad displayId to show graphicsop!")
         }
     case "order":
         if let displayId = L.toint(2),
            let position = L.toint(3) {
-            result = iohandler.graphicsop(.order(displayId, position))
+            return doGraphicsOp(L, iohandler, .order(displayId, position))
         } else {
             print("order graphicsop missing arguments!")
         }
+    case "textsize":
+        let str = L.tostring(2) ?? ""
+        var flags = Graphics.FontFlags(flags: 0)
+        if L.toboolean(2, key: "bold") {
+            flags.insert(.bold)
+        }
+        if let fontName = L.tostring(3, key: "face"),
+           let face = Graphics.FontFace(rawValue: fontName),
+           let size = L.toint(3, key: "size") {
+            let info = Graphics.FontInfo(face: face, size: size, flags: flags)
+            return doGraphicsOp(L, iohandler, .textSize(str, info))
+        } else {
+            print("Bad args to textsize!")
+        }
+           
     default:
         print("Unknown graphicsop \(cmd)!")
     }
-    if let result = result {
-        L.push(result)
-    } else {
-        L.pushnil()
-    }
-    return 1
+    return 0
 }
 
 private func getScreenSize(_ L: LuaState!) -> Int32 {
@@ -561,12 +602,7 @@ private func createBitmap(_ L: LuaState!) -> Int32 {
         return 0
     }
     let size = Graphics.Size(width: width, height: height)
-    if let handle = iohandler.graphicsop(.createBitmap(size)) {
-        L.push(handle)
-    } else {
-        L.pushnil()
-    }
-    return 1
+    return doGraphicsOp(L, iohandler, .createBitmap(size))
 }
 
 private func createWindow(_ L: LuaState!) -> Int32 {
@@ -578,12 +614,7 @@ private func createWindow(_ L: LuaState!) -> Int32 {
     }
     // TODO do something with flags
     let rect = Graphics.Rect(x: x, y: y, width: width, height: height)
-    if let handle = iohandler.graphicsop(.createWindow(rect)) {
-        L.push(handle)
-    } else {
-        L.pushnil()
-    }
-    return 1
+    return doGraphicsOp(L, iohandler, .createWindow(rect))
 }
 
 private func getTime(_ L: LuaState!) -> Int32 {

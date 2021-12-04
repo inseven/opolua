@@ -461,23 +461,23 @@ function gRank(stack, runtime) -- 0x2A
 end
 
 function gIdentity(stack, runtime) -- 0x2B
-    stack:push(runtime:getGraphics().current.id)
+    stack:push(runtime:getGraphicsContext().id)
 end
 
 function gX(stack, runtime) -- 0x2C
-    stack:push(runtime:getGraphics().current.pos.x)
+    stack:push(runtime:getGraphicsContext().pos.x)
 end
 
 function gY(stack, runtime) -- 0x2D
-    stack:push(runtime:getGraphics().current.pos.y)
+    stack:push(runtime:getGraphicsContext().pos.y)
 end
 
 function gWidth(stack, runtime) -- 0x2E
-    stack:push(runtime:getGraphics().current.width)
+    stack:push(runtime:getGraphicsContext().width)
 end
 
 function gHeight(stack, runtime) -- 0x2F
-    stack:push(runtime:getGraphics().current.height)
+    stack:push(runtime:getGraphicsContext().height)
 end
 
 function gOriginX(stack, runtime) -- 0x30

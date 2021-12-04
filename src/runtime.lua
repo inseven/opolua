@@ -412,12 +412,15 @@ function Runtime:newGraphicsContext(id, width, height, isWindow)
     local newCtx = {
         id = id,
         mode = 0, -- set
+        tmode = 0, -- set
         color = 0, -- black
         bgcolor = 255, -- white
         width = width,
         height = height,
         pos = { x = 0, y = 0 },
         isWindow = isWindow,
+        font = ops.fontIds[KDefaultFontUid],
+        style = 0, -- normal text style
     }
     graphics[id] = newCtx
     -- Creating a new drawable always seems to update current
@@ -434,21 +437,53 @@ function Runtime:getGraphics()
     return self.graphics
 end
 
+function Runtime:getGraphicsContext(id)
+    local graphics = self:getGraphics()
+    if id then
+        return graphics[id]
+    else
+        return graphics.current
+    end
+end
+
+function Runtime:setGraphicsContext(id)
+    local graphics = self:getGraphics()
+    local context = graphics[id]
+    assert(context, KOplErrDrawNotOpen)
+    graphics.current = context
+end
+
+function Runtime:closeGraphicsContext(id)
+    local graphics = self:getGraphics()
+    if id == graphics.current.id then
+        graphics.current = graphics[1]
+    end
+    graphics[id] = nil
+    self.ioh.graphicsop("close", id)
+end
+
 function Runtime:drawCmd(type, op)
     if not op then op = {} end
     local graphics = self:getGraphics()
     local context = graphics.current
-    if not op.id then
-        op.id = context.id
-    end
+    op.id = context.id
     op.type = type
     if not op.mode then
         op.mode = context.mode
     end
     op.color = context.color
     op.bgcolor = context.bgcolor
-    op.x = context.pos.x
-    op.y = context.pos.y
+    if not op.x then
+        op.x = context.pos.x
+    end
+    if not op.y then
+        op.y = context.pos.y
+    end
+    op.style = context.style
+    op.tmode = context.tmode
+    op.fontface = context.font.face
+    op.fontsize = context.font.size
+    op.fontbold = context.font.bold
 
     if graphics.buffer then
         table.insert(graphics.buffer, op)

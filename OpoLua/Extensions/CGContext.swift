@@ -20,6 +20,7 @@
 
 import Foundation
 import CoreGraphics
+import UIKit
 
 extension CGContext {
 
@@ -29,12 +30,18 @@ extension CGContext {
 
     func draw(_ operation: Graphics.DrawCommand) {
         // TODO: Scale for the iOS screensize
-        setStrokeColor(operation.color.cgColor())
-        setFillColor(operation.color.cgColor())
+        let col: CGColor
+        if operation.mode == .cleared {
+            col = operation.bgcolor.cgColor()
+        } else {
+            // TODO: not handling mode == .inverted here...
+            col = operation.color.cgColor()
+        }
+        setStrokeColor(col)
+        setFillColor(col)
         switch operation.type {
-        case .cls:
-            setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
-            fill(CGRect(origin: .zero, size: CGSize(width: width, height: height)))
+        case .fill(let size):
+            fill(CGRect(origin: operation.origin.cgPoint(), size: size.cgSize()))
         case .circle(let radius, let fill):
             let path = CGMutablePath()
             path.addArc(center: operation.origin.cgPoint(),
@@ -92,6 +99,7 @@ extension CGContext {
             let origRect = rect.cgRect()
             if let img = makeImage()?.cropping(to: origRect) {
                 let newRect = CGRect(x: rect.minX + dx, y: rect.minY + dy, width: rect.width, height: rect.height).standardized
+                // This is not entirely the right logic if both dx and dy are non-zero, but probably good enough for now
                 let minX = min(origRect.minX, newRect.minX)
                 let minY = min(origRect.minY, newRect.minY)
                 let maxX = max(origRect.maxX, newRect.maxX)
@@ -101,6 +109,15 @@ extension CGContext {
                 fill(clearRect)
                 drawUnflippedImage(img, in: newRect)
             }
+        case .text(let str, let font, _ /*let tmode*/):
+            let attribStr = NSAttributedString(string: str, attributes: [.font: font.toUiFont()])
+            UIGraphicsPushContext(self)
+            let pt = operation.origin.cgPoint()
+            // OPL text drawing coords are for the bottom left of the text, not the top left, so we have to adjust
+            // the coords we pass to UIKit
+            let sz = attribStr.size()
+            attribStr.draw(at: CGPoint(x: pt.x, y: pt.y - sz.height))
+            UIGraphicsPopContext()
         }
     }
 

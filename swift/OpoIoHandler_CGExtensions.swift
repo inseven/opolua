@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 import CoreGraphics
+import UIKit
 
 extension Graphics.Color {
     func cgColor() -> CGColor {
@@ -41,5 +42,30 @@ extension Graphics.Point {
 extension Graphics.Rect {
     func cgRect() -> CGRect {
         return CGRect(x: self.origin.x, y: self.origin.y, width: self.width, height: self.height)
+    }
+}
+
+extension Graphics.FontInfo {
+    func toUiFont() -> UIFont {
+        let sz = CGFloat(self.size)
+        let uiFontName: String
+        switch self.face {
+        case .arial:
+            uiFontName = "Arial"
+        case .times:
+            uiFontName = "Times"
+        case .courier:
+            uiFontName = "Courier"
+        case .tiny:
+            uiFontName = "Courier" // Who knows...
+        }
+
+        var desc = UIFontDescriptor(name: uiFontName, size: sz)
+        if self.flags.contains(.bold) {
+            if let newDesc = desc.withSymbolicTraits(.traitBold) {
+                desc = newDesc
+            }
+        }
+        return UIFont(descriptor: desc, size: sz)
     }
 }

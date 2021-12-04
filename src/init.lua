@@ -45,6 +45,7 @@ Errors = {
     KOplErrInvalidArgs = -2,
     KOplErrDivideByZero = -8,
     KOplErrInUse = -9,
+    KOplErrFontNotLoaded = -21,
     KOplErrExists = -32,
     KOplErrNotExists = -33,
     KOplErrWrite = -34,
@@ -78,6 +79,8 @@ KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
 KUidExternalOplFile = 0x1000008A -- DB file UID2
 
 KUidSoundData = 0x10000052 -- Not sure what this uid is officially called, can't find a reference...
+
+KDefaultFontUid = 268435957 -- ie Arial 15
 
 dItemTypes = enum {
     dTEXT = 0,

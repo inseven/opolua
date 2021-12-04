@@ -1547,20 +1547,13 @@ end
 
 function gClose(stack, runtime) -- 0xC6
     local id = stack:pop()
-    local graphics = runtime:getGraphics()
     assert(id ~= 1, KOplErrInvalidArgs) -- Cannot close the console
-    runtime:iohandler().graphicsop("close", id)
-    if id == graphics.current.id then
-        graphics.current = graphics[1]
-    end
+    runtime:closeGraphicsContext(id)
     runtime:setTrap(false)
 end
 
 function gUse(stack, runtime) -- 0xC7
-    local graphics = runtime:getGraphics()
-    local drawable = graphics[stack:pop()]
-    assert(drawable, KOplErrDrawNotOpen)
-    graphics.current = drawable
+    runtime:setGraphicsContext(stack:pop())
     runtime:setTrap(false)
 end
 
@@ -1569,17 +1562,70 @@ function gSetWin(stack, runtime) -- 0xC8
 end
 
 function gVisible(stack, runtime) -- 0xC9
-    local graphics = runtime:getGraphics()
-    assert(graphics.current.isWindow, KOplErrInvalidWindow)
+    local context = runtime:getGraphicsContext()
+    assert(context.isWindow, KOplErrInvalidWindow)
     local show = runtime:IP8() == 1
-    runtime:iohandler().graphicsop("show", graphics.current.id, show)
+    runtime:iohandler().graphicsop("show", context.id, show)
 end
 
 gVisible_dump = IP8_dump
 
+fontIds = {
+    [4] = { face = "courier", size = 8 },
+    [5] = { face = "times", size = 8 },
+    [6] = { face = "times", size = 11 },
+    [7] = { face = "times", size = 13 },
+    [8] = { face = "times", size = 15 },
+    [9] = { face = "arial", size = 8 },
+    [10] = { face = "arial", size = 11 },
+    [11] = { face = "arial", size = 13 },
+    [12] = { face = "arial", size = 15 },
+    [13] = { face = "tiny", size = 4 },
+    [0x9A] = { face = "arial", size = 15 },
+    [268435504] = { face = "tiny", size = 4 },
+    [268435951] = { face = "arial", size = 8, bold = true },
+    [268435952] = { face = "arial", size = 11, bold = true },
+    [268435953] = { face = "arial", size = 13, bold = true },
+    [268435954] = { face = "arial", size = 8 },
+    [268435955] = { face = "arial", size = 11 },
+    [268435956] = { face = "arial", size = 13 },
+    [268435957] = { face = "arial", size = 15 },
+    [268435958] = { face = "arial", size = 18 },
+    [268435959] = { face = "arial", size = 22 },
+    [268435960] = { face = "arial", size = 27 },
+    [268435961] = { face = "arial", size = 32 },
+    [268435962] = { face = "times", size = 8, bold = true },
+    [268435963] = { face = "times", size = 11, bold = true },
+    [268435964] = { face = "times", size = 13, bold = true },
+    [268435965] = { face = "times", size = 8 },
+    [268435966] = { face = "times", size = 11 },
+    [268435967] = { face = "times", size = 13 },
+    [268435968] = { face = "times", size = 15 },
+    [268435969] = { face = "times", size = 18 },
+    [268435970] = { face = "times", size = 22 },
+    [268435971] = { face = "times", size = 27 },
+    [268435972] = { face = "times", size = 32 },
+    [268436062] = { face = "courier", size = 8, bold = true },
+    [268436063] = { face = "courier", size = 11, bold = true },
+    [268436064] = { face = "courier", size = 13, bold = true },
+    [268436065] = { face = "courier", size = 8 },
+    [268436066] = { face = "courier", size = 11 },
+    [268436067] = { face = "courier", size = 13 },
+    [268436068] = { face = "courier", size = 15 },
+    [268436069] = { face = "courier", size = 18 },
+    [268436070] = { face = "courier", size = 22 },
+    [268436071] = { face = "courier", size = 27 },
+    [268436072] = { face = "courier", size = 32 },
+}
+
 function gFont(stack, runtime) -- 0xCA
-    local uid = stack:pop()
-    printf("TODO gFont 0x%08X\n", uid)
+    local id = stack:pop()
+    local font = fontIds[id]
+    if not font then
+        printf("No font found for 0x%08X\n", id)
+        error(KOplErrFontNotLoaded)
+    end
+    runtime:getGraphicsContext().font = font
     runtime:setTrap(false)
 end
 
@@ -1588,16 +1634,15 @@ function gUnloadFont(stack, runtime) -- 0xCB
 end
 
 function gGMode(stack, runtime) -- 0xCC
-    getGraphics().current.mode = stack:pop()
+    runtime:getGraphicsContext().mode = stack:pop()
 end
 
 function gTMode(stack, runtime) -- 0xCD
-    error("Unimplemented opcode gTMode!")
+    runtime:getGraphicsContext().tmode = stack:pop()
 end
 
 function gStyle(stack, runtime) -- 0xCE
-    local style = stack:pop()
-    printf("TODO gStyle %d", style)
+    runtime:getGraphicsContext().style = stack:pop()
 end
 
 function gOrder(stack, runtime) -- 0xCF
@@ -1611,41 +1656,43 @@ function gOrder(stack, runtime) -- 0xCF
 end
 
 function gCls(stack, runtime) -- 0xD1
-    local graphics = runtime:getGraphics()
-    local context = graphics.current
+    local context = runtime:getGraphicsContext()
     context.pos = { x = 0, y = 0 }
-    runtime:drawCmd("cls")
+    runtime:drawCmd("fill", { width = context.width, height = context.height, mode = 1 })
 end
 
 function gAt(stack, runtime) -- 0xD2
-    runtime:getGraphics().current.pos = stack:popPoint()
+    runtime:getGraphicsContext().pos = stack:popPoint()
 end
 
 function gMove(stack, runtime) -- 0xD3
-    error("Unimplemented opcode gMove!")
+    local context = runtime:getGraphicsContext()
+    local delta = stack:popPoint()
+    context.pos.x = context.pos.x + delta.x
+    context.pos.y = conteyt.pos.y + delta.y
 end
 
 function gPrintWord(stack, runtime) -- 0xD4
-    error("Unimplemented opcode gPrintWord!")
+    local str = tostring(stack:pop())
+    runtime:drawCmd("text", { string = str })
+    local context = runtime:getGraphicsContext()
+    local w, h = runtime:iohandler().graphicsop("textsize", str, context.font)
+    context.pos.x = context.pos.x + w
 end
 
-function gPrintLong(stack, runtime) -- 0xD5
-    error("Unimplemented opcode gPrintLong!")
-end
+gPrintLong = gPrintWord -- 0xD5
 
-function gPrintDbl(stack, runtime) -- 0xD6
-    error("Unimplemented opcode gPrintDbl!")
-end
+gPrintDbl = gPrintWord -- 0xD6
 
-function gPrintStr(stack, runtime) -- 0xD7
-    error("Unimplemented opcode gPrintStr!")
-end
+gPrintStr = gPrintWord -- 0xD7
 
 function gPrintSpace(stack, runtime) -- 0xD8
-    error("Unimplemented opcode gPrintSpace!")
+    stack:push(" ")
+    gPrintStr(stack, runtime)
 end
 
 function gPrintBoxText(stack, runtime) -- 0xD9
+    local context = runtime:getGraphicsContext()
     local numParams = runtime:IP8()
     local margin = 0
     local bottom = 0
@@ -1665,7 +1712,28 @@ function gPrintBoxText(stack, runtime) -- 0xD9
     end
     local width = stack:pop()
     local text = stack:pop()
-    printf("TODO gPrintBoxText %s\n", text)
+    local textw, texth, fontAscent = runtime:iohandler().graphicsop("textsize", text, context.font)
+
+    local ModeClear = 1
+    runtime:drawCmd("fill", {
+        x = context.pos.x,
+        y = context.pos.y - fontAscent - top,
+        width = width,
+        height = top + texth + bottom,
+        mode = ModeClear
+    })
+
+    local textX
+    if align == 1 then -- right align
+        textX = context.pos.x + width - margin - textw
+    elseif align == 3 then
+        -- Ugh how does margin work for center, docs aren't clear to me right now...
+        textX = context.pos.x + with - (textw // 2)
+    else
+        textX = context.pos.x + margin
+    end
+
+    runtime:drawCmd("text", { string = text, x = textX, y = context.pos.y - fontAscent + texth })
 end
 
 gPrintBoxText_dmp = numParams_dump
@@ -1713,7 +1781,10 @@ function gPoly(stack, runtime) -- 0xDE
 end
 
 function gFill(stack, runtime) -- 0xDF
-    error("Unimplemented opcode gFill!")
+    local mode = stack:pop()
+    local height = stack:pop()
+    local width = stack:pop()
+    runtime:drawCmd("fill", { width = width, height = height, mode = mode })
 end
 
 function gPatt(stack, runtime) -- 0xE0
@@ -2149,17 +2220,20 @@ function gInfo32(stack, runtime) -- 0x128
     local resultArray = stack:pop()
     -- Heh, ER5 doesn't have this bounds check but we can
     assert(#resultArray >= 48, "Too small an array passed to gInfo32!")
-    local graphics = runtime:getGraphics()
+
+    local context = runtime:getGraphicsContext()
+    local w, h, ascent = runtime:iohandler().graphicsop("textsize", "0", context.font)
+
     local data = {
         0, -- 1 reserved
         0, -- 2 reserved
-        15, -- 3 font height
-        15, -- 4 font descent
-        12, -- 5 font ascent
-        17, -- 6 width of '0' (really?)
+        context.font.height, -- 3 font height
+        context.font.height, -- 4 font descent
+        ascent, -- 5 font ascent
+        w, -- 6 width of '0' (really?)
         17, -- 7 max character width
         17, -- 8 font flags
-        0, -- 9 font uid
+        0, -- 9 font uid (TODO)
         0, -- 10
         0, -- 11
         0, -- 12
@@ -2168,9 +2242,9 @@ function gInfo32(stack, runtime) -- 0x128
         0, -- 15
         0, -- 16
         0, -- 17
-        graphics.current.mode, -- 18
-        0, -- 19 gTMode
-        0, -- 20 gStyle
+        context.mode, -- 18 gMode
+        context.tmode, -- 19 gTMode
+        context.style, -- 20 gStyle
         0, -- 21 cursor state
         -1, -- 22 ID of window containing cursor
         0, -- 23 cursor width
@@ -2181,12 +2255,12 @@ function gInfo32(stack, runtime) -- 0x128
         0, -- 28 drawableIsBitmap
         6, -- 29 cursor effects
         0, -- 30 color mode of current window
-        0, -- 31 fg r
-        0, -- 32 fg g
-        0, -- 33 fg b
-        255, -- 34 bg r
-        255, -- 35 bg g
-        255, -- 36 bg b
+        context.color, -- 31 fg r
+        context.color, -- 32 fg g
+        context.color, -- 33 fg b
+        context.bgcolor, -- 34 bg r
+        context.bgcolor, -- 35 bg g
+        context.bgcolor, -- 36 bg b
         0, -- 37
         0, -- 38
         0, -- 39
