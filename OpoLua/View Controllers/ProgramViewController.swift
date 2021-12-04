@@ -20,6 +20,14 @@
 
 import UIKit
 
+
+enum Task {
+
+    case asyncRequest(Async.Request)
+    case cancelRequest(Int32)
+
+}
+
 class ProgramViewController: UIViewController {
 
     enum State {
@@ -44,6 +52,9 @@ class ProgramViewController: UIViewController {
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
+
+    let tasks = ConcurrentQueue<Task>()
+    let taskQueue = DispatchQueue(label: "ProgramViewController.taskQueue")
     
     lazy var textView: UITextView = {
         let textView = UITextView()
@@ -143,6 +154,20 @@ class ProgramViewController: UIViewController {
         }
 
         canvasView.delegate = eventQueue
+
+        taskQueue.async {
+            // TODO: Have a way of terminating these queues?
+            repeat {
+                let task = self.tasks.takeFirst()
+                switch task {
+                case .asyncRequest(let request):
+                    print("Schedule Request")
+                    self.scheduler.scheduleRequest(request)
+                case .cancelRequest(let requestHandle):
+                    self.scheduler.cancelRequest(requestHandle)
+                }
+            } while true
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -436,7 +461,7 @@ extension ProgramViewController: OpoIoHandler {
     }
 
     func asyncRequest(_ request: Async.Request) {
-        scheduler.scheduleRequest(request)
+        tasks.append(.asyncRequest(request))
     }
 
     func cancelRequest(_ requestHandle: Int32) {
