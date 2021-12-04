@@ -238,4 +238,8 @@ function createBitmap(width, height)
     return 0 -- Pretend we succeeded
 end
 
+function getTime()
+    return os.time()
+end
+
 return _ENV

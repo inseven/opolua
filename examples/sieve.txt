@@ -1,0 +1,41 @@
+INCLUDE "date.oxh"
+CONST n%=16384
+
+PROC main:
+	LOCAL prime%(n%), i%, j%, max%
+	LOCAL dateStart&, dateEnd&
+	dateStart& = DTNow&:
+	max% = INT(SQR(n%))
+	i% = 2
+	WHILE i% < n%
+		prime%(i%) = 1
+		i% = i% + 1
+	ENDWH
+	
+	i% = 2
+	WHILE i% <= max%
+		IF prime%(i%) = 1
+			REM all multiples of i% not prime
+			j% = i% * 2
+			WHILE j% <= n%
+				prime%(j%) = 0
+				j% = j% + i%
+			ENDWH
+		ENDIF
+		i% = i% + 1
+	ENDWH
+	
+	i% = 2
+	j% = 0
+	WHILE i% <= n%
+		IF prime%(i%) = 1
+			REM PRINT i%, "is prime"
+			j% = j% + 1
+		ENDIF
+		i% = i% + 1
+	ENDWH
+	dateEnd& = DTNow&:
+	
+	PRINT j%, "primes found in", DTMicrosDiff&:(dateStart&, dateEnd&)
+	GET
+ENDP

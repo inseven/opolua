@@ -586,6 +586,12 @@ private func createWindow(_ L: LuaState!) -> Int32 {
     return 1
 }
 
+private func getTime(_ L: LuaState!) -> Int32 {
+    let dt = Date()
+    L.push(dt.timeIntervalSince1970)
+    return 1
+}
+
 class OpoInterpreter {
     private let L: LuaState
     var iohandler: OpoIoHandler
@@ -668,6 +674,7 @@ class OpoInterpreter {
             ("cancelRequest", cancelRequest),
             ("createBitmap", createBitmap),
             ("createWindow", createWindow),
+            ("getTime", getTime),
         ]
         L.setfuncs(fns, nup: 1)
     }

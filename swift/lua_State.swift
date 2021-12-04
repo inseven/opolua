@@ -277,6 +277,10 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         lua_pushinteger(self, int)
     }
 
+    func push(_ double: Double) {
+        lua_pushnumber(self, double)
+    }
+
     func push(_ string: String, encoding: String.Encoding) {
         guard let data = string.data(using: encoding) else {
             assertionFailure("Cannot represent string in the given encoding?!")
