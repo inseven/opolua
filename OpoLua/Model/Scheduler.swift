@@ -26,6 +26,7 @@ class Scheduler {
     var responses: [Int32: Async.Response] = [:]
     var handlers: [Async.RequestType: (Async.Request) -> Void] = [:]
     var lock = NSCondition()
+    var handlerQueue = DispatchQueue(label: "Scheduler.handlerQueue", attributes: .concurrent)
 
     func addHandler(_ type: Async.RequestType, handler: @escaping (Async.Request) -> Void) {
         lock.lock()
@@ -41,11 +42,12 @@ class Scheduler {
         defer {
             lock.unlock()
         }
+        assert(requests[request.requestHandle] == nil)
         requests[request.requestHandle] = request
         lock.broadcast()
 
         let handler = handlers[request.type]!
-        DispatchQueue.global(qos: .userInteractive).async {
+        handlerQueue.async {
             handler(request)
         }
     }

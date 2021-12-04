@@ -90,6 +90,7 @@ class ProgramViewController: UIViewController {
         ])
 
         scheduler.addHandler(.getevent) { request in
+            // TODO: Cancellation isn't working right now.
             let value = self.eventQueue.takeFirst()
             // TODO: This whole service API is now somewhat janky as we know that it's there.
             self.scheduler.serviceRequest(type: request.type) { request in
