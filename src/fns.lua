@@ -250,7 +250,7 @@ function IllegalFuncOpCode(stack, runtime)
 end
 
 function Asc(stack, runtime) -- 0x01
-    error("Unimplemented function Asc!")
+    stack:push(string.byte(stack:pop()))
 end
 
 function Count(stack, runtime) -- 0x03

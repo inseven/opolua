@@ -96,6 +96,14 @@ class ProgramViewController: UIViewController {
                 return Async.Response(type: request.type, requestHandle: request.requestHandle, value: value)
             }
         }
+        scheduler.addHandler(.playsound) { request in
+            print("PLAY SOUND!")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.scheduler.serviceRequest(type: request.type) { request in
+                    return Async.Response(type: request.type, requestHandle: request.requestHandle, value: .completed)
+                }
+            }
+        }
 
         let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
         
@@ -103,7 +111,7 @@ class ProgramViewController: UIViewController {
             menuQueue.async {
                 self.eventQueue.sendMenu()
                 let disabled = UIAction(title: "None", attributes: .disabled) { _ in }
-                let items = self.menu.tryTake(until: Date().addingTimeInterval(1.0)) ?? [disabled]
+                let items = self.menu.tryTake(until: Date().addingTimeInterval(0.1)) ?? [disabled]
                 DispatchQueue.main.async {
                     completion(items)
                 }
@@ -211,7 +219,7 @@ extension ProgramViewController: OpoIoHandler {
     func getch() -> Int {
         repeat {
             let requestHandle = handleGenerator.next()
-            scheduler.scheduleRequest(Async.Request(type: .getevent, requestHandle: requestHandle))
+            scheduler.scheduleRequest(Async.Request(type: .getevent, requestHandle: requestHandle, data: nil))
             let response = scheduler.waitForRequest(requestHandle)
             if case Async.ResponseValue.keypressevent(_) = response.value {
                 // TODO: This always sends the menu key at the moment.
