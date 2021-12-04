@@ -20,12 +20,23 @@
 
 import Foundation
 
-struct Key {
+class HandleGenerator {
 
-    let scancode: Int
-    let keycode: Int
-    let character: Int
+    var value: Int32
+    var lock = NSLock()
 
-    static let menu = Key(scancode: 148, keycode: 4150, character: 290)
+    init(initialValue: Int32) {
+        self.value = initialValue
+    }
+
+    func next() -> Int32 {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        let value = self.value
+        self.value += 1
+        return value
+    }
 
 }

@@ -24,31 +24,42 @@ class Scheduler {
 
     var requests: [Int32: Async.Request] = [:]
     var responses: [Int32: Async.Response] = [:]
-
+    var handlers: [Async.RequestType: (Async.Request) -> Void] = [:]
     var lock = NSCondition()
 
-    init() {
+    func addHandler(_ type: Async.RequestType, handler: @escaping (Async.Request) -> Void) {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        self.handlers[type] = handler
     }
 
     func scheduleRequest(_ request: Async.Request) {
+
         lock.lock()
         defer {
-            lock.broadcast()
             lock.unlock()
         }
         requests[request.requestHandle] = request
+        lock.broadcast()
+
+        let handler = handlers[request.type]!
+        DispatchQueue.global(qos: .userInteractive).async {
+            handler(request)
+        }
     }
 
     func serviceRequest(type: Async.RequestType, completion: (Async.Request) -> Async.Response) {
         lock.lock()
         defer {
-            lock.broadcast()
             lock.unlock()
         }
         for (_, request) in requests {
             if request.type == type {
                 responses[request.requestHandle] = completion(request)
                 requests.removeValue(forKey: request.requestHandle)
+                lock.broadcast()
                 return
             }
         }
@@ -57,7 +68,6 @@ class Scheduler {
     func cancelRequest(_ requestHandle: Int32) {
         lock.lock()
         defer {
-            lock.broadcast()
             lock.unlock()
         }
         guard let request = requests[requestHandle] else {
@@ -66,17 +76,21 @@ class Scheduler {
         }
         requests.removeValue(forKey: requestHandle)
         responses[requestHandle] = Async.Response(type: request.type, requestHandle: requestHandle, value: .cancelled)
+        lock.broadcast()
     }
 
     func waitForRequest(_ requestHandle: Int32) -> Async.Response {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
         repeat {
-            lock.lock()
             if let response = responses.removeValue(forKey: requestHandle) {
-                lock.unlock()
+                print("waitForRequest -> \(response)")
+                lock.broadcast()
                 return response
-            } else {
-                lock.wait()
             }
+            lock.wait()
         } while true
     }
 
@@ -87,11 +101,26 @@ class Scheduler {
         }
         repeat {
             if let response = responses.removeRandomValue() {
+                print("waitForAnyRequest -> \(response)")
+                lock.broadcast()
                 return response
-            } else {
-                lock.wait()
             }
+            lock.wait()
         } while true
+    }
+
+    func anyRequest() -> Async.Response? {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        guard let response = responses.removeRandomValue() else {
+            print("anyRequest -> nil")
+            return nil
+        }
+        print("anyRequest -> \(response)")
+        lock.broadcast()
+        return response
     }
 
 }

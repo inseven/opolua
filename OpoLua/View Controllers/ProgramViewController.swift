@@ -38,11 +38,12 @@ class ProgramViewController: UIViewController {
 
     let opo = OpoInterpreter()
     let runtimeQueue = DispatchQueue(label: "ScreenViewController.runtimeQueue")
+    let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     let scheduler = Scheduler()
+    let handleGenerator = HandleGenerator(initialValue: 1000)
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
-    let menuSemaphore: ConcurrentBox<DispatchSemaphore> = ConcurrentBox()
-    let getCharacterCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
+    let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
     
     lazy var textView: UITextView = {
         let textView = UITextView()
@@ -87,10 +88,20 @@ class ProgramViewController: UIViewController {
             textView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
 
         ])
+
+        scheduler.addHandler(.getevent) { request in
+            let value = self.eventQueue.takeFirst()
+            // TODO: This whole service API is now somewhat janky as we know that it's there.
+            self.scheduler.serviceRequest(type: request.type) { request in
+                return Async.Response(type: request.type, requestHandle: request.requestHandle, value: value)
+            }
+        }
+
+        let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
         
         let items = UIDeferredMenuElement.uncached { completion in
-            self.getCharacterCompletion.tryTake()?(KeyCode.menu.rawValue)
-            DispatchQueue.global(qos: .userInitiated).async {
+            menuQueue.async {
+                self.eventQueue.sendMenu()
                 let disabled = UIAction(title: "None", attributes: .disabled) { _ in }
                 let items = self.menu.tryTake(until: Date().addingTimeInterval(1.0)) ?? [disabled]
                 DispatchQueue.main.async {
@@ -118,11 +129,11 @@ class ProgramViewController: UIViewController {
                 return
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                self.menuSemaphore.tryTake()?.signal()
+                self.menuCompletion.tryTake()?(0)
             }
         }
 
-        canvasView.delegate = scheduler
+        canvasView.delegate = eventQueue
     }
 
     required init?(coder: NSCoder) {
@@ -198,14 +209,15 @@ extension ProgramViewController: OpoIoHandler {
     }
     
     func getch() -> Int {
-        let semaphore = DispatchSemaphore(value: 0)
-        var keyCode = 0
-        getCharacterCompletion.put { result in
-            keyCode = result
-            semaphore.signal()
-        }
-        semaphore.wait()
-        return keyCode
+        repeat {
+            let requestHandle = handleGenerator.next()
+            scheduler.scheduleRequest(Async.Request(type: .getevent, requestHandle: requestHandle))
+            let response = scheduler.waitForRequest(requestHandle)
+            if case Async.ResponseValue.keypressevent(_) = response.value {
+                // TODO: This always sends the menu key at the moment.
+                return Key.menu.character
+            }
+        } while true
     }
 
     func beep(frequency: Double, duration: Double) {
@@ -230,13 +242,14 @@ extension ProgramViewController: OpoIoHandler {
 
     func menu(_ menu: Menu.Bar) -> Menu.Result {
         let semaphore = DispatchSemaphore(value: 0)
-        self.menuSemaphore.put(semaphore)
         var result: Menu.Result = .none
-        let completion: (Int) -> Void = { keycode in
+        self.menuCompletion.put { keycode in
             result = Menu.Result(selected: keycode, highlighted: keycode)
-            self.menuSemaphore.tryTake()?.signal()
+            semaphore.signal()
         }
-        self.menu.put(menu.menuElements(completion: completion))
+        self.menu.put(menu.menuElements { keycode in
+            self.menuCompletion.tryTake()?(keycode)
+        })
         semaphore.wait()
         return result
     }
@@ -302,7 +315,7 @@ extension ProgramViewController: OpoIoHandler {
                 let newView = CanvasView(id: h, size: rect.size.cgSize())
                 newView.isHidden = true // by default, will get a showWindow op if needed
                 newView.frame = rect.cgRect()
-                newView.delegate = self.scheduler
+                newView.delegate = self.eventQueue
                 self.canvasView.addSubview(newView)
                 self.drawables[h] = newView
                 semaphore.signal()
@@ -422,57 +435,66 @@ extension ProgramViewController: OpoIoHandler {
     }
 
     func waitForAnyRequest(block: Bool) -> Async.Response? {
-        // TODO handle block=false
-        return scheduler.waitForAnyRequest()
+        if block {
+            return scheduler.waitForAnyRequest()
+        } else {
+            return scheduler.anyRequest()
+        }
     }
 
 }
 
-extension Scheduler: CanvasViewDelegate {
+extension ConcurrentQueue: CanvasViewDelegate where T == Async.ResponseValue {
 
     func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
         let location = touch.location(in: canvasView)
-        serviceRequest(type: .getevent) { request in
-            let event = Async.PenEvent(timestamp: Int(event.timestamp),
-                                       windowId: canvasView.id,
-                                       type: .down,
-                                       modifiers: 0,
-                                       x: Int(location.x),
-                                       y: Int(location.y))
-            return Async.Response(type: .getevent,
-                                  requestHandle: request.requestHandle,
-                                  value: .penevent(event))
-        }
+        append(.penevent(.init(timestamp: Int(event.timestamp),
+                               windowId: canvasView.id,
+                               type: .down,
+                               modifiers: 0,
+                               x: Int(location.x),
+                               y: Int(location.y))))
     }
 
     func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
         let location = touch.location(in: canvasView)
-        serviceRequest(type: .getevent) { request in
-            let event = Async.PenEvent(timestamp: Int(event.timestamp),
-                                       windowId: canvasView.id,
-                                       type: .drag,
-                                       modifiers: 0,
-                                       x: Int(location.x),
-                                       y: Int(location.y))
-            return Async.Response(type: .getevent,
-                                  requestHandle: request.requestHandle,
-                                  value: .penevent(event))
-        }
+        append(.penevent(.init(timestamp: Int(event.timestamp),
+                               windowId: canvasView.id,
+                               type: .drag,
+                               modifiers: 0,
+                               x: Int(location.x),
+                               y: Int(location.y))))
     }
 
     func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
         let location = touch.location(in: canvasView)
-        serviceRequest(type: .getevent) { request in
-            let event = Async.PenEvent(timestamp: Int(event.timestamp),
-                                       windowId: canvasView.id,
-                                       type: .up,
-                                       modifiers: 0,
-                                       x: Int(location.x),
-                                       y: Int(location.y))
-            return Async.Response(type: .getevent,
-                                  requestHandle: request.requestHandle,
-                                  value: .penevent(event))
-        }
+        append(.penevent(.init(timestamp: Int(event.timestamp),
+                               windowId: canvasView.id,
+                               type: .up,
+                               modifiers: 0,
+                               x: Int(location.x),
+                               y: Int(location.y))))
+    }
+
+}
+
+extension ConcurrentQueue where T == Async.ResponseValue {
+
+    func sendKeyPress(_ key: Key) {
+        append(.keypressevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
+                                    keycode: key.keycode,
+                                    scancode: key.scancode,
+                                    modifiers: 0,
+                                    isRepeat: false)))
+    }
+
+    func sendMenu() {
+        // TODO: Review injected key behaviour
+        // Vexed doesn't seem to expect the key down and key up events surrounding the key press so, for the time being,
+        // we're only sending the key press event. It's quite possible that Vexed is failing to consume the down/up
+        // events due to a bug in our event queue, but either way, I suspect skipping these down/up events will cause
+        // problems in other programs.
+        sendKeyPress(.menu)
     }
 
 }

@@ -20,12 +20,33 @@
 
 import Foundation
 
-struct Key {
+class ConcurrentQueue<T> {
 
-    let scancode: Int
-    let keycode: Int
-    let character: Int
+    var condition = NSCondition()
+    var items: [T] = []
 
-    static let menu = Key(scancode: 148, keycode: 4150, character: 290)
+    func append(_ item: T) {
+        condition.lock()
+        defer {
+            condition.unlock()
+        }
+        items.append(item)
+        condition.broadcast()
+    }
+
+    func takeFirst() -> T {
+        condition.lock()
+        defer {
+            condition.unlock()
+        }
+        repeat {
+            if let item = items.first {
+                items.remove(at: 0)
+                condition.broadcast()
+                return item
+            }
+            condition.wait()
+        } while true
+    }
 
 }
