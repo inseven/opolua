@@ -1562,70 +1562,15 @@ function gSetWin(stack, runtime) -- 0xC8
 end
 
 function gVisible(stack, runtime) -- 0xC9
-    local context = runtime:getGraphicsContext()
-    assert(context.isWindow, KOplErrInvalidWindow)
     local show = runtime:IP8() == 1
-    runtime:iohandler().graphicsop("show", context.id, show)
+    runtime:gVISIBLE(show)
 end
 
 gVisible_dump = IP8_dump
 
-fontIds = {
-    [4] = { face = "courier", size = 8 },
-    [5] = { face = "times", size = 8 },
-    [6] = { face = "times", size = 11 },
-    [7] = { face = "times", size = 13 },
-    [8] = { face = "times", size = 15 },
-    [9] = { face = "arial", size = 8 },
-    [10] = { face = "arial", size = 11 },
-    [11] = { face = "arial", size = 13 },
-    [12] = { face = "arial", size = 15 },
-    [13] = { face = "tiny", size = 4 },
-    [0x9A] = { face = "arial", size = 15 },
-    [268435504] = { face = "tiny", size = 4 },
-    [268435951] = { face = "arial", size = 8, bold = true },
-    [268435952] = { face = "arial", size = 11, bold = true },
-    [268435953] = { face = "arial", size = 13, bold = true },
-    [268435954] = { face = "arial", size = 8 },
-    [268435955] = { face = "arial", size = 11 },
-    [268435956] = { face = "arial", size = 13 },
-    [268435957] = { face = "arial", size = 15 },
-    [268435958] = { face = "arial", size = 18 },
-    [268435959] = { face = "arial", size = 22 },
-    [268435960] = { face = "arial", size = 27 },
-    [268435961] = { face = "arial", size = 32 },
-    [268435962] = { face = "times", size = 8, bold = true },
-    [268435963] = { face = "times", size = 11, bold = true },
-    [268435964] = { face = "times", size = 13, bold = true },
-    [268435965] = { face = "times", size = 8 },
-    [268435966] = { face = "times", size = 11 },
-    [268435967] = { face = "times", size = 13 },
-    [268435968] = { face = "times", size = 15 },
-    [268435969] = { face = "times", size = 18 },
-    [268435970] = { face = "times", size = 22 },
-    [268435971] = { face = "times", size = 27 },
-    [268435972] = { face = "times", size = 32 },
-    [268436062] = { face = "courier", size = 8, bold = true },
-    [268436063] = { face = "courier", size = 11, bold = true },
-    [268436064] = { face = "courier", size = 13, bold = true },
-    [268436065] = { face = "courier", size = 8 },
-    [268436066] = { face = "courier", size = 11 },
-    [268436067] = { face = "courier", size = 13 },
-    [268436068] = { face = "courier", size = 15 },
-    [268436069] = { face = "courier", size = 18 },
-    [268436070] = { face = "courier", size = 22 },
-    [268436071] = { face = "courier", size = 27 },
-    [268436072] = { face = "courier", size = 32 },
-}
-
 function gFont(stack, runtime) -- 0xCA
     local id = stack:pop()
-    local font = fontIds[id]
-    if not font then
-        printf("No font found for 0x%08X\n", id)
-        error(KOplErrFontNotLoaded)
-    end
-    runtime:getGraphicsContext().font = font
+    runtime:gFONT(id)
     runtime:setTrap(false)
 end
 
@@ -1634,50 +1579,39 @@ function gUnloadFont(stack, runtime) -- 0xCB
 end
 
 function gGMode(stack, runtime) -- 0xCC
-    runtime:getGraphicsContext().mode = stack:pop()
+    runtime:gGMODE(stack:pop())
 end
 
 function gTMode(stack, runtime) -- 0xCD
-    runtime:getGraphicsContext().tmode = stack:pop()
+    runtime:gTMODE(stack:pop())
 end
 
 function gStyle(stack, runtime) -- 0xCE
-    runtime:getGraphicsContext().style = stack:pop()
+    runtime:gSTYLE(stack:pop())
 end
 
 function gOrder(stack, runtime) -- 0xCF
     local pos = stack:pop()
     local id = stack:pop()
-
-    local graphics = runtime:getGraphics()
-    assert(graphics[id] and graphics[id].isWindow, KOplErrInvalidWindow)
-
-    runtime:iohandler().graphicsop("order", id, pos)
+    runtime:gORDER(id, pos)
 end
 
 function gCls(stack, runtime) -- 0xD1
-    local context = runtime:getGraphicsContext()
-    context.pos = { x = 0, y = 0 }
-    runtime:drawCmd("fill", { width = context.width, height = context.height, mode = 1 })
+    runtime:gCLS()
 end
 
 function gAt(stack, runtime) -- 0xD2
-    runtime:getGraphicsContext().pos = stack:popPoint()
+    local x, y = stack:popXY()
+    runtime:gAT(x, y)
 end
 
 function gMove(stack, runtime) -- 0xD3
-    local context = runtime:getGraphicsContext()
-    local delta = stack:popPoint()
-    context.pos.x = context.pos.x + delta.x
-    context.pos.y = conteyt.pos.y + delta.y
+    local dx, dy = stack:popXY()
+    runtime:gMOVE(dx, dy)
 end
 
 function gPrintWord(stack, runtime) -- 0xD4
-    local str = tostring(stack:pop())
-    runtime:drawCmd("text", { string = str })
-    local context = runtime:getGraphicsContext()
-    local w, h = runtime:iohandler().graphicsop("textsize", str, context.font)
-    context.pos.x = context.pos.x + w
+    runtime:gPRINT(stack:pop())
 end
 
 gPrintLong = gPrintWord -- 0xD5
@@ -1687,8 +1621,7 @@ gPrintDbl = gPrintWord -- 0xD6
 gPrintStr = gPrintWord -- 0xD7
 
 function gPrintSpace(stack, runtime) -- 0xD8
-    stack:push(" ")
-    gPrintStr(stack, runtime)
+    runtime:gPRINT(" ")
 end
 
 function gPrintBoxText(stack, runtime) -- 0xD9
@@ -1712,69 +1645,44 @@ function gPrintBoxText(stack, runtime) -- 0xD9
     end
     local width = stack:pop()
     local text = stack:pop()
-    local textw, texth, fontAscent = runtime:iohandler().graphicsop("textsize", text, context.font)
-
-    local ModeClear = 1
-    runtime:drawCmd("fill", {
-        x = context.pos.x,
-        y = context.pos.y - fontAscent - top,
-        width = width,
-        height = top + texth + bottom,
-        mode = ModeClear
-    })
-
-    local textX
-    if align == 1 then -- right align
-        textX = context.pos.x + width - margin - textw
-    elseif align == 3 then
-        -- Ugh how does margin work for center, docs aren't clear to me right now...
-        textX = context.pos.x + with - (textw // 2)
-    else
-        textX = context.pos.x + margin
-    end
-
-    runtime:drawCmd("text", { string = text, x = textX, y = context.pos.y - fontAscent + texth })
+    runtime:gPRINTB(text, width, align, top, bottom, margin)
 end
 
 gPrintBoxText_dmp = numParams_dump
 
 function gLineBy(stack, runtime) -- 0xDA
-    local graphics = runtime:getGraphics()
-    local context = graphics.current
-    local endPoint = stack:popPoint()
-    -- relative pos; make abs
-    endPoint.x = context.pos.x + endPoint.x
-    endPoint.y = context.pos.y + endPoint.y
-    runtime:drawCmd("line", { x2 = endPoint.x, y2 = endPoint.y })
-    context.pos = endPoint
+    local dx, dy = stack:popXY()
+    runtime:gLINEBY(dx, dy)
 end
 
 function gBox(stack, runtime) -- 0xDB
-    local height = stack:pop()
-    local width = stack:pop()
-    runtime:drawCmd("box", { width = width, height = height })
+    local width, height = stack:popXY()
+    runtime:gBOX(width, height)
 end
 
 function gCircle(stack, runtime) -- 0xDC
     local hasFill = runtime:IP8()
-    local graphics = runtime:getGraphics()
-    local context = graphics.current
-    local fill = 0
+    local fill = false
     if hasFill ~= 0 then
-        fill = stack:pop()
+        fill = stack:pop() ~= 0
     end
     local radius = stack:pop()
-    runtime:drawCmd("circle", { r = radius, fill = fill })
+    runtime:gCIRCLE(radius, fill)
 end
 
-function gCircle_dump(runtime)
-    local hasFill = runtime:IP8()
-    return fmt("hasfill=%d", hasFill)
-end
+gCircle_dump = numParams_dump
 
 function gEllipse(stack, runtime) -- 0xDD
-    error("Unimplemented opcode gEllipse!")
+    local hasFill = runtime:IP8()
+    local fill = false
+    if hasFill ~= 0 then
+        fill = stack:pop() ~= 0
+    end
+    local x, y = stack:popXY()
+    runtime:gELLIPSE(x, y, fill)
 end
+
+gEllipse_dump = numParams_dump
 
 function gPoly(stack, runtime) -- 0xDE
     error("Unimplemented opcode gPoly!")
@@ -1782,9 +1690,8 @@ end
 
 function gFill(stack, runtime) -- 0xDF
     local mode = stack:pop()
-    local height = stack:pop()
-    local width = stack:pop()
-    runtime:drawCmd("fill", { width = width, height = height, mode = mode })
+    local width, height = stack:popXY()
+    runtime:gFILL(width, height, mode)
 end
 
 function gPatt(stack, runtime) -- 0xE0
@@ -1793,51 +1700,33 @@ end
 
 function gCopy(stack, runtime) -- 0xE1
     local mode = stack:pop()
-    local srcRect = stack:popRect()
+    local x, y, w, h = stack:popRect()
     local srcId = stack:pop()
-    runtime:drawCmd("copy", {
-        srcid = srcId,
-        srcx = srcRect.x,
-        srcy = srcRect.y,
-        mode = mode,
-        width = srcRect.w,
-        height = srcRect.h
-    })
+    runtime:gCOPY(srcId, x, y, w, h, mode)
     runtime:setTrap(false)
 end
 
 function gScroll(stack, runtime) -- 0xE2
     local numParams = runtime:IP8()
-    local rect
+    local x, y, w, h
     if numParams == 6 then
-        rect = stack:popRect()
-    else
-        local ctx = runtime:getGraphics().current
-        rect = { x = 0, y = 0, w = ctx.width, h = ctx.h }
+        x, y, w, h = stack:popRect()
     end
-    local dy = stack:pop()
-    local dx = stack:pop()
-    runtime:drawCmd("scroll", { dx = dx, dy = dy, rect = rect })
+
+    local dx, dy = stack:popXY()
+    runtime:gSCROLL(dx, dy, x, y, w, h)
 end
 
 gScroll_dump = numParams_dump
 
 function gUpdate(stack, runtime) -- 0xE3
-    local flag = runtime:IP8()
-    local graphics = runtime:getGraphics()
-    local context = graphics.current
-    if flag == 255 then -- gUPDATE
-        -- Flush now
-        runtime:flushGraphicsOps()
-        return
-    end
-    if flag == 0 then -- gUPDATE OFF
-        if not graphics.buffer then
-            graphics.buffer = {}
-        end
-    else -- gUPDATE ON
-        runtime:flushGraphicsOps()
-        graphics.buffer = nil
+    local val = runtime:IP8()
+    if val == 255 then
+        runtime:gUPDATE()
+    elseif val == 0 then
+        runtime:gUPDATE(false)
+    else
+        runtime:gUPDATE(true)
     end
 end
 
@@ -1851,11 +1740,8 @@ function GetEvent(stack, runtime) -- 0xE4
 end
 
 function gLineTo(stack, runtime) -- 0xE5
-    local graphics = runtime:getGraphics()
-    local context = graphics.current
-    local endPoint = stack:popPoint()
-    runtime:drawCmd("line", { x2 = endPoint.x, y2 = endPoint.y })
-    context.pos = endPoint
+    local x, y = stack:popXY()
+    runtime:gLINETO(x, y)
 end
 
 function gPeekLine(stack, runtime) -- 0xE6
@@ -1875,9 +1761,7 @@ function IoYield(stack, runtime) -- 0xE9
 end
 
 function mInit(stack, runtime) -- 0xEA
-    runtime:setMenu({
-        cascades = {},
-    })
+    runtime:mINIT()
 end
 
 function mCard(stack, runtime) -- 0xEB
@@ -2036,10 +1920,7 @@ end
 
 function MkDir(stack, runtime) -- 0xF8
     local path = stack:pop()
-    local err = runtime:iohandler().fsop("mkdir", path)
-    if err ~= KErrNone then
-        error(err)
-    end
+    runtime:MKDIR(path)
     runtime:setTrap(false)
 end
 
@@ -2056,8 +1937,12 @@ function SecsToDate(stack, runtime) -- 0xFB
 end
 
 function gIPrint(stack, runtime) -- 0xFC
-    runtime:IP8() -- TODO
-    runtime:iohandler().print(stack:pop() .. "\n")
+    local numParams = runtime:IP8()
+    local corner = 3
+    if numParams == 1 then
+        corner = stack:pop()
+    end
+    runtime:gIPRINT(stack:pop(), corner)
 end
 
 gIPrint_dump = numParams_dump
@@ -2080,8 +1965,7 @@ end
 
 function gGrey(stack, runtime) -- 0x100
     local mode = stack:pop()
-    local val = mode == 1 and 0xAA or 0
-    runtime:getGraphics().current.color = val
+    runtime:gGREY(mode)
 end
 
 function DefaultWin(stack, runtime) -- 0x101
@@ -2198,9 +2082,7 @@ function gColor(stack, runtime) -- 0x124
     local blue = stack:pop()
     local green = stack:pop()
     local red = stack:pop()
-    -- Not gonna bother too much about exact luminosity right now
-    local val = (red + green + blue) // 3
-    runtime:getGraphics().current.color = val
+    runtime:gCOLOR(red, green, blue)
 end
 
 function SetFlags(stack, runtime) -- 0x125
@@ -2216,7 +2098,6 @@ function DaysToDate(stack, runtime) -- 0x127
 end
 
 function gInfo32(stack, runtime) -- 0x128
-    -- error("Unimplemented opcode gInfo32!")
     local resultArray = stack:pop()
     -- Heh, ER5 doesn't have this bounds check but we can
     assert(#resultArray >= 48, "Too small an array passed to gInfo32!")

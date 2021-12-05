@@ -31,24 +31,18 @@ function Stack:pop()
     return result
 end
 
-function Stack:popPoint()
+function Stack:popXY()
     local y = self:pop()
     local x = self:pop()
-    return { x = x, y = y }
-end
-
-function Stack:popSize()
-    local h = self:pop()
-    local w = self:pop()
-    return { w = w, h = h }
+    return x, y
 end
 
 function Stack:popRect()
-    local size = self:popSize()
-    local ret = self:popPoint()
-    ret.w = size.w
-    ret.h = size.h
-    return ret
+    local h = self:pop()
+    local w = self:pop()
+    local y = self:pop()
+    local x = self:pop()
+    return x, y, w, h
 end
 
 function Stack:getSize()

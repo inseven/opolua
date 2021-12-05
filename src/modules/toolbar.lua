@@ -17,11 +17,10 @@ function TBarInit(runtime, title, scrW, scrH)
     screenHeight = scrH
     local w = tbWidth()
     local h = screenHeight
-    tbWinId = runtime:iohandler().createWindow(screenWidth - w, 0, w, h, 0)
-    runtime:newGraphicsContext(tbWinId, w, h, true)
-    runtime:drawCmd("box", { width = w, height = h })
-    runtime:getGraphics().current.pos = { x = w // 2, y = h - w // 2 }
-    runtime:drawCmd("circle", { r = w // 2 - 4 })
+    tbWinId = gCREATE(screenWidth - w, 0, w, h, false)
+    gBOX(w, h)
+    gAT(w // 2, h - w // 2)
+    gCIRCLE(w // 2 - 4)
 end
 
 function TBarSetTitle(runtime, name)
@@ -32,7 +31,7 @@ function TBarButt(runtime, shortcut, pos, text, state, bit, mask, flags)
     --TODO
 end
 
-function TBarOffer(runtime, winId, ptrType, ptrX, ptrY)
+_ENV["TBarOffer%"] = function(runtime, winId, ptrType, ptrX, ptrY)
     --TODO
 end
 
@@ -41,20 +40,13 @@ function TBarLatch(runtime, comp)
 end
 
 function TBarShow(runtime)
-    runtime:iohandler().graphicsop("show", tbWinId, true)
+    gVISIBLE(tbWinId, true)
+    tbVis(-1)
 end
 
 function TBarHide(runtime)
-    runtime:iohandler().graphicsop("show", tbWinId, false)
+    gVISIBLE(tbWinId, false)
+    tbVis(0)
 end
 
-return {
-    TBarLink = TBarLink,
-    TBarInit = TBarInit,
-    TBarSetTitle = TBarSetTitle,
-    TBarButt = TBarButt,
-    ["TBarOffer%"] = TBarOffer,
-    TBarLatch = TBarLatch,
-    TBarShow = TBarShow,
-    TBarHide = TBarHide,
-}
+return _ENV

@@ -100,6 +100,60 @@ dItemTypes = enum {
     dSEPARATOR = 13,
 }
 
+FontIds = {
+    [4] = { face = "courier", size = 8 },
+    [5] = { face = "times", size = 8 },
+    [6] = { face = "times", size = 11 },
+    [7] = { face = "times", size = 13 },
+    [8] = { face = "times", size = 15 },
+    [9] = { face = "arial", size = 8 },
+    [10] = { face = "arial", size = 11 },
+    [11] = { face = "arial", size = 13 },
+    [12] = { face = "arial", size = 15 },
+    [13] = { face = "tiny", size = 4 },
+    [0x9A] = { face = "arial", size = 15 },
+    [268435504] = { face = "tiny", size = 4 },
+    [268435951] = { face = "arial", size = 8, bold = true },
+    [268435952] = { face = "arial", size = 11, bold = true },
+    [268435953] = { face = "arial", size = 13, bold = true },
+    [268435954] = { face = "arial", size = 8 },
+    [268435955] = { face = "arial", size = 11 },
+    [268435956] = { face = "arial", size = 13 },
+    [268435957] = { face = "arial", size = 15 },
+    [268435958] = { face = "arial", size = 18 },
+    [268435959] = { face = "arial", size = 22 },
+    [268435960] = { face = "arial", size = 27 },
+    [268435961] = { face = "arial", size = 32 },
+    [268435962] = { face = "times", size = 8, bold = true },
+    [268435963] = { face = "times", size = 11, bold = true },
+    [268435964] = { face = "times", size = 13, bold = true },
+    [268435965] = { face = "times", size = 8 },
+    [268435966] = { face = "times", size = 11 },
+    [268435967] = { face = "times", size = 13 },
+    [268435968] = { face = "times", size = 15 },
+    [268435969] = { face = "times", size = 18 },
+    [268435970] = { face = "times", size = 22 },
+    [268435971] = { face = "times", size = 27 },
+    [268435972] = { face = "times", size = 32 },
+    [268436062] = { face = "courier", size = 8, bold = true },
+    [268436063] = { face = "courier", size = 11, bold = true },
+    [268436064] = { face = "courier", size = 13, bold = true },
+    [268436065] = { face = "courier", size = 8 },
+    [268436066] = { face = "courier", size = 11 },
+    [268436067] = { face = "courier", size = 13 },
+    [268436068] = { face = "courier", size = 15 },
+    [268436069] = { face = "courier", size = 18 },
+    [268436070] = { face = "courier", size = 22 },
+    [268436071] = { face = "courier", size = 27 },
+    [268436072] = { face = "courier", size = 32 },
+}
+
+GraphicsMode = enum {
+    Set = 0,
+    Clear = 1,
+    Invert = 2,
+}
+
 -- Errors are global for convenience
 for k, v in pairs(Errors) do _ENV[k] = v end
 -- And allow reverse lookup

@@ -204,21 +204,22 @@ struct Graphics {
 
     enum Mode: Int {
         case set = 0
-        case cleared = 1
-        case inverted = 2
+        case clear = 1
+        case invert = 2
     }
 
     enum TMode: Int {
         case set = 0
-        case cleared = 1
-        case inverted = 2
-        case replaced = 3
+        case clear = 1
+        case invert = 2
+        case replace = 3
     }
 
     struct DrawCommand {
         enum OpType {
             case fill(Size)
             case circle(Int, Bool) // radius, fill
+            case ellipse(Int, Int, Bool) // hRadius, vRadius, fill
             case line(Int, Int) // x2, y2
             case box(Size)
             case bitblt(PixelData)

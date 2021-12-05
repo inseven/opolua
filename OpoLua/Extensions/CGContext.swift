@@ -31,10 +31,10 @@ extension CGContext {
     func draw(_ operation: Graphics.DrawCommand) {
         // TODO: Scale for the iOS screensize
         let col: CGColor
-        if operation.mode == .cleared {
+        if operation.mode == .clear {
             col = operation.bgcolor.cgColor()
         } else {
-            // TODO: not handling mode == .inverted here...
+            // TODO: not handling mode == .invert here...
             col = operation.color.cgColor()
         }
         setStrokeColor(col)
@@ -43,14 +43,22 @@ extension CGContext {
         case .fill(let size):
             fill(CGRect(origin: operation.origin.cgPoint(), size: size.cgSize()))
         case .circle(let radius, let fill):
-            let path = CGMutablePath()
-            path.addArc(center: operation.origin.cgPoint(),
-                        radius: CGFloat(radius),
-                        startAngle: 0,
-                        endAngle: Double.pi * 2,
-                        clockwise: true)
-            setLineWidth(1.0)
-            addPath(path)
+            let rect = CGRect(x: operation.origin.x - radius,
+                              y: operation.origin.y - radius,
+                              width: radius * 2,
+                              height: radius * 2)
+            addEllipse(in: rect)
+            if fill {
+                fillPath()
+            } else {
+                strokePath()
+            }
+        case .ellipse(let hRadius, let vRadius, let fill):
+            let rect = CGRect(x: operation.origin.x - hRadius,
+                              y: operation.origin.y - vRadius,
+                              width: hRadius * 2,
+                              height: vRadius * 2)
+            addEllipse(in: rect)
             if fill {
                 fillPath()
             } else {

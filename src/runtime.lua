@@ -419,7 +419,7 @@ function Runtime:newGraphicsContext(id, width, height, isWindow)
         height = height,
         pos = { x = 0, y = 0 },
         isWindow = isWindow,
-        font = ops.fontIds[KDefaultFontUid],
+        font = FontIds[KDefaultFontUid],
         style = 0, -- normal text style
     }
     graphics[id] = newCtx
@@ -500,6 +500,18 @@ function Runtime:flushGraphicsOps()
     end
 end
 
+function Runtime:setGraphicsAutoFlush(flag)
+    local graphics = self:getGraphics()
+    if flag then
+        self:flushGraphicsOps()
+        graphics.buffer = nil
+    else
+        if not graphics.buffer then
+            graphics.buffer = {}
+        end
+    end
+end
+
 function Runtime:openDb(logName, tableSpec, variables, op)
     assert(self.dbs[logName] == nil, KOplErrOpen)
     local path, tableName, fields = database.parseTableSpec(tableSpec)
@@ -573,13 +585,37 @@ function Runtime:closeDb()
     self.dbs.current = nil
 end
 
+function newModuleInstance(moduleName)
+    -- Because opl.lua uses a shared upvalue for its runtime pointer, we need to
+    -- give each runtime its own copy of the module, meaning we can't just
+    -- require() it and we have to abuse the fact that we know
+    -- OpoInterpreter.swift keeps package.searchers[2] as "the thing to call to
+    -- load a .lua file" just like the stock Lua runtime does.
+    local loader = package.searchers[2](moduleName)
+    assert(type(loader) == "function", loader)
+    local instance = loader()
+    return instance
+end
+
 function newRuntime(handler)
-    return setmetatable({
+    local rt = setmetatable({
         dbs = {},
         modules = {},
         ioh = handler or require("defaultiohandler"),
         signal = 0,
     }, Runtime)
+
+    local opl = newModuleInstance("opl")
+    -- And make all the opl functions accessible as eg runtime:gUSE(1)
+    for name, fn in pairs(opl) do
+        if type(fn) == "function" then
+            assert(rt[name] == nil, "Overlapping function names between Runtime and opl.lua!")
+            rt[name] = function(self, ...) return opl[name](...) end
+        end
+    end
+    opl._setRuntime(rt)
+    rt.opl = opl
+    return rt
 end
 
 function printInstruction(currentOpIdx, opCode, op, extra)
@@ -801,7 +837,7 @@ function Runtime:loadModule(path)
 
     -- If not, see if we have a built-in
     local modName = splitext(basename(path:lower()))
-    local ok, mod = pcall(require, "modules."..modName)
+    local ok, mod = pcall(newModuleInstance, "modules."..modName)
 
     if not ok then
         printf("Module %s (from %s) not found\n", modName, path)
@@ -818,6 +854,12 @@ function Runtime:loadModule(path)
         table.insert(procTable, proc)
     end
     self:addModule(path, procTable)
+    -- finally, import all the helper fns from opl.lua into mod's environment
+    for name, fn in pairs(self.opl) do
+        if not name:match("^_") then
+            mod[name] = fn
+        end
+    end
 end
 
 function Runtime:declareGlobal(name, arrayLen)

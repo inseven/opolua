@@ -260,7 +260,9 @@ private func draw(_ L: LuaState!) -> Int32 {
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             optype = .fill(size)
         case "circle":
-            optype = .circle(L.toint(-1, key: "r") ?? 0, (L.toint(-1, key: "fill") ?? 0) != 0)
+            optype = .circle(L.toint(-1, key: "r") ?? 0, L.toboolean(-1, key: "fill"))
+        case "ellipse":
+            optype = .ellipse(L.toint(-1, key: "hradius") ?? 0, L.toint(-1, key: "vradius") ?? 0, L.toboolean(-1, key: "fill"))
         case "line":
             optype = .line(L.toint(-1, key: "x2") ?? 0, L.toint(-1, key: "y2") ?? 0)
         case "box":

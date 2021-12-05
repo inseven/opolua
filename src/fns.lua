@@ -1,6 +1,5 @@
 _ENV = module()
 
-local mbm = require("mbm")
 local fmt = string.format
 
 codes = {
@@ -401,52 +400,25 @@ function gCreateBit(stack, runtime) -- 0x27
     if runtime:IP8() == 3 then
         mode = stack:pop()
     end
-    local size = stack:popSize()
-    local id = iohandler.createBitmap(size.w, size.h) -- always greyscale atm
-    assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
-    runtime:newGraphicsContext(id, size.w, size.h, false)
+    local w, h = stack:popXY()
+    local id = runtime:gCREATEBIT(w, h, mode)
     stack:push(id)
 end
 
 gCreateBit_dump = IP8_dump
 
 function gLoadBit(stack, runtime) -- 0x28
-    -- We implment this in 3 phases:
-    -- (1) Get the mbm data and decode it
-    -- (2) Tell iohandler to create an empty bitmap
-    -- (3) Tell iohandler to blit the decoded MBM data into it
-
-    -- (1)
     local numParams = runtime:IP8()
     local write = 1
-    local idx = 1
+    local idx = 0
     if numParams > 2 then
-        idx = 1 + stack:pop()
+        idx = stack:pop()
     end
     if numParams > 1 then
         write = stack:pop()
     end
     local path = stack:pop()
-    local iohandler = runtime:iohandler()
-    local data, err = iohandler.fsop("read", path)
-    assert(data, err)
-    local bitmaps = mbm.parseMbmHeader(data)
-    assert(bitmaps, KOplErrGenFail)
-    local bitmap = bitmaps[idx]
-    assert(bitmap, KOplErrNotExists)
-    -- (2)
-    local id = iohandler.createBitmap(bitmap.width, bitmap.height) -- always greyscale atm
-    assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
-    runtime:newGraphicsContext(id, bitmap.width, bitmap.height, false)
-    -- (3)
-    runtime:drawCmd("bitblt", {
-        bmpWidth = bitmap.width,
-        bmpHeight = bitmap.height,
-        bmpBpp = bitmap.bpp,
-        bmpStride = bitmap.stride,
-        bmpData = mbm.decodeBitmap(bitmap, data),
-    })
-    runtime:flushGraphicsOps() -- just in case
+    local id = runtime:gLOADBIT(path, write ~= 0, idx)
     stack:push(id)
 end
 
@@ -461,23 +433,23 @@ function gRank(stack, runtime) -- 0x2A
 end
 
 function gIdentity(stack, runtime) -- 0x2B
-    stack:push(runtime:getGraphicsContext().id)
+    stack:push(runtime:gIDENTITY())
 end
 
 function gX(stack, runtime) -- 0x2C
-    stack:push(runtime:getGraphicsContext().pos.x)
+    stack:push(runtime:gX())
 end
 
 function gY(stack, runtime) -- 0x2D
-    stack:push(runtime:getGraphicsContext().pos.y)
+    stack:push(runtime:gY())
 end
 
 function gWidth(stack, runtime) -- 0x2E
-    stack:push(runtime:getGraphicsContext().width)
+    stack:push(runtime:gWIDTH())
 end
 
 function gHeight(stack, runtime) -- 0x2F
-    stack:push(runtime:getGraphicsContext().height)
+    stack:push(runtime:gHEIGHT())
 end
 
 function gOriginX(stack, runtime) -- 0x30
@@ -553,14 +525,8 @@ Alert_dump = numParams_dump
 function gCreateEnhanced(stack, runtime) -- 0x39
     local flags = stack:pop()
     local visible = stack:pop()
-    local rect = stack:popRect()
-    -- printf("gCreate %d,%d %dx%d visible=%d flags=%d\n", rect.x, rect.y, rect.w, rect.h, visible, flags)
-    local id = runtime:iohandler().createWindow(rect.x, rect.y, rect.w, rect.h, flags)
-    assert(id, "Failed to createWindow!")
-    runtime:newGraphicsContext(id, rect.w, rect.h, true)
-    if visible ~= 0 then
-        runtime:iohandler().graphicsop("show", id, true)
-    end
+    local x, y, w, h = stack:popRect()
+    local id = runtime:gCREATE(x, y, w, h, visible ~= 0, flags)
     stack:push(id)
 end
 
