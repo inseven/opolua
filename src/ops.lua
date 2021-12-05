@@ -1911,8 +1911,16 @@ function gXPrint(stack, runtime) -- 0xF3
 end
 
 function gBorder(stack, runtime) -- 0xF4
-    error("Unimplemented opcode gBorder!")
+    local numParams =  runtime:IP8()
+    local w, h
+    if numParams == 3 then
+        w, h = stack:popXY()        
+    end
+    local flags = stack:pop()
+    runtime:gBORDER(flags, w, h)
 end
+
+gBorder_dump = numParams_dump
 
 function gClock(stack, runtime) -- 0xF5
     error("Unimplemented opcode gClock!")
@@ -1989,8 +1997,17 @@ function gButton(stack, runtime) -- 0x10F
 end
 
 function gXBorder(stack, runtime) -- 0x110
-    error("Unimplemented opcode gXBorder!")
+    local numParams =  runtime:IP8()
+    local w, h
+    if numParams == 4 then
+        w, h = stack:popXY()        
+    end
+    local flags = stack:pop()
+    local type = stack:pop()
+    runtime:gXBORDER(type, flags, w, h)
 end
+
+gXBorder_dump = numParams_dump
 
 function ScreenInfo(stack, runtime) -- 0x114
     error("Unimplemented opcode ScreenInfo!")

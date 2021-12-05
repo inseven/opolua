@@ -167,6 +167,19 @@ end
 
 -- TODO gPATT
 
+function gBORDER(flags, w, h)
+    -- TODO ignoring flags entirely
+    gXBORDER(2, 1, w, h)
+end
+
+function gXBORDER(type, flags, w, h)
+    if not w then
+        w = gWIDTH()
+        h = gHEIGHT()
+    end
+    -- TODO we're ignoring all the flags here...
+    gBOX(w, h)
+end
 
 function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     -- TODO utterly terrible
@@ -241,6 +254,7 @@ function gCOLOR(red, green, blue)
 end
 
 function gCREATE(x, y, w, h, visible, flags)
+    -- printf("gCreate w=%d h=%d flags=%X\n", w, h, flags or 0)
     local id = runtime:iohandler().createWindow(x, y, w, h, flags or 0)
     assert(id, "Failed to createWindow!")
     runtime:newGraphicsContext(id, w, h, true)
