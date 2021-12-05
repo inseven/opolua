@@ -24,4 +24,8 @@ extension CGSize {
 
     static var unit = CGSize(width: 1.0, height: 1.0)
 
+    func adding(dx: CGFloat, dy: CGFloat) -> CGSize {
+        return CGSize(width: self.width + dx, height: self.height + dy)
+    }
+
 }

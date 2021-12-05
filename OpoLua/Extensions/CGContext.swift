@@ -64,14 +64,15 @@ extension CGContext {
             } else {
                 strokePath()
             }
-        case .line(let x, let y):
+        case .line(let endPoint):
             let path = CGMutablePath()
-            path.move(to: operation.origin.cgPoint())
-            path.addLine(to: CGPoint(x: x, y: y))
+            path.move(to: operation.origin.cgPoint().move(x: 0.5, y: 0.5))
+            path.addLine(to: endPoint.cgPoint().move(x: -0.5, y: -0.5))
             addPath(path)
             strokePath()
         case .box(let size):
-            let rect = CGRect(origin: operation.origin.cgPoint(), size: size.cgSize())
+            let rect = CGRect(origin: operation.origin.cgPoint().move(x: 0.5, y: 0.5),
+                              size: size.cgSize().adding(dx: -1, dy: -1))
             addPath(CGPath(rect: rect, transform: nil))
             strokePath()
         case .bitblt(let pxInfo):

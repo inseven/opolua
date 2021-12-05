@@ -221,7 +221,7 @@ struct Graphics {
             case fill(Size)
             case circle(Int, Bool) // radius, fill
             case ellipse(Int, Int, Bool) // hRadius, vRadius, fill
-            case line(Int, Int) // x2, y2
+            case line(Point)
             case box(Size)
             case bitblt(PixelData)
             case copy(CopySource)
