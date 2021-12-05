@@ -32,7 +32,7 @@ function main(args)
     local data = f:read("a")
     f:close()
 
-    local err = runtime.runOpo(data, procName, iohandler, verbose)
+    local err = runtime.runOpo(filename, data, procName, iohandler, verbose)
     if err then
         print("Error: "..tostring(err))
     end
