@@ -461,7 +461,8 @@ function gOriginY(stack, runtime) -- 0x31
 end
 
 function gTWidth(stack, runtime) -- 0x32
-    error("Unimplemented function gTWidth!")
+    local width = runtime:gTWIDTH(stack:pop())
+    stack:push(width)
 end
 
 function gPrintClip(stack, runtime) -- 0x33

@@ -128,6 +128,11 @@ function gPRINTB(text, width, align, top, bottom, margin)
     runtime:drawCmd("text", { string = text, x = textX, y = context.pos.y - fontAscent + texth })
 end
 
+function gTWIDTH(text)
+    local width = runtime:iohandler().graphicsop("textsize", text, runtime:getGraphicsContext().font)
+    return width
+end
+
 function gIPRINT(text, corner)
     -- TODO implement properly
     runtime:iohandler().print(text .. "\n")
