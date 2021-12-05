@@ -26,7 +26,7 @@ function TBarInit(runtime, title, screenWidth, screenHeight)
     local h = screenHeight
     tbWinId = gCREATE(screenWidth - w, 0, w, h, false)
     gBOX(w, h)
-    gAT(w // 2, h - w // 2)
+    gAT(w // 2, h - w // 2 + 1)
     gCIRCLE(w // 2 - 4)
     TBarSetTitle(runtime, title)
 end
@@ -49,7 +49,7 @@ function TBarButt(runtime, shortcut, pos, text, state, bit, mask, flags)
     gUSE(tbWinId)
     gFONT(KFontSquashed)
     gAT(0, KTbBtTop + (pos - 1) * KTbBtH)
-    gBUTTON(text, 1, KTbWidth, KTbBtH)
+    gBUTTON(text, 1, KTbWidth, KTbBtH + 1, state, bit, mask)
     gUSE(prevId)
 end
 

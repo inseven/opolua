@@ -170,8 +170,21 @@ end
 
 function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     -- TODO utterly terrible
+    local id = gIDENTITY()
     local prevX, prevY = gX(), gY()
-    gMOVE(2, height - 4)
+    gMOVE(2, 2)
+    if bmpId > 0 then
+        gUSE(bmpId)
+        local bmpWidth = gWIDTH()
+        local bmpHeight = gHEIGHT()
+        gUSE(id)
+        local bmpOffset = (height - bmpHeight) // 2
+        gMOVE(0, bmpOffset)
+        gCOPY(bmpId, 0, 0, bmpWidth, bmpHeight, 3)
+        gMOVE(bmpWidth + 2, -bmpOffset)
+    end
+
+    gMOVE(0, height - 2)
     gPRINT(text)
     gAT(prevX, prevY)
     gBOX(width, height)
