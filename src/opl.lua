@@ -167,6 +167,16 @@ end
 
 -- TODO gPATT
 
+
+function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
+    -- TODO utterly terrible
+    local prevX, prevY = gX(), gY()
+    gMOVE(2, height - 4)
+    gPRINT(text)
+    gAT(prevX, prevY)
+    gBOX(width, height)
+end
+
 function gCOPY(id, x, y, w, h, mode)
     runtime:drawCmd("copy", {
         srcid = id,
