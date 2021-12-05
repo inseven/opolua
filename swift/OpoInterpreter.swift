@@ -179,6 +179,9 @@ private func dialog(_ L: LuaState!) -> Int32 {
                 // but what actually happens on the Psion 5 is you alway get 0 returned. Oh well. We'll fix this up
                 // below and pretend to the upper layers that we obey the docs.
                 key = -(-key & 0xFF)
+            } else if key & 0xFF == 27 {
+                flags.insert(.isCancelButton)
+                key = key & 0xFF
             } else {
                 key = key & 0xFF
             }
@@ -189,7 +192,7 @@ private func dialog(_ L: LuaState!) -> Int32 {
     let d = Dialog(title: title ?? "", items: items, buttons: buttons, flags: flags)
     let result = iohandler.dialog(d)
     // items is still on top of Lua stack here
-    if result.result > 0 {
+    if result.result > 0 && result.result != 27 {
         // Update the values Lua-side
         precondition(result.values.count == d.items.count, "Bad number of result values!")
         for (i, value) in result.values.enumerated() {
@@ -199,8 +202,8 @@ private func dialog(_ L: LuaState!) -> Int32 {
             L.pop() // items[i]
         }
     }
-    // Be bug compatible with Psion 5 and return 0 if a negative-keycode button was pressed
-    L.push(result.result < 0 ? 0 : result.result)
+    // Be bug compatible with Psion 5 and return 0 if a negative-keycode or escape button was pressed
+    L.push(result.result < 0 || result.result == 27 ? 0 : result.result)
     return 1
 }
 

@@ -101,8 +101,11 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
         self.values = dialog.items.map { item in
             switch item.type {
             case .choice:
-                // It's necessary to pre-populate the initially selected value from the choice.
-                return "1"
+                // Need to make sure the initial value is valid for the choices given
+                guard let idx = Int(item.value), idx > 0 && idx <= item.choices?.count ?? 0 else {
+                    return "1"
+                }
+                return String(idx)
             default:
                 return item.value
             }
