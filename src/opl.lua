@@ -100,7 +100,7 @@ function gPRINT(val)
 end
 
 function gPRINTB(text, width, align, top, bottom, margin)
-    if not align then align = 0 end
+    if not align then align = Align.Left end
     if not top then top = 0 end
     if not bottom then bottom = 0 end
     if not margin then margin = 0 end
@@ -116,11 +116,11 @@ function gPRINTB(text, width, align, top, bottom, margin)
     })
 
     local textX
-    if align == 1 then -- right align
+    if align == Align.Right then
         textX = context.pos.x + width - margin - textw
-    elseif align == 3 then
+    elseif align == Align.Center then
         -- Ugh how does margin work for center, docs aren't clear to me right now...
-        textX = context.pos.x + with - (textw // 2)
+        textX = context.pos.x + (width // 2) - (textw // 2)
     else
         textX = context.pos.x + margin
     end

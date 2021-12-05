@@ -184,6 +184,7 @@ struct Graphics {
         case times
         case courier
         case tiny
+        case squashed
     }
 
     enum FontFlag: Int, FlagEnum {

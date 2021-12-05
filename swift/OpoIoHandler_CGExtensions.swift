@@ -49,6 +49,10 @@ extension Graphics.FontInfo {
     func toUiFont() -> UIFont {
         let sz = CGFloat(self.size)
         let uiFontName: String
+        var traits: UIFontDescriptor.SymbolicTraits = []
+        if self.flags.contains(.bold) {
+            traits.insert(.traitBold)
+        }
         switch self.face {
         case .arial:
             uiFontName = "Arial"
@@ -58,13 +62,14 @@ extension Graphics.FontInfo {
             uiFontName = "Courier"
         case .tiny:
             uiFontName = "Courier" // Who knows...
+        case .squashed:
+            uiFontName = "Helvetica Neue"
+            traits.insert(.traitCondensed)
         }
 
         var desc = UIFontDescriptor(name: uiFontName, size: sz)
-        if self.flags.contains(.bold) {
-            if let newDesc = desc.withSymbolicTraits(.traitBold) {
-                desc = newDesc
-            }
+        if let newDesc = desc.withSymbolicTraits(traits) {
+            desc = newDesc
         }
         return UIFont(descriptor: desc, size: sz)
     }

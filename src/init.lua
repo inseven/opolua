@@ -100,6 +100,44 @@ dItemTypes = enum {
     dSEPARATOR = 13,
 }
 
+-- UIDs converted with
+-- lua -e "for line in io.lines() do print((line:gsub('(%s+)([0-9]+)%s*', function(s, m) return string.format('%s0x%08X', s, tonumber(m)) end))) end"
+KFontArialBold8 = 0x100001EF
+KFontArialBold11 = 0x100001F0
+KFontArialBold13 = 0x100001F1
+KFontArialNormal8 = 0x100001F2
+KFontArialNormal11 = 0x100001F3
+KFontArialNormal13 = 0x100001F4
+KFontArialNormal15 = 0x100001F5
+KFontArialNormal18 = 0x100001F6
+KFontArialNormal22 = 0x100001F7
+KFontArialNormal27 = 0x100001F8
+KFontArialNormal32 = 0x100001F9
+KFontTimesBold8 = 0x100001FA
+KFontTimesBold11 = 0x100001FB
+KFontTimesBold13 = 0x100001FC
+KFontTimesNormal8 = 0x100001FD
+KFontTimesNormal11 = 0x100001FE
+KFontTimesNormal13 = 0x100001FF
+KFontTimesNormal15 = 0x10000200
+KFontTimesNormal18 = 0x10000201
+KFontTimesNormal22 = 0x10000202
+KFontTimesNormal27 = 0x10000203
+KFontTimesNormal32 = 0x10000204
+KFontCourierBold8 = 0x1000025E
+KFontCourierBold11 = 0x1000025F
+KFontCourierBold13 = 0x10000260
+KFontCourierNormal8 = 0x10000261
+KFontCourierNormal11 = 0x10000262
+KFontCourierNormal13 = 0x10000263
+KFontCourierNormal15 = 0x10000264
+KFontCourierNormal18 = 0x10000265
+KFontCourierNormal22 = 0x10000266
+KFontCourierNormal27 = 0x10000267
+KFontCourierNormal32 = 0x10000268
+KFontTiny4 = 0x10000030
+KFontSquashed = 0x100000F5
+
 FontIds = {
     [4] = { face = "courier", size = 8 },
     [5] = { face = "times", size = 8 },
@@ -112,46 +150,53 @@ FontIds = {
     [12] = { face = "arial", size = 15 },
     [13] = { face = "tiny", size = 4 },
     [0x9A] = { face = "arial", size = 15 },
-    [268435504] = { face = "tiny", size = 4 },
-    [268435951] = { face = "arial", size = 8, bold = true },
-    [268435952] = { face = "arial", size = 11, bold = true },
-    [268435953] = { face = "arial", size = 13, bold = true },
-    [268435954] = { face = "arial", size = 8 },
-    [268435955] = { face = "arial", size = 11 },
-    [268435956] = { face = "arial", size = 13 },
-    [268435957] = { face = "arial", size = 15 },
-    [268435958] = { face = "arial", size = 18 },
-    [268435959] = { face = "arial", size = 22 },
-    [268435960] = { face = "arial", size = 27 },
-    [268435961] = { face = "arial", size = 32 },
-    [268435962] = { face = "times", size = 8, bold = true },
-    [268435963] = { face = "times", size = 11, bold = true },
-    [268435964] = { face = "times", size = 13, bold = true },
-    [268435965] = { face = "times", size = 8 },
-    [268435966] = { face = "times", size = 11 },
-    [268435967] = { face = "times", size = 13 },
-    [268435968] = { face = "times", size = 15 },
-    [268435969] = { face = "times", size = 18 },
-    [268435970] = { face = "times", size = 22 },
-    [268435971] = { face = "times", size = 27 },
-    [268435972] = { face = "times", size = 32 },
-    [268436062] = { face = "courier", size = 8, bold = true },
-    [268436063] = { face = "courier", size = 11, bold = true },
-    [268436064] = { face = "courier", size = 13, bold = true },
-    [268436065] = { face = "courier", size = 8 },
-    [268436066] = { face = "courier", size = 11 },
-    [268436067] = { face = "courier", size = 13 },
-    [268436068] = { face = "courier", size = 15 },
-    [268436069] = { face = "courier", size = 18 },
-    [268436070] = { face = "courier", size = 22 },
-    [268436071] = { face = "courier", size = 27 },
-    [268436072] = { face = "courier", size = 32 },
+    [KFontTiny4] = { face = "tiny", size = 4 },
+    [KFontArialBold8] = { face = "arial", size = 8, bold = true },
+    [KFontArialBold11] = { face = "arial", size = 11, bold = true },
+    [KFontArialBold13] = { face = "arial", size = 13, bold = true },
+    [KFontArialNormal8] = { face = "arial", size = 8 },
+    [KFontArialNormal11] = { face = "arial", size = 11 },
+    [KFontArialNormal13] = { face = "arial", size = 13 },
+    [KFontArialNormal15] = { face = "arial", size = 15 },
+    [KFontArialNormal18] = { face = "arial", size = 18 },
+    [KFontArialNormal22] = { face = "arial", size = 22 },
+    [KFontArialNormal27] = { face = "arial", size = 27 },
+    [KFontArialNormal32] = { face = "arial", size = 32 },
+    [KFontTimesBold8] = { face = "times", size = 8, bold = true },
+    [KFontTimesBold11] = { face = "times", size = 11, bold = true },
+    [KFontTimesBold13] = { face = "times", size = 13, bold = true },
+    [KFontTimesNormal8] = { face = "times", size = 8 },
+    [KFontTimesNormal11] = { face = "times", size = 11 },
+    [KFontTimesNormal13] = { face = "times", size = 13 },
+    [KFontTimesNormal15] = { face = "times", size = 15 },
+    [KFontTimesNormal18] = { face = "times", size = 18 },
+    [KFontTimesNormal22] = { face = "times", size = 22 },
+    [KFontTimesNormal27] = { face = "times", size = 27 },
+    [KFontTimesNormal32] = { face = "times", size = 32 },
+    [KFontCourierBold8] = { face = "courier", size = 8, bold = true },
+    [KFontCourierBold11] = { face = "courier", size = 11, bold = true },
+    [KFontCourierBold13] = { face = "courier", size = 13, bold = true },
+    [KFontCourierNormal8] = { face = "courier", size = 8 },
+    [KFontCourierNormal11] = { face = "courier", size = 11 },
+    [KFontCourierNormal13] = { face = "courier", size = 13 },
+    [KFontCourierNormal15] = { face = "courier", size = 15 },
+    [KFontCourierNormal18] = { face = "courier", size = 18 },
+    [KFontCourierNormal22] = { face = "courier", size = 22 },
+    [KFontCourierNormal27] = { face = "courier", size = 27 },
+    [KFontCourierNormal32] = { face = "courier", size = 32 },
+    [KFontSquashed] = { face = "squashed", size = 11, bold = true },
 }
 
 GraphicsMode = enum {
     Set = 0,
     Clear = 1,
     Invert = 2,
+}
+
+Align = enum {
+    Left = 2,
+    Right = 1,
+    Center = 3,
 }
 
 -- Errors are global for convenience
