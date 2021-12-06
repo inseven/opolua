@@ -614,12 +614,15 @@ private func createWindow(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let x = L.toint(1), let y = L.toint(2),
           let width = L.toint(3), let height = L.toint(4),
-          let _ = L.toint(5) /*flags*/ else {
+          let flags = L.toint(5) else {
         return 0
     }
-    // TODO do something with flags
+    var shadow = 0
+    if flags & 0xF0 != 0 {
+        shadow = 2 * ((flags & 0xF00) >> 8)
+    }
     let rect = Graphics.Rect(x: x, y: y, width: width, height: height)
-    return doGraphicsOp(L, iohandler, .createWindow(rect))
+    return doGraphicsOp(L, iohandler, .createWindow(rect, shadow))
 }
 
 private func getTime(_ L: LuaState!) -> Int32 {

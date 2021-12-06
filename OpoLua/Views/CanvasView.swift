@@ -42,12 +42,16 @@ class CanvasView : UIView, Drawable {
         fatalError("init(coder:) has not been implemented")
     }
 
-    init(id: Int, size: CGSize) {
+    init(id: Int, size: CGSize, shadowSize: Int = 0) {
         self.id = id
         canvas = Canvas(size: size)
         super.init(frame: .zero)
-        clipsToBounds = true
+        clipsToBounds = false
         isMultipleTouchEnabled = false
+        if shadowSize > 0 {
+            self.layer.shadowRadius = CGFloat(shadowSize)
+            self.layer.shadowOpacity = 1
+        }
     }
 
     func draw(_ operations: [Graphics.DrawCommand]) {

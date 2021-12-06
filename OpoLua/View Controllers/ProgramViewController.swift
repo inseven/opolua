@@ -69,6 +69,7 @@ class ProgramViewController: UIViewController {
         canvas.translatesAutoresizingMaskIntoConstraints = false
         canvas.layer.borderWidth = 1.0
         canvas.layer.borderColor = UIColor.black.cgColor
+        canvas.clipsToBounds = true
         drawables[1] = canvas // 1 is always the main window
         return canvas
     }()
@@ -341,12 +342,12 @@ extension ProgramViewController: OpoIoHandler {
             }
             semaphore.wait()
             return .handle(h)
-        case .createWindow(let rect):
+        case .createWindow(let rect, let shadowSize):
             var h = 0
             DispatchQueue.main.async {
                 h = self.nextHandle
                 self.nextHandle += 1
-                let newView = CanvasView(id: h, size: rect.size.cgSize())
+                let newView = CanvasView(id: h, size: rect.size.cgSize(), shadowSize: shadowSize)
                 newView.isHidden = true // by default, will get a showWindow op if needed
                 newView.frame = rect.cgRect()
                 newView.delegate = self.eventQueue

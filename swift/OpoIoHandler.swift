@@ -239,7 +239,7 @@ struct Graphics {
     enum Operation {
         case close(Int)
         case createBitmap(Size) // returns handle
-        case createWindow(Rect) // returns handle
+        case createWindow(Rect, Int) // Int is shadow size in pixels. returns handle
         case order(Int, Int) // displayId, position
         case show(Int, Bool) // displayId, visible flag
         case textSize(String, FontInfo) // returns size
