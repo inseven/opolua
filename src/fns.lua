@@ -802,7 +802,7 @@ function GetStr(stack, runtime) -- 0xC7
 end
 
 function HexStr(stack, runtime) -- 0xC8
-    error("Unimplemented function HexStr!")
+    stack:push(fmt("%X", stack:pop()))
 end
 
 function KeyStr(stack, runtime) -- 0xC9
