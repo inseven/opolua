@@ -319,6 +319,25 @@ function gHEIGHT()
     return runtime:getGraphicsContext().height
 end
 
+function gPOLY(array)
+    local flush = runtime:getGraphicsAutoFlush()
+    runtime:setGraphicsAutoFlush(false)
+    local prevX, prevY = gX(), gY()
+    gAT(array[1], array[2])
+    local n = array[3]
+    for i = 0, n-1 do
+        local dx, dy = array[4 + i*2], array[4 + i*2 + 1]
+        if dx & 1 > 0 then
+            printf("gmove %d %d\n", (dx - 1) // 2, dy)
+            gMOVE((dx - 1)// 2, dy)
+        else
+            printf("glineby %d %d\n", (dx // 2), dy)
+            gLINEBY(dx // 2, dy)
+        end
+    end
+    runtime:setGraphicsAutoFlush(flush)
+end
+
 -- Menu APIs
 
 function mINIT()

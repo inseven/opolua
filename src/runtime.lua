@@ -512,6 +512,10 @@ function Runtime:setGraphicsAutoFlush(flag)
     end
 end
 
+function Runtime:getGraphicsAutoFlush()
+    return self:getGraphics().buffer == nil
+end
+
 function Runtime:openDb(logName, tableSpec, variables, op)
     assert(self.dbs[logName] == nil, KOplErrOpen)
     local path, tableName, fields = database.parseTableSpec(tableSpec)

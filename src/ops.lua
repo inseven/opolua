@@ -1685,7 +1685,12 @@ end
 gEllipse_dump = numParams_dump
 
 function gPoly(stack, runtime) -- 0xDE
-    error("Unimplemented opcode gPoly!")
+    local varArray = stack:pop()
+    local valArray = {}
+    for i, var in ipairs(varArray) do
+        valArray[i] = varArray[i]()
+    end
+    runtime:gPOLY(valArray)
 end
 
 function gFill(stack, runtime) -- 0xDF

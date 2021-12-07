@@ -67,7 +67,7 @@ extension CGContext {
         case .line(let endPoint):
             let path = CGMutablePath()
             path.move(to: operation.origin.cgPoint().move(x: 0.5, y: 0.5))
-            path.addLine(to: endPoint.cgPoint().move(x: -0.5, y: -0.5))
+            path.addLine(to: endPoint.cgPoint().move(x: 0.5, y: 0.5))
             addPath(path)
             strokePath()
         case .box(let size):
