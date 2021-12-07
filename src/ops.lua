@@ -1998,8 +1998,26 @@ function FreeAlloc(stack, runtime) -- 0x10C
 end
 
 function gButton(stack, runtime) -- 0x10F
-    error("Unimplemented opcode gButton!")
+    local text, type, width, height, state, bitmap, mask, layout
+    local numParams = runtime:IP8()
+    if numParams == 3 then
+        layout = stack:pop()
+    end
+    if numParams >= 2 then
+        mask = stack:pop()
+    end
+    if numParams >= 1 then
+        bitmap = stack:pop()
+    end
+    state = stack:pop()
+    height = stack:pop()
+    width = stack:pop()
+    type = stack:pop()
+    text = stack:pop()
+    runtime:gBUTTON(text, type, width, height, state, bitmap, mask, layout)
 end
+
+gButton_dump = numParams_dump
 
 function gXBorder(stack, runtime) -- 0x110
     local numParams =  runtime:IP8()

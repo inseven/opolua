@@ -127,6 +127,8 @@ extension CGContext {
             let sz = attribStr.size()
             attribStr.draw(at: CGPoint(x: pt.x, y: pt.y - sz.height))
             UIGraphicsPopContext()
+        case .border(let rect, let type):
+            print("TODO: border \(rect) type=\(type.rawValue)")
         }
     }
 

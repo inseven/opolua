@@ -168,8 +168,7 @@ end
 -- TODO gPATT
 
 function gBORDER(flags, w, h)
-    -- TODO ignoring flags entirely
-    gXBORDER(2, 1, w, h)
+    runtime:drawCmd("border", { width = w, height = h, btype = flags })
 end
 
 function gXBORDER(type, flags, w, h)
@@ -177,16 +176,34 @@ function gXBORDER(type, flags, w, h)
         w = gWIDTH()
         h = gHEIGHT()
     end
-    -- TODO we're ignoring all the flags here...
-    gBOX(w, h)
+
+    if flags == 0 then
+        -- Nothing...
+    elseif flags == 1 then
+        gBOX(w, h)
+    else
+        runtime:drawCmd("border", { width = w, height = h, btype = (type << 16) | flags })
+    end
 end
 
 function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     -- TODO utterly terrible
     local id = gIDENTITY()
     local prevX, prevY = gX(), gY()
+
+    -- The Series 5 appears to ignore type and treat 1 as 2 the same
+    printf("TODO BUTTON %s type=%d state=%d\n", text, type, state)
+
+    if state == 0 then
+        gXBORDER(2, 0x84, width, height)
+    elseif state == 1 then
+        gXBORDER(2, 0x42, width, height)
+    elseif state == 2 then
+        gXBORDER(2, 0x54, width, height)
+    end
+
     gMOVE(2, 2)
-    if bmpId > 0 then
+    if bmpId and bmpId > 0 then
         gUSE(bmpId)
         local bmpWidth = gWIDTH()
         local bmpHeight = gHEIGHT()
@@ -199,8 +216,8 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
 
     gMOVE(0, height - 2)
     gPRINT(text)
-    gAT(prevX, prevY)
-    gBOX(width, height)
+    -- gAT(prevX, prevY)
+    -- gBOX(width, height)
 end
 
 function gCOPY(id, x, y, w, h, mode)

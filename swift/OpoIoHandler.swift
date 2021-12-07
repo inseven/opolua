@@ -209,11 +209,22 @@ struct Graphics {
         case invert = 2
     }
 
-    enum TMode: Int {
+    enum TextMode: Int {
         case set = 0
         case clear = 1
         case invert = 2
         case replace = 3
+    }
+
+    enum BorderType: Int {
+        case shallowSunken = 0x20042
+        case deepSunken = 0x20044
+        case deepSunkenWithOutline = 0x20054
+        case shallowRaised = 0x20082
+        case deepRaised = 0x20084
+        case deepRaisedWithOutline = 0x20094
+        case verticalBar = 0x20022
+        case horizontalBar = 0x2002A
     }
 
     struct DrawCommand {
@@ -226,7 +237,8 @@ struct Graphics {
             case bitblt(PixelData)
             case copy(CopySource)
             case scroll(Int, Int, Rect) // dx, dy, rect
-            case text(String, FontInfo, TMode)
+            case text(String, FontInfo, TextMode)
+            case border(Rect, BorderType)
         }
         let displayId: Int
         let type: OpType

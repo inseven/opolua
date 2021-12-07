@@ -1,0 +1,85 @@
+CONST w% = 50
+CONST h% = 30
+
+PROC main:
+	GLOBAL i%
+	gFONT 9
+	REM gCOLOR 160,160,160
+	REM gFILL gWIDTH, gHEIGHT, 0
+	gCOLOR 0,0,0
+	gAT 10, 10
+	bord:(1, 1)
+	bord:(1, 2)
+	bord:(1, 3)
+	bord:(1, 4)
+	bord:(1, $103)
+	bord:(1, $203)
+	bord:(1, $403)
+	bord:(2, 0)
+	bord:(2, 1)
+	bord:(2, $42)
+	bord:(2, $44)
+	bord:(2, $144)
+	bord:(2, $244)
+	bord:(2, $444)
+	bord:(2, $54)
+	bord:(2, $82)
+	bord:(2, $84)
+	bord:(2, $94)
+	bord:(2, $22)
+	bord:(2, $2A)
+	
+	gAT 10, gY + h% + 10
+	but:(1, 0)
+	but:(1, 1)
+	but:(1, 2)
+	but:(2, 0)
+	but:(2, 1)
+	but:(2, 2)
+
+	gAT 10, gY + h% + 10
+	brd:(1)
+	brd:(2)
+	brd:(3)
+	brd:(4)
+	brd:($101)
+	brd:($201)
+	brd:($203)
+
+	REM gSAVEBIT("D:\border-white.mbm")
+	GET
+ENDP
+
+PROC bord:(type%, flags%)
+	LOCAL x%
+	gXBORDER type%, flags%, w%, h%
+	x% = gX
+	gMOVE 5, h%-8
+	gPRINT type%, HEX$(flags%)
+	gAT x%, gY
+	gMOVE 5 + w%, -(h%-8)
+	checkEnd:	
+ENDP
+
+PROC brd:(flags%)
+	LOCAL x%
+	gBORDER flags%, w%, h%
+	x% = gX
+	gMOVE 5, h%-8
+	gPRINT HEX$(flags%)
+	gAT x%, gY
+	gMOVE 5 + w%, -(h%-8)
+	checkEnd:	
+ENDP
+
+PROC checkEnd:
+	IF gX + w% > gWIDTH
+		gAT 10, gY + h% + 10
+	ENDIF
+ENDP
+
+PROC but:(type%, state%)
+	gBUTTON HEX$(type%) + "b" + HEX$(state%), type%, w%, h%, state%
+	gMOVE 5 + w%, 0
+	checkEnd:
+ENDP

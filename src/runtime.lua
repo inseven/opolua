@@ -462,6 +462,31 @@ function Runtime:closeGraphicsContext(id)
     self.ioh.graphicsop("close", id)
 end
 
+function Runtime:saveGraphicsState()
+    local ctx = self:getGraphicsContext()
+    return {
+        id = ctx.id,
+        mode = ctx.mode,
+        tmode = ctx.tmode,
+        color = ctx.color,
+        bgcolor = ctx.bgcolor,
+        pos = { x = ctx.pos.x, y = ctx.pos.y },
+        font = ctx.font,
+        style = ctx.style,
+    }
+end
+
+function Runtime:restoreGraphicsState(state)
+    local ctx = self:getGraphicsContext(state.id)
+    ctx.mode = state.mode
+    ctx.tmode = state.tmode
+    ctx.color = state.color
+    ctx.bgcolor = state.bgcolor
+    ctx.pos = { x = state.pos.x, y = state.pos.y }
+    ctx.font = state.font
+    ctx.style = state.style
+end
+
 function Runtime:drawCmd(type, op)
     if not op then op = {} end
     local graphics = self:getGraphics()
