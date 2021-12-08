@@ -20,6 +20,8 @@
 		D889134F274C181F00794D55 /* CGPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134E274C181F00794D55 /* CGPoint.swift */; };
 		D8891351274C184C00794D55 /* UIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891350274C184C00794D55 /* UIImage.swift */; };
 		D8891353274C186E00794D55 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891352274C186E00794D55 /* Canvas.swift */; };
+		D893EAD32760739500E64219 /* Border.swift in Sources */ = {isa = PBXBuildFile; fileRef = D893EAD22760739500E64219 /* Border.swift */; };
+		D893EAD5276073CA00E64219 /* Borders in Resources */ = {isa = PBXBuildFile; fileRef = D893EAD4276073CA00E64219 /* Borders */; };
 		D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A60792756A2CC00C9757F /* FileManager.swift */; };
 		D89A607C2756A6A300C9757F /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607B2756A6A300C9757F /* URL.swift */; };
 		D89A607E2756A98200C9757F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607D2756A98200C9757F /* ViewController.swift */; };
@@ -108,6 +110,8 @@
 		D889134E274C181F00794D55 /* CGPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPoint.swift; sourceTree = "<group>"; };
 		D8891350274C184C00794D55 /* UIImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImage.swift; sourceTree = "<group>"; };
 		D8891352274C186E00794D55 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
+		D893EAD22760739500E64219 /* Border.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Border.swift; sourceTree = "<group>"; };
+		D893EAD4276073CA00E64219 /* Borders */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Borders; sourceTree = "<group>"; };
 		D89A60792756A2CC00C9757F /* FileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManager.swift; sourceTree = "<group>"; };
 		D89A607B2756A6A300C9757F /* URL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
 		D89A607D2756A98200C9757F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -213,6 +217,7 @@
 				D861E8DA274A819D003C8D3D /* OPLObject.swift */,
 				D8D50116275928CF008C1BC9 /* Scheduler.swift */,
 				D8FE60042757177200711717 /* Settings.swift */,
+				D893EAD22760739500E64219 /* Border.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -284,6 +289,7 @@
 		DB79FE6127428292005E904F /* OpoLua */ = {
 			isa = PBXGroup;
 			children = (
+				D893EAD4276073CA00E64219 /* Borders */,
 				DB79FE6A27428294005E904F /* OpoLua.entitlements */,
 				DB79FE6927428294005E904F /* Info.plist */,
 				DB79FE6227428292005E904F /* AppDelegate.swift */,
@@ -437,6 +443,7 @@
 				DBACE9C3274F895D002612DF /* modules in Resources */,
 				D87A9249274C517000254DE9 /* Assets.xcassets in Resources */,
 				DB5AC97A275AC72A0043FE5C /* sound.lua in Resources */,
+				D893EAD5276073CA00E64219 /* Borders in Resources */,
 				DB5AC970275198A20043FE5C /* database.lua in Resources */,
 				DB5AC97827583DC70043FE5C /* opx in Resources */,
 				DB79FFF22742E631005E904F /* fns.lua in Resources */,
@@ -462,6 +469,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */,
+				D893EAD32760739500E64219 /* Border.swift in Sources */,
 				DB7900232746C771005E904F /* lua_State.swift in Sources */,
 				D861E8DF274A8D70003C8D3D /* KeyCode.swift in Sources */,
 				DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */,
