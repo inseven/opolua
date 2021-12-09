@@ -217,6 +217,23 @@ struct Graphics {
     }
 
     enum BorderType: Int {
+        // gBORDER
+        case singlePixelShadow = 0x1
+        case singlePixelShadowRounded = 0x201
+        case clearSinglePixelShadow = 0x2
+        case doublePixelShadow = 0x3
+        case clearDoublePixelShadow = 0x4
+
+        // gXBORDER type=1
+        case series3singlePixelShadow = 0x10001
+        case series3singlePixelShadowRounded = 0x10201
+        case series3clearSinglePixelShadow = 0x10002
+        case series3doublePixelShadow = 0x10003
+        case series3doublePixelShadowRounded = 0x10203
+        case series3clearDoublePixelShadow = 0x10004
+
+
+        // gXBORDER type=2
         case shallowSunken = 0x20042
         case deepSunken = 0x20044
         case deepSunkenWithOutline = 0x20054

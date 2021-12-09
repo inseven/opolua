@@ -2,6 +2,16 @@ CONST w% = 50
 CONST h% = 30
 
 PROC main:
+	buttons:
+	GET
+	gCOLOR 160,160,160
+	gAT 0, 0
+	gFILL gWIDTH, gHEIGHT, 0
+	buttons:
+	GET
+ENDP
+
+PROC buttons:
 	GLOBAL i%
 	gFONT 9
 	REM gCOLOR 160,160,160
@@ -47,7 +57,6 @@ PROC main:
 	brd:($203)
 
 	REM gSAVEBIT("D:\border-white.mbm")
-	GET
 ENDP
 
 PROC bord:(type%, flags%)

@@ -167,8 +167,19 @@ end
 
 -- TODO gPATT
 
+local KExtraPixelInset = 0x100
+local KExtraRoundedCorners = 0x200
+local KLoseSinglePixel = 0x400 -- I have no idea wtf this is supposed to do
+
 function gBORDER(flags, w, h)
-    runtime:drawCmd("border", { width = w, height = h, btype = flags })
+    if flags & KExtraPixelInset > 0 then
+        flags = flags & ~KExtraPixelInset
+        local pos = runtime:getGraphicsContext().pos
+        -- No I don't understand the reason for this flag either
+        runtime:drawCmd("border", { x = pos.x + 1, y = pos.y + 1, width = w - 2, height = h - 2, btype = flags })
+    else
+        runtime:drawCmd("border", { width = w, height = h, btype = flags })
+    end
 end
 
 function gXBORDER(type, flags, w, h)
@@ -179,9 +190,18 @@ function gXBORDER(type, flags, w, h)
 
     if flags == 0 then
         -- Nothing...
-    elseif flags == 1 then
+    elseif type == 2 and flags == 1 then
         gBOX(w, h)
     else
+        if type == 1 and flags & KExtraPixelInset > 0 then
+            flags = flags & ~KExtraPixelInset -- KExtraPixelInset has no effect on type 1
+        end
+        if type == 2 and flags & KExtraRoundedCorners > 0 then
+            flags = flags & ~KExtraRoundedCorners -- rounded corners is ignored on type 2 borders
+        end
+        if flags & KLoseSinglePixel > 0 then
+            flags = flags & ~KLoseSinglePixel
+        end
         runtime:drawCmd("border", { width = w, height = h, btype = (type << 16) | flags })
     end
 end
@@ -216,7 +236,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
 
     gMOVE(0, height - 2)
     gPRINT(text)
-    -- gAT(prevX, prevY)
+    gAT(prevX, prevY)
     -- gBOX(width, height)
 end
 

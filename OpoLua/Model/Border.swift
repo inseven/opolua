@@ -20,35 +20,15 @@
 
 import UIKit
 
-extension Graphics.BorderType {
-
-    var filename: String {
-        switch self {
-        case .shallowSunken:
-            return "2-42"
-        case .deepSunken:
-            return "2-44"
-        case .deepSunkenWithOutline:
-            return "2-54"
-        case .shallowRaised:
-            return "2-82"
-        case .deepRaised:
-            return "2-84"
-        case .deepRaisedWithOutline:
-            return "2-94"
-        case .verticalBar:
-            return "2-22"
-        case .horizontalBar:
-            return "2-2a"
-        }
-    }
-
-}
-
 extension CGContext {
 
     func gXBorder(type: Graphics.BorderType, frame: CGRect) {
-        let url = Bundle.main.url(forResource: type.filename, withExtension: "png", subdirectory: "Borders")!
+        let filename = String(format: "%05X", type.rawValue)
+
+        guard let url = Bundle.main.url(forResource: filename, withExtension: "png", subdirectory: "Borders") else {
+            print("No resource found for border type \(type) (\(filename).png)")
+            return
+        }
         let image = UIImage(contentsOfFile: url.path)!
         let button = image.resizableImage(withCapInsets: UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10), resizingMode: .tile)
         let view = UIImageView(image: button)
