@@ -336,6 +336,10 @@ function gLOADBIT(path, writable, index)
     return id
 end
 
+function gSAVEBIT(path, w, h)
+    printf("TODO: gSAVEBIT(%s)\n", path)
+end
+
 function gIDENTITY()
     return runtime:getGraphicsContext().id
 end

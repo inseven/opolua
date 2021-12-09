@@ -2,29 +2,45 @@ CONST w% = 50
 CONST h% = 30
 
 PROC main:
-	buttons:
+	draw:
+	gSAVEBIT("D:\border-white.mbm")
 	GET
 	gCOLOR 160,160,160
 	gAT 0, 0
 	gFILL gWIDTH, gHEIGHT, 0
-	buttons:
+	draw:
+	gSAVEBIT("D:\border-grey.mbm")
 	GET
 ENDP
 
-PROC buttons:
+PROC draw:
 	GLOBAL i%
 	gFONT 9
-	REM gCOLOR 160,160,160
-	REM gFILL gWIDTH, gHEIGHT, 0
 	gCOLOR 0,0,0
 	gAT 10, 10
+
+	brd:(1)
+	brd:(2)
+	brd:(3)
+	brd:(4)
+	brd:($201)
+	brd:($202)
+	brd:($203)
+	brd:($204)
+
+	gAT 10, gY + h% + 10
+
 	bord:(1, 1)
 	bord:(1, 2)
 	bord:(1, 3)
 	bord:(1, 4)
-	bord:(1, $103)
+	bord:(1, $201)
+	bord:(1, $202)
 	bord:(1, $203)
-	bord:(1, $403)
+	bord:(1, $204)
+	REM bord:(1, $403)
+
+	gAT 10, gY + h% + 10
 	bord:(2, 0)
 	bord:(2, 1)
 	bord:(2, $42)
@@ -46,27 +62,16 @@ PROC buttons:
 	but:(2, 0)
 	but:(2, 1)
 	but:(2, 2)
-
-	gAT 10, gY + h% + 10
-	brd:(1)
-	brd:(2)
-	brd:(3)
-	brd:(4)
-	brd:($101)
-	brd:($201)
-	brd:($203)
-
-	REM gSAVEBIT("D:\border-white.mbm")
 ENDP
 
 PROC bord:(type%, flags%)
 	LOCAL x%
 	gXBORDER type%, flags%, w%, h%
 	x% = gX
-	gMOVE 5, h%-8
+	gMOVE 7, h%-10
 	gPRINT type%, HEX$(flags%)
 	gAT x%, gY
-	gMOVE 5 + w%, -(h%-8)
+	gMOVE 5 + w%, -(h%-10)
 	checkEnd:	
 ENDP
 

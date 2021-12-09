@@ -1542,8 +1542,15 @@ end
 OpenR_dump = Open_dump
 
 function gSaveBit(stack, runtime) -- 0xC5
-    error("Unimplemented opcode gSaveBit!")
+    local numParams = runtime:IP8()
+    local w, h
+    if numParams == 1 then
+        w, h = stack:popXY()
+    end
+    runtime:gSAVEBIT(stack:pop(), w, h)     
 end
+
+gSaveBit_dump = numParams_dump
 
 function gClose(stack, runtime) -- 0xC6
     local id = stack:pop()
