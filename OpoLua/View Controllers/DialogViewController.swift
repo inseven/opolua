@@ -221,8 +221,9 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
             return cell
         case .checkbox:
             let cell = SwitchTableViewCell()
-            cell.tag = row.index
             cell.label.text = item.prompt
+            cell.switchView.tag = row.index
+            cell.switchView.isOn = values[row.index] != "0"
             cell.switchView.addTarget(self, action: #selector(choiceValueDidChange(sender:)), for: .valueChanged)
             return cell
         case .edit:
