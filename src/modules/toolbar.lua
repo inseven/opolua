@@ -62,13 +62,19 @@ function TBarLatch(runtime, comp)
 end
 
 function TBarShow(runtime)
-    gVISIBLE(tbWinId, true)
+    local prevId = gIDENTITY()
+    gUSE(tbWinId)
+    gVISIBLE(true)
     visibleVar(-1)
+    gUSE(prevId)
 end
 
 function TBarHide(runtime)
-    gVISIBLE(tbWinId, false)
+    local prevId = gIDENTITY()
+    gUSE(tbWinId)
+    gVISIBLE(false)
     visibleVar(0)
+    gUSE(prevId)
 end
 
 return _ENV
