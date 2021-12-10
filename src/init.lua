@@ -100,6 +100,10 @@ dItemTypes = enum {
     dSEPARATOR = 13,
 }
 
+KPenDown = 0
+KPenUp = 1
+KPenDrag = 6
+
 -- UIDs converted with
 -- lua -e "for line in io.lines() do print((line:gsub('(%s+)([0-9]+)%s*', function(s, m) return string.format('%s0x%08X', s, tonumber(m)) end))) end"
 KFontArialBold8 = 0x100001EF

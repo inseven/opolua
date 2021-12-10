@@ -473,6 +473,7 @@ function Runtime:saveGraphicsState()
         pos = { x = ctx.pos.x, y = ctx.pos.y },
         font = ctx.font,
         style = ctx.style,
+        flush = self:getGraphicsAutoFlush(),
     }
 end
 
@@ -485,6 +486,8 @@ function Runtime:restoreGraphicsState(state)
     ctx.pos = { x = state.pos.x, y = state.pos.y }
     ctx.font = state.font
     ctx.style = state.style
+    self:setGraphicsContext(state.id)
+    self:setGraphicsAutoFlush(state.flush)
 end
 
 function Runtime:drawCmd(type, op)

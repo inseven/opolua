@@ -119,7 +119,10 @@ extension CGContext {
                 drawUnflippedImage(img, in: newRect)
             }
         case .text(let str, let font, _ /*let tmode*/):
-            let attribStr = NSAttributedString(string: str, attributes: [.font: font.toUiFont()])
+            let attribStr = NSAttributedString(string: str, attributes: [
+                .font: font.toUiFont(),
+                .foregroundColor: UIColor(cgColor: col)
+            ])
             UIGraphicsPushContext(self)
             let pt = operation.origin.cgPoint()
             // OPL text drawing coords are for the bottom left of the text, not the top left, so we have to adjust

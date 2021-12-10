@@ -9,6 +9,9 @@ PROC go:
 	LOCAL ev&(16)
 	TBarInit:("Woop", gWIDTH, gHEIGHT)
 	TBarButt:("n", 1, "New", 0, 0, 0, 0)
+	TBarButt:("a", 2, "Thing 1", 0, 0, 0, $16)
+	TBarButt:("b", 3, "Thing 2", 0, 0, 0, $32)
+	TBarButt:("q", 4, "Quit", 0, 0, 0, 0)
 	TBarShow:
 	WHILE 1
 		GETEVENT32 ev&()
@@ -20,4 +23,18 @@ ENDP
 
 PROC CmdN%:
 	PRINT "Got command N!"
+ENDP
+
+PROC CmdA%:
+	PRINT "Got command A!"
+	TBarLatch:(2)
+ENDP
+
+PROC CmdB%:
+	PRINT "Got command B!"
+	TBarLatch:(3)
+ENDP
+
+PROC CmdQ%:
+	STOP
 ENDP

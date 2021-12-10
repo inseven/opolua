@@ -1,17 +1,31 @@
 _ENV = module()
 
+-- Constants
+
 local KTbWidth = 70
 local KTbBtTop = 24
 local KTbBtH = 37
 local KTbClockSize = 70
 local KTbNumButtons = 4
 local KTbNumComps = 6
--- local KTbMarginX = 0
-local KTbFont = KFontSquashed
-local KTbTitleFont = KFontArialNormal11
 
+local KTbFlgLatchable = 0x2
+local KTbFlgLatchStart = 0x12
+local KTbFlgLatchMiddle = 0x22
+local KTbFlgLatchEnd = 0x32
+local KTbFlgLatched = 0x04
+
+local KTbFont = KFontSquashed
+local KTbTitleFont = KFontArialBold11 --KFontArialNormal11
+
+-- Global vars
+local visibleVar 
+
+-- Actual state
 local tbWinId
-local visibleVar -- global vars
+local buttons = {}
+local pressedButtonId
+
 
 function TBarLink(runtime, appLink)
     local tbWidthVar = runtime:declareGlobal("TbWidth%")
@@ -21,7 +35,23 @@ function TBarLink(runtime, appLink)
     runtime:callProc(appLink:upper())
 end
 
+local function drawButton(runtime, pos)
+    local button = buttons[pos]
+    local state = button.state
+    if pos == pressedButtonId and button.isPushedDown then
+        state = state + 1
+    end
+    if button.flags & KTbFlgLatched > 0 then
+        state = state + 1
+    end
+    gUSE(tbWinId)
+    gFONT(KFontSquashed)
+    gAT(0, KTbBtTop + (pos - 1) * KTbBtH)
+    gBUTTON(button.text, 2, KTbWidth, KTbBtH + 1, state, button.bmp, button.mask)
+end
+
 function TBarInit(runtime, title, screenWidth, screenHeight)
+    local prevId = gIDENTITY()
     local w = KTbWidth
     local h = screenHeight
     tbWinId = gCREATE(screenWidth - w, 0, w, h, false)
@@ -44,21 +74,104 @@ function TBarSetTitle(runtime, name)
     gUSE(prevId)
 end
 
-function TBarButt(runtime, shortcut, pos, text, state, bit, mask, flags)
+function TBarButt(runtime, shortcut, pos, text, state, bmp, mask, flags)
     local prevId = gIDENTITY()
-    gUSE(tbWinId)
-    gFONT(KFontSquashed)
-    gAT(0, KTbBtTop + (pos - 1) * KTbBtH)
-    gBUTTON(text, 1, KTbWidth, KTbBtH + 1, state, bit, mask)
+    buttons[pos] = {
+        id = pos,
+        text = text,
+        shortcut = shortcut,
+        state = state,
+        bmp = bmp,
+        mask = mask,
+        flags = flags
+    }
+    drawButton(runtime, pos)
     gUSE(prevId)
 end
 
 _ENV["TBarOffer%"] = function(runtime, winId, ptrType, ptrX, ptrY)
-    --TODO
+    -- printf("TBarOffer id=%d ptrType=%d ptrX=%d ptrY=%d\n", winId, ptrType, ptrX, ptrY)
+    local butId = 1 + ((ptrY - KTbBtTop) // KTbBtH)
+    if not buttons[butId] or winId ~= tbWinId or ptrX < 0 or ptrX >= KTbWidth then
+        butId = nil
+    end
+
+    if pressedButtonId then
+        local gupdateState = gUPDATE(false)
+        local prevId = gIDENTITY()
+        local procToCall = nil
+        if ptrType == KPenUp then
+            if buttons[pressedButtonId].isPushedDown then
+                buttons[pressedButtonId].isPushedDown = false
+                drawButton(runtime, pressedButtonId)
+            end
+            -- Note, already latched buttons don't get called
+            if butId == pressedButtonId and (buttons[butId].flags & KTbFlgLatched) == 0 then
+                -- Call the shortcut
+                local shortcut = buttons[butId].shortcut
+                local shifted = shortcut:match("^[A-Z]")
+                procToCall = string.upper("cmd" .. (shifted and "S" or "")..shortcut.."%")
+            end
+            pressedButtonId = nil
+        elseif ptrType == KPenDrag then
+            if butId ~= pressedButtonId and buttons[pressedButtonId].isPushedDown then
+                buttons[pressedButtonId].isPushedDown = false
+                drawButton(runtime, pressedButtonId)
+            elseif butId == pressedButtonId and not buttons[pressedButtonId].isPushedDown then
+                buttons[pressedButtonId].isPushedDown = true
+                drawButton(runtime, pressedButtonId)
+            end
+        end
+        gUPDATE(gupdateState)
+        gUSE(prevId)
+        if procToCall then
+            runtime:callProc(procToCall)
+        end
+        return -1
+    elseif butId and ptrType == KPenDown then
+        pressedButtonId = butId
+        buttons[butId].isPushedDown = true
+        local prevId = gIDENTITY()
+        drawButton(runtime, butId)
+        gUSE(prevId)
+        return -1
+    else
+        return 0
+    end
 end
 
-function TBarLatch(runtime, comp)
-    --TODO
+local function unlatch(runtime, button)
+    if button.flags & KTbFlgLatched > 0 then
+        button.flags = button.flags & ~KTbFlgLatched
+        drawButton(runtime, button.id)
+    end
+end
+
+function TBarLatch(runtime, butId)
+    local button = buttons[butId]
+    assert(button and button.flags & KTbFlgLatchable > 0, "No latchable button found!")
+    -- Unlatch everything above that's in the same latch group
+    local buttonLatchGroup = button.flags & 0x30
+    for id = butId - 1, 1, -1 do
+        local blg = buttons[id].flags & 0x30 
+        if blg == 0 or blg > buttonLatchGroup then
+            break
+        end
+        unlatch(runtime, buttons[id])
+    end
+    -- And everything below
+    for id = butId + 1, #buttons do
+        local blg = buttons[id].flags & 0x30 
+        if blg == 0 or blg < buttonLatchGroup then
+            break
+        end
+        unlatch(runtime, buttons[id])
+    end
+
+    if button.flags & KTbFlgLatched == 0 then
+        button.flags = button.flags | KTbFlgLatched
+        drawButton(runtime, button.id)
+    end
 end
 
 function TBarShow(runtime)

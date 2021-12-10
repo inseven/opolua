@@ -29,6 +29,22 @@ function _setRuntime(r)
     runtime = r
 end
 
+local function darkGrey()
+    gCOLOR(0x55, 0x55, 0x55)
+end
+
+local function lightGrey()
+    gCOLOR(0xAA, 0xAA, 0xAA)
+end
+
+local function black()
+    gCOLOR(0, 0, 0)
+end
+
+local function white()
+    gCOLOR(0xFF, 0xFF, 0xFF)
+end
+
 -- Graphics APIs
 
 function gCLOSE(id)
@@ -207,37 +223,47 @@ function gXBORDER(type, flags, w, h)
 end
 
 function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
-    -- TODO utterly terrible
-    local id = gIDENTITY()
-    local prevX, prevY = gX(), gY()
+    local s = runtime:saveGraphicsState()
+    gUPDATE(false)
 
     -- The Series 5 appears to ignore type and treat 1 as 2 the same
-    printf("TODO BUTTON %s type=%d state=%d\n", text, type, state)
+    -- printf("gBUTTON %s type=%d state=%d\n", text, type, state)
 
+    local textw, texth = runtime:iohandler().graphicsop("textsize", text, s.font)
+
+    lightGrey()
     if state == 0 then
         gXBORDER(2, 0x84, width, height)
+        gMOVE(3, 3)
+        gFILL(width - 6, height - 6)
     elseif state == 1 then
         gXBORDER(2, 0x42, width, height)
+        gMOVE(2, 2)
+        gFILL(width - 4, height - 4, GraphicsMode.Clear)
     elseif state == 2 then
         gXBORDER(2, 0x54, width, height)
+        gMOVE(3, 3)
+        gFILL(width - 5, height - 5)
     end
 
-    gMOVE(2, 2)
+    -- state 1 should offset the button contents by 1 pixel, and state 2 by 2, so just add the state to the coords
+    local textX = s.pos.x + 4 + state
     if bmpId and bmpId > 0 then
         gUSE(bmpId)
         local bmpWidth = gWIDTH()
         local bmpHeight = gHEIGHT()
-        gUSE(id)
+        gUSE(s.id)
         local bmpOffset = (height - bmpHeight) // 2
-        gMOVE(0, bmpOffset)
+        gAT(textX, s.pos.y + bmpOffset + state)
         gCOPY(bmpId, 0, 0, bmpWidth, bmpHeight, 3)
-        gMOVE(bmpWidth + 2, -bmpOffset)
+        textX = textX + bmpWidth + 1
     end
 
-    gMOVE(0, height - 2)
+    gAT(textX, s.pos.y + ((height + texth) // 2) + state)
+    black()
     gPRINT(text)
-    gAT(prevX, prevY)
-    -- gBOX(width, height)
+
+    runtime:restoreGraphicsState(s) -- also restores gUPDATE state
 end
 
 function gCOPY(id, x, y, w, h, mode)
@@ -263,6 +289,7 @@ function gSCROLL(dx, dy, x, y, w, h)
 end
 
 function gUPDATE(flag)
+    local prevState = runtime:getGraphicsAutoFlush()
     if flag == nil then
         -- gUPDATE
         runtime:flushGraphicsOps()
@@ -270,6 +297,7 @@ function gUPDATE(flag)
         -- gUPDATE ON/OFF
         runtime:setGraphicsAutoFlush(flag)
     end
+    return prevState
 end
 
 function gLINETO(x, y)
