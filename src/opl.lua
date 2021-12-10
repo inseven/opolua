@@ -150,8 +150,7 @@ function gTWIDTH(text)
 end
 
 function gIPRINT(text, corner)
-    -- TODO implement properly
-    runtime:iohandler().print(text .. "\n")
+    runtime:iohandler().graphicsop("giprint", text, corner)
 end
 
 function gLINEBY(dx, dy)

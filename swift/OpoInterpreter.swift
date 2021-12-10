@@ -400,7 +400,10 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         } else {
             print("Bad args to textsize!")
         }
-           
+    case "giprint":
+        let text = L.tostring(2) ?? ""
+        let corner = Graphics.Corner(rawValue: L.toint(3) ?? Graphics.Corner.bottomRight.rawValue) ?? .bottomRight
+        return doGraphicsOp(L, iohandler, .giprint(text, corner))
     default:
         print("Unknown graphicsop \(cmd)!")
     }

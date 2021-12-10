@@ -244,6 +244,13 @@ struct Graphics {
         case horizontalBar = 0x2002A
     }
 
+    enum Corner: Int {
+        case topLeft = 0
+        case bottomLeft = 1
+        case topRight = 2
+        case bottomRight = 3
+    }
+
     struct DrawCommand {
         enum OpType {
             case fill(Size)
@@ -272,6 +279,7 @@ struct Graphics {
         case order(Int, Int) // displayId, position
         case show(Int, Bool) // displayId, visible flag
         case textSize(String, FontInfo) // returns size
+        case giprint(String, Corner)
     }
 
     enum Result {
