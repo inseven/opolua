@@ -101,9 +101,11 @@ extension CGContext {
                 print("Couldn't get source drawable from extra!")
                 return
             }
+            // Clip the rect to the source size to make sure we don't inadvertently stretch it
+            let rect = src.rect.cgRect().intersection(CGRect(x: 0, y: 0, width: srcImage.width, height: srcImage.height))
             let maskImg = (mask?.extra as? Drawable)?.image
-            if let img = srcImage.cropping(to: src.rect.cgRect()) {
-                drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: src.rect.size.cgSize()), mask: maskImg)
+            if let img = srcImage.cropping(to: rect) {
+                drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: rect.size), mask: maskImg)
             }
         case .scroll(let dx, let dy, let rect):
             let origRect = rect.cgRect()
