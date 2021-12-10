@@ -350,6 +350,8 @@ struct Async {
         let modifiers: Int
         let x: Int
         let y: Int
+        let screenx: Int
+        let screeny: Int
     }
     enum ResponseValue {
         case cancelled

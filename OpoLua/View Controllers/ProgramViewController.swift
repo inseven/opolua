@@ -488,34 +488,29 @@ extension ProgramViewController: OpoIoHandler {
 
 extension ConcurrentQueue: CanvasViewDelegate where T == Async.ResponseValue {
 
-    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
-        let location = touch.location(in: canvasView)
+    private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
+        let location = touch.location(in: view)
+        let screenLocation = touch.location(in: view.superview)
         append(.penevent(.init(timestamp: Int(event.timestamp),
-                               windowId: canvasView.id,
-                               type: .down,
+                               windowId: view.id,
+                               type: type,
                                modifiers: 0,
                                x: Int(location.x),
-                               y: Int(location.y))))
+                               y: Int(location.y),
+                               screenx: Int(screenLocation.x),
+                               screeny: Int(screenLocation.y))))
+    }
+
+    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
+        handleTouch(touch, in: canvasView, with: event, type: .down)
     }
 
     func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
-        let location = touch.location(in: canvasView)
-        append(.penevent(.init(timestamp: Int(event.timestamp),
-                               windowId: canvasView.id,
-                               type: .drag,
-                               modifiers: 0,
-                               x: Int(location.x),
-                               y: Int(location.y))))
+        handleTouch(touch, in: canvasView, with: event, type: .drag)
     }
 
     func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
-        let location = touch.location(in: canvasView)
-        append(.penevent(.init(timestamp: Int(event.timestamp),
-                               windowId: canvasView.id,
-                               type: .up,
-                               modifiers: 0,
-                               x: Int(location.x),
-                               y: Int(location.y))))
+        handleTouch(touch, in: canvasView, with: event, type: .up)
     }
 
 }

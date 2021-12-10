@@ -570,11 +570,10 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
             ev[2] = event.windowId
             ev[3] = event.type.rawValue
             ev[4] = event.modifiers
-            // TODO distinguish window relative and abs coords
             ev[5] = event.x
             ev[6] = event.y
-            ev[7] = event.x
-            ev[8] = event.y
+            ev[7] = event.screenx
+            ev[8] = event.screeny
         case .cancelled, .stopped, .completed:
             break // Already handled above
         }
