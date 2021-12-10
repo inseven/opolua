@@ -799,7 +799,6 @@ function Runtime:pcallProc(procName, ...)
     local args = table.pack(...)
     assert(args.n == #proc.params, "Wrong number of arguments in call to "..procName)
 
-    self.ip = proc.codeOffset
     self.errorValue = KErrNone
     local stack = newStack()
     for i = 1, args.n do
