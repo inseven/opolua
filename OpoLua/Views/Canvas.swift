@@ -34,18 +34,28 @@ class Canvas: Drawable {
     var buffer: Data
     var image: CGImage?
 
-    let colorSpace = CGColorSpaceCreateDeviceRGB()
-    let bytesPerPixel = 4
+    let colorSpace: CGColorSpace
+    let bytesPerPixel: Int
+    let bitmapInfo: UInt32
 
-    init(size: CGSize) {
+    init(size: CGSize, color: Bool) {
         self.size = size
-        self.buffer = Data(count: Int(size.width) * Int(size.height) * bytesPerPixel)
+        if color {
+            colorSpace = CGColorSpaceCreateDeviceRGB()
+            bytesPerPixel = 4
+            bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+            self.buffer = Data(count: Int(size.width) * Int(size.height) * bytesPerPixel)
+        } else {
+            colorSpace = CGColorSpaceCreateDeviceGray()
+            bytesPerPixel = 1
+            bitmapInfo = 0
+            self.buffer = Data(repeating: 0xFF, count: Int(size.width) * Int(size.height) * bytesPerPixel)
+        }
     }
 
     func draw(_ operations: [Graphics.DrawCommand]) {
         let bytesPerRow = bytesPerPixel * Int(size.width)
         let bitsPerComponent = 8
-        let bitmapInfo: UInt32 = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
         buffer.withUnsafeMutableBytes { data in
             let context = CGContext(data: data.baseAddress,
                                     width: Int(size.width),

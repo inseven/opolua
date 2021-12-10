@@ -301,15 +301,22 @@ extension ProgramViewController: OpoIoHandler {
                     opsPerId[op.displayId] = []
                 }
                 switch (op.type) {
-                case .copy(let src):
+                case .copy(let src, let mask):
                     // These need some massaging to shoehorn in the src Drawable pointer
                     guard let srcCanvas = self.drawables[src.displayId] else {
                         print("Copy operation with unknown source \(src.displayId)!")
                         continue
                     }
                     let newSrc = Graphics.CopySource(displayId: src.displayId, rect: src.rect, extra: srcCanvas)
-                    let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .copy(newSrc), mode: op.mode,
-                                                     origin: op.origin, color: op.color, bgcolor: op.bgcolor)
+                    let newMaskSrc: Graphics.CopySource?
+                    if let mask = mask, let maskCanvas = self.drawables[mask.displayId] {
+                        newMaskSrc = Graphics.CopySource(displayId: mask.displayId, rect: mask.rect, extra: maskCanvas)
+                    } else {
+                        newMaskSrc = nil
+                    }
+                    let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .copy(newSrc, newMaskSrc),
+                                                     mode: op.mode, origin: op.origin,
+                                                     color: op.color, bgcolor: op.bgcolor)
                     opsPerId[op.displayId]!.append(newOp)
                 default:
                     opsPerId[op.displayId]!.append(op)
@@ -337,7 +344,8 @@ extension ProgramViewController: OpoIoHandler {
             DispatchQueue.main.async {
                 h = self.nextHandle
                 self.nextHandle += 1
-                self.drawables[h] = Canvas(size: size.cgSize())
+                let color = false // Hardcoded, for the moment
+                self.drawables[h] = Canvas(size: size.cgSize(), color: color)
                 semaphore.signal()
             }
             semaphore.wait()

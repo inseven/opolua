@@ -294,7 +294,14 @@ private func draw(_ L: LuaState!) -> Int32 {
                 let size = Graphics.Size(width: width, height: height)
                 let rect = Graphics.Rect(origin: Graphics.Point(x: srcx, y: srcy), size: size)
                 let info = Graphics.CopySource(displayId: srcid, rect: rect, extra: nil)
-                optype = .copy(info)
+                let maskInfo: Graphics.CopySource?
+                let maskId = L.toint(-1, key: "mask") ?? 0
+                if maskId > 0 {
+                    maskInfo = Graphics.CopySource(displayId: maskId, rect: rect, extra: nil)
+                } else {
+                    maskInfo = nil
+                }
+                optype = .copy(info, maskInfo)
             } else {
                 print("Missing params in copy!")
                 continue
@@ -360,8 +367,10 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 
 // graphicsop(cmd, ...)
 // graphicsop("close", displayId)
-// graphicsop("showWindow", displayId, flag)
+// graphicsop("show", displayId, flag)
+// graphicsop("order", displayId, pos)
 // graphicsop("textsize", str, font)
+// graphicsop("giprint", text, corner)
 private func graphicsop(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""

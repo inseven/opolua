@@ -96,13 +96,14 @@ extension CGContext {
             } else {
                 print("Unhandled bpp \(pxInfo.bpp) in bitblt operation!")
             }
-        case .copy(let src):
+        case .copy(let src, let mask):
             guard let srcDrawable = src.extra as? Drawable, let srcImage = srcDrawable.image else {
                 print("Couldn't get source drawable from extra!")
                 return
             }
+            let maskImg = (mask?.extra as? Drawable)?.image
             if let img = srcImage.cropping(to: src.rect.cgRect()) {
-                drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: src.rect.size.cgSize()))
+                drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: src.rect.size.cgSize()), mask: maskImg)
             }
         case .scroll(let dx, let dy, let rect):
             let origRect = rect.cgRect()
@@ -135,13 +136,25 @@ extension CGContext {
         }
     }
 
-    func drawUnflippedImage(_ img: CGImage, in rect: CGRect) {
+    func drawUnflippedImage(_ img: CGImage, in rect: CGRect, mask: CGImage? = nil) {
         // Need to make sure the image draws the right way up so we have to flip back to normal coords, and
         // apply the y coordinate conversion ourselves
+        saveGState()
+        defer {
+            restoreGState()
+        }
         self.concatenate(self.coordinateFlipTransform.inverted())
         let unflippedRect = CGRect(x: rect.minX, y: CGFloat(self.height) - rect.minY - rect.height, width: rect.width, height: rect.height)
+        if let mask = mask {
+            // Annoyingly, clip() expects the mask to be the inverse of how epoc
+            // expects it (ie 0xFF meaning opaque whereas epoc uses 0x00 for
+            // opaque), so we have to invert it ourselves. Probably should do
+            // something more efficient here...
+            let invertedCi = CIImage(cgImage: mask).applyingFilter("CIColorInvert")
+            let invertedCG = CIContext().createCGImage(invertedCi, from: invertedCi.extent)!
+            clip(to: unflippedRect, mask: invertedCG)
+        }
+
         self.draw(img, in: unflippedRect)
-        // And restore for other ops
-        self.concatenate(self.coordinateFlipTransform)
     }
 }

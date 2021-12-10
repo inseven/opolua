@@ -259,7 +259,7 @@ struct Graphics {
             case line(Point)
             case box(Size)
             case bitblt(PixelData)
-            case copy(CopySource)
+            case copy(CopySource, CopySource?) // second arg is optional mask
             case scroll(Int, Int, Rect) // dx, dy, rect
             case text(String, FontInfo, TextMode)
             case border(Rect, BorderType)

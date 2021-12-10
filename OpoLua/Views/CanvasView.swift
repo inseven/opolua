@@ -44,7 +44,7 @@ class CanvasView : UIView, Drawable {
 
     init(id: Int, size: CGSize, shadowSize: Int = 0) {
         self.id = id
-        canvas = Canvas(size: size)
+        canvas = Canvas(size: size, color: true)
         super.init(frame: .zero)
         clipsToBounds = false
         isMultipleTouchEnabled = false

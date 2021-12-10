@@ -254,7 +254,22 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         gUSE(s.id)
         local bmpOffset = (height - bmpHeight) // 2
         gAT(textX, s.pos.y + bmpOffset + state)
-        gCOPY(bmpId, 0, 0, bmpWidth, bmpHeight, 3)
+        if maskId and maskId > 0 then
+            gUSE(maskId)
+            assert(gWIDTH() == bmpWidth and gHEIGHT() == bmpHeight, "Bitmap and mask have different dimensions!")
+            gUSE(s.id)
+            runtime:drawCmd("copy", {
+                srcid = bmpId,
+                mask = maskId,
+                srcx = 0,
+                srcy = 0,
+                width = bmpWidth,
+                height = bmpHeight,
+                mode = 3,
+            })
+        else
+            gCOPY(bmpId, 0, 0, bmpWidth, bmpHeight, 3)
+        end
         textX = textX + bmpWidth + 1
     end
 
