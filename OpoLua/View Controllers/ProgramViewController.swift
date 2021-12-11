@@ -524,11 +524,10 @@ extension ConcurrentQueue: CanvasViewDelegate where T == Async.ResponseValue {
 
 extension ConcurrentQueue where T == Async.ResponseValue {
 
-    func sendKeyPress(_ key: Key) {
+    func sendKeyPress(_ key: KeyCode) {
         append(.keypressevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
-                                    keycode: key.keycode,
-                                    scancode: key.scancode,
-                                    modifiers: 0,
+                                    keycode: key,
+                                    modifiers: Modifiers(),
                                     isRepeat: false)))
     }
 
