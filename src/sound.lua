@@ -10,7 +10,7 @@ function parseWveFile(data)
         local uid, offset
         uid, offset, pos = string.unpack("<I4I4", data, pos)
         toc[uid] = offset
-        print(string.format("0x%08X @ 0x%08X", uid, offset))
+        -- print(string.format("0x%08X @ 0x%08X", uid, offset))
     end
 
     local sndDataOffset = toc[KUidSoundData]

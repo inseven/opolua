@@ -325,7 +325,7 @@ struct Fs {
 }
 
 struct Async {
-    enum RequestType {
+    enum RequestType: String {
         case getevent
         case playsound
     }
@@ -364,14 +364,13 @@ struct Async {
     enum ResponseValue {
         case cancelled
         case completed
-        case stopped // ie throw a KStopErr to unwind the thread, do not pass go do not collect £200.
+        // case stopped // ie throw a KStopErr to unwind the thread, do not pass go do not collect £200.
         case keypressevent(KeyPressEvent)
         case keydownevent(KeyUpDownEvent)
         case keyupevent(KeyUpDownEvent)
         case penevent(PenEvent)
     }
     struct Response {
-        let type: RequestType
         let requestHandle: Int32
         let value: ResponseValue
     }
@@ -413,8 +412,8 @@ protocol OpoIoHandler {
 
     func asyncRequest(_ request: Async.Request)
     func cancelRequest( _ requestHandle: Int32)
-    func waitForAnyRequest(block: Bool) -> Async.Response?
-
+    func waitForAnyRequest() -> Async.Response
+    func anyRequest() -> Async.Response?
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -468,12 +467,12 @@ class DummyIoHandler : OpoIoHandler {
     func cancelRequest(_ requestHandle: Int32) {
     }
 
-    func waitForAnyRequest(block: Bool) -> Async.Response? {
-        if block {
-            fatalError("No support for waitForAnyRequest in DummyIoHandler")
-        } else {
-            return nil
-        }    
+    func waitForAnyRequest() -> Async.Response {
+        fatalError("No support for waitForAnyRequest in DummyIoHandler")
+    }
+
+    func anyRequest() -> Async.Response? {
+        return nil
     }
 
 }

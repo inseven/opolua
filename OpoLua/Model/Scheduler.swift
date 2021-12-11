@@ -72,13 +72,12 @@ class Scheduler {
         defer {
             lock.unlock()
         }
-        guard let request = requests[requestHandle] else {
-            print("Failed to cancel unknown request.")
-            return
+        // It's not an error to cancel a request that's already been completed
+        if requests[requestHandle] != nil {
+            requests.removeValue(forKey: requestHandle)
+            responses[requestHandle] = Async.Response(requestHandle: requestHandle, value: .cancelled)
+            lock.broadcast()
         }
-        requests.removeValue(forKey: requestHandle)
-        responses[requestHandle] = Async.Response(type: request.type, requestHandle: requestHandle, value: .cancelled)
-        lock.broadcast()
     }
 
     func waitForRequest(_ requestHandle: Int32) -> Async.Response {
@@ -88,7 +87,7 @@ class Scheduler {
         }
         repeat {
             if let response = responses.removeValue(forKey: requestHandle) {
-                print("waitForRequest -> \(response)")
+                // print("waitForRequest -> \(response)")
                 lock.broadcast()
                 return response
             }
@@ -103,7 +102,7 @@ class Scheduler {
         }
         repeat {
             if let response = responses.removeRandomValue() {
-                print("waitForAnyRequest -> \(response)")
+                // print("waitForAnyRequest -> \(response)")
                 lock.broadcast()
                 return response
             }
@@ -117,10 +116,10 @@ class Scheduler {
             lock.unlock()
         }
         guard let response = responses.removeRandomValue() else {
-            print("anyRequest -> nil")
+            // print("anyRequest -> nil")
             return nil
         }
-        print("anyRequest -> \(response)")
+        // print("anyRequest -> \(response)")
         lock.broadcast()
         return response
     }

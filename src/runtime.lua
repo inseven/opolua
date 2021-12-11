@@ -932,7 +932,7 @@ function Runtime:waitForAnyRequest()
         self.signal = self.signal - 1
         return
     end
-    local ok = self.ioh.waitForAnyRequest(true)
+    local ok = self.ioh.waitForAnyRequest()
     -- A wait technically decrements the signal count, but completing it would
     -- increment it again hence a call to iohandler.waitForAnyRequest() that
     -- returns leaves the signal count unchanged.
@@ -947,6 +947,10 @@ function Runtime:waitForRequest(stat)
     until stat() ~= KOplErrFilePending
     -- And balance any waits we did for things that weren't stat
     self:requestSignal(waits)
+end
+
+function Runtime:checkCompletions()
+    self.signal = self.signal + self.ioh.checkCompletions()
 end
 
 function Runtime:requestSignal(num)

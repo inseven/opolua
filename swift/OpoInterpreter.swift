@@ -474,12 +474,18 @@ private func fsop(_ L: LuaState!) -> Int32 {
 private func asyncRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let name = L.tostring(1) else { return 0 }
+    guard let type = Async.RequestType(rawValue: name) else {
+        fatalError("Unhandled asyncRequest type \(name)")
+    }
 
     lua_createtable(L, 0, 3) // requestTable
     lua_replace(L, 1) // move requestTable to stack position 1, replacing name
 
     lua_pushvalue(L, 2) // statusVar
     lua_setfield(L, 1, "var") // requestTable.var = statusVar
+
+    L.push(type.rawValue)
+    lua_setfield(L, 1, "type") // requestTable.type = name
 
     // Use registry ref to map swift int to statusVar
     // Then set registry[statusVar] = requestTable
@@ -494,105 +500,53 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
     lua_pushvalue(L, 1) // dup requestTable
     lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = requestTable
 
-    let req: Async.Request
-    switch name {
-    case "getevent":
+    var data: Data? = nil
+    var intVal: Int? = nil
+    switch type {
+    case .getevent:
         lua_settop(L, 3) // so eventArray definitely on top
         lua_setfield(L, 1, "ev") // requestTable.ev = eventArray
-        req = Async.Request(type: .getevent, requestHandle: requestHandle, data: nil)
-    case "playsound":
+    case .playsound:
         lua_settop(L, 3)
-        let data = L.todata(3)
-        req = Async.Request(type: .playsound, requestHandle: requestHandle, data: data)
-    default:
-        fatalError("Unhandled asyncRequest type \(name)")
+        data = L.todata(3)
+    case .sleep:
+        guard let period = L.toint(3) else {
+            print("Bad param to sleep asyncRequest")
+            return 0
+        }
+        intVal = period
     }
+    let req = Async.Request(type: type, requestHandle: requestHandle, data: data, intVal: intVal)
+
     iohandler.asyncRequest(req)
     return 0
 }
 
+// As per init.lua
 private let KOplErrIOCancelled = -48
+private let KStopErr = -999
+
+private func checkCompletions(_ L: LuaState!) -> Int32 {
+    let interpreter = getInterpreterUpval(L)
+    let iohandler = interpreter.iohandler
+    var count = 0
+    while true {
+        if let response = iohandler.anyRequest() {
+            interpreter.completeRequest(L, response)
+            count = count + 1
+        } else {
+            break
+        }
+    }
+    L.push(count)
+    return 1
+}
 
 private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
-    let iohandler = getInterpreterUpval(L).iohandler
-    let shouldBlock = L.toboolean(1)
-    guard let response = iohandler.waitForAnyRequest(block: shouldBlock) else {
-        L.pushnil()
-        return 1
-    }
-    lua_settop(L, 0)
-
-    var t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // 1: registry[requestHandle] -> statusVar
-    assert(t == LUA_TTABLE, "Failed to locate statusVar for requestHandle \(response.requestHandle)!")
-    lua_pushvalue(L, 1) // statusVar
-    t = lua_gettable(L, LUA_REGISTRYINDEX) // 2: registry[statusVar] -> requestTable
-    assert(t == LUA_TTABLE, "Failed to locate requestTable for requestHandle \(response.requestHandle)!")
-
-    lua_pushvalue(L, 1) // statusVar
-    lua_pushnil(L)
-    lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = nil
-
-    luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle) // registry[requestHandle] = nil
-    
-    lua_pushvalue(L, 1) // statusVar
-    switch (response.value) {
-    case .cancelled:
-        L.push(KOplErrIOCancelled)
-        lua_call(L, 1, 0) // statusVar(-48)
-        L.push(true)
-        return 1
-    case .stopped:
-        L.push(false)
-        return 1
-    default:
-        L.push(0) // Assuming everything is a success completion atm...
-        lua_call(L, 1, 0) // statusVar(0), pops back to 2
-    }
-
-    switch (response.type) {
-    case .getevent:
-        var ev = Array<Int>(repeating: 0, count: 16)
-        switch (response.value) {
-        case .keypressevent(let event):
-            // Remember, ev[0] here means ev[1] in the OPL docs because they're one-based
-            ev[0] = event.keycode
-            ev[1] = event.timestamp
-            ev[2] = event.scancode
-            ev[3] = event.modifiers
-            ev[4] = event.isRepeat ? 1 : 0
-        case .keydownevent(let event):
-            ev[0] = 0x406
-            ev[1] = event.timestamp
-            ev[2] = event.scancode
-            ev[3] = event.modifiers
-        case .keyupevent(let event):
-            ev[0] = 0x407
-            ev[1] = event.timestamp
-            ev[2] = event.scancode
-            ev[3] = event.modifiers
-        case .penevent(let event):
-            ev[0] = 0x408
-            ev[1] = event.timestamp
-            ev[2] = event.windowId
-            ev[3] = event.type.rawValue
-            ev[4] = event.modifiers
-            ev[5] = event.x
-            ev[6] = event.y
-            ev[7] = event.screenx
-            ev[8] = event.screeny
-        case .cancelled, .stopped, .completed:
-            break // Already handled above
-        }
-        lua_getfield(L, 2, "ev") // Pushes eventArray
-        for i in 0 ..< ev.count {
-            lua_rawgeti(L, -1, lua_Integer(i + 1))
-            L.push(ev[i])
-            lua_call(L, 1, 0)
-        }
-    case .playsound:
-        // Nothing else needed
-        break
-    }
+    let interpreter = getInterpreterUpval(L)
+    let iohandler = interpreter.iohandler
+    let response = iohandler.waitForAnyRequest()
+    interpreter.completeRequest(L, response)
     L.push(true)
     return 1
 }
@@ -724,6 +678,7 @@ class OpoInterpreter {
             ("fsop", fsop),
             ("asyncRequest", asyncRequest),
             ("waitForAnyRequest", waitForAnyRequest),
+            ("checkCompletions", checkCompletions),
             ("cancelRequest", cancelRequest),
             ("createBitmap", createBitmap),
             ("createWindow", createWindow),
@@ -835,5 +790,85 @@ class OpoInterpreter {
             let err = Error(code: nil, opoStack: nil, luaStack: "", description: "Check console for error.")
             return Result.error(err)
         }
+    }
+
+    func completeRequest(_ L: LuaState!, _ response: Async.Response) {
+        lua_settop(L, 0)
+        var t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // 1: registry[requestHandle] -> statusVar
+        assert(t == LUA_TTABLE, "Failed to locate statusVar for requestHandle \(response.requestHandle)!")
+        lua_pushvalue(L, 1) // 2: statusVar
+        t = lua_gettable(L, LUA_REGISTRYINDEX) // 2: registry[statusVar] -> requestTable
+        assert(t == LUA_TTABLE, "Failed to locate requestTable for requestHandle \(response.requestHandle)!")
+
+        lua_getfield(L, 2, "type") // 3: requestTable["type"] -> type
+        guard let type = Async.RequestType(rawValue: L.tostring(-1) ?? "") else {
+            fatalError("Failed to get type from requestTable!")
+        }
+        L.pop() // type
+
+        // Deal with writing any result data
+
+        switch type {
+        case .getevent:
+            var ev = Array<Int>(repeating: 0, count: 16)
+            switch (response.value) {
+            case .keypressevent(let event):
+                // Remember, ev[0] here means ev[1] in the OPL docs because they're one-based
+                ev[0] = event.keycode
+                ev[1] = event.timestamp
+                ev[2] = event.scancode
+                ev[3] = event.modifiers
+                ev[4] = event.isRepeat ? 1 : 0
+            case .keydownevent(let event):
+                ev[0] = 0x406
+                ev[1] = event.timestamp
+                ev[2] = event.scancode
+                ev[3] = event.modifiers
+            case .keyupevent(let event):
+                ev[0] = 0x407
+                ev[1] = event.timestamp
+                ev[2] = event.scancode
+                ev[3] = event.modifiers
+            case .penevent(let event):
+                ev[0] = 0x408
+                ev[1] = event.timestamp
+                ev[2] = event.windowId
+                ev[3] = event.type.rawValue
+                ev[4] = event.modifiers
+                ev[5] = event.x
+                ev[6] = event.y
+                ev[7] = event.screenx
+                ev[8] = event.screeny
+            case .cancelled, .completed:
+                break // No completion data for these
+            }
+            lua_getfield(L, 2, "ev") // Pushes eventArray
+            for i in 0 ..< ev.count {
+                lua_rawgeti(L, -1, lua_Integer(i + 1))
+                L.push(ev[i])
+                lua_call(L, 1, 0)
+            }
+            L.pop() // eventArray
+        case .playsound, .sleep:
+            break // No data for these
+        }
+
+        // Mark statusVar as completed
+        let val: Int
+        switch (response.value) {
+        case .cancelled:
+            val = KOplErrIOCancelled
+        default:
+            val = 0 // Assuming everything is a success completion atm...
+        }
+        lua_pushvalue(L, 1) // statusVar
+        L.push(val)
+        lua_call(L, 1, 0) 
+
+        // Finally, free up requestHandle
+        lua_settop(L, 1) // 1: statusVar
+        lua_pushnil(L)
+        lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = nil
+        luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle) // registry[requestHandle] = nil
     }
 }

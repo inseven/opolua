@@ -1769,7 +1769,7 @@ function IoWaitStat(stack, runtime) -- 0xE8
 end
 
 function IoYield(stack, runtime) -- 0xE9
-    -- runtime:iohandler().waitForAnyRequest()
+    runtime:checkCompletions()
 end
 
 function mInit(stack, runtime) -- 0xEA

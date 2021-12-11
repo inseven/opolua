@@ -106,14 +106,14 @@ class ProgramViewController: UIViewController {
             let value = self.eventQueue.takeFirst()
             // TODO: This whole service API is now somewhat janky as we know that it's there.
             self.scheduler.serviceRequest(type: request.type) { request in
-                return Async.Response(type: request.type, requestHandle: request.requestHandle, value: value)
+                return Async.Response(requestHandle: request.requestHandle, value: value)
             }
         }
         scheduler.addHandler(.playsound) { request in
             print("PLAY SOUND!")
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.scheduler.serviceRequest(type: request.type) { request in
-                    return Async.Response(type: request.type, requestHandle: request.requestHandle, value: .completed)
+                    return Async.Response(requestHandle: request.requestHandle, value: .completed)
                 }
             }
         }
@@ -162,7 +162,7 @@ class ProgramViewController: UIViewController {
                 let task = self.tasks.takeFirst()
                 switch task {
                 case .asyncRequest(let request):
-                    print("Schedule Request")
+                    // print("Schedule Request")
                     self.scheduler.scheduleRequest(request)
                 case .cancelRequest(let requestHandle):
                     self.scheduler.cancelRequest(requestHandle)
@@ -476,12 +476,12 @@ extension ProgramViewController: OpoIoHandler {
         scheduler.cancelRequest(requestHandle)
     }
 
-    func waitForAnyRequest(block: Bool) -> Async.Response? {
-        if block {
-            return scheduler.waitForAnyRequest()
-        } else {
-            return scheduler.anyRequest()
-        }
+    func waitForAnyRequest() -> Async.Response {
+        return scheduler.waitForAnyRequest()
+    }
+
+    func anyRequest() -> Async.Response? {
+        return scheduler.anyRequest()
     }
 
 }
