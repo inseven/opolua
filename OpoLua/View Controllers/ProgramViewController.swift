@@ -242,18 +242,6 @@ extension ProgramViewController: OpoIoHandler {
         semaphore.wait()
         return result
     }
-    
-    func getch() -> Int {
-        repeat {
-            let requestHandle = handleGenerator.next()
-            scheduler.scheduleRequest(Async.Request(type: .getevent, requestHandle: requestHandle, data: nil))
-            let response = scheduler.waitForRequest(requestHandle)
-            if case Async.ResponseValue.keypressevent(_) = response.value {
-                // TODO: This always sends the menu key at the moment.
-                return Key.menu.character
-            }
-        } while true
-    }
 
     func beep(frequency: Double, duration: Double) {
         print("BEEP")

@@ -101,12 +101,6 @@ private func alert(_ L: LuaState!) -> Int32 {
     return 1
 }
 
-private func getch(_ L: LuaState!) -> Int32 {
-    let iohandler = getInterpreterUpval(L).iohandler
-    L.push(iohandler.getch())
-    return 1
-}
-
 private func print_lua(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.printValue(L.tostring(1, convert: true) ?? "<<STRING DECODE ERR>>")
@@ -720,7 +714,6 @@ class OpoInterpreter {
         let fns: [(String, lua_CFunction)] = [
             ("readLine", readLine),
             ("alert", alert),
-            ("getch", getch),
             ("print", print_lua),
             ("beep", beep),
             ("dialog", dialog),

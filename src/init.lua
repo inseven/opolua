@@ -266,3 +266,26 @@ end
 function hexUnescape(str)
     return str:gsub("\\x(%x%x)", function(hexcode) return string.char(tonumber(hexcode, 16)) end)
 end
+
+local charCodeMap = {
+    [4098] = 262, -- Home
+    [4099] = 263, -- End
+    [4100] = 260, -- PgUp
+    [4101] = 261, -- PgDn
+    [4103] = 259, -- LeftArrow
+    [4104] = 258, -- RightArrow
+    [4105] = 256, -- UpArrow
+    [4106] = 257, -- DownArrow
+    [4150] = 290, -- Menu
+}
+
+function keycodeToCharacterCode(keycode)
+    local ch = charCodeMap[keycode]
+    if ch then
+        return ch
+    elseif keycode < 256 then
+        return keycode
+    else
+        error("Unknown keycode "..tostring(keycode))
+    end
+end

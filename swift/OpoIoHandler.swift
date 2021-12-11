@@ -388,9 +388,6 @@ protocol OpoIoHandler {
     // return should be 1, 2, or 3
     func alert(lines: [String], buttons: [String]) -> Int
 
-    // return char code
-    func getch() -> Int
-
     func beep(frequency: Double, duration: Double) -> Void
 
     // Meaning of the return value:

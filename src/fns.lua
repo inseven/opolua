@@ -285,7 +285,18 @@ function Find(stack, runtime) -- 0x09
 end
 
 function Get(stack, runtime) -- 0x0A
-    stack:push(runtime:iohandler().getch())
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local ev = {}
+    for i = 1, 16 do
+        ev[i] = runtime:makeTemporaryVar(DataTypes.ELong)
+    end
+    repeat
+        stat(KOplErrFilePending)
+        runtime:iohandler().asyncRequest("getevent", stat, ev)
+        runtime:waitForRequest(stat)
+    until ev[1]() & 0x400 == 0
+
+    stack:push(keycodeToCharacterCode(ev[1]()))
 end
 
 function Ioa(stack, runtime) -- 0x0B
