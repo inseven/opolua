@@ -117,6 +117,13 @@ class ProgramViewController: UIViewController {
                 }
             }
         }
+        scheduler.addHandler(.sleep) { request in
+            DispatchQueue.main.asyncAfter(deadline: .now() + (Double(request.intVal!) / 1000.0)) {
+                self.scheduler.serviceRequest(type: request.type) { request in
+                    return Async.Response(requestHandle: request.requestHandle, value: .completed)
+                }
+            }
+        }
 
         let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
         

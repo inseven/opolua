@@ -328,11 +328,13 @@ struct Async {
     enum RequestType: String {
         case getevent
         case playsound
+        case sleep
     }
     struct Request {
         let type: RequestType
         let requestHandle: Int32
         let data: Data? // For playsound
+        let intVal: Int? // For sleep. Ugh need a neater way to pass parameters to async requests...
     }
     struct KeyPressEvent {
         let timestamp: Int // Microseconds since boot, or something

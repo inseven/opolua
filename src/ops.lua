@@ -1447,11 +1447,12 @@ Open_dump = Create_dump
 
 function Pause(stack, runtime) -- 0xB5
     local val = stack:pop() -- pause time in 1/20 seconds
-    printf("TODO Pause %d\n", val)
-    -- error("TODO")
-    -- runtime.instructionDebug = true
-    -- fns.Get(stack, runtime)
-    -- stack:pop()
+    local period = val * 50 -- now in ms
+    local sleepVar = runtime:makeTemporaryVar(DataTypes.EWord)
+    sleepVar(KOplErrFilePending)
+    runtime:iohandler().asyncRequest("sleep", sleepVar, period)
+    -- TODO also return if there's a key event...
+    runtime:waitForRequest(sleepVar)
 end
 
 function Position(stack, runtime) -- 0xB6
