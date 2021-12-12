@@ -197,7 +197,9 @@ function DisplayTaskList(stack, runtime) -- 29
 end
 
 function SetComputeMode(stack, runtime) -- 30
-    error("Unimplemented system.opx function SetComputeMode!")
+    local state = stack:pop()
+    -- We don't care about scheduling
+    stack:push(0)
 end
 
 function RunApp(stack, runtime) -- 31
@@ -262,11 +264,15 @@ function StopSound(stack, runtime) -- 40
 end
 
 function Mod(stack, runtime) -- 41
-    error("Unimplemented system.opx function Mod!")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left % right)
 end
 
 function XOR(stack, runtime) -- 42
-    error("Unimplemented system.opx function XOR!")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left ~ right)
 end
 
 function LoadRsc(stack, runtime) -- 43
