@@ -1994,7 +1994,11 @@ function gGrey(stack, runtime) -- 0x100
 end
 
 function DefaultWin(stack, runtime) -- 0x101
-    error("Unimplemented opcode DefaultWin!")
+    -- Since we don't care about the specific bit depth of the backing buffer,
+    -- we just implement the side effect of clearing the default window (but
+    -- without resetting the draw position, unlike gCLS)
+    local context = runtime:getGraphicsContext(1)
+    runtime:drawCmd("fill", { x = 0, y = 0, width = context.width, height = context.height, mode = 1 })
 end
 
 function Font(stack, runtime) -- 0x104

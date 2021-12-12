@@ -330,7 +330,10 @@ function Len(stack, runtime) -- 0x14
 end
 
 function Loc(stack, runtime) -- 0x15
-    error("Unimplemented function Loc!")
+    local searchString = stack:pop():lower()
+    local str = stack:pop():lower()
+    local result = string.find(str, searchString, 1, true) or 0
+    stack:push(result)
 end
 
 function Minute(stack, runtime) -- 0x16
@@ -681,12 +684,8 @@ function Exp(stack, runtime) -- 0x86
     stack:push(math.exp(stack:pop()))
 end
 
--- function Flt(stack, runtime) -- 0x87
---     -- TODO
--- end
-
 function Flt(stack, runtime) -- 0x87
-    error("Unimplemented function Flt!")
+    -- Nothing needed, numbers are numbers
 end
 
 function Intf(stack, runtime) -- 0x88
@@ -810,11 +809,13 @@ function KeyStr(stack, runtime) -- 0xC9
 end
 
 function LeftStr(stack, runtime) -- 0xCA
-    error("Unimplemented function LeftStr!")
+    local numChars = stack:pop()
+    local str = stack:pop()
+    stack:push(string.sub(str, 1, numChars))
 end
 
 function LowerStr(stack, runtime) -- 0xCB
-    error("Unimplemented function LowerStr!")
+    stack:push(stack:pop():lower())
 end
 
 function MidStr(stack, runtime) -- 0xCC
@@ -825,8 +826,23 @@ function MidStr(stack, runtime) -- 0xCC
     stack:push(str:sub(offset, offset + len - 1))
 end
 
+local months = {
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+}
+
 function MonthStr(stack, runtime) -- 0xCD
-    error("Unimplemented function MonthStr!")
+    stack:push(assert(months[stack:pop()], KOplErrInvalidArgs))
 end
 
 function NumStr(stack, runtime) -- 0xCE
@@ -850,11 +866,15 @@ function PeekStr(stack, runtime) -- 0xCF
 end
 
 function ReptStr(stack, runtime) -- 0xD0
-    error("Unimplemented function ReptStr!")
+    local reps = stack:pop()
+    local str = stack:pop()
+    stack:push(string.rep(str, reps))
 end
 
 function RightStr(stack, runtime) -- 0xD1
-    error("Unimplemented function RightStr!")
+    local numChars = stack:pop()
+    local str = stack:pop()
+    stack:push(string.sub(str, -numChars))
 end
 
 function SciStr(stack, runtime) -- 0xD2
@@ -862,7 +882,7 @@ function SciStr(stack, runtime) -- 0xD2
 end
 
 function UpperStr(stack, runtime) -- 0xD3
-    error("Unimplemented function UpperStr!")
+    stack:push(stack:pop():upper())
 end
 
 function WCmd(stack, runtime) -- 0xD5
