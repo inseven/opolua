@@ -491,6 +491,12 @@ extension ProgramViewController: OpoIoHandler {
         return scheduler.anyRequest()
     }
 
+    func key() -> KeyCode? {
+        // TODO return non-nil (and remove the event from the queue) if there's
+        // any KeyPressEvent in the queue
+        return nil
+    }
+
 }
 
 extension ConcurrentQueue: CanvasViewDelegate where T == Async.ResponseValue {

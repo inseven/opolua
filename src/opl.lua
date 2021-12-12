@@ -281,6 +281,8 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
 end
 
 function gCOPY(id, x, y, w, h, mode)
+    -- printf("gCOPY from %d(%d,%d %dx%d) to %d(%d,%d %dx%d)\n",
+    --     id, x, y, w, h, gIDENTITY(), gX(), gY(), w, h)
     runtime:drawCmd("copy", {
         srcid = id,
         srcx = x,
@@ -438,6 +440,23 @@ function SCREEN(w, h, x, y)
     screen.x = x
     screen.y = y
 end
+
+function KEY()
+    local charcode = runtime:iohandler().key()
+    return charcode
+end
+
+function KEYSTR()
+    -- Yep, this is what the Psion does, meaning for eg that the menu key
+    -- (charcode 0x122) gets returned as 0x22 which is double-quote...
+    local code = KEY() & 0xFF
+    if code >= 32 then
+        return string.char(code)
+    else
+        return ""
+    end
+end
+
 -- Menu APIs
 
 function mINIT()

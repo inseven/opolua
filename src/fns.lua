@@ -333,7 +333,7 @@ function Hour(stack, runtime) -- 0x12
 end
 
 function Key(stack, runtime) -- 0x13
-    error("Unimplemented function Key!")
+    stack:push(runtime:KEY())
 end
 
 function Len(stack, runtime) -- 0x14
@@ -817,7 +817,7 @@ function HexStr(stack, runtime) -- 0xC8
 end
 
 function KeyStr(stack, runtime) -- 0xC9
-    error("Unimplemented function KeyStr!")
+    stack:push(runtime:KEYSTR())
 end
 
 function LeftStr(stack, runtime) -- 0xCA

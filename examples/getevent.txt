@@ -1,37 +1,69 @@
 PROC main:
-	local ev&(16), status%, k%, s2%
+	GLOBAL ev&(16)
+	LOCAL info%(10), i%
+	LOCAL evstat%, kstat%, key%(1)
+	
+	REM shrink screen so we can draw pointer events
+	SCREENINFO info%()
+	SCREEN info%(3) / 2, info%(4), 1, 1
+	gAT gWIDTH/2, 0
+	gBOX gWIDTH/2, gHEIGHT
+	
 	WHILE 1
-		GETEVENTA32 status%, ev&()
+		kstat% = -48 REM KEYA(kstat%, key%())
+		GETEVENTA32 evstat%, ev&()
 		IOWAIT
-		k% = ev&(1)
-		REM PRINT "Timestamp", ev&(2), " ",
-		IF ev&(1) < $400
-			PRINT "Key press", k%, "rep=", ev&(5)
+		REM PRINT kstat%, evstat%
+		IF kstat% = 0
+			PRINT "KEY!", key%(1)
 		ELSE
-			k% = ev&(1)- $400
-			VECTOR k%
-				nop, nop, nop, nop, nop
-				keyDown, keyUp
-				pen, penDown, penUp
-			ENDV
-		nop::
-			PRINT "Got event", ev&(1)
-			CONTINUE
-		keyDown::
-			PRINT "Key down", ev&(3)
-			CONTINUE
-		keyUp::
-			PRINT "Key up", ev&(3)
-			CONTINUE
-		pen::
-			PRINT "Pen type="; ev&(4), ev&(6), ev&(7)
-			CONTINUE
-		penDown::
-			PRINT "Pen down"
-			CONTINUE
-		penUp::
-			PRINT "Pen up"
-			CONTINUE
+			REM IF ev&(1) < $400
+			REM	PRINT "Peeked KEY:", KEY
+			REM ENDIF
+			IF ev&(1) = 13
+				PRINT "Saving screenshot..."
+				gSAVEBIT "D:\screenshot.mbm"
+			ENDIF
+			printEvent:
 		ENDIF
 	ENDWH
+ENDP
+
+PROC printEvent:
+	LOCAL k%
+	k% = ev&(1)
+	REM PRINT "Timestamp", ev&(2), " ",
+	IF (ev&(1) AND $400) = 0
+		PRINT "Key press", k%, "mod="; ev&(4), "rep="; ev&(5)
+	ELSE
+		k% = ev&(1)- $400
+		VECTOR k%
+			nop, nop, nop, nop, nop
+			keyDown, keyUp
+			pen, penDown, penUp
+		ENDV
+	nop::
+		PRINT "Got event", ev&(1)
+		RETURN
+	keyDown::
+		PRINT "Key down", ev&(3)
+		RETURN
+	keyUp::
+		PRINT "Key up", ev&(3)
+		RETURN
+	pen::
+		PRINT "Pen type="; ev&(4), "mod="; ev&(5), ev&(6), ev&(7)
+		IF ev&(4) = 0
+			gAT ev&(6), ev&(7)
+		ELSE
+			gLINETO ev&(6), ev&(7)
+		ENDIF
+		RETURN
+	penDown::
+		PRINT "Pen down"
+		RETURN
+	penUp::
+		PRINT "Pen up"
+		RETURN
+	ENDIF
 ENDP

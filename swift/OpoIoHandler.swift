@@ -335,6 +335,7 @@ struct Fs {
 // keypress events, in particular the modifiers, but for the sake of convenience let's
 // pretend they are.
 enum KeyCode : Int, CaseIterable {
+    case capsLock = 2
     case backspace = 8
     case tab = 9
     case enter = 13
@@ -555,6 +556,8 @@ protocol OpoIoHandler {
     func cancelRequest( _ requestHandle: Int32)
     func waitForAnyRequest() -> Async.Response
     func anyRequest() -> Async.Response?
+
+    func key() -> KeyCode?
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -616,4 +619,7 @@ class DummyIoHandler : OpoIoHandler {
         return nil
     }
 
+    func key() -> KeyCode? {
+        return nil
+    }
 }

@@ -600,6 +600,16 @@ private func getTime(_ L: LuaState!) -> Int32 {
     return 1
 }
 
+private func key(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    if let keycode = iohandler.key(), charcode = OpoInterpreter.keycodeToCharcode(keycode) {
+        L.push(charcode)
+    } else {
+        L.push(0)
+    }
+    return 1
+}
+
 class OpoInterpreter {
     private let L: LuaState
     var iohandler: OpoIoHandler
@@ -683,6 +693,7 @@ class OpoInterpreter {
             ("createBitmap", createBitmap),
             ("createWindow", createWindow),
             ("getTime", getTime),
+            ("key", key),
         ]
         L.setfuncs(fns, nup: 1)
     }
@@ -902,7 +913,7 @@ class OpoInterpreter {
             return KeyCode.num0.rawValue
         case .backspace:
             return 1
-        case .tab:
+        case .capsLock, .tab:
             return 2
         case .enter:
             return 3
@@ -940,6 +951,35 @@ class OpoInterpreter {
             return KeyCode.L.rawValue
         case .equals:
             return KeyCode.P.rawValue
+        }
+    }
+
+    // Returns nil for things without a charcode (like modifier keys)
+    private static func keycodeToCharcode(_ keycode: KeyCode) -> Int? {
+        switch keycode {
+        case .leftShift, .rightShift, .control, .fn, .capsLock:
+            return nil
+        case .menu, .menuSoftkey:
+            return 290
+        case .home:
+            return 262
+        case .end:
+            return 263
+        case .pgUp:
+            return 260
+        case .pgDn:
+            return 261
+        case .leftArrow:
+            return 259
+        case .rightArrow:
+            return 258
+        case .upArrow:
+            return 256
+        case .downArrow:
+            return 257
+        default:
+            // Everything else has the same charcode as keycode
+            return keycode.rawValue
         }
     }
 }

@@ -30,10 +30,9 @@ This interpreter is not 100% behavior compatible with the original Psion. The mo
 
 ## Missing features
 
-* Database/file support
-* Graphics support
+* Ability to load psion-format database files
 * Various other opcodes and functions
-* OCX support (don't hold your breath for that one...)
+* OPX support (don't hold your breath for that one...)
 * Anything which pokes the underlying OS, or allocates memory
 * Any sort of performance considerations
 

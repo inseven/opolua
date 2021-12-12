@@ -242,4 +242,8 @@ function getTime()
     return os.time()
 end
 
+function key()
+    return 0
+end
+
 return _ENV
