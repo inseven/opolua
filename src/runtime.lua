@@ -433,6 +433,13 @@ function Runtime:getGraphics()
         self.graphics = {}
         local w, h = self.ioh.getScreenSize()
         self:newGraphicsContext(1, w, h)
+        self.graphics.screen = {
+            x = 0,
+            y = 0,
+            w = w // 7,
+            h = h // 11,
+            fontid = KFontCourierNormal11,
+        }
     end
     return self.graphics
 end

@@ -1530,7 +1530,8 @@ function Edit(stack, runtime) -- 0xC2
 end
 
 function Screen2(stack, runtime) -- 0xC3
-    error("Unimplemented opcode Screen2!")
+    local w, h = stack:popXY()
+    runtime:SCREEN(w, h)
 end
 
 function OpenR(stack, runtime) -- 0xC4
@@ -1762,7 +1763,9 @@ function gPeekLine(stack, runtime) -- 0xE6
 end
 
 function Screen4(stack, runtime) -- 0xE7
-    error("Unimplemented opcode Screen4!")
+    local w, h = stack:popXY()
+    local x, y = stack:popXY()
+    runtime:SCREEN(w, h, x, y)
 end
 
 function IoWaitStat(stack, runtime) -- 0xE8
@@ -2042,7 +2045,24 @@ end
 gXBorder_dump = numParams_dump
 
 function ScreenInfo(stack, runtime) -- 0x114
-    error("Unimplemented opcode ScreenInfo!")
+    local array = stack:pop()
+    local screen = runtime:getGraphics().screen
+    local screenFontUid = KFontCourierNormal11
+    local result = {
+        [1] = screen.x, -- Left margin in pixels
+        [2] = screen.y, -- Top margin in pixels
+        [3] = screen.w, -- text screen width in chars (to match Series 5)
+        [4] = screen.h, -- text screen height in chars (ditto)
+        [5] = 1, -- text win window id (ie default window)
+        [6] = 0, -- unused
+        [7] = 7, -- screen font char width
+        [8] = 11, -- screen font char height
+        [9] = screen.fontid & 0xFFFF,
+        [10] = (screen.fontid >> 16) & 0xFFFF,
+    }
+    for i, val in ipairs(result) do
+        array[i](val)
+    end
 end
 
 function CallOpxFunc(stack, runtime) -- 0x118

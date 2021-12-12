@@ -421,6 +421,23 @@ function gPOLY(array)
     runtime:setGraphicsAutoFlush(flush)
 end
 
+-- Screen APIs
+
+function SCREEN(w, h, x, y)
+    -- Since we don't draw text into the main window this command doesn't
+    -- currently have any effect, but we will update the info returned by
+    -- SCREENINFO just to be polite.
+    local screen = runtime:getGraphics().screen
+    screen.w = w
+    screen.h = h
+    if not x then
+        local scrw, scrh = runtime:iohandler().getScreenSize()
+        x = (scrw - w) // 2
+        y = (scrh - h) // 2
+    end
+    screen.x = x
+    screen.y = y
+end
 -- Menu APIs
 
 function mINIT()

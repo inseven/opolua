@@ -1,0 +1,10 @@
+PROC main:
+	LOCAL info%(10), i%
+	SCREENINFO info%()
+	i% = 1
+	WHILE i% <= 10
+		PRINT i%; ":", info%(i%)
+		i% = i% + 1
+	ENDWH
+	GET
+ENDP
