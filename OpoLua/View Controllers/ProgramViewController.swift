@@ -194,7 +194,10 @@ class ProgramViewController: UIViewController {
         state = .running
         runtimeQueue.async {
             self.opo.iohandler = self
-            let result = self.opo.run(file: self.object.url.path, procedureName: self.procedureName)
+            let url = self.object.url
+            let appName = url.deletingPathExtension().lastPathComponent.uppercased()
+            let oplPath = "C:\\SYSTEM\\APPS\\" + appName + "\\" + url.lastPathComponent
+            let result = self.opo.run(devicePath: oplPath, procedureName: self.procedureName)
             DispatchQueue.main.async {
                 self.programDidFinish(result: result)
             }

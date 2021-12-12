@@ -217,7 +217,13 @@ function sortedKeys(tbl)
     return result
 end
 
-function splitpath(path)
+oplpath = {}
+
+function oplpath.isabs(path)
+    return path:match("^[a-zA-Z]:\\") ~= nil
+end
+
+function oplpath.split(path)
     local dir, sep, name = path:match([[(.*)([/\])(.*)$]])
     if not dir then
         return "", path
@@ -231,17 +237,17 @@ function splitpath(path)
     end
 end
 
-function dirname(path)
-    local dir, file = splitpath(path)
+function oplpath.dirname(path)
+    local dir, file = oplpath.split(path)
     return dir
 end
 
-function basename(path)
-    local dir, file = splitpath(path)
+function oplpath.basename(path)
+    local dir, file = oplpath.split(path)
     return file
 end
 
-function splitext(path)
+function oplpath.splitext(path)
     local base, ext = path:match("(.+)(%.[^%.]*)")
     if not base then
         return path, ""
@@ -250,8 +256,33 @@ function splitext(path)
     end
 end
 
+function oplpath.join(path, component)
+    if not path:match("\\$") then
+        path = path.."\\"
+    end
+    return path..component
+end
+
+function oplpath.abs(path, relativeTo)
+    if path == "" then
+        return relativeTo
+    elseif oplpath.isabs(path) then
+        return path
+    elseif path:match("^\\") then
+        -- Just take drive letter from relativeTo
+        return relativeTo:sub(1, 2) .. path
+    else
+        local dir, name = oplpath.split(relativeTo)
+        -- Check if relativeTo has a wildcarded name (ugh)
+        if name:match("%*") then
+            path = name:gsub("%*", path, 1)
+        end
+        return oplpath.join(dir, path)
+    end
+end
+
 -- For whenever you need to compare paths for equality - not to be used for anything else
-function canonPath(path)
+function oplpath.canon(path)
     return path:upper():gsub("[\\/]+", "/")
 end
 

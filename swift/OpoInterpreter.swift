@@ -755,26 +755,21 @@ class OpoInterpreter {
         case error(Error)
     }
 
-    func run(file: String, procedureName: String? = nil) -> Result {
-        guard let data = FileManager.default.contents(atPath: file) else {
-            fatalError("File \(file) not found!")
-        }
-
+    func run(devicePath: String, procedureName: String? = nil) -> Result {
         lua_settop(L, 0)
 
         lua_getglobal(L, "require")
         L.push("runtime")
         guard pcall(1, 1) else { fatalError("Couldn't load runtime") }
         lua_getfield(L, -1, "runOpo")
-        L.push(file)
-        L.push(data)
+        L.push(devicePath)
         if let proc = procedureName {
             L.push(proc)
         } else {
             L.pushnil()
         }
         makeIoHandlerBridge()
-        let ok = pcall(4, 1) // runOpo(filename, data, proc, iohandler)
+        let ok = pcall(3, 1) // runOpo(devicePath, proc, iohandler)
         if ok {
             let t = L.type(-1)
             let result: Result

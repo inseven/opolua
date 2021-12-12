@@ -890,11 +890,42 @@ function WCmd(stack, runtime) -- 0xD5
 end
 
 function CmdStr(stack, runtime) -- 0xD6
-    error("Unimplemented function CmdStr!")
+    local x = stack:pop()
+    if x == 1 then
+        stack:push(runtime:getPath())
+    elseif x == 2 then
+        local path = runtime:getPath()
+        path = oplpath.join(oplpath.dirname(path), "SomeDoc.Wat")
+        stack:push(path)
+    elseif x == 3 then
+        stack:push("R")
+    else
+        error("unhandle CMD$ param "..tostring(x))
+    end
 end
 
 function ParseStr(stack, runtime) -- 0xD7
-    error("Unimplemented function ParseStr!")
+    local offsets = stack:pop()
+    local rel = stack:pop()
+    local f = stack:pop()
+    -- Wow this is a fun API
+
+    rel = oplpath.abs(rel, runtime:getCwd())
+    f = oplpath.abs(f, rel)
+
+    -- Once f is complete, parse it to fill in offsets
+    local base, name = oplpath.split(f)
+    local start, _ = oplpath.splitext(f)
+    local nameNoExt, ext = oplpath.splitext(name)
+    local nameHasWildcard = nameNoExt:match("%*") and 1 or 0
+    local extHasWildcard = ext:match("%*") and 2 or 0
+    offsets[1](1)
+    offsets[2](1)
+    offsets[3](3) -- Start of path will always be after the C:
+    offsets[4](1 + #f - #name)
+    offsets[5](1 + #start)
+    offsets[6](nameHasWildcard | extHasWildcard)
+    stack:push(f)
 end
 
 function ErrxStr(stack, runtime) -- 0xD8

@@ -21,18 +21,26 @@ function main(args)
             i = i + 1
         end
     end
-    local filename = args[1]
+    local path = args[1]
     local procName = args[2]
     local iohandler = require("defaultiohandler")
     for _, m in ipairs(maps) do
         iohandler.fsmap(m[1], m[2]) -- Not part of iohandler interface, specific to defaultiohandler
     end
 
-    local f = assert(io.open(filename, "rb"))
-    local data = f:read("a")
-    f:close()
+    if #maps == 0 then
+        -- Setup the default one
+        local dir, filename = oplpath.split(path)
+        local appName = oplpath.splitext(filename)
+        local appDir = string.format([[C:\SYSTEM\APPS\%s\]], appName)
+        iohandler.fsmap(appDir, dir.."/")
+        devicePath = appDir..filename
+    else
+        -- If any maps are supplied on the commandline, the cmdline path is assumed to be a devicePath
+        devicePath = path
+    end
 
-    local err = runtime.runOpo(filename, data, procName, iohandler, verbose)
+    local err = runtime.runOpo(devicePath, procName, iohandler, verbose)
     if err then
         print("Error: "..tostring(err))
     end

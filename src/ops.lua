@@ -1954,7 +1954,9 @@ function RmDir(stack, runtime) -- 0xF9
 end
 
 function SetPath(stack, runtime) -- 0xFA
-    error("Unimplemented opcode SetPath!")
+    local path = stack:pop()
+    local dir = oplpath.split(path) -- Yep, D:\dir\thingwithoutslash means D:\dir\
+    runtime:setCwd(dir)
 end
 
 function SecsToDate(stack, runtime) -- 0xFB

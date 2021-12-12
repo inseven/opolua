@@ -27,7 +27,7 @@ function main(args)
     local verbose = all or fnName == nil
     local procTable, opxTable = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime()
-    rt:addModule(filename, procTable, opxTable)
+    rt:addModule("C:\\module", procTable, opxTable)
     if fnName then
         printProc(rt:findProc(fnName:upper()))
         rt:dumpProc(fnName:upper(), startAddr)

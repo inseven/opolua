@@ -189,7 +189,7 @@ function Runtime:makeTemporaryVar(type)
 end
 
 function Runtime:addModule(path, procTable, opxTable)
-    local name = splitext(basename(path)):upper()
+    local name = oplpath.splitext(oplpath.basename(path)):upper()
     local mod = {
         -- Since 'name' isn't a legal procname (they're always uppercase in
         -- definitions, even though they're not necessarily when they are
@@ -203,6 +203,10 @@ function Runtime:addModule(path, procTable, opxTable)
         mod[proc.name] = proc
     end
     table.insert(self.modules, mod)
+    if not self.cwd then
+        assert(oplpath.isabs(path), "Bad path for initial module!")
+        self.cwd = path:sub(1, 3)
+    end
 end
 
 function Runtime:unloadModule(path)
@@ -573,9 +577,9 @@ function Runtime:openDb(logName, tableSpec, variables, op)
 
     local readonly = op == "OpenR"
     -- Check if there are already any other open handles to this db
-    local cpath = canonPath(path)
+    local cpath = oplpath.canon(path)
     for _, db in pairs(self.dbs) do
-        if canonPath(db:getPath()) == cpath then
+        if oplpath.canon(db:getPath()) == cpath then
             if not readonly or db:isWriteable() then
                 error(KOplErrInUse)
             end
@@ -874,7 +878,7 @@ function Runtime:loadModule(path)
     end
 
     -- If not, see if we have a built-in
-    local modName = splitext(basename(path:lower()))
+    local modName = oplpath.splitext(oplpath.basename(path:lower()))
     local ok, mod = pcall(newModuleInstance, "modules."..modName)
 
     if not ok then
@@ -964,10 +968,29 @@ function Runtime:requestSignal(num)
     self.signal = self.signal + (num or 1)
 end
 
-function runOpo(fileName, data, procName, iohandler, verbose)
-    local procTable, opxTable = require("opofile").parseOpo(data, verbose)
+function Runtime:getPath()
+    return self.modules[1].path
+end
+
+function Runtime:getCwd()
+    return self.cwd
+end
+
+function Runtime:setCwd(cwd)
+    assert(oplpath.isabs(cwd), "Cannot set a non-absolute CWD!")
+    assert(cwd:match("\\$"), "Cannot set a non-dir path as CWD!")
+    self.cwd = cwd
+end
+
+function runOpo(fileName, procName, iohandler, verbose)
+    local data, err = iohandler.fsop("read", fileName)
+    if not data then
+        error("Failed to read opo file data")
+    end
+
     local rt = newRuntime(iohandler)
     rt:setInstructionDebug(verbose)
+    local procTable, opxTable = require("opofile").parseOpo(data, verbose)
     rt:addModule(fileName, procTable, opxTable)
     local procToCall = procName and procName:upper() or procTable[1].name
     local err = rt:pcallProc(procToCall)
