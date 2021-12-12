@@ -457,6 +457,30 @@ function KEYSTR()
     end
 end
 
+function GET()
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local ev = {}
+    for i = 1, 16 do
+        ev[i] = runtime:makeTemporaryVar(DataTypes.ELong)
+    end
+    repeat
+        stat(KOplErrFilePending)
+        runtime:iohandler().asyncRequest("getevent", stat, ev)
+        runtime:waitForRequest(stat)
+    until ev[1]() & 0x400 == 0
+
+    return keycodeToCharacterCode(ev[1]())
+end
+
+function GETSTR()
+    local code = GET() & 0xFF
+    if code >= 32 then
+        return string.char(code)
+    else
+        return ""
+    end
+end
+
 -- Menu APIs
 
 function mINIT()

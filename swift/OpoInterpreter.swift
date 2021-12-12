@@ -602,7 +602,7 @@ private func getTime(_ L: LuaState!) -> Int32 {
 
 private func key(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    if let keycode = iohandler.key(), charcode = OpoInterpreter.keycodeToCharcode(keycode) {
+    if let keycode = iohandler.key(), let charcode = OpoInterpreter.keycodeToCharcode(keycode) {
         L.push(charcode)
     } else {
         L.push(0)
@@ -955,7 +955,7 @@ class OpoInterpreter {
     }
 
     // Returns nil for things without a charcode (like modifier keys)
-    private static func keycodeToCharcode(_ keycode: KeyCode) -> Int? {
+    static func keycodeToCharcode(_ keycode: KeyCode) -> Int? {
         switch keycode {
         case .leftShift, .rightShift, .control, .fn, .capsLock:
             return nil
