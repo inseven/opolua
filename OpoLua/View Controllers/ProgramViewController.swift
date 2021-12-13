@@ -290,14 +290,12 @@ extension ProgramViewController: OpoIoHandler {
     func draw(operations: [Graphics.DrawCommand]) {
         let semaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
-            // Split ops into per drawable
-            // TODO this is all a bit broken atm allowing out-of-order execution of ops :-(
-
-            var opsPerId: [Int: [Graphics.DrawCommand]] = [:]
             for op in operations {
-                if opsPerId[op.displayId] == nil {
-                    opsPerId[op.displayId] = []
+                guard let drawable = self.drawables[op.displayId] else {
+                    print("No drawable for displayid \(op.displayId)!")
+                    continue
                 }
+
                 switch (op.type) {
                 case .copy(let src, let mask):
                     // These need some massaging to shoehorn in the src Drawable pointer
@@ -315,18 +313,11 @@ extension ProgramViewController: OpoIoHandler {
                     let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .copy(newSrc, newMaskSrc),
                                                      mode: op.mode, origin: op.origin,
                                                      color: op.color, bgcolor: op.bgcolor)
-                    opsPerId[op.displayId]!.append(newOp)
+                    drawable.draw(newOp)
                 default:
-                    opsPerId[op.displayId]!.append(op)
+                    drawable.draw(op)
                 }
 
-            }
-            for (id, ops) in opsPerId {
-                if let drawable = self.drawables[id] {
-                    drawable.draw(ops)
-                } else {
-                    print("\(ops.count) operations for unknown displayId!")
-                }
             }
 
             semaphore.signal()

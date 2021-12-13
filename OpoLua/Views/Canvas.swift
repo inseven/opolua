@@ -23,54 +23,53 @@ import Foundation
 
 protocol Drawable: AnyObject {
 
-    var image: CGImage? { get }
-    func draw(_ operations: [Graphics.DrawCommand])
+    func draw(_ operation: Graphics.DrawCommand)
+    func getImage() -> CGImage?
 
 }
 
 class Canvas: Drawable {
 
     let size: CGSize
-    var buffer: Data
-    var image: CGImage?
-
-    let colorSpace: CGColorSpace
-    let bytesPerPixel: Int
-    let bitmapInfo: UInt32
+    private var image: CGImage?
+    private let context: CGContext
 
     init(size: CGSize, color: Bool) {
         self.size = size
+        let colorSpace: CGColorSpace
+        let bytesPerPixel: Int
+        let bitmapInfo: UInt32
         if color {
             colorSpace = CGColorSpaceCreateDeviceRGB()
             bytesPerPixel = 4
             bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
-            self.buffer = Data(count: Int(size.width) * Int(size.height) * bytesPerPixel)
         } else {
             colorSpace = CGColorSpaceCreateDeviceGray()
             bytesPerPixel = 1
             bitmapInfo = 0
-            self.buffer = Data(repeating: 0xFF, count: Int(size.width) * Int(size.height) * bytesPerPixel)
         }
-    }
-
-    func draw(_ operations: [Graphics.DrawCommand]) {
         let bytesPerRow = bytesPerPixel * Int(size.width)
         let bitsPerComponent = 8
-        buffer.withUnsafeMutableBytes { data in
-            let context = CGContext(data: data.baseAddress,
-                                    width: Int(size.width),
-                                    height: Int(size.height),
-                                    bitsPerComponent: bitsPerComponent,
-                                    bytesPerRow: bytesPerRow,
-                                    space: colorSpace,
-                                    bitmapInfo: bitmapInfo)!
-            context.concatenate(context.coordinateFlipTransform)
+        context = CGContext(data: nil,
+                            width: Int(size.width),
+                            height: Int(size.height),
+                            bitsPerComponent: bitsPerComponent,
+                            bytesPerRow: bytesPerRow,
+                            space: colorSpace,
+                            bitmapInfo: bitmapInfo)!
+        context.concatenate(context.coordinateFlipTransform)
+    }
 
-            for operation in operations {
-                context.draw(operation)
-            }
-            image = context.makeImage()
+    func draw(_ operation: Graphics.DrawCommand) {
+        context.draw(operation)
+        self.image = nil
+    }
+
+    func getImage() -> CGImage? {
+        if self.image == nil {
+            self.image = self.context.makeImage()
         }
+        return self.image
     }
 
 }

@@ -34,10 +34,6 @@ class CanvasView : UIView, Drawable {
     var canvas: Canvas
     weak var delegate: CanvasViewDelegate?
 
-    var image: CGImage? {
-        return canvas.image
-    }
-
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -54,9 +50,13 @@ class CanvasView : UIView, Drawable {
         }
     }
 
-    func draw(_ operations: [Graphics.DrawCommand]) {
-        canvas.draw(operations)
+    func draw(_ operation: Graphics.DrawCommand) {
+        canvas.draw(operation)
         setNeedsDisplay()
+    }
+
+    func getImage() -> CGImage? {
+        return canvas.getImage()
     }
 
     override var intrinsicContentSize: CGSize {
@@ -64,7 +64,7 @@ class CanvasView : UIView, Drawable {
     }
 
     override func draw(_ rect: CGRect) {
-        guard let image = canvas.image,
+        guard let image = canvas.getImage(),
               let context = UIGraphicsGetCurrentContext()
         else {
             return
