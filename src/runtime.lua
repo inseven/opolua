@@ -998,13 +998,13 @@ function Runtime:setCwd(cwd)
 end
 
 function runOpo(fileName, procName, iohandler, verbose)
-    local data, err = iohandler.fsop("read", fileName)
+    local rt = newRuntime(iohandler)
+    rt:setInstructionDebug(verbose)
+    local data, err = rt:iohandler().fsop("read", fileName)
     if not data then
         error("Failed to read opo file data")
     end
 
-    local rt = newRuntime(iohandler)
-    rt:setInstructionDebug(verbose)
     local procTable, opxTable = require("opofile").parseOpo(data, verbose)
     rt:addModule(fileName, procTable, opxTable)
     local procToCall = procName and procName:upper() or procTable[1].name
