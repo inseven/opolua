@@ -15,12 +15,15 @@ function parseMbmHeader(data)
         local len, headerLen, x, y, twipsx, twipsy, bpp, col, paletteSz, compression, pos = 
             string.unpack("<I4I4I4I4I4I4I4I4I4I4", data, 1 + headerOffset)
 
+        local bytesPerPixel = bpp / 8
+        local bytesPerWidth = math.ceil(x * bytesPerPixel)
+        local stride = (bytesPerWidth + 3) & ~3
         local bitmap = {
             width = x,
             height = y,
             bpp = bpp,
             color = col,
-            stride = (((x + 1) // 2) + 3) & ~3, --(x + 3) & ~3,
+            stride = stride,
             -- not worrying about palettes yet
             compression = compression,
             imgStart = headerOffset + headerLen,

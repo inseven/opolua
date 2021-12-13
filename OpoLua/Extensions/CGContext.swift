@@ -22,6 +22,10 @@ import Foundation
 import CoreGraphics
 import UIKit
 
+private func scale2bpp(_ val: UInt8) -> UInt8 {
+    return val | (val << 2) | (val << 4) | (val << 6)
+}
+
 extension CGContext {
 
     var coordinateFlipTransform: CGAffineTransform {
@@ -76,19 +80,33 @@ extension CGContext {
             addPath(CGPath(rect: rect, transform: nil))
             strokePath()
         case .bitblt(let pxInfo):
-            if pxInfo.bpp == 4 {
-                // CoreGraphics doesn't seem to like 4bpp, so expand it
+            if pxInfo.bpp == 2 || pxInfo.bpp == 4 {
+                // CoreGraphics doesn't seem to like <8bpp, so expand it
+                // (It renders it, it just makes a mess)
                 var wdat = Data()
-                wdat.reserveCapacity(pxInfo.data.count * 2)
-                for b in pxInfo.data {
-                    wdat.append(((b & 0xF) << 4) | (b & 0xF)) // 0xA -> 0xAA etc
-                    wdat.append((b & 0xF0) | (b >> 4)) // 0x0A -> 0xAA etc
+                let stride: Int
+                if pxInfo.bpp == 2 {
+                    wdat.reserveCapacity(pxInfo.data.count * 4)
+                    for b in pxInfo.data {
+                        wdat.append(scale2bpp(b & 0x3))
+                        wdat.append(scale2bpp((b & 0xC) >> 2))
+                        wdat.append(scale2bpp((b & 0x30) >> 4))
+                        wdat.append(scale2bpp((b & 0xC0) >> 6))
+                    }
+                    stride = pxInfo.stride * 4
+                } else {
+                    wdat.reserveCapacity(pxInfo.data.count * 2)
+                    for b in pxInfo.data {
+                        wdat.append(((b & 0xF) << 4) | (b & 0xF)) // 0xA -> 0xAA etc
+                        wdat.append((b & 0xF0) | (b >> 4)) // 0x0A -> 0xAA etc
+                    }
+                    stride = pxInfo.stride * 2
                 }
                 let provider = CGDataProvider(data: wdat as CFData)!
                 let sp = CGColorSpaceCreateDeviceGray()
                 let cgImg = CGImage(width: pxInfo.size.width, height: pxInfo.size.height,
                     bitsPerComponent: 8, bitsPerPixel: 8,
-                    bytesPerRow: pxInfo.stride * 2, space: sp,
+                    bytesPerRow: stride, space: sp,
                     bitmapInfo: CGBitmapInfo.byteOrder32Little,
                     provider: provider, decode: nil, shouldInterpolate: false,
                     intent: .defaultIntent)!
