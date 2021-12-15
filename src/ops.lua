@@ -2051,7 +2051,7 @@ end
 gXBorder_dump = numParams_dump
 
 function ScreenInfo(stack, runtime) -- 0x114
-    local array = stack:pop()
+    local addr = stack:pop()
     local screen = runtime:getGraphics().screen
     local screenFontUid = KFontCourierNormal11
     local result = {
@@ -2066,9 +2066,7 @@ function ScreenInfo(stack, runtime) -- 0x114
         [9] = screen.fontid & 0xFFFF,
         [10] = (screen.fontid >> 16) & 0xFFFF,
     }
-    for i, val in ipairs(result) do
-        array[i](val)
-    end
+    addr:writeArray(result, DataTypes.EWord)
 end
 
 function CallOpxFunc(stack, runtime) -- 0x118
@@ -2148,7 +2146,7 @@ end
 
 function GetEventA32(stack, runtime) -- 0x123
     local ev = stack:pop()
-    local stat = stack:pop()[1]
+    local stat = stack:pop():dereference()
     stat(KOplErrFilePending)
     runtime:iohandler().asyncRequest("getevent", stat, ev)
 end
@@ -2173,9 +2171,9 @@ function DaysToDate(stack, runtime) -- 0x127
 end
 
 function gInfo32(stack, runtime) -- 0x128
-    local resultArray = stack:pop()
+    local addr = stack:pop()
     -- Heh, ER5 doesn't have this bounds check but we can
-    assert(#resultArray >= 48, "Too small an array passed to gInfo32!")
+    assert(addr:getLength() >= 48*4, "Too small an array passed to gInfo32!")
 
     local context = runtime:getGraphicsContext()
     local w, h, ascent = runtime:iohandler().graphicsop("textsize", "0", context.font)
@@ -2230,9 +2228,7 @@ function gInfo32(stack, runtime) -- 0x128
         0, -- 47
         0, -- 48
     }
-    for i, val in ipairs(data) do
-        resultArray[i](val)
-    end
+    addr:writeArray(data, DataTypes.ELong)
 end
 
 function IoWaitStat32(stack, runtime) -- 0x129

@@ -2,6 +2,17 @@ function module()
     return setmetatable({}, {__index=_G})
 end
 
+local classMt = {
+    __call = function(classObj, obj)
+        return setmetatable(obj or {}, classObj)
+    end
+}
+
+function class(classObj)
+    classObj.__index = classObj
+    return setmetatable(classObj, classMt)
+end
+
 function enum(tbl)
     local result = {}
     for k, v in pairs(tbl) do
@@ -35,6 +46,12 @@ DefaultSimpleTypes = {
     [DataTypes.ELong] = 0,
     [DataTypes.EReal] = 0.0,
     [DataTypes.EString] = "",
+}
+
+SizeofType = {
+    [DataTypes.EWord] = 2,
+    [DataTypes.ELong] = 4,
+    [DataTypes.EReal] = 8,
 }
 
 -- Since we never have to worry about actual epoc error codes (eg -8 meaning

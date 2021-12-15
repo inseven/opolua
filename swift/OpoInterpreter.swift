@@ -848,13 +848,12 @@ class OpoInterpreter {
             case .cancelled, .completed:
                 break // No completion data for these
             }
-            lua_getfield(L, 2, "ev") // Pushes eventArray
-            for i in 0 ..< ev.count {
-                lua_rawgeti(L, -1, lua_Integer(i + 1))
-                L.push(ev[i])
-                lua_call(L, 1, 0)
-            }
-            L.pop() // eventArray
+            lua_getfield(L, 2, "ev") // Pushes eventArray (AddrSlice)
+            luaL_getmetafield(L, -1, "writeArray") // AddrSlice:writeArray
+            lua_insert(L, -2) // put writeArray below eventArray
+            L.push(ev) // ev as a table
+            L.push(1) // DataTypes.ELong
+            lua_call(L, 3, 0)
         case .playsound, .sleep:
             break // No data for these
         }

@@ -17,6 +17,8 @@ function Stack:push(val)
         else
             val = 0
         end
+    elseif val == nil then
+        error("Can't push a nil val!")
     end
     assert(self.n < kMaxStackSize, "Stack has too many items!")
     self.n = self.n + 1

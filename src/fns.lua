@@ -535,7 +535,7 @@ function gCreateEnhanced(stack, runtime) -- 0x39
 end
 
 function MenuWithMemory(stack, runtime) -- 0x3A
-    local var = stack:pop()[1] -- The stack contains &(the highlighted item) and addressOf always returns a table.
+    local var = stack:pop():dereference()
     local menu = runtime:getMenu()
     runtime:setMenu(nil)
     menu.highlight = var()
@@ -641,7 +641,7 @@ function Bookmark(stack, runtime) -- 0x55
 end
 
 function GetEventC(stack, runtime) -- 0x56
-    local stat = stack:pop()[1]
+    local stat = stack:pop():dereference()
     runtime:iohandler().cancelRequest(stat)
     -- Unlike IoCancel, GetEventC should do its own waitForRequest.
     runtime:waitForRequest(stat)
@@ -905,7 +905,7 @@ function CmdStr(stack, runtime) -- 0xD6
 end
 
 function ParseStr(stack, runtime) -- 0xD7
-    local offsets = stack:pop()
+    local offsetsArrayAddr = stack:pop()
     local rel = stack:pop()
     local f = stack:pop()
     -- Wow this is a fun API
@@ -913,18 +913,21 @@ function ParseStr(stack, runtime) -- 0xD7
     rel = oplpath.abs(rel, runtime:getCwd())
     f = oplpath.abs(f, rel)
 
-    -- Once f is complete, parse it to fill in offsets
+    -- Once f is complete, parse it to fill in offsetsArrayAddr
     local base, name = oplpath.split(f)
     local start, _ = oplpath.splitext(f)
     local nameNoExt, ext = oplpath.splitext(name)
     local nameHasWildcard = nameNoExt:match("%*") and 1 or 0
     local extHasWildcard = ext:match("%*") and 2 or 0
-    offsets[1](1)
-    offsets[2](1)
-    offsets[3](3) -- Start of path will always be after the C:
-    offsets[4](1 + #f - #name)
-    offsets[5](1 + #start)
-    offsets[6](nameHasWildcard | extHasWildcard)
+    local offsets = {
+        1,
+        1,
+        3, -- Start of path will always be after the C:
+        1 + #f - #name,
+        1 + #start,
+        nameHasWildcard | extHasWildcard,
+    }
+    offsetsArrayAddr:writeArray(offsets, DataTypes.EWord)
     stack:push(f)
 end
 

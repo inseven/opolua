@@ -301,6 +301,15 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         lua_pushnil(self)
     }
 
+    // Hmm, how to make this generic based on the Array type being something we have a push() overload for?
+    func push(_ array: Array<Int>) {
+        lua_createtable(self, Int32(array.count), 0)
+        for (i, val) in array.enumerated() {
+            push(val)
+            lua_rawseti(self, -2, lua_Integer(i + 1))
+        }
+    }
+
     func pop(_ nitems: Int32 = 1) {
         lua_pop(self, nitems)
     }

@@ -94,6 +94,7 @@
 		DB79FFFF2742E6F6005E904F /* ldblib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF692742D5BC005E904F /* ldblib.c */; };
 		DB9B7C31274A771A006B6F60 /* loslib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB9B7C30274A771A006B6F60 /* loslib.c */; };
 		DBACE9C3274F895D002612DF /* modules in Resources */ = {isa = PBXBuildFile; fileRef = DBACE9C2274F895D002612DF /* modules */; };
+		DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE91522276A9D0900BDB8F5 /* memory.lua */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -189,6 +190,7 @@
 		DB9B7C30274A771A006B6F60 /* loslib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = loslib.c; sourceTree = "<group>"; };
 		DB9B7C33274A7B9B006B6F60 /* luauser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = luauser.h; sourceTree = "<group>"; };
 		DBACE9C2274F895D002612DF /* modules */ = {isa = PBXFileReference; lastKnownFileType = folder; path = modules; sourceTree = "<group>"; };
+		DBE91522276A9D0900BDB8F5 /* memory.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = memory.lua; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -353,8 +355,9 @@
 		DB79FFE72742E631005E904F /* src */ = {
 			isa = PBXGroup;
 			children = (
-				DB79FFE82742E631005E904F /* runtime.lua */,
 				DB79FFE92742E631005E904F /* init.lua */,
+				DB79FFE82742E631005E904F /* runtime.lua */,
+				DBE91522276A9D0900BDB8F5 /* memory.lua */,
 				DB79FFEA2742E631005E904F /* fns.lua */,
 				DB79FFEB2742E631005E904F /* opofile.lua */,
 				DB79FFEC2742E631005E904F /* runopo.lua */,
@@ -447,6 +450,7 @@
 				D8C679BD27484BF400BD8720 /* examples in Resources */,
 				DB79FFF72742E631005E904F /* ops.lua in Resources */,
 				DB79FFF52742E631005E904F /* dumpopo.lua in Resources */,
+				DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */,
 				DB79FFF62742E631005E904F /* stack.lua in Resources */,
 				DB7900262746D915005E904F /* defaultiohandler.lua in Resources */,
 				DB79FFF32742E631005E904F /* opofile.lua in Resources */,

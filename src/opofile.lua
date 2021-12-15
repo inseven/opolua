@@ -165,7 +165,7 @@ function parseProc(proc)
             break
         end
         local maxLen = readByte()
-        table.insert(proc.strings, { offset = offset , maxLen = maxLen })
+        proc.strings[offset] = maxLen
     end
 
     -- Array fixups

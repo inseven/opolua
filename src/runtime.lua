@@ -3,9 +3,9 @@ _ENV = module()
 local ops = require("ops")
 local newStack = require("stack").newStack
 local database = require("database")
+local memory = require("memory")
 
-Runtime = {}
-Runtime.__index = Runtime
+Runtime = class {}
 
 local sbyte = string.byte
 local fmt = string.format
@@ -60,67 +60,9 @@ function Runtime:IPReal()
     return self:ipUnpack("<d")
 end
 
-local VarMt = {
-    __call = function(self, val)
-        if val ~= nil then
-            self._val = val
-        else
-            return self._val
-        end
-    end,
-    type = function(self)
-        return self._type
-    end,
-    addressOf = function(self)
-        -- For array items, addressOf yields a table of all the values in the
-        -- array from this item onward, kinda like how & operator in C
-        -- technically doesn't allow you to index that pointer beyond the array
-        -- bounds (even though most people ignore that, undefined behaviour oh
-        -- well).
-        if self._parent then
-            -- Return the slice of variables from this item up
-            local result = {}
-            for i = self._idx, self._parent.len do
-                result[1 + i - self._idx] = self._parent[i]
-            end
-            return result
-        else
-            return { self }
-        end
-    end
-}
-VarMt.__index = VarMt
-
-local function makeVar(type, parentArray, parentIdx)
-    return setmetatable({ _type = type, _parent = parentArray, _idx = parentIdx }, VarMt)
-end
-
+local makeVar = memory.makeVar
 database.makeVar = makeVar
-
--- To get the var at the given (1-based) pos, do arrayVar()[pos]. This will do
--- the bounds check and create a var if necessary. It is an error to assign
--- directly to the array, do arrayVar()[pos](newVal) instead - ie get the val,
--- then assign to it using the function syntax.
-local ArrayMt = {
-    __index = function(val, k)
-        local len = rawget(val, "len")
-        assert(len, "Array length has not been set!")
-        assert(k > 0 and k <= len, KOplErrSubs)
-        local valType = rawget(val, "type")
-        local result = makeVar(valType, val, k)
-        rawset(val, k, result)
-        -- And default initialize the array value
-        result(DefaultSimpleTypes[valType])
-        return result
-    end,
-    __newindex = function(val, k, v)
-        error("Runtime should never be assigning to a array var index!")
-    end
-}
-
-local function newArrayVal(valueType, len)
-    return setmetatable({ type = valueType, len = len }, ArrayMt)
-end
+local newArrayVal = memory.newArrayVal
 
 function Runtime:getLocalVar(index, type, frame)
     -- ie things where index is just an offset from iFrameCell
@@ -131,7 +73,12 @@ function Runtime:getLocalVar(index, type, frame)
     local vars = frame.vars
     local var = vars[index]
     if not var then
-        var = makeVar(type)
+        local maxLen = nil
+        if type == DataTypes.EString then
+            local stringFixupIndex = index - 1
+            maxLen = assert(frame.proc.strings[stringFixupIndex], "Failed to find string fixup!")
+        end
+        var = makeVar(type, maxLen)
         vars[index] = var
     end
     if var() == nil then
@@ -143,7 +90,12 @@ function Runtime:getLocalVar(index, type, frame)
             -- Have to apply array fixup (ie find array length from proc definition)
             local arrayFixupIndex = (type == DataTypes.EStringArray) and index - 3 or index - 2
             local len = assert(frame.proc.arrays[arrayFixupIndex], "Failed to find array fixup!")
-            var(newArrayVal(type & 0xF, len))
+            local stringMaxLen = nil
+            if type == DataTypes.EStringArray then
+                local stringFixupIndex = index - 1
+                stringMaxLen = assert(frame.proc.strings[stringFixupIndex], "Failed to find string fixup for array!")
+            end
+            var(newArrayVal(type & 0xF, len, stringMaxLen))
         else
             var(DefaultSimpleTypes[type])
         end
@@ -641,12 +593,12 @@ function newModuleInstance(moduleName)
 end
 
 function newRuntime(handler)
-    local rt = setmetatable({
+    local rt = Runtime {
         dbs = {},
         modules = {},
         ioh = handler or require("defaultiohandler"),
         signal = 0,
-    }, Runtime)
+    }
 
     local opl = newModuleInstance("opl")
     -- And make all the opl functions accessible as eg runtime:gUSE(1)

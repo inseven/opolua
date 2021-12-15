@@ -232,7 +232,7 @@ end
 
 function PlaySound(stack, runtime) -- 38
     local var = runtime:makeTemporaryVar(DataTypes.EWord)
-    stack:push({var})
+    stack:push(var:addressOf())
     PlaySoundA(stack, runtime)
     runtime:waitForRequest(var)
     local val = var()
@@ -242,7 +242,7 @@ function PlaySound(stack, runtime) -- 38
 end
 
 function PlaySoundA(stack, runtime) -- 39
-    local var = stack:pop()[1]
+    local var = stack:pop():dereference()
     local volume = stack:pop()
     local file = stack:pop()
     var(KOplErrFilePending)

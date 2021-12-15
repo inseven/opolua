@@ -59,8 +59,9 @@ function printProc(proc)
         local indirectIdx = (#proc.params + i - 1) * 2 + proc.iTotalTableSize + 18
         printf('    External "%s" (%s) indirectIdx=0x%04X\n', external.name, DataTypes[external.type], indirectIdx)
     end
-    for _, str in ipairs(proc.strings) do
-        printf("    String offset=0x%04X maxLen=%d\n", str.offset, str.maxLen)
+    for _, offset in ipairs(sortedKeys(proc.strings)) do
+        local maxLen = proc.strings[offset]
+        printf("    String offset=0x%04X maxLen=%d\n", offset, maxLen)
     end
     for _, offset in ipairs(sortedKeys(proc.arrays)) do
         local len = proc.arrays[offset]
