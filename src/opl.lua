@@ -498,4 +498,141 @@ function MKDIR(path)
     end
 end
 
+local Mode = {
+    Open = 0,
+    Create = 1,
+    Replace = 2,
+    Append = 3,
+    Unique = 4,
+    OpenModeMask = 0x3,
+
+    TextFlag = 0x20,
+    WriteFlag = 0x100,
+    SeekableFlag = 0x200,
+    ReadonlyShared = 0x400, -- We can safely ignore this one
+}
+
+function IOOPEN(path, mode)
+    local openMode = mode & Mode.OpenModeMask
+
+    if openMode == Mode.Open then
+        local f = runtime:newFileHandle()
+        f.pos = 1
+        f.mode = mode
+        local data, err = runtime:iohandler().fsop("read", path)
+        if data then
+            f.data = data
+            return f.h
+        else
+            runtime:closeFile(f.h)
+            return nil, err, nil
+        end
+    end
+
+    -- Write support
+    assert(mode & Mode.WriteFlag > 0, "Incompatible mode flags to IOOPEN")
+    assert(mode & Mode.SeekableFlag == 0, "Don't support seeking writeable files yet!")
+    assert(openMode ~= Mode.Append, "Don't support append yet!")
+    assert(openMode ~= Mode.Unique, "Don't support unique yet!")
+
+    if openMode == Mode.Create then
+        local err = runtime:fsop("exists", path)
+        if err ~= KOplErrNotExists then
+            printf("IOOPEN(%s) failed: %d\n", path, err)
+            return nil, err
+        end
+    end
+
+    local f = runtime:newFileHandle()
+    f.path = path
+    f.pos = 1
+    f.mode = mode
+    f.data = ""
+    return f.h
+end
+
+-- return `nil, err` in some errors, and `data, err` in the event of "valid but truncated..."
+function IOREAD(h, maxLen)
+    local f = runtime:getFile(h)
+    if not f then
+        return nil, KOplErrInvalidArgs
+    end
+
+    if f.mode & Mode.TextFlag > 0 then
+        local startPos, endPos = f.data:find("\r?\n", f.pos)
+        if startPos then
+            local data = f.data:sub(f.pos, f.startPos - 1)
+            f.pos = endPos + 1
+            if #data > maxLen then
+                -- Yes returning both data and an error is a weird way to do things, it's what the API requires...
+                return data:sub(1, maxLen), KOplErrRecord
+            end
+            return data
+        else
+            f.pos = #f.data + 1
+            return ""
+        end
+    else
+        local data = f.data:sub(f.pos, f.pos + maxLen - 1)
+        f.pos = f.pos + #data
+        return data
+    end
+end
+
+function IOWRITE(h, data)
+    local f = runtime:getFile(h)
+    if not f then
+        return nil, KOplErrInvalidArgs
+    end
+    -- What's the right actual error code for this? KOplErrWrite? KOplErrReadOnly? KOplErrAccess?
+    assert(f.mode & Mode.WriteFlag > 0, "Cannot write to a readonly file handle!")
+    -- Not the most efficient operation, oh well
+    f.data = f.data .. data
+    if f.mode & Mode.TextFlag > 0 then
+        f.data = f.data.."\r\n"
+    end
+    f.pos = #f.data + 1
+    return KErrNone
+end
+
+function IOSEEK(handle, mode, offset)
+    local f = runtime:getFile(h)
+    if not f then
+        return KOplErrInvalidArgs
+    end
+    local newPos
+    if mode == 1 then
+        newPos = 1 + offset
+    elseif mode == 2 then
+        newPos = 1 + #f.data + offset -- I think it's plus...?
+    elseif mode == 3 then
+        newPos = self.pos + offset
+    elseif mode == 6 then
+        newPos = 1
+    else
+        error("Unknown mode to IOSEEK!")
+    end
+
+    assert(newPos >= 1 and newPos <= #f.data + 1) -- Not sure what the right error here is
+    f.pos = newPos
+    return KErrNone, newPos
+end
+
+function IOCLOSE(h)
+    if h == 0 then
+        return KErrNone
+    end
+    local err = KErrNone
+    local f = runtime:getFile(h)
+    if f then
+        if f.mode & Mode.WriteFlag > 0 then
+            err = runtime:fsop("write", f.path, f.data)
+        end
+        runtime:closeFile(h)
+    else
+        err = KOplErrInvalidArgs
+    end
+    return err
+end
+
 return _ENV

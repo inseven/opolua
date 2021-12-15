@@ -1263,7 +1263,9 @@ function PokeStr(stack, runtime) -- 0x9B
 end
 
 function PokeB(stack, runtime) -- 0x9C
-    error("Unimplemented opcode PokeB!")
+    local data = string.char(stack:pop())
+    local addr = stack:pop()
+    addr:write(data)
 end
 
 function Append(stack, runtime) -- 0x9D

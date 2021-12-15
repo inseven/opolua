@@ -580,6 +580,24 @@ function Runtime:closeDb()
     self.dbs.current = nil
 end
 
+function Runtime:newFileHandle()
+    local h = #self.files
+    local f = {
+        h = h,
+    }
+    self.files[h] = f
+    return f
+end
+
+function Runtime:getFile(handle)
+    local f = self.files[handle]
+    return f
+end
+
+function Runtime:closeFile(handle)
+    self.files[handle] = nil
+end
+
 function newModuleInstance(moduleName)
     -- Because opl.lua uses a shared upvalue for its runtime pointer, we need to
     -- give each runtime its own copy of the module, meaning we can't just
@@ -596,6 +614,7 @@ function newRuntime(handler)
     local rt = Runtime {
         dbs = {},
         modules = {},
+        files = {},
         ioh = handler or require("defaultiohandler"),
         signal = 0,
     }

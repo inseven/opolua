@@ -297,19 +297,48 @@ function Iow(stack, runtime) -- 0x0C
 end
 
 function IoOpen(stack, runtime) -- 0x0D
-    error("Unimplemented function IoOpen!")
+    local mode = stack:pop()
+    local name = stack:pop()
+    local handleVar = stack:pop():dereference()
+
+    local handle, err = runtime:IOOPEN(name, mode)
+    if handle then
+        handleVar(handle)
+        stack:push(0)
+    else
+        handleVar(-1) -- Just in case
+        stack:push(err)
+    end
 end
 
 function IoWrite(stack, runtime) -- 0x0E
-    error("Unimplemented function IoWrite!")
+    local len = stack:pop()
+    local addr = stack:pop()
+    local h = stack:pop()
+    local data = addr:read(len)
+    local err = runtime:IOWRITE(h, data)
+    stack:push(err)
 end
 
 function IoRead(stack, runtime) -- 0x0F
-    error("Unimplemented function IoRead!")
+    local maxLen = stack:pop()
+    local addr = stack:pop()
+    local h = stack:pop()
+    local data, err = runtime:IOREAD(h, maxLen)
+
+    if data then
+        addr:write(data)
+    end
+
+    if err then
+        stack:push(err)
+    else
+        stack:push(#data)
+    end
 end
 
 function IoClose(stack, runtime) -- 0x10
-    error("Unimplemented function IoClose!")
+    stack:push(runtime:IOCLOSE(stack:pop()))
 end
 
 function IoWait(stack, runtime) -- 0x11
@@ -345,7 +374,9 @@ function Month(stack, runtime) -- 0x17
 end
 
 function PeekB(stack, runtime) -- 0x18
-    error("Unimplemented function PeekB!")
+    local addr = stack:pop()
+    local data = addr:read(1)
+    stack:push(string.unpack("b", data))
 end
 
 function PeekW(stack, runtime) -- 0x19
@@ -366,7 +397,9 @@ function Year(stack, runtime) -- 0x1E
 end
 
 function SAddr(stack, runtime) -- 0x1F
-    error("Unimplemented function SAddr!")
+    local str = stack:pop()
+    assert(str:type() == DataTypes.EString, "Bad variable type passed to SAddr")
+    stack:push(str:addressOf())
 end
 
 function Week(stack, runtime) -- 0x20
@@ -374,7 +407,14 @@ function Week(stack, runtime) -- 0x20
 end
 
 function IoSeek(stack, runtime) -- 0x21
-    error("Unimplemented function IoSeek!")
+    local offsetVar = stack:pop():dereference()
+    local mode = stack:pop()
+    local handle = stack:pop()
+    local err, result = runtime:IOSEEK(handle, mode, offsetVar())
+    if result then
+        offsetVar(result)
+    end
+    stack:push(err)
 end
 
 function Kmod(stack, runtime) -- 0x22
@@ -390,7 +430,21 @@ function KeyC(stack, runtime) -- 0x24
 end
 
 function IoOpenUnique(stack, runtime) -- 0x25
-    error("Unimplemented function IoOpenUnique!")
+    local mode = stack:pop()
+    local nameVar = stack:pop():dereference()
+    local handleVar = stack:pop():dereference()
+
+    local handle, err, name = runtime:IOOPEN(nameVar(), mode)
+    if handle then
+        handleVar(handle)
+        if name then
+            nameVar(name)
+        end
+        stack:push(0)
+    else
+        handleVar(-1) -- Just in case
+        stack:push(err)
+    end
 end
 
 function gCreate(stack, runtime) -- 0x26
