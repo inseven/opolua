@@ -704,7 +704,7 @@ local function run(self, stack)
         if self.instructionDebug then
             local savedIp = self.ip
             self.ip = self.frame.lastIp
-            print(self:decodeNextInstruction())
+            print(self:decodeNextInstruction(), fmt("stack=%d", stack.n))
             self.ip = savedIp
         end
         ops[op](stack, self)
@@ -812,6 +812,7 @@ function Runtime:pcallProc(procName, ...)
         local ok, err = xpcall(run, traceback, self, stack)
         if not ok then
             addStacktraceToError(self, err, callingFrame)
+            -- print(err)
             self.errorLocation = fmt("Error in %s\\%s", self:moduleForProc(self.frame.proc).name, self.frame.proc.name)
             if err.code then
                 self.errorValue = err.code

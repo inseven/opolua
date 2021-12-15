@@ -456,6 +456,9 @@ private func fsop(_ L: LuaState!) -> Int32 {
     let result = iohandler.fsop(Fs.Operation(path: path, type: op))
     switch (result) {
     case .err(let err):
+        if err != .none {
+            print("Error \(err) for cmd \(op) path \(path)")
+        }
         if cmd == "read" {
             L.pushnil()
             L.push(err.rawValue)

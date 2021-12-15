@@ -589,6 +589,7 @@ function gCreateEnhanced(stack, runtime) -- 0x39
     local flags = stack:pop()
     local visible = stack:pop()
     local x, y, w, h = stack:popRect()
+    -- printf("gCreate x=%d y=%d w=%d h=%d flags=%d\n", x, y, w, h, flags)
     local id = runtime:gCREATE(x, y, w, h, visible ~= 0, flags)
     stack:push(id)
 end
