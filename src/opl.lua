@@ -334,6 +334,11 @@ function gCOLOR(red, green, blue)
     runtime:getGraphicsContext().color = val
 end
 
+function gSETWIN(x, y, w, h)
+    runtime:flushGraphicsOps()
+    runtime:iohandler().graphicsop("setwin", gIDENTITY(), x, y, w, h)
+end
+
 function gCREATE(x, y, w, h, visible, flags)
     -- printf("gCreate w=%d h=%d flags=%X\n", w, h, flags or 0)
     local id = runtime:iohandler().createWindow(x, y, w, h, flags or 0)

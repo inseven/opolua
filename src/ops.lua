@@ -1569,8 +1569,16 @@ function gUse(stack, runtime) -- 0xC7
 end
 
 function gSetWin(stack, runtime) -- 0xC8
-    error("Unimplemented opcode gSetWin!")
+    local numParams = runtime:IP8()
+    local w, h
+    if numParams == 4 then
+        w, h = stack:popXY()
+    end
+    local x, y = stack:popXY()
+    runtime:gSETWIN(x, y, w, h)
 end
+
+gSetWin_dump = numParams_dump
 
 function gVisible(stack, runtime) -- 0xC9
     local show = runtime:IP8() == 1

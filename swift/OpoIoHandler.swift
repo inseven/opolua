@@ -287,6 +287,7 @@ struct Graphics {
         case show(Int, Bool) // displayId, visible flag
         case textSize(String, FontInfo) // returns size
         case giprint(String, Corner)
+        case setwin(Int, Point, Size?) // displayId, pos, size
     }
 
     enum Result {

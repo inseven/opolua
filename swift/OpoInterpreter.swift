@@ -365,6 +365,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("order", displayId, pos)
 // graphicsop("textsize", str, font)
 // graphicsop("giprint", text, corner)
+// graphicsop("setwin", displayId, x, y, [w, h])
 private func graphicsop(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""
@@ -407,6 +408,21 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         let text = L.tostring(2) ?? ""
         let corner = Graphics.Corner(rawValue: L.toint(3) ?? Graphics.Corner.bottomRight.rawValue) ?? .bottomRight
         return doGraphicsOp(L, iohandler, .giprint(text, corner))
+    case "setwin":
+        if let displayId = L.toint(2),
+           let x = L.toint(3),
+           let y = L.toint(4) {
+            let pos = Graphics.Point(x: x, y: y)
+            let size: Graphics.Size?
+            if let w = L.toint(5), let h = L.toint(6) {
+                size = Graphics.Size(width: w, height: h)
+            } else {
+                size = nil
+            }
+            return doGraphicsOp(L, iohandler, .setwin(displayId, pos, size))
+        } else {
+            print("Bad args to setwin±")
+        }
     default:
         print("Unknown graphicsop \(cmd)!")
     }

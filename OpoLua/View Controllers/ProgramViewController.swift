@@ -403,6 +403,20 @@ extension ProgramViewController: OpoIoHandler {
             // TODO
             printValue(text + "\n")
             return .nothing
+        case .setwin(let displayId, let pos, let size):
+            DispatchQueue.main.async {
+                if let view = self.drawables[displayId] as? CanvasView {
+                    if let size = size {
+                        view.resize(to: size.cgSize())
+                    }
+                    view.frame = CGRect(origin: pos.cgPoint(), size: view.frame.size)
+                } else {
+                    print("No CanvasView for setwin operation")
+                }
+                semaphore.signal()
+            }
+            semaphore.wait()
+            return .nothing
         }
     }
 
