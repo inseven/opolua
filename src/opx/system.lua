@@ -251,6 +251,7 @@ function PlaySoundA(stack, runtime) -- 39
     if not data then
         var(err)
         runtime:requestSignal()
+        stack:push(0) -- Should this be the error?
         return
     end
 

@@ -377,6 +377,7 @@ function gLOADBIT(path, writable, index)
         bmpStride = bitmap.stride,
         bmpData = mbm.decodeBitmap(bitmap, data)
     })
+    runtime:flushGraphicsOps()
     return id
 end
 

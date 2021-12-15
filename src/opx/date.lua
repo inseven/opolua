@@ -44,6 +44,7 @@ end
 
 function DTDeleteDateTime(stack, runtime) -- 2
     handles[stack:pop()] = nil
+    stack:push(0)
 end
 
 function DTYear(stack, runtime) -- 3

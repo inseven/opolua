@@ -249,7 +249,12 @@ function IllegalFuncOpCode(stack, runtime)
 end
 
 function Asc(stack, runtime) -- 0x01
-    stack:push(string.byte(stack:pop()))
+    local str = stack:pop()
+    if #str == 0 then
+        stack:push(0)
+    else
+        stack:push(string.byte(str))
+    end
 end
 
 function Count(stack, runtime) -- 0x03

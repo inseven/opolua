@@ -50,9 +50,10 @@ class Canvas: Drawable {
         }
         let bytesPerRow = bytesPerPixel * Int(size.width)
         let bitsPerComponent = 8
+        // Apparently zero-width windows are allowed in OPL, who knows why...
         context = CGContext(data: nil,
-                            width: Int(size.width),
-                            height: Int(size.height),
+                            width: Int(size.width == 0 ? 1 : size.width),
+                            height: Int(size.height == 0 ? 1 : size.height),
                             bitsPerComponent: bitsPerComponent,
                             bytesPerRow: bytesPerRow,
                             space: colorSpace,

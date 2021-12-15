@@ -422,6 +422,7 @@ function Runtime:closeGraphicsContext(id)
         graphics.current = graphics[1]
     end
     graphics[id] = nil
+    self:flushGraphicsOps()
     self.ioh.graphicsop("close", id)
 end
 
