@@ -129,7 +129,8 @@ function SetSoundDriverEnabled(stack, runtime) -- 12
 end
 
 function SetKeyClickEnabled(stack, runtime) -- 13
-    error("Unimplemented system.opx function SetKeyClickEnabled!")
+    stack:pop() -- state
+    stack:push(0)
 end
 
 function SetPointerClickEnabled(stack, runtime) -- 14

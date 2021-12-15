@@ -532,7 +532,8 @@ function gPrintClip(stack, runtime) -- 0x33
 end
 
 function TestEvent(stack, runtime) -- 0x34
-    error("Unimplemented function TestEvent!")
+    -- error("Unimplemented function TestEvent!")
+    stack:push(false)
 end
 
 function Menu(stack, runtime) -- 0x36
