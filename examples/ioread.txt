@@ -1,0 +1,48 @@
+PROC main:
+	LOCAL n$(32), d$(32), h%, err%
+	n$ = "D:\ioreadtest"
+	IF NOT EXIST(n$)
+		err% = IOOPEN(h%, n$, 2)
+		IF err% : RAISE err% : ENDIF
+		d$ = "abcdefghij"
+		IOWRITE(h%, ADDR(d$)+1, LEN(d$))
+		IOCLOSE(h%)
+		d$ = "xxxxxxxxxxxxxxx"
+	ENDIF
+	
+	err% = IOOPEN(h%, n$, 0)
+	IF err% : RAISE err% : ENDIF
+	err% = IOREAD(h%, ADDR(d$)+1, 32)
+	IF err% < 0 : RAISE err% : ENDIF
+	IOCLOSE(h%)
+	POKEB ADDR(d$), err%
+	
+	PRINT "Data is:", d$
+	tmemcpy:
+	GET
+
+ENDP
+
+PROC memcpy:(adest&, asrc&, alen%)
+	LOCAL src&, dest&, len%
+	src& = asrc&
+	dest& = adest&
+	len% = alen% 
+	WHILE len% > 0
+		POKEB dest&, PEEKB(src&)
+		dest& = dest& + 1
+		src& = src& + 1
+		len% = len% - 1
+	ENDWH
+ENDP
+
+PROC tmemcpy:
+	LOCAL a%, b%, c$(10), d$(5)
+	a% = 1234
+	memcpy:(ADDR(b%), ADDR(a%), 2)
+	PRINT a%, "->", b%
+	c$ = "xxxxxxxxxx"
+	d$ = "abcde"
+	memcpy:(ADDR(c$), ADDR(d$), 6)
+	PRINT d$, "->", c$
+ENDP
