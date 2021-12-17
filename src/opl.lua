@@ -52,6 +52,7 @@ function gCLOSE(id)
 end
 
 function gUSE(id)
+    -- printf("gUSE(%d)\n", id)
     runtime:setGraphicsContext(id)
 end
 
@@ -89,6 +90,7 @@ function gORDER(id, pos)
 end
 
 function gCLS()
+    -- printf("gCLS\n")
     local context = runtime:getGraphicsContext()
     context.pos = { x = 0, y = 0 }
     runtime:drawCmd("fill", { width = context.width, height = context.height, mode = 1 })
@@ -177,6 +179,7 @@ end
 -- TODO gPOLY
 
 function gFILL(width, height, mode)
+    -- printf("gFILL %d,%d %dx%d\n", gX(), gY(), width, height)
     runtime:drawCmd("fill", { width = width, height = height, mode = mode })
 end
 
@@ -336,14 +339,16 @@ function gCOLOR(red, green, blue)
 end
 
 function gSETWIN(x, y, w, h)
+    -- printf("gSETWIN id=%d %d,%d %sx%s\n", gIDENTITY(), x, y, w, h)
     runtime:flushGraphicsOps()
     runtime:iohandler().graphicsop("setwin", gIDENTITY(), x, y, w, h)
 end
 
 function gCREATE(x, y, w, h, visible, flags)
-    -- printf("gCreate w=%d h=%d flags=%X\n", w, h, flags or 0)
+    -- printf("gCREATE w=%d h=%d flags=%X", w, h, flags or 0)
     local id = runtime:iohandler().createWindow(x, y, w, h, flags or 0)
     assert(id, "Failed to createWindow!")
+    -- printf(" id=%d\n", id)
     runtime:newGraphicsContext(id, w, h, true)
     if visible then
         runtime:iohandler().graphicsop("show", id, true)
@@ -353,8 +358,10 @@ end
 
 function gCREATEBIT(w, h, mode)
     -- We ignore mode - bitmaps are always (atm) 8bpp greyscale internally
+    -- printf("gCREATEBIT w=%d h=%d", w, h)
     local id = runtime:iohandler().createBitmap(w, h)
     assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
+    -- printf(" id=%d\n", id)
     runtime:newGraphicsContext(id, w, h, false)
     return id
 end
@@ -375,6 +382,7 @@ function gLOADBIT(path, writable, index)
     assert(bitmap, KOplErrNotExists)
     -- (2)
     local id = gCREATEBIT(bitmap.width, bitmap.height)
+    -- printf("gLOADBIT %s mbmid=%d %dx%d id=%d\n", path, 1+index, bitmap.width, bitmap.height, id)
     -- (3)
     runtime:drawCmd("bitblt", {
         bmpWidth = bitmap.width,

@@ -1012,7 +1012,7 @@ end
 function BranchIfFalse_dump(runtime)
     local ip = runtime:getIp() - 1 -- Because ip points to just after us
     local relJmp = runtime:IPs16()
-    return fmt("%d (->0x%08X)", relJmp, ip + relJmp)
+    return fmt("%d (->%08X)", relJmp, ip + relJmp)
 end
 
 function AndInt(stack) -- 0x5C
@@ -1513,7 +1513,7 @@ end
 function GoTo_dump(runtime)
     local ip = runtime:getIp() - 1 -- Because ip points to just after us
     local relJmp = runtime:IPs16()
-    return fmt("%d (->0x%08X)", relJmp, ip + relJmp)
+    return fmt("%d (->%08X)", relJmp, ip + relJmp)
 end
 
 function Return(stack, runtime) -- 0xC0
@@ -1564,7 +1564,7 @@ function gClose(stack, runtime) -- 0xC6
 end
 
 function gUse(stack, runtime) -- 0xC7
-    runtime:setGraphicsContext(stack:pop())
+    runtime:gUSE(stack:pop())
     runtime:setTrap(false)
 end
 
