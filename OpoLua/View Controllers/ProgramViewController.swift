@@ -214,6 +214,32 @@ class ProgramViewController: UIViewController {
         }
     }
 
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        for press in presses {
+            if let key = press.key {
+                if let oplKey = key.oplKeyCode() {
+                    let timestamp = Int(press.timestamp)
+                    let modifiers = key.oplModifiers()
+                    eventQueue.append(.keydownevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers)))
+                    eventQueue.append(.keypressevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers, isRepeat: false)))
+                }
+            }
+        }
+    }
+
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        for press in presses {
+            if let key = press.key {
+                if let oplKey = key.oplKeyCode() {
+                    let timestamp = Int(press.timestamp)
+                    let modifiers = key.oplModifiers()
+                    eventQueue.append(.keyupevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers)))
+                    return
+                }
+            }
+        }
+    }
+
 }
 
 extension ProgramViewController: OpoIoHandler {
