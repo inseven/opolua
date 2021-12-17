@@ -438,7 +438,15 @@ function gPOLY(array)
     runtime:setGraphicsAutoFlush(flush)
 end
 
+function gINVERT(w, h)
+    runtime:drawCmd("invert", { width = w, height = h })
+end
+
 -- Screen APIs
+
+function BUSY(str, corner, delay)
+    runtime:iohandler().graphicsop("busy", str, corner, delay)
+end
 
 function SCREEN(w, h, x, y)
     -- Since we don't draw text into the main window this command doesn't

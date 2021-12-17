@@ -1917,7 +1917,18 @@ function dItem_dump(runtime)
 end
 
 function Busy(stack, runtime) -- 0xF0
-    error("Unimplemented opcode Busy!")
+    local numParams = runtime:IP8()
+    local corner, delay, str
+    if numParams > 2 then
+        delay = stack:pop()
+    end
+    if numParams > 1 then
+        corner = stack:pop()
+    end
+    if numParams > 0 then
+        str = stack:pop()
+    end
+    runtime:BUSY(str, corner, delay)
 end
 
 Busy_dump = numParams_dump
@@ -1930,7 +1941,8 @@ end
 Lock_dump = IPs8_dump
 
 function gInvert(stack, runtime) -- 0xF2
-    error("Unimplemented opcode gInvert!")
+    local w, h = stack:popXY()
+    runtime:gINVERT(w, h)
 end
 
 function gXPrint(stack, runtime) -- 0xF3

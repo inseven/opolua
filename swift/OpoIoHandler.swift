@@ -270,6 +270,7 @@ struct Graphics {
             case scroll(Int, Int, Rect) // dx, dy, rect
             case text(String, FontInfo, TextMode)
             case border(Rect, BorderType)
+            case invert(Size)
         }
         let displayId: Int
         let type: OpType
@@ -286,6 +287,7 @@ struct Graphics {
         case order(Int, Int) // displayId, position
         case show(Int, Bool) // displayId, visible flag
         case textSize(String, FontInfo) // returns size
+        case busy(String, Corner, Int) // text, corner, delay (in ms)
         case giprint(String, Corner)
         case setwin(Int, Point, Size?) // displayId, pos, size
     }

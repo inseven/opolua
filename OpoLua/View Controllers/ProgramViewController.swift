@@ -399,6 +399,12 @@ extension ProgramViewController: OpoIoHandler {
             // the text to be, so...
             let ascent = Int(ceil(sz.height) + font.descender)
             return .sizeAndAscent(Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))), ascent)
+        case .busy(let text, _, _ /*let corner, let delay*/):
+            // TODO
+            if text.count > 0 {
+                printValue(text)
+            }
+            return .nothing
         case .giprint(let text, _ /*let corner*/):
             // TODO
             printValue(text + "\n")

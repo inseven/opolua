@@ -256,6 +256,9 @@ private func draw(_ L: LuaState!) -> Int32 {
         case "fill":
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             optype = .fill(size)
+        case "invert":
+            let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
+            optype = .invert(size)
         case "circle":
             optype = .circle(L.toint(-1, key: "r") ?? 0, L.toboolean(-1, key: "fill"))
         case "ellipse":
@@ -364,6 +367,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("show", displayId, flag)
 // graphicsop("order", displayId, pos)
 // graphicsop("textsize", str, font)
+// graphicsop("busy", text, corner, delay)
 // graphicsop("giprint", text, corner)
 // graphicsop("setwin", displayId, x, y, [w, h])
 private func graphicsop(_ L: LuaState!) -> Int32 {
@@ -404,6 +408,11 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         } else {
             print("Bad args to textsize!")
         }
+    case "busy":
+        let text = L.tostring(2) ?? ""
+        let corner = Graphics.Corner(rawValue: L.toint(3) ?? Graphics.Corner.bottomRight.rawValue) ?? .bottomRight
+        let delay = (L.toint(4) ?? 0) * 500
+        return doGraphicsOp(L, iohandler, .busy(text, corner, delay))
     case "giprint":
         let text = L.tostring(2) ?? ""
         let corner = Graphics.Corner(rawValue: L.toint(3) ?? Graphics.Corner.bottomRight.rawValue) ?? .bottomRight

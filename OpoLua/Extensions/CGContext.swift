@@ -153,6 +153,11 @@ extension CGContext {
             UIGraphicsPopContext()
         case .border(let rect, let type):
             gXBorder(type: type, frame: rect.cgRect())
+        case .invert(let size):
+            let rect = Graphics.Rect(origin: operation.origin, size: size).cgRect()
+            let img = CIImage(cgImage: makeImage()!).cropped(to: rect).applyingFilter("CIColorInvert")
+            let cgImg = CIContext().createCGImage(img, from: img.extent)!
+            drawUnflippedImage(cgImg, in: rect) // TODO mask out the corner pixels
         }
     }
 
