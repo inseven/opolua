@@ -121,9 +121,21 @@ extension CGContext {
             }
             // Clip the rect to the source size to make sure we don't inadvertently stretch it
             let rect = src.rect.cgRect().intersection(CGRect(x: 0, y: 0, width: srcImage.width, height: srcImage.height))
+
+            // OPL lets your src rect extend beyond the top and left of the
+            // image, in which case we need to adjust the dest pos
+            var destX = operation.origin.cgPoint().x
+            var destY = operation.origin.cgPoint().y
+            if src.rect.minX < 0 {
+                destX = destX + CGFloat(-src.rect.minX)
+            }
+            if src.rect.minY < 0 {
+                destY = destY + CGFloat(-src.rect.minY)
+            }
+
             let maskImg = (mask?.extra as? Drawable)?.getImage()
             if let img = srcImage.cropping(to: rect) {
-                drawUnflippedImage(img, in: CGRect(origin: operation.origin.cgPoint(), size: rect.size), mask: maskImg)
+                drawUnflippedImage(img, in: CGRect(origin: CGPoint(x: destX, y: destY), size: rect.size), mask: maskImg)
             }
         case .scroll(let dx, let dy, let rect):
             let origRect = rect.cgRect()
