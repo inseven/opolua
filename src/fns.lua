@@ -381,7 +381,7 @@ end
 function PeekB(stack, runtime) -- 0x18
     local addr = stack:pop()
     local data = addr:read(1)
-    stack:push(string.unpack("b", data))
+    stack:push(string.unpack("B", data))
 end
 
 function PeekW(stack, runtime) -- 0x19

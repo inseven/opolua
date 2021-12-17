@@ -1263,7 +1263,7 @@ function PokeStr(stack, runtime) -- 0x9B
 end
 
 function PokeB(stack, runtime) -- 0x9C
-    local data = string.pack("b", stack:pop())
+    local data = string.pack("B", stack:pop())
     local addr = stack:pop()
     addr:write(data)
 end
