@@ -310,7 +310,10 @@ function MachineUniqueId(stack, runtime) -- 50
 end
 
 function EndTask(stack, runtime) -- 51
-    error("Unimplemented system.opx function EndTask!")
+    -- error("Unimplemented system.opx function EndTask!")
+    local prev = stack:pop()
+    local id = stack:pop()
+    printf("TODO: EndTask id=%d prev=%d\n", id, prev)
 end
 
 function KillTask(stack, runtime) -- 52

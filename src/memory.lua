@@ -329,7 +329,6 @@ local function applyDataToSimpleVar(data, var, offset)
         end
     elseif offset == 0 and #data == SizeofType[vart] then
         -- We can simply assign
-        -- assert(offset == 0 and #data == SizeofType[vart], "Setting a primitive type with data not of the same size?!")
         local fmt = FmtForType[vart]
         var(string.unpack(fmt, data))
     else
