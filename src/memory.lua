@@ -17,6 +17,9 @@ function ArrayValue:__index(k)
     local len = rawget(self, "_len")
     assert(len, "Array length has not been set!")
     assert(type(k) == "number", "Attempt to index "..tostring(k))
+    if not (k > 0 and k <= len) then
+        error(string.format("Out of bounds: %d len=%d for %s\n", k, len, ArrayValue.__tostring(self)))
+    end
     assert(k > 0 and k <= len, KOplErrSubs)
     local valType = rawget(self, "_type")
     local maxLen = rawget(self, "_stringMaxLen")
@@ -40,6 +43,15 @@ function ArrayValue:valueType()
     return rawget(self, "_type")
 end
 
+function ArrayValue:__tostring()
+    local result = {}
+    local len = self:arrayLen()
+    for i = 1, len do
+        result[i] = tostring(self[i])
+    end
+    return string.format("[t=%d, %s]", self:valueType(), table.concat(result, ", "))
+end
+
 function newArrayVal(valueType, len, stringMaxLen)
     return ArrayValue {
         _type = valueType,
@@ -55,6 +67,7 @@ Variable = class {
     _parent = nil,
     _idx = nil,
     _maxLen = nil,
+    _val = nil,
 }
 
 function Variable:__call(val)
@@ -72,6 +85,14 @@ function Variable:__call(val)
         else
             return self._val
         end
+    end
+end
+
+function Variable:__tostring()
+    if self._type == DataTypes.EString then
+        return string.format('"%s"', hexEscape(self()))
+    else
+        return tostring(self())
     end
 end
 
@@ -141,9 +162,9 @@ end
 function Variable:getBytes()
     local t = self._type
     if t == DataTypes.EWord then
-        return string.pack("<I2", self._val)
+        return string.pack("<i2", self._val)
     elseif t == DataTypes.ELong then
-        return string.pack("<I4", self._val)
+        return string.pack("<i4", self._val)
     elseif t == DataTypes.EReal then
         return string.pack("<d", self._val)
     elseif t == DataTypes.EString then
@@ -156,28 +177,31 @@ end
 function Variable:getAllStringData()
     if self._len then
         -- Already expanded
-        return self._val
+        return self._val, self._len
     else
-        return self._val .. string.rep("\0", self:getMaxLen() - #self._val)
+        local realLen = #self._val
+        return self._val .. string.rep("\0", self:getMaxLen() - realLen), realLen
+    end
+end
+
+function Variable:ensureStringExpanded()
+    if not self._len then
+        self._val, self._len = self:getAllStringData()
     end
 end
 
 function Variable:updateStringData(idx, data)
     assert(self:type() == DataTypes.EString, "Can't updateStringData for non-string variables!")
     assert(idx + #data <= self:getMaxLen(), "Attempt to updateStringData beyond max length!")
-    if self._len == nil then
-        -- Extend the string to the max len to make the maths easier (__call knows to sub() it)
-        local len = #self.val
-        self._val = self:getAllStringData()
-        self._len = len
-    end
+    self:ensureStringExpanded()
     self._val = self._val:sub(1, idx)..data..self._val:sub(idx + 1 + #data)
     assert(#self._val == self:getMaxLen(), "Oh dear I've messed up the maths")
 end
 
 function Variable:setStringLength(len)
     assert(len <= self:getMaxLen(), "Attempt to setStringLength beyond maxLen")
-    self._len = len
+    self:ensureStringExpanded()
+   self._len = len
 end
 
 function makeVar(type, maxLen)
@@ -214,7 +238,11 @@ end
 function AddrSlice.__add(lhs, rhs)
     local addr, offset = getAddrAndOffset(lhs, rhs)
     local newOffset = addr.offset + offset
-    assert(newOffset >= 0 and newOffset <= addr.len, "Address calculation out of bounds!")
+    if newOffset < 0 or newOffset > addr.len then
+        printf("Warning: 0x%08X + %d outside of 0-%08X for var %s\n", addr.offset, offset, addr.len, addr.var)
+        -- error("Address calculation out of bounds!")
+        -- Strictly speaking it's not an error until you try and dereference it
+    end
     return AddrSlice {
         offset = newOffset,
         len = addr.len,
@@ -227,29 +255,31 @@ function AddrSlice.__sub(lhs, rhs)
     return AddrSlice.__add(addr, -offset)
 end
 
-function AddrSlice:getOffsetAsArrayPosition()
-    local valSz = self.var:stride()
-    assert(self.offset < self.len and self.offset % valSz == 0, "Addr is not pointing to an array entry!")
-    return 1 + (self.offset // valSz)
-end
-
-function AddrSlice:dereference(arrayPos)
-    if not arrayPos then
-        arrayPos = 1
-    end
-    assert(arrayPos > 0, "Cannot dereference backwards") -- just no.
+function AddrSlice:dereference()
+    assert(self.offset == 0, "Addr not pointing to start of value!")
     if isArrayType(self.var:type()) then
-        local arrayVal = self.var()
-        local pos = self:getOffsetAsArrayPosition() + (arrayPos - 1)
-        return arrayVal[pos]
+        return self.var()[1]
     else
-        assert(self.offset == 0, "Addr not pointing to start of value!")
-        assert(arrayPos == 1, "dereference beyond slice bounds!")
         return self.var
     end
 end
 
-function AddrSlice:getLength()
+function AddrSlice:getVarForOffset(offset)
+    local offset = self.offset + offset
+    local stride = self.var:stride()
+    if isArrayType(self.var:type()) then
+        local idx = offset // stride
+        local remainder = offset - (idx * stride)
+        local pos = idx + 1
+        assert(pos > 0 and pos <= self.var():arrayLen(), "Out of bounds!")
+        return self.var()[pos], remainder
+    else
+        assert(offset < stride, "Out of bounds!")
+        return self.var, offset
+    end
+end
+
+function AddrSlice:getValidLength()
     return self.len - self.offset
 end
 
@@ -274,14 +304,15 @@ function AddrSlice:read(len)
 end
 
 local FmtForType = {
-    [DataTypes.EWord] = "<I2",
-    [DataTypes.ELong] = "<I4",
+    [DataTypes.EWord] = "<i2",
+    [DataTypes.ELong] = "<i4",
     [DataTypes.EReal] = "<d",
 }
 
 local function applyDataToSimpleVar(data, var, offset)
     assert(offset + #data <= var:stride(), "Too much data for this var!")
     local vart = var:type()
+    -- printf("applyDataToSimpleVar datalen=%d offset=%d vartype=%d stride=%d\n", #data, offset, vart, var:stride())
     if vart == DataTypes.EString then
         local newLen
         if offset == 0 then
@@ -296,10 +327,17 @@ local function applyDataToSimpleVar(data, var, offset)
         if newLen then
             var:setStringLength(newLen)
         end
-    else
-        assert(offset == 0 and #data == SizeofType[vart], "Setting a primitive type with data not of the same size?!")
+    elseif offset == 0 and #data == SizeofType[vart] then
+        -- We can simply assign
+        -- assert(offset == 0 and #data == SizeofType[vart], "Setting a primitive type with data not of the same size?!")
         local fmt = FmtForType[vart]
         var(string.unpack(fmt, data))
+    else
+        local fmt = FmtForType[vart]
+        local stringVar = makeVar(DataTypes.EString, string.packsize(fmt))
+        stringVar(string.pack(fmt, var()))
+        applyDataToSimpleVar(data, stringVar, offset + 1)
+        var(string.unpack(fmt, stringVar()))
     end
 end 
 
@@ -308,16 +346,16 @@ function AddrSlice:write(data)
         return
     end
 
+    -- printf("WRITE: offset %d len=%d stride=%d to '%s'\n", self.offset, #data, self.var:stride(), self.var())
+
     local dataIdx = 0
-    local varIdx = 0
     local stride = self.var:stride()
-    while dataIdx + stride <= #data do
-        local var = self:dereference(1 + varIdx)
+    while dataIdx < #data do
+        local var, varOffset = self:getVarForOffset(dataIdx)
         local dataPiece = data:sub(1 + dataIdx, dataIdx + stride)
         -- assert(#dataPiece == stride, "Oh dear maths fail")
-        applyDataToSimpleVar(dataPiece, var, dataIdx % stride)
+        applyDataToSimpleVar(dataPiece, var, varOffset)
         dataIdx = dataIdx + stride
-        varIdx = varIdx + 1
     end
 end
 

@@ -90,10 +90,10 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
                 sections.append(currentSection)
                 currentSection = []
             } else {
-                print(item)
+                // print(item)
                 currentSection.append(Row(index: index, item: item))
             }
-            print(currentSection)
+            // print(currentSection)
         }
         sections.append(currentSection)
         self.sections = sections

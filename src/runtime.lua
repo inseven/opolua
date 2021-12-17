@@ -582,7 +582,7 @@ function Runtime:closeDb()
 end
 
 function Runtime:newFileHandle()
-    local h = #self.files
+    local h = #self.files + 1
     local f = {
         h = h,
     }

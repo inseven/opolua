@@ -1263,7 +1263,7 @@ function PokeStr(stack, runtime) -- 0x9B
 end
 
 function PokeB(stack, runtime) -- 0x9C
-    local data = string.char(stack:pop())
+    local data = string.pack("b", stack:pop())
     local addr = stack:pop()
     addr:write(data)
 end
@@ -2183,7 +2183,7 @@ end
 function gInfo32(stack, runtime) -- 0x128
     local addr = stack:pop()
     -- Heh, ER5 doesn't have this bounds check but we can
-    assert(addr:getLength() >= 48*4, "Too small an array passed to gInfo32!")
+    assert(addr:getValidLength() >= 48*4, "Too small an array passed to gInfo32!")
 
     local context = runtime:getGraphicsContext()
     local w, h, ascent = runtime:iohandler().graphicsop("textsize", "0", context.font)

@@ -536,7 +536,8 @@ function IOOPEN(path, mode)
     end
 
     -- Write support
-    assert(mode & Mode.WriteFlag > 0, "Incompatible mode flags to IOOPEN")
+    mode = mode | Mode.WriteFlag -- Apparently this _isn't_ mandatory...
+    -- assert(mode & Mode.WriteFlag > 0, "Incompatible mode flags to IOOPEN")
     assert(mode & Mode.SeekableFlag == 0, "Don't support seeking writeable files yet!")
     assert(openMode ~= Mode.Append, "Don't support append yet!")
     assert(openMode ~= Mode.Unique, "Don't support unique yet!")
@@ -632,7 +633,7 @@ function IOCLOSE(h)
     local f = runtime:getFile(h)
     if f then
         if f.mode & Mode.WriteFlag > 0 then
-            err = runtime:fsop("write", f.path, f.data)
+            err = runtime:iohandler().fsop("write", f.path, f.data)
         end
         runtime:closeFile(h)
     else
