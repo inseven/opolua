@@ -410,6 +410,7 @@ function Runtime:getGraphicsContext(id)
 end
 
 function Runtime:setGraphicsContext(id)
+    -- printf("setGraphicsContext %d\n", id)
     local graphics = self:getGraphics()
     local context = graphics[id]
     assert(context, KOplErrDrawNotOpen)
@@ -931,6 +932,8 @@ function Runtime:waitForAnyRequest()
         self.signal = self.signal - 1
         return
     end
+    -- Have to make sure all ops are flushed before blocking
+    self:flushGraphicsOps()
     local ok = self.ioh.waitForAnyRequest()
     -- A wait technically decrements the signal count, but completing it would
     -- increment it again hence a call to iohandler.waitForAnyRequest() that

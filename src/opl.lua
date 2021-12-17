@@ -305,6 +305,7 @@ function gSCROLL(dx, dy, x, y, w, h)
 end
 
 function gUPDATE(flag)
+    -- printf("gUPDATE %s\n", flag)
     local prevState = runtime:getGraphicsAutoFlush()
     if flag == nil then
         -- gUPDATE
