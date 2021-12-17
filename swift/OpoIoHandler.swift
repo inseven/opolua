@@ -558,6 +558,9 @@ protocol OpoIoHandler {
     func waitForAnyRequest() -> Async.Response
     func anyRequest() -> Async.Response?
 
+    // Return true if there is an event waiting
+    func testEvent() -> Bool
+
     func key() -> KeyCode?
 }
 
@@ -618,6 +621,10 @@ class DummyIoHandler : OpoIoHandler {
 
     func anyRequest() -> Async.Response? {
         return nil
+    }
+
+    func testEvent() -> Bool {
+        return false
     }
 
     func key() -> KeyCode? {

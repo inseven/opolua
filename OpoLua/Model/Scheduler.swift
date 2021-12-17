@@ -80,21 +80,6 @@ class Scheduler {
         }
     }
 
-    func waitForRequest(_ requestHandle: Int32) -> Async.Response {
-        lock.lock()
-        defer {
-            lock.unlock()
-        }
-        repeat {
-            if let response = responses.removeValue(forKey: requestHandle) {
-                // print("waitForRequest -> \(response)")
-                lock.broadcast()
-                return response
-            }
-            lock.wait()
-        } while true
-    }
-
     func waitForAnyRequest() -> Async.Response {
         lock.lock()
         defer {

@@ -589,6 +589,12 @@ private func cancelRequest(_ L: LuaState!) -> Int32 {
     return 0
 }
 
+private func testEvent(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    L.push(iohandler.testEvent())
+    return 1
+}
+
 private func createBitmap(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let width = L.toint(1), let height = L.toint(2) else {
@@ -708,6 +714,7 @@ class OpoInterpreter {
             ("asyncRequest", asyncRequest),
             ("waitForAnyRequest", waitForAnyRequest),
             ("checkCompletions", checkCompletions),
+            ("testEvent", testEvent),
             ("cancelRequest", cancelRequest),
             ("createBitmap", createBitmap),
             ("createWindow", createWindow),

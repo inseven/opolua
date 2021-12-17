@@ -499,6 +499,10 @@ extension ProgramViewController: OpoIoHandler {
         return scheduler.anyRequest()
     }
 
+    func testEvent() -> Bool {
+        return !eventQueue.isEmpty()
+    }
+
     func key() -> KeyCode? {
         // TODO return non-nil (and remove the event from the queue) if there's
         // any KeyPressEvent in the queue
@@ -539,18 +543,14 @@ extension ConcurrentQueue: CanvasViewDelegate where T == Async.ResponseValue {
 extension ConcurrentQueue where T == Async.ResponseValue {
 
     func sendKeyPress(_ key: KeyCode) {
-        append(.keypressevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
-                                    keycode: key,
-                                    modifiers: Modifiers(),
-                                    isRepeat: false)))
+        let timestamp = Int(NSDate().timeIntervalSince1970)
+        let modifiers = Modifiers()
+        append(.keydownevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
+        append(.keypressevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers, isRepeat: false)))
+        append(.keyupevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
     }
 
     func sendMenu() {
-        // TODO: Review injected key behaviour
-        // Vexed doesn't seem to expect the key down and key up events surrounding the key press so, for the time being,
-        // we're only sending the key press event. It's quite possible that Vexed is failing to consume the down/up
-        // events due to a bug in our event queue, but either way, I suspect skipping these down/up events will cause
-        // problems in other programs.
         sendKeyPress(.menu)
     }
 

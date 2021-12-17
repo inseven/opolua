@@ -49,4 +49,10 @@ class ConcurrentQueue<T> {
         } while true
     }
 
+    func isEmpty() -> Bool {
+        condition.lock()
+        let result = items.isEmpty
+        condition.unlock()
+        return result
+    }
 }
