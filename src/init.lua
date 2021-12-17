@@ -87,6 +87,9 @@ Errors = {
     KStopErr = -999, -- Made this one up
 }
 
+-- Except when we do :-(
+KRequestPending = 0x80000001
+
 -- Some misc uids used for file formats
 KUidDirectFileStore = 0x10000037 -- OPO file uid1
 -- KUidAppDllDoc8 = 0x1000006D

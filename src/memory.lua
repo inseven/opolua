@@ -204,6 +204,17 @@ function Variable:setStringLength(len)
    self._len = len
 end
 
+function Variable:isPending()
+    local t = self:type()
+    if t == DataTypes.EWord then
+        return self() == KOplErrFilePending
+    elseif t == DataTypes.ELong then
+        return self() == KRequestPending
+    else
+        error("Bad type for isPending")
+    end
+end
+
 function makeVar(type, maxLen)
     local result = Variable { _type = type }
     if type == DataTypes.EString then
@@ -239,7 +250,7 @@ function AddrSlice.__add(lhs, rhs)
     local addr, offset = getAddrAndOffset(lhs, rhs)
     local newOffset = addr.offset + offset
     if newOffset < 0 or newOffset > addr.len then
-        printf("Warning: 0x%08X + %d outside of 0-%08X for var %s\n", addr.offset, offset, addr.len, addr.var)
+        -- printf("Warning: 0x%08X + %d outside of 0-%08X for var %s\n", addr.offset, offset, addr.len, addr.var)
         -- error("Address calculation out of bounds!")
         -- Strictly speaking it's not an error until you try and dereference it
     end

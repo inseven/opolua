@@ -946,7 +946,7 @@ function Runtime:waitForRequest(stat)
     repeat
         waits = waits + 1
         self:waitForAnyRequest()
-    until stat() ~= KOplErrFilePending
+    until not stat:isPending()
     -- And balance any waits we did for things that weren't stat
     self:requestSignal(waits)
 end

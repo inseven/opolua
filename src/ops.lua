@@ -1779,7 +1779,8 @@ function Screen4(stack, runtime) -- 0xE7
 end
 
 function IoWaitStat(stack, runtime) -- 0xE8
-    error("Unimplemented opcode IoWaitStat!")
+    local stat = stack:pop():dereference()
+    runtime:waitForRequest(stat)
 end
 
 function IoYield(stack, runtime) -- 0xE9
@@ -2254,7 +2255,8 @@ function gInfo32(stack, runtime) -- 0x128
 end
 
 function IoWaitStat32(stack, runtime) -- 0x129
-    error("Unimplemented opcode IoWaitStat32!")
+    local stat = stack:pop():dereference()
+    runtime:waitForRequest(stat)
 end
 
 function Compact(stack, runtime) -- 0x12A

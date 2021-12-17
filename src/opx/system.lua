@@ -232,7 +232,7 @@ function KillProcess(stack, runtime) -- 37
 end
 
 function PlaySound(stack, runtime) -- 38
-    local var = runtime:makeTemporaryVar(DataTypes.EWord)
+    local var = runtime:makeTemporaryVar(DataTypes.ELong)
     stack:push(var:addressOf())
     PlaySoundA(stack, runtime)
     runtime:waitForRequest(var)
@@ -246,7 +246,7 @@ function PlaySoundA(stack, runtime) -- 39
     local var = stack:pop():dereference()
     local volume = stack:pop()
     local file = stack:pop()
-    var(KOplErrFilePending)
+    var(KRequestPending)
 
     local data, err = runtime:iohandler().fsop("read", file)
     if not data then
