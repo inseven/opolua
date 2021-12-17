@@ -30,7 +30,7 @@ extension CGContext {
             return
         }
         let image = UIImage(contentsOfFile: url.path)!
-        let button = image.resizableImage(withCapInsets: UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10), resizingMode: .tile)
+        let button = image.resizableImage(withCapInsets: UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10), resizingMode: .stretch)
         let view = UIImageView(image: button)
         saveGState()
         self.translateBy(x: frame.origin.x, y: frame.origin.y)

@@ -144,7 +144,7 @@ class ProgramViewController: UIViewController {
                                                             menu: menu)
 
         // Unfortunately there doesn't seem to be a great way to detect when the user dismisses the menu.
-        // This implementation uses SPI to do just that by watching the notificaiton center for presentation dismiss
+        // This implementation uses SPI to do just that by watching the notification center for presentation dismiss
         // notifications and ignores notifications for anything that isn't a menu.
         let UIPresentationControllerDismissalTransitionDidEndNotification = NSNotification.Name(rawValue: "UIPresentationControllerDismissalTransitionDidEndNotification")
         NotificationCenter.default.addObserver(forName: UIPresentationControllerDismissalTransitionDidEndNotification,
