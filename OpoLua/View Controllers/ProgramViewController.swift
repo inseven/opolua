@@ -111,7 +111,7 @@ class ProgramViewController: UIViewController {
         }
         scheduler.addHandler(.playsound) { request in
             print("PLAY SOUND!")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 self.scheduler.serviceRequest(type: request.type) { request in
                     return Async.Response(requestHandle: request.requestHandle, value: .completed)
                 }
