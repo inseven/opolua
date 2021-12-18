@@ -1248,15 +1248,21 @@ function InputString(stack, runtime) -- 0x97
 end
 
 function PokeW(stack, runtime) -- 0x98
-    error("Unimplemented opcode PokeW!")
+    local data = string.pack("<i2", stack:pop())
+    local addr = stack:pop()
+    addr:write(data)
 end
 
 function PokeL(stack, runtime) -- 0x99
-    error("Unimplemented opcode PokeL!")
+    local data = string.pack("<i4", stack:pop())
+    local addr = stack:pop()
+    addr:write(data)
 end
 
 function PokeD(stack, runtime) -- 0x9A
-    error("Unimplemented opcode PokeD!")
+    local data = string.pack("<d", stack:pop())
+    local addr = stack:pop()
+    addr:write(data)
 end
 
 function PokeStr(stack, runtime) -- 0x9B

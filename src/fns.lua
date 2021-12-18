@@ -385,7 +385,9 @@ function PeekB(stack, runtime) -- 0x18
 end
 
 function PeekW(stack, runtime) -- 0x19
-    error("Unimplemented function PeekW!")
+    local addr = stack:pop()
+    local data = addr:read(2)
+    stack:push(string.unpack("<i2", data))
 end
 
 function Pos(stack, runtime) -- 0x1A
@@ -623,7 +625,7 @@ function Days(stack, runtime) -- 0x37
 end
 
 function IAbs(stack, runtime) -- 0x41
-    error("Unimplemented function IAbs!")
+    stack:push(math.abs(stack:pop()))
 end
 
 function roundTowardsZero(val)
@@ -649,7 +651,9 @@ function IntLong(stack, runtime) -- 0x42
 end
 
 function PeekL(stack, runtime) -- 0x43
-    error("Unimplemented function PeekL!")
+    local addr = stack:pop()
+    local data = addr:read(4)
+    stack:push(string.unpack("<i4", data))
 end
 
 function Space(stack, runtime) -- 0x44
@@ -761,7 +765,9 @@ function Log(stack, runtime) -- 0x8A
 end
 
 function PeekF(stack, runtime) -- 0x8B
-    error("Unimplemented function PeekF!")
+    local addr = stack:pop()
+    local data = addr:read(8)
+    stack:push(string.unpack("<d", data))
 end
 
 function Pi(stack, runtime) -- 0x8C
