@@ -456,6 +456,20 @@ extension ProgramViewController: OpoIoHandler {
         return screenSize
     }
 
+    func findCorrectCase(in path: URL, for uncasedName: String) -> String {
+        guard let contents = try? FileManager.default.contentsOfDirectory(at: path, includingPropertiesForKeys: []) else {
+            return uncasedName
+        }
+        let uppercasedName = uncasedName.uppercased()
+        for url in contents {
+            let name = url.lastPathComponent
+            if name.uppercased() == uppercasedName {
+                return name
+            }
+        }
+        return uncasedName
+    }
+
     func mapToNative(path: String) -> URL? {
         // For now assume if we're running foo.opo then we're running it from a simulated
         // C:\System\Apps\Foo\ path and make everything in the foo.opo dir available
@@ -469,7 +483,9 @@ extension ProgramViewController: OpoIoHandler {
                 if component == "." || component == ".." {
                     continue
                 }
-                result.appendPathComponent(String(component))
+                // Have to do some nasty hacks here to appear case-insensitive
+                let name = findCorrectCase(in: result, for: String(component))
+                result.appendPathComponent(name)
             }
             return result.absoluteURL
         } else {
