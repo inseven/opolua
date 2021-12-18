@@ -40,6 +40,7 @@
 		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
 		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
 		D8FE60092757208000711717 /* ApplicationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60082757208000711717 /* ApplicationError.swift */; };
+		DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */; };
 		DB5AC970275198A20043FE5C /* database.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC96F275198A20043FE5C /* database.lua */; };
 		DB5AC972275577990043FE5C /* mbm.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC971275577980043FE5C /* mbm.lua */; };
 		DB5AC974275681510043FE5C /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC973275681510043FE5C /* CanvasView.swift */; };
@@ -131,6 +132,7 @@
 		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
 		D8FE60082757208000711717 /* ApplicationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationError.swift; sourceTree = "<group>"; };
+		DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OplKeyCode.swift; sourceTree = "<group>"; };
 		DB5AC96F275198A20043FE5C /* database.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = database.lua; sourceTree = "<group>"; };
 		DB5AC971275577980043FE5C /* mbm.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mbm.lua; sourceTree = "<group>"; };
 		DB5AC973275681510043FE5C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
@@ -350,6 +352,7 @@
 				DB79FFE22742E52B005E904F /* opolua-bridge.h */,
 				DB79FFE52742E596005E904F /* OpoInterpreter.swift */,
 				DB79001B2746B88F005E904F /* OpoIoHandler.swift */,
+				DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */,
 				DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift */,
 			);
 			path = swift;
@@ -475,6 +478,7 @@
 				D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */,
 				D893EAD32760739500E64219 /* Border.swift in Sources */,
 				DB7900232746C771005E904F /* lua_State.swift in Sources */,
+				DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */,
 				DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */,
 				DB79FFF82742E6F6005E904F /* lapi.c in Sources */,
 				DB79FFF92742E6F6005E904F /* lauxlib.c in Sources */,
