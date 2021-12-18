@@ -168,7 +168,8 @@ function Variable:getBytes()
     elseif t == DataTypes.EReal then
         return string.pack("<d", self._val)
     elseif t == DataTypes.EString then
-        return string.pack("s1", self:getAllStringData())
+        local len = self._len or #self._val
+        return string.pack("B", len)..self:getAllStringData()
     else
         error("Bad type in getBytes!")
     end
