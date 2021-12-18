@@ -947,6 +947,7 @@ function RunProcedure(stack, runtime) -- 0x53
     local procIdx, name, numParams = decodeRunProc(runtime)
     assert(name, "Subproc not found for index "..tostring(procIdx))
     local proc = runtime:findProc(name)
+    -- printf("RunProcedure %s\n", name)
     runtime:pushNewFrame(stack, proc, numParams)
 end
 

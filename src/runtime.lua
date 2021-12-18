@@ -272,6 +272,7 @@ function Runtime:pushNewFrame(stack, proc, numParams)
 end
 
 function Runtime:returnFromFrame(stack, val)
+    -- printf("Returning from %s\n", self.frame.proc.name)
     local prevFrame = self.frame.prevFrame
     stack:popTo(self.frame.returnStackSize)
     self:setFrame(prevFrame, self.frame.returnIP)

@@ -314,6 +314,7 @@ function EndTask(stack, runtime) -- 51
     local prev = stack:pop()
     local id = stack:pop()
     printf("TODO: EndTask id=%d prev=%d\n", id, prev)
+    stack:push(0)
 end
 
 function KillTask(stack, runtime) -- 52
