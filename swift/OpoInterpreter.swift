@@ -224,7 +224,16 @@ private func menu(_ L: LuaState!) -> Int32 {
                 submenu = getMenu()
             }
             L.pop()
-            items.append(Menu.Item(text: text, keycode: keycode, submenu: submenu, flags: Menu.Item.Flags(rawValue: flags)))
+            let shortcut: String?
+            if keycode >= OplKeyCode.a.rawValue && keycode <= OplKeyCode.z.rawValue {
+                shortcut = "Ctrl+"+String(Character(Unicode.Scalar(UInt8(keycode))).uppercased())
+            } else if keycode >= OplKeyCode.A.rawValue && keycode <= OplKeyCode.Z.rawValue {
+                shortcut = "Shift+Ctrl+"+String(Character(Unicode.Scalar(UInt8(keycode))))
+            } else {
+                shortcut = nil
+            }
+            let flg = Menu.Item.Flags(rawValue: flags)
+            items.append(Menu.Item(text: text, keycode: keycode, shortcut: shortcut, submenu: submenu, flags: flg))
         }
         return Menu(title: title, items: items)
     }

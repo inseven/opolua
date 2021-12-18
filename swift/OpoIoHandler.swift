@@ -124,6 +124,7 @@ struct Menu {
 
         let text: String
         let keycode: Int
+        let shortcut: String?
         let submenu: Menu?
         let flags: Flags
     }

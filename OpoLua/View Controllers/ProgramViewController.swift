@@ -638,7 +638,7 @@ extension Menu {
             if let submenu = item.submenu {
                 return UIMenu(title: submenu.title, children: submenu.menuElements(completion: completion))
             } else {
-                return UIAction(title: item.text) { action in
+                return UIAction(title: item.text, subtitle: item.shortcut) { action in
                     completion(item.keycode)
                 }
             }
