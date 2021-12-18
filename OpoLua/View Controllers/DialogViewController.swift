@@ -228,7 +228,7 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
             return cell
         case .edit:
             let cell = TextFieldTableViewCell()
-            cell.tag = row.index
+            cell.textField.tag = row.index
             cell.textField.clearButtonMode = .whileEditing
             cell.textField.placeholder = item.prompt
             cell.textField.text = values[row.index]
@@ -236,7 +236,7 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
             return cell
         case .xinput:
             let cell = TextFieldTableViewCell()
-            cell.tag = row.index
+            cell.textField.tag = row.index
             cell.textField.isSecureTextEntry = true
             cell.textField.clearButtonMode = .whileEditing
             cell.textField.placeholder = item.prompt
@@ -244,11 +244,12 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
             cell.textField.addTarget(self, action: #selector(editValueDidChange(sender:)), for: .editingChanged)
             return cell
         case .long:
-            let cell = UITableViewCell()
-            cell.textLabel?.text = "\(item.type)"
-            cell.selectionStyle = .none
-            cell.accessoryType = .none
-            cell.backgroundColor = .cyan
+            let cell = TextFieldTableViewCell()
+            cell.textField.tag = row.index
+            cell.textField.clearButtonMode = .whileEditing
+            cell.textField.placeholder = item.prompt
+            cell.textField.text = values[row.index]
+            cell.textField.addTarget(self, action: #selector(editValueDidChange(sender:)), for: .editingChanged)
             return cell
         case .float:
             let cell = UITableViewCell()
