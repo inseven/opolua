@@ -545,6 +545,7 @@ function IOOPEN(path, mode)
         local data, err = runtime:iohandler().fsop("read", path)
         if data then
             f.data = data
+            f.path = path
             return f.h
         else
             runtime:closeFile(f.h)
@@ -619,9 +620,10 @@ function IOWRITE(h, data)
     return KErrNone
 end
 
-function IOSEEK(handle, mode, offset)
+function IOSEEK(h, mode, offset)
     local f = runtime:getFile(h)
     if not f then
+        printf("Invalid handle to IOSEEK!\n")
         return KOplErrInvalidArgs
     end
     local newPos
