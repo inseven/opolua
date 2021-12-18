@@ -179,6 +179,10 @@ private func dialog(_ L: LuaState!) -> Int32 {
             } else {
                 key = key & 0xFF
             }
+            if key >= 0x41 && key < 0x5A {
+                // if you request an upper-case key, the result you'll get will always be lowercase. Yes really!
+                key = key + 0x20
+            }
             buttons.append(Dialog.Button(key: key, text: text, flags: flags))
         }
     }
