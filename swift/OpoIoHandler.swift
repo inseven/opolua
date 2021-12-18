@@ -334,132 +334,6 @@ struct Fs {
     }
 }
 
-// Some of these these aren't strictly keycodes in that they don't generate
-// keypress events, in particular the modifiers, but for the sake of convenience let's
-// pretend they are.
-enum KeyCode : Int, CaseIterable {
-    case capsLock = 2
-    case backspace = 8
-    case tab = 9
-    case enter = 13
-    case leftShift = 18
-    case rightShift = 19
-    case control = 22
-    case fn = 24
-    case escape = 27
-    case space = 32
-    case exclamationMark = 33
-    case doubleQuote = 34
-    case hash = 35
-    case dollar = 36
-    case percent = 37
-    case ampersand = 38
-    case singleQuote = 39
-    case leftParenthesis = 40
-    case rightParenthesis = 41
-    case asterisk = 42
-    case plus = 43
-    case comma = 44
-    case minus = 45
-    case fullStop = 46
-    case slash = 47
-    case num0 = 48
-    case num1 = 49
-    case num2 = 50
-    case num3 = 51
-    case num4 = 52
-    case num5 = 53
-    case num6 = 54
-    case num7 = 55
-    case num8 = 56
-    case num9 = 57
-    case colon = 58
-    case semicolon = 59
-    case lessThan = 60
-    case equals = 61
-    case greaterThan = 62
-    case questionMark = 63
-    case atSign = 64
-    case A = 65
-    case B = 66
-    case C = 67
-    case D = 68
-    case E = 69
-    case F = 70
-    case G = 71
-    case H = 72
-    case I = 73
-    case J = 74
-    case K = 75
-    case L = 76
-    case M = 77
-    case N = 78
-    case O = 79
-    case P = 80
-    case Q = 81
-    case R = 82
-    case S = 83
-    case T = 84
-    case U = 85
-    case V = 86
-    case W = 87
-    case X = 88
-    case Y = 89
-    case Z = 90
-    case leftSquareBracket = 91
-    case backslash = 92
-    case rightSquareBracket = 93
-    case circumflex = 94
-    case underscore = 95
-    case a = 97
-    case b = 98
-    case c = 99
-    case d = 100
-    case e = 101
-    case f = 102
-    case g = 103
-    case h = 104
-    case i = 105
-    case j = 106
-    case k = 107
-    case l = 108
-    case m = 109
-    case n = 110
-    case o = 111
-    case p = 112
-    case q = 113
-    case r = 114
-    case s = 115
-    case t = 116
-    case u = 117
-    case v = 118
-    case w = 119
-    case x = 120
-    case y = 121
-    case z = 122
-    case leftCurlyBracket = 123
-    case rightCurlyBracket = 125
-    case tilde = 126
-    case pound = 163
-    case multiply = 215
-    case divide = 247
-    case home = 4098
-    case end = 4099
-    case pgUp = 4100
-    case pgDn = 4101
-    case leftArrow = 4103
-    case rightArrow = 4104
-    case upArrow = 4105
-    case downArrow = 4106
-    case menu = 4150
-    case dial = 4155
-    case menuSoftkey = 10000
-    case clipboardSoftkey = 10001
-    case irSoftkey = 10002
-    case zoomInSoftkey = 10003
-    case zoomOutSoftkey = 10004
-}
-
 enum Modifier: Int, FlagEnum {
     case shift = 2
     case control = 4
@@ -482,13 +356,13 @@ struct Async {
     }
     struct KeyPressEvent {
         let timestamp: Int // Microseconds since boot, or something
-        let keycode: KeyCode
+        let keycode: OplKeyCode
         let modifiers: Modifiers
         let isRepeat: Bool
     }
     struct KeyUpDownEvent {
         let timestamp: Int // Microseconds since boot, or something
-        let keycode: KeyCode
+        let keycode: OplKeyCode
         let modifiers: Modifiers
     }
     enum PenEventType: Int {
@@ -518,6 +392,21 @@ struct Async {
     struct Response {
         let requestHandle: Int32
         let value: ResponseValue
+    }
+}
+
+extension Async.KeyPressEvent {
+    func modifiedKeycode() -> Int? {
+        if modifiers.contains(.control) && keycode.rawValue >= OplKeyCode.a.rawValue && keycode.rawValue <= OplKeyCode.z.rawValue {
+            // OPL likes to send 1-26 for Ctrl-[Shift-]A thru Ctrl-[Shift-]Z
+            return keycode.rawValue - (OplKeyCode.a.rawValue - 1)
+        } else if modifiers.contains(.control) && keycode.rawValue >= OplKeyCode.num0.rawValue && keycode.rawValue <= OplKeyCode.num9.rawValue {
+            // And for some reason Ctrl-0 thru Ctrl-9 don't send keypress events
+            // at all!? But eg Ctrl-Fn-1 (for underscore) does, go figure...
+            return nil
+        } else {
+            return keycode.rawValue
+        }
     }
 }
 
@@ -563,7 +452,7 @@ protocol OpoIoHandler {
     // Return true if there is an event waiting
     func testEvent() -> Bool
 
-    func key() -> KeyCode?
+    func key() -> OplKeyCode?
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -629,7 +518,7 @@ class DummyIoHandler : OpoIoHandler {
         return false
     }
 
-    func key() -> KeyCode? {
+    func key() -> OplKeyCode? {
         return nil
     }
 }

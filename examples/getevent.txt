@@ -34,7 +34,7 @@ PROC printEvent:
 	k% = ev&(1)
 	REM PRINT "Timestamp", ev&(2), " ",
 	IF (ev&(1) AND $400) = 0
-		PRINT "Key press", k%, "mod="; ev&(4), "rep="; ev&(5)
+		PRINT "Key press", k%, "scan=", ev&(3), "mod="; ev&(4), "rep="; ev&(5)
 	ELSE
 		k% = ev&(1)- $400
 		VECTOR k%

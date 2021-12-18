@@ -640,7 +640,7 @@ private func getTime(_ L: LuaState!) -> Int32 {
 
 private func key(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    if let keycode = iohandler.key(), let charcode = OpoInterpreter.keycodeToCharcode(keycode) {
+    if let keycode = iohandler.key(), let charcode = keycode.toCharcode() {
         L.push(charcode)
     } else {
         L.push(0)
@@ -859,20 +859,20 @@ class OpoInterpreter {
             switch (response.value) {
             case .keypressevent(let event):
                 // Remember, ev[0] here means ev[1] in the OPL docs because they're one-based
-                ev[0] = event.keycode.rawValue
+                ev[0] = event.modifiedKeycode()!
                 ev[1] = event.timestamp
-                ev[2] = Self.keycodeToScancode(event.keycode)
+                ev[2] = event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
                 ev[4] = event.isRepeat ? 1 : 0
             case .keydownevent(let event):
                 ev[0] = 0x406
                 ev[1] = event.timestamp
-                ev[2] = Self.keycodeToScancode(event.keycode)
+                ev[2] = event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
             case .keyupevent(let event):
                 ev[0] = 0x407
                 ev[1] = event.timestamp
-                ev[2] = Self.keycodeToScancode(event.keycode)
+                ev[2] = event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
             case .penevent(let event):
                 ev[0] = 0x408
@@ -916,103 +916,4 @@ class OpoInterpreter {
         luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle) // registry[requestHandle] = nil
     }
 
-    private static func keycodeToScancode(_ keycode: KeyCode) -> Int {
-        switch keycode {
-        case .A, .B, .C, .D, .E, .F, .G, .H, .I, .J, .K, .L, .M, .N, .O, .P, .Q, .R, .S, .T, .U, .V, .W, .X, .Y, .Z:
-            return keycode.rawValue
-        case .a, .b, .c, .d, .e, .f, .g, .h, .i, .j, .k, .l, .m, .n, .o, .p, .q, .r, .s, .t, .u, .v, .w, .x, .y, .z:
-            return keycode.rawValue - 32
-        case .leftShift, .rightShift, .control, .fn:
-            return keycode.rawValue
-        case .num1, .exclamationMark, .underscore:
-            return KeyCode.num1.rawValue
-        case .num2, .doubleQuote, .hash:
-            return KeyCode.num2.rawValue
-        case .num3, .pound, .backslash:
-            return KeyCode.num3.rawValue
-        case .num4, .dollar, .atSign:
-            return KeyCode.num4.rawValue
-        case .num5, .percent, .lessThan:
-            return KeyCode.num5.rawValue
-        case .num6, .circumflex, .greaterThan:
-            return KeyCode.num6.rawValue
-        case .num7, .ampersand, .leftSquareBracket:
-            return KeyCode.num7.rawValue
-        case .num8, .asterisk, .rightSquareBracket:
-            return KeyCode.num8.rawValue
-        case .num9, .leftParenthesis, .leftCurlyBracket:
-            return KeyCode.num9.rawValue
-        case .num0, .rightParenthesis, .rightCurlyBracket:
-            return KeyCode.num0.rawValue
-        case .backspace:
-            return 1
-        case .capsLock, .tab:
-            return 2
-        case .enter:
-            return 3
-        case .escape:
-            return 4
-        case .space:
-            return 5
-        case .singleQuote, .tilde, .colon:
-            return 126
-        case .comma, .slash:
-            return 121
-        case .fullStop, .questionMark:
-            return 122
-        case .leftArrow, .home:
-            return 14
-        case .rightArrow, .end:
-            return 15
-        case .upArrow, .pgUp:
-            return 16
-        case .downArrow, .pgDn:
-            return 17
-        case .menu, .dial:
-            return 148
-        case .menuSoftkey, .clipboardSoftkey, .irSoftkey, .zoomInSoftkey, .zoomOutSoftkey:
-            return keycode.rawValue
-        case .multiply:
-            return KeyCode.Y.rawValue
-        case .divide:
-            return KeyCode.U.rawValue
-        case .plus:
-            return KeyCode.I.rawValue
-        case .minus:
-            return KeyCode.O.rawValue
-        case .semicolon:
-            return KeyCode.L.rawValue
-        case .equals:
-            return KeyCode.P.rawValue
-        }
-    }
-
-    // Returns nil for things without a charcode (like modifier keys)
-    static func keycodeToCharcode(_ keycode: KeyCode) -> Int? {
-        switch keycode {
-        case .leftShift, .rightShift, .control, .fn, .capsLock:
-            return nil
-        case .menu, .menuSoftkey:
-            return 290
-        case .home:
-            return 262
-        case .end:
-            return 263
-        case .pgUp:
-            return 260
-        case .pgDn:
-            return 261
-        case .leftArrow:
-            return 259
-        case .rightArrow:
-            return 258
-        case .upArrow:
-            return 256
-        case .downArrow:
-            return 257
-        default:
-            // Everything else has the same charcode as keycode
-            return keycode.rawValue
-        }
-    }
 }

@@ -1668,7 +1668,7 @@ function gPrintBoxText(stack, runtime) -- 0xD9
     runtime:gPRINTB(text, width, align, top, bottom, margin)
 end
 
-gPrintBoxText_dmp = numParams_dump
+gPrintBoxText_dump = numParams_dump
 
 function gLineBy(stack, runtime) -- 0xDA
     local dx, dy = stack:popXY()

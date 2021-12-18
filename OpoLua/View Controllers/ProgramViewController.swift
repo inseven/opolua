@@ -217,11 +217,26 @@ class ProgramViewController: UIViewController {
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         for press in presses {
             if let key = press.key {
-                if let oplKey = key.oplKeyCode() {
-                    let timestamp = Int(press.timestamp)
-                    let modifiers = key.oplModifiers()
-                    eventQueue.append(.keydownevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers)))
-                    eventQueue.append(.keypressevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers, isRepeat: false)))
+                let timestamp = Int(press.timestamp)
+                let modifiers = key.oplModifiers()
+
+                let (keydownCode, keypressCode) = key.toOplCodes()
+
+                // The could be no legitimate keydownCode if we're inputting say
+                // a tilde which is not on a key that the Psion 5 keyboard has
+                if let code = keydownCode {
+                    eventQueue.append(.keydownevent(.init(timestamp: timestamp, keycode: code, modifiers: modifiers)))
+                } else {
+                    print("No keydown code for \(key)")
+                }
+
+                if let code = keypressCode, code.toCharcode() != nil {
+                    let event = Async.KeyPressEvent(timestamp: timestamp, keycode: code, modifiers: modifiers, isRepeat: false)
+                    if event.modifiedKeycode() != nil {
+                        eventQueue.append(.keypressevent(event))
+                    }
+                } else {
+                    print("No keypress code for \(key)")
                 }
             }
         }
@@ -230,11 +245,11 @@ class ProgramViewController: UIViewController {
     override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         for press in presses {
             if let key = press.key {
-                if let oplKey = key.oplKeyCode() {
+                let (oplKey, _) = key.toOplCodes()
+                if let oplKey = oplKey {
                     let timestamp = Int(press.timestamp)
                     let modifiers = key.oplModifiers()
                     eventQueue.append(.keyupevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers)))
-                    return
                 }
             }
         }
@@ -551,7 +566,7 @@ extension ProgramViewController: OpoIoHandler {
         return !eventQueue.isEmpty()
     }
 
-    func key() -> KeyCode? {
+    func key() -> OplKeyCode? {
         // TODO return non-nil (and remove the event from the queue) if there's
         // any KeyPressEvent in the queue
         return nil
@@ -590,7 +605,7 @@ extension ConcurrentQueue: CanvasViewDelegate where T == Async.ResponseValue {
 
 extension ConcurrentQueue where T == Async.ResponseValue {
 
-    func sendKeyPress(_ key: KeyCode) {
+    func sendKeyPress(_ key: OplKeyCode) {
         let timestamp = Int(NSDate().timeIntervalSince1970)
         let modifiers = Modifiers()
         append(.keydownevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))

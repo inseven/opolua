@@ -22,7 +22,7 @@ import UIKit
 
 extension UIKey {
 
-    func oplKeyCode() -> KeyCode? {
+    func oplKeyCode() -> OplKeyCode? {
         switch self.keyCode {
         case .keyboardUpArrow: return .upArrow
         case .keyboardDownArrow: return .downArrow
@@ -32,6 +32,11 @@ extension UIKey {
         case .keyboardLeftShift: return .leftShift
         case .keyboardRightShift: return .rightShift
         case .keyboardLeftControl: return .control
+        case .keyboardHome: return .home
+        case .keyboardEnd: return .end
+        case .keyboardPageUp: return .pgUp
+        case .keyboardPageDown: return .pgDn
+        case .keyboardDeleteOrBackspace: return .backspace
         default:
             return nil
         }
@@ -50,5 +55,26 @@ extension UIKey {
             result.insert(.capsLock)
         }
         return result
+    }
+
+    func toOplCodes() -> (OplKeyCode?, OplKeyCode?) {
+        var keydownCode = self.oplKeyCode()
+        var keypressCode = OplKeyCode.from(string: self.characters)
+
+        if keypressCode == nil {
+            // See what we can get from the unmodified chars
+            keypressCode = OplKeyCode.from(string: self.charactersIgnoringModifiers)
+        }
+        if keydownCode == nil {
+            // We don't map absolutely everything in UIKeyboardHIDUsage (we probably should, to avoid this workaround...)
+            keydownCode = keypressCode
+        }
+
+        if keypressCode == nil {
+            // See if it's a key that doesn't generate a character (such as backspace, up arrow etc)
+            keypressCode = keydownCode
+        }
+
+        return (keydownCode, keypressCode)
     }
 }
