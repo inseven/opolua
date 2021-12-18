@@ -37,6 +37,7 @@ extension UIKey {
         case .keyboardPageUp: return .pgUp
         case .keyboardPageDown: return .pgDn
         case .keyboardDeleteOrBackspace: return .backspace
+        case .keyboardLeftGUI, .keyboardRightGUI: return .menu
         default:
             return nil
         }
