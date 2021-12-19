@@ -1,3 +1,27 @@
+--[[
+
+Copyright (c) 2021 Jason Morley, Tom Sutcliffe
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+]]
+
 _ENV = module()
 
 -- Constants
@@ -19,7 +43,7 @@ local KTbFont = KFontSquashed
 local KTbTitleFont = KFontArialBold11 --KFontArialNormal11
 
 -- Global vars
-local visibleVar 
+local visibleVar
 
 -- Actual state
 local tbWinId
@@ -153,7 +177,7 @@ function TBarLatch(runtime, butId)
     -- Unlatch everything above that's in the same latch group
     local buttonLatchGroup = button.flags & 0x30
     for id = butId - 1, 1, -1 do
-        local blg = buttons[id].flags & 0x30 
+        local blg = buttons[id].flags & 0x30
         if blg == 0 or blg > buttonLatchGroup then
             break
         end
@@ -161,7 +185,7 @@ function TBarLatch(runtime, butId)
     end
     -- And everything below
     for id = butId + 1, #buttons do
-        local blg = buttons[id].flags & 0x30 
+        local blg = buttons[id].flags & 0x30
         if blg == 0 or blg < buttonLatchGroup then
             break
         end

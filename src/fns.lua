@@ -1,3 +1,27 @@
+--[[
+
+Copyright (c) 2021 Jason Morley, Tom Sutcliffe
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+]]
+
 _ENV = module()
 
 local fmt = string.format
@@ -737,7 +761,7 @@ function ATan(stack, runtime) -- 0x83
 end
 
 function Cos(stack, runtime) -- 0x84
-    stack:push(math.cos(stack:pop())) 
+    stack:push(math.cos(stack:pop()))
 end
 
 function Deg(stack, runtime) -- 0x85
@@ -783,7 +807,7 @@ function Rnd(stack, runtime) -- 0x8E
 end
 
 function Sin(stack, runtime) -- 0x8F
-    stack:push(math.sin(stack:pop())) 
+    stack:push(math.sin(stack:pop()))
 end
 
 function Sqr(stack, runtime) -- 0x90
@@ -791,7 +815,7 @@ function Sqr(stack, runtime) -- 0x90
 end
 
 function Tan(stack, runtime) -- 0x91
-    stack:push(math.tan(stack:pop())) 
+    stack:push(math.tan(stack:pop()))
 end
 
 function Val(stack, runtime) -- 0x92
