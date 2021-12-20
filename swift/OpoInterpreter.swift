@@ -792,6 +792,48 @@ class OpoInterpreter {
         return procs
     }
 
+    struct AppInfo {
+        let caption: String
+        let icons: [Graphics.PixelData]
+    }
+
+    func getAppInfo(aifPath: String) -> AppInfo? {
+        let top = lua_gettop(L)
+        defer {
+            lua_settop(L, top)
+        }
+        guard let data = FileManager.default.contents(atPath: aifPath) else {
+            return nil
+        }
+        lua_getglobal(L, "require")
+        L.push("aif")
+        guard pcall(1, 1) else { return nil }
+        lua_getfield(L, -1, "parseAif")
+        lua_remove(L, -2) // aif module
+        L.push(data)
+        guard pcall(1, 1) else { return nil }
+
+        lua_getfield(L, -1, "captions")
+        lua_getfield(L, -1, "EN")
+        guard let caption = L.tostring(-1) else { return nil }
+        L.pop(2) // EN caption, captions
+
+        lua_getfield(L, -1, "icons")
+        var icons: [Graphics.PixelData] = []
+        for _ in L.ipairs(-1, requiredType: .table) {
+            if let width = L.toint(-1, key: "width"),
+               let height = L.toint(-1, key: "height"),
+               let bpp = L.toint(-1, key: "bpp"),
+               let stride = L.toint(-1, key: "stride"),
+               let data = L.todata(-1, key: "imgData") {
+                let size = Graphics.Size(width: width, height: height)
+                let info = Graphics.PixelData(size: size, bpp: bpp, stride: stride, data: data)
+                icons.append(info)
+            }
+        }
+        return AppInfo(caption: caption, icons: icons)
+    }
+
     struct Error {
         let code: Int?
         let opoStack: String?

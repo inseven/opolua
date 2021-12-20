@@ -115,7 +115,8 @@ Errors = {
 KRequestPending = 0x80000001
 
 -- Some misc uids used for file formats
-KUidDirectFileStore = 0x10000037 -- OPO file uid1
+KUidDirectFileStore = 0x10000037 -- OPO/AIF/MBM uid1
+KUidAppInfoFile8 = 0x1000006A -- AIF file uid2
 -- KUidAppDllDoc8 = 0x1000006D
 KUidOPO = 0x10000073 -- pre-unicode OPO uid2
 KUidMultiBitmapFileImage = 0x10000042
@@ -125,8 +126,6 @@ KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
 KUidExternalOplFile = 0x1000008A -- DB file UID2
 
 KUidSoundData = 0x10000052 -- Not sure what this uid is officially called, can't find a reference...
-
-KDefaultFontUid = 268435957 -- ie Arial 15
 
 dItemTypes = enum {
     dTEXT = 0,
@@ -187,6 +186,8 @@ KFontCourierNormal27 = 0x10000267
 KFontCourierNormal32 = 0x10000268
 KFontTiny4 = 0x10000030
 KFontSquashed = 0x100000F5
+
+KDefaultFontUid = KFontArialNormal15
 
 FontIds = {
     [4] = { face = "courier", size = 8 },

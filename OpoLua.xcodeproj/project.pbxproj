@@ -74,6 +74,9 @@
 		DB0B91742770A279006F5CD0 /* lvm.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF5F2742D5BB005E904F /* lvm.c */; };
 		DB0B91752770A279006F5CD0 /* lzio.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6A2742D5BC005E904F /* lzio.c */; };
 		DB0B917D2770A49E006F5CD0 /* luac.c in Sources */ = {isa = PBXBuildFile; fileRef = DB0B917C2770A49E006F5CD0 /* luac.c */; };
+		DB0B918227710120006F5CD0 /* CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B918127710120006F5CD0 /* CGImage.swift */; };
+		DB0B91852771031F006F5CD0 /* aif.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB0B91832771031F006F5CD0 /* aif.lua */; };
+		DB0B91862771031F006F5CD0 /* sis.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB0B91842771031F006F5CD0 /* sis.lua */; };
 		DB5AC970275198A20043FE5C /* database.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC96F275198A20043FE5C /* database.lua */; };
 		DB5AC972275577990043FE5C /* mbm.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC971275577980043FE5C /* mbm.lua */; };
 		DB5AC974275681510043FE5C /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC973275681510043FE5C /* CanvasView.swift */; };
@@ -190,6 +193,9 @@
 		DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OplKeyCode.swift; sourceTree = "<group>"; };
 		DB0B914F2770A1F6006F5CD0 /* luac */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = luac; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB0B917C2770A49E006F5CD0 /* luac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = luac.c; sourceTree = "<group>"; };
+		DB0B918127710120006F5CD0 /* CGImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGImage.swift; sourceTree = "<group>"; };
+		DB0B91832771031F006F5CD0 /* aif.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = aif.lua; sourceTree = "<group>"; };
+		DB0B91842771031F006F5CD0 /* sis.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sis.lua; sourceTree = "<group>"; };
 		DB5AC96F275198A20043FE5C /* database.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = database.lua; sourceTree = "<group>"; };
 		DB5AC971275577980043FE5C /* mbm.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mbm.lua; sourceTree = "<group>"; };
 		DB5AC973275681510043FE5C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
@@ -316,6 +322,7 @@
 				D89A607B2756A6A300C9757F /* URL.swift */,
 				D89A607D2756A98200C9757F /* ViewController.swift */,
 				DBE91524276D25A900BDB8F5 /* UIKey.swift */,
+				DB0B918127710120006F5CD0 /* CGImage.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -449,6 +456,8 @@
 				DB5AC96F275198A20043FE5C /* database.lua */,
 				DB5AC971275577980043FE5C /* mbm.lua */,
 				DB5AC979275AC72A0043FE5C /* sound.lua */,
+				DB0B91832771031F006F5CD0 /* aif.lua */,
+				DB0B91842771031F006F5CD0 /* sis.lua */,
 				DBACE9C2274F895D002612DF /* modules */,
 				DB5AC97727583DC70043FE5C /* opx */,
 			);
@@ -561,7 +570,9 @@
 				DB79FFF12742E631005E904F /* init.lua in Resources */,
 				DB79FFF02742E631005E904F /* runtime.lua in Resources */,
 				DB5AC972275577990043FE5C /* mbm.lua in Resources */,
+				DB0B91862771031F006F5CD0 /* sis.lua in Resources */,
 				DB5AC97C275CD5690043FE5C /* opl.lua in Resources */,
+				DB0B91852771031F006F5CD0 /* aif.lua in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -653,6 +664,7 @@
 				D8FE60032757106300711717 /* Location.swift in Sources */,
 				D8891353274C186E00794D55 /* Canvas.swift in Sources */,
 				D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */,
+				DB0B918227710120006F5CD0 /* CGImage.swift in Sources */,
 				D889134D274C17FF00794D55 /* CGContext.swift in Sources */,
 				DB5AC9762757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift in Sources */,
 				DB7900022742E6F6005E904F /* ldump.c in Sources */,

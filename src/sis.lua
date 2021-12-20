@@ -219,11 +219,11 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
         printf("type=%d details=%d srcNameLen=%d srcNamePtr=0x%08X destNameLen=%d destNamePtr=0x%08X\n",
             type, details, srcNameLen, srcNamePtr, destNameLen, destNamePtr)
     end
-    -- local srcName = data:sub(1 + srcNamePtr, srcNamePtr + srcNameLen)
+    local srcName = data:sub(1 + srcNamePtr, srcNamePtr + srcNameLen)
     local destName = data:sub(1 + destNamePtr, destNamePtr + destNameLen)
     local file = {
         type = type,
-        -- src = srcName,
+        src = srcName,
         dest = destName,
     }
 

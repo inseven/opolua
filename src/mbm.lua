@@ -35,27 +35,30 @@ function parseMbmHeader(data)
     local bitmaps = {}
     for i = 1, numBitmaps do
         local headerOffset = string.unpack("<I4", data, 1 + trailerOffset + 4 + (i-1) * 4)
-        -- print(headerOffset)
-        local len, headerLen, x, y, twipsx, twipsy, bpp, col, paletteSz, compression, pos =
-            string.unpack("<I4I4I4I4I4I4I4I4I4I4", data, 1 + headerOffset)
-
-        local bytesPerPixel = bpp / 8
-        local bytesPerWidth = math.ceil(x * bytesPerPixel)
-        local stride = (bytesPerWidth + 3) & ~3
-        local bitmap = {
-            width = x,
-            height = y,
-            bpp = bpp,
-            color = col,
-            stride = stride,
-            -- not worrying about palettes yet
-            compression = compression,
-            imgStart = headerOffset + headerLen,
-            imgLen = len - headerLen,
-        }
+        local bitmap = parseBitmap(data, headerOffset)
         table.insert(bitmaps, bitmap)
     end
     return bitmaps
+end
+
+function parseBitmap(data, headerOffset)
+    local len, headerLen, x, y, twipsx, twipsy, bpp, col, paletteSz, compression, pos =
+        string.unpack("<I4I4I4I4I4I4I4I4I4I4", data, 1 + headerOffset)
+
+    local bytesPerPixel = bpp / 8
+    local bytesPerWidth = math.ceil(x * bytesPerPixel)
+    local stride = (bytesPerWidth + 3) & ~3
+    return {
+        width = x,
+        height = y,
+        bpp = bpp,
+        color = col,
+        stride = stride,
+        -- not worrying about palettes yet
+        compression = compression,
+        imgStart = headerOffset + headerLen,
+        imgLen = len - headerLen,
+    }
 end
 
 function decodeBitmap(bitmap, data)

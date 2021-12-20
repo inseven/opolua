@@ -74,3 +74,5 @@ $
 * https://github.com/opl-dev/opl-dev
 * https://web.archive.org/web/20070716134804/http://3lib.ukonline.co.uk/progindex.htm
 * https://web.archive.org/web/20060505220702/http://www.allaboutopl.com/wiki/OPLCommandsListing?v=kbu
+* https://thoukydides.github.io/riscos-psifs/sis.html
+* http://www.koeniglich.de/epoc32_fileformats.txt

@@ -54,7 +54,7 @@ function main()
             elseif file.langData then
                 len = #(file.langData[langIdx])
             end
-            printf("%s: %s len=%d\n", sis.FileType[file.type], file.dest, len or 0)
+            printf("%s: %s -> %s len=%d\n", sis.FileType[file.type], file.src, file.dest, len or 0)
         end
         return
     end
