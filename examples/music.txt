@@ -1,0 +1,80 @@
+PROC main:
+	LOCAL ev&(16)
+	LOCAL evstat%, m%
+	m% = 1
+	DO
+		PRINT "Press a key..."
+		GETEVENTA32 evstat%, ev&()
+		IOWAIT
+		IF ((ev&(1) AND $400) AND ((ev&(3) = 10000) OR (ev&(3) = 148)))
+		   	m% = menu%:
+		ENDIF
+	UNTIL m% = %q
+ENDP
+
+PROC menu%:
+	LOCAL ret%
+	mINIT
+	mCARD "Play", "Greensleeves", 1, "Scale", 2, "Beep", 3
+	mCARD "File", "Quit", %q
+	ret% = MENU(ret%)
+	IF ret% = 1
+		greensleeves:
+	ELSEIF ret% = 2
+		scale:
+	ELSEIF ret% = 3
+		beep:
+	ENDIF
+	RETURN ret%
+ENDP
+
+PROC pitch:(frequency)
+   RETURN (512.0 / (frequency / 1000.0)) - 1.0
+ENDP
+
+PROC note:(duration, pitch)
+  BEEP duration * 16, pitch
+ENDP
+
+PROC greensleeves:
+  LOCAL d4,e4,fs4,g4,a4,b4,c5
+  d4=pitch:(293.6648)
+  e4=pitch:(329.6276)
+  fs4=pitch:(369.9944)
+  g4=pitch:(391.9954)
+  a4=pitch:(440.0000)
+  b4=pitch:(493.8833)
+  c5=pitch:(523.2511)
+  note:(1.0, e4)
+  note:(2.0, g4)
+  note:(1.0, a4)
+  note:(1.5, b4)
+  note:(0.5, c5)
+  note:(1.0, b4)
+  note:(2.0, a4)
+  note:(1.0, fs4)
+  note:(1.5, d4)
+  note:(0.5, e4)
+  note:(1.0, fs4)
+  note:(2.0, g4)
+  note:(1.0, e4)
+  note:(1.5, e4)
+ENDP
+
+PROC beep:
+  BEEP 5, 300
+  BEEP 10, 400
+ENDP
+
+PROC scale:
+  LOCAL freq,n%
+  n%=3
+  WHILE n%<16
+    freq=440*2**(n%/12.0)
+    BEEP 8,512000/freq-1.0
+    n%=n%+1
+    IF n%=4 OR n%=6 OR n%=9 OR n%=11 OR n%=13
+        n%=n%+1
+    ENDIF
+  ENDWH
+ENDP

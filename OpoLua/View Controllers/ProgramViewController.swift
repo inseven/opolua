@@ -295,7 +295,11 @@ extension ProgramViewController: OpoIoHandler {
     }
 
     func beep(frequency: Double, duration: Double) {
-        // print("BEEP")
+        do {
+            try Sound.beep(frequency: frequency * 1000, duration: duration)
+        } catch {
+            present(error: error)
+        }
     }
 
     func dialog(_ dialog: Dialog) -> Dialog.Result {
