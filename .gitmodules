@@ -2,3 +2,6 @@
 	path = lua
 	url = git@github.com:lua/lua.git
 	branch = v5.3
+[submodule "luac"]
+	path = luac
+	url = git@github.com:lua/luac.git
