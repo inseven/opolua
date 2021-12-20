@@ -34,27 +34,49 @@ function main()
     f:close()
     local sisfile = sis.parseSisFile(data, true)
 
+    local langIdx = 1
+    -- Find which language index refers to English (not worrying about extracting other langs just yet)
+    for i, lang in ipairs(sisfile.langs) do
+        if lang == "EN" then
+            langIdx = i
+            break
+        end
+    end
+
     if not dest then
+        for _, lang in ipairs(sisfile.langs) do
+            printf("Language: %s\n", lang)
+        end
         for _, file in ipairs(sisfile.files) do
-            printf("%s: %s len=%d\n", sis.FileType[file.type], file.dest, file.data and #file.data or 0)
+            local len
+            if file.data then
+                len = #file.data
+            elseif file.langData then
+                len = #(file.langData[langIdx])
+            end
+            printf("%s: %s len=%d\n", sis.FileType[file.type], file.dest, len or 0)
         end
         return
     end
 
     for _, file in ipairs(sisfile.files) do
         if file.type == sis.FileType.File then
-            extractFile(file, dest)
+            extractFile(file, langIdx, dest)
         end
     end
 end
 
-function extractFile(file, dest)
+function extractFile(file, langIdx, dest)
     local outName = dest.."/c/"..file.dest:sub(4):gsub("\\", "/")
     local dir = oplpath.dirname(outName)
     -- print(dir)
     os.execute(string.format('mkdir -p "%s"', dir))
     local f = assert(io.open(outName, "wb"))
-    f:write(file.data)
+    local data = file.data
+    if not data then
+        data = file.langData[langIdx]
+    end
+    f:write(data)
     f:close()
 end
 
