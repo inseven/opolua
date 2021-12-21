@@ -34,7 +34,6 @@
 		D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* DirectoryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
-		D8C712A6275AFC2300D83A3E /* HandleGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A5275AFC2300D83A3E /* HandleGenerator.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
 		D8EB6FF82759682000FC139F /* UITextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF72759682000FC139F /* UITextView.swift */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
@@ -187,7 +186,6 @@
 		D8C679B927483B5600BD8720 /* DirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
-		D8C712A5275AFC2300D83A3E /* HandleGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandleGenerator.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		D8EB6FF72759682000FC139F /* UITextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextView.swift; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
@@ -292,7 +290,6 @@
 				D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */,
 				D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */,
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
-				D8C712A5275AFC2300D83A3E /* HandleGenerator.swift */,
 				D8FE60022757106300711717 /* Location.swift */,
 				D861E8DA274A819D003C8D3D /* OPLObject.swift */,
 				D8D50116275928CF008C1BC9 /* Scheduler.swift */,
@@ -689,7 +686,6 @@
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				DB7900092742E6F6005E904F /* lmem.c in Sources */,
 				DB79000A2742E6F6005E904F /* loadlib.c in Sources */,
-				D8C712A6275AFC2300D83A3E /* HandleGenerator.swift in Sources */,
 				D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */,
 				D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */,
 				DB79000B2742E6F6005E904F /* lobject.c in Sources */,

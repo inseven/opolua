@@ -39,7 +39,6 @@ class ProgramViewController: UIViewController {
 
     let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     let scheduler = Scheduler()
-    let handleGenerator = HandleGenerator(initialValue: 1000)
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
