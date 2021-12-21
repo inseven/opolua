@@ -51,8 +51,6 @@ class Program {
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     private let scheduler = Scheduler()
-    private let tasks = ConcurrentQueue<Task>()
-    private let taskQueue = DispatchQueue(label: "Program.taskQueue")  // TODO: Replace this with an operation queue
 
     private var state: State = .idle
 
@@ -86,20 +84,6 @@ class Program {
                 request.complete(.completed)
             }
         }
-        taskQueue.async {
-            repeat {
-                let task = self.tasks.takeFirst()
-                switch task {
-                case .asyncRequest(let request):
-                    // print("Schedule Request")
-                    self.scheduler.scheduleRequest(request)
-                case .cancelRequest(let requestHandle):
-                    self.scheduler.cancelRequest(requestHandle)
-                }
-            } while true
-        }
-
-
     }
 
     func start() {
@@ -259,7 +243,7 @@ extension Program: OpoIoHandler {
     }
 
     func asyncRequest(_ request: Async.Request) {
-        tasks.append(.asyncRequest(request))
+        scheduler.scheduleRequest(request)
     }
 
     func cancelRequest(_ requestHandle: Int32) {

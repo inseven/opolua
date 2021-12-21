@@ -20,14 +20,6 @@
 
 import UIKit
 
-
-enum Task {
-
-    case asyncRequest(Async.Request)
-    case cancelRequest(Int32)
-
-}
-
 class ProgramViewController: UIViewController {
 
     let screenSize = Graphics.Size(width:640, height: 240)

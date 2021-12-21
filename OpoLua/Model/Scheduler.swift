@@ -120,7 +120,6 @@ class Scheduler {
         }
         repeat {
             if let response = responses.removeRandomValue() {
-                // print("waitForAnyRequest -> \(response)")
                 lock.broadcast()
                 return response
             }
@@ -134,10 +133,8 @@ class Scheduler {
             lock.unlock()
         }
         guard let response = responses.removeRandomValue() else {
-            // print("anyRequest -> nil")
             return nil
         }
-        // print("anyRequest -> \(response)")
         lock.broadcast()
         return response
     }
