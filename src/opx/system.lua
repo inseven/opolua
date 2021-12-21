@@ -145,7 +145,9 @@ function SwitchOff(stack, runtime) -- 10
 end
 
 function SetSoundEnabled(stack, runtime) -- 11
-    error("Unimplemented system.opx function SetSoundEnabled!")
+    local state = stack:pop()
+    printf("TODO: SetSoundEnabled %d\n", state)
+    stack:push(0)
 end
 
 function SetSoundDriverEnabled(stack, runtime) -- 12
@@ -410,7 +412,7 @@ function IrDADisconnect(stack, runtime) -- 68
 end
 
 function MainBatteryStatus(stack, runtime) -- 69
-    error("Unimplemented system.opx function MainBatteryStatus!")
+    stack:push(3) -- Good
 end
 
 function BackupBatteryStatus(stack, runtime) -- 70
