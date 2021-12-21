@@ -22,8 +22,8 @@ import Foundation
 
 protocol ProgramDelegate: AnyObject {
 
-    func program(program: Program, didFinishWithResult result: OpoInterpreter.Result)
-    func program(program: Program, didEncounterError error: Error)
+    func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result)
+    func program(_ program: Program, didEncounterError error: Error)
 
     // TODO: These are directly copied from OpoIoHandler and should be thinned over time.
     func printValue(_ val: String) -> Void
@@ -48,13 +48,12 @@ class Program {
     enum State {
         case idle
         case running
+        case finished
     }
 
     var object: OPLObject
     var procedureName: String?
-
-    let opo = OpoInterpreter()
-    let runtimeQueue = DispatchQueue(label: "ScreenViewController.runtimeQueue")
+    let thread: InterpreterThread
 
     var state: State = .idle
 
@@ -71,6 +70,9 @@ class Program {
     init(object: OPLObject, procedureName: String? = nil) {
         self.object = object
         self.procedureName = procedureName
+        self.thread = InterpreterThread(object: object, procedureName: procedureName)
+        self.thread.delegate = self
+        self.thread.handler = self
     }
 
     func start() {
@@ -78,17 +80,7 @@ class Program {
             return
         }
         state = .running
-        runtimeQueue.async {
-            self.opo.iohandler = self
-            let url = self.object.url
-            let appName = url.deletingPathExtension().lastPathComponent.uppercased()
-            let oplPath = "C:\\SYSTEM\\APPS\\" + appName + "\\" + url.lastPathComponent
-            let result = self.opo.run(devicePath: oplPath, procedureName: self.procedureName)
-            // TODO: Maybe don't dispatch this?
-            DispatchQueue.main.async {
-                self.delegate?.program(program: self, didFinishWithResult: result)
-            }
-        }
+        thread.start()
     }
 
     func findCorrectCase(in path: URL, for uncasedName: String) -> String {
@@ -131,6 +123,18 @@ class Program {
     
 }
 
+extension Program: InterpreterThreadDelegate {
+
+    func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result) {
+        // TODO: Should this be a dispatch?
+        DispatchQueue.main.async {
+            self.state = .finished
+            self.delegate?.program(self, didFinishWithResult: result)
+        }
+    }
+
+}
+
 extension Program: OpoIoHandler {
 
     func printValue(_ val: String) {
@@ -149,7 +153,7 @@ extension Program: OpoIoHandler {
         do {
             try Sound.beep(frequency: frequency * 1000, duration: duration)
         } catch {
-            delegate?.program(program: self, didEncounterError: error)
+            delegate?.program(self, didEncounterError: error)
         }
     }
 

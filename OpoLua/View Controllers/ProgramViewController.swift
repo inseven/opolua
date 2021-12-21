@@ -218,7 +218,7 @@ class ProgramViewController: UIViewController {
 
 extension ProgramViewController: ProgramDelegate {
 
-    func program(program: Program, didFinishWithResult result: OpoInterpreter.Result) {
+    func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
         self.textView.textColor = .secondaryLabel
         switch result {
         case .none:
@@ -228,7 +228,7 @@ extension ProgramViewController: ProgramDelegate {
         }
     }
 
-    func program(program: Program, didEncounterError error: Error) {
+    func program(_ program: Program, didEncounterError error: Error) {
         present(error: error)
     }
 
