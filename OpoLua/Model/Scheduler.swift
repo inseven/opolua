@@ -22,13 +22,54 @@ import UIKit
 
 class Scheduler {
 
-    var requests: [Int32: Async.Request] = [:]
+    class Request {
+
+        let request: Async.Request
+        private let completion: (Async.ResponseValue) -> Void
+
+        private var lock = NSLock()
+        private var _cancelled: Bool = false
+
+        init(request: Async.Request, completion: @escaping (Async.ResponseValue) -> Void) {
+            self.request = request
+            self.completion = completion
+        }
+
+        var cancelled: Bool {
+            get {
+                lock.lock()
+                defer {
+                    lock.unlock()
+                }
+                return _cancelled
+            }
+            set {
+                lock.lock()
+                defer {
+                    lock.unlock()
+                }
+                _cancelled = newValue
+            }
+        }
+
+        func cancel() {
+            cancelled = true
+        }
+
+        func complete(_ value: Async.ResponseValue) {
+            completion(value)
+        }
+
+    }
+
+    var requests: [Int32: Request] = [:]
     var responses: [Int32: Async.Response] = [:]
-    var handlers: [Async.RequestType: (Async.Request) -> Void] = [:]
+    var handlers: [Async.RequestType: (Request) -> Void] = [:]
     var lock = NSCondition()
     var handlerQueue = DispatchQueue(label: "Scheduler.handlerQueue", attributes: .concurrent)
 
-    func addHandler(_ type: Async.RequestType, handler: @escaping (Async.Request) -> Void) {
+    func addHandler(_ type: Async.RequestType,
+                    handler: @escaping (Request) -> Void) {
         lock.lock()
         defer {
             lock.unlock()
@@ -37,34 +78,30 @@ class Scheduler {
     }
 
     func scheduleRequest(_ request: Async.Request) {
-
         lock.lock()
         defer {
             lock.unlock()
         }
         assert(requests[request.requestHandle] == nil)
-        requests[request.requestHandle] = request
+        let wrapper = Request(request: request) { responseValue in
+            self.serviceRequest(request.requestHandle, responseValue: responseValue)
+        }
+        requests[request.requestHandle] = wrapper
         lock.broadcast()
-
         let handler = handlers[request.type]!
         handlerQueue.async {
-            handler(request)
+            handler(wrapper)
         }
     }
 
-    func serviceRequest(type: Async.RequestType, completion: (Async.Request) -> Async.Response) {
+    private func serviceRequest(_ requestHandle: Int32, responseValue: Async.ResponseValue) {
         lock.lock()
         defer {
             lock.unlock()
         }
-        for (_, request) in requests {
-            if request.type == type {
-                responses[request.requestHandle] = completion(request)
-                requests.removeValue(forKey: request.requestHandle)
-                lock.broadcast()
-                return
-            }
-        }
+        let request = requests.removeValue(forKey: requestHandle)!
+        responses[requestHandle] = Async.Response(requestHandle: request.request.requestHandle, value: responseValue)
+        lock.broadcast()
     }
 
     func cancelRequest(_ requestHandle: Int32) {
@@ -72,12 +109,8 @@ class Scheduler {
         defer {
             lock.unlock()
         }
-        // It's not an error to cancel a request that's already been completed
-        if requests[requestHandle] != nil {
-            requests.removeValue(forKey: requestHandle)
-            responses[requestHandle] = Async.Response(requestHandle: requestHandle, value: .cancelled)
-            lock.broadcast()
-        }
+        let request = requests[requestHandle]!
+        request.cancel()
     }
 
     func waitForAnyRequest() -> Async.Response {

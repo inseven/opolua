@@ -74,26 +74,16 @@ class Program {
         self.thread.handler = self
 
         scheduler.addHandler(.getevent) { request in
-            // TODO: Cancellation isn't working right now.
-            let value = self.eventQueue.takeFirst()
-            // TODO: This whole service API is now somewhat janky as we know that it's there.
-            self.scheduler.serviceRequest(type: request.type) { request in
-                return Async.Response(requestHandle: request.requestHandle, value: value)
-            }
+            request.complete(self.eventQueue.takeFirst())
         }
         scheduler.addHandler(.playsound) { request in
-            print("PLAY SOUND!")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.scheduler.serviceRequest(type: request.type) { request in
-                    return Async.Response(requestHandle: request.requestHandle, value: .completed)
-                }
+                request.complete(.completed)
             }
         }
         scheduler.addHandler(.sleep) { request in
-            DispatchQueue.main.asyncAfter(deadline: .now() + (Double(request.intVal!) / 1000.0)) {
-                self.scheduler.serviceRequest(type: request.type) { request in
-                    return Async.Response(requestHandle: request.requestHandle, value: .completed)
-                }
+            DispatchQueue.main.asyncAfter(deadline: .now() + (Double(request.request.intVal!) / 1000.0)) {
+                request.complete(.completed)
             }
         }
         taskQueue.async {
