@@ -67,7 +67,7 @@ class Program {
         return device.screenSize
     }
 
-    init(object: OPLObject, procedureName: String? = nil, device: Device = .series5) {
+    init(object: OPLObject, procedureName: String? = nil, device: Device = .psionSeries5) {
         self.object = object
         self.procedureName = procedureName
         self.device = device

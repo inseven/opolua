@@ -18,43 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import Foundation
+import UIKit
 
-enum Device: CaseIterable {
+extension OpoInterpreter.AppInfo {
 
-    case psionSeries5
-    case psionRevo
-    case psionSeries7
-    case geofoxOne
-
-}
-
-extension Device {
-
-    var name: String {
-        switch self {
-        case .psionSeries5:
-            return "Psion Series 5"
-        case .psionRevo:
-            return "Psion Revo"
-        case .psionSeries7:
-            return "Psion Series 7"
-        case .geofoxOne:
-            return "Geofox One"
+    var appIcon: UIImage? {
+        guard let icon = icons.first(where: { $0.size == .icon }) else {
+            return nil
         }
-    }
-
-    var screenSize: Graphics.Size {
-        switch self {
-        case .psionSeries5:
-            return Graphics.Size(width:640, height: 240)
-        case .psionRevo:
-            return Graphics.Size(width: 480, height: 160)
-        case .psionSeries7:
-            return Graphics.Size(width:640, height: 480)
-        case .geofoxOne:
-            return Graphics.Size(width: 640, height: 320)
-        }
+        return UIImage(cgImage: icon.cgImage)
     }
 
 }

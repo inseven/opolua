@@ -658,6 +658,11 @@ private func key(_ L: LuaState!) -> Int32 {
 }
 
 class OpoInterpreter {
+
+    static var shared: OpoInterpreter = {
+        return OpoInterpreter()
+    }()
+
     private let L: LuaState
     var iohandler: OpoIoHandler
 

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */; };
+		D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
@@ -163,6 +165,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Graphics+CoreGraphics.swift"; sourceTree = "<group>"; };
+		D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+UIKit.swift"; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
@@ -325,19 +329,21 @@
 			children = (
 				D8FE60062757201600711717 /* Bundle.swift */,
 				D889134C274C17FF00794D55 /* CGContext.swift */,
+				DB0B918127710120006F5CD0 /* CGImage.swift */,
 				D889134E274C181F00794D55 /* CGPoint.swift */,
 				D87A62732752A67500075CB8 /* CGSize.swift */,
 				D8EB6FF9275995DB00FC139F /* Dictionary.swift */,
 				D89A60792756A2CC00C9757F /* FileManager.swift */,
+				D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */,
+				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
+				D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
 				D8BA09712751BBEA00F4730D /* UIElement.swift */,
 				D8891350274C184C00794D55 /* UIImage.swift */,
+				DBE91524276D25A900BDB8F5 /* UIKey.swift */,
 				D8EB6FF72759682000FC139F /* UITextView.swift */,
 				D89A607B2756A6A300C9757F /* URL.swift */,
 				D89A607D2756A98200C9757F /* ViewController.swift */,
-				DBE91524276D25A900BDB8F5 /* UIKey.swift */,
-				DB0B918127710120006F5CD0 /* CGImage.swift */,
-				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -723,7 +729,9 @@
 				DB7900132742E6F6005E904F /* ltablib.c in Sources */,
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,
 				D8FE60092757208000711717 /* ApplicationError.swift in Sources */,
+				D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
+				D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */,
 				DB7900162742E6F6005E904F /* lutf8lib.c in Sources */,
 				D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */,
 				DB7900172742E6F6005E904F /* lvm.c in Sources */,

@@ -54,11 +54,16 @@ class DirectoryViewController : UITableViewController {
         cell.accessoryType = .disclosureIndicator
         switch item.type {
         case .object:
-            cell.imageView?.image = UIImage(systemName: "applescript")
+            cell.imageView?.image = UIImage(systemName: "applescript",
+                                            withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
         case .directory:
-            cell.imageView?.image = UIImage(systemName: "folder")
+            cell.imageView?.image = UIImage(named: "FolderIcon")
         case .app:
-            cell.imageView?.image = UIImage(systemName: "app")
+            cell.imageView?.image = UIImage(systemName: "app",
+                                            withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+        case .bundle(let appInfo):
+            cell.imageView?.image = appInfo.appIcon ?? UIImage(systemName: "app",
+                                                               withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
         }
         return cell
     }
@@ -66,7 +71,7 @@ class DirectoryViewController : UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let item = directory.objects[indexPath.row]
         switch item.type {
-        case .object, .app:
+        case .object, .app, .bundle:
             let object = OPLObject(url: item.url)
             let program = Program(object: object)
             let viewController = ProgramViewController(program: program)
@@ -88,27 +93,31 @@ class DirectoryViewController : UITableViewController {
                             point: CGPoint) -> UIContextMenuConfiguration? {
         let item = directory.objects[indexPath.row]
         switch item.type {
-        case .object, .app:
+        case .object, .app, .bundle:
             let object = OPLObject(url: item.url)
             return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
-                let runAction = UIAction(title: "Run", image: UIImage(systemName: "play")) { action in
+                let runAction = UIAction(title: "Run") { action in
                     let program = Program(object: object)
                     let viewController = ProgramViewController(program: program)
                     self.navigationController?.pushViewController(viewController, animated: true)
                 }
+                let runAsActions = Device.allCases.map { device in
+                    UIAction(title: device.name) { action in
+                        let program = Program(object: object, device: device)
+                        let viewController = ProgramViewController(program: program)
+                        self.navigationController?.pushViewController(viewController, animated: true)
+                    }
+                }
+                let runAsMenu = UIMenu(title: "Run As...", children: runAsActions)
                 let procedureActions = object.procedures.map { procedure in
-                    UIAction(title: procedure.name, image: UIImage(systemName: "function")) { action in
+                    UIAction(title: procedure.name) { action in
                         let program = Program(object: object, procedureName: procedure.name)
                         let viewController = ProgramViewController(program: program)
                         self.navigationController?.pushViewController(viewController, animated: true)
                     }
                 }
-                let procedureMenu = UIMenu(title: "",
-                                           image: nil,
-                                           identifier: nil,
-                                           options: .displayInline,
-                                           children: procedureActions)
-                return UIMenu(title: "", children: [runAction, procedureMenu])
+                let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
+                return UIMenu(title: "", children: [runAction, runAsMenu, procedureMenu])
             }
         case .directory:
             return nil

@@ -26,4 +26,20 @@ extension String {
 
     static let `false` = "0"
 
+    var pathExtension: String {
+        return (self as NSString).pathExtension
+    }
+
+    var deletingPathExtension: String {
+        return (self as NSString).deletingPathExtension
+    }
+
+    var lastPathComponent: String {
+        return (self as NSString).lastPathComponent
+    }
+
+    var basename: String {
+        return lastPathComponent.deletingPathExtension
+    }
+
 }

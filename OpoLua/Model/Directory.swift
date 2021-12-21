@@ -28,13 +28,19 @@ class Directory {
             case object
             case directory
             case app
+            case bundle(OpoInterpreter.AppInfo)
         }
 
         let url: URL
         let type: `Type`
 
         var name: String {
-            return url.name
+            switch type {
+            case .bundle(let appInfo):
+                return appInfo.caption
+            default:
+                return url.name
+            }
         }
 
     }
@@ -53,7 +59,21 @@ class Directory {
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
                 if FileManager.default.directoryExists(atPath: url.path) {
-                    return Item(url: url, type: .directory)
+                    // Check for an app 'bundle'.
+                    let contents = try FileManager.default.contentsOfDirectory(atPath: url.path)
+                        .map { url.appendingPathComponent($0) }
+                    let appInfoUrls = contents.filter { $0.pathExtension == "aif" }
+                    let appUrls = contents.filter { $0.pathExtension == "app" }
+                    guard appInfoUrls.count == 1,
+                          appUrls.count == 1,
+                          let appInfoUrl = appInfoUrls.first,
+                          let appUrl = appUrls.first,
+                          appUrl.path.basename == appInfoUrl.path.basename,
+                          let data = OpoInterpreter.shared.getAppInfo(aifPath: appInfoUrl.path)
+                    else {
+                        return Item(url: url, type: .directory)
+                    }
+                    return Item(url: appUrl, type: .bundle(data))
                 } else if url.pathExtension == "opo" {
                     return Item(url: url, type: .object)
                 } else if url.pathExtension == "app" {

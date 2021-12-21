@@ -148,9 +148,12 @@ struct Menu {
 
 struct Graphics {
 
-    struct Size {
+    struct Size: Equatable {
+
         let width: Int
         let height: Int
+
+        static let icon = Self(width: 48, height: 48)
     }
 
     struct Point {

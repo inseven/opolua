@@ -18,43 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import CoreGraphics
 import Foundation
 
-enum Device: CaseIterable {
+extension Graphics.PixelData {
 
-    case psionSeries5
-    case psionRevo
-    case psionSeries7
-    case geofoxOne
-
-}
-
-extension Device {
-
-    var name: String {
-        switch self {
-        case .psionSeries5:
-            return "Psion Series 5"
-        case .psionRevo:
-            return "Psion Revo"
-        case .psionSeries7:
-            return "Psion Series 7"
-        case .geofoxOne:
-            return "Geofox One"
-        }
-    }
-
-    var screenSize: Graphics.Size {
-        switch self {
-        case .psionSeries5:
-            return Graphics.Size(width:640, height: 240)
-        case .psionRevo:
-            return Graphics.Size(width: 480, height: 160)
-        case .psionSeries7:
-            return Graphics.Size(width:640, height: 480)
-        case .geofoxOne:
-            return Graphics.Size(width: 640, height: 320)
-        }
+    var cgImage: CGImage {
+        return CGImage.from(pixelData: self)
     }
 
 }
