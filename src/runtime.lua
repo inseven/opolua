@@ -418,7 +418,7 @@ function Runtime:getGraphics()
     if not self.graphics then
         self.graphics = {}
         local w, h = self.ioh.getScreenSize()
-        self:newGraphicsContext(1, w, h)
+        self:newGraphicsContext(1, w, h, true)
         self.graphics.screen = {
             x = 0,
             y = 0,
