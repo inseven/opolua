@@ -387,12 +387,6 @@ extension ProgramViewController: ProgramDelegate {
         return screenSize
     }
 
-    func key() -> OplKeyCode? {
-        // TODO return non-nil (and remove the event from the queue) if there's
-        // any KeyPressEvent in the queue
-        return nil
-    }
-
 }
 
 extension Menu.Bar {

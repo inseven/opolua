@@ -49,6 +49,18 @@ class ConcurrentQueue<T> {
         } while true
     }
 
+    func first(where predicate: (T) -> Bool) -> T? {
+        condition.lock()
+        defer {
+            condition.unlock()
+        }
+        guard let index = items.firstIndex(where: predicate) else {
+            return nil
+        }
+        condition.broadcast()
+        return items.remove(at: index)
+    }
+
     func isEmpty() -> Bool {
         condition.lock()
         let result = items.isEmpty

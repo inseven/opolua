@@ -34,7 +34,6 @@ protocol ProgramDelegate: AnyObject {
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
     func getScreenSize() -> Graphics.Size
-    func key() -> OplKeyCode?
 
 }
 
@@ -263,7 +262,16 @@ extension Program: OpoIoHandler {
     }
 
     func key() -> OplKeyCode? {
-        return delegate!.key()
+        let responseValue = eventQueue.first { responseValue in
+            if case .keypressevent(_) = responseValue {
+                return true
+            }
+            return false
+        }
+        guard case .keypressevent(let event) = responseValue else {
+            return nil
+        }
+        return event.keycode
     }
 
 }
