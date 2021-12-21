@@ -11,6 +11,7 @@
 		D8535A2A277139D900DFCE29 /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A29277139D900DFCE29 /* Tone.swift */; };
 		D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DA274A819D003C8D3D /* OPLObject.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
+		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
 		D87A62742752A67500075CB8 /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62732752A67500075CB8 /* CGSize.swift */; };
 		D87A9249274C517000254DE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB79FE6427428294005E904F /* Assets.xcassets */; };
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
@@ -164,6 +165,7 @@
 		D8535A29277139D900DFCE29 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		D861E8DA274A819D003C8D3D /* OPLObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OPLObject.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
+		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		D87A62732752A67500075CB8 /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
 		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
 		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
@@ -297,6 +299,7 @@
 				D8FE60042757177200711717 /* Settings.swift */,
 				D8535A27277139AB00DFCE29 /* Sound.swift */,
 				D8535A29277139D900DFCE29 /* Tone.swift */,
+				D86724EF27715B88009C7246 /* Program.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -654,6 +657,7 @@
 				DB7900232746C771005E904F /* lua_State.swift in Sources */,
 				DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */,
 				DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */,
+				D86724F027715B88009C7246 /* Program.swift in Sources */,
 				DB79FFF82742E6F6005E904F /* lapi.c in Sources */,
 				DB79FFF92742E6F6005E904F /* lauxlib.c in Sources */,
 				DB79FFFA2742E6F6005E904F /* lbaselib.c in Sources */,

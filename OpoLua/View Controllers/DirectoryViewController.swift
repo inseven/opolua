@@ -68,7 +68,8 @@ class DirectoryViewController : UITableViewController {
         switch item.type {
         case .object, .app:
             let object = OPLObject(url: item.url)
-            let viewController = ProgramViewController(object: object)
+            let program = Program(object: object)
+            let viewController = ProgramViewController(program: program)
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
             do {
@@ -91,12 +92,14 @@ class DirectoryViewController : UITableViewController {
             let object = OPLObject(url: item.url)
             return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
                 let runAction = UIAction(title: "Run", image: UIImage(systemName: "play")) { action in
-                    let viewController = ProgramViewController(object: object)
+                    let program = Program(object: object)
+                    let viewController = ProgramViewController(program: program)
                     self.navigationController?.pushViewController(viewController, animated: true)
                 }
                 let procedureActions = object.procedures.map { procedure in
                     UIAction(title: procedure.name, image: UIImage(systemName: "function")) { action in
-                        let viewController = ProgramViewController(object: object, procedureName: procedure.name)
+                        let program = Program(object: object, procedureName: procedure.name)
+                        let viewController = ProgramViewController(program: program)
                         self.navigationController?.pushViewController(viewController, animated: true)
                     }
                 }

@@ -30,22 +30,13 @@ enum Task {
 
 class ProgramViewController: UIViewController {
 
-    enum State {
-        case idle
-        case running
-    }
-
     let screenSize = Graphics.Size(width:640, height: 240)
 
-    var object: OPLObject
-    var procedureName: String?
+    var program: Program
     
-    var state: State = .idle
     var nextHandle: Int
     var drawables: [Int: Drawable] = [:]
 
-    let opo = OpoInterpreter()
-    let runtimeQueue = DispatchQueue(label: "ScreenViewController.runtimeQueue")
     let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     let scheduler = Scheduler()
     let handleGenerator = HandleGenerator(initialValue: 1000)
@@ -74,18 +65,14 @@ class ProgramViewController: UIViewController {
         return canvas
     }()
 
-    init(object: OPLObject, procedureName: String? = nil) {
-        self.object = object
-        self.procedureName = procedureName
+    init(program: Program) {
+        self.program = program
         self.nextHandle = 2
         super.init(nibName: nil, bundle: nil)
+        program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
         view.backgroundColor = .systemBackground
-        if let procedureName = procedureName {
-            navigationItem.title = [object.name, procedureName].joined(separator: "\\")
-        } else {
-            navigationItem.title = object.name
-        }
+        navigationItem.title = program.name
         view.clipsToBounds = true
         view.addSubview(canvasView)
         view.addSubview(textView)
@@ -184,34 +171,7 @@ class ProgramViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        start()
-    }
-    
-    func start() {
-        guard state == .idle else {
-            return
-        }
-        state = .running
-        runtimeQueue.async {
-            self.opo.iohandler = self
-            let url = self.object.url
-            let appName = url.deletingPathExtension().lastPathComponent.uppercased()
-            let oplPath = "C:\\SYSTEM\\APPS\\" + appName + "\\" + url.lastPathComponent
-            let result = self.opo.run(devicePath: oplPath, procedureName: self.procedureName)
-            DispatchQueue.main.async {
-                self.programDidFinish(result: result)
-            }
-        }
-    }
-    
-    func programDidFinish(result: OpoInterpreter.Result) {
-        self.textView.textColor = .secondaryLabel
-        switch result {
-        case .none:
-            self.textView.append("\n---Completed---")
-        case .error(let err):
-            self.textView.append("\n---Error occurred:---\n\(err.description)")
-        }
+        program.start()
     }
 
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -257,7 +217,21 @@ class ProgramViewController: UIViewController {
 
 }
 
-extension ProgramViewController: OpoIoHandler {
+extension ProgramViewController: ProgramDelegate {
+
+    func program(program: Program, didFinishWithResult result: OpoInterpreter.Result) {
+        self.textView.textColor = .secondaryLabel
+        switch result {
+        case .none:
+            self.textView.append("\n---Completed---")
+        case .error(let err):
+            self.textView.append("\n---Error occurred:---\n\(err.description)")
+        }
+    }
+
+    func program(program: Program, didEncounterError error: Error) {
+        present(error: error)
+    }
 
     func printValue(_ val: String) {
         DispatchQueue.main.async {
@@ -292,14 +266,6 @@ extension ProgramViewController: OpoIoHandler {
         }
         semaphore.wait()
         return result
-    }
-
-    func beep(frequency: Double, duration: Double) {
-        do {
-            try Sound.beep(frequency: frequency * 1000, duration: duration)
-        } catch {
-            present(error: error)
-        }
     }
 
     func dialog(_ dialog: Dialog) -> Dialog.Result {
@@ -473,81 +439,6 @@ extension ProgramViewController: OpoIoHandler {
 
     func getScreenSize() -> Graphics.Size {
         return screenSize
-    }
-
-    func findCorrectCase(in path: URL, for uncasedName: String) -> String {
-        guard let contents = try? FileManager.default.contentsOfDirectory(at: path, includingPropertiesForKeys: []) else {
-            return uncasedName
-        }
-        let uppercasedName = uncasedName.uppercased()
-        for url in contents {
-            let name = url.lastPathComponent
-            if name.uppercased() == uppercasedName {
-                return name
-            }
-        }
-        return uncasedName
-    }
-
-    func mapToNative(path: String) -> URL? {
-        // For now assume if we're running foo.opo then we're running it from a simulated
-        // C:\System\Apps\Foo\ path and make everything in the foo.opo dir available
-        // under that path.
-        let appName = object.url.deletingPathExtension().lastPathComponent
-        let prefix = "C:\\SYSTEM\\APPS\\" + appName.uppercased() + "\\"
-        if path.uppercased().starts(with: prefix) {
-            let pathComponents = path.split(separator: "\\")[4...]
-            var result = object.url.deletingLastPathComponent()
-            for component in pathComponents {
-                if component == "." || component == ".." {
-                    continue
-                }
-                // Have to do some nasty hacks here to appear case-insensitive
-                let name = findCorrectCase(in: result, for: String(component))
-                result.appendPathComponent(name)
-            }
-            return result.absoluteURL
-        } else {
-            return nil
-        }
-    }
-
-    func fsop(_ op: Fs.Operation) -> Fs.Result {
-        guard let nativePath = mapToNative(path: op.path) else {
-            return .err(.notReady)
-        }
-        let path = nativePath.path
-        // print("Got op for \(path)")
-        let fm = FileManager.default
-        switch (op.type) {
-        case .exists:
-            let exists = fm.fileExists(atPath: path)
-            return .err(exists ? .alreadyExists : .notFound)
-        case .delete:
-            // Should probably prevent this from accidentally deleting a directory...
-            do {
-                try fm.removeItem(atPath: path)
-                return .err(.none)
-            } catch {
-                return .err(.notReady)
-            }
-        case .mkdir:
-            print("TODO mkdir \(path)")
-        case .rmdir:
-            print("TODO rmdir \(path)")
-        case .write(let data):
-            let ok = fm.createFile(atPath: path, contents: data)
-            return .err(ok ? .none : .notReady)
-        case .read:
-            if let result = fm.contents(atPath: nativePath.path) {
-                return .data(result)
-            } else if !fm.fileExists(atPath: path) {
-                return .err(.notFound)
-            } else {
-                return .err(.notReady)
-            }
-        }
-        return .err(.notReady)
     }
 
     func asyncRequest(_ request: Async.Request) {
