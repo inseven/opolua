@@ -692,7 +692,7 @@ class OpoInterpreter {
         // Finally, run init.lua
         lua_getglobal(L, "require")
         L.push("init")
-        guard pcall(1, 0) else {
+        guard logpcall(1, 0) else {
             fatalError("Failed to load init.lua!")
         }
 
@@ -703,7 +703,8 @@ class OpoInterpreter {
         lua_close(L)
     }
 
-    func pcall(_ narg: Int32, _ nret: Int32) -> Bool {
+    // Returns nil on success, otherwise err string
+    func pcall(_ narg: Int32, _ nret: Int32) -> String? {
         let base = lua_gettop(L) - narg // Where the function is, and where the msghandler will be
         lua_pushcfunction(L, traceHandler)
         lua_insert(L, base)
@@ -711,11 +712,19 @@ class OpoInterpreter {
         lua_remove(L, base)
         if err != 0 {
             let errStr = L.tostring(-1, convert: true)!
-            print("Error: \(errStr)")
             L.pop()
-            return false
+            return errStr
         }
-        return true
+        return nil
+    }
+
+    func logpcall(_ narg: Int32, _ nret: Int32) -> Bool {
+        if let err = pcall(narg, nret) {
+            print("Error: \(err)")
+            return false
+        } else {
+            return true
+        }
     }
 
     func makeIoHandlerBridge() {
@@ -768,10 +777,10 @@ class OpoInterpreter {
         }
         lua_getglobal(L, "require")
         L.push("opofile")
-        guard pcall(1, 1) else { return nil }
+        guard logpcall(1, 1) else { return nil }
         lua_getfield(L, -1, "parseOpo")
         L.push(data)
-        guard pcall(1, 1) else {
+        guard logpcall(1, 1) else {
             L.pop() // opofile
             return nil
         }
@@ -807,11 +816,11 @@ class OpoInterpreter {
         }
         lua_getglobal(L, "require")
         L.push("aif")
-        guard pcall(1, 1) else { return nil }
+        guard logpcall(1, 1) else { return nil }
         lua_getfield(L, -1, "parseAif")
         lua_remove(L, -2) // aif module
         L.push(data)
-        guard pcall(1, 1) else { return nil }
+        guard logpcall(1, 1) else { return nil }
 
         lua_getfield(L, -1, "captions")
         lua_getfield(L, -1, "EN")
@@ -850,7 +859,7 @@ class OpoInterpreter {
 
         lua_getglobal(L, "require")
         L.push("runtime")
-        guard pcall(1, 1) else { fatalError("Couldn't load runtime") }
+        guard logpcall(1, 1) else { fatalError("Couldn't load runtime") }
         lua_getfield(L, -1, "runOpo")
         L.push(devicePath)
         if let proc = procedureName {
@@ -859,8 +868,10 @@ class OpoInterpreter {
             L.pushnil()
         }
         makeIoHandlerBridge()
-        let ok = pcall(3, 1) // runOpo(devicePath, proc, iohandler)
-        if ok {
+        let err = pcall(3, 1) // runOpo(devicePath, proc, iohandler)
+        if let err = err {
+            return .error(Error(code: nil, opoStack: nil, luaStack: err, description: err))
+        } else {
             let t = L.type(-1)
             let result: Result
             switch(L.type(-1)) {
@@ -881,10 +892,6 @@ class OpoInterpreter {
             }
             L.pop()
             return result
-        } else {
-            // pcall has already logged it
-            let err = Error(code: nil, opoStack: nil, luaStack: "", description: "Check console for error.")
-            return Result.error(err)
         }
     }
 
