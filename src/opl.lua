@@ -504,17 +504,14 @@ end
 
 function GET()
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
-    local ev = {}
-    for i = 1, 16 do
-        ev[i] = runtime:makeTemporaryVar(DataTypes.ELong)
-    end
+    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
     repeat
         stat(KOplErrFilePending)
-        runtime:iohandler().asyncRequest("getevent", stat, ev)
+        runtime:iohandler().asyncRequest("getevent", stat, ev:addressOf())
         runtime:waitForRequest(stat)
-    until ev[1]() & 0x400 == 0
+    until ev()[1]() & 0x400 == 0
 
-    return keycodeToCharacterCode(ev[1]())
+    return keycodeToCharacterCode(ev()[1]())
 end
 
 function GETSTR()

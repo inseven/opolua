@@ -160,8 +160,13 @@ function Runtime:getVar(index, type, indirect)
 end
 
 -- Only for things that need to simulate a var (such as for making sync versions of async requests)
-function Runtime:makeTemporaryVar(type)
-    return makeVar(type)
+function Runtime:makeTemporaryVar(type, len, stringMaxLen)
+    local result = makeVar(type)
+    if isArrayType(type) then
+        local val = newArrayVal(type & 0xF, len, stringMaxLen)
+        result(val)
+    end
+    return result
 end
 
 function Runtime:addModule(path, procTable, opxTable)
