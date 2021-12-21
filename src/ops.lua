@@ -1929,6 +1929,9 @@ function dItem(stack, runtime) -- 0xED
             local text = stack:pop()
             table.insert(dialog.buttons, 1, { key = key, text = text })
         end
+    elseif itemType == dItemTypes.dPOSITION then
+        -- We don't do anything with this yet, just keep the stack balanced
+        dialog.xpos, dialog.ypos = stack:popXY()
     else
         error("Unsupported dItem type "..itemType)
     end
