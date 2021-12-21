@@ -26,7 +26,7 @@ class ProgramViewController: UIViewController {
 
     var program: Program
 
-    var drawableHandle = (2...).makeIterator()
+    var drawableHandle = (1...).makeIterator()
     var drawables: [Int: Drawable] = [:]
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
@@ -41,13 +41,14 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var canvasView: CanvasView = {
-        let canvas = CanvasView(id: 1, size: screenSize.cgSize())
-        canvas.translatesAutoresizingMaskIntoConstraints = false
-        canvas.layer.borderWidth = 1.0
-        canvas.layer.borderColor = UIColor.black.cgColor
-        canvas.clipsToBounds = true
-        drawables[1] = canvas // 1 is always the main window
-        return canvas
+        let canvas = Canvas(id: drawableHandle.next()!, size: screenSize.cgSize(), color: true)
+        let canvasView = CanvasView(canvas: canvas)
+        canvasView.translatesAutoresizingMaskIntoConstraints = false
+        canvasView.layer.borderWidth = 1.0
+        canvasView.layer.borderColor = UIColor.black.cgColor
+        canvasView.clipsToBounds = true
+        drawables[1] = canvasView // 1 is always the main window
+        return canvasView
     }()
 
     init(program: Program) {
@@ -299,7 +300,8 @@ extension ProgramViewController: ProgramDelegate {
             var h = 0
             DispatchQueue.main.async {
                 h = self.drawableHandle.next()!
-                let newView = CanvasView(id: h, size: rect.size.cgSize(), shadowSize: shadowSize)
+                let canvas = Canvas(id: h, size: rect.size.cgSize(), color: true)
+                let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
                 newView.isHidden = true // by default, will get a showWindow op if needed
                 newView.frame = rect.cgRect()
                 newView.delegate = self.program

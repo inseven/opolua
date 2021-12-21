@@ -41,8 +41,8 @@ class CanvasView : UIView, Drawable {
         fatalError("init(coder:) has not been implemented")
     }
 
-    init(id: Int, size: CGSize, shadowSize: Int = 0) {
-        canvas = Canvas(id: id, size: size, color: true)
+    init(canvas: Canvas, shadowSize: Int = 0) {
+        self.canvas = canvas
         super.init(frame: .zero)
         clipsToBounds = false
         isMultipleTouchEnabled = false
