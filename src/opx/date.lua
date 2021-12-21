@@ -55,9 +55,12 @@ fns = {
     [28] = "DTDayNoInWeek",
     [29] = "DTDaysInMonth",
     [30] = "DTSetHomeTime",
-    [31] = "DTFileTime",
-    [32] = "DTSetFileTime",
-    [33] = "DTIsLeapYear",
+    [31] = "LCCountryCode",
+    [32] = "LCDecimalSeparator",
+    [33] = "LCSetClockFormat",
+    [34] = "LCClockFormat",
+    [35] = "LCStartOfWeek",
+    [36] = "LCThousandsSeparator",
 }
 
 handles = {}
@@ -189,16 +192,28 @@ function DTSetHomeTime(stack, runtime) -- 30
     error("Unimplemented date.opx function DTSetHomeTime!")
 end
 
-function DTFileTime(stack, runtime) -- 31
-    error("Unimplemented date.opx function DTFileTime!")
+function LCCountryCode(stack, runtime) -- 31
+    stack:push(require("sis").Langs.EN)
 end
 
-function DTSetFileTime(stack, runtime) -- 32
-    error("Unimplemented date.opx function DTSetFileTime!")
+function LCDecimalSeparator(stack, runtime) -- 32
+    error("Unimplemented date.opx.function LCDecimalSeparator!")
 end
 
-function DTIsLeapYear(stack, runtime) -- 33
-    error("Unimplemented date.opx function DTIsLeapYear!")
+function LCSetClockFormat(stack, runtime) -- 33
+    error("Unimplemented date.opx.function LCSetClockFormat!")
+end
+
+function LCClockFormat(stack, runtime) -- 34
+    error("Unimplemented date.opx.function LCClockFormat!")
+end
+
+function LCStartOfWeek(stack, runtime) -- 35
+    error("Unimplemented date.opx.function LCStartOfWeek!")
+end
+
+function LCThousandsSeparator(stack, runtime) -- 36
+    error("Unimplemented date.opx.function LCThousandsSeparator!")
 end
 
 return _ENV
