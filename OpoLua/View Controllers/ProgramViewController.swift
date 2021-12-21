@@ -22,8 +22,6 @@ import UIKit
 
 class ProgramViewController: UIViewController {
 
-    let screenSize = Graphics.Size(width:640, height: 240)
-
     var program: Program
 
     var drawableHandle = (1...).makeIterator()
@@ -41,7 +39,7 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var canvasView: CanvasView = {
-        let canvas = Canvas(id: drawableHandle.next()!, size: screenSize.cgSize(), color: true)
+        let canvas = Canvas(id: drawableHandle.next()!, size: program.screenSize.cgSize(), color: true)
         let canvasView = CanvasView(canvas: canvas)
         canvasView.translatesAutoresizingMaskIntoConstraints = false
         canvasView.layer.borderWidth = 1.0
@@ -91,11 +89,11 @@ class ProgramViewController: UIViewController {
                                                             primaryAction: nil,
                                                             menu: menu)
 
+
         // Unfortunately there doesn't seem to be a great way to detect when the user dismisses the menu.
         // This implementation uses SPI to do just that by watching the notification center for presentation dismiss
         // notifications and ignores notifications for anything that isn't a menu.
-        let UIPresentationControllerDismissalTransitionDidEndNotification = NSNotification.Name(rawValue: "UIPresentationControllerDismissalTransitionDidEndNotification")
-        NotificationCenter.default.addObserver(forName: UIPresentationControllerDismissalTransitionDidEndNotification,
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.UIPresentationControllerDismissalTransitionDidEndNotification,
                                                object: nil,
                                                queue: .main) { notification in
             guard let UIContextMenuActionsOnlyViewController = NSClassFromString("_UIContextMenuActionsOnlyViewController"),
@@ -384,7 +382,7 @@ extension ProgramViewController: ProgramDelegate {
     }
 
     func getScreenSize() -> Graphics.Size {
-        return screenSize
+        return program.screenSize
     }
 
 }

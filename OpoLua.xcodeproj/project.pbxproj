@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
+		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
 		D8535A2A277139D900DFCE29 /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A29277139D900DFCE29 /* Tone.swift */; };
 		D861E8DB274A819D003C8D3D /* OPLObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DA274A819D003C8D3D /* OPLObject.swift */; };
@@ -161,6 +163,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
+		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
 		D8535A29277139D900DFCE29 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		D861E8DA274A819D003C8D3D /* OPLObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OPLObject.swift; sourceTree = "<group>"; };
@@ -291,6 +295,7 @@
 				D893EAD22760739500E64219 /* Border.swift */,
 				D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */,
 				D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */,
+				D84ADB152771D937001ABFB4 /* Device.swift */,
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
 				D86724F12771672A009C7246 /* InterpreterThread.swift */,
 				D8FE60022757106300711717 /* Location.swift */,
@@ -332,6 +337,7 @@
 				D89A607D2756A98200C9757F /* ViewController.swift */,
 				DBE91524276D25A900BDB8F5 /* UIKey.swift */,
 				DB0B918127710120006F5CD0 /* CGImage.swift */,
+				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -703,6 +709,7 @@
 				D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */,
 				D87A62742752A67500075CB8 /* CGSize.swift in Sources */,
 				D8535A28277139AB00DFCE29 /* Sound.swift in Sources */,
+				D84ADB162771D937001ABFB4 /* Device.swift in Sources */,
 				D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */,
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
 				DB79000F2742E6F6005E904F /* lstate.c in Sources */,
@@ -718,6 +725,7 @@
 				D8FE60092757208000711717 /* ApplicationError.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
 				DB7900162742E6F6005E904F /* lutf8lib.c in Sources */,
+				D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */,
 				DB7900172742E6F6005E904F /* lvm.c in Sources */,
 				D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */,
 				DB5AC974275681510043FE5C /* CanvasView.swift in Sources */,

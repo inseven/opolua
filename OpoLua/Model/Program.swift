@@ -47,6 +47,7 @@ class Program {
 
     private let object: OPLObject
     private let procedureName: String?
+    private let device: Device
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     private let scheduler = Scheduler()
@@ -63,9 +64,14 @@ class Program {
         }
     }
 
-    init(object: OPLObject, procedureName: String? = nil) {
+    var screenSize: Graphics.Size {
+        return device.screenSize
+    }
+
+    init(object: OPLObject, procedureName: String? = nil, device: Device = .series5) {
         self.object = object
         self.procedureName = procedureName
+        self.device = device
         self.thread = InterpreterThread(object: object, procedureName: procedureName)
         self.thread.delegate = self
         self.thread.handler = self
