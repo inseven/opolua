@@ -874,7 +874,18 @@ function ErrStr(stack, runtime) -- 0xC4
 end
 
 function FixStr(stack, runtime) -- 0xC5
-    error("Unimplemented function FixStr!")
+    local width = stack:pop()
+    local decimals = stack:pop()
+    local val = stack:pop()
+    local result = string.format("%0."..decimals.."f", val)
+    if width < 0 then
+        width = -width
+        result = string.rep(" ", width - #result)..result
+    end
+    if #result > width then
+        result = string.rep("*", width)
+    end
+    stack:push(result)
 end
 
 function GenStr(stack, runtime) -- 0xC6
