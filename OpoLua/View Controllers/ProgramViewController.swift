@@ -25,8 +25,8 @@ class ProgramViewController: UIViewController {
     let screenSize = Graphics.Size(width:640, height: 240)
 
     var program: Program
-    
-    var nextHandle: Int
+
+    var drawableHandle = (2...).makeIterator()
     var drawables: [Int: Drawable] = [:]
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
@@ -52,7 +52,6 @@ class ProgramViewController: UIViewController {
 
     init(program: Program) {
         self.program = program
-        self.nextHandle = 2
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
@@ -289,10 +288,9 @@ extension ProgramViewController: ProgramDelegate {
         case .createBitmap(let size):
             var h = 0
             DispatchQueue.main.async {
-                h = self.nextHandle
-                self.nextHandle += 1
+                h = self.drawableHandle.next()!
                 let color = false // Hardcoded, for the moment
-                self.drawables[h] = Canvas(size: size.cgSize(), color: color)
+                self.drawables[h] = Canvas(id: h, size: size.cgSize(), color: color)
                 semaphore.signal()
             }
             semaphore.wait()
@@ -300,8 +298,7 @@ extension ProgramViewController: ProgramDelegate {
         case .createWindow(let rect, let shadowSize):
             var h = 0
             DispatchQueue.main.async {
-                h = self.nextHandle
-                self.nextHandle += 1
+                h = self.drawableHandle.next()!
                 let newView = CanvasView(id: h, size: rect.size.cgSize(), shadowSize: shadowSize)
                 newView.isHidden = true // by default, will get a showWindow op if needed
                 newView.frame = rect.cgRect()

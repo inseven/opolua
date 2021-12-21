@@ -30,7 +30,10 @@ protocol CanvasViewDelegate: AnyObject {
 
 class CanvasView : UIView, Drawable {
 
-    var id: Int
+    var id: Int {
+        return canvas.id
+    }
+
     var canvas: Canvas
     weak var delegate: CanvasViewDelegate?
 
@@ -39,8 +42,7 @@ class CanvasView : UIView, Drawable {
     }
 
     init(id: Int, size: CGSize, shadowSize: Int = 0) {
-        self.id = id
-        canvas = Canvas(size: size, color: true)
+        canvas = Canvas(id: id, size: size, color: true)
         super.init(frame: .zero)
         clipsToBounds = false
         isMultipleTouchEnabled = false
@@ -104,7 +106,7 @@ class CanvasView : UIView, Drawable {
 
     func resize(to newSize: CGSize) {
         let oldCanvas = self.canvas
-        self.canvas = Canvas(size: newSize, color: true)
+        self.canvas = Canvas(id: id, size: newSize, color: true)
         if let img = oldCanvas.getImage() {
             let src = Graphics.CopySource(displayId: 0, rect: Graphics.Rect(x: 0, y: 0, width: img.width, height: img.height), extra: oldCanvas)
             let dontCare = Graphics.Color(r: 0, g: 0, b: 0)
