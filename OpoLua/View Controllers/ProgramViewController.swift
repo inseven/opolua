@@ -37,14 +37,8 @@ class ProgramViewController: UIViewController {
     var nextHandle: Int
     var drawables: [Int: Drawable] = [:]
 
-    let eventQueue = ConcurrentQueue<Async.ResponseValue>()
-    let scheduler = Scheduler()
-
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
-
-    let tasks = ConcurrentQueue<Task>()
-    let taskQueue = DispatchQueue(label: "ProgramViewController.taskQueue")
     
     lazy var textView: UITextView = {
         let textView = UITextView()
@@ -87,35 +81,11 @@ class ProgramViewController: UIViewController {
 
         ])
 
-        scheduler.addHandler(.getevent) { request in
-            // TODO: Cancellation isn't working right now.
-            let value = self.eventQueue.takeFirst()
-            // TODO: This whole service API is now somewhat janky as we know that it's there.
-            self.scheduler.serviceRequest(type: request.type) { request in
-                return Async.Response(requestHandle: request.requestHandle, value: value)
-            }
-        }
-        scheduler.addHandler(.playsound) { request in
-            print("PLAY SOUND!")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.scheduler.serviceRequest(type: request.type) { request in
-                    return Async.Response(requestHandle: request.requestHandle, value: .completed)
-                }
-            }
-        }
-        scheduler.addHandler(.sleep) { request in
-            DispatchQueue.main.asyncAfter(deadline: .now() + (Double(request.intVal!) / 1000.0)) {
-                self.scheduler.serviceRequest(type: request.type) { request in
-                    return Async.Response(requestHandle: request.requestHandle, value: .completed)
-                }
-            }
-        }
-
         let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
         
         let items = UIDeferredMenuElement.uncached { completion in
             menuQueue.async {
-                self.eventQueue.sendMenu()
+                self.program.sendMenu()
                 let disabled = UIAction(title: "None", attributes: .disabled) { _ in }
                 let items = self.menu.tryTake(until: Date().addingTimeInterval(0.1)) ?? [disabled]
                 DispatchQueue.main.async {
@@ -147,21 +117,7 @@ class ProgramViewController: UIViewController {
             }
         }
 
-        canvasView.delegate = eventQueue
-
-        taskQueue.async {
-            // TODO: Have a way of terminating these queues?
-            repeat {
-                let task = self.tasks.takeFirst()
-                switch task {
-                case .asyncRequest(let request):
-                    // print("Schedule Request")
-                    self.scheduler.scheduleRequest(request)
-                case .cancelRequest(let requestHandle):
-                    self.scheduler.cancelRequest(requestHandle)
-                }
-            } while true
-        }
+        canvasView.delegate = program
     }
 
     required init?(coder: NSCoder) {
@@ -184,7 +140,7 @@ class ProgramViewController: UIViewController {
                 // The could be no legitimate keydownCode if we're inputting say
                 // a tilde which is not on a key that the Psion 5 keyboard has
                 if let code = keydownCode {
-                    eventQueue.append(.keydownevent(.init(timestamp: timestamp, keycode: code, modifiers: modifiers)))
+                    program.sendEvent(.keydownevent(.init(timestamp: timestamp, keycode: code, modifiers: modifiers)))
                 } else {
                     print("No keydown code for \(key)")
                 }
@@ -192,7 +148,7 @@ class ProgramViewController: UIViewController {
                 if let code = keypressCode, code.toCharcode() != nil {
                     let event = Async.KeyPressEvent(timestamp: timestamp, keycode: code, modifiers: modifiers, isRepeat: false)
                     if event.modifiedKeycode() != nil {
-                        eventQueue.append(.keypressevent(event))
+                        program.sendEvent(.keypressevent(event))
                     }
                 } else {
                     print("No keypress code for \(key)")
@@ -208,7 +164,7 @@ class ProgramViewController: UIViewController {
                 if let oplKey = oplKey {
                     let timestamp = Int(press.timestamp)
                     let modifiers = key.oplModifiers()
-                    eventQueue.append(.keyupevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers)))
+                    program.sendEvent(.keyupevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers)))
                 }
             }
         }
@@ -357,7 +313,7 @@ extension ProgramViewController: ProgramDelegate {
                 let newView = CanvasView(id: h, size: rect.size.cgSize(), shadowSize: shadowSize)
                 newView.isHidden = true // by default, will get a showWindow op if needed
                 newView.frame = rect.cgRect()
-                newView.delegate = self.eventQueue
+                newView.delegate = self.program
                 self.canvasView.addSubview(newView)
                 self.drawables[h] = newView
                 semaphore.signal()
@@ -440,26 +396,6 @@ extension ProgramViewController: ProgramDelegate {
         return screenSize
     }
 
-    func asyncRequest(_ request: Async.Request) {
-        tasks.append(.asyncRequest(request))
-    }
-
-    func cancelRequest(_ requestHandle: Int32) {
-        scheduler.cancelRequest(requestHandle)
-    }
-
-    func waitForAnyRequest() -> Async.Response {
-        return scheduler.waitForAnyRequest()
-    }
-
-    func anyRequest() -> Async.Response? {
-        return scheduler.anyRequest()
-    }
-
-    func testEvent() -> Bool {
-        return !eventQueue.isEmpty()
-    }
-
     func key() -> OplKeyCode? {
         // TODO return non-nil (and remove the event from the queue) if there's
         // any KeyPressEvent in the queue
@@ -467,52 +403,6 @@ extension ProgramViewController: ProgramDelegate {
     }
 
 }
-
-extension ConcurrentQueue: CanvasViewDelegate where T == Async.ResponseValue {
-
-    private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
-        let location = touch.location(in: view)
-        let screenLocation = touch.location(in: view.superview)
-        append(.penevent(.init(timestamp: Int(event.timestamp),
-                               windowId: view.id,
-                               type: type,
-                               modifiers: 0,
-                               x: Int(location.x),
-                               y: Int(location.y),
-                               screenx: Int(screenLocation.x),
-                               screeny: Int(screenLocation.y))))
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .down)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .drag)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .up)
-    }
-
-}
-
-extension ConcurrentQueue where T == Async.ResponseValue {
-
-    func sendKeyPress(_ key: OplKeyCode) {
-        let timestamp = Int(NSDate().timeIntervalSince1970)
-        let modifiers = Modifiers()
-        append(.keydownevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
-        append(.keypressevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers, isRepeat: false)))
-        append(.keyupevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
-    }
-
-    func sendMenu() {
-        sendKeyPress(.menu)
-    }
-
-}
-
 
 extension Menu.Bar {
 

@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import Foundation
+import UIKit
 
 protocol ProgramDelegate: AnyObject {
 
@@ -34,11 +34,6 @@ protocol ProgramDelegate: AnyObject {
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
     func getScreenSize() -> Graphics.Size
-    func asyncRequest(_ request: Async.Request)
-    func cancelRequest( _ requestHandle: Int32)
-    func waitForAnyRequest() -> Async.Response
-    func anyRequest() -> Async.Response?
-    func testEvent() -> Bool
     func key() -> OplKeyCode?
 
 }
@@ -51,11 +46,15 @@ class Program {
         case finished
     }
 
-    var object: OPLObject
-    var procedureName: String?
-    let thread: InterpreterThread
+    private let object: OPLObject
+    private let procedureName: String?
+    private let thread: InterpreterThread
+    private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
+    private let scheduler = Scheduler()
+    private let tasks = ConcurrentQueue<Task>()
+    private let taskQueue = DispatchQueue(label: "Program.taskQueue")  // TODO: Replace this with an operation queue
 
-    var state: State = .idle
+    private var state: State = .idle
 
     weak var delegate: ProgramDelegate?
 
@@ -73,6 +72,44 @@ class Program {
         self.thread = InterpreterThread(object: object, procedureName: procedureName)
         self.thread.delegate = self
         self.thread.handler = self
+
+        scheduler.addHandler(.getevent) { request in
+            // TODO: Cancellation isn't working right now.
+            let value = self.eventQueue.takeFirst()
+            // TODO: This whole service API is now somewhat janky as we know that it's there.
+            self.scheduler.serviceRequest(type: request.type) { request in
+                return Async.Response(requestHandle: request.requestHandle, value: value)
+            }
+        }
+        scheduler.addHandler(.playsound) { request in
+            print("PLAY SOUND!")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.scheduler.serviceRequest(type: request.type) { request in
+                    return Async.Response(requestHandle: request.requestHandle, value: .completed)
+                }
+            }
+        }
+        scheduler.addHandler(.sleep) { request in
+            DispatchQueue.main.asyncAfter(deadline: .now() + (Double(request.intVal!) / 1000.0)) {
+                self.scheduler.serviceRequest(type: request.type) { request in
+                    return Async.Response(requestHandle: request.requestHandle, value: .completed)
+                }
+            }
+        }
+        taskQueue.async {
+            repeat {
+                let task = self.tasks.takeFirst()
+                switch task {
+                case .asyncRequest(let request):
+                    // print("Schedule Request")
+                    self.scheduler.scheduleRequest(request)
+                case .cancelRequest(let requestHandle):
+                    self.scheduler.cancelRequest(requestHandle)
+                }
+            } while true
+        }
+
+
     }
 
     func start() {
@@ -83,7 +120,23 @@ class Program {
         thread.start()
     }
 
-    func findCorrectCase(in path: URL, for uncasedName: String) -> String {
+    func sendMenu() {
+        sendKeyPress(.menu)
+    }
+
+    func sendKeyPress(_ key: OplKeyCode) {
+        let timestamp = Int(NSDate().timeIntervalSince1970)
+        let modifiers = Modifiers()
+        sendEvent(.keydownevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
+        sendEvent(.keypressevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers, isRepeat: false)))
+        sendEvent(.keyupevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
+    }
+
+    func sendEvent(_ event: Async.ResponseValue) {
+        eventQueue.append(event)
+    }
+
+    private func findCorrectCase(in path: URL, for uncasedName: String) -> String {
         guard let contents = try? FileManager.default.contentsOfDirectory(at: path, includingPropertiesForKeys: []) else {
             return uncasedName
         }
@@ -97,7 +150,7 @@ class Program {
         return uncasedName
     }
 
-    func mapToNative(path: String) -> URL? {
+    private func mapToNative(path: String) -> URL? {
         // For now assume if we're running foo.opo then we're running it from a simulated
         // C:\System\Apps\Foo\ path and make everything in the foo.opo dir available
         // under that path.
@@ -216,28 +269,56 @@ extension Program: OpoIoHandler {
     }
 
     func asyncRequest(_ request: Async.Request) {
-        delegate!.asyncRequest(request)
+        tasks.append(.asyncRequest(request))
     }
 
     func cancelRequest(_ requestHandle: Int32) {
-        delegate!.cancelRequest(requestHandle)
+        scheduler.cancelRequest(requestHandle)
     }
 
     func waitForAnyRequest() -> Async.Response {
-        return delegate!.waitForAnyRequest()
+        return scheduler.waitForAnyRequest()
     }
 
     func anyRequest() -> Async.Response? {
-        return delegate!.anyRequest()
+        return scheduler.anyRequest()
     }
 
     func testEvent() -> Bool {
-        return delegate!.testEvent()
+        return !eventQueue.isEmpty()
     }
 
     func key() -> OplKeyCode? {
         return delegate!.key()
     }
 
+}
+
+extension Program: CanvasViewDelegate {
+
+    private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
+        let location = touch.location(in: view)
+        let screenLocation = touch.location(in: view.superview)
+        sendEvent(.penevent(.init(timestamp: Int(event.timestamp),
+                                  windowId: view.id,
+                                  type: type,
+                                  modifiers: 0,
+                                  x: Int(location.x),
+                                  y: Int(location.y),
+                                  screenx: Int(screenLocation.x),
+                                  screeny: Int(screenLocation.y))))
+    }
+
+    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
+        handleTouch(touch, in: canvasView, with: event, type: .down)
+    }
+
+    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
+        handleTouch(touch, in: canvasView, with: event, type: .drag)
+    }
+
+    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
+        handleTouch(touch, in: canvasView, with: event, type: .up)
+    }
 
 }
