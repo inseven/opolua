@@ -381,10 +381,6 @@ extension ProgramViewController: ProgramDelegate {
         }
     }
 
-    func getScreenSize() -> Graphics.Size {
-        return program.screenSize
-    }
-
 }
 
 extension Menu.Bar {

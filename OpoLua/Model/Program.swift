@@ -33,7 +33,6 @@ protocol ProgramDelegate: AnyObject {
     func menu(_ m: Menu.Bar) -> Menu.Result
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
-    func getScreenSize() -> Graphics.Size
 
 }
 
@@ -206,7 +205,7 @@ extension Program: OpoIoHandler {
     }
 
     func getScreenSize() -> Graphics.Size {
-        return delegate!.getScreenSize()
+        return device.screenSize
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
