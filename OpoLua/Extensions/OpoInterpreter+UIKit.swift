@@ -23,7 +23,7 @@ import UIKit
 extension OpoInterpreter.AppInfo {
 
     var appIcon: UIImage? {
-        guard let icon = icons.first(where: { $0.size == .icon }) else {
+        guard let icon = icons.first(where: { $0.bitmap.size == .icon }) else {
             return nil
         }
         return UIImage(cgImage: icon.cgImage)

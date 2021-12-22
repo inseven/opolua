@@ -176,12 +176,20 @@ struct Graphics {
         let b: UInt8
     }
 
-    struct PixelData {
+    struct Bitmap {
         let size: Size
         let bpp: Int
         let stride: Int
         let data: Data
         // TODO colour depth and/or palette info also needed, in due course
+
+        var width: Int { return size.width }
+        var height: Int { return size.height }
+    }
+
+    struct MaskedBitmap {
+        let bitmap: Bitmap
+        let mask: Bitmap?
     }
 
     struct CopySource {
@@ -269,7 +277,7 @@ struct Graphics {
             case ellipse(Int, Int, Bool) // hRadius, vRadius, fill
             case line(Point)
             case box(Size)
-            case bitblt(PixelData)
+            case bitblt(Bitmap)
             case copy(CopySource, CopySource?) // second arg is optional mask
             case scroll(Int, Int, Rect) // dx, dy, rect
             case text(String, FontInfo, TextMode)

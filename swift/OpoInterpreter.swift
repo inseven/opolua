@@ -288,7 +288,7 @@ private func draw(_ L: LuaState!) -> Int32 {
                let stride = L.toint(-1, key: "bmpStride"),
                let data = L.todata(-1, key: "bmpData") {
                 let size = Graphics.Size(width: width, height: height)
-                let info = Graphics.PixelData(size: size, bpp: bpp, stride: stride, data: data)
+                let info = Graphics.Bitmap(size: size, bpp: bpp, stride: stride, data: data)
                 optype = .bitblt(info)
             } else {
                 print("Missing params in bitblt!")
@@ -808,7 +808,7 @@ class OpoInterpreter {
 
     struct AppInfo {
         let caption: String
-        let icons: [Graphics.PixelData]
+        let icons: [Graphics.MaskedBitmap]
     }
 
     func getAppInfo(aifPath: String) -> AppInfo? {
@@ -833,16 +833,25 @@ class OpoInterpreter {
         L.pop(2) // EN caption, captions
 
         lua_getfield(L, -1, "icons")
-        var icons: [Graphics.PixelData] = []
-        for _ in L.ipairs(-1, requiredType: .table) {
+        var icons: [Graphics.MaskedBitmap] = []
+        func getBitmap() -> Graphics.Bitmap? {
             if let width = L.toint(-1, key: "width"),
                let height = L.toint(-1, key: "height"),
                let bpp = L.toint(-1, key: "bpp"),
                let stride = L.toint(-1, key: "stride"),
                let data = L.todata(-1, key: "imgData") {
                 let size = Graphics.Size(width: width, height: height)
-                let info = Graphics.PixelData(size: size, bpp: bpp, stride: stride, data: data)
-                icons.append(info)
+                return Graphics.Bitmap(size: size, bpp: bpp, stride: stride, data: data)
+            }
+            return nil
+        }
+        for _ in L.ipairs(-1, requiredType: .table) {
+            if let bmp = getBitmap() {
+                // There should always be a mask
+                lua_getfield(L, -1, "mask")
+                let mask = getBitmap()
+                L.pop()
+                icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
             }
         }
         return AppInfo(caption: caption, icons: icons)

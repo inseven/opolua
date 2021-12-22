@@ -77,7 +77,7 @@ extension CGContext {
             strokePath()
         case .bitblt(let pxInfo):
             if pxInfo.bpp == 2 || pxInfo.bpp == 4 {
-                let cgImg = CGImage.from(pixelData: pxInfo)
+                let cgImg = CGImage.from(bitmap: pxInfo)
                 drawUnflippedImage(cgImg, in: CGRect(origin: operation.origin.cgPoint(), size: pxInfo.size.cgSize()))
             } else {
                 print("Unhandled bpp \(pxInfo.bpp) in bitblt operation!")

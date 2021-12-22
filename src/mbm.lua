@@ -58,6 +58,7 @@ function parseBitmap(data, headerOffset)
         compression = compression,
         imgStart = headerOffset + headerLen,
         imgLen = len - headerLen,
+        len = len,
     }
 end
 
