@@ -37,6 +37,7 @@ class Console {
     }
 
     func append(_ line: String) {
+        dispatchPrecondition(condition: .onQueue(.main))
         _lines.append(line)
         delegate?.console(self, didAppendLine: line)
     }

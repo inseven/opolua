@@ -159,21 +159,37 @@ struct Graphics {
     struct Point {
         let x: Int
         let y: Int
+
+        static let zero = Self(x: 0, y: 0)
     }
 
     struct Rect {
+
         let origin: Point
         let size: Size
         var minX: Int { return origin.x }
         var minY: Int { return origin.y }
         var width: Int { return size.width }
         var height: Int { return size.height }
+
+        init(origin: Point, size: Size) {
+            self.origin = origin
+            self.size = size
+        }
+
+        init(x: Int, y: Int, width: Int, height: Int) {
+            self.init(origin: .init(x: x, y: y), size: .init(width: width, height: height))
+        }
     }
 
     struct Color {
+        
         let r: UInt8
         let g: UInt8
         let b: UInt8
+
+        static let black = Self(r: 0, g: 0, b: 0)
+        static let white = Self(r: 255, g: 255, b: 255)
     }
 
     struct Bitmap {
@@ -308,12 +324,6 @@ struct Graphics {
         case nothing
         case handle(Int)
         case sizeAndAscent(Size, Int)
-    }
-}
-
-extension Graphics.Rect {
-    init(x: Int, y: Int, width: Int, height: Int) {
-        self.init(origin: Graphics.Point(x: x, y: y), size: Graphics.Size(width: width, height: height))
     }
 }
 

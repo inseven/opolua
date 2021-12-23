@@ -22,19 +22,25 @@ import UIKit
 
 class ProgramViewController: UIViewController {
 
+    struct TextDetails {
+        let size: Graphics.Size
+        let ascent: Int
+    }
+
     var program: Program
 
     var drawableHandle = (1...).makeIterator()
     var drawables: [Int: Drawable] = [:]
+    var infoDrawableHandle: Int?
+    var infoWindowDismissTimer: Timer?
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
 
     let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
-    
 
     lazy var canvasView: CanvasView = {
-        let canvas = Canvas(id: drawableHandle.next()!, size: program.screenSize.cgSize(), color: true)
+        let canvas = newCanvas(size: program.screenSize.cgSize(), color: true)
         let canvasView = CanvasView(canvas: canvas)
         canvasView.translatesAutoresizingMaskIntoConstraints = false
         canvasView.layer.borderWidth = 1.0
@@ -132,6 +138,180 @@ class ProgramViewController: UIViewController {
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
         present(navigationController, animated: true)
+    }
+
+    private func newCanvas(size: CGSize, color: Bool) -> Canvas {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let canvas = Canvas(id: drawableHandle.next()!, size: size, color: color)
+        return canvas
+    }
+
+    func createBitmap(size: Graphics.Size) -> Canvas {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let canvas = newCanvas(size: size.cgSize(), color: false)
+        drawables[canvas.id] = canvas
+        return canvas
+    }
+    /**
+     N.B. Windows are hidden by default.
+     */
+    func createWindow(rect: Graphics.Rect, shadowSize: Int) -> Canvas {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let canvas = self.newCanvas(size: rect.size.cgSize(), color: true)
+        let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
+        newView.isHidden = true
+        newView.frame = rect.cgRect()
+        newView.delegate = self.program
+        self.canvasView.addSubview(newView)
+        self.drawables[canvas.id] = newView
+        bringInfoWindowToFront()
+        return canvas
+    }
+
+    func setVisiblity(handle: Int, visible: Bool) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard let view = self.drawables[handle] as? CanvasView else {
+            print("No CanvasView for showWindow operation")
+            return
+        }
+        view.isHidden = !visible
+    }
+
+    /**
+     N.B. In OPL terms position=1 means the front, whereas subviews[1] is at the back.
+     */
+    func order(displayId: Int, position: Int) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard let view = self.drawables[displayId] as? CanvasView else {
+            return
+        }
+        let views = self.canvasView.subviews
+        let uipos = views.count - position
+        if views.count == 0 || uipos < 0 {
+            self.canvasView.sendSubviewToBack(view)
+        } else {
+            self.canvasView.insertSubview(view, aboveSubview: views[uipos])
+        }
+        bringInfoWindowToFront()
+    }
+
+
+    func close(displayId: Int) {
+        guard let view = self.drawables[displayId] as? CanvasView else {
+            return
+        }
+        view.removeFromSuperview()
+        self.drawables[displayId] = nil
+    }
+
+    func bringInfoWindowToFront() {
+        guard let infoDrawableHandle = infoDrawableHandle,
+              let infoView = self.drawables[infoDrawableHandle] as? CanvasView
+        else {
+            return
+        }
+        self.canvasView.bringSubviewToFront(infoView)
+    }
+
+    @objc func closeInfoWindow() {
+        guard let infoDrawableHandle = infoDrawableHandle else {
+            return
+        }
+        close(displayId: infoDrawableHandle)
+        self.infoDrawableHandle = nil
+        infoWindowDismissTimer?.invalidate()
+    }
+
+    func infoPrint(text: String, corner: Graphics.Corner) {
+        closeInfoWindow()
+        guard !text.isEmpty else {
+            return
+        }
+        let fontInfo = Graphics.FontInfo(face: .arial, size: 15, flags: .init()) // TODO: Empty flags?
+        let details = Self.textSize(string: text, fontInfo: fontInfo)
+        let canvas = self.createWindow(rect: .init(origin: .zero, size: details.size), shadowSize: 0)
+        canvas.draw(.init(displayId: canvas.id,
+                          type: .fill(details.size),
+                          mode: .set,
+                          origin: .zero,
+                          color: .black,
+                          bgcolor: .black))
+        canvas.draw(.init(displayId: canvas.id,
+                          type: .text(text, fontInfo, .set),
+                          mode: .set,
+                          origin: .init(x: 0, y: details.size.height),
+                          color: .white,
+                          bgcolor: .white))
+        self.setVisiblity(handle: canvas.id, visible: true)
+        infoDrawableHandle = canvas.id
+
+        infoWindowDismissTimer = Timer.scheduledTimer(timeInterval: 2.0,
+                                                      target: self,
+                                                      selector: #selector(closeInfoWindow),
+                                                      userInfo: nil,
+                                                      repeats: false)
+    }
+
+    func performGraphicsOperation(_ operation: Graphics.Operation) -> Graphics.Result {
+        dispatchPrecondition(condition: .onQueue(.main))
+        switch (operation) {
+
+        case .createBitmap(let size):
+            let canvas = createBitmap(size: size)
+            return .handle(canvas.id)
+
+        case .createWindow(let rect, let shadowSize):
+            let canvas = createWindow(rect: rect, shadowSize: shadowSize)
+            return .handle(canvas.id)
+
+        case .close(let displayId):
+            close(displayId: displayId)
+            return .nothing
+
+        case .order(let displayId, let position):
+            order(displayId: displayId, position: position)
+            return .nothing
+
+        case .show(let displayId, let flag):
+            setVisiblity(handle: displayId, visible: flag)
+            return .nothing
+
+        case .textSize(let string, let fontInfo):
+            let details = Self.textSize(string: string, fontInfo: fontInfo)
+            return .sizeAndAscent(details.size, details.ascent)
+
+        case .busy(let text, let corner, _):
+            // TODO: Implement BUSY
+            infoPrint(text: text, corner: corner)
+            return .nothing
+
+        case .giprint(let text, let corner):
+            infoPrint(text: text, corner: corner)
+            return .nothing
+
+        case .setwin(let displayId, let pos, let size):
+            if let view = self.drawables[displayId] as? CanvasView {
+                if let size = size {
+                    view.resize(to: size.cgSize())
+                }
+                view.frame = CGRect(origin: pos.cgPoint(), size: view.frame.size)
+            } else {
+                print("No CanvasView for setwin operation")
+            }
+            return .nothing
+
+        }
+    }
+
+    static func textSize(string: String, fontInfo: Graphics.FontInfo) -> TextDetails {
+        let font = fontInfo.toUiFont()
+        let attribStr = NSAttributedString(string: string, attributes: [.font: font])
+        let sz = attribStr.size()
+        // This is not really the right definition for ascent but it seems to work for where epoc expects
+        // the text to be, so...
+        let ascent = Int(ceil(sz.height) + font.descender)
+        return TextDetails(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
+                           ascent: ascent)
     }
 
     override var canBecomeFirstResponder: Bool {
@@ -259,8 +439,7 @@ extension ProgramViewController: ProgramDelegate {
     }
 
     func draw(operations: [Graphics.DrawCommand]) {
-        let semaphore = DispatchSemaphore(value: 0)
-        DispatchQueue.main.async {
+        DispatchQueue.main.sync {
             for op in operations {
                 guard let drawable = self.drawables[op.displayId] else {
                     print("No drawable for displayid \(op.displayId)!")
@@ -290,108 +469,15 @@ extension ProgramViewController: ProgramDelegate {
                 }
 
             }
-
-            semaphore.signal()
         }
-        semaphore.wait()
     }
 
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
-        let semaphore = DispatchSemaphore(value: 0)
-        switch (operation) {
-        case .createBitmap(let size):
-            var h = 0
-            DispatchQueue.main.async {
-                h = self.drawableHandle.next()!
-                let color = false // Hardcoded, for the moment
-                self.drawables[h] = Canvas(id: h, size: size.cgSize(), color: color)
-                semaphore.signal()
-            }
-            semaphore.wait()
-            return .handle(h)
-        case .createWindow(let rect, let shadowSize):
-            var h = 0
-            DispatchQueue.main.async {
-                h = self.drawableHandle.next()!
-                let canvas = Canvas(id: h, size: rect.size.cgSize(), color: true)
-                let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
-                newView.isHidden = true // by default, will get a showWindow op if needed
-                newView.frame = rect.cgRect()
-                newView.delegate = self.program
-                self.canvasView.addSubview(newView)
-                self.drawables[h] = newView
-                semaphore.signal()
-            }
-            semaphore.wait()
-            return .handle(h)
-        case .close(let displayId):
-            DispatchQueue.main.async {
-                if let view = self.drawables[displayId] as? CanvasView {
-                    view.removeFromSuperview()
-                }
-                self.drawables[displayId] = nil
-                semaphore.signal()
-            }
-            semaphore.wait()
-            return .nothing
-        case .order(let displayId, let position):
-            DispatchQueue.main.async {
-                if let view = self.drawables[displayId] as? CanvasView {
-                    // In OPL terms position=1 means the front, whereas subviews[1] is at the back
-                    let views = self.canvasView.subviews
-                    let uipos = views.count - position
-                    if views.count == 0 || uipos < 0 {
-                        self.canvasView.sendSubviewToBack(view)
-                    } else {
-                        self.canvasView.insertSubview(view, aboveSubview: views[uipos])
-                    }
-                }
-                semaphore.signal()
-            }
-            semaphore.wait()
-            return .nothing
-        case .show(let displayId, let flag):
-            DispatchQueue.main.async {
-                if let view = self.drawables[displayId] as? CanvasView {
-                    view.isHidden = !flag
-                } else {
-                    print("No CanvasView for showWindow operation")
-                }
-                semaphore.signal()
-            }
-            semaphore.wait()
-            return .nothing
-        case .textSize(let string, let fontInfo):
-            let font = fontInfo.toUiFont()
-            let attribStr = NSAttributedString(string: string, attributes: [.font: font])
-            let sz = attribStr.size()
-            // This is not really the right definition for ascent but it seems to work for where epoc expects
-            // the text to be, so...
-            let ascent = Int(ceil(sz.height) + font.descender)
-            return .sizeAndAscent(Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))), ascent)
-        case .busy(let text, _, _ /*let corner, let delay*/):
-            // TODO: Implement BUSY
-            program.console.append("BUSY '\(text)'")
-            return .nothing
-        case .giprint(let text, let corner):
-            // TODO: Implement gIPRINT
-            program.console.append("gIPRINT '\(text)', \(corner)")
-            return .nothing
-        case .setwin(let displayId, let pos, let size):
-            DispatchQueue.main.async {
-                if let view = self.drawables[displayId] as? CanvasView {
-                    if let size = size {
-                        view.resize(to: size.cgSize())
-                    }
-                    view.frame = CGRect(origin: pos.cgPoint(), size: view.frame.size)
-                } else {
-                    print("No CanvasView for setwin operation")
-                }
-                semaphore.signal()
-            }
-            semaphore.wait()
-            return .nothing
+        var result: Graphics.Result!
+        DispatchQueue.main.sync {
+            result = performGraphicsOperation(operation)
         }
+        return result
     }
 
 }

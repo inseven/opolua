@@ -109,7 +109,9 @@ class Scheduler {
         defer {
             lock.unlock()
         }
-        let request = requests[requestHandle]!
+        guard let request = requests[requestHandle] else {
+            return
+        }
         request.cancel()
     }
 
