@@ -237,7 +237,7 @@ class ProgramViewController: UIViewController {
                           color: .black,
                           bgcolor: .black))
         canvas.draw(.init(displayId: canvas.id,
-                          type: .text(text, fontInfo, .set),
+                          type: .text(text, fontInfo),
                           mode: .set,
                           origin: .init(x: 0, y: details.size.height),
                           color: .white,
