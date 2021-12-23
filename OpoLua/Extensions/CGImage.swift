@@ -26,7 +26,7 @@ private func scale2bpp(_ val: UInt8) -> UInt8 {
 }
 
 extension CGImage {
-    static func from(bitmap: Graphics.Bitmap) -> CGImage {
+    static func from(bitmap: Graphics.Bitmap) throws -> CGImage {
         if bitmap.bpp == 2 || bitmap.bpp == 4 {
             // CoreGraphics doesn't seem to like <8bpp, so expand it
             // (It renders it, it just makes a mess)
@@ -58,7 +58,7 @@ extension CGImage {
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
         } else {
-            fatalError("Unsupported bpp \(bitmap.bpp)")
+            throw OpoLuaError.unsupportedBitmapDepth(bitmap.bpp)
         }
     }
 }

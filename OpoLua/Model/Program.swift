@@ -26,7 +26,6 @@ protocol ProgramDelegate: AnyObject {
     func program(_ program: Program, didEncounterError error: Error)
 
     // TODO: These are directly copied from OpoIoHandler and should be thinned over time.
-    func printValue(_ val: String) -> Void
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
     func alert(lines: [String], buttons: [String]) -> Int
     func dialog(_ d: Dialog) -> Dialog.Result
@@ -54,6 +53,8 @@ class Program {
     private var state: State = .idle
 
     weak var delegate: ProgramDelegate?
+
+    var console = Console()
 
     var name: String {
         if let procedureName = procedureName {
@@ -157,8 +158,13 @@ class Program {
 extension Program: InterpreterThreadDelegate {
 
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result) {
-        // TODO: Should this be a dispatch?
         DispatchQueue.main.async {
+            switch result {
+            case .none:
+                self.console.append("\n---Completed---")
+            case .error(let err):
+                self.console.append("\n---Error occurred:---\n\(err.description)")
+            }
             self.state = .finished
             self.delegate?.program(self, didFinishWithResult: result)
         }
@@ -169,7 +175,9 @@ extension Program: InterpreterThreadDelegate {
 extension Program: OpoIoHandler {
 
     func printValue(_ val: String) {
-        delegate!.printValue(val)
+        DispatchQueue.main.sync {
+            console.append(val)
+        }
     }
 
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {

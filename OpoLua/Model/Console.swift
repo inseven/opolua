@@ -18,23 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import Foundation
 
+protocol ConsoleDelegate: AnyObject {
 
-extension UITextView {
+    func console(_ console: Console, didAppendLine line: String)
 
-    func append(_ text: String) {
-        self.text?.append(text)
-        scrollToEnd()
+}
+
+class Console {
+
+    private var _lines: [String] = []
+
+    weak var delegate: ConsoleDelegate?
+
+    var lines: [String] {
+        return _lines
     }
 
-    func scrollToEnd() {
-        guard text.count > 0 else {
-            return
-        }
-        UIView.setAnimationsEnabled(false)
-        scrollRangeToVisible(NSMakeRange(text.count - 1, 1))
-        UIView.setAnimationsEnabled(true)
+    func append(_ line: String) {
+        _lines.append(line)
+        delegate?.console(self, didAppendLine: line)
     }
 
 }

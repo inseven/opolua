@@ -29,14 +29,9 @@ class ProgramViewController: UIViewController {
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
+
+    let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
     
-    lazy var textView: UITextView = {
-        let textView = UITextView()
-        textView.isEditable = false
-        textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.backgroundColor = .clear
-        return textView
-    }()
 
     lazy var canvasView: CanvasView = {
         let canvas = Canvas(id: drawableHandle.next()!, size: program.screenSize.cgSize(), color: true)
@@ -49,6 +44,13 @@ class ProgramViewController: UIViewController {
         return canvasView
     }()
 
+    lazy var consoleBarButtonItem: UIBarButtonItem = {
+        return UIBarButtonItem(image: UIImage(systemName: "terminal"),
+                               style: .plain,
+                               target: self,
+                               action: #selector(consoleTapped(sender:)))
+    }()
+
     init(program: Program) {
         self.program = program
         super.init(nibName: nil, bundle: nil)
@@ -58,23 +60,20 @@ class ProgramViewController: UIViewController {
         navigationItem.title = program.name
         view.clipsToBounds = true
         view.addSubview(canvasView)
-        view.addSubview(textView)
         NSLayoutConstraint.activate([
 
-            canvasView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             canvasView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            textView.topAnchor.constraint(equalTo: canvasView.bottomAnchor, constant: 8.0),
-            textView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            textView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+            canvasView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
 
         ])
 
-        let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
+        self.toolbarItems = [consoleBarButtonItem]
         
-        let items = UIDeferredMenuElement.uncached { completion in
-            menuQueue.async {
+        let items = UIDeferredMenuElement.uncached { [weak self] completion in
+            guard let self = self else {
+                return
+            }
+            self.menuQueue.async {
                 self.program.sendMenu()
                 let disabled = UIAction(title: "None", attributes: .disabled) { _ in }
                 let items = self.menu.tryTake(until: Date().addingTimeInterval(0.1)) ?? [disabled]
@@ -114,9 +113,25 @@ class ProgramViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.isToolbarHidden = false
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         program.start()
+    }
+
+    @objc func consoleTapped(sender: UIBarButtonItem) {
+        showConsole()
+    }
+
+    func showConsole() {
+        let viewController = ConsoleViewController(program: program)
+        viewController.delegate = self
+        let navigationController = UINavigationController(rootViewController: viewController)
+        present(navigationController, animated: true)
     }
 
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -162,31 +177,27 @@ class ProgramViewController: UIViewController {
 
 }
 
+extension ProgramViewController: ConsoleViewControllerDelegate {
+
+    func consoleViewControllerDidDismiss(_ consoleViewController: ConsoleViewController) {
+        consoleViewController.dismiss(animated: true)
+    }
+
+}
+
 extension ProgramViewController: ProgramDelegate {
 
     func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
-        self.textView.textColor = .secondaryLabel
-        switch result {
-        case .none:
-            self.textView.append("\n---Completed---")
-        case .error(let err):
-            self.textView.append("\n---Error occurred:---\n\(err.description)")
-        }
+        showConsole()
     }
 
     func program(_ program: Program, didEncounterError error: Error) {
         present(error: error)
     }
-
-    func printValue(_ val: String) {
-        DispatchQueue.main.async {
-            self.textView.append(val)
-        }
-    }
     
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
-        // TODO
-        return "123" // Have to return something valid here otherwise INPUT might keep on asking us
+        // TODO: Implement INPUT
+        return "123"
     }
     
     func alert(lines: [String], buttons: [String]) -> Int {
@@ -355,14 +366,12 @@ extension ProgramViewController: ProgramDelegate {
             let ascent = Int(ceil(sz.height) + font.descender)
             return .sizeAndAscent(Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))), ascent)
         case .busy(let text, _, _ /*let corner, let delay*/):
-            // TODO
-            if text.count > 0 {
-                printValue(text)
-            }
+            // TODO: Implement BUSY
+            program.console.append("BUSY '\(text)'")
             return .nothing
-        case .giprint(let text, _ /*let corner*/):
-            // TODO
-            printValue(text + "\n")
+        case .giprint(let text, let corner):
+            // TODO: Implement gIPRINT
+            program.console.append("gIPRINT '\(text)', \(corner)")
             return .nothing
         case .setwin(let displayId, let pos, let size):
             DispatchQueue.main.async {

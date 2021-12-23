@@ -18,20 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import Foundation
+import CoreGraphics
 
-extension OpoInterpreter.AppInfo {
+enum OpoLuaError: Error {
 
-    var appIcon: UIImage? {
-        guard let icon = icons.first(where: { $0.bitmap.size == .icon }) else {
-            return nil
-        }
-        do {
-            return UIImage(cgImage: try icon.cgImage)
-        } catch {
-            print("Failed to create bitmap with error \(error)")
-            return nil
-        }
-    }
+    case unsupportedBitmapDepth(Int)
 
 }

@@ -36,11 +36,13 @@
 		D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */; };
 		D8BA0970275196CA00F4730D /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096F275196CA00F4730D /* String.swift */; };
 		D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA09712751BBEA00F4730D /* UIElement.swift */; };
+		D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */; };
+		D8C3BD652774BEC2003B1AD0 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD642774BEC2003B1AD0 /* Console.swift */; };
+		D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */; };
 		D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* DirectoryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
-		D8EB6FF82759682000FC139F /* UITextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF72759682000FC139F /* UITextView.swift */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8FE60032757106300711717 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* Location.swift */; };
@@ -193,11 +195,13 @@
 		D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldTableViewCell.swift; sourceTree = "<group>"; };
 		D8BA096F275196CA00F4730D /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		D8BA09712751BBEA00F4730D /* UIElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIElement.swift; sourceTree = "<group>"; };
+		D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleViewController.swift; sourceTree = "<group>"; };
+		D8C3BD642774BEC2003B1AD0 /* Console.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
+		D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoLuaError.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* DirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
-		D8EB6FF72759682000FC139F /* UITextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextView.swift; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
@@ -309,6 +313,8 @@
 				D8FE60042757177200711717 /* Settings.swift */,
 				D8535A27277139AB00DFCE29 /* Sound.swift */,
 				D8535A29277139D900DFCE29 /* Tone.swift */,
+				D8C3BD642774BEC2003B1AD0 /* Console.swift */,
+				D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -341,7 +347,6 @@
 				D8BA09712751BBEA00F4730D /* UIElement.swift */,
 				D8891350274C184C00794D55 /* UIImage.swift */,
 				DBE91524276D25A900BDB8F5 /* UIKey.swift */,
-				D8EB6FF72759682000FC139F /* UITextView.swift */,
 				D89A607B2756A6A300C9757F /* URL.swift */,
 				D89A607D2756A98200C9757F /* ViewController.swift */,
 			);
@@ -357,6 +362,7 @@
 				D89A607F2756AE8800C9757F /* LibraryViewController.swift */,
 				DB79FFBD2742D99C005E904F /* ProgramViewController.swift */,
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
+				D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */,
 			);
 			path = "View Controllers";
 			sourceTree = "<group>";
@@ -675,6 +681,7 @@
 				DB79FFFA2742E6F6005E904F /* lbaselib.c in Sources */,
 				DB79FFFB2742E6F6005E904F /* lbitlib.c in Sources */,
 				DB79FFFC2742E6F6005E904F /* lcode.c in Sources */,
+				D8C3BD652774BEC2003B1AD0 /* Console.swift in Sources */,
 				DB79FFFD2742E6F6005E904F /* lcorolib.c in Sources */,
 				DB79FFFE2742E6F6005E904F /* lctype.c in Sources */,
 				DB79FFFF2742E6F6005E904F /* ldblib.c in Sources */,
@@ -682,6 +689,7 @@
 				D8FE60052757177200711717 /* Settings.swift in Sources */,
 				D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */,
 				DB7900012742E6F6005E904F /* ldo.c in Sources */,
+				D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */,
 				DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */,
 				D8BA0970275196CA00F4730D /* String.swift in Sources */,
 				D8FE60032757106300711717 /* Location.swift in Sources */,
@@ -696,9 +704,9 @@
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
-				D8EB6FF82759682000FC139F /* UITextView.swift in Sources */,
 				DB7900072742E6F6005E904F /* llex.c in Sources */,
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
+				D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */,
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				DB7900092742E6F6005E904F /* lmem.c in Sources */,
 				DB79000A2742E6F6005E904F /* loadlib.c in Sources */,
