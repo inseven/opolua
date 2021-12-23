@@ -263,7 +263,7 @@ private func draw(_ L: LuaState!) -> Int32 {
         let color = Graphics.Color(r: col, g: col, b: col)
         let bgcol = UInt8(L.toint(-1, key: "bgcolor") ?? 255)
         let bgcolor = Graphics.Color(r: bgcol, g: bgcol, b: bgcol)
-        let mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
+        var mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
         let optype: Graphics.DrawCommand.OpType
         switch (t) {
         case "fill":
@@ -326,10 +326,22 @@ private func draw(_ L: LuaState!) -> Int32 {
             let h = L.toint(-1, key: "h") ?? 0
             let rect = Graphics.Rect(x: x, y: y, width: w, height: h)
             optype = .scroll(dx, dy, rect)
+        case "patt":
+            if let srcid = L.toint(-1, key: "srcid"),
+               let w = L.toint(-1, key: "width"),
+               let h = L.toint(-1, key: "height") {
+                let size = Graphics.Size(width: w, height: h)
+                let rect = Graphics.Rect(origin: origin, size: size)
+                let info = Graphics.CopySource(displayId: srcid, rect: rect, extra: nil)
+                optype = .pattern(info)
+            } else {
+                print("Missing params in patt!")
+                continue
+            }
         case "text":
             let str = L.tostring(-1, key: "string") ?? ""
             var flags = Graphics.FontFlags(flags: L.toint(-1, key: "style") ?? 0)
-            let tmode = Graphics.TextMode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
+            mode = Graphics.Mode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
             let face = Graphics.FontFace(rawValue: L.tostring(-1, key: "fontface") ?? "arial") ?? .arial
             if L.toboolean(-1, key: "fontbold") {
                 // We're not going to support any of this double-bold nonsense with applying simulated bold on top
@@ -338,7 +350,7 @@ private func draw(_ L: LuaState!) -> Int32 {
             }
             let sz = L.toint(-1, key: "fontsize") ?? 15
             let fontInfo = Graphics.FontInfo(face: face, size: sz, flags: flags)
-            optype = .text(str, fontInfo, tmode)
+            optype = .text(str, fontInfo)
         case "border":
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             let rect = Graphics.Rect(origin: origin, size: size)

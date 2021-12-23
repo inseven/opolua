@@ -1750,7 +1750,11 @@ function gFill(stack, runtime) -- 0xDF
 end
 
 function gPatt(stack, runtime) -- 0xE0
-    error("Unimplemented opcode gPatt!")
+    local mode = stack:pop()
+    local height = stack:pop()
+    local width = stack:pop()
+    local id = stack:pop()
+    runtime:gPATT(id, width, height, mode)
 end
 
 function gCopy(stack, runtime) -- 0xE1

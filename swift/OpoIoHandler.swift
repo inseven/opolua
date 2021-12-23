@@ -211,7 +211,7 @@ struct Graphics {
     struct CopySource {
         let displayId: Int
         let rect: Rect
-        let extra: AnyObject?
+        let extra: AnyObject? // a CGImage, in the ProgramViewController impl
     }
 
     enum FontFace: String {
@@ -242,13 +242,7 @@ struct Graphics {
         case set = 0
         case clear = 1
         case invert = 2
-    }
-
-    enum TextMode: Int {
-        case set = 0
-        case clear = 1
-        case invert = 2
-        case replace = 3
+        case replace = 3 // Only applicable for copy, pattern and text operations
     }
 
     enum BorderType: Int {
@@ -295,8 +289,9 @@ struct Graphics {
             case box(Size)
             case bitblt(Bitmap)
             case copy(CopySource, CopySource?) // second arg is optional mask
+            case pattern(CopySource)
             case scroll(Int, Int, Rect) // dx, dy, rect
-            case text(String, FontInfo, TextMode)
+            case text(String, FontInfo)
             case border(Rect, BorderType)
             case invert(Size)
         }

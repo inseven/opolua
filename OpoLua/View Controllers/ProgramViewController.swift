@@ -453,7 +453,7 @@ extension ProgramViewController: ProgramDelegate {
                         print("Copy operation with unknown source \(src.displayId)!")
                         continue
                     }
-                    let newSrc = Graphics.CopySource(displayId: src.displayId, rect: src.rect, extra: srcCanvas)
+                    let newSrc = Graphics.CopySource(displayId: src.displayId, rect: src.rect, extra: srcCanvas.getImage())
                     let newMaskSrc: Graphics.CopySource?
                     if let mask = mask, let maskCanvas = self.drawables[mask.displayId] {
                         newMaskSrc = Graphics.CopySource(displayId: mask.displayId, rect: mask.rect, extra: maskCanvas)
@@ -461,6 +461,26 @@ extension ProgramViewController: ProgramDelegate {
                         newMaskSrc = nil
                     }
                     let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .copy(newSrc, newMaskSrc),
+                                                     mode: op.mode, origin: op.origin,
+                                                     color: op.color, bgcolor: op.bgcolor)
+                    drawable.draw(newOp)
+                case .pattern(let info):
+                    let extra: AnyObject?
+                    if info.displayId == -1 {
+                        guard let img = UIImage(named: "DitherPattern")?.cgImage else {
+                            print("Failed to load DitherPattern!")
+                            return
+                        }
+                        extra = img
+                    } else {
+                        guard let srcCanvas = self.drawables[info.displayId] else {
+                            print("Pattern operation with unknown source \(info.displayId)!")
+                            continue
+                        }
+                        extra = srcCanvas.getImage()
+                    }
+                    let newInfo = Graphics.CopySource(displayId: info.displayId, rect: info.rect, extra: extra)
+                    let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .pattern(newInfo),
                                                      mode: op.mode, origin: op.origin,
                                                      color: op.color, bgcolor: op.bgcolor)
                     drawable.draw(newOp)

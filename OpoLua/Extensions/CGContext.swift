@@ -87,10 +87,12 @@ extension CGContext {
                 print("Unhandled bpp \(pxInfo.bpp) in bitblt operation!")
             }
         case .copy(let src, let mask):
-            guard let srcDrawable = src.extra as? Drawable, let srcImage = srcDrawable.getImage() else {
-                print("Couldn't get source drawable from extra!")
+            guard let obj = src.extra else {
+                print("Unexpected nil extra!")
                 return
             }
+            let srcImage = obj as! CGImage // CF types are weird...
+
             // Clip the rect to the source size to make sure we don't inadvertently stretch it
             let rect = src.rect.cgRect().intersection(CGRect(x: 0, y: 0, width: srcImage.width, height: srcImage.height))
 
@@ -107,8 +109,16 @@ extension CGContext {
 
             let maskImg = (mask?.extra as? Drawable)?.getImage()
             if let img = srcImage.cropping(to: rect) {
-                drawUnflippedImage(img, in: CGRect(origin: CGPoint(x: destX, y: destY), size: rect.size), mask: maskImg)
+                let imgRect = CGRect(origin: CGPoint(x: destX, y: destY), size: rect.size)
+                drawUnflippedImage(img, in: imgRect, mode: operation.mode, mask: maskImg)
             }
+        case .pattern(let info):
+            guard let obj = info.extra else {
+                print("Unexpected nil extra!")
+                return
+            }
+            let srcImage = obj as! CGImage // CF types are weird...
+            drawUnflippedImage(srcImage, in: info.rect.cgRect(), mode: operation.mode, tile: true)
         case .scroll(let dx, let dy, let rect):
             let origRect = rect.cgRect()
             if let img = makeImage()?.cropping(to: origRect) {
@@ -123,7 +133,7 @@ extension CGContext {
                 fill(clearRect)
                 drawUnflippedImage(img, in: newRect)
             }
-        case .text(let str, let font, _ /*let tmode*/):
+        case .text(let str, let font):
             let attribStr = NSAttributedString(string: str, attributes: [
                 .font: font.toUiFont(),
                 .foregroundColor: UIColor(cgColor: col)
@@ -145,7 +155,7 @@ extension CGContext {
         }
     }
 
-    func drawUnflippedImage(_ img: CGImage, in rect: CGRect, mask: CGImage? = nil) {
+    func drawUnflippedImage(_ img: CGImage, in rect: CGRect, mode: Graphics.Mode = .replace, mask: CGImage? = nil, tile: Bool = false) {
         // Need to make sure the image draws the right way up so we have to flip back to normal coords, and
         // apply the y coordinate conversion ourselves
         saveGState()
@@ -164,6 +174,38 @@ extension CGContext {
             clip(to: unflippedRect, mask: invertedCG)
         }
 
-        self.draw(img, in: unflippedRect)
+        var imgToDraw = img
+        switch mode {
+        case .set:
+            let components: [CGFloat]
+            if img.bitsPerPixel == 32 {
+                components = [255, 255, 255, 255, 255, 0, 255]
+            } else if img.bitsPerPixel == 8 {
+                components = [255, 255]
+            } else if img.bitsPerPixel == 16 && (img.bitmapInfo.rawValue & CGImageAlphaInfo.noneSkipLast.rawValue) > 0 {
+                components = [255, 255]
+            } else {
+                print("Unhandled bpp in Graphics.Mode.Set image drawing!")
+                return
+            }
+            if let maskedImg = img.copy(maskingColorComponents: components) {
+                imgToDraw = maskedImg
+            } else {
+                print("Image masking operation failed!")
+            }
+        case .clear:
+            print("TODO: drawUnflippedImage .clear")
+        case .invert:
+            print("TODO: drawUnflippedImage .invert")
+        case .replace:
+            break
+        }
+        if tile {
+            clip(to: unflippedRect)
+            let imgRect = CGRect(x: 0, y: 0, width: img.width, height: img.height)
+            self.draw(imgToDraw, in: imgRect, byTiling: true)
+        } else {
+            self.draw(imgToDraw, in: unflippedRect)
+        }
     }
 }

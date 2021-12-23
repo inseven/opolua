@@ -1,0 +1,11 @@
+PROC main:
+	gfill 100, 100, 0
+	gat 50, 50
+	gpatt -1, 100, 100, 0
+	gat 75, 75
+	gpatt -1, 100, 20, 2
+	gat 80, 30
+	gpatt -1, 40, 40, 1
+	
+	GET
+ENDP

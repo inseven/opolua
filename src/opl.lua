@@ -329,6 +329,15 @@ function gSCROLL(dx, dy, x, y, w, h)
     runtime:drawCmd("scroll", { dx = dx, dy = dy, rect = rect })
 end
 
+function gPATT(id, width, height, mode)
+    runtime:drawCmd("patt", {
+        srcid = id,
+        width = width,
+        height = height,
+        mode = mode
+    })
+end
+
 function gUPDATE(flag)
     -- printf("gUPDATE %s\n", flag)
     local prevState = runtime:getGraphicsAutoFlush()
