@@ -20,6 +20,7 @@
 
 import Foundation
 import CoreGraphics
+import CoreImage
 
 private func scale2bpp(_ val: UInt8) -> UInt8 {
     return val | (val << 2) | (val << 4) | (val << 6)
@@ -60,5 +61,29 @@ extension CGImage {
         } else {
             throw OpoLuaError.unsupportedBitmapDepth(bitmap.bpp)
         }
+    }
+
+    func masking(epocMask: CGImage) -> CGImage? {
+        precondition(self.width == epocMask.width && self.height == epocMask.height, "Bad mask size!")
+        // CoreGraphics masks have the opposite semantics to epoc ones...
+        let rect = CGRect(x: 0, y: 0, width: self.width, height: self.height)
+        let invertedCi = CIImage(cgImage: epocMask).applyingFilter("CIColorInvert")
+        let invertedCg = CIContext().createCGImage(invertedCi, from: invertedCi.extent)!
+        // invertedCg has an alpha channel (I think) which means masking() doesn't work.
+        // There must be a more efficient way to do this...
+        return self.masking(invertedCg.stripAlpha())
+    }
+
+    func stripAlpha() -> CGImage {
+        let context = CGContext(data: nil,
+                                width: self.width,
+                                height: self.height,
+                                bitsPerComponent: 8,
+                                bytesPerRow: self.width,
+                                space: CGColorSpaceCreateDeviceGray(),
+                                bitmapInfo: 0)!
+        let rect = CGRect(x: 0, y: 0, width: self.width, height: self.height)
+        context.draw(self, in: rect)
+        return context.makeImage()!
     }
 }

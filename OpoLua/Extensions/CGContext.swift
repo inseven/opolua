@@ -177,9 +177,12 @@ extension CGContext {
         var imgToDraw = img
         switch mode {
         case .set:
+            // .set means only draw the non-white pixels which we can achieve by
+            // setting a colour mask on the image set to min=255 max=255
             let components: [CGFloat]
             if img.bitsPerPixel == 32 {
-                components = [255, 255, 255, 255, 255, 0, 255]
+                components = [255, 255, 255, 255, 255, 255]
+                imgToDraw = img.stripAlpha()
             } else if img.bitsPerPixel == 8 {
                 components = [255, 255]
             } else if img.bitsPerPixel == 16 && (img.bitmapInfo.rawValue & CGImageAlphaInfo.noneSkipLast.rawValue) > 0 {
@@ -188,7 +191,7 @@ extension CGContext {
                 print("Unhandled bpp in Graphics.Mode.Set image drawing!")
                 return
             }
-            if let maskedImg = img.copy(maskingColorComponents: components) {
+            if let maskedImg = imgToDraw.copy(maskingColorComponents: components) {
                 imgToDraw = maskedImg
             } else {
                 print("Image masking operation failed!")

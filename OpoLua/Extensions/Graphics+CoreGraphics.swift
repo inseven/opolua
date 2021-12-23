@@ -24,30 +24,14 @@ import CoreImage
 
 extension Graphics.MaskedBitmap {
 
-    var cgImage: CGImage {
-        get throws {
-            var img = try CGImage.from(bitmap: self.bitmap)
-            if let mask = self.mask {
-                precondition(bitmap.width == mask.width && bitmap.height == mask.height, "Bad mask size!")
-                // CoreGraphics masks have the opposite semantics to epoc ones...
-                let maskCg = try CGImage.from(bitmap: mask)
-                let rect = CGRect(origin: .zero, size: bitmap.size.cgSize())
-                let invertedCi = CIImage(cgImage: maskCg).applyingFilter("CIColorInvert")
-                let invertedCg = CIContext().createCGImage(invertedCi, from: invertedCi.extent)!
-                // invertedCg has an alpha channel (I think) which means masking() doesn't work.
-                // There must be a more efficient way to do this...
-                let context = CGContext(data: nil,
-                                        width: bitmap.width,
-                                        height: bitmap.height,
-                                        bitsPerComponent: 8,
-                                        bytesPerRow: bitmap.width,
-                                        space: CGColorSpaceCreateDeviceGray(),
-                                        bitmapInfo: 0)!
-                context.draw(invertedCg, in: rect)
-                let invertedCgNoAlpha = context.makeImage()!
-                img = img.masking(invertedCgNoAlpha)!
+    var cgImage: CGImage? {
+        get {
+            let img = try? CGImage.from(bitmap: self.bitmap)
+            if let img = img, let maskBmp = self.mask, let maskImg = try? CGImage.from(bitmap: maskBmp) {
+                return img.masking(epocMask: maskImg)
+            } else {
+                return img
             }
-            return img
         }
     }
 

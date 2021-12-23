@@ -26,12 +26,10 @@ extension OpoInterpreter.AppInfo {
         guard let icon = icons.first(where: { $0.bitmap.size == .icon }) else {
             return nil
         }
-        do {
-            return UIImage(cgImage: try icon.cgImage)
-        } catch {
-            print("Failed to create bitmap with error \(error)")
-            return nil
+        if let cgImg = icon.cgImage {
+            return UIImage(cgImage: cgImg)
         }
+        return nil
     }
 
 }
