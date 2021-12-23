@@ -134,6 +134,10 @@ class ProgramViewController: UIViewController {
         present(navigationController, animated: true)
     }
 
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
+
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         for press in presses {
             if let key = press.key {
