@@ -66,7 +66,6 @@ extension CGImage {
     func masking(epocMask: CGImage) -> CGImage? {
         precondition(self.width == epocMask.width && self.height == epocMask.height, "Bad mask size!")
         // CoreGraphics masks have the opposite semantics to epoc ones...
-        let rect = CGRect(x: 0, y: 0, width: self.width, height: self.height)
         let invertedCi = CIImage(cgImage: epocMask).applyingFilter("CIColorInvert")
         let invertedCg = CIContext().createCGImage(invertedCi, from: invertedCi.extent)!
         // invertedCg has an alpha channel (I think) which means masking() doesn't work.
