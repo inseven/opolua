@@ -52,7 +52,8 @@ function parseBitmap(data, headerOffset)
         width = x,
         height = y,
         bpp = bpp,
-        color = col,
+        isColor = col == 1,
+        mode = bppColorToMode(bpp, col == 1),
         stride = stride,
         -- not worrying about palettes yet
         compression = compression,

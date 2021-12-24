@@ -284,11 +284,11 @@ private func draw(_ L: LuaState!) -> Int32 {
         case "bitblt":
             if let width = L.toint(-1, key: "bmpWidth"),
                let height = L.toint(-1, key: "bmpHeight"),
-               let bpp = L.toint(-1, key: "bmpBpp"),
+               let mode = Graphics.Bitmap.Mode(rawValue: L.toint(-1, key: "bmpMode") ?? 0),
                let stride = L.toint(-1, key: "bmpStride"),
                let data = L.todata(-1, key: "bmpData") {
                 let size = Graphics.Size(width: width, height: height)
-                let info = Graphics.Bitmap(size: size, bpp: bpp, stride: stride, data: data)
+                let info = Graphics.Bitmap(mode: mode, size: size, stride: stride, data: data)
                 optype = .bitblt(info)
             } else {
                 print("Missing params in bitblt!")
@@ -631,26 +631,32 @@ private func testEvent(_ L: LuaState!) -> Int32 {
 
 private func createBitmap(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    guard let width = L.toint(1), let height = L.toint(2) else {
+    guard let width = L.toint(1),
+          let height = L.toint(2),
+          let modeVal = L.toint(3),
+          let mode = Graphics.Bitmap.Mode(rawValue: modeVal) else {
+        print("Bad parameters to createBitmap")
         return 0
     }
     let size = Graphics.Size(width: width, height: height)
-    return doGraphicsOp(L, iohandler, .createBitmap(size))
+    return doGraphicsOp(L, iohandler, .createBitmap(size, mode))
 }
 
 private func createWindow(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let x = L.toint(1), let y = L.toint(2),
           let width = L.toint(3), let height = L.toint(4),
-          let flags = L.toint(5) else {
+          let flags = L.toint(5),
+          let mode = Graphics.Bitmap.Mode(rawValue: flags & 0xF) else {
         return 0
     }
+
     var shadow = 0
     if flags & 0xF0 != 0 {
         shadow = 2 * ((flags & 0xF00) >> 8)
     }
     let rect = Graphics.Rect(x: x, y: y, width: width, height: height)
-    return doGraphicsOp(L, iohandler, .createWindow(rect, shadow))
+    return doGraphicsOp(L, iohandler, .createWindow(rect, mode, shadow))
 }
 
 private func getTime(_ L: LuaState!) -> Int32 {
@@ -849,19 +855,21 @@ class OpoInterpreter {
         func getBitmap() -> Graphics.Bitmap? {
             if let width = L.toint(-1, key: "width"),
                let height = L.toint(-1, key: "height"),
-               let bpp = L.toint(-1, key: "bpp"),
+               let modeVal = L.toint(-1, key: "mode"),
+               let mode = Graphics.Bitmap.Mode(rawValue: modeVal),
                let stride = L.toint(-1, key: "stride"),
                let data = L.todata(-1, key: "imgData") {
                 let size = Graphics.Size(width: width, height: height)
-                return Graphics.Bitmap(size: size, bpp: bpp, stride: stride, data: data)
+                return Graphics.Bitmap(mode: mode, size: size, stride: stride, data: data)
             }
             return nil
         }
         for _ in L.ipairs(-1, requiredType: .table) {
             if let bmp = getBitmap() {
-                // There should always be a mask
-                lua_getfield(L, -1, "mask")
-                let mask = getBitmap()
+                var mask: Graphics.Bitmap? = nil
+                if lua_getfield(L, -1, "mask") == LUA_TTABLE {
+                    mask = getBitmap()
+                }
                 L.pop()
                 icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
             }

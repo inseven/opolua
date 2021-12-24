@@ -146,18 +146,20 @@ class ProgramViewController: UIViewController {
         return canvas
     }
 
-    func createBitmap(size: Graphics.Size) -> Canvas {
+    func createBitmap(size: Graphics.Size, mode: Graphics.Bitmap.Mode) -> Canvas {
         dispatchPrecondition(condition: .onQueue(.main))
-        let canvas = newCanvas(size: size.cgSize(), color: false)
+        let isColor = mode == .Color16 || mode == .Color256
+        let canvas = newCanvas(size: size.cgSize(), color: isColor)
         drawables[canvas.id] = canvas
         return canvas
     }
     /**
      N.B. Windows are hidden by default.
      */
-    func createWindow(rect: Graphics.Rect, shadowSize: Int) -> Canvas {
+    func createWindow(rect: Graphics.Rect, mode: Graphics.Bitmap.Mode, shadowSize: Int) -> Canvas {
         dispatchPrecondition(condition: .onQueue(.main))
-        let canvas = self.newCanvas(size: rect.size.cgSize(), color: true)
+        let isColor = mode == .Color16 || mode == .Color256
+        let canvas = self.newCanvas(size: rect.size.cgSize(), color: isColor)
         let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
         newView.isHidden = true
         newView.frame = rect.cgRect()
@@ -229,7 +231,8 @@ class ProgramViewController: UIViewController {
         }
         let fontInfo = Graphics.FontInfo(face: .arial, size: 15, flags: .init()) // TODO: Empty flags?
         let details = Self.textSize(string: text, fontInfo: fontInfo)
-        let canvas = self.createWindow(rect: .init(origin: .zero, size: details.size), shadowSize: 0)
+        let mode = Graphics.Bitmap.Mode.Gray4
+        let canvas = self.createWindow(rect: .init(origin: .zero, size: details.size), mode: mode, shadowSize: 0)
         canvas.draw(.init(displayId: canvas.id,
                           type: .fill(details.size),
                           mode: .set,
@@ -256,12 +259,12 @@ class ProgramViewController: UIViewController {
         dispatchPrecondition(condition: .onQueue(.main))
         switch (operation) {
 
-        case .createBitmap(let size):
-            let canvas = createBitmap(size: size)
+        case .createBitmap(let size, let mode):
+            let canvas = createBitmap(size: size, mode: mode)
             return .handle(canvas.id)
 
-        case .createWindow(let rect, let shadowSize):
-            let canvas = createWindow(rect: rect, shadowSize: shadowSize)
+        case .createWindow(let rect, let mode, let shadowSize):
+            let canvas = createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
             return .handle(canvas.id)
 
         case .close(let displayId):

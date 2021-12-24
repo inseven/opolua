@@ -76,16 +76,8 @@ extension CGContext {
             addPath(CGPath(rect: rect, transform: nil))
             strokePath()
         case .bitblt(let pxInfo):
-            if pxInfo.bpp == 2 || pxInfo.bpp == 4 {
-                do {
-                    let cgImg = try CGImage.from(bitmap: pxInfo)
-                    drawUnflippedImage(cgImg, in: CGRect(origin: operation.origin.cgPoint(), size: pxInfo.size.cgSize()))
-                } catch {
-                    print("Failed to create bitmap with error \(error)")
-                }
-            } else {
-                print("Unhandled bpp \(pxInfo.bpp) in bitblt operation!")
-            }
+            let cgImg = CGImage.from(bitmap: pxInfo)
+            drawUnflippedImage(cgImg, in: CGRect(origin: operation.origin.cgPoint(), size: pxInfo.size.cgSize()))
         case .copy(let src, let mask):
             guard let obj = src.extra else {
                 print("Unexpected nil extra!")

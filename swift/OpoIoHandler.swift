@@ -193,14 +193,33 @@ struct Graphics {
     }
 
     struct Bitmap {
+        enum Mode: Int {
+            case Gray2 = 0 // ie 1bpp
+            case Gray4 = 1 // ie 2bpp
+            case Gray16 = 2 // ie 4bpp grayscale
+            case Gray256 = 3 // ie 8bpp grayscale
+            case Color16 = 4 // ie 4bpp color
+            case Color256 = 5 // ie 8bpp color
+        }
+        let mode: Mode
         let size: Size
-        let bpp: Int
         let stride: Int
         let data: Data
-        // TODO colour depth and/or palette info also needed, in due course
+        // TODO palette info also needed, in due course
 
         var width: Int { return size.width }
         var height: Int { return size.height }
+        var bpp: Int {
+            switch mode {
+            case .Gray2: return 1
+            case .Gray4: return 2
+            case .Gray16, .Color16: return 4
+            case .Gray256, .Color256: return 8
+            }
+        }
+        var color: Bool {
+            return mode == .Color16 || mode == .Color256
+        }
     }
 
     struct MaskedBitmap {
@@ -305,8 +324,8 @@ struct Graphics {
 
     enum Operation {
         case close(Int)
-        case createBitmap(Size) // returns handle
-        case createWindow(Rect, Int) // Int is shadow size in pixels. returns handle
+        case createBitmap(Size, Bitmap.Mode) // returns handle
+        case createWindow(Rect, Bitmap.Mode, Int) // Int is shadow size in pixels. returns handle
         case order(Int, Int) // displayId, position
         case show(Int, Bool) // displayId, visible flag
         case textSize(String, FontInfo) // returns size

@@ -388,9 +388,7 @@ function gCREATE(x, y, w, h, visible, flags)
 end
 
 function gCREATEBIT(w, h, mode)
-    -- We ignore mode - bitmaps are always (atm) 8bpp greyscale internally
-    -- printf("gCREATEBIT w=%d h=%d", w, h)
-    local id = runtime:iohandler().createBitmap(w, h)
+    local id = runtime:iohandler().createBitmap(w, h, mode)
     assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
     -- printf(" id=%d\n", id)
     runtime:newGraphicsContext(id, w, h, false)
@@ -412,13 +410,13 @@ function gLOADBIT(path, writable, index)
     local bitmap = bitmaps[1 + index]
     assert(bitmap, KOplErrNotExists)
     -- (2)
-    local id = gCREATEBIT(bitmap.width, bitmap.height)
+    local id = gCREATEBIT(bitmap.width, bitmap.height, bitmap.mode)
     -- printf("gLOADBIT %s mbmid=%d %dx%d id=%d\n", path, 1+index, bitmap.width, bitmap.height, id)
     -- (3)
     runtime:drawCmd("bitblt", {
         bmpWidth = bitmap.width,
         bmpHeight = bitmap.height,
-        bmpBpp = bitmap.bpp,
+        bmpMode = bitmap.mode,
         bmpStride = bitmap.stride,
         bmpData = mbm.decodeBitmap(bitmap, data)
     })

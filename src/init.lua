@@ -244,6 +244,35 @@ GraphicsMode = enum {
     Invert = 2,
 }
 
+DrawableMode = enum {
+    Gray2 = 0, -- ie 1bpp
+    Gray4 = 1, -- ie 2bpp
+    Gray16 = 2, -- ie 4bpp grayscale
+    Gray256 = 3, -- ie 8bpp grayscale
+    Color16 = 4, -- ie 4bpp color
+    Color256 = 5, -- ie 8bpp color
+}
+
+local GrayBppToMode = {
+    [1] = DrawableMode.Gray2,
+    [2] = DrawableMode.Gray4,
+    [4] = DrawableMode.Gray16,
+    [8] = DrawableMode.Gray256,
+}
+
+local ColorBppToMode = {
+    [4] = DrawableMode.Color16,
+    [8] = DrawableMode.Color256,
+}    
+
+function bppColorToMode(bpp, color)
+    local result = (color and ColorBppToMode or GrayBppToMode)[bpp]
+    if not result then
+        error(string.format("Invalid bpp=%d color=%s combination", bpp, color))
+    end
+    return result
+end
+
 Align = enum {
     Left = 2,
     Right = 1,

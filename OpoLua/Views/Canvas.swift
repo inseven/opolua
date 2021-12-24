@@ -61,6 +61,9 @@ class Canvas: Drawable {
                             space: colorSpace,
                             bitmapInfo: bitmapInfo)!
         context.concatenate(context.coordinateFlipTransform)
+        // All drawables should start off filled with white
+        context.setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
+        context.fill(CGRect(x: 0, y: 0, width: context.width, height: context.height))
     }
 
     func draw(_ operation: Graphics.DrawCommand) {

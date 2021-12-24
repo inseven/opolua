@@ -26,8 +26,9 @@ extension Graphics.MaskedBitmap {
 
     var cgImage: CGImage? {
         get {
-            let img = try? CGImage.from(bitmap: self.bitmap)
-            if let img = img, let maskBmp = self.mask, let maskImg = try? CGImage.from(bitmap: maskBmp) {
+            let img = CGImage.from(bitmap: self.bitmap)
+            if let maskBmp = self.mask {
+                let maskImg = CGImage.from(bitmap: maskBmp)
                 return img.masking(epocMask: maskImg)
             } else {
                 return img

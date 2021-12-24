@@ -23,6 +23,4 @@ import CoreGraphics
 
 enum OpoLuaError: Error {
 
-    case unsupportedBitmapDepth(Int)
-
 }
