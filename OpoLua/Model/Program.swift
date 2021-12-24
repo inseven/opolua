@@ -111,6 +111,18 @@ class Program {
         sendEvent(.keyupevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
     }
 
+    func sendKeyDown(_ key: OplKeyCode) {
+        sendEvent(.keydownevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
+                                      keycode: key,
+                                      modifiers: Modifiers())))
+    }
+
+    func sendKeyUp(_ key: OplKeyCode) {
+        sendEvent(.keyupevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
+                                    keycode: key,
+                                    modifiers: Modifiers())))
+    }
+
     func sendEvent(_ event: Async.ResponseValue) {
         eventQueue.append(event)
     }

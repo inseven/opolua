@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import GameController
 import UIKit
 
 class ProgramViewController: UIViewController {
@@ -26,6 +27,26 @@ class ProgramViewController: UIViewController {
         let size: Graphics.Size
         let ascent: Int
     }
+
+    enum ControllerButton: CaseIterable {
+        case up
+        case down
+        case left
+        case right
+        case a
+        case b
+        case home
+    }
+
+    let controllerButtonMap: [ControllerButton: OplKeyCode] = [
+        .up: .upArrow,
+        .down: .downArrow,
+        .left: .leftArrow,
+        .right: .rightArrow,
+        .a: .q,
+        .b: .q,
+        .home: .space
+    ]
 
     var program: Program
 
@@ -39,6 +60,14 @@ class ProgramViewController: UIViewController {
 
     let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
 
+    var virtualController: GCVirtualController?
+
+    lazy var controllerState: [ControllerButton: Bool] = {
+        return ControllerButton.allCases.reduce(into: [ControllerButton: Bool]()) { partialResult, button in
+            partialResult[button] = false
+        }
+    }()
+
     lazy var canvasView: CanvasView = {
         let canvas = newCanvas(size: program.screenSize.cgSize(), color: true)
         let canvasView = CanvasView(canvas: canvas)
@@ -51,10 +80,19 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var consoleBarButtonItem: UIBarButtonItem = {
-        return UIBarButtonItem(image: UIImage(systemName: "terminal"),
-                               style: .plain,
-                               target: self,
-                               action: #selector(consoleTapped(sender:)))
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "terminal"),
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(consoleTapped(sender:)))
+        return barButtonItem
+    }()
+
+    lazy var controllerBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "gamecontroller"),
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(controllerButtonTapped(sender:)))
+        return barButtonItem
     }()
 
     init(program: Program) {
@@ -89,28 +127,14 @@ class ProgramViewController: UIViewController {
             }
         }
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [items])
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: nil,
-                                                            image: UIImage(systemName: "ellipsis.circle"),
-                                                            primaryAction: nil,
-                                                            menu: menu)
+        let menuBarButtonItem = UIBarButtonItem(title: nil,
+                                                image: UIImage(systemName: "ellipsis.circle"),
+                                                primaryAction: nil,
+                                                menu: menu)
+        navigationItem.rightBarButtonItems = [menuBarButtonItem, controllerBarButtonItem]
 
-
-        // Unfortunately there doesn't seem to be a great way to detect when the user dismisses the menu.
-        // This implementation uses SPI to do just that by watching the notification center for presentation dismiss
-        // notifications and ignores notifications for anything that isn't a menu.
-        NotificationCenter.default.addObserver(forName: NSNotification.Name.UIPresentationControllerDismissalTransitionDidEndNotification,
-                                               object: nil,
-                                               queue: .main) { notification in
-            guard let UIContextMenuActionsOnlyViewController = NSClassFromString("_UIContextMenuActionsOnlyViewController"),
-                  let object = notification.object,
-                  type(of: object) == UIContextMenuActionsOnlyViewController
-            else {
-                return
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                self.menuCompletion.tryTake()?(0)
-            }
-        }
+        self.observeMenuDismiss()
+        self.observeGameControllers()
 
         canvasView.delegate = program
     }
@@ -127,10 +151,98 @@ class ProgramViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         program.start()
+        configureControllers()
     }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        virtualController?.disconnect()
+    }
+
+    func observeMenuDismiss() {
+        // Unfortunately there doesn't seem to be a great way to detect when the user dismisses the menu.
+        // This implementation uses SPI to do just that by watching the notification center for presentation dismiss
+        // notifications and ignores notifications for anything that isn't a menu.
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.UIPresentationControllerDismissalTransitionDidEndNotification,
+                                               object: nil,
+                                               queue: .main) { notification in
+            guard let UIContextMenuActionsOnlyViewController = NSClassFromString("_UIContextMenuActionsOnlyViewController"),
+                  let object = notification.object,
+                  type(of: object) == UIContextMenuActionsOnlyViewController
+            else {
+                return
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.menuCompletion.tryTake()?(0)
+            }
+        }
+    }
+
+    func observeGameControllers() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(forName: NSNotification.Name.GCControllerDidConnect,
+                                       object: nil,
+                                       queue: .main) { notification in
+            self.configureControllers()
+        }
+    }
+
+    func configureControllers() {
+        for controller in GCController.controllers() {
+            controller.extendedGamepad?.buttonHome?.pressedChangedHandler = self.pressedChangeHandler(for: .home)
+            controller.extendedGamepad?.buttonA.pressedChangedHandler = self.pressedChangeHandler(for: .a)
+            controller.extendedGamepad?.buttonB.pressedChangedHandler = self.pressedChangeHandler(for: .b)
+            controller.extendedGamepad?.dpad.up.pressedChangedHandler = self.pressedChangeHandler(for: .up)
+            controller.extendedGamepad?.dpad.down.pressedChangedHandler = self.pressedChangeHandler(for: .down)
+            controller.extendedGamepad?.dpad.left.pressedChangedHandler = self.pressedChangeHandler(for: .left)
+            controller.extendedGamepad?.dpad.right.pressedChangedHandler = self.pressedChangeHandler(for: .right)
+            controller.extendedGamepad?.leftThumbstick.up.pressedChangedHandler = self.pressedChangeHandler(for: .up)
+            controller.extendedGamepad?.leftThumbstick.down.pressedChangedHandler = self.pressedChangeHandler(for: .down)
+            controller.extendedGamepad?.leftThumbstick.left.pressedChangedHandler = self.pressedChangeHandler(for: .left)
+            controller.extendedGamepad?.leftThumbstick.right.pressedChangedHandler = self.pressedChangeHandler(for: .right)
+        }
+    }
+
+    func updateControllerButton(_ controllerButton: ControllerButton, pressed: Bool) {
+        guard controllerState[controllerButton] != pressed else {
+            return
+        }
+        controllerState[controllerButton] = pressed
+        guard let keyCode = controllerButtonMap[controllerButton] else {
+            print("Controller button has no mapping (\(controllerButton)).")
+            return
+        }
+        switch pressed {
+        case true:
+            program.sendKeyDown(keyCode)
+        case false:
+            program.sendKeyUp(keyCode)
+        }
+    }
+
+    func pressedChangeHandler(for controllerButton: ControllerButton) -> GCControllerButtonValueChangedHandler {
+        return { button, value, pressed in
+            self.updateControllerButton(controllerButton, pressed: pressed)
+        }
+    }
+
+    @objc func controllerDidDisconnect(notification: NSNotification) {}
 
     @objc func consoleTapped(sender: UIBarButtonItem) {
         showConsole()
+    }
+
+    @objc func controllerButtonTapped(sender: UIBarButtonItem) {
+        if let virtualController = virtualController {
+            virtualController.disconnect()
+            self.virtualController = nil
+        } else {
+            let configuration = GCVirtualController.Configuration()
+            configuration.elements = [GCInputButtonA, GCInputButtonB, GCInputDirectionPad, GCInputDirectionPad, GCInputButtonHome, GCInputButtonOptions]
+            virtualController = GCVirtualController(configuration: configuration)
+            virtualController?.connect()
+        }
     }
 
     func showConsole() {
