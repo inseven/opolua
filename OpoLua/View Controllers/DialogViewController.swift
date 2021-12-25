@@ -234,6 +234,8 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
             cell.textField.placeholder = item.prompt
             cell.textField.text = values[row.index]
             cell.textField.addTarget(self, action: #selector(editValueDidChange(sender:)), for: .editingChanged)
+            cell.textField.autocapitalizationType = .none
+            cell.textField.autocorrectionType = .no
             return cell
         case .xinput:
             let cell = TextFieldTableViewCell()
