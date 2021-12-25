@@ -131,6 +131,7 @@ class DialogViewController: UIViewController, UITableViewDataSource, UITableView
 
         ])
 
+        tableView.keyboardDismissMode = .onDrag
     }
 
     required init?(coder: NSCoder) {
