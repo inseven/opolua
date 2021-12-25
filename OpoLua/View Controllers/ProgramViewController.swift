@@ -44,8 +44,7 @@ class ProgramViewController: UIViewController {
         .left: .leftArrow,
         .right: .rightArrow,
         .a: .q,
-        .b: .q,
-        .home: .space
+        .b: .enter,
     ]
 
     var program: Program
@@ -216,6 +215,7 @@ class ProgramViewController: UIViewController {
         switch pressed {
         case true:
             program.sendKeyDown(keyCode)
+            program.sendKeyPress(keyCode)
         case false:
             program.sendKeyUp(keyCode)
         }
