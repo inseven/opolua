@@ -100,15 +100,7 @@ class Program {
     }
 
     func sendMenu() {
-        sendKeyPress(.menu)
-    }
-
-    func sendKeyPress(_ key: OplKeyCode) {
-        let timestamp = Int(NSDate().timeIntervalSince1970)
-        let modifiers = Modifiers()
-        sendEvent(.keydownevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
-        sendEvent(.keypressevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers, isRepeat: false)))
-        sendEvent(.keyupevent(.init(timestamp: timestamp, keycode: key, modifiers: modifiers)))
+        sendKey(.menu)
     }
 
     func sendKeyDown(_ key: OplKeyCode) {
@@ -121,6 +113,19 @@ class Program {
         sendEvent(.keyupevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
                                     keycode: key,
                                     modifiers: Modifiers())))
+    }
+
+    func sendKeyPress(_ key: OplKeyCode) {
+        sendEvent(.keypressevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
+                                       keycode: key,
+                                       modifiers: Modifiers(),
+                                       isRepeat: false)))
+    }
+
+    func sendKey(_ key: OplKeyCode) {
+        sendKeyDown(key)
+        sendKeyPress(key)
+        sendKeyUp(key)
     }
 
     func sendEvent(_ event: Async.ResponseValue) {

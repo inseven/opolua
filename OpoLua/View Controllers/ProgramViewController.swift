@@ -215,6 +215,7 @@ class ProgramViewController: UIViewController {
         switch pressed {
         case true:
             program.sendKeyDown(keyCode)
+            program.sendKeyPress(keyCode)
         case false:
             program.sendKeyUp(keyCode)
         }
