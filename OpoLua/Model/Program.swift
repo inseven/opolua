@@ -143,6 +143,20 @@ class Program {
                 return name
             }
         }
+        // If the requested name ends in a dot, also see if there's an undotted
+        // name because epoc seems to have a weird way of dealing with
+        // extensionless names
+        if uncasedName.hasSuffix(".") {
+            // This does not seem to me to be more elegant than having a simple substring API...
+            let ugh = uncasedName.lastIndex(of: ".")!
+            let unsuffixedName = uncasedName[..<ugh].uppercased()
+            for url in contents {
+                let name = url.lastPathComponent
+                if name.uppercased() == unsuffixedName {
+                    return name
+                }
+            }
+        }
         return uncasedName
     }
 
