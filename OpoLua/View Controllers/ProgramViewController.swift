@@ -608,11 +608,9 @@ extension ProgramViewController: ProgramDelegate {
     }
 
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
-        var result: Graphics.Result!
-        DispatchQueue.main.sync {
-            result = performGraphicsOperation(operation)
+        return DispatchQueue.main.sync {
+            return performGraphicsOperation(operation)
         }
-        return result
     }
 
 }
