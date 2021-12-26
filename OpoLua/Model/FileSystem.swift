@@ -20,34 +20,9 @@
 
 import Foundation
 
-extension String {
+protocol FileSystem {
 
-    static let `true` = "-1"
-
-    static let `false` = "0"
-
-    var pathComponents: [String] {
-        return (self as NSString).pathComponents
-    }
-
-    var pathExtension: String {
-        return (self as NSString).pathExtension
-    }
-
-    var deletingPathExtension: String {
-        return (self as NSString).deletingPathExtension
-    }
-
-    func appendingPathExtension(_ str: String) -> String? {
-        return (self as NSString).appendingPathExtension(str)
-    }
-
-    var lastPathComponent: String {
-        return (self as NSString).lastPathComponent
-    }
-
-    var basename: String {
-        return lastPathComponent.deletingPathExtension
-    }
+    func hostUrl(for path: String) -> URL?
+    func guestPath(for url: URL) -> String?
 
 }

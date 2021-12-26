@@ -46,6 +46,7 @@ class Program {
     private let object: OPLObject
     private let procedureName: String?
     private let device: Device
+    private let fileSystem: FileSystem
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     private let scheduler = Scheduler()
@@ -72,6 +73,7 @@ class Program {
         self.object = object
         self.procedureName = procedureName
         self.device = device
+        self.fileSystem = ObjectFileSystem(objectUrl: object.url)
         self.thread = InterpreterThread(object: object, procedureName: procedureName)
         self.thread.delegate = self
         self.thread.handler = self
@@ -132,61 +134,17 @@ class Program {
         eventQueue.append(event)
     }
 
-    private func findCorrectCase(in path: URL, for uncasedName: String) -> String {
-        guard let contents = try? FileManager.default.contentsOfDirectory(at: path, includingPropertiesForKeys: []) else {
-            return uncasedName
-        }
-        let uppercasedName = uncasedName.uppercased()
-        for url in contents {
-            let name = url.lastPathComponent
-            if name.uppercased() == uppercasedName {
-                return name
-            }
-        }
-        // If the requested name ends in a dot, also see if there's an undotted
-        // name because epoc seems to have a weird way of dealing with
-        // extensionless names
-        if uncasedName.hasSuffix(".") {
-            // This does not seem to me to be more elegant than having a simple substring API...
-            let ugh = uncasedName.lastIndex(of: ".")!
-            let unsuffixedName = uncasedName[..<ugh].uppercased()
-            for url in contents {
-                let name = url.lastPathComponent
-                if name.uppercased() == unsuffixedName {
-                    return name
-                }
-            }
-        }
-        return uncasedName
-    }
-
     private func mapToNative(path: String) -> URL? {
-        // For now assume if we're running foo.opo then we're running it from a simulated
-        // C:\System\Apps\Foo\ path and make everything in the foo.opo dir available
-        // under that path.
-        let appName = object.url.deletingPathExtension().lastPathComponent
-        let prefix = "C:\\SYSTEM\\APPS\\" + appName.uppercased() + "\\"
-        if path.uppercased().starts(with: prefix) {
-            let pathComponents = path.split(separator: "\\")[4...]
-            var result = object.url.deletingLastPathComponent()
-            for component in pathComponents {
-                if component == "." || component == ".." {
-                    continue
-                }
-                // Have to do some nasty hacks here to appear case-insensitive
-                let name = findCorrectCase(in: result, for: String(component))
-                result.appendPathComponent(name)
-            }
-            return result.absoluteURL
-        } else {
-            return nil
-        }
+        return fileSystem.hostUrl(for: path)
     }
 
-    
 }
 
 extension Program: InterpreterThreadDelegate {
+
+    func interpreter(_ interpreter: InterpreterThread, pathForUrl url: URL) -> String? {
+        return fileSystem.guestPath(for: url)
+    }
 
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result) {
         DispatchQueue.main.async {

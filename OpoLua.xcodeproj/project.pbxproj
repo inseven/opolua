@@ -19,6 +19,8 @@
 		D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724F12771672A009C7246 /* InterpreterThread.swift */; };
 		D87A62742752A67500075CB8 /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62732752A67500075CB8 /* CGSize.swift */; };
 		D87A9249274C517000254DE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB79FE6427428294005E904F /* Assets.xcassets */; };
+		D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */; };
+		D884A3D32778E335008954A0 /* FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D22778E335008954A0 /* FileSystem.swift */; };
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
 		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
 		D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891346274BF2D200794D55 /* DialogViewController.swift */; };
@@ -179,6 +181,8 @@
 		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		D86724F12771672A009C7246 /* InterpreterThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterThread.swift; sourceTree = "<group>"; };
 		D87A62732752A67500075CB8 /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
+		D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFileSystem.swift; sourceTree = "<group>"; };
+		D884A3D22778E335008954A0 /* FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
 		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
 		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
 		D8891346274BF2D200794D55 /* DialogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewController.swift; sourceTree = "<group>"; };
@@ -306,18 +310,20 @@
 				D893EAD22760739500E64219 /* Border.swift */,
 				D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */,
 				D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */,
+				D8C3BD642774BEC2003B1AD0 /* Console.swift */,
 				D84ADB152771D937001ABFB4 /* Device.swift */,
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
+				D884A3D22778E335008954A0 /* FileSystem.swift */,
 				D86724F12771672A009C7246 /* InterpreterThread.swift */,
 				D8FE60022757106300711717 /* Location.swift */,
+				D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */,
 				D861E8DA274A819D003C8D3D /* OPLObject.swift */,
+				D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */,
 				D86724EF27715B88009C7246 /* Program.swift */,
 				D8D50116275928CF008C1BC9 /* Scheduler.swift */,
 				D8FE60042757177200711717 /* Settings.swift */,
 				D8535A27277139AB00DFCE29 /* Sound.swift */,
 				D8535A29277139D900DFCE29 /* Tone.swift */,
-				D8C3BD642774BEC2003B1AD0 /* Console.swift */,
-				D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -720,6 +726,7 @@
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
 				D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */,
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
+				D884A3D32778E335008954A0 /* FileSystem.swift in Sources */,
 				DB7900092742E6F6005E904F /* lmem.c in Sources */,
 				DB79000A2742E6F6005E904F /* loadlib.c in Sources */,
 				D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */,
@@ -745,6 +752,7 @@
 				DB7900122742E6F6005E904F /* ltable.c in Sources */,
 				D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */,
 				D89A607C2756A6A300C9757F /* URL.swift in Sources */,
+				D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */,
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,
 				DB7900132742E6F6005E904F /* ltablib.c in Sources */,
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,

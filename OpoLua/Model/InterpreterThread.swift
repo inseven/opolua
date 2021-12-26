@@ -22,6 +22,7 @@ import Foundation
 
 protocol InterpreterThreadDelegate: AnyObject {
 
+    func interpreter(_ interpreter: InterpreterThread, pathForUrl url: URL) -> String?
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result)
 
 }
@@ -50,9 +51,7 @@ class InterpreterThread: Thread {
     }
 
     override func main() {
-        let url = self.object.url
-        let appName = url.deletingPathExtension().lastPathComponent.uppercased()
-        let oplPath = "C:\\SYSTEM\\APPS\\" + appName + "\\" + url.lastPathComponent
+        let oplPath = delegate!.interpreter(self, pathForUrl: self.object.url)!
         let result = self.interpreter.run(devicePath: oplPath, procedureName: self.procedureName)
         delegate?.interpreter(self, didFinishWithResult: result)
     }

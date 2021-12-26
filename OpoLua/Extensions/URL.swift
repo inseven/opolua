@@ -67,4 +67,8 @@ extension URL {
         return path.pathExtension == "app"
     }
 
+    var basename: String {
+        return self.path.basename
+    }
+
 }
