@@ -37,34 +37,6 @@ class ObjectFileSystem: FileSystem {
         return "C:\\SYSTEM\\APPS\\" + name.uppercased() + "\\"
     }
 
-    private static func findCorrectCase(in path: URL, for uncasedName: String) -> String {
-        guard let contents = try? FileManager.default.contentsOfDirectory(at: path, includingPropertiesForKeys: []) else {
-            return uncasedName
-        }
-        let uppercasedName = uncasedName.uppercased()
-        for url in contents {
-            let name = url.lastPathComponent
-            if name.uppercased() == uppercasedName {
-                return name
-            }
-        }
-        // If the requested name ends in a dot, also see if there's an undotted
-        // name because epoc seems to have a weird way of dealing with
-        // extensionless names
-        if uncasedName.hasSuffix(".") {
-            // This does not seem to me to be more elegant than having a simple substring API...
-            let ugh = uncasedName.lastIndex(of: ".")!
-            let unsuffixedName = uncasedName[..<ugh].uppercased()
-            for url in contents {
-                let name = url.lastPathComponent
-                if name.uppercased() == unsuffixedName {
-                    return name
-                }
-            }
-        }
-        return uncasedName
-    }
-
     func hostUrl(for path: String) -> URL? {
         if path.uppercased().starts(with: guestPrefix) {
             let pathComponents = path.split(separator: "\\")[4...]
@@ -74,7 +46,7 @@ class ObjectFileSystem: FileSystem {
                     continue
                 }
                 // Have to do some nasty hacks here to appear case-insensitive
-                let name = Self.findCorrectCase(in: result, for: String(component))
+                let name = (try? FileManager.default.findCorrectCase(in: result, for: String(component))) ?? String(component)
                 result.appendPathComponent(name)
             }
             print(result.absoluteURL)
