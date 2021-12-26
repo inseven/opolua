@@ -30,6 +30,13 @@ extension FileManager {
         return false
     }
 
+    func fileExists(atUrl url: URL) -> Bool {
+        guard url.isFileURL else {
+            return false
+        }
+        return fileExists(atPath: url.path)
+    }
+
     var documentsUrl: URL {
         return urls(for: .documentDirectory, in: .userDomainMask)[0]
     }

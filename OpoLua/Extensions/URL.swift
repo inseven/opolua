@@ -26,4 +26,45 @@ extension URL {
         return (FileManager.default.displayName(atPath: path) as NSString).deletingPathExtension
     }
 
+    var contents: [URL] {
+        get throws {
+            return try FileManager.default.contentsOfDirectory(atPath: path).map { appendingPathComponent($0) }
+        }
+    }
+
+    var components: URLComponents? { return URLComponents(string: absoluteString) }
+
+    var isDirectory: Bool {
+        var isDirectory: ObjCBool = false
+        FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
+        return isDirectory.boolValue
+    }
+
+    var deletingPathExtension: URL? {
+        guard var components = components else {
+            return nil
+        }
+        components.path = components.path.deletingPathExtension
+        return components.url
+
+    }
+
+    func appendingPathExtension(_ str: String) -> URL? {
+        guard var components = components,
+              let path = components.path.appendingPathExtension(str)
+        else {
+            return nil
+        }
+        components.path = path
+        return components.url
+    }
+
+    var applicationInfoFile: URL? {
+        return deletingPathExtension?.appendingPathExtension("aif")
+    }
+
+    var isApplication: Bool {
+        return path.pathExtension == "app"
+    }
+
 }

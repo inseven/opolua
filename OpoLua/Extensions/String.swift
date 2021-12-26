@@ -34,6 +34,10 @@ extension String {
         return (self as NSString).deletingPathExtension
     }
 
+    func appendingPathExtension(_ str: String) -> String? {
+        return (self as NSString).appendingPathExtension(str)
+    }
+
     var lastPathComponent: String {
         return (self as NSString).lastPathComponent
     }

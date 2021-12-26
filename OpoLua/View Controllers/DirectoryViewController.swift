@@ -64,9 +64,10 @@ class DirectoryViewController : UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
+        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
         let item = directory.objects[indexPath.row]
         cell.textLabel?.text = item.name
+        cell.detailTextLabel?.text = item.type.localizedDescription
         cell.accessoryType = .disclosureIndicator
         switch item.type {
         case .object:
@@ -84,6 +85,13 @@ class DirectoryViewController : UITableViewController {
                 cell.imageView?.image = UIImage(systemName: "app",
                                                 withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
             }
+        case .system(let application):
+            if let appIcon = application.appInfo.appIcon {
+                cell.imageView?.image = appIcon
+            } else {
+                cell.imageView?.image = UIImage(systemName: "app",
+                                                withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+            }
         }
         return cell
     }
@@ -91,7 +99,7 @@ class DirectoryViewController : UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let item = directory.objects[indexPath.row]
         switch item.type {
-        case .object, .app, .bundle:
+        case .object, .app, .bundle, .system:
             let program = Program(object: item.object)
             let viewController = ProgramViewController(program: program)
             navigationController?.pushViewController(viewController, animated: true)
@@ -123,7 +131,7 @@ class DirectoryViewController : UITableViewController {
             }
 
             switch item.type {
-            case .object, .app, .bundle:
+            case .object, .app, .bundle, .system:
                 let object = item.object
                 let runAction = UIAction(title: "Run") { action in
                     let program = Program(object: object)
