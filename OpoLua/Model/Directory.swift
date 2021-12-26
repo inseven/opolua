@@ -112,6 +112,10 @@ class Directory {
         // N.B. This implementation is intetnionally strict. We can relax it as and when we find we need to.
         for url in contents {
             let name = url.lastPathComponent
+            if name.starts(with: ".") {
+                // Ignore hidden files.
+                continue
+            }
             guard url.isDirectory,
                   drives.contains(name)
             else {
