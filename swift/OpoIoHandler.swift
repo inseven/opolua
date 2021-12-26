@@ -269,8 +269,11 @@ struct Graphics {
         case singlePixelShadow = 0x1
         case singlePixelShadowRounded = 0x201
         case clearSinglePixelShadow = 0x2
+        case clearSinglePixelShadowRounded = 0x202
         case doublePixelShadow = 0x3
+        case doublePixelShadowRounded = 0x203
         case clearDoublePixelShadow = 0x4
+        case clearDoublePixelShadowRounded = 0x204
 
         // gXBORDER type=1
         case series3singlePixelShadow = 0x10001
