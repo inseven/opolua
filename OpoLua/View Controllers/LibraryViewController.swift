@@ -56,6 +56,7 @@ class LibraryViewController: UITableViewController {
             self.location = location
             self.name = name
         }
+
     }
 
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>

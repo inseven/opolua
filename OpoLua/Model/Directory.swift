@@ -22,13 +22,20 @@ import Foundation
 
 class Directory {
 
+    struct Application {
+
+        let url: URL
+        let appInfo: OpoInterpreter.AppInfo
+
+    }
+
     struct Item {
 
         enum `Type` {
             case object
             case directory
             case app
-            case bundle(OpoInterpreter.AppInfo)
+            case bundle(Application)
         }
 
         let url: URL
@@ -36,10 +43,19 @@ class Directory {
 
         var name: String {
             switch type {
-            case .bundle(let appInfo):
-                return appInfo.caption
+            case .bundle(let application):
+                return application.appInfo.caption
             default:
                 return url.name
+            }
+        }
+
+        var object: OPLObject {
+            switch type {
+            case .bundle(let application):
+                return OPLObject(url: application.url)
+            default:
+                return OPLObject(url: url)
             }
         }
 
@@ -73,7 +89,7 @@ class Directory {
                     else {
                         return Item(url: url, type: .directory)
                     }
-                    return Item(url: appUrl, type: .bundle(data))
+                    return Item(url: url, type: .bundle(Application(url: appUrl, appInfo: data)))
                 } else if url.pathExtension == "opo" {
                     return Item(url: url, type: .object)
                 } else if url.pathExtension == "app" {

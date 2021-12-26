@@ -61,9 +61,13 @@ class DirectoryViewController : UITableViewController {
         case .app:
             cell.imageView?.image = UIImage(systemName: "app",
                                             withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
-        case .bundle(let appInfo):
-            cell.imageView?.image = appInfo.appIcon ?? UIImage(systemName: "app",
-                                                               withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+        case .bundle(let application):
+            if let appIcon = application.appInfo.appIcon {
+                cell.imageView?.image = appIcon
+            } else {
+                cell.imageView?.image = UIImage(systemName: "app",
+                                                withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+            }
         }
         return cell
     }
@@ -72,8 +76,7 @@ class DirectoryViewController : UITableViewController {
         let item = directory.objects[indexPath.row]
         switch item.type {
         case .object, .app, .bundle:
-            let object = OPLObject(url: item.url)
-            let program = Program(object: object)
+            let program = Program(object: item.object)
             let viewController = ProgramViewController(program: program)
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
@@ -94,7 +97,7 @@ class DirectoryViewController : UITableViewController {
         let item = directory.objects[indexPath.row]
         switch item.type {
         case .object, .app, .bundle:
-            let object = OPLObject(url: item.url)
+            let object = item.object
             return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
                 let runAction = UIAction(title: "Run") { action in
                     let program = Program(object: object)
