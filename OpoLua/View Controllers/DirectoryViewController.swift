@@ -104,15 +104,44 @@ class DirectoryViewController : UITableViewController {
             let viewController = ProgramViewController(program: program)
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
-            do {
-                let directory = try Directory(url: item.url)
-                let viewController = DirectoryViewController(directory: directory)
-                navigationController?.pushViewController(viewController, animated: true)
-            } catch {
-                present(error: error)
-                tableView.deselectRow(at: indexPath, animated: true)
+            pushViewController(for: item.url)
+            tableView.deselectRow(at: indexPath, animated: true)
+        }
+    }
+
+    func pushViewController(for url: URL) {
+        do {
+            let directory = try Directory(url: url)
+            let viewController = DirectoryViewController(directory: directory)
+            navigationController?.pushViewController(viewController, animated: true)
+        } catch {
+            present(error: error)
+        }
+    }
+
+    func actions(for object: OPLObject) -> [UIMenuElement] {
+        let runAction = UIAction(title: "Run") { action in
+            let program = Program(object: object)
+            let viewController = ProgramViewController(program: program)
+            self.navigationController?.pushViewController(viewController, animated: true)
+        }
+        let runAsActions = Device.allCases.map { device in
+            UIAction(title: device.name) { action in
+                let program = Program(object: object, device: device)
+                let viewController = ProgramViewController(program: program)
+                self.navigationController?.pushViewController(viewController, animated: true)
             }
         }
+        let runAsMenu = UIMenu(title: "Run As...", children: runAsActions)
+        let procedureActions = object.procedures.map { procedure in
+            UIAction(title: procedure.name) { action in
+                let program = Program(object: object, procedureName: procedure.name)
+                let viewController = ProgramViewController(program: program)
+                self.navigationController?.pushViewController(viewController, animated: true)
+            }
+        }
+        let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
+        return [runAction, runAsMenu, procedureMenu]
     }
 
     override func tableView(_ tableView: UITableView,
@@ -121,7 +150,9 @@ class DirectoryViewController : UITableViewController {
         let item = directory.objects[indexPath.row]
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
 
-            let deleteActions = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { action in
+            let deleteActions = UIAction(title: "Delete",
+                                         image: UIImage(systemName: "trash"),
+                                         attributes: .destructive) { action in
                 do {
                     try FileManager.default.removeItem(at: item.url)
                     self.reload()
@@ -131,31 +162,13 @@ class DirectoryViewController : UITableViewController {
             }
 
             switch item.type {
-            case .object, .app, .bundle, .system:
-                let object = item.object
-                let runAction = UIAction(title: "Run") { action in
-                    let program = Program(object: object)
-                    let viewController = ProgramViewController(program: program)
-                    self.navigationController?.pushViewController(viewController, animated: true)
+            case .object, .app:
+                return UIMenu(title: "", children: self.actions(for: item.object) + [deleteActions])
+            case .bundle, .system:
+                let contentsAction = UIAction(title: "Show Package Contents") { action in
+                    self.pushViewController(for: item.url)
                 }
-                let runAsActions = Device.allCases.map { device in
-                    UIAction(title: device.name) { action in
-                        let program = Program(object: object, device: device)
-                        let viewController = ProgramViewController(program: program)
-                        self.navigationController?.pushViewController(viewController, animated: true)
-                    }
-                }
-                let runAsMenu = UIMenu(title: "Run As...", children: runAsActions)
-                let procedureActions = object.procedures.map { procedure in
-                    UIAction(title: procedure.name) { action in
-                        let program = Program(object: object, procedureName: procedure.name)
-                        let viewController = ProgramViewController(program: program)
-                        self.navigationController?.pushViewController(viewController, animated: true)
-                    }
-                }
-                let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
-                return UIMenu(title: "", children: [runAction, runAsMenu, procedureMenu, deleteActions])
-
+                return UIMenu(title: "", children: self.actions(for: item.object) + [contentsAction, deleteActions])
             case .directory:
                 return UIMenu(title: "", children: [deleteActions])
             }
