@@ -70,7 +70,11 @@ class Program {
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     private let scheduler = Scheduler()
 
-    private var state: State = .idle
+    private var _state: State = .idle
+
+    public var state: State {
+        return _state
+    }
 
     weak var delegate: ProgramDelegate?
 
@@ -115,7 +119,7 @@ class Program {
         guard state == .idle else {
             return
         }
-        state = .running
+        _state = .running
         thread.start()
     }
 
@@ -172,7 +176,7 @@ extension Program: InterpreterThreadDelegate {
             case .error(let err):
                 self.console.append("\n---Error occurred:---\n\(err.description)")
             }
-            self.state = .finished
+            self._state = .finished
             self.delegate?.program(self, didFinishWithResult: result)
         }
     }

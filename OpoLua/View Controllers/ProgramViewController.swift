@@ -483,7 +483,13 @@ class ProgramViewController: UIViewController {
 extension ProgramViewController: ConsoleViewControllerDelegate {
 
     func consoleViewControllerDidDismiss(_ consoleViewController: ConsoleViewController) {
-        consoleViewController.dismiss(animated: true)
+        let shouldPopViewController = program.state == .finished
+        consoleViewController.dismiss(animated: true) {
+            guard shouldPopViewController else {
+                return
+            }
+            self.navigationController?.popViewController(animated: true)
+        }
     }
 
 }
