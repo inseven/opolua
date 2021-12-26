@@ -216,6 +216,9 @@ extension Program: OpoIoHandler {
         case .exists:
             let exists = fm.fileExists(atPath: path)
             return .err(exists ? .alreadyExists : .notFound)
+        case .isdir:
+            let exists = fm.directoryExists(atPath: path)
+            return .err(exists ? .alreadyExists : .notFound)
         case .delete:
             // Should probably prevent this from accidentally deleting a directory...
             do {

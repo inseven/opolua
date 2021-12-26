@@ -170,6 +170,7 @@ function Runtime:makeTemporaryVar(type, len, stringMaxLen)
 end
 
 function Runtime:addModule(path, procTable, opxTable)
+    -- printf("addModule: %s\n", path)
     local name = oplpath.splitext(oplpath.basename(path)):upper()
     local mod = {
         -- Since 'name' isn't a legal procname (they're always uppercase in
@@ -542,6 +543,7 @@ end
 function Runtime:openDb(logName, tableSpec, variables, op)
     assert(self.dbs[logName] == nil, KOplErrOpen)
     local path, tableName, fields = database.parseTableSpec(tableSpec)
+    path = self:abs(path)
     if fields == nil then
         -- SIBO-style call where field names are derived from the variable names
         fields = {}
@@ -1011,6 +1013,10 @@ function Runtime:setCwd(cwd)
     assert(oplpath.isabs(cwd), "Cannot set a non-absolute CWD!")
     assert(cwd:match("\\$"), "Cannot set a non-dir path as CWD!")
     self.cwd = cwd
+end
+
+function Runtime:abs(path)
+    return oplpath.abs(path, self.cwd)
 end
 
 function runOpo(fileName, procName, iohandler, verbose)

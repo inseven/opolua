@@ -403,7 +403,7 @@ function gLOADBIT(path, writable, index)
 
     -- (1)
     local iohandler = runtime:iohandler()
-    local data, err = iohandler.fsop("read", path)
+    local data, err = iohandler.fsop("read", runtime:abs(path))
     assert(data, err)
     local bitmaps = mbm.parseMbmHeader(data)
     assert(bitmaps, KOplErrGenFail)
@@ -540,8 +540,13 @@ end
 
 -- File APIs
 
+function EXIST(path)
+    local ret = runtime:iohandler().fsop("exists", runtime:abs(path))
+    return ret == KOplErrExists
+end
+
 function MKDIR(path)
-    local err = runtime:iohandler().fsop("mkdir", path)
+    local err = runtime:iohandler().fsop("mkdir", runtime:abs(path))
     if err ~= KErrNone then
         error(err)
     end
@@ -562,6 +567,7 @@ local Mode = {
 }
 
 function IOOPEN(path, mode)
+    path = runtime:abs(path)
     local openMode = mode & Mode.OpenModeMask
 
     if openMode == Mode.Open then
@@ -587,7 +593,7 @@ function IOOPEN(path, mode)
     assert(openMode ~= Mode.Unique, "Don't support unique yet!")
 
     if openMode == Mode.Create then
-        local err = runtime:fsop("exists", path)
+        local err = runtime:iohandler().fsop("exists", path)
         if err ~= KOplErrNotExists then
             printf("IOOPEN(%s) failed: %d\n", path, err)
             return nil, err

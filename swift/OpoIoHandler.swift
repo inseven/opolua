@@ -348,6 +348,7 @@ struct Fs {
     struct Operation {
         enum OpType {
             case exists // return notFound or alreadyExists (any access issue should result in notFound)
+            case isdir // as per exists
             case delete // return none, notFound, notReady
             case mkdir // return none, alreadyExists, notReady
             case rmdir // return none, notFound, inUse if it isn't empty, notReady

@@ -60,7 +60,7 @@ class ObjectFileSystem: FileSystem {
         guard url.path.hasPrefix(baseUrl.path) else {
             return nil
         }
-        let relativePath = String(url.path.dropFirst(baseUrl.path.count))
+        let relativePath = String(url.absoluteString.dropFirst(baseUrl.absoluteString.count))
         return guestPrefix + relativePath.pathComponents.joined(separator: "\\")
     }
 

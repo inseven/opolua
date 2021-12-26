@@ -483,6 +483,8 @@ private func fsop(_ L: LuaState!) -> Int32 {
     switch cmd {
     case "exists":
         op = .exists
+    case "isdir":
+        op = .isdir
     case "delete":
         op = .delete
     case "mkdir":

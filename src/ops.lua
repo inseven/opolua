@@ -1369,6 +1369,7 @@ end
 function Delete(stack, runtime) -- 0xA7
     local filename = stack:pop()
     assert(#filename > 0, KOplErrName)
+    filename = runtime:abs(filename)
     local err = runtime:iohandler().fsop("delete", filename)
     if err ~= 0 then
         error(err)
@@ -1430,7 +1431,7 @@ function LClose(stack, runtime) -- 0xAD
 end
 
 function LoadM(stack, runtime) -- 0xAE
-    runtime:loadModule(stack:pop())
+    runtime:loadModule(runtime:abs(stack:pop()))
     runtime:setTrap(false)
 end
 

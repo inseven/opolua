@@ -272,7 +272,7 @@ function PlaySoundA(stack, runtime) -- 39
     assert(runtime:getResource("sound") == nil, KOplErrInUse)
     local var = stack:pop():dereference()
     local volume = stack:pop()
-    local file = stack:pop()
+    local file = runtime:abs(stack:pop())
     var(KRequestPending)
 
     local data, err = runtime:iohandler().fsop("read", file)

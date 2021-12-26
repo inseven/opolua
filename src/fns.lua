@@ -305,8 +305,7 @@ end
 
 function Exist(stack, runtime) -- 0x08
     local path = stack:pop()
-    local ret = runtime:iohandler().fsop("exists", path)
-    stack:push(ret == KOplErrExists)
+    stack:push(runtime:EXIST(path))
 end
 
 function Find(stack, runtime) -- 0x09
@@ -1001,7 +1000,7 @@ function CmdStr(stack, runtime) -- 0xD6
     elseif x == 3 then
         stack:push("R")
     else
-        error("unhandle CMD$ param "..tostring(x))
+        error("unhandled CMD$ param "..tostring(x))
     end
 end
 
