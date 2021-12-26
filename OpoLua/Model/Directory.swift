@@ -32,13 +32,15 @@ class Directory {
             self.appInfo = appInfo
         }
 
-        init?(url: URL) {
+        init(url: URL) {
             guard url.isApplication,
                   let applicationInfoFile = url.applicationInfoFile,
                   FileManager.default.fileExists(atUrl: applicationInfoFile),
                   let appInfo = OpoInterpreter.shared.getAppInfo(aifPath: applicationInfoFile.path)
             else {
-                return nil
+                self.url = url
+                self.appInfo = OpoInterpreter.AppInfo(caption: url.name, icons: [])
+                return
             }
             self.url = url
             self.appInfo = appInfo

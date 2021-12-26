@@ -60,11 +60,11 @@ extension URL {
     }
 
     var applicationInfoFile: URL? {
-        return deletingPathExtension?.appendingPathExtension("aif")
+        return deletingLastPathComponent().appendingCaseInsensitivePathComponents([basename.appendingPathExtension("aif")!])
     }
 
     var isApplication: Bool {
-        return path.pathExtension == "app"
+        return path.pathExtension.lowercased() == "app"
     }
 
     var basename: String {
