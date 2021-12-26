@@ -2294,7 +2294,9 @@ end
 
 function IoWaitStat32(stack, runtime) -- 0x129
     local stat = stack:pop():dereference()
+    -- printf("IoWaitStat32 %s", stat)
     runtime:waitForRequest(stat)
+    -- printf(" -> %s\n", stat)
 end
 
 function Compact(stack, runtime) -- 0x12A

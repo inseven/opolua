@@ -112,7 +112,7 @@ Errors = {
 }
 
 -- Except when we do :-(
-KRequestPending = 0x80000001
+KRequestPending = -2147483647 -- Note we don't use 0x80000001 as that would be unsigned > 2^31
 
 -- Some misc uids used for file formats
 KUidDirectFileStore = 0x10000037 -- OPO/AIF/MBM uid1

@@ -180,9 +180,6 @@ function parseProc(proc)
         table.insert(proc.externals, { name = name, type = type })
     end
 
-    -- Since we don't care about max lengths we can ignore string fixups (which
-    -- exist to set the maxLength field of local strings declared in iFrameCell)
-    -- But we'll record them anyway in case we start enforcing that later.
     while true do
         local offset = readWord()
         if offset == 0 then

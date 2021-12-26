@@ -269,6 +269,7 @@ function PlaySound(stack, runtime) -- 38
 end
 
 function PlaySoundA(stack, runtime) -- 39
+    assert(runtime:getResource("sound") == nil, KOplErrInUse)
     local var = stack:pop():dereference()
     local volume = stack:pop()
     local file = stack:pop()
@@ -283,6 +284,11 @@ function PlaySoundA(stack, runtime) -- 39
     end
 
     local sndData = require("sound").parseWveFile(data)
+    runtime:setResource("sound", var)
+    var:setOnAssignCallback(function(var)
+        runtime:setResource("sound", nil)
+        var:setOnAssignCallback(nil)
+    end)
     runtime:iohandler().asyncRequest("playsound", var, sndData)
     stack:push(0)
 end

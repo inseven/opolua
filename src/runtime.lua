@@ -630,6 +630,15 @@ function Runtime:closeFile(handle)
     self.files[handle] = nil
 end
 
+function Runtime:setResource(name, val)
+    -- print("setResource", name, val)
+    self.resources[name] = val
+end
+
+function Runtime:getResource(name)
+    return self.resources[name]
+end
+
 function newModuleInstance(moduleName)
     -- Because opl.lua uses a shared upvalue for its runtime pointer, we need to
     -- give each runtime its own copy of the module, meaning we can't just
@@ -648,6 +657,7 @@ function newRuntime(handler)
         modules = {},
         files = {},
         ioh = handler or require("defaultiohandler"),
+        resources = {}, -- keyed by string, anything that code wants to use to provide singleton/mutex/etc semantics
         signal = 0,
     }
 

@@ -92,6 +92,7 @@ Variable = class {
     _idx = nil,
     _maxLen = nil,
     _val = nil,
+    _onAssign = nil,
 }
 
 function Variable:__call(val)
@@ -102,6 +103,9 @@ function Variable:__call(val)
             self._len = #val
         else
             self._val = val
+        end
+        if self._onAssign then
+            self._onAssign(self)
         end
     else
         if self._len then
@@ -238,6 +242,10 @@ function Variable:isPending()
     else
         error("Bad type for isPending")
     end
+end
+
+function Variable:setOnAssignCallback(fn)
+    self._onAssign = fn
 end
 
 function makeVar(type, maxLen)

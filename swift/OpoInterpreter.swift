@@ -997,6 +997,9 @@ class OpoInterpreter {
         default:
             val = 0 // Assuming everything is a success completion atm...
         }
+
+        // print("Completing \(type) with value \(val)")
+
         lua_pushvalue(L, 1) // statusVar
         L.push(val)
         lua_call(L, 1, 0) 
