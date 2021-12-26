@@ -20,20 +20,35 @@
 
 import Foundation
 
-class OPLObject {
-    
-    let url: URL
-    
-    var name: String {
-        return url.name
+class SystemFileSystem: FileSystem {
+
+    var rootUrl: URL
+
+    init(rootUrl: URL) {
+        self.rootUrl = rootUrl
     }
-    
-    var procedures: [OpoInterpreter.Procedure] {
-        return OpoInterpreter().getProcedures(file: url.path) ?? []
+
+    func hostUrl(for path: String) -> URL? {
+        let components = path.split(separator: "\\")
+            .map { String($0) }
+        guard let drive = components.first else {
+            return nil
+        }
+        let driveLetter = String(drive.prefix(1))
+        let normalizedComponents = [driveLetter] + Array(components[1...])
+        let hostUrl = rootUrl.appendingCaseInsensitivePathComponents(normalizedComponents)
+        return hostUrl
     }
-    
-    init(url: URL) {
-        self.url = url
+
+    func guestPath(for url: URL) -> String? {
+        let relativePath = url.relativePath(from: rootUrl)
+        let components = relativePath.split(separator: "/")
+            .map { String($0) }
+        guard let driveLetter = components.first else {
+            return nil
+        }
+        let result = driveLetter + ":\\" + components[1...].joined(separator: "\\")
+        return result
     }
-        
+
 }

@@ -39,18 +39,10 @@ class ObjectFileSystem: FileSystem {
 
     func hostUrl(for path: String) -> URL? {
         if path.uppercased().starts(with: guestPrefix) {
-            let pathComponents = path.split(separator: "\\")[4...]
-            var result = baseUrl
-            for component in pathComponents {
-                if component == "." || component == ".." {
-                    continue
-                }
-                // Have to do some nasty hacks here to appear case-insensitive
-                let name = (try? FileManager.default.findCorrectCase(in: result, for: String(component))) ?? String(component)
-                result.appendPathComponent(name)
-            }
-            print(result.absoluteURL)
-            return result.absoluteURL
+            let pathComponents = path
+                .split(separator: "\\")[4...]
+                .map { String($0) }
+            return baseUrl.appendingCaseInsensitivePathComponents(pathComponents)
         } else {
             return nil
         }

@@ -83,14 +83,14 @@ class Directory {
             }
         }
 
-        var object: OPLObject {
+        var configuration: Program.Configuration? {
             switch type {
             case .bundle(let application):
-                return OPLObject(url: application.url)
+                return Program.Configuration(url: application.url, fileSystem: ObjectFileSystem(objectUrl: application.url))
             case .system(let application):
-                return OPLObject(url: application.url)
+                return Program.Configuration(url: application.url, fileSystem: SystemFileSystem(rootUrl: url))
             default:
-                return OPLObject(url: url)
+                return Program.Configuration(url: url, fileSystem: ObjectFileSystem(objectUrl: url))
             }
         }
 

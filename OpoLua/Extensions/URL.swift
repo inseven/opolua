@@ -71,4 +71,24 @@ extension URL {
         return self.path.basename
     }
 
+    func appendingCaseInsensitivePathComponents(_ components: [String]) -> URL {
+        var result = self
+        for component in components {
+            if component == "." || component == ".." {
+                continue
+            }
+            let name = (try? FileManager.default.findCorrectCase(in: result, for: component)) ?? component
+            result.appendPathComponent(name)
+        }
+        return result.absoluteURL
+    }
+
+    func relativePath(from url: URL) -> String {
+        assert(self.isFileURL)
+        let destination = resolvingSymlinksInPath()
+        let source = url.resolvingSymlinksInPath()
+        assert(destination.path.hasPrefix(source.path))
+        return String(destination.path.dropFirst(source.path.count))
+    }
+
 }

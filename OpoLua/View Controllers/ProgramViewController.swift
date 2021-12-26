@@ -78,6 +78,28 @@ class ProgramViewController: UIViewController {
         return canvasView
     }()
 
+    lazy var menuBarButtonItem: UIBarButtonItem = {
+        let items = UIDeferredMenuElement.uncached { [weak self] completion in
+            guard let self = self else {
+                return
+            }
+            self.menuQueue.async {
+                self.program.sendMenu()
+                let disabled = UIAction(title: "None", attributes: .disabled) { _ in }
+                let items = self.menu.tryTake(until: Date().addingTimeInterval(0.1)) ?? [disabled]
+                DispatchQueue.main.async {
+                    completion(items)
+                }
+            }
+        }
+        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [items])
+        let menuBarButtonItem = UIBarButtonItem(title: nil,
+                                                image: UIImage(systemName: "ellipsis.circle"),
+                                                primaryAction: nil,
+                                                menu: menu)
+        return menuBarButtonItem
+    }()
+
     lazy var consoleBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "terminal"),
                                             style: .plain,
@@ -112,24 +134,6 @@ class ProgramViewController: UIViewController {
 
         self.toolbarItems = [consoleBarButtonItem]
         
-        let items = UIDeferredMenuElement.uncached { [weak self] completion in
-            guard let self = self else {
-                return
-            }
-            self.menuQueue.async {
-                self.program.sendMenu()
-                let disabled = UIAction(title: "None", attributes: .disabled) { _ in }
-                let items = self.menu.tryTake(until: Date().addingTimeInterval(0.1)) ?? [disabled]
-                DispatchQueue.main.async {
-                    completion(items)
-                }
-            }
-        }
-        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [items])
-        let menuBarButtonItem = UIBarButtonItem(title: nil,
-                                                image: UIImage(systemName: "ellipsis.circle"),
-                                                primaryAction: nil,
-                                                menu: menu)
         navigationItem.rightBarButtonItems = [menuBarButtonItem, controllerBarButtonItem]
 
         self.observeMenuDismiss()

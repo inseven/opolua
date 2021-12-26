@@ -37,16 +37,35 @@ protocol ProgramDelegate: AnyObject {
 
 class Program {
 
+    class Configuration {
+
+        let url: URL
+        let fileSystem: FileSystem
+
+        var name: String {
+            return url.name
+        }
+
+        var procedures: [OpoInterpreter.Procedure] {
+            return OpoInterpreter.shared.getProcedures(file: url.path) ?? []
+        }
+
+        init(url: URL, fileSystem: FileSystem) {
+            self.url = url
+            self.fileSystem = fileSystem
+        }
+
+    }
+
     enum State {
         case idle
         case running
         case finished
     }
 
-    private let object: OPLObject
+    private let configuration: Configuration
     private let procedureName: String?
     private let device: Device
-    private let fileSystem: FileSystem
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     private let scheduler = Scheduler()
@@ -59,9 +78,9 @@ class Program {
 
     var name: String {
         if let procedureName = procedureName {
-            return [object.name, procedureName].joined(separator: "\\")
+            return [configuration.name, procedureName].joined(separator: "\\")
         } else {
-            return object.name
+            return configuration.name
         }
     }
 
@@ -69,12 +88,11 @@ class Program {
         return device.screenSize
     }
 
-    init(object: OPLObject, procedureName: String? = nil, device: Device = .psionSeries5) {
-        self.object = object
+    init(configuration: Configuration, procedureName: String? = nil, device: Device = .psionSeries5) {
+        self.configuration = configuration
         self.procedureName = procedureName
         self.device = device
-        self.fileSystem = ObjectFileSystem(objectUrl: object.url)
-        self.thread = InterpreterThread(object: object, procedureName: procedureName)
+        self.thread = InterpreterThread(object: configuration, procedureName: procedureName)
         self.thread.delegate = self
         self.thread.handler = self
 
@@ -135,7 +153,7 @@ class Program {
     }
 
     private func mapToNative(path: String) -> URL? {
-        return fileSystem.hostUrl(for: path)
+        return configuration.fileSystem.hostUrl(for: path)
     }
 
 }
@@ -143,7 +161,7 @@ class Program {
 extension Program: InterpreterThreadDelegate {
 
     func interpreter(_ interpreter: InterpreterThread, pathForUrl url: URL) -> String? {
-        return fileSystem.guestPath(for: url)
+        return configuration.fileSystem.guestPath(for: url)
     }
 
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result) {

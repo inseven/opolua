@@ -29,7 +29,7 @@ protocol InterpreterThreadDelegate: AnyObject {
 
 class InterpreterThread: Thread {
 
-    private let object: OPLObject
+    private let object: Program.Configuration
     private let procedureName: String?
     private let interpreter = OpoInterpreter()
 
@@ -44,7 +44,7 @@ class InterpreterThread: Thread {
         }
     }
 
-    init(object: OPLObject, procedureName: String? = nil) {
+    init(object: Program.Configuration, procedureName: String? = nil) {
         self.object = object
         self.procedureName = procedureName
         super.init()
