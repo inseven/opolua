@@ -22,7 +22,7 @@ import UIKit
 
 class DirectoryViewController : UITableViewController {
     
-    let directory: Directory
+    var directory: Directory
     
     init(directory: Directory, title: String? = nil) {
         self.directory = directory
@@ -37,6 +37,22 @@ class DirectoryViewController : UITableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.isToolbarHidden = true
+        tableView.refreshControl = UIRefreshControl()
+        tableView.refreshControl?.addTarget(self, action: #selector(refresh(sender:)), for: .valueChanged)
+    }
+
+    @objc func refresh(sender: UIRefreshControl) {
+        reload()
+    }
+
+    func reload() {
+        do {
+            directory = try Directory(url: directory.url)
+            tableView.reloadData()
+            tableView.refreshControl?.endRefreshing()
+        } catch {
+            present(error: error)
+        }
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -95,10 +111,20 @@ class DirectoryViewController : UITableViewController {
                             contextMenuConfigurationForRowAt indexPath: IndexPath,
                             point: CGPoint) -> UIContextMenuConfiguration? {
         let item = directory.objects[indexPath.row]
-        switch item.type {
-        case .object, .app, .bundle:
-            let object = item.object
-            return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+
+            let deleteActions = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { action in
+                do {
+                    try FileManager.default.removeItem(at: item.url)
+                    self.reload()
+                } catch {
+                    self.present(error: error)
+                }
+            }
+
+            switch item.type {
+            case .object, .app, .bundle:
+                let object = item.object
                 let runAction = UIAction(title: "Run") { action in
                     let program = Program(object: object)
                     let viewController = ProgramViewController(program: program)
@@ -120,11 +146,13 @@ class DirectoryViewController : UITableViewController {
                     }
                 }
                 let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
-                return UIMenu(title: "", children: [runAction, runAsMenu, procedureMenu])
+                return UIMenu(title: "", children: [runAction, runAsMenu, procedureMenu, deleteActions])
+
+            case .directory:
+                return UIMenu(title: "", children: [deleteActions])
             }
-        case .directory:
-            return nil
+
         }
     }
-    
+
 }
