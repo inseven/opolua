@@ -1038,4 +1038,36 @@ function runOpo(fileName, procName, iohandler, verbose)
     return err
 end
 
+function installSis(data, iohandler)
+    local rt = newRuntime(iohandler)
+    local sis = require("sis")
+    local sisfile = sis.parseSisFile(data, false)
+
+    local langIdx = 1
+    -- Find which language index refers to English (not worrying about extracting other langs just yet)
+    for i, lang in ipairs(sisfile.langs) do
+        if lang == "EN" then
+            langIdx = i
+            break
+        end
+    end
+
+    for _, file in ipairs(sisfile.files) do
+        if file.type == sis.FileType.File then
+            -- extractFile(file, langIdx, dest)
+            local path = file.dest:gsub("^?:\\", "C:\\")
+            local dir = oplpath.dirname(path)
+            if iohandler:fsop("isdir", dir) == KOplErrNotExists then
+                rt:MKDIR(dir)
+            end
+            local data = file.data
+            if not data then
+                data = file.langData[langIdx]
+            end
+            local err = iohandler:fsop("write", path, data)
+            assert(err == KErrNone, "Failed to write to "..path)
+        end
+    end
+end
+
 return _ENV

@@ -1013,4 +1013,25 @@ class OpoInterpreter {
         luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle) // registry[requestHandle] = nil
     }
 
+    func installSisFile(path: String) -> Result {
+        let top = lua_gettop(L)
+        defer {
+            lua_settop(L, top)
+        }
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .error(Error(code: nil, opoStack: nil, luaStack: "", description:
+                "Couldn't read \(path)"))
+        }
+        lua_getglobal(L, "require")
+        L.push("runtime")
+        guard logpcall(1, 1) else { fatalError("Couldn't load runtime") }
+        lua_getfield(L, -1, "installSis")
+        L.push(data)
+        makeIoHandlerBridge()
+        if let err = pcall(2, 0) { // installSis(data, iohandler)
+            return .error(Error(code: nil, opoStack: nil, luaStack: err, description: err))
+        } else {
+            return .none
+        }
+    }
 }
