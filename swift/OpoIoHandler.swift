@@ -97,6 +97,8 @@ struct Dialog {
     struct Result {
         let result: Int
         let values: [String] // Must be same length as Dialog.items
+
+        static let none = Result(result: 0, values: [])
     }
 
     let title: String
@@ -136,10 +138,10 @@ struct Menu {
 
     struct Result {
 
-        static let none = Result(selected: 0, highlighted: 0)
-
         let selected: Int // Zero if menu cancelled, otherwise keycode of selected command
         let highlighted: Int // Index of highlighted item (even if cancelled)
+
+        static let none = Result(selected: 0, highlighted: 0)
     }
 
     let title: String
@@ -154,6 +156,7 @@ struct Graphics {
         let height: Int
 
         static let icon = Self(width: 48, height: 48)
+        static let zero = Self(width: 0, height: 0)
     }
 
     struct Point {

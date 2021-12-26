@@ -23,6 +23,7 @@ import UIKit
 class DirectoryViewController : UITableViewController {
     
     var directory: Directory
+    var installer: Installer?
     
     init(directory: Directory, title: String? = nil) {
         self.directory = directory
@@ -62,6 +63,8 @@ class DirectoryViewController : UITableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return directory.objects.count
     }
+
+    let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 48)
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
@@ -71,27 +74,25 @@ class DirectoryViewController : UITableViewController {
         cell.accessoryType = .disclosureIndicator
         switch item.type {
         case .object:
-            cell.imageView?.image = UIImage(systemName: "applescript",
-                                            withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+            cell.imageView?.image = UIImage(systemName: "applescript", withConfiguration: symbolConfiguration)
         case .directory:
             cell.imageView?.image = UIImage(named: "FolderIcon")
         case .app:
-            cell.imageView?.image = UIImage(systemName: "app",
-                                            withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+            cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
         case .bundle(let application):
             if let appIcon = application.appInfo.appIcon {
                 cell.imageView?.image = appIcon
             } else {
-                cell.imageView?.image = UIImage(systemName: "app",
-                                                withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+                cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
             }
         case .system(let application):
             if let appIcon = application.appInfo.appIcon {
                 cell.imageView?.image = appIcon
             } else {
-                cell.imageView?.image = UIImage(systemName: "app",
-                                                withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+                cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
             }
+        case .installer:
+            cell.imageView?.image = UIImage(systemName: "shippingbox", withConfiguration: symbolConfiguration)
         }
         return cell
     }
@@ -109,6 +110,11 @@ class DirectoryViewController : UITableViewController {
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
             pushDirectoryViewController(for: item.url)
+            tableView.deselectRow(at: indexPath, animated: true)
+        case .installer:
+            installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url))
+            installer?.delegate = self
+            installer?.run()
             tableView.deselectRow(at: indexPath, animated: true)
         }
     }
@@ -179,8 +185,22 @@ class DirectoryViewController : UITableViewController {
                 return UIMenu(children: actions + [contentsAction, deleteActions])
             case .directory:
                 return UIMenu(children: [deleteActions])
+            case .installer:
+                return UIMenu(children: [deleteActions])
             }
         }
+    }
+
+}
+
+extension DirectoryViewController: InstallerDelegate {
+
+    func installer(_ installer: Installer, didFinishWithResult result: OpoInterpreter.Result) {
+        print("installer(\(installer), didFinishWithResult: \(result))")
+    }
+
+    func installer(_ installer: Installer, didFailWithError error: Error) {
+        print("installer(\(installer), didFailWithError: \(error))")
     }
 
 }

@@ -54,6 +54,7 @@ class Directory {
             case app
             case bundle(Application)
             case system(Application)
+            case installer
 
             var localizedDescription: String {
                 switch self {
@@ -67,6 +68,8 @@ class Directory {
                     return "Bundle"
                 case .system:
                     return "System"
+                case .installer:
+                    return "Installer"
                 }
             }
         }
@@ -172,10 +175,12 @@ class Directory {
                     } else {
                         return Item(url: url, type: .directory)
                     }
-                } else if url.pathExtension == "opo" {
+                } else if url.pathExtension.lowercased() == "opo" {
                     return Item(url: url, type: .object)
-                } else if url.pathExtension == "app" {
+                } else if url.pathExtension.lowercased() == "app" {
                     return Item(url: url, type: .app)
+                } else if url.pathExtension.lowercased() == "sis" {
+                    return Item(url: url, type: .installer)
                 } else {
                     return nil
                 }

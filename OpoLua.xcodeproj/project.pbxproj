@@ -21,6 +21,7 @@
 		D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */; };
 		D884A3D32778E335008954A0 /* FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D22778E335008954A0 /* FileSystem.swift */; };
 		D884A3D52779025A008954A0 /* SystemFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D42779025A008954A0 /* SystemFileSystem.swift */; };
+		D884A3D7277914CF008954A0 /* Installer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D6277914CF008954A0 /* Installer.swift */; };
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
 		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
 		D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891346274BF2D200794D55 /* DialogViewController.swift */; };
@@ -183,6 +184,7 @@
 		D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFileSystem.swift; sourceTree = "<group>"; };
 		D884A3D22778E335008954A0 /* FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
 		D884A3D42779025A008954A0 /* SystemFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemFileSystem.swift; sourceTree = "<group>"; };
+		D884A3D6277914CF008954A0 /* Installer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Installer.swift; sourceTree = "<group>"; };
 		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
 		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
 		D8891346274BF2D200794D55 /* DialogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewController.swift; sourceTree = "<group>"; };
@@ -314,6 +316,7 @@
 				D84ADB152771D937001ABFB4 /* Device.swift */,
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
 				D884A3D22778E335008954A0 /* FileSystem.swift */,
+				D884A3D6277914CF008954A0 /* Installer.swift */,
 				D86724F12771672A009C7246 /* InterpreterThread.swift */,
 				D8FE60022757106300711717 /* Location.swift */,
 				D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */,
@@ -724,6 +727,7 @@
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
 				DB7900072742E6F6005E904F /* llex.c in Sources */,
+				D884A3D7277914CF008954A0 /* Installer.swift in Sources */,
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
 				D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */,
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
