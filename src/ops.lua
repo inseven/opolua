@@ -339,8 +339,8 @@ codes = {
     [0x132] = "EvalExternalLeftSideRef",
     [0x133] = "dEditCheckbox", -- In 6.0 this opcode has actually been REDEFINED to gSetPenWidth
     [0x134] = "dEditMulti",
-    [0x135] = "gColorInfo",
-    [0x136] = "gColorBackground",
+    [0x135] = "IllegalOpCode", --"gColorInfo",
+    [0x136] = "gColorInfo", --"gColorBackground",
     [0x137] = "mCardX",
     [0x138] = "SetHelp",
     [0x139] = "ShowHelp",
@@ -2377,12 +2377,21 @@ function mCardX(stack, runtime) -- 0x137
     error("Unimplemented opcode mCardX!")
 end
 
-function gColorBackground(stack, runtime) -- 0x136
-    error("Unimplemented opcode gColorBackground!")
+function gColorBackground(stack, runtime) -- ER5: ??, ER6: 0x136
+    local blue = stack:pop()
+    local green = stack:pop()
+    local red = stack:pop()
+    runtime:gCOLORBACKGROUND(red, green, blue)
 end
 
-function gColorInfo(stack, runtime) -- 0x135
-    error("Unimplemented opcode gColorInfo!")
+function gColorInfo(stack, runtime) -- ER5: 0x136, ER6: 0x135
+    local addr = stack:pop()
+    local result = {
+        6, -- TDisplayMode::EColor256
+        256, -- numColors
+        256, -- numGrays
+    }
+    addr:writeArray(result, DataTypes.ELong)
 end
 
 function dEditMulti(stack, runtime) -- 0x134

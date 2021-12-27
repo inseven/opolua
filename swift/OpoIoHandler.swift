@@ -203,6 +203,8 @@ struct Graphics {
             case Gray256 = 3 // ie 8bpp grayscale
             case Color16 = 4 // ie 4bpp color
             case Color256 = 5 // ie 8bpp color
+            case Color64K = 6 // 16bpp color
+            case Color16M = 7 // 24bpp color
         }
         let mode: Mode
         let size: Size
@@ -218,10 +220,12 @@ struct Graphics {
             case .Gray4: return 2
             case .Gray16, .Color16: return 4
             case .Gray256, .Color256: return 8
+            case .Color64K: return 16
+            case .Color16M: return 24
             }
         }
         var color: Bool {
-            return mode == .Color16 || mode == .Color256
+            return mode.rawValue >= Mode.Color16.rawValue
         }
     }
 

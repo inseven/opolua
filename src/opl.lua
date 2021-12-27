@@ -369,6 +369,11 @@ function gCOLOR(red, green, blue)
     runtime:getGraphicsContext().color = val
 end
 
+function gCOLORBACKGROUND(red, green, blue)
+    local val = (red + green + blue) // 3
+    runtime:getGraphicsContext().bgcolor = val
+end
+
 function gSETWIN(x, y, w, h)
     -- printf("gSETWIN id=%d %d,%d %sx%s\n", gIDENTITY(), x, y, w, h)
     runtime:flushGraphicsOps()

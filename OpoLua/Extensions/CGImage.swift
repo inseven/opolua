@@ -375,6 +375,26 @@ extension CGImage {
                 bitmapInfo: inf,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
+        case .Color64K:
+            let provider = CGDataProvider(data: bitmap.data as CFData)!
+            let sp = CGColorSpaceCreateDeviceRGB()
+            let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
+            return CGImage(width: bitmap.width, height: bitmap.height,
+                bitsPerComponent: 16, bitsPerPixel: 16, // bitsPerComponent is probably wrong here
+                bytesPerRow: bitmap.stride, space: sp,
+                bitmapInfo: inf,
+                provider: provider, decode: nil, shouldInterpolate: false,
+                intent: .defaultIntent)!
+        case .Color16M:
+            let provider = CGDataProvider(data: bitmap.data as CFData)!
+            let sp = CGColorSpaceCreateDeviceRGB()
+            let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
+            return CGImage(width: bitmap.width, height: bitmap.height,
+                bitsPerComponent: 8, bitsPerPixel: 24,
+                bytesPerRow: bitmap.stride, space: sp,
+                bitmapInfo: inf,
+                provider: provider, decode: nil, shouldInterpolate: false,
+                intent: .defaultIntent)!
         }
     }
 
