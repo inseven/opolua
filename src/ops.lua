@@ -1431,7 +1431,9 @@ function LClose(stack, runtime) -- 0xAD
 end
 
 function LoadM(stack, runtime) -- 0xAE
-    runtime:loadModule(runtime:abs(stack:pop()))
+    -- Unlike everything else, LoadM has its own idea of where paths should be relative to
+    local path = oplpath.abs(stack:pop(), runtime:getPath())
+    runtime:loadModule(path)
     runtime:setTrap(false)
 end
 
@@ -2017,6 +2019,7 @@ end
 
 function SetPath(stack, runtime) -- 0xFA
     local path = stack:pop()
+    -- printf("SetPath %s\n", path)
     local dir = oplpath.split(path) -- Yep, D:\dir\thingwithoutslash means D:\dir\
     runtime:setCwd(dir)
 end
