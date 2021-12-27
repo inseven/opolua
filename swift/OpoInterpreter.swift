@@ -392,13 +392,14 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 }
 
 // graphicsop(cmd, ...)
-// graphicsop("close", displayId)
-// graphicsop("show", displayId, flag)
-// graphicsop("order", displayId, pos)
+// graphicsop("close", drawableId)
+// graphicsop("show", drawableId, flag)
+// graphicsop("order", drawableId, pos)
 // graphicsop("textsize", str, font)
 // graphicsop("busy", text, corner, delay)
 // graphicsop("giprint", text, corner)
-// graphicsop("setwin", displayId, x, y, [w, h])
+// graphicsop("setwin", drawableId, x, y, [w, h])
+// graphicsop("sprite", id, [sprite])
 private func graphicsop(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""
@@ -408,7 +409,7 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
             let drawableId = Graphics.DrawableId(value: id)
             return doGraphicsOp(L, iohandler, .close(drawableId))
         } else {
-            print("Bad displayId to close graphicsop!")
+            print("Bad drawableId to close graphicsop!")
         }
     case "show":
         if let id = L.toint(2) {
@@ -416,7 +417,7 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
             let flag = L.toboolean(3)
             return doGraphicsOp(L, iohandler, .show(drawableId, flag))
         } else {
-            print("Bad displayId to show graphicsop!")
+            print("Bad drawableId to show graphicsop!")
         }
     case "order":
         if let id = L.toint(2),
@@ -463,8 +464,47 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
             }
             return doGraphicsOp(L, iohandler, .setwin(drawableId, pos, size))
         } else {
-            print("Bad args to setwin±")
+            print("Bad args to setwin")
         }
+    case "sprite":
+        guard let spriteId = L.toint(2) else {
+            print("Bad id for sprite")
+            break
+        }
+        if L.type(3) == .nilType {
+            return doGraphicsOp(L, iohandler, .sprite(spriteId, nil))
+        }
+        guard L.type(3) == .table,
+              let x = L.toint(3, key: "x"),
+              let y = L.toint(3, key: "y"),
+              let win = L.toint(3, key: "win"),
+              lua_getfield(L, 3, "frames") == LUA_TTABLE
+            else {
+                print("Bad args to sprite")
+                break
+            }
+        let winId = Graphics.DrawableId(value: win)
+        var frames: [Graphics.Sprite.Frame] = []
+        for _ in L.ipairs(-1, requiredType: .table) {
+            if let dx = L.toint(-1, key: "dx"),
+               let dy = L.toint(-1, key: "dy"),
+               let bitmap = L.toint(-1, key: "bitmap"),
+               let mask = L.toint(-1, key: "mask"),
+               let time = L.toint(-1, key: "time") {
+                let invert = L.toboolean(-1, key: "invert")
+                let offset = Graphics.Point(x: dx, y: dy)
+                let bitmapId = Graphics.DrawableId(value: bitmap)
+                let maskId = Graphics.DrawableId(value: mask)
+                let frame = Graphics.Sprite.Frame(offset: offset, bitmap: bitmapId, mask:maskId, invertMask: invert, time: Double(time) / 1000000)
+                frames.append(frame)
+            } else {
+                print("Missing frame params!")
+                break
+            }
+        }
+        let origin = Graphics.Point(x: x, y: y)
+        let sprite = Graphics.Sprite(window: winId, origin: origin, frames: frames)
+        return doGraphicsOp(L, iohandler, .sprite(spriteId, sprite))
     default:
         print("Unknown graphicsop \(cmd)!")
     }

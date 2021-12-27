@@ -420,6 +420,10 @@ class ProgramViewController: UIViewController {
             }
             return .nothing
 
+        case .sprite(_ /*let id*/, let sprite):
+            // TODO
+            print("TODO \(String(describing: sprite))")
+            return .nothing
         }
     }
 

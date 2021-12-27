@@ -340,6 +340,19 @@ struct Graphics {
         let bgcolor: Color
     }
 
+    struct Sprite {
+        struct Frame {
+            let offset: Point
+            let bitmap: DrawableId
+            let mask: DrawableId
+            let invertMask: Bool
+            let time: TimeInterval
+        }
+        let window: DrawableId
+        let origin: Point
+        let frames: [Frame]
+    }
+
     enum Operation {
         case close(DrawableId)
         case createBitmap(Size, Bitmap.Mode) // returns handle
@@ -350,6 +363,7 @@ struct Graphics {
         case busy(String, Corner, Int) // text, corner, delay (in ms)
         case giprint(String, Corner)
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
+        case sprite(Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
     }
 
     enum Result {

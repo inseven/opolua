@@ -393,11 +393,12 @@ function Runtime:getMenu()
     return self.menu
 end
 
-function Runtime:newGraphicsContext(id, width, height, isWindow)
+function Runtime:newGraphicsContext(id, width, height, isWindow, displayMode)
     local graphics = self:getGraphics()
     assert(graphics[id] == nil, "Graphics context already exists!")
     local newCtx = {
         id = id,
+        displayMode = displayMode,
         mode = 0, -- set
         tmode = 0, -- set
         color = 0, -- black
@@ -427,6 +428,7 @@ function Runtime:getGraphics()
             h = h // 11,
             fontid = KFontCourierNormal11,
         }
+        self.graphics.sprites = {}
     end
     return self.graphics
 end

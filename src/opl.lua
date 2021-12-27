@@ -385,7 +385,7 @@ function gCREATE(x, y, w, h, visible, flags)
     local id = runtime:iohandler().createWindow(x, y, w, h, flags or 0)
     assert(id, "Failed to createWindow!")
     -- printf(" id=%d\n", id)
-    runtime:newGraphicsContext(id, w, h, true)
+    runtime:newGraphicsContext(id, w, h, true, (flags or 0) & 0xF)
     if visible then
         runtime:iohandler().graphicsop("show", id, true)
     end
@@ -396,7 +396,7 @@ function gCREATEBIT(w, h, mode)
     local id = runtime:iohandler().createBitmap(w, h, mode)
     assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
     -- printf(" id=%d\n", id)
-    runtime:newGraphicsContext(id, w, h, false)
+    runtime:newGraphicsContext(id, w, h, false, mode)
     return id
 end
 
