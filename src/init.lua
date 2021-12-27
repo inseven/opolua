@@ -50,6 +50,13 @@ function printf(...)
     io.stdout:write(string.format(...))
 end
 
+function toint32(val)
+    if val >= 0x80000000 then
+        val = string.unpack("i4", string.pack("I4", val))
+    end
+    return val
+end
+
 DataTypes = enum {
     EWord = 0, -- 2 bytes
     ELong = 1, -- 4 bytes
@@ -112,7 +119,8 @@ Errors = {
 }
 
 -- Except when we do :-(
-KRequestPending = -2147483647 -- Note we don't use 0x80000001 as that would be unsigned > 2^31
+KRequestPending = toint32(0x80000001)
+assert(KRequestPending == -2147483647)
 
 -- Some misc uids used for file formats
 KUidDirectFileStore = 0x10000037 -- OPO/AIF/MBM uid1

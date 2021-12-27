@@ -684,7 +684,21 @@ function Space(stack, runtime) -- 0x44
 end
 
 function DateToSecs(stack, runtime) -- 0x45
-    error("Unimplemented function DateToSecs!")
+    local seconds = stack:pop()
+    local minutes = stack:pop()
+    local hours = stack:pop()
+    local day = stack:pop()
+    local month = stack:pop()
+    local year = stack:pop()
+    local t = os.time({
+        year = year,
+        month = month,
+        day = day,
+        hour = hours,
+        min = minutes,
+        sec = seconds
+    })
+    stack:push(toint32(t))
 end
 
 function Alloc(stack, runtime) -- 0x4B
