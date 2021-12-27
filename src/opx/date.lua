@@ -91,7 +91,8 @@ function DTHour(stack, runtime) -- 6
 end
 
 function DTMinute(stack, runtime) -- 7
-    error("Unimplemented date.opx function DTMinute!")
+    local t = assert(handles[stack:pop()])
+    stack:push(os.date("*t", math.floor(t)).min)
 end
 
 function DTSecond(stack, runtime) -- 8

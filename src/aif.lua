@@ -37,7 +37,7 @@ function parseAif(data)
         offset, langCode, pos = string.unpack("<I4I2", data, pos)
         local captionLen = (string.unpack("B", data, 1 + offset) - 2) // 4
         local caption = data:sub(1 + offset + 1, offset + 1 + captionLen)
-        local lang = assert(sis.Langs[langCode], "Unknown lang code!")
+        local lang = assert(sis.Langs[langCode], "Unknown lang code "..langCode)
         captions[lang] = caption
     end
 

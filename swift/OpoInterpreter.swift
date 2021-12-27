@@ -157,7 +157,7 @@ private func dialog(_ L: LuaState!) -> Int32 {
                 selectable: selectable)
             items.append(item)
         } else {
-            print("Unknown dialog item type!")
+            print("Unknown dialog item type \(String(describing: rawt))!")
         }
     }
     // leave items on the stack for doing fixups at the end

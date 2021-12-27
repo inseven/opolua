@@ -133,7 +133,8 @@ function SetAutoSwitchOffTime(stack, runtime) -- 7
 end
 
 function SetActive(stack, runtime) -- 8
-    error("Unimplemented system.opx function SetActive!")
+    printf("system.SetActive(%d)\n", stack:pop())
+    stack:push(0)
 end
 
 function ResetAutoSwitchOffTimer(stack, runtime) -- 9
@@ -362,11 +363,13 @@ function GetThreadIdFromAppUid(stack, runtime) -- 54
 end
 
 function SetForeground(stack, runtime) -- 55
-    error("Unimplemented system.opx function SetForeground!")
+    printf("system.SetForeground()\n")
+    stack:push(0)
 end
 
 function SetBackground(stack, runtime) -- 56
-    error("Unimplemented system.opx function SetBackground!")
+    printf("system.SetBackground()\n")
+    stack:push(0)
 end
 
 function SetForegroundByThread(stack, runtime) -- 57
