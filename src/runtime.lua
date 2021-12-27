@@ -1055,7 +1055,7 @@ function installSis(data, iohandler)
     for _, file in ipairs(sisfile.files) do
         if file.type == sis.FileType.File then
             -- extractFile(file, langIdx, dest)
-            local path = file.dest:gsub("^?:\\", "C:\\")
+            local path = file.dest:gsub("^.:\\", "C:\\")
             local dir = oplpath.dirname(path)
             if iohandler:fsop("isdir", dir) == KOplErrNotExists then
                 rt:MKDIR(dir)
@@ -1064,7 +1064,7 @@ function installSis(data, iohandler)
             if not data then
                 data = file.langData[langIdx]
             end
-            local err = iohandler:fsop("write", path, data)
+            local err = iohandler.fsop("write", path, data)
             assert(err == KErrNone, "Failed to write to "..path)
         end
     end
