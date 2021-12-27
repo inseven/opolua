@@ -50,8 +50,8 @@ class ProgramViewController: UIViewController {
     var program: Program
 
     var drawableHandle = (1...).makeIterator()
-    var drawables: [Int: Drawable] = [:]
-    var infoDrawableHandle: Int?
+    var drawables: [Graphics.DrawableId: Drawable] = [:]
+    var infoDrawableHandle: Graphics.DrawableId?
     var infoWindowDismissTimer: Timer?
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
@@ -74,7 +74,7 @@ class ProgramViewController: UIViewController {
         canvasView.layer.borderWidth = 1.0
         canvasView.layer.borderColor = UIColor.black.cgColor
         canvasView.clipsToBounds = true
-        drawables[1] = canvasView // 1 is always the main window
+        drawables[.defaultWindow] = canvasView
         return canvasView
     }()
 
@@ -258,7 +258,8 @@ class ProgramViewController: UIViewController {
 
     private func newCanvas(size: CGSize, color: Bool) -> Canvas {
         dispatchPrecondition(condition: .onQueue(.main))
-        let canvas = Canvas(id: drawableHandle.next()!, size: size, color: color)
+        let id = Graphics.DrawableId(value: drawableHandle.next()!)
+        let canvas = Canvas(id: id, size: size, color: color)
         return canvas
     }
 
@@ -286,7 +287,7 @@ class ProgramViewController: UIViewController {
         return canvas
     }
 
-    func setVisiblity(handle: Int, visible: Bool) {
+    func setVisiblity(handle: Graphics.DrawableId, visible: Bool) {
         dispatchPrecondition(condition: .onQueue(.main))
         guard let view = self.drawables[handle] as? CanvasView else {
             print("No CanvasView for showWindow operation")
@@ -298,9 +299,9 @@ class ProgramViewController: UIViewController {
     /**
      N.B. In OPL terms position=1 means the front, whereas subviews[1] is at the back.
      */
-    func order(displayId: Int, position: Int) {
+    func order(drawableId: Graphics.DrawableId, position: Int) {
         dispatchPrecondition(condition: .onQueue(.main))
-        guard let view = self.drawables[displayId] as? CanvasView else {
+        guard let view = self.drawables[drawableId] as? CanvasView else {
             return
         }
         let views = self.canvasView.subviews
@@ -314,12 +315,12 @@ class ProgramViewController: UIViewController {
     }
 
 
-    func close(displayId: Int) {
-        guard let view = self.drawables[displayId] as? CanvasView else {
+    func close(drawableId: Graphics.DrawableId) {
+        guard let view = self.drawables[drawableId] as? CanvasView else {
             return
         }
         view.removeFromSuperview()
-        self.drawables[displayId] = nil
+        self.drawables[drawableId] = nil
     }
 
     func bringInfoWindowToFront() {
@@ -335,7 +336,7 @@ class ProgramViewController: UIViewController {
         guard let infoDrawableHandle = infoDrawableHandle else {
             return
         }
-        close(displayId: infoDrawableHandle)
+        close(drawableId: infoDrawableHandle)
         self.infoDrawableHandle = nil
         infoWindowDismissTimer?.invalidate()
     }
@@ -349,13 +350,13 @@ class ProgramViewController: UIViewController {
         let details = Self.textSize(string: text, fontInfo: fontInfo)
         let mode = Graphics.Bitmap.Mode.Gray4
         let canvas = self.createWindow(rect: .init(origin: .zero, size: details.size), mode: mode, shadowSize: 0)
-        canvas.draw(.init(displayId: canvas.id,
+        canvas.draw(.init(drawableId: canvas.id,
                           type: .fill(details.size),
                           mode: .set,
                           origin: .zero,
                           color: .black,
                           bgcolor: .black))
-        canvas.draw(.init(displayId: canvas.id,
+        canvas.draw(.init(drawableId: canvas.id,
                           type: .text(text, fontInfo),
                           mode: .set,
                           origin: .init(x: 0, y: details.size.height),
@@ -383,16 +384,16 @@ class ProgramViewController: UIViewController {
             let canvas = createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
             return .handle(canvas.id)
 
-        case .close(let displayId):
-            close(displayId: displayId)
+        case .close(let drawableId):
+            close(drawableId: drawableId)
             return .nothing
 
-        case .order(let displayId, let position):
-            order(displayId: displayId, position: position)
+        case .order(let drawableId, let position):
+            order(drawableId: drawableId, position: position)
             return .nothing
 
-        case .show(let displayId, let flag):
-            setVisiblity(handle: displayId, visible: flag)
+        case .show(let drawableId, let flag):
+            setVisiblity(handle: drawableId, visible: flag)
             return .nothing
 
         case .textSize(let string, let fontInfo):
@@ -408,8 +409,8 @@ class ProgramViewController: UIViewController {
             infoPrint(text: text, corner: corner)
             return .nothing
 
-        case .setwin(let displayId, let pos, let size):
-            if let view = self.drawables[displayId] as? CanvasView {
+        case .setwin(let drawableId, let pos, let size):
+            if let view = self.drawables[drawableId] as? CanvasView {
                 if let size = size {
                     view.resize(to: size.cgSize())
                 }
@@ -566,46 +567,46 @@ extension ProgramViewController: ProgramDelegate {
     func draw(operations: [Graphics.DrawCommand]) {
         DispatchQueue.main.sync {
             for op in operations {
-                guard let drawable = self.drawables[op.displayId] else {
-                    print("No drawable for displayid \(op.displayId)!")
+                guard let drawable = self.drawables[op.drawableId] else {
+                    print("No drawable for drawableId \(op.drawableId)!")
                     continue
                 }
 
                 switch (op.type) {
                 case .copy(let src, let mask):
                     // These need some massaging to shoehorn in the src Drawable pointer
-                    guard let srcCanvas = self.drawables[src.displayId] else {
-                        print("Copy operation with unknown source \(src.displayId)!")
+                    guard let srcCanvas = self.drawables[src.drawableId] else {
+                        print("Copy operation with unknown source \(src.drawableId)!")
                         continue
                     }
-                    let newSrc = Graphics.CopySource(displayId: src.displayId, rect: src.rect, extra: srcCanvas.getImage())
+                    let newSrc = Graphics.CopySource(drawableId: src.drawableId, rect: src.rect, extra: srcCanvas.getImage())
                     let newMaskSrc: Graphics.CopySource?
-                    if let mask = mask, let maskCanvas = self.drawables[mask.displayId] {
-                        newMaskSrc = Graphics.CopySource(displayId: mask.displayId, rect: mask.rect, extra: maskCanvas)
+                    if let mask = mask, let maskCanvas = self.drawables[mask.drawableId] {
+                        newMaskSrc = Graphics.CopySource(drawableId: mask.drawableId, rect: mask.rect, extra: maskCanvas)
                     } else {
                         newMaskSrc = nil
                     }
-                    let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .copy(newSrc, newMaskSrc),
+                    let newOp = Graphics.DrawCommand(drawableId: op.drawableId, type: .copy(newSrc, newMaskSrc),
                                                      mode: op.mode, origin: op.origin,
                                                      color: op.color, bgcolor: op.bgcolor)
                     drawable.draw(newOp)
                 case .pattern(let info):
                     let extra: AnyObject?
-                    if info.displayId == -1 {
+                    if info.drawableId.value == -1 {
                         guard let img = UIImage(named: "DitherPattern")?.cgImage else {
                             print("Failed to load DitherPattern!")
                             return
                         }
                         extra = img
                     } else {
-                        guard let srcCanvas = self.drawables[info.displayId] else {
-                            print("Pattern operation with unknown source \(info.displayId)!")
+                        guard let srcCanvas = self.drawables[info.drawableId] else {
+                            print("Pattern operation with unknown source \(info.drawableId)!")
                             continue
                         }
                         extra = srcCanvas.getImage()
                     }
-                    let newInfo = Graphics.CopySource(displayId: info.displayId, rect: info.rect, extra: extra)
-                    let newOp = Graphics.DrawCommand(displayId: op.displayId, type: .pattern(newInfo),
+                    let newInfo = Graphics.CopySource(drawableId: info.drawableId, rect: info.rect, extra: extra)
+                    let newOp = Graphics.DrawCommand(drawableId: op.drawableId, type: .pattern(newInfo),
                                                      mode: op.mode, origin: op.origin,
                                                      color: op.color, bgcolor: op.bgcolor)
                     drawable.draw(newOp)

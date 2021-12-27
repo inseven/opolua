@@ -234,8 +234,16 @@ struct Graphics {
         let mask: Bitmap?
     }
 
+    struct DrawableId: Hashable {
+        let value: Int
+
+        static var defaultWindow: DrawableId {
+            return .init(value: 1)
+        }
+    }
+
     struct CopySource {
-        let displayId: Int
+        let drawableId: DrawableId
         let rect: Rect
         let extra: AnyObject? // a CGImage, in the ProgramViewController impl
     }
@@ -324,7 +332,7 @@ struct Graphics {
             case border(Rect, BorderType)
             case invert(Size)
         }
-        let displayId: Int
+        let drawableId: DrawableId
         let type: OpType
         let mode: Mode
         let origin: Point
@@ -333,20 +341,20 @@ struct Graphics {
     }
 
     enum Operation {
-        case close(Int)
+        case close(DrawableId)
         case createBitmap(Size, Bitmap.Mode) // returns handle
         case createWindow(Rect, Bitmap.Mode, Int) // Int is shadow size in pixels. returns handle
-        case order(Int, Int) // displayId, position
-        case show(Int, Bool) // displayId, visible flag
+        case order(DrawableId, Int) // drawableId, position
+        case show(DrawableId, Bool) // drawableId, visible flag
         case textSize(String, FontInfo) // returns size
         case busy(String, Corner, Int) // text, corner, delay (in ms)
         case giprint(String, Corner)
-        case setwin(Int, Point, Size?) // displayId, pos, size
+        case setwin(DrawableId, Point, Size?) // drawableId, pos, size
     }
 
     enum Result {
         case nothing
-        case handle(Int)
+        case handle(DrawableId)
         case sizeAndAscent(Size, Int)
     }
 }
@@ -419,7 +427,7 @@ struct Async {
     }
     struct PenEvent {
         let timestamp: Int // Microseconds since boot, or something
-        let windowId: Int
+        let windowId: Graphics.DrawableId
         let type: PenEventType
         let modifiers: Int
         let x: Int

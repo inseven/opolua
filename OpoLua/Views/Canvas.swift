@@ -30,12 +30,12 @@ protocol Drawable: AnyObject {
 
 class Canvas: Drawable {
 
-    let id: Int
+    let id: Graphics.DrawableId
     let size: CGSize
     private var image: CGImage?
     private let context: CGContext
 
-    init(id: Int, size: CGSize, color: Bool) {
+    init(id: Graphics.DrawableId, size: CGSize, color: Bool) {
         self.id = id
         self.size = size
         let colorSpace: CGColorSpace

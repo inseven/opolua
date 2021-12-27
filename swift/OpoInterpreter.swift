@@ -144,7 +144,8 @@ private func dialog(_ L: LuaState!) -> Int32 {
         let choices = L.tostringarray(-1, key: "choices")
         let selectable = L.toboolean(-1, key: "selectable")
 
-        if let t = Dialog.Item.ItemType(rawValue: L.toint(-1, key: "type") ?? -1) {
+        let rawt = L.toint(-1, key: "type")
+        if let t = Dialog.Item.ItemType(rawValue: rawt ?? -1) {
             let item = Dialog.Item(
                 type: t,
                 prompt: prompt,
@@ -254,7 +255,7 @@ private func draw(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     var ops: [Graphics.DrawCommand] = []
     for _ in L.ipairs(1, requiredType: .table) {
-        let id = L.toint(-1, key: "id") ?? 1
+        let id = Graphics.DrawableId(value: L.toint(-1, key: "id") ?? 1)
         let t = L.tostring(-1, key: "type") ?? ""
         let x = L.toint(-1, key: "x") ?? 0
         let y = L.toint(-1, key: "y") ?? 0
@@ -303,11 +304,13 @@ private func draw(_ L: LuaState!) -> Int32 {
                let _ = L.toint(-1, key: "mode") {
                 let size = Graphics.Size(width: width, height: height)
                 let rect = Graphics.Rect(origin: Graphics.Point(x: srcx, y: srcy), size: size)
-                let info = Graphics.CopySource(displayId: srcid, rect: rect, extra: nil)
+                let drawable = Graphics.DrawableId(value: srcid)
+                let info = Graphics.CopySource(drawableId: drawable, rect: rect, extra: nil)
                 let maskInfo: Graphics.CopySource?
                 let maskId = L.toint(-1, key: "mask") ?? 0
                 if maskId > 0 {
-                    maskInfo = Graphics.CopySource(displayId: maskId, rect: rect, extra: nil)
+                    let maskDrawable = Graphics.DrawableId(value: maskId)
+                    maskInfo = Graphics.CopySource(drawableId: maskDrawable, rect: rect, extra: nil)
                 } else {
                     maskInfo = nil
                 }
@@ -332,7 +335,8 @@ private func draw(_ L: LuaState!) -> Int32 {
                let h = L.toint(-1, key: "height") {
                 let size = Graphics.Size(width: w, height: h)
                 let rect = Graphics.Rect(origin: origin, size: size)
-                let info = Graphics.CopySource(displayId: srcid, rect: rect, extra: nil)
+                let drawable = Graphics.DrawableId(value: srcid)
+                let info = Graphics.CopySource(drawableId: drawable, rect: rect, extra: nil)
                 optype = .pattern(info)
             } else {
                 print("Missing params in patt!")
@@ -365,7 +369,7 @@ private func draw(_ L: LuaState!) -> Int32 {
             print("Unknown Graphics.DrawCommand.OpType \(t)")
             continue
         }
-        ops.append(Graphics.DrawCommand(displayId: id, type: optype, mode: mode, origin: origin, color: color, bgcolor: bgcolor))
+        ops.append(Graphics.DrawCommand(drawableId: id, type: optype, mode: mode, origin: origin, color: color, bgcolor: bgcolor))
     }
     iohandler.draw(operations: ops)
     return 0
@@ -377,7 +381,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
     case .nothing:
         return 0
     case .handle(let h):
-        L.push(h)
+        L.push(h.value)
         return 1
     case .sizeAndAscent(let sz, let ascent):
         L.push(sz.width)
@@ -400,22 +404,25 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
     let cmd = L.tostring(1) ?? ""
     switch cmd {
     case "close":
-        if let displayId = L.toint(2) {
-            return doGraphicsOp(L, iohandler, .close(displayId))
+        if let id = L.toint(2) {
+            let drawableId = Graphics.DrawableId(value: id)
+            return doGraphicsOp(L, iohandler, .close(drawableId))
         } else {
             print("Bad displayId to close graphicsop!")
         }
     case "show":
-        if let displayId = L.toint(2) {
+        if let id = L.toint(2) {
+            let drawableId = Graphics.DrawableId(value: id)
             let flag = L.toboolean(3)
-            return doGraphicsOp(L, iohandler, .show(displayId, flag))
+            return doGraphicsOp(L, iohandler, .show(drawableId, flag))
         } else {
             print("Bad displayId to show graphicsop!")
         }
     case "order":
-        if let displayId = L.toint(2),
+        if let id = L.toint(2),
            let position = L.toint(3) {
-            return doGraphicsOp(L, iohandler, .order(displayId, position))
+            let drawableId = Graphics.DrawableId(value: id)
+            return doGraphicsOp(L, iohandler, .order(drawableId, position))
         } else {
             print("order graphicsop missing arguments!")
         }
@@ -443,9 +450,10 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         let corner = Graphics.Corner(rawValue: L.toint(3) ?? Graphics.Corner.bottomRight.rawValue) ?? .bottomRight
         return doGraphicsOp(L, iohandler, .giprint(text, corner))
     case "setwin":
-        if let displayId = L.toint(2),
+        if let id = L.toint(2),
            let x = L.toint(3),
            let y = L.toint(4) {
+            let drawableId = Graphics.DrawableId(value: id)
             let pos = Graphics.Point(x: x, y: y)
             let size: Graphics.Size?
             if let w = L.toint(5), let h = L.toint(6) {
@@ -453,7 +461,7 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
             } else {
                 size = nil
             }
-            return doGraphicsOp(L, iohandler, .setwin(displayId, pos, size))
+            return doGraphicsOp(L, iohandler, .setwin(drawableId, pos, size))
         } else {
             print("Bad args to setwin±")
         }
@@ -971,7 +979,7 @@ class OpoInterpreter {
             case .penevent(let event):
                 ev[0] = 0x408
                 ev[1] = event.timestamp
-                ev[2] = event.windowId
+                ev[2] = event.windowId.value
                 ev[3] = event.type.rawValue
                 ev[4] = 0 // TODO oh god what
                 ev[5] = event.x

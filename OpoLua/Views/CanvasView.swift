@@ -30,7 +30,7 @@ protocol CanvasViewDelegate: AnyObject {
 
 class CanvasView : UIView, Drawable {
 
-    var id: Int {
+    var id: Graphics.DrawableId {
         return canvas.id
     }
 
@@ -108,10 +108,11 @@ class CanvasView : UIView, Drawable {
         let oldCanvas = self.canvas
         self.canvas = Canvas(id: id, size: newSize, color: true)
         if let img = oldCanvas.getImage() {
-            let src = Graphics.CopySource(displayId: 0, rect: Graphics.Rect(x: 0, y: 0, width: img.width, height: img.height), extra: img)
+            let dummyId = Graphics.DrawableId(value: 0)
+            let src = Graphics.CopySource(drawableId: dummyId, rect: Graphics.Rect(x: 0, y: 0, width: img.width, height: img.height), extra: img)
             let dontCare = Graphics.Color(r: 0, g: 0, b: 0)
             let zero = Graphics.Point(x: 0, y: 0)
-            self.canvas.draw(Graphics.DrawCommand(displayId: 0, type: .copy(src, nil), mode: .set, origin: zero, color: dontCare, bgcolor: dontCare))
+            self.canvas.draw(Graphics.DrawCommand(drawableId: dummyId, type: .copy(src, nil), mode: .set, origin: zero, color: dontCare, bgcolor: dontCare))
         }
         self.bounds = CGRect(origin: .zero, size: newSize)
     }
