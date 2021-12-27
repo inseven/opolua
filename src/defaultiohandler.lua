@@ -166,6 +166,7 @@ end
 
 local function mapDevicePath(path)
     for _, m in ipairs(fsmaps) do
+        -- printf("Considering devicePath %s -> %s for %s\n", m.devicePath, m.hostPath, path)
         if path:sub(1, #m.devicePath) == m.devicePath then
             return m.hostPath .. path:sub(#m.devicePath + 1):gsub("\\", "/")
         end
@@ -248,7 +249,7 @@ function waitForAnyRequest()
     end
 
     local ch = getch()
-    eventRequest.eventArray[1](ch)
+    eventRequest.eventArray:writeArray({ch}, DataTypes.ELong)
     eventRequest.statusVar(0)
     statusRequests["getevent"] = nil
     return true
