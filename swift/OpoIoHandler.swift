@@ -165,6 +165,10 @@ struct Graphics {
             return Self(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
         }
 
+        static func -(lhs: Graphics.Point, rhs: Graphics.Point) -> Graphics.Point {
+            return Self(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
+        }
+
         let x: Int
         let y: Int
 

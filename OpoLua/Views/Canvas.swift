@@ -136,13 +136,18 @@ class Canvas: Drawable {
             else {
                 continue
             }
-            let origin = sprite.sprite.origin + sprite.frame.offset
-            let destRect = Graphics.Rect(origin: origin, size: image.size)
+            let origin = self.invertCoordinates(point: sprite.sprite.origin + sprite.frame.offset)
+            let adjustedOrigin = origin - Graphics.Point(x: 0, y: image.size.height)
+            let destRect = Graphics.Rect(origin: adjustedOrigin, size: image.size)
             context.draw(maskedImage, in: destRect.cgRect())
         }
         self.image = context.makeImage()
 
         return self.image
+    }
+
+    func invertCoordinates(point: Graphics.Point) -> Graphics.Point {
+        return Graphics.Point(x: point.x, y: Int(self.size.height) - point.y)
     }
 
 }
