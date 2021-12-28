@@ -547,6 +547,8 @@ private func fsop(_ L: LuaState!) -> Int32 {
         }
     case "read":
         op = .read
+    case "dir":
+        op = .dir
     default:
         print("Unimplemented fsop \(cmd)!")
         L.push(Fs.Err.notReady.rawValue)
@@ -559,7 +561,7 @@ private func fsop(_ L: LuaState!) -> Int32 {
         if err != .none {
             print("Error \(err) for cmd \(op) path \(path)")
         }
-        if cmd == "read" {
+        if cmd == "read" || cmd == "dir" {
             L.pushnil()
             L.push(err.rawValue)
             return 2
@@ -569,6 +571,13 @@ private func fsop(_ L: LuaState!) -> Int32 {
         }
     case .data(let data):
         L.push(data)
+        return 1
+    case .strings(let strings):
+        lua_createtable(L, Int32(strings.count), 0)
+        for (i, string) in strings.enumerated() {
+            L.push(string)
+            lua_rawseti(L, -2, lua_Integer(i + 1))
+        }
         return 1
     }
 }

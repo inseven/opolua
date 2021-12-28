@@ -388,6 +388,7 @@ struct Fs {
             case rmdir // return none, notFound, inUse if it isn't empty, notReady
             case write(Data) // return none, notReady
             case read // return none, notFound, accessDenied
+            case dir // return .strings(paths)
         }
         let path: String
         let type: OpType
@@ -405,6 +406,7 @@ struct Fs {
     enum Result {
         case err(Err)
         case data(Data)
+        case strings([String])
     }
 }
 

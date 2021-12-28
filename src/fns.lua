@@ -878,7 +878,11 @@ function DayNameStr(stack, runtime) -- 0xC2
 end
 
 function DirStr(stack, runtime) -- 0xC3
-    error("Unimplemented function DirStr!")
+    local path = stack:pop()
+    -- dir requires state to be tracked, so push it into runtime
+    local result = runtime:dir(path)
+    -- printf('DIR$("%s") -> %s\n', path, result)
+    stack:push(result)
 end
 
 function ErrStr(stack, runtime) -- 0xC4

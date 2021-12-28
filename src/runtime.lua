@@ -1021,6 +1021,43 @@ function Runtime:abs(path)
     return oplpath.abs(path, self.cwd)
 end
 
+local function globToMatch(glob)
+    local m = glob:gsub("[.+%%^$%(%)%[%]-]", "%%%0"):gsub("%?", "."):gsub("%*", ".*")
+    return m
+end
+
+function Runtime:dir(path)
+    -- printf("dir: %s\n", path)
+    if path == "" then
+        local result = self.dirResults and self.dirResults[1]
+        if result then
+            table.remove(self.dirResults, 1)
+        end
+        return result or ""
+    end
+
+    local dir, filenameFilter = oplpath.split(path)
+    local contents, err = self.ioh.fsop("dir", oplpath.join(dir, ""))
+    if not contents then
+        error(err)
+    end
+    if #filenameFilter > 0 then
+        local filtered = {}
+        local m = "^"..globToMatch(filenameFilter).."$"
+        for i, path in ipairs(contents) do
+            local _, name = oplpath.split(path)
+            -- printf("Checking %s against match %s\n", name, m)
+            if name:match(m) then
+                table.insert(filtered, path)
+            end
+        end
+        self.dirResults = filtered
+    else
+        self.dirResults = contents
+    end
+    return self:dir("")
+end
+
 function runOpo(fileName, procName, iohandler, verbose)
     local rt = newRuntime(iohandler)
     rt:setInstructionDebug(verbose)

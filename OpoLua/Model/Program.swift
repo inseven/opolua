@@ -277,6 +277,14 @@ extension Program: OpoIoHandler {
             } else {
                 return .err(.notReady)
             }
+        case .dir:
+            if let names = try? fm.contentsOfDirectory(atPath: path) {
+                var paths: [String] = []
+                for name in names {
+                    paths.append(op.path + name)
+                }
+                return .strings(paths)
+            }
         }
         return .err(.notReady)
     }
