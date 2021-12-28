@@ -160,6 +160,19 @@ class Program {
         return configuration.fileSystem.hostUrl(for: path)
     }
 
+    private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
+        let location = touch.location(in: view)
+        let screenLocation = touch.location(in: view.superview)
+        sendEvent(.penevent(.init(timestamp: Int(event.timestamp),
+                                  windowId: view.id,
+                                  type: type,
+                                  modifiers: 0,
+                                  x: Int(location.x),
+                                  y: Int(location.y),
+                                  screenx: Int(screenLocation.x),
+                                  screeny: Int(screenLocation.y))))
+    }
+
 }
 
 extension Program: InterpreterThreadDelegate {
@@ -304,19 +317,6 @@ extension Program: OpoIoHandler {
 }
 
 extension Program: CanvasViewDelegate {
-
-    private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
-        let location = touch.location(in: view)
-        let screenLocation = touch.location(in: view.superview)
-        sendEvent(.penevent(.init(timestamp: Int(event.timestamp),
-                                  windowId: view.id,
-                                  type: type,
-                                  modifiers: 0,
-                                  x: Int(location.x),
-                                  y: Int(location.y),
-                                  screenx: Int(screenLocation.x),
-                                  screeny: Int(screenLocation.y))))
-    }
 
     func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
         handleTouch(touch, in: canvasView, with: event, type: .down)
