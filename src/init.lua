@@ -194,6 +194,7 @@ KFontCourierNormal27 = 0x10000267
 KFontCourierNormal32 = 0x10000268
 KFontTiny4 = 0x10000030
 KFontSquashed = 0x100000F5
+KFontDigital35 = 0x10000128
 
 KDefaultFontUid = KFontArialNormal15
 
@@ -245,6 +246,8 @@ FontIds = {
     [KFontCourierNormal32] = { face = "courier", size = 32 },
     [KFontSquashed] = { face = "squashed", size = 11, bold = true },
 }
+
+FontIds[KFontDigital35] = FontIds[KFontArialNormal32] -- TODO
 
 GraphicsMode = enum {
     Set = 0,
