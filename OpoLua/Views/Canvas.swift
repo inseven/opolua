@@ -101,25 +101,34 @@ class Canvas: Drawable {
     }
 
     func getImage() -> CGImage? {
-        guard image == nil else {
+
+        // Return the cached image.
+        if image != nil {
             return self.image
         }
-        UIGraphicsBeginImageContext(self.size)
-        defer {
-            UIGraphicsEndImageContext()
-        }
-        guard let context = UIGraphicsGetCurrentContext(),
-              let cgImage = self.context.makeImage()
-        else {
+
+        // Render the context.
+        guard let cgImage = self.context.makeImage() else {
             return nil
         }
-        context.concatenate(context.coordinateFlipTransform)
 
-        // Draw our backing image.
-        context.draw(cgImage, in: CGRect(origin: .zero, size: self.size))
+        // Check to see if we have any active sprites; if not, then we can stop here.
+        if sprites.isEmpty {
+            self.image = cgImage
+            return cgImage
+        }
 
-        // Draw our sprites.
-        // TODO: Check how the CGContext drawing implementations access drawables.
+        // If our window contains any sprites, we composite these into a secondary context.
+        guard let context = CGContext(data: nil,
+                                      width: context.width,
+                                      height: context.height,
+                                      bitsPerComponent: context.bitsPerComponent,
+                                      bytesPerRow: context.bytesPerRow,
+                                      space: context.colorSpace!,
+                                      bitmapInfo: context.bitmapInfo.rawValue) else {
+            return nil
+        }
+        context.draw(cgImage, in: CGRect(origin: .zero, size: cgImage.cgSize))
         for sprite in self.sprites.values {
             guard let image = windowServer.drawable(for: sprite.frame.bitmap)?.getImage(),
                   let mask = windowServer.drawable(for: sprite.frame.mask)?.getImage()?.copyInDeviceGrayColorSpace(),
@@ -131,7 +140,7 @@ class Canvas: Drawable {
             let destRect = Graphics.Rect(origin: origin, size: image.size)
             context.draw(maskedImage, in: destRect.cgRect())
         }
-        self.image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+        self.image = context.makeImage()
 
         return self.image
     }
