@@ -65,6 +65,11 @@ fns = {
 
 handles = {}
 
+local function popTimeFromStack(stack)
+    local t = assert(handles[stack:pop()], "Bad date/time handle")
+    return t
+end
+
 function DTNewDateTime(stack, runtime) -- 1
     error("Unimplemented date.opx function DTNewDateTime!")
 end
@@ -75,32 +80,40 @@ function DTDeleteDateTime(stack, runtime) -- 2
 end
 
 function DTYear(stack, runtime) -- 3
-    error("Unimplemented date.opx function DTYear!")
+    local t = popTimeFromStack(stack)
+    stack:push(os.date("*t", math.floor(t)).year)
 end
 
 function DTMonth(stack, runtime) -- 4
-    error("Unimplemented date.opx function DTMonth!")
+    local t = popTimeFromStack(stack)
+    stack:push(os.date("*t", math.floor(t)).month)
 end
 
 function DTDay(stack, runtime) -- 5
-    error("Unimplemented date.opx function DTDay!")
+    local t = popTimeFromStack(stack)
+    stack:push(os.date("*t", math.floor(t)).day)
 end
 
 function DTHour(stack, runtime) -- 6
-    error("Unimplemented date.opx function DTHour!")
+    local t = popTimeFromStack(stack)
+    stack:push(os.date("*t", math.floor(t)).hour)
 end
 
 function DTMinute(stack, runtime) -- 7
-    local t = assert(handles[stack:pop()])
+    local t = popTimeFromStack(stack)
     stack:push(os.date("*t", math.floor(t)).min)
 end
 
 function DTSecond(stack, runtime) -- 8
-    error("Unimplemented date.opx function DTSecond!")
+    local t = popTimeFromStack(stack)
+    stack:push(os.date("*t", math.floor(t)).sec)
 end
 
 function DTMicro(stack, runtime) -- 9
-    error("Unimplemented date.opx function DTMicro!")
+    local t = popTimeFromStack(stack)
+    local _, micro = math.modf(t)
+    micro = math.floor(micro * 1000000)
+    stack:push(micro)
 end
 
 function DTSetYear(stack, runtime) -- 10
@@ -167,10 +180,10 @@ function DTSecsDiff(stack, runtime) -- 24
 end
 
 function DTMicrosDiff(stack, runtime) -- 25
-    local endh = stack:pop()
-    local starth = stack:pop()
-    local diff = handles[endh] - handles[starth]
-    stack:push(math.floor(diff * 1000000))
+    local endt = popTimeFromStack(stack)
+    local startt = popTimeFromStack(stack)
+    local diff = endt - startt
+    stack:push(toint32(math.floor(diff * 1000000)))
 end
 
 function DTWeekNoInYear(stack, runtime) -- 26
