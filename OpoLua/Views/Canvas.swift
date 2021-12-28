@@ -32,28 +32,6 @@ protocol Drawable: AnyObject {
 
 }
 
-class Sprite {
-
-    let sprite: Graphics.Sprite
-    var index: Int = 0
-
-    var frame: Graphics.Sprite.Frame {
-        return sprite.frames[index]
-    }
-
-    init(sprite: Graphics.Sprite) {
-        self.sprite = sprite
-    }
-
-    func tick() {
-        index = index + 1
-        if index >= sprite.frames.count {
-            index = 0
-        }
-    }
-
-}
-
 class Canvas: Drawable {
 
     let id: Graphics.DrawableId
