@@ -161,9 +161,7 @@ extension CGContext {
             // expects it (ie 0xFF meaning opaque whereas epoc uses 0x00 for
             // opaque), so we have to invert it ourselves. Probably should do
             // something more efficient here...
-            let invertedCi = CIImage(cgImage: mask).applyingFilter("CIColorInvert")
-            let invertedCG = CIContext().createCGImage(invertedCi, from: invertedCi.extent)!
-            clip(to: unflippedRect, mask: invertedCG)
+            clip(to: unflippedRect, mask: mask.inverted()!)
         }
 
         var imgToDraw = img

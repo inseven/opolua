@@ -23,11 +23,6 @@ import UIKit
 
 class ProgramViewController: UIViewController {
 
-    struct TextDetails {
-        let size: Graphics.Size
-        let ascent: Int
-    }
-
     enum ControllerButton: CaseIterable {
         case up
         case down
@@ -48,11 +43,7 @@ class ProgramViewController: UIViewController {
     ]
 
     var program: Program
-
-    var drawableHandle = (1...).makeIterator()
-    var drawables: [Graphics.DrawableId: Drawable] = [:]
-    var infoDrawableHandle: Graphics.DrawableId?
-    var infoWindowDismissTimer: Timer?
+    var windowServer: WindowServer
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
@@ -65,17 +56,6 @@ class ProgramViewController: UIViewController {
         return ControllerButton.allCases.reduce(into: [ControllerButton: Bool]()) { partialResult, button in
             partialResult[button] = false
         }
-    }()
-
-    lazy var canvasView: CanvasView = {
-        let canvas = newCanvas(size: program.screenSize.cgSize(), color: true)
-        let canvasView = CanvasView(canvas: canvas)
-        canvasView.translatesAutoresizingMaskIntoConstraints = false
-        canvasView.layer.borderWidth = 1.0
-        canvasView.layer.borderColor = UIColor.black.cgColor
-        canvasView.clipsToBounds = true
-        drawables[.defaultWindow] = canvasView
-        return canvasView
     }()
 
     lazy var menuBarButtonItem: UIBarButtonItem = {
@@ -118,28 +98,22 @@ class ProgramViewController: UIViewController {
 
     init(program: Program) {
         self.program = program
+        self.windowServer = WindowServer(program: program)
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
         view.backgroundColor = .systemBackground
         navigationItem.title = program.name
         view.clipsToBounds = true
-        view.addSubview(canvasView)
+        view.addSubview(windowServer.canvasView)
         NSLayoutConstraint.activate([
-
-            canvasView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            canvasView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-
+            windowServer.canvasView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            windowServer.canvasView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
-
-        self.toolbarItems = [consoleBarButtonItem]
-        
+        toolbarItems = [consoleBarButtonItem]
         navigationItem.rightBarButtonItems = [menuBarButtonItem, controllerBarButtonItem]
-
-        self.observeMenuDismiss()
-        self.observeGameControllers()
-
-        canvasView.delegate = program
+        observeMenuDismiss()
+        observeGameControllers()
     }
 
     required init?(coder: NSCoder) {
@@ -256,186 +230,50 @@ class ProgramViewController: UIViewController {
         present(navigationController, animated: true)
     }
 
-    private func newCanvas(size: CGSize, color: Bool) -> Canvas {
-        dispatchPrecondition(condition: .onQueue(.main))
-        let id = Graphics.DrawableId(value: drawableHandle.next()!)
-        let canvas = Canvas(id: id, size: size, color: color)
-        return canvas
-    }
-
-    func createBitmap(size: Graphics.Size, mode: Graphics.Bitmap.Mode) -> Canvas {
-        dispatchPrecondition(condition: .onQueue(.main))
-        let isColor = mode == .Color16 || mode == .Color256
-        let canvas = newCanvas(size: size.cgSize(), color: isColor)
-        drawables[canvas.id] = canvas
-        return canvas
-    }
-    /**
-     N.B. Windows are hidden by default.
-     */
-    func createWindow(rect: Graphics.Rect, mode: Graphics.Bitmap.Mode, shadowSize: Int) -> Canvas {
-        dispatchPrecondition(condition: .onQueue(.main))
-        let isColor = mode == .Color16 || mode == .Color256
-        let canvas = self.newCanvas(size: rect.size.cgSize(), color: isColor)
-        let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
-        newView.isHidden = true
-        newView.frame = rect.cgRect()
-        newView.delegate = self.program
-        self.canvasView.addSubview(newView)
-        self.drawables[canvas.id] = newView
-        bringInfoWindowToFront()
-        return canvas
-    }
-
-    func setVisiblity(handle: Graphics.DrawableId, visible: Bool) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        guard let view = self.drawables[handle] as? CanvasView else {
-            print("No CanvasView for showWindow operation")
-            return
-        }
-        view.isHidden = !visible
-    }
-
-    /**
-     N.B. In OPL terms position=1 means the front, whereas subviews[1] is at the back.
-     */
-    func order(drawableId: Graphics.DrawableId, position: Int) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        guard let view = self.drawables[drawableId] as? CanvasView else {
-            return
-        }
-        let views = self.canvasView.subviews
-        let uipos = views.count - position
-        if views.count == 0 || uipos < 0 {
-            self.canvasView.sendSubviewToBack(view)
-        } else {
-            self.canvasView.insertSubview(view, aboveSubview: views[uipos])
-        }
-        bringInfoWindowToFront()
-    }
-
-
-    func close(drawableId: Graphics.DrawableId) {
-        guard let view = self.drawables[drawableId] as? CanvasView else {
-            return
-        }
-        view.removeFromSuperview()
-        self.drawables[drawableId] = nil
-    }
-
-    func bringInfoWindowToFront() {
-        guard let infoDrawableHandle = infoDrawableHandle,
-              let infoView = self.drawables[infoDrawableHandle] as? CanvasView
-        else {
-            return
-        }
-        self.canvasView.bringSubviewToFront(infoView)
-    }
-
-    @objc func closeInfoWindow() {
-        guard let infoDrawableHandle = infoDrawableHandle else {
-            return
-        }
-        close(drawableId: infoDrawableHandle)
-        self.infoDrawableHandle = nil
-        infoWindowDismissTimer?.invalidate()
-    }
-
-    func infoPrint(text: String, corner: Graphics.Corner) {
-        closeInfoWindow()
-        guard !text.isEmpty else {
-            return
-        }
-        let fontInfo = Graphics.FontInfo(face: .arial, size: 15, flags: .init()) // TODO: Empty flags?
-        let details = Self.textSize(string: text, fontInfo: fontInfo)
-        let mode = Graphics.Bitmap.Mode.Gray4
-        let canvas = self.createWindow(rect: .init(origin: .zero, size: details.size), mode: mode, shadowSize: 0)
-        canvas.draw(.init(drawableId: canvas.id,
-                          type: .fill(details.size),
-                          mode: .set,
-                          origin: .zero,
-                          color: .black,
-                          bgcolor: .black))
-        canvas.draw(.init(drawableId: canvas.id,
-                          type: .text(text, fontInfo),
-                          mode: .set,
-                          origin: .init(x: 0, y: details.size.height),
-                          color: .white,
-                          bgcolor: .white))
-        self.setVisiblity(handle: canvas.id, visible: true)
-        infoDrawableHandle = canvas.id
-
-        infoWindowDismissTimer = Timer.scheduledTimer(timeInterval: 2.0,
-                                                      target: self,
-                                                      selector: #selector(closeInfoWindow),
-                                                      userInfo: nil,
-                                                      repeats: false)
-    }
-
     func performGraphicsOperation(_ operation: Graphics.Operation) -> Graphics.Result {
         dispatchPrecondition(condition: .onQueue(.main))
         switch (operation) {
 
         case .createBitmap(let size, let mode):
-            let canvas = createBitmap(size: size, mode: mode)
+            let canvas = windowServer.createBitmap(size: size, mode: mode)
             return .handle(canvas.id)
 
         case .createWindow(let rect, let mode, let shadowSize):
-            let canvas = createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
+            let canvas = windowServer.createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
             return .handle(canvas.id)
 
         case .close(let drawableId):
-            close(drawableId: drawableId)
+            windowServer.close(drawableId: drawableId)
             return .nothing
 
         case .order(let drawableId, let position):
-            order(drawableId: drawableId, position: position)
+            windowServer.order(drawableId: drawableId, position: position)
             return .nothing
 
         case .show(let drawableId, let flag):
-            setVisiblity(handle: drawableId, visible: flag)
+            windowServer.setVisiblity(handle: drawableId, visible: flag)
             return .nothing
 
         case .textSize(let string, let fontInfo):
-            let details = Self.textSize(string: string, fontInfo: fontInfo)
+            let details = WindowServer.textSize(string: string, fontInfo: fontInfo)
             return .sizeAndAscent(details.size, details.ascent)
 
         case .busy(let text, let corner, _):
-            // TODO: Implement BUSY
-            infoPrint(text: text, corner: corner)
+            windowServer.infoPrint(text: text, corner: corner)
             return .nothing
 
         case .giprint(let text, let corner):
-            infoPrint(text: text, corner: corner)
+            windowServer.infoPrint(text: text, corner: corner)
             return .nothing
 
         case .setwin(let drawableId, let pos, let size):
-            if let view = self.drawables[drawableId] as? CanvasView {
-                if let size = size {
-                    view.resize(to: size.cgSize())
-                }
-                view.frame = CGRect(origin: pos.cgPoint(), size: view.frame.size)
-            } else {
-                print("No CanvasView for setwin operation")
-            }
+            windowServer.setWin(drawableId: drawableId, position: pos, size: size)
             return .nothing
 
-        case .sprite(_ /*let id*/, let sprite):
-            // TODO
-            print("TODO \(String(describing: sprite))")
+        case .sprite(let id, let sprite):
+            windowServer.setSprite(id: id, sprite: sprite)
             return .nothing
         }
-    }
-
-    static func textSize(string: String, fontInfo: Graphics.FontInfo) -> TextDetails {
-        let font = fontInfo.toUiFont()
-        let attribStr = NSAttributedString(string: string, attributes: [.font: font])
-        let sz = attribStr.size()
-        // This is not really the right definition for ascent but it seems to work for where epoc expects
-        // the text to be, so...
-        let ascent = Int(ceil(sz.height) + font.descender)
-        return TextDetails(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
-                           ascent: ascent)
     }
 
     override var canBecomeFirstResponder: Bool {
@@ -502,7 +340,16 @@ extension ProgramViewController: ConsoleViewControllerDelegate {
 extension ProgramViewController: ProgramDelegate {
 
     func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
-        showConsole()
+        windowServer.shutdown()
+        if case OpoInterpreter.Result.none = result {
+            self.navigationController?.popViewController(animated: true)
+            return
+        }
+        UIView.animate(withDuration: 0.3) {
+            self.windowServer.canvasView.alpha = 0.3
+        } completion: { _ in
+            self.showConsole()
+        }
     }
 
     func program(_ program: Program, didEncounterError error: Error) {
@@ -570,55 +417,7 @@ extension ProgramViewController: ProgramDelegate {
 
     func draw(operations: [Graphics.DrawCommand]) {
         DispatchQueue.main.sync {
-            for op in operations {
-                guard let drawable = self.drawables[op.drawableId] else {
-                    print("No drawable for drawableId \(op.drawableId)!")
-                    continue
-                }
-
-                switch (op.type) {
-                case .copy(let src, let mask):
-                    // These need some massaging to shoehorn in the src Drawable pointer
-                    guard let srcCanvas = self.drawables[src.drawableId] else {
-                        print("Copy operation with unknown source \(src.drawableId)!")
-                        continue
-                    }
-                    let newSrc = Graphics.CopySource(drawableId: src.drawableId, rect: src.rect, extra: srcCanvas.getImage())
-                    let newMaskSrc: Graphics.CopySource?
-                    if let mask = mask, let maskCanvas = self.drawables[mask.drawableId] {
-                        newMaskSrc = Graphics.CopySource(drawableId: mask.drawableId, rect: mask.rect, extra: maskCanvas)
-                    } else {
-                        newMaskSrc = nil
-                    }
-                    let newOp = Graphics.DrawCommand(drawableId: op.drawableId, type: .copy(newSrc, newMaskSrc),
-                                                     mode: op.mode, origin: op.origin,
-                                                     color: op.color, bgcolor: op.bgcolor)
-                    drawable.draw(newOp)
-                case .pattern(let info):
-                    let extra: AnyObject?
-                    if info.drawableId.value == -1 {
-                        guard let img = UIImage(named: "DitherPattern")?.cgImage else {
-                            print("Failed to load DitherPattern!")
-                            return
-                        }
-                        extra = img
-                    } else {
-                        guard let srcCanvas = self.drawables[info.drawableId] else {
-                            print("Pattern operation with unknown source \(info.drawableId)!")
-                            continue
-                        }
-                        extra = srcCanvas.getImage()
-                    }
-                    let newInfo = Graphics.CopySource(drawableId: info.drawableId, rect: info.rect, extra: extra)
-                    let newOp = Graphics.DrawCommand(drawableId: op.drawableId, type: .pattern(newInfo),
-                                                     mode: op.mode, origin: op.origin,
-                                                     color: op.color, bgcolor: op.bgcolor)
-                    drawable.draw(newOp)
-                default:
-                    drawable.draw(op)
-                }
-
-            }
+            windowServer.draw(operations: operations)
         }
     }
 

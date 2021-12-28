@@ -304,6 +304,16 @@ private let kEpoc8bitPalette: [UInt8] = [
 ]
 
 extension CGImage {
+
+    var size: Graphics.Size {
+        return Graphics.Size(width: width, height: height)
+    }
+
+    var cgSize: CGSize {
+        return CGSize(width: width, height: height)
+    }
+
+    // TODO: This should be a convenience constructor
     static func from(bitmap: Graphics.Bitmap) -> CGImage {
         switch bitmap.mode {
         case .Gray2, .Gray4, .Gray16:
@@ -425,4 +435,30 @@ extension CGImage {
         context.draw(self, in: rect)
         return context.makeImage()!
     }
+
+    func inverted() -> CGImage? {
+        let invertedCi = CIImage(cgImage: self).applyingFilter("CIColorInvert")
+        let invertedCG = CIContext().createCGImage(invertedCi, from: invertedCi.extent)
+        return invertedCG
+    }
+
+    func copyInDeviceGrayColorSpace() -> CGImage? {
+        let colorSpace = CGColorSpaceCreateDeviceGray()
+        let bytesPerPixel: Int = 1
+        let bitmapInfo: UInt32 = 0
+        let bytesPerRow = bytesPerPixel * Int(size.width)
+        let bitsPerComponent = 8
+        guard let context = CGContext(data: nil,
+                                      width: Int(size.width == 0 ? 1 : size.width),
+                                      height: Int(size.height == 0 ? 1 : size.height),
+                                      bitsPerComponent: bitsPerComponent,
+                                      bytesPerRow: bytesPerRow,
+                                      space: colorSpace,
+                                      bitmapInfo: bitmapInfo) else {
+            return nil
+        }
+        context.draw(self, in: CGRect(origin: .zero, size: cgSize))
+        return context.makeImage()
+    }
+
 }

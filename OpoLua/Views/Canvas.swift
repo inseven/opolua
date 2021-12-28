@@ -20,11 +20,37 @@
 
 import CoreGraphics
 import Foundation
+import UIKit
 
 protocol Drawable: AnyObject {
 
     func draw(_ operation: Graphics.DrawCommand)
+    func setSprite(_ sprite: Graphics.Sprite?, for id: Int)
     func getImage() -> CGImage?
+
+    func updateSprites()
+
+}
+
+class Sprite {
+
+    let sprite: Graphics.Sprite
+    var index: Int = 0
+
+    var frame: Graphics.Sprite.Frame {
+        return sprite.frames[index]
+    }
+
+    init(sprite: Graphics.Sprite) {
+        self.sprite = sprite
+    }
+
+    func tick() {
+        index = index + 1
+        if index >= sprite.frames.count {
+            index = 0
+        }
+    }
 
 }
 
@@ -35,7 +61,12 @@ class Canvas: Drawable {
     private var image: CGImage?
     private let context: CGContext
 
-    init(id: Graphics.DrawableId, size: CGSize, color: Bool) {
+    var windowServer: WindowServer
+
+    var sprites: [Int: Sprite] = [:]
+
+    init(windowServer: WindowServer, id: Graphics.DrawableId, size: CGSize, color: Bool) {
+        self.windowServer = windowServer
         self.id = id
         self.size = size
         let colorSpace: CGColorSpace
@@ -71,10 +102,59 @@ class Canvas: Drawable {
         self.image = nil
     }
 
-    func getImage() -> CGImage? {
-        if self.image == nil {
-            self.image = self.context.makeImage()
+    func setSprite(_ sprite: Graphics.Sprite?, for id: Int) {
+        guard let sprite = sprite else {
+            self.sprites.removeValue(forKey: id)
+            return
         }
+        self.sprites[id] = Sprite(sprite: sprite)
+        print(self.sprites)
+        self.image = nil
+    }
+
+    func updateSprites() {
+        guard !sprites.isEmpty else {
+            return
+        }
+        for sprite in self.sprites.values {
+            sprite.tick()
+        }
+        self.image = nil
+    }
+
+    func getImage() -> CGImage? {
+        guard image == nil else {
+            return self.image
+        }
+        UIGraphicsBeginImageContext(self.size)
+        defer {
+            UIGraphicsEndImageContext()
+        }
+        guard let context = UIGraphicsGetCurrentContext(),
+              let cgImage = self.context.makeImage()
+        else {
+            return nil
+        }
+        context.concatenate(context.coordinateFlipTransform)
+
+        // Draw our backing image.
+        context.draw(cgImage, in: CGRect(origin: .zero, size: self.size))
+
+        // Draw our sprites.
+        // TODO: Check how the CGContext drawing implementations access drawables.
+        for sprite in self.sprites.values {
+            guard let image = windowServer.drawable(for: sprite.frame.bitmap)?.getImage(),
+                  let mask = windowServer.drawable(for: sprite.frame.mask)?.getImage()?.copyInDeviceGrayColorSpace(),
+                  let maskedImage = image.masking(mask)
+            else {
+                continue
+            }
+            let origin = sprite.sprite.origin + sprite.frame.offset
+            let destRect = Graphics.Rect(origin: origin, size: image.size)
+            context.draw(maskedImage, in: destRect.cgRect())
+        }
+        self.image = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+
         return self.image
     }
 

@@ -47,6 +47,7 @@
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
+		D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03D277AC9B300760302 /* WindowServer.swift */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8FE60032757106300711717 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* Location.swift */; };
@@ -210,6 +211,7 @@
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
+		D8DCD03D277AC9B300760302 /* WindowServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowServer.swift; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
@@ -327,6 +329,7 @@
 				D8535A27277139AB00DFCE29 /* Sound.swift */,
 				D884A3D42779025A008954A0 /* SystemFileSystem.swift */,
 				D8535A29277139D900DFCE29 /* Tone.swift */,
+				D8DCD03D277AC9B300760302 /* WindowServer.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -732,6 +735,7 @@
 				D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */,
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				D884A3D32778E335008954A0 /* FileSystem.swift in Sources */,
+				D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */,
 				DB7900092742E6F6005E904F /* lmem.c in Sources */,
 				DB79000A2742E6F6005E904F /* loadlib.c in Sources */,
 				D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */,
