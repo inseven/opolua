@@ -902,8 +902,18 @@ function Runtime:callProc(procName, ...)
 end
 
 function Runtime:loadModule(path)
+    local origPath = path
+    printf("Runtime:loadModule(%s)\n", origPath)
     -- First see if this is a real module
     local data = self.ioh.fsop("read", path)
+    if not data then
+        path = origPath..".opm"
+        data = self.ioh.fsop("read", path)
+    end
+    if not data then
+        path = origPath..".opo"
+        data = self.ioh.fsop("read", path)
+    end
     if data then
         local procTable, opxTable = require("opofile").parseOpo(data, self.instructionDebug)
         self:addModule(path, procTable, opxTable)
@@ -911,6 +921,7 @@ function Runtime:loadModule(path)
     end
 
     -- If not, see if we have a built-in
+    path = origPath
     local modName = oplpath.splitext(oplpath.basename(path:lower()))
     local ok, mod = pcall(newModuleInstance, "modules."..modName)
 
