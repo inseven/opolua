@@ -553,7 +553,13 @@ function gTWidth(stack, runtime) -- 0x32
 end
 
 function gPrintClip(stack, runtime) -- 0x33
-    error("Unimplemented function gPrintClip!")
+    local width = stack:pop()
+    local text = stack:pop()
+    while #text > 0 and runtime:gTWIDTH(text) > width do
+        text = text:sub(1, -2)
+    end
+    runtime:gPRINT(text)
+    stack:push(#text)
 end
 
 function TestEvent(stack, runtime) -- 0x34
