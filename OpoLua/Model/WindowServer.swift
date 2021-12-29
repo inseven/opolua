@@ -177,7 +177,9 @@ class WindowServer {
 
     func setWin(drawableId: Graphics.DrawableId, position: Graphics.Point, size: Graphics.Size?) {
         dispatchPrecondition(condition: .onQueue(.main))
-        if let view = self.drawables[drawableId] as? CanvasView {
+        if drawableId == Graphics.DrawableId.defaultWindow {
+            // Let's ignore attempts to move/resize the toplevel window
+        } else if let view = self.drawables[drawableId] as? CanvasView {
             if let size = size {
                 view.resize(to: size.cgSize())
             }
