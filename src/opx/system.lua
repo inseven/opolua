@@ -335,7 +335,7 @@ function SetPointerGrabOn(stack, runtime) -- 48
 end
 
 function MachineName(stack, runtime) -- 49
-    error("Unimplemented system.opx function MachineName!")
+    stack:push("OpoLua")
 end
 
 function MachineUniqueId(stack, runtime) -- 50
