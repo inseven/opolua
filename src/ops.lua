@@ -1738,12 +1738,17 @@ end
 gEllipse_dump = numParams_dump
 
 function gPoly(stack, runtime) -- 0xDE
-    local varArray = stack:pop()
-    local valArray = {}
-    for i, var in ipairs(varArray) do
-        valArray[i] = varArray[i]()
+    local addr = stack:pop()
+    local x, y, n = string.unpack("<i2i2i2", addr:read(6))
+    local intArray = { x, y, n }
+    addr = addr + 6
+    for i = 0, n-1 do
+        local x, y = string.unpack("<i2i2", addr:read(4))
+        addr = addr + 4
+        intArray[4 + i*2] = x
+        intArray[4 + i*2 + 1] = y
     end
-    runtime:gPOLY(valArray)
+    runtime:gPOLY(intArray)
 end
 
 function gFill(stack, runtime) -- 0xDF

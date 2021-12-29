@@ -462,10 +462,10 @@ function gPOLY(array)
     for i = 0, n-1 do
         local dx, dy = array[4 + i*2], array[4 + i*2 + 1]
         if dx & 1 > 0 then
-            printf("gmove %d %d\n", (dx - 1) // 2, dy)
+            -- printf("gmove %d %d\n", (dx - 1) // 2, dy)
             gMOVE((dx - 1)// 2, dy)
         else
-            printf("glineby %d %d\n", (dx // 2), dy)
+            -- printf("glineby %d %d\n", (dx // 2), dy)
             gLINEBY(dx // 2, dy)
         end
     end
