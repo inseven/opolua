@@ -409,6 +409,7 @@ function Runtime:newGraphicsContext(id, width, height, isWindow, displayMode)
         isWindow = isWindow,
         font = FontIds[KDefaultFontUid],
         style = 0, -- normal text style
+        penwidth = 1,
     }
     graphics[id] = newCtx
     -- Creating a new drawable always seems to update current
@@ -506,6 +507,7 @@ function Runtime:drawCmd(type, op)
         op.y = context.pos.y
     end
     op.style = context.style
+    op.penwidth = context.penwidth
     op.tmode = context.tmode
     op.fontface = context.font.face
     op.fontsize = context.font.size

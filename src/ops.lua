@@ -338,7 +338,7 @@ codes = {
     [0x131] = "EvalExternalRightSideRef",
     [0x132] = "EvalExternalLeftSideRef",
     [0x133] = "dEditCheckbox", -- In 6.0 this opcode has actually been REDEFINED to gSetPenWidth
-    [0x134] = "dEditMulti",
+    [0x134] = "gSetPenWidth", -- in ER6 is "dEditMulti",
     [0x135] = "IllegalOpCode", --"gColorInfo",
     [0x136] = "gColorInfo", --"gColorBackground",
     [0x137] = "mCardX",
@@ -2402,8 +2402,9 @@ function gColorInfo(stack, runtime) -- ER5: 0x136, ER6: 0x135
     addr:writeArray(result, DataTypes.ELong)
 end
 
-function dEditMulti(stack, runtime) -- 0x134
-    error("Unimplemented opcode dEditMulti!")
+function gSetPenWidth(stack, runtime) -- 0x134
+    local width = stack:pop()
+    runtime:gSETPENWIDTH(width)
 end
 
 return _ENV

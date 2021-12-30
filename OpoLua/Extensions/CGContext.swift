@@ -39,6 +39,7 @@ extension CGContext {
         }
         setStrokeColor(col)
         setFillColor(col)
+        setLineWidth(CGFloat(operation.penWidth))
         switch operation.type {
         case .fill(let size):
             fill(CGRect(origin: operation.origin.cgPoint(), size: size.cgSize()))

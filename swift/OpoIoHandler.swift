@@ -347,6 +347,7 @@ struct Graphics {
         let origin: Point
         let color: Color
         let bgcolor: Color
+        let penWidth: Int
     }
 
     struct Sprite {

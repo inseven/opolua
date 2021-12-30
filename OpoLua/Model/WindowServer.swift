@@ -158,13 +158,15 @@ class WindowServer {
                           mode: .set,
                           origin: .zero,
                           color: .black,
-                          bgcolor: .black))
+                          bgcolor: .black,
+                          penWidth: 1))
         canvas.draw(.init(drawableId: canvas.id,
                           type: .text(text, fontInfo),
                           mode: .set,
                           origin: .init(x: 0, y: details.size.height),
                           color: .white,
-                          bgcolor: .white))
+                          bgcolor: .white,
+                          penWidth: 1))
         self.setVisiblity(handle: canvas.id, visible: true)
         infoDrawableHandle = canvas.id
 
@@ -233,7 +235,7 @@ class WindowServer {
                 }
                 let newOp = Graphics.DrawCommand(drawableId: op.drawableId, type: .copy(newSrc, newMaskSrc),
                                                  mode: op.mode, origin: op.origin,
-                                                 color: op.color, bgcolor: op.bgcolor)
+                                                 color: op.color, bgcolor: op.bgcolor, penWidth: op.penWidth)
                 drawable.draw(newOp)
             case .pattern(let info):
                 let extra: AnyObject?
@@ -254,7 +256,7 @@ class WindowServer {
                 let newInfo = Graphics.CopySource(drawableId: info.drawableId, rect: info.rect, extra: extra)
                 let newOp = Graphics.DrawCommand(drawableId: op.drawableId, type: .pattern(newInfo),
                                                  mode: op.mode, origin: op.origin,
-                                                 color: op.color, bgcolor: op.bgcolor)
+                                                 color: op.color, bgcolor: op.bgcolor, penWidth: op.penWidth)
                 drawable.draw(newOp)
             default:
                 drawable.draw(op)

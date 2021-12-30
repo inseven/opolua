@@ -476,6 +476,10 @@ function gINVERT(w, h)
     runtime:drawCmd("invert", { width = w, height = h })
 end
 
+function gSETPENWIDTH(width)
+    runtime:getGraphicsContext().penwidth = width
+end
+
 -- Screen APIs
 
 function BUSY(str, corner, delay)
