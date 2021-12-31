@@ -41,6 +41,25 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         push(string, encoding: kEnc)
     }
 
+    func toColor(_ idx: Int32, key: String) -> Graphics.Color? {
+        let L = self
+        if lua_getfield(L, idx, key) == LUA_TTABLE {
+            lua_rawgeti(L, -1, 1)
+            let r = UInt8(L.toint(-1) ?? 0)
+            L.pop()
+            lua_rawgeti(L, -1, 2)
+            let g = UInt8(L.toint(-1) ?? 0)
+            L.pop()
+            lua_rawgeti(L, -1, 3)
+            let b = UInt8(L.toint(-1) ?? 0)
+            L.pop(2)
+            return Graphics.Color(r: r, g: g, b: b)
+        } else {
+            L.pop()
+            return nil
+        }
+    }
+
 }
 
 private func searcher(_ L: LuaState!) -> Int32 {
@@ -260,10 +279,14 @@ private func draw(_ L: LuaState!) -> Int32 {
         let x = L.toint(-1, key: "x") ?? 0
         let y = L.toint(-1, key: "y") ?? 0
         let origin = Graphics.Point(x: x, y: y)
-        let col = UInt8(L.toint(-1, key: "color") ?? 0)
-        let color = Graphics.Color(r: col, g: col, b: col)
-        let bgcol = UInt8(L.toint(-1, key: "bgcolor") ?? 255)
-        let bgcolor = Graphics.Color(r: bgcol, g: bgcol, b: bgcol)
+        guard let color = L.toColor(-1, key: "color") else {
+            print("missing color")
+            continue
+        }
+        guard let bgcolor = L.toColor(-1, key: "bgcolor") else {
+            print("missing bgcolor")
+            continue
+        }
         var mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
         let penWidth = L.toint(-1, key: "penwidth") ?? 1
         let optype: Graphics.DrawCommand.OpType

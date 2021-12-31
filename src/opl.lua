@@ -364,14 +364,11 @@ function gGREY(mode)
 end
 
 function gCOLOR(red, green, blue)
-    -- Not gonna bother too much about exact luminosity right now
-    local val = (red + green + blue) // 3
-    runtime:getGraphicsContext().color = val
+    runtime:getGraphicsContext().color = { red, green, blue }
 end
 
 function gCOLORBACKGROUND(red, green, blue)
-    local val = (red + green + blue) // 3
-    runtime:getGraphicsContext().bgcolor = val
+    runtime:getGraphicsContext().bgcolor = { red, green, blue }
 end
 
 function gSETWIN(x, y, w, h)
