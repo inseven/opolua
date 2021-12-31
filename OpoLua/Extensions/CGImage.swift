@@ -418,6 +418,24 @@ extension CGImage {
         return self.masking(invertedCg.stripAlpha(grayscale: true))
     }
 
+    func masking(componentRange from: Int, to: Int) -> CGImage? {
+        let fromf = CGFloat(from)
+        let tof = CGFloat(to)
+        let components: [CGFloat]
+        if self.bitsPerPixel == 32 {
+            components = [fromf, tof, fromf, tof, fromf, tof]
+            return self.stripAlpha().copy(maskingColorComponents: components)
+        } else if self.bitsPerPixel == 8 {
+            components = [fromf, tof]
+        } else if self.bitsPerPixel == 16 && (self.bitmapInfo.rawValue & CGImageAlphaInfo.noneSkipLast.rawValue) > 0 {
+            components = [fromf, tof]
+        } else {
+            print("Unhandled bpp in Graphics.Mode.Set image drawing!")
+            return nil
+        }
+        return self.copy(maskingColorComponents: components)
+    }
+
     func stripAlpha(grayscale: Bool = false) -> CGImage {
         let space = grayscale ? CGColorSpaceCreateDeviceGray() : self.colorSpace ?? CGColorSpaceCreateDeviceGray()
         var info: UInt32 = 0
