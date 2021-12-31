@@ -1171,7 +1171,6 @@ function Runtime:addrToInt(addr)
 end
 
 function Runtime:realloc(addr, sz)
-    self.callTrace = true
     -- printf("Runtime:realloc(%s, %d)\n", addr, sz) --, self:getOpoStacktrace())
     local sz = (sz + 3) & ~3
     if addr == nil then

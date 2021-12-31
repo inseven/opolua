@@ -2226,20 +2226,38 @@ function ReturnFromEval(stack, runtime) -- 0x121
     error("Unimplemented opcode ReturnFromEval!")
 end
 
+local function getEvent(runtime, stat, ev)
+    -- runtime:checkCompletions()
+    local existingStat = runtime:getResource("getevent")
+    if existingStat then
+        printf("Outstanding getevent request, cancelling!\n")
+        runtime:iohandler().cancelRequest(existingStat)
+        runtime:waitForRequest(existingStat)
+        assert(runtime:getResource("getevent") == nil, "cancelRequest did not release getevent resource!")
+        -- assert(existingStat() == KOplErrIOCancelled)
+        printf("Cancel complete\n")
+    end
+
+    stat(KOplErrFilePending)
+    runtime:setResource("getevent", stat)
+    stat:setOnAssignCallback(function(stat)
+        runtime:setResource("getevent", nil)
+        stat:setOnAssignCallback(nil)
+    end)
+    runtime:iohandler().asyncRequest("getevent", stat, ev)
+end
+
 function GetEvent32(stack, runtime) -- 0x122
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
-    stat(KOplErrFilePending)
     local ev = stack:pop()
-
-    runtime:iohandler().asyncRequest("getevent", stat, ev)
+    getEvent(runtime, stat, ev)
     runtime:waitForRequest(stat)
 end
 
 function GetEventA32(stack, runtime) -- 0x123
     local ev = stack:pop()
     local stat = stack:pop():dereference()
-    stat(KOplErrFilePending)
-    runtime:iohandler().asyncRequest("getevent", stat, ev)
+    getEvent(runtime, stat, ev)
 end
 
 function gColor(stack, runtime) -- 0x124
