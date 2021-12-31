@@ -148,6 +148,10 @@ end
 function Db:load(data)
     self.tables = {}
     self.currentTable = nil
+    if data:sub(1, 4) == "\x50\x00\x00\x10" then
+        -- It's an epoc binary db
+        return self:loadBinary(data)
+    end
     local currentTable, currentRec
     for line in data:gmatch("[^\r\n]+") do
         local tableName = line:match("^:TABLE (.+)")
@@ -213,6 +217,21 @@ function Db:save()
     return table.concat(lines, "\n")
 end
 
+function readCardinality(data, pos)
+    local val, pos = string.unpack("B", data, pos)
+    if val & 1 == 0 then
+        return val >> 1, pos
+    elseif val & 2 == 0 then
+        val = (val + (string.unpack("B", data, pos) << 8)) >> 2
+        pos = pos + 1
+    elseif val & 2 == 0 then
+        local n = string.unpack("I3", data, pos)
+        val = (val + (n << 8)) >> 3
+        pos = pos + 3
+    end
+    return val, pos
+end
+
 -- TODO unfinished, broken
 function Db:loadBinary(data)
     local uid1, uid2, uid3, uidChecksum, pos = string.unpack("<I4I4I4I4", data)
@@ -229,10 +248,8 @@ function Db:loadBinary(data)
     local function readToc(offset)
         -- CPermanentStoreToc::STocHead, read by CPermanentStoreToc::ConstructL
         local KOffsetTocHeader = 12 -- wat?
-        -- printf("TOMSCIidx=%X", idx)
         local primary, avail, count = string.unpack("<i4i4I4", data, 1 + permanentStoreOffset + offset + KOffsetTocHeader)
-        printf("primary=%X avail=%X, count=%X\n", primary, avail, count)
-        --
+        printf("primary=%08X avail=%X, count=%X\n", primary, avail, count)
         return primary
     end
 
@@ -241,7 +258,7 @@ function Db:loadBinary(data)
     local appUid, streamID = string.unpack("<I4I4", data, 1 + permanentStoreOffset + rootOffset)
     printf("appUid=0x%08X streamID=0x%08X\n", appUid, streamID)
     assert(appUid == KUidOplInterpreter, "Something's gone wrong in the file store parsing!")
-    -- And yet another indirect... streamID is _finally_ where all our stuff is
+    -- And yet another indirect... streamID is _finally_ where all our stuff is?
 end
 
 function Db:createTable(tableName, fields)
@@ -259,6 +276,11 @@ end
 
 function parseTableSpec(spec)
     -- TODO support
+    printf("parseTableSpec: %s\n", spec)
+    local quoted, rest = spec:match('^"([^"]+)"%s*(.*)')
+    if quoted then
+        spec = quoted
+    end
     return spec, "Table1", nil
 end
 

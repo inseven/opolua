@@ -259,6 +259,9 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         table.insert(frame.indirects, 1, var)
     end
     frame.returnStackSize = stack:getSize()
+    if self.callTrace then
+        printf("+%s() initstacksz=%d\n", proc.name, frame.returnStackSize)
+    end
 
     for _, external in ipairs(proc.externals or {}) do
         -- Now resolve externals in the new fn by walking up the frame procs until
@@ -302,7 +305,9 @@ function Runtime:pushNewFrame(stack, proc, numParams)
 end
 
 function Runtime:returnFromFrame(stack, val)
-    -- printf("Returning from %s\n", self.frame.proc.name)
+    if self.callTrace then
+        printf("-%s()\n", self.frame.proc.name)
+    end
     local prevFrame = self.frame.prevFrame
     stack:popTo(self.frame.returnStackSize)
     self:setFrame(prevFrame, self.frame.returnIP)
@@ -763,6 +768,10 @@ function Runtime:setInstructionDebug(flag)
     self.instructionDebug = flag
 end
 
+function Runtime:setCallTrace(flag)
+    self.callTrace = flag
+end
+
 ErrObj = {
     __tostring = function(self)
         return fmt("%s\n%s\n%s", self.msg or self.code, self.opoStack, self.luaStack)
@@ -819,6 +828,12 @@ local function addStacktraceToError(self, err, callingFrame)
     else
         err.opoStack = stack
     end
+end
+
+function Runtime:getOpoStacktrace()
+    local err = {}
+    addStacktraceToError(self, err, nil)
+    return err.opoStack
 end
 
 local function traceback(msgOrCode)

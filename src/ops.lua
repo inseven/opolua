@@ -774,9 +774,10 @@ ArrayInDirectLeftSideString_dump = index_dump
 
 local function fieldLeftSide(stack, runtime)
     local logName = runtime:IP8()
-    local fieldName = stack:pop()
+    local varName = stack:pop()
     local db = runtime:getDb(logName)
-    local var = assert(db.currentVars[fieldName], KOplErrNoFld)
+    -- printf("fieldLeftSide %s\n", varName)
+    local var = assert(db.currentVars[varName], KOplErrNoFld)
     stack:push(var)
 end
 
@@ -2249,7 +2250,8 @@ function gColor(stack, runtime) -- 0x124
 end
 
 function SetFlags(stack, runtime) -- 0x125
-    -- We don't care atm
+    local flags = stack:pop()
+    printf("SetFlags(%d)\n", flags)
 end
 
 function SetDoc(stack, runtime) -- 0x126
