@@ -866,16 +866,15 @@ function Runtime:pcallProc(procName, ...)
                 -- An error code that might potentially be handled by a Trap or OnErr
                 if self.trap then
                     self.trap = false
-                    stack:popTo(self.frame.returnStackSize)
                     -- And continue to next instruction
                 else
                     -- See if this frame or any parent frame up to callingFrame has an error handler
                     while true do
                         if self.frame.errIp then
-                            stack:popTo(self.frame.returnStackSize)
                             self.ip = self.frame.errIp
                             break
                         else
+                            stack:popTo(self.frame.returnStackSize)
                             local prevFrame = self.frame.prevFrame
                             self:setFrame(prevFrame)
                             if prevFrame ~= callingFrame then

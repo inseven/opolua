@@ -1312,6 +1312,7 @@ end
 function Back(stack, runtime) -- 0x9F
     local db = runtime:getDb()
     db:setPos(db:getPos() - 1)
+    runtime:setTrap(false)
 end
 
 function Beep(stack, runtime) -- 0xA0
@@ -1332,6 +1333,7 @@ end
 
 function Copy(stack, runtime) -- 0xA4
     error("Unimplemented opcode Copy!")
+    runtime:setTrap(false)
 end
 
 local function parseOpenOrCreate(runtime)
@@ -1395,6 +1397,7 @@ end
 function First(stack, runtime) -- 0xAA
     local db = runtime:getDb()
     db:setPos(1)
+    runtime:setTrap(false)
 end
 
 function Vector(stack, runtime) -- 0xAB
@@ -1424,10 +1427,12 @@ end
 function Last(stack, runtime) -- 0xAC
     local db = runtime:getDb()
     db:setPos(db:getCount())
+    runtime:setTrap(false)
 end
 
 function LClose(stack, runtime) -- 0xAD
     error("Unimplemented opcode LClose!")
+    runtime:setTrap(false)
 end
 
 function LoadM(stack, runtime) -- 0xAE
@@ -1439,11 +1444,13 @@ end
 
 function LOpen(stack, runtime) -- 0xAF
     error("Unimplemented opcode LOpen!")
+    runtime:setTrap(false)
 end
 
 function Next(stack, runtime) -- 0xB0
     local db = runtime:getDb()
     db:setPos(db:getPos() + 1)
+    runtime:setTrap(false)
 end
 
 local function decodeOnErr(runtime)
@@ -1512,6 +1519,7 @@ end
 
 function Rename(stack, runtime) -- 0xBA
     error("Unimplemented opcode Rename!")
+    runtime:setTrap(false)
 end
 
 function Stop(stack, runtime) -- 0xBB
@@ -1563,6 +1571,7 @@ end
 
 function Edit(stack, runtime) -- 0xC2
     error("Unimplemented opcode Edit!")
+    runtime:setTrap(false)
 end
 
 function Screen2(stack, runtime) -- 0xC3
@@ -1586,6 +1595,7 @@ function gSaveBit(stack, runtime) -- 0xC5
         w, h = stack:popXY()
     end
     runtime:gSAVEBIT(stack:pop(), w, h)
+    runtime:setTrap(false)
 end
 
 gSaveBit_dump = numParams_dump
@@ -1629,6 +1639,7 @@ end
 
 function gUnloadFont(stack, runtime) -- 0xCB
     error("Unimplemented opcode gUnloadFont!")
+    runtime:setTrap(false)
 end
 
 function gGMode(stack, runtime) -- 0xCC
@@ -1763,6 +1774,7 @@ function gPatt(stack, runtime) -- 0xE0
     local width = stack:pop()
     local id = stack:pop()
     runtime:gPATT(id, width, height, mode)
+    runtime:setTrap(false)
 end
 
 function gCopy(stack, runtime) -- 0xE1
@@ -2020,6 +2032,7 @@ end
 
 function RmDir(stack, runtime) -- 0xF9
     error("Unimplemented opcode RmDir!")
+    runtime:setTrap(false)
 end
 
 function SetPath(stack, runtime) -- 0xFA
@@ -2175,18 +2188,22 @@ end
 
 function Modify(stack, runtime) -- 0x11A
     error("Unimplemented opcode Modify!")
+    runtime:setTrap(false)
 end
 
 function Insert(stack, runtime) -- 0x11B
     error("Unimplemented opcode Insert!")
+    runtime:setTrap(false)
 end
 
 function Cancel(stack, runtime) -- 0x11C
     error("Unimplemented opcode Cancel!")
+    runtime:setTrap(false)
 end
 
 function Put(stack, runtime) -- 0x11D
     error("Unimplemented opcode Put!")
+    runtime:setTrap(false)
 end
 
 function DeleteTable(stack, runtime) -- 0x11E
