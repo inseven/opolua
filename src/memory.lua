@@ -32,6 +32,7 @@ ArrayValue = class {
     _type = nil,
     _len = nil,
     _stringMaxLen = nil,
+    _var = nil,
 }
 
 function ArrayValue:__index(k)
@@ -40,7 +41,7 @@ function ArrayValue:__index(k)
     end
     local len = rawget(self, "_len")
     assert(len, "Array length has not been set!")
-    assert(type(k) == "number", "Attempt to index "..tostring(k))
+    assert(type(k) == "number", "Attempt to access "..tostring(k).." in ArrayValue")
     if not (k > 0 and k <= len) then
         error(string.format("Out of bounds: %d len=%d for %s\n", k, len, ArrayValue.__tostring(self)))
     end
@@ -48,7 +49,7 @@ function ArrayValue:__index(k)
     local valType = rawget(self, "_type")
     local maxLen = rawget(self, "_stringMaxLen")
     local result = makeVar(valType, maxLen)
-    result:setParent(self, k)
+    result:setParent(self._var, k)
     rawset(self, k, result)
     -- And default initialize the array value
     result(DefaultSimpleTypes[valType])
@@ -76,6 +77,11 @@ function ArrayValue:__tostring()
     return string.format("[t=%d, %s]", self:valueType(), table.concat(result, ", "))
 end
 
+function ArrayValue:setVar(var)
+    assert(rawget(self, "_var") == nil, "Cannot re-assign an array value's variable!")
+    rawset(self, "_var", var)
+end
+
 function newArrayVal(valueType, len, stringMaxLen)
     return ArrayValue {
         _type = valueType,
@@ -97,6 +103,10 @@ Variable = class {
 
 function Variable:__call(val)
     if val ~= nil then
+        if isArrayType(self._type) then
+            assert(self._val == nil, "Cannot reassign the value of an array variable!")
+            val:setVar(self)
+        end
         -- TODO should probably assert that val's type is correct for our type
         if self._len then
             self:updateStringData(0, val)
@@ -133,15 +143,13 @@ function Variable:addressOf()
     -- all the values in the array, kinda like how & operator in C technically
     -- doesn't allow you to index that pointer beyond the array bounds (even
     -- though most people ignore that, undefined behaviour oh well).
-    local parentArrayVal = self:getParent()
-    if parentArrayVal then
+    local parentArrayVar = self:getParent()
+    if parentArrayVar then
         local valSz = self:stride()
-        local arrayVar = makeVar(parentArrayVal:valueType() | 0x80)
-        arrayVar(parentArrayVal)
         return AddrSlice {
             offset = (self:getIndexInArray() - 1) * valSz,
-            len = parentArrayVal:arrayLen() * valSz,
-            var = arrayVar,
+            len = parentArrayVar():arrayLen() * valSz,
+            var = parentArrayVar,
         }
     else
         return AddrSlice {
@@ -152,8 +160,8 @@ function Variable:addressOf()
     end
 end
 
-function Variable:setParent(parentArrayVal, parentIdx)
-    self._parent = parentArrayVal
+function Variable:setParent(parentArrayVar, parentIdx)
+    self._parent = parentArrayVar
     self._idx = parentIdx
 end
 
@@ -261,7 +269,9 @@ end
 AddrSlice = class {
     offset = 0,
     len = 0,
+    -- Only one of var and mem will be set
     var = nil,
+    mem = nil,
 }
 
 local function getAddrAndOffset(lhs, rhs)
@@ -281,6 +291,11 @@ end
 
 function AddrSlice.__add(lhs, rhs)
     local addr, offset = getAddrAndOffset(lhs, rhs)
+    if offset == 0 then
+        -- No change
+        return addr
+    end
+
     local newOffset = addr.offset + offset
     if newOffset < 0 or newOffset > addr.len then
         -- printf("Warning: 0x%08X + %d outside of 0-%08X for var %s\n", addr.offset, offset, addr.len, addr.var)
@@ -291,6 +306,7 @@ function AddrSlice.__add(lhs, rhs)
         offset = newOffset,
         len = addr.len,
         var = addr.var,
+        mem = addr.mem,
     }
 end
 
@@ -301,10 +317,24 @@ end
 
 function AddrSlice:dereference()
     assert(self.offset == 0, "Addr not pointing to start of value!")
+    assert(self.var, "Cannot dereference a non-variable AddrSlice!")
     if isArrayType(self.var:type()) then
         return self.var()[1]
     else
         return self.var
+    end
+end
+
+function AddrSlice:baseAddr()
+    if self.offset == 0 then
+        return self
+    else
+        return AddrSlice {
+            offset = 0,
+            len = self.len,
+            var = self.var,
+            mem = self.mem,
+        }
     end
 end
 
@@ -328,6 +358,10 @@ function AddrSlice:getValidLength()
 end
 
 function AddrSlice:read(len)
+    if self.mem then
+        return self.mem:read(self.offset, len)
+    end
+
     local varData
     if isArrayType(self.var:type()) then
         -- Have to potentially span data from across multiple vars, fun....
@@ -388,18 +422,23 @@ function AddrSlice:write(data)
     if #data == 0 then
         return
     end
+    if self.mem then
+        self.mem:write(self.offset, data)
+        return
+    end
 
-    -- printf("WRITE: offset %d len=%d stride=%d to '%s'\n", self.offset, #data, self.var:stride(), self.var())
+    -- printf("+WRITE: offset %d len=%d stride=%d to '%s': \"%s\"\n", self.offset, #data, self.var:stride(), self.var(), hexEscape(data))
 
     local dataIdx = 0
     local stride = self.var:stride()
     while dataIdx < #data do
         local var, varOffset = self:getVarForOffset(dataIdx)
-        local dataPiece = data:sub(1 + dataIdx, dataIdx + stride)
-        -- assert(#dataPiece == stride, "Oh dear maths fail")
+        local dataPiece = data:sub(1 + dataIdx, dataIdx + stride - varOffset)
+        -- printf("write: dataIdx=%d len=%d varOffset=%d\n", dataIdx, #dataPiece, varOffset)
         applyDataToSimpleVar(dataPiece, var, varOffset)
-        dataIdx = dataIdx + stride
+        dataIdx = dataIdx + #dataPiece
     end
+    -- printf("-WRITE: val=%s\n", self.var())
 end
 
 

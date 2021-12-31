@@ -1273,29 +1273,31 @@ end
 
 function PokeW(stack, runtime) -- 0x98
     local data = string.pack("<i2", stack:pop())
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     addr:write(data)
 end
 
 function PokeL(stack, runtime) -- 0x99
     local data = string.pack("<i4", stack:pop())
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     addr:write(data)
 end
 
 function PokeD(stack, runtime) -- 0x9A
     local data = string.pack("<d", stack:pop())
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     addr:write(data)
 end
 
 function PokeStr(stack, runtime) -- 0x9B
-    error("Unimplemented opcode PokeStr!")
+    local data = string.pack("<s1", stack:pop())
+    local addr = runtime:addrFromInt(stack:pop())
+    addr:write(data)
 end
 
 function PokeB(stack, runtime) -- 0x9C
     local data = string.pack("B", stack:pop())
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     addr:write(data)
 end
 
@@ -2095,7 +2097,8 @@ function Style(stack, runtime) -- 0x105
 end
 
 function FreeAlloc(stack, runtime) -- 0x10C
-    error("Unimplemented opcode FreeAlloc!")
+    local addr = runtime:addrFromInt(stack:pop())
+    runtime:realloc(addr, 0)
 end
 
 function gButton(stack, runtime) -- 0x10F
@@ -2134,7 +2137,7 @@ end
 gXBorder_dump = numParams_dump
 
 function ScreenInfo(stack, runtime) -- 0x114
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local screen = runtime:getGraphics().screen
     local screenFontUid = KFontCourierNormal11
     local result = {
@@ -2258,7 +2261,7 @@ function DaysToDate(stack, runtime) -- 0x127
 end
 
 function gInfo32(stack, runtime) -- 0x128
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     -- Heh, ER5 doesn't have this bounds check but we can
     assert(addr:getValidLength() >= 48*4, "Too small an array passed to gInfo32!")
 
@@ -2410,7 +2413,7 @@ function gColorBackground(stack, runtime) -- ER5: ??, ER6: 0x136
 end
 
 function gColorInfo(stack, runtime) -- ER5: 0x136, ER6: 0x135
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local result = {
         6, -- TDisplayMode::EColor256
         256, -- numColors

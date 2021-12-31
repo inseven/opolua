@@ -659,6 +659,7 @@ end
 
 function newRuntime(handler)
     local rt = Runtime {
+        allocs = {},
         dbs = {},
         modules = {},
         files = {},
@@ -1068,6 +1069,132 @@ function Runtime:dir(path)
         self.dirResults = contents
     end
     return self:dir("")
+end
+
+--[[
+Cell address encoding scheme:
+
+Allocs < 64KB get the format 0000xxxx to 7FFFxxxx (where xxxx is the offset
+within the cell) meaning we can track up to 32k individual small allocations.
+
+Allocs >= 64KB get the format 80xxxxxx to FFxxxxxx allowing for 128 huge
+allocations (up to 16MB which seems like a reasonable upper limit).
+
+allocations are indexed by their top 4 (for small allocs) or 2 (for big allocs)
+bytes into runtime.allocs which is also reverse-indexed too. ie for the first
+small alloc:
+
+runtime.allocs[0x00010000] = AddrSlice {...}
+runtime.allocs[addrSlice] = 0x00010000
+]]
+
+local kLargeAllocMask = 0xFF000000
+local kSmallAllocMask = 0xFFFF0000
+local kMaxSmallAlloc = 0xFFFF
+
+local function baseAddress(addr)
+    if addr & 0x80000000 > 0 then
+        -- Large alloc
+        return addr & kLargeAllocMask
+    else
+        return addr & kSmallAllocMask
+    end
+end
+
+function Runtime:addrFromInt(addr)
+    if type(addr) == "table" then
+        -- It's already an AddrSlice
+        return addr
+    end
+    addr = addr % (1<<32)
+    local base = baseAddress(addr)
+    local offset = addr - base
+    result = self.allocs[base]
+    if not result then
+        error(string.format("Failed to find allocation for address 0x%08X", addr))
+    end
+    return result + offset
+end
+
+function Runtime:nextSmallAlloc()
+    local addr = 0x00010000
+    while self.allocs[addr] do
+        addr = addr + 0x00010000
+    end
+    assert(addr < 0x80000000, "OOM!")
+    return addr
+end
+
+function Runtime:nextLargeAlloc()
+    local addr = 0x80000000
+    while self.allocs[addr] do
+        addr = addr + 0x01000000
+    end
+    assert(addr < 0xFFFFFFFF, "OOM!")
+    return addr
+end
+
+function Runtime:addrToInt(addr)
+    if type(addr) == "number" then
+        return addr
+    else
+        -- Do we already have one?
+        local key = addr.mem or addr.var -- track based on var or mem since AddrSlice objects are ephemeral
+        local baseAddr = self.allocs[key]
+        if not baseAddr then
+            if addr.len > kMaxSmallAlloc then
+                baseAddr = self:nextLargeAlloc()
+            else
+                baseAddr = self:nextSmallAlloc()
+            end
+            self.allocs[baseAddr] = addr:baseAddr()
+            self.allocs[key] = baseAddr
+            -- printf("%s -> 0x%08X\n", key, baseAddr)
+        end
+        return toint32(baseAddr + addr.offset)
+    end
+end
+
+function Runtime:realloc(addr, sz)
+    self.callTrace = true
+    -- printf("Runtime:realloc(%s, %d)\n", addr, sz) --, self:getOpoStacktrace())
+    local sz = (sz + 3) & ~3
+    if addr == nil then
+        local addr
+        if self.ioh.realloc then
+            local mem = self.ioh.realloc(nil, sz)
+            addr = memory.AddrSlice {
+                offset = 0,
+                len = sz,
+                mem = mem
+            }
+        else
+            local var = self:makeTemporaryVar(DataTypes.ELongArray, sz // 4)
+            addr = var()[1]:addressOf()
+        end
+        return self:addrToInt(addr)
+    end
+
+    assert(addr.offset == 0, "Cannot realloc a non-alloc'd address!")
+    local k = addr.mem or addr.var
+    local baseAddr = self.allocs[k]
+    assert(baseAddr, "Can't find allocation in allocs table!")
+    if sz == 0 then
+        if addr.mem then
+            self.ioh.realloc(addr.mem, 0)
+        end
+        self.allocs[k] = nil
+        self.allocs[baseAddr] = nil
+        return 0
+    elseif sz < addr.len then
+        addr.len = sz
+    elseif sz > addr.len then
+        local newAddr = self:realloc(nil, sz)
+        newAddr:write(addr:read(addr.len))
+        self:realloc(addr, 0)
+        addr = newAddr
+    end
+    return self:addrToInt(addr)
 end
 
 function runOpo(fileName, procName, iohandler, verbose)

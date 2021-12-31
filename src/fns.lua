@@ -341,7 +341,7 @@ end
 
 function IoWrite(stack, runtime) -- 0x0E
     local len = stack:pop()
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local h = stack:pop()
     local data = addr:read(len)
     local err = runtime:IOWRITE(h, data)
@@ -350,7 +350,7 @@ end
 
 function IoRead(stack, runtime) -- 0x0F
     local maxLen = stack:pop()
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local h = stack:pop()
     local data, err = runtime:IOREAD(h, maxLen)
 
@@ -402,13 +402,13 @@ function Month(stack, runtime) -- 0x17
 end
 
 function PeekB(stack, runtime) -- 0x18
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local data = addr:read(1)
     stack:push(string.unpack("B", data))
 end
 
 function PeekW(stack, runtime) -- 0x19
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local data = addr:read(2)
     stack:push(string.unpack("<i2", data))
 end
@@ -680,7 +680,7 @@ function IntLong(stack, runtime) -- 0x42
 end
 
 function PeekL(stack, runtime) -- 0x43
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local data = addr:read(4)
     stack:push(string.unpack("<i4", data))
 end
@@ -708,11 +708,17 @@ function DateToSecs(stack, runtime) -- 0x45
 end
 
 function Alloc(stack, runtime) -- 0x4B
-    error("Unimplemented function Alloc!")
+    local sz = stack:pop()
+    assert(sz > 0, "Allocation size must be positive")
+    local result = runtime:realloc(nil, sz)
+    stack:push(result)
 end
 
 function ReAlloc(stack, runtime) -- 0x4C
-    error("Unimplemented function ReAlloc!")
+    local sz = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
+    local result = runtime:realloc(addr, sz)
+    stack:push(result)
 end
 
 function AdjustAlloc(stack, runtime) -- 0x4D
