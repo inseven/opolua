@@ -42,7 +42,9 @@ end
 function Db:newView()
     local result = {}
     for name, field in pairs(self.viewMap) do
-        result[name] = makeVar(field.type)
+        local var = makeVar(field.type)
+        var(DefaultSimpleTypes[field.type])
+        result[name] = var
     end
     return result
 end
