@@ -176,7 +176,10 @@ function DTMinutesDiff(stack, runtime) -- 23
 end
 
 function DTSecsDiff(stack, runtime) -- 24
-    error("Unimplemented date.opx function DTSecsDiff!")
+    local endt = popTimeFromStack(stack)
+    local startt = popTimeFromStack(stack)
+    local diff = endt - startt
+    stack:push(toint32(math.floor(diff)))
 end
 
 function DTMicrosDiff(stack, runtime) -- 25
