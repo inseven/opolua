@@ -1752,7 +1752,7 @@ end
 gEllipse_dump = numParams_dump
 
 function gPoly(stack, runtime) -- 0xDE
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local x, y, n = string.unpack("<i2i2i2", addr:read(6))
     local intArray = { x, y, n }
     addr = addr + 6
