@@ -127,17 +127,31 @@ extension CGContext {
                 drawUnflippedImage(img, in: newRect)
             }
         case .text(let str, let font):
-            let attribStr = NSAttributedString(string: str, attributes: [
-                .font: font.toUiFont(),
-                .foregroundColor: UIColor(cgColor: col)
-            ])
-            UIGraphicsPushContext(self)
             let pt = operation.origin.cgPoint()
             // OPL text drawing coords are for the bottom left of the text, not the top left, so we have to adjust
             // the coords we pass to UIKit
-            let sz = attribStr.size()
-            attribStr.draw(at: CGPoint(x: pt.x, y: pt.y - sz.height))
-            UIGraphicsPopContext()
+            if let uifont = font.toUiFont() {
+                UIGraphicsPushContext(self)
+                let attribStr = NSAttributedString(string: str, attributes: [
+                    .font: uifont,
+                    .foregroundColor: UIColor(cgColor: col)
+                ])
+                let sz = attribStr.size()
+                attribStr.draw(at: CGPoint(x: pt.x, y: pt.y - sz.height))
+                UIGraphicsPopContext()
+            } else {
+                let font = font.toBitmapFont()! // One or other has to return non-nil
+                let renderer = BitmapFontRenderer(font: font)
+                var x = operation.origin.x
+                let y = operation.origin.y - font.charh
+                for ch in str {
+                    if let img = renderer.getImageForChar(ch) {
+                        let rect = CGRect(x: x, y: y, width: img.width, height: img.height)
+                        drawUnflippedImage(img, in: rect, mode: operation.mode)
+                        x = x + img.width
+                    }
+                }
+            }
         case .border(let rect, let type):
             gXBorder(type: type, frame: rect.cgRect())
         case .invert(let size):

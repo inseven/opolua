@@ -165,7 +165,12 @@ function gPRINTB(text, width, align, top, bottom, margin)
         textX = context.pos.x + margin
     end
 
-    runtime:drawCmd("text", { string = text, x = textX, y = context.pos.y - fontAscent + texth })
+    runtime:drawCmd("text", {
+        x = textX,
+        y = context.pos.y - fontAscent + texth,
+        mode = GraphicsMode.Set,
+        string = text,
+    })
 end
 
 function gTWIDTH(text)

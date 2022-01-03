@@ -30,14 +30,19 @@ class WindowServer {
     }
 
     static func textSize(string: String, fontInfo: Graphics.FontInfo) -> TextDetails {
-        let font = fontInfo.toUiFont()
-        let attribStr = NSAttributedString(string: string, attributes: [.font: font])
-        let sz = attribStr.size()
-        // This is not really the right definition for ascent but it seems to work for where epoc expects
-        // the text to be, so...
-        let ascent = Int(ceil(sz.height) + font.descender)
-        return TextDetails(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
-                           ascent: ascent)
+        if let font = fontInfo.toUiFont() {
+            let attribStr = NSAttributedString(string: string, attributes: [.font: font])
+            let sz = attribStr.size()
+            // This is not really the right definition for ascent but it seems to work for where epoc expects
+            // the text to be, so...
+            let ascent = Int(ceil(sz.height) + font.descender)
+            return TextDetails(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
+                               ascent: ascent)
+        } else {
+            let font = fontInfo.toBitmapFont()! // One or other has to return non-nil
+            let renderer = BitmapFontRenderer(font: font)
+            return TextDetails(size: Graphics.Size(width: renderer.getTextWidth(string), height: font.charh), ascent: font.ascent)
+        }
     }
 
     // TODO: This should probably be done by a delegate model.

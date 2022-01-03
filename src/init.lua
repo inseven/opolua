@@ -245,9 +245,8 @@ FontIds = {
     [KFontCourierNormal27] = { face = "courier", size = 27 },
     [KFontCourierNormal32] = { face = "courier", size = 32 },
     [KFontSquashed] = { face = "squashed", size = 11, bold = true },
+    [KFontDigital35] = { face = "digit", size = 35 },
 }
-
-FontIds[KFontDigital35] = FontIds[KFontArialNormal32] -- TODO
 
 GraphicsMode = enum {
     Set = 0,

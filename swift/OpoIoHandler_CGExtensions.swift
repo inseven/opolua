@@ -46,7 +46,7 @@ extension Graphics.Rect {
 }
 
 extension Graphics.FontInfo {
-    func toUiFont() -> UIFont {
+    func toUiFont() -> UIFont? {
         let sz = CGFloat(self.size)
         let uiFontName: String
         var traits: UIFontDescriptor.SymbolicTraits = []
@@ -65,6 +65,8 @@ extension Graphics.FontInfo {
         case .squashed:
             uiFontName = "Helvetica Neue"
             traits.insert(.traitCondensed)
+        case .digit:
+            return nil
         }
 
         var desc = UIFontDescriptor(name: uiFontName, size: sz)
@@ -72,5 +74,14 @@ extension Graphics.FontInfo {
             desc = newDesc
         }
         return UIFont(descriptor: desc, size: sz)
+    }
+
+    func toBitmapFont() -> BitmapFontInfo? {
+        switch self.face {
+        case .digit:
+            return BitmapFontInfo.digit
+        default:
+            return nil
+        }
     }
 }

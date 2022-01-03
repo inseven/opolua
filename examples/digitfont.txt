@@ -1,0 +1,12 @@
+INCLUDE "Const.oph"
+
+PROC main:
+	gFONT KFontDigital35&
+	REM gCOLOR 128, 128, 128
+	REM gFILL 200, 200, 0
+	gCOLOR 0, 0, 0
+	gAT 0, 35
+	gPRINT "01234567890:0,0.0-0"
+	GET
+	gSAVEBIT("D:\digitfont.mbm")
+ENDP

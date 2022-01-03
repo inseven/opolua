@@ -2253,7 +2253,7 @@ local function getEvent(runtime, stat, ev)
         -- exactly the same address on the Series 5), on the basis that anything
         -- else would have not worked anyway and this workaround would not
         -- apply.
-        printf("Duplicate GetEventA32 request, applying workaround\n")
+        -- printf("Duplicate GetEventA32 request, applying workaround\n")
         assert(existingEvent.var == stat, "Workaround does not support using a different status variable instance!")
         existingEvent.ev = ev
         return
