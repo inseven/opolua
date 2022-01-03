@@ -22,8 +22,8 @@ import Foundation
 
 class ConcurrentQueue<T> {
 
-    var condition = NSCondition()
-    var items: [T] = []
+    private var condition = NSCondition()
+    private var items: [T] = []
 
     func append(_ item: T) {
         condition.lock()
@@ -42,11 +42,23 @@ class ConcurrentQueue<T> {
         repeat {
             if let item = items.first {
                 items.remove(at: 0)
-                condition.broadcast()
                 return item
             }
             condition.wait()
         } while true
+    }
+
+    func first() -> T? {
+        condition.lock()
+        defer {
+            condition.unlock()
+        }
+        if let item = items.first {
+            items.remove(at: 0)
+            return item
+        } else {
+            return nil
+        }
     }
 
     func first(where predicate: (T) -> Bool) -> T? {
@@ -57,7 +69,6 @@ class ConcurrentQueue<T> {
         guard let index = items.firstIndex(where: predicate) else {
             return nil
         }
-        condition.broadcast()
         return items.remove(at: index)
     }
 

@@ -19,100 +19,122 @@
 // SOFTWARE.
 
 import UIKit
+import Combine
 
 class Scheduler {
 
-    class Request {
+    /// Base class for all asynchronous tasks managed by the Scheduler.
+    class RequestBase {
+        let requestHandle: Int32
+        fileprivate(set) weak var scheduler: Scheduler?
+        fileprivate var response: Async.ResponseValue?
 
-        let request: Async.Request
-        private let completion: (Async.ResponseValue) -> Void
-
-        private var lock = NSLock()
-        private var _cancelled: Bool = false
-
-        init(request: Async.Request, completion: @escaping (Async.ResponseValue) -> Void) {
-            self.request = request
-            self.completion = completion
+        init(requestHandle: Int32) {
+            self.requestHandle = requestHandle
+            response = nil
         }
 
-        var cancelled: Bool {
-            get {
-                lock.lock()
-                defer {
-                    lock.unlock()
-                }
-                return _cancelled
-            }
-            set {
-                lock.lock()
-                defer {
-                    lock.unlock()
-                }
-                _cancelled = newValue
-            }
-        }
-
+        /// Perform any cancellation needed by this request. Called with the
+        /// scheduler lock held therefore must not result in any calls back into
+        /// the scheduler. Must be overridden by subclasses.
         func cancel() {
-            cancelled = true
+            fatalError("RequestBase.cancel() must be overridden!")
         }
 
-        func complete(_ value: Async.ResponseValue) {
-            completion(value)
-        }
-
+        /// Start the thing that will result in the complete call occurring.
+        func start() {
+            fatalError("RequestBase.start() must be overridden!")
+        }            
     }
 
-    var requests: [Int32: Request] = [:]
-    var responses: [Int32: Async.Response] = [:]
-    var handlers: [Async.RequestType: (Request) -> Void] = [:]
+    class CancellableRequest: RequestBase {
+        var cancellable: Cancellable?
+
+        override func cancel() {
+            cancellable?.cancel()
+        }
+    }
+
+    /// A one-shot interval-based timer.
+    class TimerRequest: CancellableRequest {
+        let interval: Double
+        init(requestHandle: Int32, interval: Double) {
+            self.interval = interval
+            super.init(requestHandle: requestHandle)
+        }
+
+        convenience init(request: Async.Request) {
+            precondition(request.type == .sleep && request.intVal != nil)
+            let intervalSeconds = Double(request.intVal!) / 1000.0
+            self.init(requestHandle: request.requestHandle, interval: intervalSeconds)
+        }
+
+        override func start() {
+            self.cancellable = DispatchQueue.main.schedule(after: .init(.now() + interval),
+                    interval: .init(integerLiteral: 1),
+                    tolerance: .init(floatLiteral: 0.001),
+                    options: nil) {
+                self.cancellable?.cancel() // Stop the timer firing again
+                self.cancellable = nil
+                self.scheduler?.complete(request: self, response: .completed)
+            }
+        }
+    }
+
+    var requests: [RequestBase] = []
     var lock = NSCondition()
-    var handlerQueue = DispatchQueue(label: "Scheduler.handlerQueue", attributes: .concurrent)
 
-    func addHandler(_ type: Async.RequestType,
-                    handler: @escaping (Request) -> Void) {
+    func withLockHeld(run code: () -> Void) {
         lock.lock()
-        defer {
-            lock.unlock()
-        }
-        self.handlers[type] = handler
+        code()
+        lock.unlock()
     }
 
-    func scheduleRequest(_ request: Async.Request) {
-        lock.lock()
-        defer {
-            lock.unlock()
-        }
-        assert(requests[request.requestHandle] == nil)
-        let wrapper = Request(request: request) { responseValue in
-            self.serviceRequest(request.requestHandle, responseValue: responseValue)
-        }
-        requests[request.requestHandle] = wrapper
-        lock.broadcast()
-        let handler = handlers[request.type]!
-        handlerQueue.async {
-            handler(wrapper)
+    func addPendingRequest(_ request: RequestBase) {
+        precondition(request.scheduler == nil, "Request has already been added to a scheduler?")
+        withLockHeld {
+            request.scheduler = self
+            requests.append(request)
         }
     }
 
-    private func serviceRequest(_ requestHandle: Int32, responseValue: Async.ResponseValue) {
-        lock.lock()
-        defer {
-            lock.unlock()
+    func complete(request: RequestBase, response: Async.ResponseValue) {
+        withLockHeld {
+            completeLocked(request: request, response: response)
         }
-        let request = requests.removeValue(forKey: requestHandle)!
-        responses[requestHandle] = Async.Response(requestHandle: request.request.requestHandle, value: responseValue)
+    }
+
+    private func completeLocked(request: RequestBase, response: Async.ResponseValue) {
+        precondition(request.response == nil, "Cannot complete a request that already has a response set!")
+        request.response = response
         lock.broadcast()
     }
 
     func cancelRequest(_ requestHandle: Int32) {
+        // Note, it's not an error if the request has already been completed or
+        // even already gone from requests.
         lock.lock()
-        defer {
+        if let req = requests.first(where: { $0.requestHandle == requestHandle }) {
+            if req.response == nil {
+                req.cancel()
+                completeLocked(request: req, response: .cancelled)
+            }
             lock.unlock()
-        }
-        guard let request = requests[requestHandle] else {
             return
         }
-        request.cancel()
+        lock.unlock()
+    }
+
+    private func removeCompletedRequest() -> Async.Response? {
+        // lock must be held
+        if let idx = requests.firstIndex(where: { $0.response != nil }) {
+            let req = requests.remove(at: idx)
+            req.scheduler = nil
+            let response = Async.Response(requestHandle: req.requestHandle, value: req.response!)
+            return response
+        } else {
+            return nil
+        }
     }
 
     func waitForAnyRequest() -> Async.Response {
@@ -121,8 +143,7 @@ class Scheduler {
             lock.unlock()
         }
         repeat {
-            if let response = responses.removeRandomValue() {
-                lock.broadcast()
+            if let response = removeCompletedRequest() {
                 return response
             }
             lock.wait()
@@ -134,11 +155,10 @@ class Scheduler {
         defer {
             lock.unlock()
         }
-        guard let response = responses.removeRandomValue() else {
-            return nil
+        if let response = removeCompletedRequest() {
+            return response
         }
-        lock.broadcast()
-        return response
+        return nil
     }
 
 }

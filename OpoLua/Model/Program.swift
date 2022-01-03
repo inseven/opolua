@@ -63,12 +63,39 @@ class Program {
         case finished
     }
 
+    class GetEventRequest: Scheduler.RequestBase {
+        weak var program: Program?
+
+        init(requestHandle: Int32, program: Program) {
+            self.program = program
+            super.init(requestHandle: requestHandle)
+        }
+
+        override func cancel() {
+            if let prog = program {
+                prog.geteventRequest = nil
+            }
+        }
+
+        override func start() {
+            guard let scheduler = self.scheduler, let program = self.program else {
+                print("Cannot start request if scheduler or program isn't set!")
+                return
+            }
+            scheduler.withLockHeld {
+                precondition(program.geteventRequest == nil, "There can only be one geteventRequest!")
+                program.geteventRequest = self
+            }
+        }
+    }
+
     private let configuration: Configuration
     private let procedureName: String?
     private let device: Device
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     private let scheduler = Scheduler()
+    fileprivate var geteventRequest: GetEventRequest?
 
     private var _state: State = .idle
 
@@ -99,20 +126,6 @@ class Program {
         self.thread = InterpreterThread(object: configuration, procedureName: procedureName)
         self.thread.delegate = self
         self.thread.handler = self
-
-        scheduler.addHandler(.getevent) { request in
-            request.complete(self.eventQueue.takeFirst())
-        }
-        scheduler.addHandler(.playsound) { request in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                request.complete(.completed)
-            }
-        }
-        scheduler.addHandler(.sleep) { request in
-            DispatchQueue.main.asyncAfter(deadline: .now() + (Double(request.request.intVal!) / 1000.0)) {
-                request.complete(.completed)
-            }
-        }
     }
 
     func start() {
@@ -153,7 +166,17 @@ class Program {
     }
 
     func sendEvent(_ event: Async.ResponseValue) {
-        eventQueue.append(event)
+        var req: GetEventRequest?
+        scheduler.withLockHeld {
+            req = geteventRequest
+            geteventRequest = nil
+        }
+        if let req = req {
+            assert(eventQueue.isEmpty(), "Queue must be empty if there's a geteventRequest!")
+            scheduler.complete(request: req, response: event)
+        } else {
+            eventQueue.append(event)
+        }
     }
 
     private func mapToNative(path: String) -> URL? {
@@ -290,7 +313,25 @@ extension Program: OpoIoHandler {
     }
 
     func asyncRequest(_ request: Async.Request) {
-        scheduler.scheduleRequest(request)
+        switch request.type {
+        case .getevent:
+            let req = GetEventRequest(requestHandle: request.requestHandle, program: self)
+            scheduler.addPendingRequest(req)
+            if let event = eventQueue.first() {
+                scheduler.complete(request: req, response: event)
+            } else {
+                req.start()
+            }
+        case .sleep:
+            let req = Scheduler.TimerRequest(request: request)
+            scheduler.addPendingRequest(req)
+            req.start()
+        case .playsound:
+            // TODO
+            let req = Scheduler.TimerRequest(requestHandle: request.requestHandle, interval: 0.1)
+            scheduler.addPendingRequest(req)
+            req.start()
+        }
     }
 
     func cancelRequest(_ requestHandle: Int32) {
