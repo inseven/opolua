@@ -38,6 +38,8 @@ extension UIKey {
         case .keyboardPageDown: return .pgDn
         case .keyboardDeleteOrBackspace: return .backspace
         case .keyboardLeftGUI, .keyboardRightGUI: return .menu
+        case .keyboardEscape: return .escape
+        case .keyboardTab: return .tab
         default:
             return nil
         }
