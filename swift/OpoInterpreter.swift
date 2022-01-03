@@ -606,19 +606,19 @@ private func fsop(_ L: LuaState!) -> Int32 {
     }
 }
 
-// asyncRequest("getevent", statusVar, ev)
+// asyncRequest(requestName, requestTable)
+// asyncRequest("getevent", { var = ..., ev = ... })
+// asyncRequest("sleep", { var = ..., interval = ... })
+// asyncRequest("playsound", { var = ..., data = ... })
 private func asyncRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let name = L.tostring(1) else { return 0 }
     guard let type = Async.RequestType(rawValue: name) else {
         fatalError("Unhandled asyncRequest type \(name)")
     }
-
-    lua_createtable(L, 0, 3) // requestTable
-    lua_replace(L, 1) // move requestTable to stack position 1, replacing name
-
-    lua_pushvalue(L, 2) // statusVar
-    lua_setfield(L, 1, "var") // requestTable.var = statusVar
+    lua_settop(L, 2)
+    lua_remove(L, 1) // Removes name, so requestTable is now at position 1
+    lua_getfield(L, 1, "var") // Put var at 2 for compat with code below
 
     L.push(type.rawValue)
     lua_setfield(L, 1, "type") // requestTable.type = name
@@ -640,13 +640,11 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
     var intVal: Int? = nil
     switch type {
     case .getevent:
-        lua_settop(L, 3) // so eventArray definitely on top
-        lua_setfield(L, 1, "ev") // requestTable.ev = eventArray
+        break
     case .playsound:
-        lua_settop(L, 3)
-        data = L.todata(3)
+        data = L.todata(1, key: "data")
     case .sleep:
-        guard let period = L.toint(3) else {
+        guard let period = L.toint(1, key: "period") else {
             print("Bad param to sleep asyncRequest")
             return 0
         }

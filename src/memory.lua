@@ -99,6 +99,8 @@ Variable = class {
     _maxLen = nil,
     _val = nil,
     _onAssign = nil,
+    _originProc = nil,
+    _originIndex = nil,
 }
 
 function Variable:__call(val)
@@ -127,10 +129,16 @@ function Variable:__call(val)
 end
 
 function Variable:__tostring()
+    local val
     if self._type == DataTypes.EString then
-        return string.format('"%s"', hexEscape(self()))
+        val = string.format('"%s"', hexEscape(self()))
     else
-        return tostring(self())
+        val = tostring(self())
+    end
+    if self._originProc then
+        return string.format("%s+0x%04X (%s)", self._originProc, self._originIndex, val)
+    else
+        return string.format("Temporary (%s)", val)
     end
 end
 
@@ -254,6 +262,17 @@ end
 
 function Variable:setOnAssignCallback(fn)
     self._onAssign = fn
+end
+
+function Variable:setOrigin(proc, index)
+    self._originProc = proc
+    self._originIndex = index
+end
+
+function Variable:sameOrigin(otherVar)
+    return self._originProc and otherVar._originProc
+        and self._originProc == otherVar._originProc
+        and self._originIndex == otherVar._originIndex
 end
 
 function makeVar(type, maxLen)
@@ -456,6 +475,20 @@ function AddrSlice:writeArray(array, valueType)
     end
     -- Restore offset
     self.offset = offset
+end
+
+function AddrSlice:sameOrigin(otherAddr)
+    if (self.mem == nil) == (otherAddr.mem == nil) then
+        if self.mem then
+            return self.mem == otherAddr.mem
+        else
+            return self.var:sameOrigin(otherAddr.var)
+        end
+    else
+        -- A variable-based AddrSlice is definitely does not have the same
+        -- origin as a mem-based one
+        return false
+    end
 end
 
 return _ENV

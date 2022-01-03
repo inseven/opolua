@@ -43,7 +43,6 @@ function Runtime:nextOp()
     end
     self.ip = ip + 1
     return opCode, op
-
 end
 
 function Runtime:ipUnpack(packFmt)
@@ -103,6 +102,7 @@ function Runtime:getLocalVar(index, type, frame)
             maxLen = assert(frame.proc.strings[stringFixupIndex], "Failed to find string fixup!")
         end
         var = makeVar(type, maxLen)
+        var:setOrigin(frame.proc, index)
         vars[index] = var
     end
     if var() == nil then

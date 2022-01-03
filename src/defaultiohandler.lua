@@ -231,14 +231,9 @@ function fsop(cmd, path, ...)
     end
 end
 
-function asyncRequest(name, statusVar, ...)
-    local req = { name = name, statusVar = statusVar }
-    if name == "getevent" then
-        req.eventArray = ...
-    else
-        error("Unknown asyncRequest "..name)
-    end
-    statusRequests[name] = req
+function asyncRequest(name, requestTable)
+    assert(name == "getevent", "Unknown asyncRequest "..name)
+    statusRequests[name] = requestTable
 end
 
 function waitForAnyRequest()
@@ -249,8 +244,8 @@ function waitForAnyRequest()
     end
 
     local ch = getch()
-    eventRequest.eventArray:writeArray({ch}, DataTypes.ELong)
-    eventRequest.statusVar(0)
+    eventRequest.ev:writeArray({ch}, DataTypes.ELong)
+    eventRequest.var(0)
     statusRequests["getevent"] = nil
     return true
 end

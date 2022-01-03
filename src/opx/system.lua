@@ -290,7 +290,7 @@ function PlaySoundA(stack, runtime) -- 39
         runtime:setResource("sound", nil)
         var:setOnAssignCallback(nil)
     end)
-    runtime:iohandler().asyncRequest("playsound", var, sndData)
+    runtime:iohandler().asyncRequest("playsound", { var = var, data = sndData })
     stack:push(0)
 end
 

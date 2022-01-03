@@ -520,7 +520,11 @@ function GET()
     local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
     repeat
         stat(KOplErrFilePending)
-        runtime:iohandler().asyncRequest("getevent", stat, ev:addressOf())
+        local requestTable = {
+            var = stat,
+            ev = ev:addressOf()
+        }
+        runtime:iohandler().asyncRequest("getevent", requestTable)
         runtime:waitForRequest(stat)
     until ev()[1]() & 0x400 == 0
 
