@@ -74,6 +74,10 @@ extension FileManager {
     }
 
     func findCorrectCase(in path: URL, for uncasedName: String) throws -> String {
+        if fileExists(atUrl: path.appendingPathComponent(uncasedName)) {
+            // No need to check anything else
+            return uncasedName
+        }
         let contents = try contentsOfDirectory(at: path, includingPropertiesForKeys: [])
         let uppercasedName = uncasedName.uppercased()
         for url in contents {
@@ -94,6 +98,14 @@ extension FileManager {
                 if name.uppercased() == unsuffixedName {
                     return name
                 }
+            }
+        }
+        if let dot = uncasedName.lastIndex(of: ".") {
+            let suff = uncasedName[uncasedName.index(after: dot)...]
+            if suff.count > 3 {
+                //  Try truncating the extension to 3 chars
+                let newName = String(uncasedName[...dot]) + suff.prefix(3)
+                return try findCorrectCase(in: path, for: newName)
             }
         }
         return uncasedName
