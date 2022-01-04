@@ -108,6 +108,7 @@ class Sound {
         audioUnit.stopHardware()
     }
 
+    // See https://www.reddit.com/r/iOSProgramming/comments/pgi1zl/how_to_play_raw_audio_in/
     static var audioStreamBasicDescription: AudioStreamBasicDescription = {
         var asbd = AudioStreamBasicDescription()
         asbd.mSampleRate = 8000
