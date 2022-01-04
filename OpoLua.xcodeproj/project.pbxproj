@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */; };
 		D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */; };
+		D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82639352783CAE500AB4086 /* TimerRequest.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
@@ -177,6 +178,7 @@
 /* Begin PBXFileReference section */
 		D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Graphics+CoreGraphics.swift"; sourceTree = "<group>"; };
 		D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+UIKit.swift"; sourceTree = "<group>"; };
+		D82639352783CAE500AB4086 /* TimerRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRequest.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
@@ -338,6 +340,7 @@
 				D884A3D42779025A008954A0 /* SystemFileSystem.swift */,
 				D8535A29277139D900DFCE29 /* Tone.swift */,
 				D8DCD03D277AC9B300760302 /* WindowServer.swift */,
+				D82639352783CAE500AB4086 /* TimerRequest.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -775,6 +778,7 @@
 				D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */,
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,
 				DB7900132742E6F6005E904F /* ltablib.c in Sources */,
+				D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */,
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,
 				D8FE60092757208000711717 /* ApplicationError.swift in Sources */,
 				D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */,

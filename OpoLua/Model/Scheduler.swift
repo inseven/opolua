@@ -24,7 +24,8 @@ import Combine
 class Scheduler {
 
     /// Base class for all asynchronous tasks managed by the Scheduler.
-    class RequestBase {
+    // TODO: Make this a protocol.
+    class Request {
         let requestHandle: Int32
         fileprivate(set) weak var scheduler: Scheduler?
         fileprivate var response: Async.ResponseValue?
@@ -47,41 +48,7 @@ class Scheduler {
         }            
     }
 
-    class CancellableRequest: RequestBase {
-        var cancellable: Cancellable?
-
-        override func cancel() {
-            cancellable?.cancel()
-        }
-    }
-
-    /// A one-shot interval-based timer.
-    class TimerRequest: CancellableRequest {
-        let interval: Double
-        init(requestHandle: Int32, interval: Double) {
-            self.interval = interval
-            super.init(requestHandle: requestHandle)
-        }
-
-        convenience init(request: Async.Request) {
-            precondition(request.type == .sleep && request.intVal != nil)
-            let intervalSeconds = Double(request.intVal!) / 1000.0
-            self.init(requestHandle: request.requestHandle, interval: intervalSeconds)
-        }
-
-        override func start() {
-            self.cancellable = DispatchQueue.main.schedule(after: .init(.now() + interval),
-                    interval: .init(integerLiteral: 1),
-                    tolerance: .init(floatLiteral: 0.001),
-                    options: nil) {
-                self.cancellable?.cancel() // Stop the timer firing again
-                self.cancellable = nil
-                self.scheduler?.complete(request: self, response: .completed)
-            }
-        }
-    }
-
-    var requests: [RequestBase] = []
+    var requests: [Request] = []
     var lock = NSCondition()
 
     func withLockHeld(run code: () -> Void) {
@@ -90,7 +57,7 @@ class Scheduler {
         lock.unlock()
     }
 
-    func addPendingRequest(_ request: RequestBase) {
+    func addPendingRequest(_ request: Request) {
         precondition(request.scheduler == nil, "Request has already been added to a scheduler?")
         withLockHeld {
             request.scheduler = self
@@ -98,13 +65,13 @@ class Scheduler {
         }
     }
 
-    func complete(request: RequestBase, response: Async.ResponseValue) {
+    func complete(request: Request, response: Async.ResponseValue) {
         withLockHeld {
             completeLocked(request: request, response: response)
         }
     }
 
-    private func completeLocked(request: RequestBase, response: Async.ResponseValue) {
+    private func completeLocked(request: Request, response: Async.ResponseValue) {
         precondition(request.response == nil, "Cannot complete a request that already has a response set!")
         request.response = response
         lock.broadcast()

@@ -63,7 +63,7 @@ class Program {
         case finished
     }
 
-    class GetEventRequest: Scheduler.RequestBase {
+    class GetEventRequest: Scheduler.Request {
         weak var program: Program?
 
         init(requestHandle: Int32, program: Program) {
@@ -312,6 +312,7 @@ extension Program: OpoIoHandler {
         return .err(.notReady)
     }
 
+    // TODO: Consider returning the request?
     func asyncRequest(_ request: Async.Request) {
         switch request.type {
         case .getevent:
@@ -323,12 +324,11 @@ extension Program: OpoIoHandler {
                 req.start()
             }
         case .sleep:
-            let req = Scheduler.TimerRequest(request: request)
+            let req = TimerRequest(request: request)
             scheduler.addPendingRequest(req)
             req.start()
         case .playsound:
-            // TODO
-            let req = Scheduler.TimerRequest(requestHandle: request.requestHandle, interval: 0.1)
+            let req = PlaySoundRequest(request: request)
             scheduler.addPendingRequest(req)
             req.start()
         }
