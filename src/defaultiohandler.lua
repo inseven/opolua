@@ -266,4 +266,7 @@ function key()
     return 0
 end
 
+function opsync()
+end
+
 return _ENV

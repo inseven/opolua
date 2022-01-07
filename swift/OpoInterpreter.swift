@@ -756,7 +756,15 @@ private func key(_ L: LuaState!) -> Int32 {
     return 1
 }
 
+private func opsync(_ L: LuaState!) -> Int32 {
+    let interpreter = getInterpreterUpval(L)
+    interpreter.syncOpTimer()
+    return 0
+}
+
 class OpoInterpreter {
+
+    static let kOpTime: TimeInterval = 3.5 / 1000000 // Make this bigger to slow the interpreter down
 
     static var shared: OpoInterpreter = {
         return OpoInterpreter()
@@ -764,6 +772,7 @@ class OpoInterpreter {
 
     private let L: LuaState
     var iohandler: OpoIoHandler
+    var lastOpTime = Date()
 
     init() {
         iohandler = DummyIoHandler() // For now...
@@ -855,6 +864,7 @@ class OpoInterpreter {
             ("createWindow", createWindow),
             ("getTime", getTime),
             ("key", key),
+            ("opsync", opsync),
         ]
         L.setfuncs(fns, nup: 1)
     }
@@ -1112,5 +1122,10 @@ class OpoInterpreter {
         } else {
             return .none
         }
+    }
+
+    func syncOpTimer() {
+        Thread.sleep(until: lastOpTime.addingTimeInterval(Self.kOpTime))
+        lastOpTime = Date()
     }
 }

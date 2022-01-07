@@ -747,6 +747,7 @@ function Runtime:dumpProc(procName, startAddr)
 end
 
 local function run(self, stack)
+    local opsync = self.ioh.opsync
     while self.ip do
         self.frame.lastIp = self.ip
         local opCode, op = self:nextOp()
@@ -761,6 +762,7 @@ local function run(self, stack)
             self.ip = savedIp
         end
         ops[op](stack, self)
+        opsync()
     end
 end
 
