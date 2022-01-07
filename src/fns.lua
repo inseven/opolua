@@ -1062,9 +1062,16 @@ function ParseStr(stack, runtime) -- 0xD7
     local rel = stack:pop()
     local f = stack:pop()
     -- Wow this is a fun API
+    -- printf("Parse(%s, %s)\n", f, rel)
 
     rel = oplpath.abs(rel, runtime:getCwd())
+    local _, fext = oplpath.splitext(f)
+    local _, relext = oplpath.splitext(rel)
     f = oplpath.abs(f, rel)
+    if #fext == 0 and #relext > 0 then
+        -- f is expected to inherit rel's extension
+        f = f .. relext
+    end
 
     -- Once f is complete, parse it to fill in offsetsArrayAddr
     local base, name = oplpath.split(f)

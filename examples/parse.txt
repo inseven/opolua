@@ -1,5 +1,5 @@
 PROC main:
-	LOCAL f$(32), rel$(32)
+	REM LOCAL f$(32), rel$(32)
 	
 	SETPATH("D:\")
 	tparse:("", "C:\System\Apps\Wat\Wat.app")
@@ -8,6 +8,7 @@ PROC main:
 	tparse:("C:\fdir\fname", "C:\Dir\")
 	tparse:("\fdir", "\Dir\")
 	tparse:("wat", "")
+	tparse:("NEW", CMD$(1))
 	GET
 ENDP
 
