@@ -259,8 +259,8 @@ extension Program: OpoIoHandler {
         return delegate!.graphicsop(operation)
     }
 
-    func getScreenSize() -> Graphics.Size {
-        return device.screenSize
+    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
+        return (device.screenSize, device.screenMode)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {

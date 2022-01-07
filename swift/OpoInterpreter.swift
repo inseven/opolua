@@ -535,12 +535,13 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
     return 0
 }
 
-private func getScreenSize(_ L: LuaState!) -> Int32 {
+private func getScreenInfo(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    let sz = iohandler.getScreenSize()
+    let (sz, mode) = iohandler.getScreenInfo()
     L.push(sz.width)
     L.push(sz.height)
-    return 2
+    L.push(mode.rawValue)
+    return 3
 }
 
 private func fsop(_ L: LuaState!) -> Int32 {
@@ -853,7 +854,7 @@ class OpoInterpreter {
             ("menu", menu),
             ("draw", draw),
             ("graphicsop", graphicsop),
-            ("getScreenSize", getScreenSize),
+            ("getScreenInfo", getScreenInfo),
             ("fsop", fsop),
             ("asyncRequest", asyncRequest),
             ("waitForAnyRequest", waitForAnyRequest),

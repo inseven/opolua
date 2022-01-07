@@ -522,7 +522,7 @@ protocol OpoIoHandler {
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
-    func getScreenSize() -> Graphics.Size
+    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode)
 
     func fsop(_ op: Fs.Operation) -> Fs.Result
 
@@ -574,8 +574,8 @@ class DummyIoHandler : OpoIoHandler {
         return .nothing
     }
 
-    func getScreenSize() -> Graphics.Size {
-        return Graphics.Size(width: 640, height: 240)
+    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
+        return (Graphics.Size(width: 640, height: 240), .Gray4)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
