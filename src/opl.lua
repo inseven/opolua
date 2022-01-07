@@ -365,7 +365,7 @@ end
 
 function gGREY(mode)
     local val = mode == 1 and 0xAA or 0
-    runtime:getGraphicsContext().color = val
+    runtime:getGraphicsContext().color = { val, val, val }
 end
 
 function gCOLOR(red, green, blue)
