@@ -849,17 +849,40 @@ function Val(stack, runtime) -- 0x92
     stack:push(result)
 end
 
-function Max(stack, runtime) -- 0x93
-    error("Unimplemented function Max!")
+local function valList(stack, runtime)
+    local numParams = runtime:IP8()
+    local vals = {}
+    if numParams == 0 then
+        -- It's an array
+        local var = stack:pop():dereference():getParent()
+        local val = var()
+        for i = 1, val:arrayLen() do
+            vals[i] = val[i]()
+        end
+    else
+        while numParams > 0 do
+            table.insert(vals, stack:pop())
+            numParams = numParams - 1
+        end
+    end
+    return vals
 end
+
+function Max(stack, runtime) -- 0x93
+    stack:push(math.max(table.unpack(valList(stack, runtime))))
+end
+
+Max_dump = numParams_dump
 
 function Mean(stack, runtime) -- 0x94
     error("Unimplemented function Mean!")
 end
 
 function Min(stack, runtime) -- 0x95
-    error("Unimplemented function Min!")
+    stack:push(math.min(table.unpack(valList(stack, runtime))))
 end
+
+Min_dump = numParams_dump
 
 function Std(stack, runtime) -- 0x96
     error("Unimplemented function Std!")
