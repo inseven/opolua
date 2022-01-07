@@ -75,10 +75,15 @@ local function drawButton(runtime, pos)
 end
 
 function TBarInit(runtime, title, screenWidth, screenHeight)
+    local displayMode = runtime:getGraphicsContext().displayMode
+    TBarInitC(runtime, title, screenWidth, screenHeight, displayMode)
+end
+
+function TBarInitC(runtime, title, screenWidth, screenHeight, winMode)
     local prevId = gIDENTITY()
     local w = KTbWidth
     local h = screenHeight
-    tbWinId = gCREATE(screenWidth - w, 0, w, h, false)
+    tbWinId = gCREATE(screenWidth - w, 0, w, h, false, winMode)
     gBOX(w, h)
     gAT(w // 2, h - w // 2 + 1)
     gCIRCLE(w // 2 - 4)
