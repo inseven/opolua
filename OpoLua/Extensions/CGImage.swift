@@ -365,13 +365,18 @@ extension CGImage {
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
         case .Color16:
-            // Is this going to need expanding in the same way as 4bpp grayscale does?
-            let provider = CGDataProvider(data: bitmap.data as CFData)!
+            var wdat = Data()
+            wdat.reserveCapacity(bitmap.data.count * 2)
+            for b in bitmap.data {
+                wdat.append(b & 0xF)
+                wdat.append(b >> 4)
+            }
+            let provider = CGDataProvider(data: wdat as CFData)!
             let sp = CGColorSpace(indexedBaseSpace: CGColorSpaceCreateDeviceRGB(), last: 15, colorTable: kEpoc4bitPalette)!
             let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
             return CGImage(width: bitmap.width, height: bitmap.height,
                 bitsPerComponent: 8, bitsPerPixel: 8,
-                bytesPerRow: bitmap.stride, space: sp,
+                bytesPerRow: bitmap.stride * 2, space: sp,
                 bitmapInfo: inf,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
