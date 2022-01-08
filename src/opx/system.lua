@@ -295,7 +295,15 @@ function PlaySoundA(stack, runtime) -- 39
 end
 
 function StopSound(stack, runtime) -- 40
-    error("Unimplemented system.opx function StopSound!")
+    local var = runtime:getResource("sound")
+    if var then
+        runtime:iohandler().cancelRequest(var)
+        runtime:waitForRequest(var)
+        assert(runtime:getResource("sound") == nil, "cancelRequest did not release sound resource!")
+        stack:push(1)
+    else
+        stack:push(0)
+    end
 end
 
 function Mod(stack, runtime) -- 41
