@@ -224,6 +224,14 @@ function Runtime:moduleForProc(proc)
     return nil
 end
 
+local function quoteVal(val)
+    if type(val) == "string" then
+        return string.format('"%s"', hexEscape(val))
+    else
+        return tostring(val)
+    end
+end
+
 function Runtime:pushNewFrame(stack, proc, numParams)
     assert(numParams, "Must specify numParams!")
     if proc.params then
@@ -260,7 +268,11 @@ function Runtime:pushNewFrame(stack, proc, numParams)
     end
     frame.returnStackSize = stack:getSize()
     if self.callTrace then
-        printf("+%s() initstacksz=%d\n", proc.name, frame.returnStackSize)
+        local args = {}
+        for i, var in ipairs(frame.indirects) do
+            args[i] = quoteVal(var())
+        end
+        printf("+%s(%s) initstacksz=%d\n", proc.name, table.concat(args, ", "), frame.returnStackSize)
     end
 
     for _, external in ipairs(proc.externals or {}) do
@@ -306,7 +318,7 @@ end
 
 function Runtime:returnFromFrame(stack, val)
     if self.callTrace then
-        printf("-%s()\n", self.frame.proc.name)
+        printf("-%s() -> %s\n", self.frame.proc.name, quoteVal(val))
     end
     local prevFrame = self.frame.prevFrame
     stack:popTo(self.frame.returnStackSize)
@@ -835,7 +847,7 @@ end
 function Runtime:getOpoStacktrace()
     local err = {}
     addStacktraceToError(self, err, nil)
-    return err.opoStack
+    return "    "..err.opoStack:gsub("\n", "\n    ")
 end
 
 local function traceback(msgOrCode)
