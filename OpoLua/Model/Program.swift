@@ -179,10 +179,6 @@ class Program {
         }
     }
 
-    private func mapToNative(path: String) -> URL? {
-        return configuration.fileSystem.hostUrl(for: path)
-    }
-
     private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
         let location = touch.location(in: view)
         let screenLocation = touch.location(in: view.superview)
@@ -264,52 +260,7 @@ extension Program: OpoIoHandler {
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
-        guard let nativePath = mapToNative(path: op.path) else {
-            return .err(.notReady)
-        }
-        let path = nativePath.path
-        // print("Got op for \(path)")
-        let fm = FileManager.default
-        switch (op.type) {
-        case .exists:
-            let exists = fm.fileExists(atPath: path)
-            return .err(exists ? .alreadyExists : .notFound)
-        case .isdir:
-            let exists = fm.directoryExists(atPath: path)
-            return .err(exists ? .alreadyExists : .notFound)
-        case .delete:
-            // Should probably prevent this from accidentally deleting a directory...
-            do {
-                try fm.removeItem(atPath: path)
-                return .err(.none)
-            } catch {
-                return .err(.notReady)
-            }
-        case .mkdir:
-            print("TODO mkdir \(path)")
-        case .rmdir:
-            print("TODO rmdir \(path)")
-        case .write(let data):
-            let ok = fm.createFile(atPath: path, contents: data)
-            return .err(ok ? .none : .notReady)
-        case .read:
-            if let result = fm.contents(atPath: nativePath.path) {
-                return .data(result)
-            } else if !fm.fileExists(atPath: path) {
-                return .err(.notFound)
-            } else {
-                return .err(.notReady)
-            }
-        case .dir:
-            if let names = try? fm.contentsOfDirectory(atPath: path) {
-                var paths: [String] = []
-                for name in names {
-                    paths.append(op.path + name)
-                }
-                return .strings(paths)
-            }
-        }
-        return .err(.notReady)
+        return self.configuration.fileSystem.perform(op)
     }
 
     // TODO: Consider returning the request?
