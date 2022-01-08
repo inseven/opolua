@@ -1113,6 +1113,9 @@ function CallProcByStringExpr(stack, runtime) -- 0x6B
     local numParams = runtime:IP8()
     local type = runtime:IP8()
     local procName = stack:remove(stack:getSize() - numParams*2)
+    if not procName:match("[%%%&%$]$") and type ~= 0 then
+        procName = string.format("%s%c", procName, type)
+    end
     local proc = runtime:findProc(procName:upper())
     runtime:pushNewFrame(stack, proc, numParams)
 end
