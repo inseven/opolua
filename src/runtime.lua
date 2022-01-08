@@ -1272,6 +1272,8 @@ function installSis(data, iohandler)
             end
             local err = iohandler.fsop("write", path, data)
             assert(err == KErrNone, "Failed to write to "..path)
+        elseif file.type == sis.FileType.SisComponent then
+            installSis(file.data, iohandler)
         end
     end
 end

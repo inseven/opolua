@@ -32,7 +32,7 @@ function main()
     local f = assert(io.open(filename, "rb"))
     local data = f:read("a")
     f:close()
-    local sisfile = sis.parseSisFile(data, true)
+    local sisfile = sis.parseSisFile(data, false)
 
     local langIdx = 1
     -- Find which language index refers to English (not worrying about extracting other langs just yet)
@@ -44,24 +44,39 @@ function main()
     end
 
     if not dest then
-        for _, lang in ipairs(sisfile.langs) do
-            printf("Language: %s\n", lang)
-        end
-        for _, file in ipairs(sisfile.files) do
-            local len
-            if file.data then
-                len = #file.data
-            elseif file.langData then
-                len = #(file.langData[langIdx])
-            end
-            printf("%s: %s -> %s len=%d\n", sis.FileType[file.type], file.src, file.dest, len or 0)
-        end
+        describeSis(sisfile, "")
         return
     end
 
+    installSis(sisfile, dest)
+end
+
+function describeSis(sisfile, indent)
+    for _, lang in ipairs(sisfile.langs) do
+        printf("%sLanguage: %s\n", indent, lang)
+    end
+    for _, file in ipairs(sisfile.files) do
+        local len
+        if file.data then
+            len = #file.data
+        elseif file.langData then
+            len = #(file.langData[langIdx])
+        end
+        printf("%s%s: %s -> %s len=%d\n", indent, sis.FileType[file.type], file.src, file.dest, len or 0)
+        if file.type == sis.FileType.SisComponent then
+            local componentSis = sis.parseSisFile(file.data)
+            describeSis(componentSis, "    "..indent)
+        end
+    end
+end
+
+function installSis(sisfile, dest)
     for _, file in ipairs(sisfile.files) do
         if file.type == sis.FileType.File then
             extractFile(file, langIdx, dest)
+        elseif file.type == sis.FileType.SisComponent then
+            local componentSis = sis.parseSisFile(file.data)
+            installSis(componentSis, dest)
         end
     end
 end
