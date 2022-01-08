@@ -88,6 +88,7 @@ function TBarInitC(runtime, title, screenWidth, screenHeight, winMode)
     gAT(w // 2, h - w // 2 + 1)
     gCIRCLE(w // 2 - 4)
     TBarSetTitle(runtime, title)
+    gUSE(prevId)
 end
 
 function TBarSetTitle(runtime, name)
