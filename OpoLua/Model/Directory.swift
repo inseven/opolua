@@ -111,7 +111,7 @@ class Directory {
     static func asSystem(url: URL) throws -> Item.`Type`? {
 
         let contents = try url.contents
-        let drives: Set<String> = ["c", "C"]
+        let drives: Set<String> = ["c", "C", "d", "D"]
 
         // Ensure there only folders named for valid drive letters present.
         // N.B. This implementation is intetnionally strict. We can relax it as and when we find we need to.

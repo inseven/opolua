@@ -112,7 +112,7 @@ class DirectoryViewController : UITableViewController {
             pushDirectoryViewController(for: item.url)
             tableView.deselectRow(at: indexPath, animated: true)
         case .installer:
-            installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url))
+            installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
             installer?.delegate = self
             installer?.run()
             tableView.deselectRow(at: indexPath, animated: true)
@@ -196,11 +196,25 @@ class DirectoryViewController : UITableViewController {
 extension DirectoryViewController: InstallerDelegate {
 
     func installer(_ installer: Installer, didFinishWithResult result: OpoInterpreter.Result) {
-        print("installer(\(installer), didFinishWithResult: \(result))")
+        DispatchQueue.main.async {
+            print("installer(\(installer), didFinishWithResult: \(result))")
+            switch result {
+            case .none:
+                let alert = UIAlertController(title: "Installer", message: "Complete!", preferredStyle: .alert)
+                alert.addAction(.init(title: "OK", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
+            case .error(let error):
+                self.present(error: error)
+            }
+            self.reload()
+        }
     }
 
     func installer(_ installer: Installer, didFailWithError error: Error) {
-        print("installer(\(installer), didFailWithError: \(error))")
+        DispatchQueue.main.async {
+            self.present(error: error)
+            self.reload()
+        }
     }
 
 }

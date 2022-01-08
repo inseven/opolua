@@ -46,6 +46,10 @@ extension String {
         return (self as NSString).lastPathComponent
     }
 
+    var deletingLastPathComponent: String {
+        return (self as NSString).deletingLastPathComponent
+    }
+
     var basename: String {
         return lastPathComponent.deletingPathExtension
     }

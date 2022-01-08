@@ -43,6 +43,7 @@ extension FileSystem {
             let exists = fileManager.directoryExists(atPath: path)
             return .err(exists ? .alreadyExists : .notFound)
         case .delete:
+            print("DELETE '\(operation.path)'")
             /*
              Usage: DELETE filename$ Deletes any type of file.
                Series 5: You can use wildcards for example,to delete all the files in D:\OPL
@@ -65,6 +66,7 @@ extension FileSystem {
                 return .err(.notReady)
             }
         case .mkdir:
+            print("MKDIR '\(operation.path)'")
             /*
              Usage: MKDIR name$ Creates a new folder/directory.
              Series 5: For example, MKDIR “C:\MINE\TEMP” creates a C:\MINE\TEMP folder, also creating C:\MINE if it is
@@ -83,6 +85,7 @@ extension FileSystem {
                 return .err(.notReady)
             }
         case .rmdir:
+            print("RMDIR '\(operation.path)'")
             /*
              Usage: RMDIR str$
              Removes the directory given by str$. You can only remove empty directories.
@@ -99,6 +102,21 @@ extension FileSystem {
                 return .err(.notReady)
             }
         case .write(let data):
+            print("IOWRITE '\(operation.path)'")
+            // OPL seems to ensure the directory exists on our behalf?
+            // TODO: Ensure this is contained within our root.
+            // TODO: We need to handle case coersion when creating our directories.
+            let directory = path.deletingLastPathComponent
+            if !fileManager.fileExists(atPath: directory, isDirectory: nil) {
+                print("Attempting to write a file without creating the intermediate directories (\(directory))")
+                do {
+                    print("Attempting to create directories on behalf of the app...")
+                    try fileManager.createDirectory(atPath: directory, withIntermediateDirectories: true)
+                } catch {
+                    print("Failed to create intermediate path with error \(error).")
+                    return .err(.notReady)
+                }
+            }
             let ok = fileManager.createFile(atPath: path, contents: data)
             return .err(ok ? .none : .notReady)
         case .read:
