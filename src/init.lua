@@ -52,9 +52,13 @@ end
 
 function toint32(val)
     if val >= 0x80000000 then
-        val = string.unpack("i4", string.pack("I4", val))
+        val = string.unpack("<i4", string.pack("<I4", val))
     end
     return val
+end
+
+function touint16(val)
+    return string.unpack("<I2", string.pack("<i2", val))
 end
 
 DataTypes = enum {
