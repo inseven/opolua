@@ -1898,6 +1898,7 @@ function dItem(stack, runtime) -- 0xED
     local itemType = runtime:IP8()
     local dialog = runtime:getDialog()
     local item = { type = itemType }
+    local shouldAdd = true
     if itemType == dItemTypes.dTEXT then
         local flagToAlign = { [0] = "left", [1] = "right", [2] = "center" }
         local flags = 0
@@ -1913,13 +1914,25 @@ function dItem(stack, runtime) -- 0xED
         end
         -- Ignoring the other flags for now
     elseif itemType == dItemTypes.dCHOICE then
-        local commaList = stack:pop()
         item.choices = {}
-        for choice in commaList:gmatch("[^,]+") do
-            table.insert(item.choices, choice)
-        end
+        local commaList = stack:pop()
         item.prompt = stack:pop()
         item.variable = stack:pop()
+        local prevItem = dialog.items[#dialog.items]
+        if prevItem and prevItem.type == dItemTypes.dCHOICE and prevItem.moreChoices then
+            assert(item.variable == prevItem.variable, "Cannot use '...' with a different variable!")
+            item = prevItem
+            item.moreChoices = false
+            shouldAdd = false
+        end
+        for choice in commaList:gmatch("[^,]+") do
+            if choice == "..." then
+                item.moreChoices = true
+            else
+                assert(not item.moreChoices, "Cannot specify more options after '...'!")
+                table.insert(item.choices, choice)
+            end
+        end
         -- Have to resolve default choice here, and _not_ at the point of the DIALOG call!
         local val = math.min(math.max(item.variable(), 1), #item.choices)
         item.value = tostring(val)
@@ -1948,6 +1961,7 @@ function dItem(stack, runtime) -- 0xED
         item.prompt = stack:pop()
         item.variable = stack:pop()
     elseif itemType == dItemTypes.dBUTTONS then
+        shouldAdd = false
         assert(dialog.buttons == nil, KOplStructure)
         local numButtons = runtime:IP8()
         dialog.buttons = {}
@@ -1962,7 +1976,7 @@ function dItem(stack, runtime) -- 0xED
     else
         error("Unsupported dItem type "..itemType)
     end
-    if itemType ~= dItemTypes.dBUTTONS then
+    if shouldAdd then
         table.insert(dialog.items, item)
     end
 end
