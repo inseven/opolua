@@ -56,6 +56,7 @@ function parseBitmap(data, headerOffset)
         mode = bppColorToMode(bpp, col == 1),
         stride = stride,
         -- not worrying about palettes yet
+        paletteSz = paletteSz,
         compression = compression,
         imgStart = headerOffset + headerLen,
         imgLen = len - headerLen,
@@ -97,12 +98,6 @@ function rle8decode(data, pos, len)
     end
     local result = table.concat(bytes)
     return result
-end
-
-function getBitmap(data, index)
-    local bitmap = parseMbmHeader(data)[index]
-    local imgData = decodeBitmap(bitmap, data)
-    return bitmap.width, bitmap.height, imgData
 end
 
 return _ENV
