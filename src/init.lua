@@ -123,7 +123,7 @@ KRequestPending = toint32(0x80000001)
 assert(KRequestPending == -2147483647)
 
 -- Some misc uids used for file formats
-KUidDirectFileStore = 0x10000037 -- OPO/AIF/MBM uid1
+KUidDirectFileStore = 0x10000037 -- OPL/OPO/AIF/MBM uid1
 KUidAppInfoFile8 = 0x1000006A -- AIF file uid2
 -- KUidAppDllDoc8 = 0x1000006D
 KUidOPO = 0x10000073 -- pre-unicode OPO uid2
@@ -134,6 +134,7 @@ KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
 KUidExternalOplFile = 0x1000008A -- DB file UID2
 
 KUidSoundData = 0x10000052 -- Not sure what this uid is officially called, can't find a reference...
+KUidTextEdSection = 0x10000085 -- ditto
 
 dItemTypes = enum {
     dTEXT = 0,
@@ -405,4 +406,21 @@ function keycodeToCharacterCode(keycode)
     else
         error("Unknown keycode "..tostring(keycode))
     end
+end
+
+function readCardinality(data, pos)
+    local val, pos = string.unpack("B", data, pos)
+    if val & 1 == 0 then
+        return val >> 1, pos
+    elseif val & 2 == 0 then
+        val = (val + (string.unpack("B", data, pos) << 8)) >> 2
+        pos = pos + 1
+    elseif val & 4 == 0 then
+        local n = string.unpack("I3", data, pos)
+        val = (val + (n << 8)) >> 3
+        pos = pos + 3
+    else
+        error("Invalid TCardinality!")
+    end
+    return val, pos
 end

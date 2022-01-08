@@ -217,20 +217,6 @@ function Db:save()
     return table.concat(lines, "\n")
 end
 
-function readCardinality(data, pos)
-    local val, pos = string.unpack("B", data, pos)
-    if val & 1 == 0 then
-        return val >> 1, pos
-    elseif val & 2 == 0 then
-        val = (val + (string.unpack("B", data, pos) << 8)) >> 2
-        pos = pos + 1
-    elseif val & 2 == 0 then
-        local n = string.unpack("I3", data, pos)
-        val = (val + (n << 8)) >> 3
-        pos = pos + 3
-    end
-    return val, pos
-end
 
 -- TODO unfinished, broken
 function Db:loadBinary(data)
