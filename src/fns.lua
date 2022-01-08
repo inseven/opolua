@@ -1026,8 +1026,13 @@ end
 
 function RightStr(stack, runtime) -- 0xD1
     local numChars = stack:pop()
+    assert(numChars >= 0, KOplErrInvalidArgs)
     local str = stack:pop()
-    stack:push(string.sub(str, -numChars))
+    if numChars == 0 then
+        stack:push("")
+    else
+        stack:push(string.sub(str, -numChars))
+    end
 end
 
 function SciStr(stack, runtime) -- 0xD2
