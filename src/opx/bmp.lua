@@ -101,6 +101,7 @@ function SpriteAppend(stack, runtime)
 end
 
 function SpriteChange(stack, runtime)
+    -- printf("SpriteChange\n")
     local graphics = runtime:getGraphics()
     local dx, dy = stack:popXY()
     local invertMask = stack:pop() == 1
@@ -134,21 +135,27 @@ function getCurrentSprite(runtime)
 end
 
 function SpriteDraw(stack, runtime)
+    -- printf("SpriteDraw\n")
     local sprite = getCurrentSprite(runtime)
+    sprite.drawn = true
     runtime:iohandler().graphicsop("sprite", sprite.id, sprite)
     stack:push(0)
 end
 
 function SpritePos(stack, runtime)
+    -- printf("SpritePos\n")
     local sprite = getCurrentSprite(runtime)
     local x, y = stack:popXY()
     sprite.x = x
     sprite.y = y
-    runtime:iohandler().graphicsop("sprite", sprite.id, sprite)
+    if sprite.drawn then
+        runtime:iohandler().graphicsop("sprite", sprite.id, sprite)
+    end
     stack:push(0)
 end
 
 function SpriteDelete(stack, runtime)
+    -- printf("SpriteDelete\n")
     local graphics = runtime:getGraphics()
     local sprite = graphics.sprites[stack:pop()]
     assert(sprite, "Bad sprite ID!")
