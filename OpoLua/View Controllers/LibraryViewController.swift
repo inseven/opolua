@@ -101,7 +101,7 @@ class LibraryViewController: UITableViewController {
 
     init() {
         super.init(style: .insetGrouped)
-        title = "OPO Lua"
+        title = "OPL"
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
                                                             style: .plain,
                                                             target: self,
