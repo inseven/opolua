@@ -588,6 +588,7 @@ local Mode = {
 function IOOPEN(path, mode)
     path = runtime:abs(path)
     local openMode = mode & Mode.OpenModeMask
+    -- printf("IOOPEN %s mode=%d\n", path, mode)
 
     if openMode == Mode.Open then
         local f = runtime:newFileHandle()
@@ -606,8 +607,6 @@ function IOOPEN(path, mode)
 
     -- Write support
     mode = mode | Mode.WriteFlag -- Apparently this _isn't_ mandatory...
-    -- assert(mode & Mode.WriteFlag > 0, "Incompatible mode flags to IOOPEN")
-    assert(mode & Mode.SeekableFlag == 0, "Don't support seeking writeable files yet!")
     assert(openMode ~= Mode.Append, "Don't support append yet!")
     assert(openMode ~= Mode.Unique, "Don't support unique yet!")
 
@@ -663,7 +662,8 @@ function IOWRITE(h, data)
     -- What's the right actual error code for this? KOplErrWrite? KOplErrReadOnly? KOplErrAccess?
     assert(f.mode & Mode.WriteFlag > 0, "Cannot write to a readonly file handle!")
     -- Not the most efficient operation, oh well
-    f.data = f.data .. data
+    f.data = f.data:sub(1, f.pos - 1)..data..f.data:sub(f.pos + #data)
+
     if f.mode & Mode.TextFlag > 0 then
         f.data = f.data.."\r\n"
     end
