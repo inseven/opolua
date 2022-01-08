@@ -315,15 +315,10 @@ function oplpath.isabs(path)
 end
 
 function oplpath.split(path)
-    local dir, sep, name = path:match([[(.*)([/\])(.*)$]])
+    local dir, name = path:match([[(.*[/\])(.*)$]])
     if not dir then
         return "", path
     else
-        local dirLen = #dir
-        if dirLen == 0 or (dirLen == 2 and dir:match("[a-zA-Z]:")) then
-            -- Roots always have have a trailing slash
-            dir = dir..sep
-        end
         return dir, name
     end
 end
