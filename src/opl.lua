@@ -286,7 +286,11 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         gAT(textX, s.pos.y + bmpOffset + state)
         if maskId and maskId > 0 then
             gUSE(maskId)
-            assert(gWIDTH() == bmpWidth and gHEIGHT() == bmpHeight, "Bitmap and mask have different dimensions!")
+            -- Yes, examples where the mask is smaller than the bitmap exist...
+            if gWIDTH() > bmpWidth or gHEIGHT() > bmpHeight then
+                printf("%dx%d != %dx%d\n", gWIDTH(), gHEIGHT(), bmpWidth, bmpHeight)
+                error("bitmap mask cannot be larger than the bitmap!")
+            end
             gUSE(s.id)
             runtime:drawCmd("copy", {
                 srcid = bmpId,
