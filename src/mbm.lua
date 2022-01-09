@@ -29,7 +29,10 @@ local string_byte, string_rep, string_sub = string.byte, string.rep, string.sub
 function parseMbmHeader(data)
     local uid1, uid2, uid3, checksum, trailerOffset = string.unpack("<I4I4I4I4I4", data)
     assert(uid1 == KUidDirectFileStore, "Bad uid1 in MBM file!")
-    assert(uid2 == KUidMultiBitmapFileImage, "Bad uid2 in MBM file!")
+    -- UID2 should be KUidMultiBitmapFileImage, and usually is, but of course
+    -- there are some otherwise-valid MBMs out there where it isn't (and is eg
+    -- KUidExternalOplFile)
+    -- assert(uid2 == KUidMultiBitmapFileImage, "Bad uid2 in MBM file!")
 
     local numBitmaps, pos = string.unpack("<I4", data, 1 + trailerOffset)
     local bitmaps = {}

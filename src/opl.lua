@@ -414,6 +414,7 @@ function gLOADBIT(path, writable, index)
     -- (3) Tell iohandler to blit the decoded MBM data into it
 
     -- (1)
+    -- printf("gLOADBIT %s mbmid=%d", path, 1+index)
     local iohandler = runtime:iohandler()
     local data, err = iohandler.fsop("read", runtime:abs(path))
     assert(data, err)
@@ -423,7 +424,7 @@ function gLOADBIT(path, writable, index)
     assert(bitmap, KOplErrNotExists)
     -- (2)
     local id = gCREATEBIT(bitmap.width, bitmap.height, bitmap.mode)
-    -- printf("gLOADBIT %s mbmid=%d %dx%d id=%d\n", path, 1+index, bitmap.width, bitmap.height, id)
+    -- printf(" %dx%d drawableid=%d\n", bitmap.width, bitmap.height, id)
     -- (3)
     runtime:drawCmd("bitblt", {
         bmpWidth = bitmap.width,
