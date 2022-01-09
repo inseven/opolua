@@ -53,6 +53,8 @@ class WindowServer {
 
     private var infoDrawableHandle: Graphics.DrawableId?
     private var infoWindowDismissTimer: Timer?
+    private var busyDrawableHandle: Graphics.DrawableId?
+    private var busyWindowShowTimer: Timer?
 
     var sprites: [Int: Sprite] = [:]
     var spriteTimer: Timer?
@@ -148,38 +150,34 @@ class WindowServer {
         // TODO: Clean up the sprites for this window.
     }
 
-    func infoPrint(text: String, corner: Graphics.Corner) {
+    func infoPrint(drawableId: Graphics.DrawableId) {
         dispatchPrecondition(condition: .onQueue(.main))
-        closeInfoWindow()
-        guard !text.isEmpty else {
+        hideInfoWindow()
+        guard let canvas = self.drawables[drawableId] as? CanvasView else {
             return
         }
-        let fontInfo = Graphics.FontInfo(face: .arial, size: 15, flags: .init()) // TODO: Empty flags?
-        let details = Self.textSize(string: text, fontInfo: fontInfo)
-        let mode = Graphics.Bitmap.Mode.Gray4
-        let canvas = self.createWindow(rect: .init(origin: .zero, size: details.size), mode: mode, shadowSize: 0)
-        canvas.draw(.init(drawableId: canvas.id,
-                          type: .fill(details.size),
-                          mode: .set,
-                          origin: .zero,
-                          color: .black,
-                          bgcolor: .black,
-                          penWidth: 1))
-        canvas.draw(.init(drawableId: canvas.id,
-                          type: .text(text, fontInfo),
-                          mode: .set,
-                          origin: .init(x: 0, y: details.size.height),
-                          color: .white,
-                          bgcolor: .white,
-                          penWidth: 1))
         self.setVisiblity(handle: canvas.id, visible: true)
         infoDrawableHandle = canvas.id
 
         infoWindowDismissTimer = Timer.scheduledTimer(timeInterval: 2.0,
                                                       target: self,
-                                                      selector: #selector(closeInfoWindow),
+                                                      selector: #selector(hideInfoWindow),
                                                       userInfo: nil,
                                                       repeats: false)
+    }
+
+    func busy(drawableId: Graphics.DrawableId, delay: Int) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        cancelBusyTimer()
+        guard let canvas = self.drawables[drawableId] as? CanvasView else {
+            return
+        }
+        busyDrawableHandle = canvas.id
+        busyWindowShowTimer = Timer.scheduledTimer(timeInterval: Double(delay) / 1000,
+                                                   target: self,
+                                                   selector: #selector(showBusyWindow),
+                                                   userInfo: nil,
+                                                   repeats: false)
     }
 
     func setWin(drawableId: Graphics.DrawableId, position: Graphics.Point, size: Graphics.Size?) {
@@ -278,13 +276,27 @@ class WindowServer {
         self.canvasView.bringSubviewToFront(infoView)
     }
 
-    @objc func closeInfoWindow() {
+    @objc func hideInfoWindow() {
         guard let infoDrawableHandle = infoDrawableHandle else {
             return
         }
-        close(drawableId: infoDrawableHandle)
+        setVisiblity(handle: infoDrawableHandle, visible: false)
         self.infoDrawableHandle = nil
         infoWindowDismissTimer?.invalidate()
+    }
+
+    func cancelBusyTimer() {
+        busyWindowShowTimer?.invalidate()
+        busyWindowShowTimer = nil
+    }
+
+    @objc func showBusyWindow() {
+        cancelBusyTimer()
+        guard let busyDrawableHandle = busyDrawableHandle else {
+            return
+        }
+        setVisiblity(handle: busyDrawableHandle, visible: true)
+        self.busyDrawableHandle = nil
     }
 
     @objc func tickSprites() {
@@ -294,6 +306,8 @@ class WindowServer {
     }
 
     func shutdown() {
+        cancelBusyTimer()
+        hideInfoWindow()
         spriteTimer?.invalidate()
         spriteTimer = nil
     }

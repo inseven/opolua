@@ -371,8 +371,8 @@ struct Graphics {
         case order(DrawableId, Int) // drawableId, position
         case show(DrawableId, Bool) // drawableId, visible flag
         case textSize(String, FontInfo) // returns size
-        case busy(String, Corner, Int) // text, corner, delay (in ms)
-        case giprint(String, Corner)
+        case busy(DrawableId, Int) // drawableId, delay (in ms)
+        case giprint(DrawableId)
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
         case sprite(Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
     }

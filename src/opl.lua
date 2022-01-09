@@ -186,10 +186,6 @@ function gTWIDTH(text)
     return width
 end
 
-function gIPRINT(text, corner)
-    runtime:iohandler().graphicsop("giprint", text, corner)
-end
-
 function gLINEBY(dx, dy)
     local context = runtime:getGraphicsContext()
     local x = context.pos.x + dx
@@ -499,8 +495,95 @@ end
 
 -- Screen APIs
 
-function BUSY(str, corner, delay)
-    runtime:iohandler().graphicsop("busy", str, corner, delay)
+local function drawInfoPrint(drawable, text, corner)
+    gUPDATE(false)
+    gUSE(1)
+    local screenWidth = gWIDTH()
+    local screenHeight = gHEIGHT()
+    local winHeight = 23
+    gUSE(drawable)
+
+    local cornerInset = 5
+    local inset = 6
+    local textWidth = gTWIDTH(text)
+    local w = math.min(screenWidth - 2 * cornerInset, textWidth + inset * 2)
+    local actualTextWidth = w - 2 * inset
+
+    local x, y
+    if corner == 0 then
+        -- Top left
+        x = cornerInset
+        y = cornerInset
+    elseif corner == 1 then
+        -- Bottom left
+        x = cornerInset
+        y = screenHeight - winHeight - cornerInset
+    elseif corner == 2 then
+        -- Top right
+        x = screenWidth - w - cornerInset
+        y = cornerInset
+    elseif corner == 3 then
+        -- Bottom right
+        x = screenWidth - w - cornerInset
+        y = screenHeight - winHeight - cornerInset
+    else
+        error("Bad corner")
+    end
+    gSETWIN(x, y, w, winHeight)
+    gCOLOR(0, 0, 0)
+    gAT(0, 0)
+    gFILL(w, winHeight)
+    gXBORDER(2, 0x94)
+    gCOLOR(255, 255, 255)
+    gAT(inset, 19)
+    gPRINTCLIP(text, w - 2 * inset)
+    return { x = inset, y = gY(), w = actualTextWidth, h = 15 }
+end
+
+function gIPRINT(text, corner)
+    if text == "" then
+        runtime:iohandler().graphicsop("giprint", 0)
+        return
+    end
+    local state = runtime:saveGraphicsState()
+    local infoWinId = runtime:getResource("infowin")
+    if not infoWinId then
+        infoWinId = gCREATE(0, 0, 1, 1, false)
+        gFONT(KFontArialNormal15)
+        runtime:setResource("infowin", infoWinId)
+    end
+    drawInfoPrint(infoWinId, text, corner or 3)
+    runtime:flushGraphicsOps()
+    runtime:iohandler().graphicsop("giprint", infoWinId)
+    runtime:restoreGraphicsState(state)
+end
+
+function BUSY(text, corner, delay)
+    local busyWinId = runtime:getResource("busy")
+    if busyWinId then
+        runtime:iohandler().graphicsop("busy", 0)
+        runtime:setResource("busy", nil)
+        gCLOSE(busyWinId)
+    end
+    if not text then
+        return
+    end
+
+    local state = runtime:saveGraphicsState()
+    busyWinId = gCREATE(0, 0, 1, 1, false)
+    gFONT(KFontArialNormal15)
+    runtime:setResource("busy", busyWinId)
+    local textRect = drawInfoPrint(busyWinId, text, corner or 1)
+
+    -- TODO: flashy thing
+
+    if delay and delay > 0 then
+        runtime:iohandler().graphicsop("busy", busyWinId, delay)
+    else
+        -- Jusy show it now
+        gVISIBLE(true)
+    end
+    runtime:restoreGraphicsState(state)
 end
 
 function SCREEN(w, h, x, y)

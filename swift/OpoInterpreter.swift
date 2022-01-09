@@ -420,8 +420,8 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("show", drawableId, flag)
 // graphicsop("order", drawableId, pos)
 // graphicsop("textsize", str, font)
-// graphicsop("busy", text, corner, delay)
-// graphicsop("giprint", text, corner)
+// graphicsop("busy", drawableId, delay)
+// graphicsop("giprint", drawableId)
 // graphicsop("setwin", drawableId, x, y, [w, h])
 // graphicsop("sprite", id, [sprite])
 private func graphicsop(_ L: LuaState!) -> Int32 {
@@ -466,14 +466,14 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
             print("Bad args to textsize!")
         }
     case "busy":
-        let text = L.tostring(2) ?? ""
-        let corner = Graphics.Corner(rawValue: L.toint(3) ?? Graphics.Corner.bottomRight.rawValue) ?? .bottomRight
-        let delay = (L.toint(4) ?? 0) * 500
-        return doGraphicsOp(L, iohandler, .busy(text, corner, delay))
+        let id = L.toint(2) ?? 0
+        let drawableId = Graphics.DrawableId(value: id)
+        let delay = (L.toint(3) ?? 0) * 500
+        return doGraphicsOp(L, iohandler, .busy(drawableId, delay))
     case "giprint":
-        let text = L.tostring(2) ?? ""
-        let corner = Graphics.Corner(rawValue: L.toint(3) ?? Graphics.Corner.bottomRight.rawValue) ?? .bottomRight
-        return doGraphicsOp(L, iohandler, .giprint(text, corner))
+        let id = L.toint(2) ?? 0
+        let drawableId = Graphics.DrawableId(value: id)
+        return doGraphicsOp(L, iohandler, .giprint(drawableId))
     case "setwin":
         if let id = L.toint(2),
            let x = L.toint(3),

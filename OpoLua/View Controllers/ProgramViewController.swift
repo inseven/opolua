@@ -258,12 +258,12 @@ class ProgramViewController: UIViewController {
             let details = WindowServer.textSize(string: string, fontInfo: fontInfo)
             return .sizeAndAscent(details.size, details.ascent)
 
-        case .busy(let text, let corner, _):
-            windowServer.infoPrint(text: text, corner: corner)
+        case .busy(let drawableId, let delay):
+            windowServer.busy(drawableId: drawableId, delay: delay)
             return .nothing
 
-        case .giprint(let text, let corner):
-            windowServer.infoPrint(text: text, corner: corner)
+        case .giprint(let drawableId):
+            windowServer.infoPrint(drawableId: drawableId)
             return .nothing
 
         case .setwin(let drawableId, let pos, let size):
