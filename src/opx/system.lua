@@ -221,7 +221,8 @@ function SetFileTime(stack, runtime) -- 28
 end
 
 function DisplayTaskList(stack, runtime) -- 29
-    error("Unimplemented system.opx function DisplayTaskList!")
+    printf("system.DisplayTaskList()\n")
+    stack:push(0)
 end
 
 function SetComputeMode(stack, runtime) -- 30
@@ -347,7 +348,11 @@ function MachineName(stack, runtime) -- 49
 end
 
 function MachineUniqueId(stack, runtime) -- 50
-    error("Unimplemented system.opx function MachineUniqueId!")
+    local loWord = stack:pop():dereference()
+    local hiWord = stack:pop():dereference()
+    hiWord(0x090700A)
+    loWord(0xFACE4ACE)
+    stack:push(0)
 end
 
 function EndTask(stack, runtime) -- 51

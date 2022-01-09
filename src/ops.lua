@@ -2427,7 +2427,9 @@ function ClearFlags(stack, runtime) -- 0x12E
 end
 
 function PointerFilter(stack, runtime) -- 0x12F
-    error("Unimplemented opcode PointerFilter!")
+    local mask = stack:pop()
+    local filter = stack:pop()
+    printf("PointerFilter filter=%d mask=%d\n", filter, mask)
 end
 
 function mCasc(stack, runtime) -- 0x130
