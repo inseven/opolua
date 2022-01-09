@@ -107,6 +107,8 @@ build_scheme "OpoLua" clean build \
     -sdk iphonesimulator \
     -destination "$IPHONE_DESTINATION"
 
+exit
+
 # Clean up the build directory.
 if [ -d "$BUILD_DIRECTORY" ] ; then
     rm -r "$BUILD_DIRECTORY"
