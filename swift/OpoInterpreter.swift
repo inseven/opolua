@@ -574,6 +574,13 @@ private func fsop(_ L: LuaState!) -> Int32 {
         op = .read
     case "dir":
         op = .dir
+    case "rename":
+        guard let dest = L.tostring(3) else {
+            print("Missing param to rename")
+            L.push(Fs.Err.notReady.rawValue)
+            return 1
+        }
+        op = .rename(dest)
     default:
         print("Unimplemented fsop \(cmd)!")
         L.push(Fs.Err.notReady.rawValue)

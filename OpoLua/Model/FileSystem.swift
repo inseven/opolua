@@ -135,6 +135,22 @@ extension FileSystem {
                 }
                 return .strings(paths)
             }
+        case .rename(let dest):
+            guard let nativeDestUrl = hostUrl(for: dest) else {
+                return .err(.notReady)
+            }
+            let nativeDest = nativeDestUrl.path
+            if fileManager.fileExists(atPath: nativeDest) {
+                return .err(.alreadyExists)
+            } else if !fileManager.fileExists(atPath: path) {
+                return .err(.notFound)
+            }
+            do {
+                try fileManager.moveItem(atPath: path, toPath: nativeDest)
+                return .err(.none)
+            } catch {
+                return .err(.notReady)
+            }
         }
         return .err(.notReady)
     }

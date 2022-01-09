@@ -393,8 +393,9 @@ struct Fs {
             case mkdir // return none, alreadyExists, notReady
             case rmdir // return none, notFound, inUse if it isn't empty, notReady
             case write(Data) // return none, notReady
-            case read // return none, notFound, accessDenied
+            case read // return none, notFound, notReady
             case dir // return .strings(paths)
+            case rename(String) // return none, notFound, notReady, alreadyExists
         }
         let path: String
         let type: OpType

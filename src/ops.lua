@@ -1524,7 +1524,15 @@ function Randomize(stack, runtime) -- 0xB9
 end
 
 function Rename(stack, runtime) -- 0xBA
-    error("Unimplemented opcode Rename!")
+    local dest = stack:pop()
+    local src = stack:pop()
+    -- printf("Rename %s->%s\n", src, dest)
+    src = runtime:abs(src)
+    dest = runtime:abs(dest)
+    local err = runtime:iohandler().fsop("rename", src, dest)
+    if err ~= 0 then
+        error(err)
+    end
     runtime:setTrap(false)
 end
 
