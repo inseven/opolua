@@ -637,7 +637,7 @@ function IOREAD(h, maxLen)
     if f.mode & Mode.TextFlag > 0 then
         local startPos, endPos = f.data:find("\r?\n", f.pos)
         if startPos then
-            local data = f.data:sub(f.pos, f.startPos - 1)
+            local data = f.data:sub(f.pos, startPos - 1)
             f.pos = endPos + 1
             if #data > maxLen then
                 -- Yes returning both data and an error is a weird way to do things, it's what the API requires...
