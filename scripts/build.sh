@@ -143,7 +143,7 @@ if $ARCHIVE || $TESTFLIGHT_UPLOAD ; then
 
     # Build and archive the iOS project.
     xcode_project \
-        -scheme "StatusPanel" \
+        -scheme "OpoLua" \
         -config Release \
         -archivePath "$ARCHIVE_PATH" \
         OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
@@ -158,7 +158,7 @@ if $ARCHIVE || $TESTFLIGHT_UPLOAD ; then
 
 fi
 
-IPA_BASENAME="StatusPanel.ipa"
+IPA_BASENAME="OpoLua.ipa"
 IPA_PATH="$BUILD_DIRECTORY/$IPA_BASENAME"
 
 # Upload the build to TestFlight
