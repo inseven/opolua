@@ -154,16 +154,6 @@
 		DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE91524276D25A900BDB8F5 /* UIKey.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		DB0B917E2770A4CB006F5CD0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DB79FE5727428292005E904F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = DB0B914E2770A1F6006F5CD0;
-			remoteInfo = luac;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		DB0B914D2770A1F6006F5CD0 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -570,7 +560,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				DB0B917F2770A4CB006F5CD0 /* PBXTargetDependency */,
 			);
 			name = OpoLua;
 			productName = "OpoLua (iOS)";
@@ -803,14 +792,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		DB0B917F2770A4CB006F5CD0 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = DB0B914E2770A1F6006F5CD0 /* luac */;
-			targetProxy = DB0B917E2770A4CB006F5CD0 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		DB0B91532770A1F6006F5CD0 /* Debug */ = {
