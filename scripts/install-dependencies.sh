@@ -32,7 +32,9 @@ BUILD_TOOLS_DIRECTORY="${SCRIPTS_DIRECTORY}/build-tools"
 
 ENVIRONMENT_PATH="${SCRIPTS_DIRECTORY}/environment.sh"
 
-rm -r "${ROOT_DIRECTORY}/.local"
+if [ -d "${ROOT_DIRECTORY}" ] ; then
+    rm -r "${ROOT_DIRECTORY}/.local"
+fi
 source "${ENVIRONMENT_PATH}"
 
 # Install the Python dependencies
