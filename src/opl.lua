@@ -383,7 +383,12 @@ end
 function gSETWIN(x, y, w, h)
     -- printf("gSETWIN id=%d %d,%d %sx%s\n", gIDENTITY(), x, y, w, h)
     runtime:flushGraphicsOps()
-    runtime:iohandler().graphicsop("setwin", gIDENTITY(), x, y, w, h)
+    local ctx = runtime:getGraphicsContext()
+    runtime:iohandler().graphicsop("setwin", ctx.id, x, y, w, h)
+    if w then
+        ctx.width = w
+        ctx.height = h
+    end
 end
 
 function gCREATE(x, y, w, h, visible, flags)
