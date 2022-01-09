@@ -399,6 +399,7 @@ function gCREATE(x, y, w, h, visible, flags)
 end
 
 function gCREATEBIT(w, h, mode)
+    -- printf("gCREATEBIT w=%d h=%d mode=%X", w, h, mode or 0)
     local id = runtime:iohandler().createBitmap(w, h, mode)
     assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
     -- printf(" id=%d\n", id)

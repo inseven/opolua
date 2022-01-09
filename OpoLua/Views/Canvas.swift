@@ -86,7 +86,7 @@ class Canvas: Drawable {
             return
         }
         self.sprites[id] = Sprite(sprite: sprite)
-        print(self.sprites)
+        // print(self.sprites)
         self.image = nil
     }
 

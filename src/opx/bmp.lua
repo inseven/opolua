@@ -42,6 +42,7 @@ function BitmapLoad(stack, runtime)
     local path = stack:pop()
     local cur = runtime:gIDENTITY()
     local id = runtime:gLOADBIT(path, false, idx)
+    runtime:gUSE(cur)
     stack:push(id)
 end
 
