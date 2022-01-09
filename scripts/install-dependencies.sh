@@ -30,7 +30,6 @@ root_directory="${scripts_directory}/.."
 ios_directory="${root_directory}/ios"
 changes_directory="${scripts_directory}/changes"
 build_tools_directory="${scripts_directory}/build-tools"
-nodemcu_directory="${root_directory}/nodemcu"
 
 environment_path="${scripts_directory}/environment.sh"
 
@@ -38,10 +37,8 @@ source "$environment_path"
 
 # Install the Python dependencies
 pip3 install --user pipenv
-PIPENV_PIPFILE="$root_directory/Pipfile" pipenv install
 PIPENV_PIPFILE="$changes_directory/Pipfile" pipenv install
 PIPENV_PIPFILE="$build_tools_directory/Pipfile" pipenv install
-PIPENV_PIPFILE="$nodemcu_directory/Pipfile" pipenv install
 
 # Install the Ruby dependencies
 cd "$ios_directory"
