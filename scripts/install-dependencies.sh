@@ -27,7 +27,6 @@ set -u
 
 scripts_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 root_directory="${scripts_directory}/.."
-ios_directory="${root_directory}/ios"
 changes_directory="${scripts_directory}/changes"
 build_tools_directory="${scripts_directory}/build-tools"
 
@@ -41,7 +40,7 @@ PIPENV_PIPFILE="$changes_directory/Pipfile" pipenv install
 PIPENV_PIPFILE="$build_tools_directory/Pipfile" pipenv install
 
 # Install the Ruby dependencies
-cd "$ios_directory"
+cd "$root_directory"
 gem install bundler
 bundle install
 
