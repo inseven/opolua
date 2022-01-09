@@ -173,6 +173,14 @@ function gPRINTB(text, width, align, top, bottom, margin)
     })
 end
 
+function gPRINTCLIP(text, width)
+    while #text > 0 and gTWIDTH(text) > width do
+        text = text:sub(1, -2)
+    end
+    gPRINT(text)
+    return #text
+end
+
 function gTWIDTH(text)
     local width = runtime:iohandler().graphicsop("textsize", text, runtime:getGraphicsContext().font)
     return width
@@ -203,14 +211,10 @@ function gELLIPSE(hRadius, vRadius, fill)
     runtime:drawCmd("ellipse", { hradius = hRadius, vradius = vRadius, fill = fill })
 end
 
--- TODO gPOLY
-
 function gFILL(width, height, mode)
     -- printf("gFILL %d,%d %dx%d\n", gX(), gY(), width, height)
     runtime:drawCmd("fill", { width = width, height = height, mode = mode })
 end
-
--- TODO gPATT
 
 local KExtraPixelInset = 0x100
 local KExtraRoundedCorners = 0x200

@@ -63,6 +63,11 @@ function SpriteCreate(stack, runtime)
     if winId == 0 then
         winId = 1 -- apparently...
     end
+    local spriteId = SPRITECREATE(runtime, winId, x, y, flags)
+    stack:push(spriteId)
+end
+
+function SPRITECREATE(runtime, winId, x, y, flags)
     local graphics = runtime:getGraphics()
     assert(graphics[winId] and graphics[winId].isWindow, "id is not a window")
     local spriteId = #graphics.sprites + 1
@@ -75,17 +80,21 @@ function SpriteCreate(stack, runtime)
     }
     graphics.sprites[spriteId] = sprite
     graphics.currentSprite = sprite
-    stack:push(spriteId)
+    return spriteId
 end
 
 function SpriteAppend(stack, runtime)
-    local graphics = runtime:getGraphics()
     local dx, dy = stack:popXY()
-    local invertMask = stack:pop() == 1
+    local invertMask = stack:pop() ~= 0
     local maskBitmap = stack:pop()
     local bitmap = stack:pop()
     local time = stack:pop()
+    SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
+    stack:push(0)
+end
 
+function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
+    local graphics = runtime:getGraphics()
     local sprite = graphics.currentSprite
     assert(sprite, "No current sprite!")
 
@@ -98,7 +107,6 @@ function SpriteAppend(stack, runtime)
         invert = invertMask,
     }
     table.insert(sprite.frames, frame)
-    stack:push(0)
 end
 
 function SpriteChange(stack, runtime)
@@ -136,11 +144,15 @@ function getCurrentSprite(runtime)
 end
 
 function SpriteDraw(stack, runtime)
+    SPRITEDRAW(runtime)
+    stack:push(0)
+end
+
+function SPRITEDRAW(runtime)
     -- printf("SpriteDraw\n")
     local sprite = getCurrentSprite(runtime)
     sprite.drawn = true
     runtime:iohandler().graphicsop("sprite", sprite.id, sprite)
-    stack:push(0)
 end
 
 function SpritePos(stack, runtime)
