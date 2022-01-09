@@ -103,7 +103,7 @@ xcode_project -list
 # Smoke test builds.
 
 # iOS
-build_scheme "OpoLua" clean build build-for-testing test \
+build_scheme "OpoLua" clean build \
     -sdk iphonesimulator \
     -destination "$IPHONE_DESTINATION"
 
