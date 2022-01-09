@@ -1,5 +1,7 @@
 # opolua
 
+[![Build](https://github.com/inseven/opolua/actions/workflows/build.yaml/badge.svg)](https://github.com/inseven/opolua/actions/workflows/build.yaml)
+
 An OPO (compiled OPL) interpreter written in Lua, based on the Psion 5 era format (ie ER5, prior to the Quartz 6.x changes).
 
 ## QCode
