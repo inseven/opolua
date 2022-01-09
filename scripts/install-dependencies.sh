@@ -25,22 +25,25 @@ set -o pipefail
 set -x
 set -u
 
-scripts_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-root_directory="${scripts_directory}/.."
-changes_directory="${scripts_directory}/changes"
-build_tools_directory="${scripts_directory}/build-tools"
+SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ROOT_DIRECTORY="${SCRIPTS_DIRECTORY}/.."
+CHANGES_DIRECTORY="${SCRIPTS_DIRECTORY}/changes"
+BUILD_TOOLS_DIRECTORY="${SCRIPTS_DIRECTORY}/build-tools"
 
-environment_path="${scripts_directory}/environment.sh"
+ENVIRONMENT_PATH="${SCRIPTS_DIRECTORY}/environment.sh"
 
-source "$environment_path"
+if [ -d "${ROOT_DIRECTORY}/.local" ] ; then
+    rm -r "${ROOT_DIRECTORY}/.local"
+fi
+source "${ENVIRONMENT_PATH}"
 
 # Install the Python dependencies
 pip3 install --user pipenv
-PIPENV_PIPFILE="$changes_directory/Pipfile" pipenv install
-PIPENV_PIPFILE="$build_tools_directory/Pipfile" pipenv install
+PIPENV_PIPFILE="$CHANGES_DIRECTORY/Pipfile" pipenv install
+PIPENV_PIPFILE="$BUILD_TOOLS_DIRECTORY/Pipfile" pipenv install
 
 # Install the Ruby dependencies
-cd "$root_directory"
+cd "$ROOT_DIRECTORY"
 gem install bundler
 bundle install
 

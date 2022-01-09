@@ -106,3 +106,69 @@ xcode_project -list
 build_scheme "OpoLua" clean build \
     -sdk iphonesimulator \
     -destination "$IPHONE_DESTINATION"
+
+# Clean up the build directory.
+if [ -d "$BUILD_DIRECTORY" ] ; then
+    rm -r "$BUILD_DIRECTORY"
+fi
+mkdir -p "$BUILD_DIRECTORY"
+
+# Create the a new keychain.
+if [ -d "$TEMPORARY_DIRECTORY" ] ; then
+    rm -rf "$TEMPORARY_DIRECTORY"
+fi
+mkdir -p "$TEMPORARY_DIRECTORY"
+echo "$TEMPORARY_KEYCHAIN_PASSWORD" | build-tools create-keychain "$KEYCHAIN_PATH" --password
+
+function cleanup {
+    # Cleanup the temporary files and keychain.
+    cd "$ROOT_DIRECTORY"
+    build-tools delete-keychain "$KEYCHAIN_PATH"
+    rm -rf "$TEMPORARY_DIRECTORY"
+}
+
+trap cleanup EXIT
+
+# Determine the version and build number.
+VERSION_NUMBER=`changes --scope macOS version`
+BUILD_NUMBER=`build-tools generate-build-number`
+
+# Import the certificates into our dedicated keychain.
+echo "$IOS_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$IOS_CERTIFICATE_BASE64"
+
+# Install the provisioning profiles.
+build-tools install-provisioning-profile "${APP_DIRECTORY}/OpoLua_App_Store_Profile.mobileprovision"
+
+if $ARCHIVE || $TESTFLIGHT_UPLOAD ; then
+
+    # Build and archive the iOS project.
+    xcode_project \
+        -scheme "OpoLua" \
+        -config Release \
+        -archivePath "$ARCHIVE_PATH" \
+        OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+        BUILD_NUMBER=$BUILD_NUMBER \
+        MARKETING_VERSION=$VERSION_NUMBER \
+        clean archive
+    xcodebuild \
+        -archivePath "$ARCHIVE_PATH" \
+        -exportArchive \
+        -exportPath "$BUILD_DIRECTORY" \
+        -exportOptionsPlist "${APP_DIRECTORY}/ExportOptions.plist"
+
+fi
+
+IPA_BASENAME="OpoLua.ipa"
+IPA_PATH="$BUILD_DIRECTORY/$IPA_BASENAME"
+
+# Upload the build to TestFlight
+if $TESTFLIGHT_UPLOAD ; then
+    API_KEY_PATH="${TEMPORARY_DIRECTORY}/AuthKey.p8"
+    echo -n "$APPLE_API_KEY" | base64 --decode --output "$API_KEY_PATH"
+    bundle exec fastlane upload \
+        api_key:"$API_KEY_PATH" \
+        api_key_id:"$APPLE_API_KEY_ID" \
+        api_key_issuer_id:"$APPLE_API_KEY_ISSUER_ID" \
+        ipa:"$IPA_PATH"
+    unlink "$API_KEY_PATH"
+fi
