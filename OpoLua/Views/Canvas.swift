@@ -131,11 +131,26 @@ class Canvas: Drawable {
         context.draw(cgImage, in: CGRect(origin: .zero, size: cgImage.cgSize))
         for sprite in self.sprites.values {
             guard let image = windowServer.drawable(for: sprite.frame.bitmap)?.getImage(),
-                  let mask = windowServer.drawable(for: sprite.frame.mask)?.getImage()?.copyInDeviceGrayColorSpace(),
-                  let maskedImage = image.masking(mask)
+                  let mask = windowServer.drawable(for: sprite.frame.mask)?.getImage()
             else {
                 continue
             }
+            let maskedImage: CGImage
+            if sprite.frame.invertMask {
+                guard let inverted = mask.inverted(),
+                      let invertedGray = inverted.copyInDeviceGrayColorSpace(),
+                      let result = image.masking(invertedGray) else {
+                        continue
+                }
+                maskedImage = result
+            } else {
+                guard let maskGray = mask.copyInDeviceGrayColorSpace(),
+                      let result = image.masking(maskGray) else {
+                        continue
+                }
+                maskedImage = result
+            }
+
             let origin = self.invertCoordinates(point: sprite.sprite.origin + sprite.frame.offset)
             let adjustedOrigin = origin - Graphics.Point(x: 0, y: image.size.height)
             let destRect = Graphics.Rect(origin: adjustedOrigin, size: image.size)

@@ -535,9 +535,9 @@ local function drawInfoPrint(drawable, text, corner)
     gFILL(w, winHeight)
     gXBORDER(2, 0x94)
     gCOLOR(255, 255, 255)
-    gAT(inset, 19)
+    gAT(inset, 20)
     gPRINTCLIP(text, w - 2 * inset)
-    return { x = inset, y = gY(), w = actualTextWidth, h = 15 }
+    return { x = inset, y = inset, w = actualTextWidth, h = 15 }
 end
 
 function gIPRINT(text, corner)
@@ -575,7 +575,16 @@ function BUSY(text, corner, delay)
     runtime:setResource("busy", busyWinId)
     local textRect = drawInfoPrint(busyWinId, text, corner or 1)
 
-    -- TODO: flashy thing
+    local bmp = require("opx.bmp")
+    local sprite = bmp.SPRITECREATE(runtime, busyWinId, textRect.x, textRect.y, 0)
+    local blackBmp = gCREATEBIT(textRect.w, textRect.h, 0)
+    gCOLOR(0, 0, 0)
+    gFILL(gWIDTH(), gHEIGHT())
+    gUSE(busyWinId)
+    runtime:flushGraphicsOps()
+    bmp.SPRITEAPPEND(runtime, 1000000, blackBmp, blackBmp, true, 0, 0)
+    bmp.SPRITEAPPEND(runtime, 1000000, blackBmp, blackBmp, false, 0, 0)
+    bmp.SPRITEDRAW(runtime)
 
     if delay and delay > 0 then
         runtime:iohandler().graphicsop("busy", busyWinId, delay)
