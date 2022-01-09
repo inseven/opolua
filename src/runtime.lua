@@ -751,6 +751,18 @@ function Runtime:dumpProc(procName, startAddr)
             print(self:decodeNextInstruction()) -- BranchIfFalse
             self:dumpRawBytesUntil(newIp)
             realCodeStart = newIp
+        elseif self.ip == realCodeStart and self.data:sub(1 + self.ip, self.ip + 10):match("[\x00\x08]..\x4F.\x40%\x5B..%\x2B") then
+            -- Another variant which does a CompareEqualInt against an extern
+            -- variable that's (afaics) always going to be zero.
+
+            -- Simple[In]DirectRightSideInt, StackByteAsWord, CompareEqualInt, BranchIfFalse, ConstantString
+            print(self:decodeNextInstruction()) -- SimpleInDirectRightSideInt
+            print(self:decodeNextInstruction()) -- StackByteAsWord
+            print(self:decodeNextInstruction()) -- CompareEqualInt
+            local jmp = string.unpack("<i2", self.data, 1 + self.ip + 1)
+            local newIp = self.ip + jmp            
+            print(self:decodeNextInstruction()) -- BranchIfFalse
+            self:dumpRawBytesUntil(newIp)
         else
             print(self:decodeNextInstruction())
         end
