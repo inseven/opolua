@@ -50,6 +50,9 @@
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
 		D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03D277AC9B300760302 /* WindowServer.swift */; };
 		D8DCD040277ACD7800760302 /* Sprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03F277ACD7800760302 /* Sprite.swift */; };
+		D8DF3FAE278B3DA100FF658B /* Common.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAB278B3DA100FF658B /* Common.xcconfig */; };
+		D8DF3FAF278B3DA100FF658B /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */; };
+		D8DF3FB0278B3DA100FF658B /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAD278B3DA100FF658B /* Release.xcconfig */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8FE60032757106300711717 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* Location.swift */; };
@@ -209,6 +212,9 @@
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		D8DCD03D277AC9B300760302 /* WindowServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowServer.swift; sourceTree = "<group>"; };
 		D8DCD03F277ACD7800760302 /* Sprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprite.swift; sourceTree = "<group>"; };
+		D8DF3FAB278B3DA100FF658B /* Common.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Common.xcconfig; sourceTree = "<group>"; };
+		D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		D8DF3FAD278B3DA100FF658B /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
@@ -405,14 +411,14 @@
 			isa = PBXGroup;
 			children = (
 				D8C679BC27484BF400BD8720 /* examples */,
-				DB79FE6127428292005E904F /* OpoLua */,
+				D8C3BD682774F4A2003B1AD0 /* Frameworks */,
 				DB79FEB527429761005E904F /* lua */,
+				DB0B91502770A1F6006F5CD0 /* luac */,
 				DB9B7C32274A7B9B006B6F60 /* luaconf */,
+				DB79FE6127428292005E904F /* OpoLua */,
+				DB79FE6027428292005E904F /* Products */,
 				DB79FFE72742E631005E904F /* src */,
 				DB79FFE12742E52B005E904F /* swift */,
-				DB0B91502770A1F6006F5CD0 /* luac */,
-				DB79FE6027428292005E904F /* Products */,
-				D8C3BD682774F4A2003B1AD0 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -434,6 +440,9 @@
 				DB79FE6927428294005E904F /* Info.plist */,
 				DB79FE6227428292005E904F /* AppDelegate.swift */,
 				DB79FE6427428294005E904F /* Assets.xcassets */,
+				D8DF3FAB278B3DA100FF658B /* Common.xcconfig */,
+				D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */,
+				D8DF3FAD278B3DA100FF658B /* Release.xcconfig */,
 				D889134B274C17F300794D55 /* Extensions */,
 				D861E8D9274A818D003C8D3D /* Model */,
 				D8C679BB27484BB800BD8720 /* View Controllers */,
@@ -609,6 +618,7 @@
 			files = (
 				DBACE9C3274F895D002612DF /* modules in Resources */,
 				D87A9249274C517000254DE9 /* Assets.xcassets in Resources */,
+				D8DF3FB0278B3DA100FF658B /* Release.xcconfig in Resources */,
 				DB5AC97A275AC72A0043FE5C /* sound.lua in Resources */,
 				D893EAD5276073CA00E64219 /* Borders in Resources */,
 				DB5AC970275198A20043FE5C /* database.lua in Resources */,
@@ -630,6 +640,8 @@
 				DB5AC97C275CD5690043FE5C /* opl.lua in Resources */,
 				DB0B91852771031F006F5CD0 /* aif.lua in Resources */,
 				DB0B91952789C561006F5CD0 /* directfilestore.lua in Resources */,
+				D8DF3FAF278B3DA100FF658B /* Debug.xcconfig in Resources */,
+				D8DF3FAE278B3DA100FF658B /* Common.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -965,11 +977,13 @@
 		};
 		DB79FFB82742D88B005E904F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = OpoLua/OpoLua.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = $BUILD_NUMBER;
 				DEVELOPMENT_TEAM = S4WXAUZQEV;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = OpoLua/Info.plist;
@@ -977,7 +991,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.me.tomsci.OpoLua;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.co.inseven.opolua;
 				PRODUCT_NAME = OpoLua;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
@@ -988,11 +1003,13 @@
 		};
 		DB79FFB92742D88B005E904F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D8DF3FAD278B3DA100FF658B /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = OpoLua/OpoLua.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = $BUILD_NUMBER;
 				DEVELOPMENT_TEAM = S4WXAUZQEV;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = OpoLua/Info.plist;
@@ -1000,7 +1017,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.me.tomsci.OpoLua;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.co.inseven.opolua;
 				PRODUCT_NAME = OpoLua;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
