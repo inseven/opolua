@@ -277,9 +277,13 @@ function Runtime:pushNewFrame(stack, proc, numParams)
 
     for _, external in ipairs(proc.externals or {}) do
         -- Now resolve externals in the new fn by walking up the frame procs until
-        -- we find a global with a matching name
+        -- we find a global with a matching name and type
         local parentFrame = frame
         local found
+        local nameForLookup = external.name
+        if isArrayType(external.type) then
+            nameForLookup = nameForLookup.."[]"
+        end
         while not found do
             parentFrame = parentFrame.prevFrame
             assert(parentFrame, "Failed to resolve external "..external.name)
@@ -292,8 +296,9 @@ function Runtime:pushNewFrame(stack, proc, numParams)
             else
                 globals = parentProc.globals
             end
-            found = globals[external.name]
+            found = globals[nameForLookup]
         end
+        assert(found.type == external.type, "Mismatching types on resolved external!")
         table.insert(frame.indirects, self:getLocalVar(found.offset, found.type, parentFrame))
         -- DEBUG
         -- printf("Fixed up external offset=0x%04X to indirect #%d\n", found.offset, #frame.indirects)

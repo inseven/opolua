@@ -136,7 +136,7 @@ function Variable:__tostring()
         val = tostring(self())
     end
     if self._originProc then
-        return string.format("%s+0x%04X (%s)", self._originProc, self._originIndex, val)
+        return string.format("%s+0x%04X (%s)", self._originProc.name, self._originIndex, val)
     else
         return string.format("Temporary (%s)", val)
     end

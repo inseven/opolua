@@ -145,7 +145,14 @@ function parseProc(proc)
             local offset = readWord()
             local global = { name = name, type = type, offset = offset }
             table.insert(proc.globals, global)
-            proc.globals[name] = global -- support lookup by name too
+            local nameForLookupByName = name
+            if isArrayType(type) then
+                -- Array variable names live in a separate namespace to scalars,
+                -- for the purposes of global variable lookup, the simplest
+                -- solution is to disambiguate them here.
+                nameForLookupByName = nameForLookupByName.."[]"
+            end
+            proc.globals[nameForLookupByName] = global -- support lookup by name too
         end
         assert(dataPos == endPos, "dataPos != endPos!?")
     end
