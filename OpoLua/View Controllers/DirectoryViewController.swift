@@ -92,7 +92,7 @@ class DirectoryViewController : UITableViewController {
                 cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
             }
         case .installer:
-            cell.imageView?.image = UIImage(systemName: "shippingbox", withConfiguration: symbolConfiguration)
+            cell.imageView?.image = UIImage(named: "SisIcon")
         }
         return cell
     }
