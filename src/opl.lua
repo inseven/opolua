@@ -674,26 +674,12 @@ function MKDIR(path)
     end
 end
 
-local Mode = {
-    Open = 0,
-    Create = 1,
-    Replace = 2,
-    Append = 3,
-    Unique = 4,
-    OpenModeMask = 0x3,
-
-    TextFlag = 0x20,
-    WriteFlag = 0x100,
-    SeekableFlag = 0x200,
-    ReadonlyShared = 0x400, -- We can safely ignore this one
-}
-
 function IOOPEN(path, mode)
     path = runtime:abs(path)
-    local openMode = mode & Mode.OpenModeMask
+    local openMode = mode & IoOpenMode.OpenModeMask
     -- printf("IOOPEN %s mode=%d\n", path, mode)
 
-    if openMode == Mode.Open then
+    if openMode == IoOpenMode.Open then
         local f = runtime:newFileHandle()
         f.pos = 1
         f.mode = mode
@@ -709,11 +695,11 @@ function IOOPEN(path, mode)
     end
 
     -- Write support
-    mode = mode | Mode.WriteFlag -- Apparently this _isn't_ mandatory...
-    assert(openMode ~= Mode.Append, "Don't support append yet!")
-    assert(openMode ~= Mode.Unique, "Don't support unique yet!")
+    mode = mode | IoOpenMode.WriteFlag -- Apparently this _isn't_ mandatory...
+    assert(openMode ~= IoOpenMode.Append, "Don't support append yet!")
+    assert(openMode ~= IoOpenMode.Unique, "Don't support unique yet!")
 
-    if openMode == Mode.Create then
+    if openMode == IoOpenMode.Create then
         local err = runtime:iohandler().fsop("exists", path)
         if err ~= KOplErrNotExists then
             printf("IOOPEN(%s) failed: %d\n", path, err)
@@ -736,7 +722,7 @@ function IOREAD(h, maxLen)
         return nil, KOplErrInvalidArgs
     end
 
-    if f.mode & Mode.TextFlag > 0 then
+    if f.mode & IoOpenMode.TextFlag > 0 then
         local startPos, endPos = f.data:find("\r?\n", f.pos)
         if startPos then
             local data = f.data:sub(f.pos, startPos - 1)
@@ -760,14 +746,14 @@ end
 function IOWRITE(h, data)
     local f = runtime:getFile(h)
     if not f then
-        return nil, KOplErrInvalidArgs
+        return KOplErrInvalidArgs
     end
     -- What's the right actual error code for this? KOplErrWrite? KOplErrReadOnly? KOplErrAccess?
-    assert(f.mode & Mode.WriteFlag > 0, "Cannot write to a readonly file handle!")
+    assert(f.mode & IoOpenMode.WriteFlag > 0, "Cannot write to a readonly file handle!")
     -- Not the most efficient operation, oh well
     f.data = f.data:sub(1, f.pos - 1)..data..f.data:sub(f.pos + #data)
 
-    if f.mode & Mode.TextFlag > 0 then
+    if f.mode & IoOpenMode.TextFlag > 0 then
         f.data = f.data.."\r\n"
     end
     f.pos = #f.data + 1
@@ -805,7 +791,7 @@ function IOCLOSE(h)
     local err = KErrNone
     local f = runtime:getFile(h)
     if f then
-        if f.mode & Mode.WriteFlag > 0 then
+        if f.mode & IoOpenMode.WriteFlag > 0 then
             err = runtime:iohandler().fsop("write", f.path, f.data)
         end
         runtime:closeFile(h)

@@ -115,6 +115,7 @@ Errors = {
     KOplErrClosed = -102,
     KOplErrNoMod = -106,
     KOplErrSubs = -111,
+    KOplErrDevOpen = -113,
     KOplErrEsc = -114,
     KOplErrDrawNotOpen = -118,
     KOplErrInvalidWindow = -119,
@@ -139,6 +140,20 @@ KUidExternalOplFile = 0x1000008A -- DB file UID2
 
 KUidSoundData = 0x10000052 -- Not sure what this uid is officially called, can't find a reference...
 KUidTextEdSection = 0x10000085 -- ditto
+
+IoOpenMode = {
+    Open = 0,
+    Create = 1,
+    Replace = 2,
+    Append = 3,
+    Unique = 4,
+    OpenModeMask = 0x3,
+
+    TextFlag = 0x20,
+    WriteFlag = 0x100,
+    SeekableFlag = 0x200,
+    ReadonlyShared = 0x400, -- We can safely ignore this one
+}
 
 dItemTypes = enum {
     dTEXT = 0,

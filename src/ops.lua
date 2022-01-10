@@ -1211,19 +1211,26 @@ PrintFloat = PrintUntyped -- 0x8A
 PrintString = PrintUntyped -- 0x8B
 
 function LPrintInt(stack, runtime) -- 0x8C
-    error("Unimplemented opcode LPrintInt!")
+    stack:push(string.format("%d", stack:pop()))
+    LPrintString(stack, runtime)
 end
 
 function LPrintLong(stack, runtime) -- 0x8D
-    error("Unimplemented opcode LPrintLong!")
+    stack:push(string.format("%d", stack:pop()))
+    LPrintString(stack, runtime)
 end
 
 function LPrintFloat(stack, runtime) -- 0x8E
-    error("Unimplemented opcode LPrintFloat!")
+    stack:push(string.format("%g", stack:pop()))
+    LPrintString(stack, runtime)
 end
 
 function LPrintString(stack, runtime) -- 0x8F
-    error("Unimplemented opcode LPrintString!")
+    local str = stack:pop()
+    local handle = runtime:getResource("lopen")
+    assert(handle, KOplErrClosed)
+    local err = runtime:IOWRITE(handle, str)
+    assert(err == 0, err)
 end
 
 function PrintSpace(stack, runtime) -- 0x90
@@ -1231,7 +1238,8 @@ function PrintSpace(stack, runtime) -- 0x90
 end
 
 function LPrintSpace(stack, runtime) -- 0x91
-    error("Unimplemented opcode LPrintSpace!")
+    stack:push(" ")
+    LPrintString(stack, runtime)
 end
 
 function PrintCarriageReturn(stack, runtime) -- 0x92
@@ -1437,7 +1445,14 @@ function Last(stack, runtime) -- 0xAC
 end
 
 function LClose(stack, runtime) -- 0xAD
-    error("Unimplemented opcode LClose!")
+    local handle = runtime:getResource("lopen")
+    if handle then
+        local err = runtime:IOCLOSE(handle)
+        runtime:setResource("lopen", nil)
+        if err ~= 0 then
+            error(err)
+        end
+    end
     runtime:setTrap(false)
 end
 
@@ -1449,7 +1464,14 @@ function LoadM(stack, runtime) -- 0xAE
 end
 
 function LOpen(stack, runtime) -- 0xAF
-    error("Unimplemented opcode LOpen!")
+    if runtime:getResource("lopen") then
+        error(KOplErrDevOpen)
+    end
+    local name = stack:pop()
+    local mode = IoOpenMode.Replace
+    local handle, err = runtime:IOOPEN(name, mode)
+    assert(handle, err)
+    runtime:setResource("lopen", handle)
     runtime:setTrap(false)
 end
 
