@@ -26,7 +26,7 @@ SOFTWARE.
 
 function main()
     local filename = arg[1]
-    local dest = arg[2]
+    local dumpIcons = arg[2] == "--icons"
     require("init")
     aif = require("aif")
     local f = assert(io.open(filename, "rb"))
@@ -38,6 +38,47 @@ function main()
     end
     for _, icon in ipairs(info.icons) do
         printf("Icon %dx%d bpp=%d\n", icon.width, icon.height, icon.bpp)
+        if dumpIcons then
+            local iconName = string.format("%s_icon_%dx%d.bin", filename, icon.width, icon.height)
+            local f = assert(io.open(iconName, "wb"))
+            f:write(widen(icon.imgData, icon.bpp))
+            f:close()
+        end
+    end
+
+end
+
+local function scale2bpp(val)
+    return val | (val << 2) | (val << 4) | (val << 6)
+end
+
+function widen(data, bpp)
+    local len = #data
+    if bpp == 4 then
+        local pos = 1
+        local bytes = {}
+        while pos <= len do
+            local b = string.unpack("B", data, pos)
+            bytes[pos] = string.pack("BB", ((b & 0xF) << 4) | (b & 0xF), (b & 0xF0) | (b >> 4))
+            pos = pos + 1
+        end
+        return table.concat(bytes)
+    elseif bpp == 2 then
+        local pos = 1
+        local bytes = {}
+        while pos <= len do
+            local b = string.unpack("B", data, pos)
+            bytes[pos] = string.pack("BBBB",
+                scale2bpp(b & 0x3),
+                scale2bpp((b & 0xC) >> 2),
+                scale2bpp((b & 0x30) >> 4),
+                scale2bpp((b & 0xC0) >> 6)
+            )
+            pos = pos + 1
+        end
+        return table.concat(bytes)
+    else
+        return data
     end
 end
 
