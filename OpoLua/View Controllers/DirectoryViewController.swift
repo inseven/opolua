@@ -20,15 +20,31 @@
 
 import UIKit
 
-class DirectoryViewController : UITableViewController {
+class DirectoryViewController : UIViewController {
     
     var directory: Directory
     var installer: Installer?
     var applicationActiveObserver: Any?
+
+    lazy var tableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .plain)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.delegate = self
+        tableView.dataSource = self
+        return tableView
+    }()
     
     init(directory: Directory, title: String? = nil) {
         self.directory = directory
-        super.init(style: .plain)
+        super.init(nibName: nil, bundle: nil)
+        view.addSubview(tableView)
+        NSLayoutConstraint.activate([
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
         self.title = title ?? directory.name
     }
     
@@ -72,69 +88,8 @@ class DirectoryViewController : UITableViewController {
             present(error: error)
         }
     }
-    
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return directory.objects.count
-    }
 
     let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 48)
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
-        let item = directory.objects[indexPath.row]
-        cell.textLabel?.text = item.name
-        cell.detailTextLabel?.text = item.type.localizedDescription
-        cell.accessoryType = .disclosureIndicator
-        switch item.type {
-        case .object:
-            cell.imageView?.image = UIImage(systemName: "applescript", withConfiguration: symbolConfiguration)
-        case .directory:
-            cell.imageView?.image = UIImage(named: "FolderIcon")
-        case .app:
-            cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
-        case .bundle(let application):
-            if let appIcon = application.appInfo.appIcon {
-                cell.imageView?.image = appIcon
-            } else {
-                cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
-            }
-        case .system(let application):
-            if let appIcon = application.appInfo.appIcon {
-                cell.imageView?.image = appIcon
-            } else {
-                cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
-            }
-        case .installer:
-            cell.imageView?.image = UIImage(named: "SisIcon")
-        }
-        return cell
-    }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let item = directory.objects[indexPath.row]
-        switch item.type {
-        case .object, .app, .bundle, .system:
-            guard let configuration = item.configuration else {
-                tableView.deselectRow(at: indexPath, animated: true)
-                return
-            }
-            let program = Program(configuration: configuration)
-            let viewController = ProgramViewController(program: program)
-            navigationController?.pushViewController(viewController, animated: true)
-        case .directory:
-            pushDirectoryViewController(for: item.url)
-            tableView.deselectRow(at: indexPath, animated: true)
-        case .installer:
-            installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
-            installer?.delegate = self
-            installer?.run()
-            tableView.deselectRow(at: indexPath, animated: true)
-        }
-    }
 
     func pushDirectoryViewController(for url: URL) {
         do {
@@ -171,7 +126,76 @@ class DirectoryViewController : UITableViewController {
         return [runAction, runAsMenu, procedureMenu]
     }
 
-    override func tableView(_ tableView: UITableView,
+}
+
+extension DirectoryViewController: UITableViewDataSource {
+
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return directory.objects.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
+        let item = directory.objects[indexPath.row]
+        cell.textLabel?.text = item.name
+        cell.detailTextLabel?.text = item.type.localizedDescription
+        cell.accessoryType = .disclosureIndicator
+        switch item.type {
+        case .object:
+            cell.imageView?.image = UIImage(systemName: "applescript", withConfiguration: symbolConfiguration)
+        case .directory:
+            cell.imageView?.image = UIImage(named: "FolderIcon")
+        case .app:
+            cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
+        case .bundle(let application):
+            if let appIcon = application.appInfo.appIcon {
+                cell.imageView?.image = appIcon
+            } else {
+                cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
+            }
+        case .system(let application):
+            if let appIcon = application.appInfo.appIcon {
+                cell.imageView?.image = appIcon
+            } else {
+                cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
+            }
+        case .installer:
+            cell.imageView?.image = UIImage(named: "SisIcon")
+        }
+        return cell
+    }
+
+}
+
+extension DirectoryViewController: UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let item = directory.objects[indexPath.row]
+        switch item.type {
+        case .object, .app, .bundle, .system:
+            guard let configuration = item.configuration else {
+                tableView.deselectRow(at: indexPath, animated: true)
+                return
+            }
+            let program = Program(configuration: configuration)
+            let viewController = ProgramViewController(program: program)
+            navigationController?.pushViewController(viewController, animated: true)
+        case .directory:
+            pushDirectoryViewController(for: item.url)
+            tableView.deselectRow(at: indexPath, animated: true)
+        case .installer:
+            installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
+            installer?.delegate = self
+            installer?.run()
+            tableView.deselectRow(at: indexPath, animated: true)
+        }
+    }
+
+    func tableView(_ tableView: UITableView,
                             contextMenuConfigurationForRowAt indexPath: IndexPath,
                             point: CGPoint) -> UIContextMenuConfiguration? {
         let item = directory.objects[indexPath.row]
