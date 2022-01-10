@@ -4,6 +4,14 @@
 
 An OPO (compiled OPL) interpreter written in Lua, based on the Psion 5 era format (ie ER5, prior to the Quartz 6.x changes).
 
+## Screenshots
+
+![Jumpy! Plus](screenshots/jumpy-plus.png)
+
+![Vexed](screenshots/vexed.png)
+
+![Tile Fall](screenshots/tile-fall.png)
+
 ## QCode
 
 _Disclaimer: My understanding only, based on reading the opl-dev source code._
