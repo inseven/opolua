@@ -375,6 +375,7 @@ struct Graphics {
         case giprint(DrawableId)
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
         case sprite(Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
+        case setAppTitle(String)
     }
 
     enum Result {

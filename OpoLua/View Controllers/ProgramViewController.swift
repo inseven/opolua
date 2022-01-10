@@ -273,6 +273,10 @@ class ProgramViewController: UIViewController {
         case .sprite(let id, let sprite):
             windowServer.setSprite(id: id, sprite: sprite)
             return .nothing
+
+        case .setAppTitle(let title):
+            navigationItem.title = title
+            return .nothing
         }
     }
 
