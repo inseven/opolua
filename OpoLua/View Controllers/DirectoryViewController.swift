@@ -24,6 +24,7 @@ class DirectoryViewController : UITableViewController {
     
     var directory: Directory
     var installer: Installer?
+    var applicationActiveObserver: Any?
     
     init(directory: Directory, title: String? = nil) {
         self.directory = directory
@@ -40,6 +41,22 @@ class DirectoryViewController : UITableViewController {
         navigationController?.isToolbarHidden = true
         tableView.refreshControl = UIRefreshControl()
         tableView.refreshControl?.addTarget(self, action: #selector(refresh(sender:)), for: .valueChanged)
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        applicationActiveObserver = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification,
+                                               object: nil,
+                                               queue: nil) { notification in
+            self.reload()
+        }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if let observer = applicationActiveObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     @objc func refresh(sender: UIRefreshControl) {
