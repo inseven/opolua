@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
@@ -99,13 +100,27 @@ class LibraryViewController: UITableViewController {
     var settings = Settings()
     var dataSource: LibraryDataSource!
 
+    lazy var addBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(addTapped(sender:)))
+        return barButtonItem
+    }()
+
+    lazy var aboutBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(title: "About",
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(aboutTapped(sender:)))
+        return barButtonItem
+    }()
+
     init() {
         super.init(style: .insetGrouped)
         title = "OPL"
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
-                                                            style: .plain,
-                                                            target: self,
-                                                            action: #selector(addTapped(sender:)))
+        navigationItem.rightBarButtonItem = addBarButtonItem
+        navigationItem.leftBarButtonItem = aboutBarButtonItem
         tableView.dataSource = nil
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: Self.cellIdentifier)
         dataSource = LibraryDataSource(tableView: tableView) { tableView, indexPath, itemIdentifier in
@@ -126,6 +141,11 @@ class LibraryViewController: UITableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(true)
         dataSource.apply(snapshot(), animatingDifferences: false)
+    }
+
+    @objc func aboutTapped(sender: UIBarButtonItem) {
+        let viewController = UIHostingController(rootView: AboutView())
+        self.present(viewController, animated: true)
     }
 
     func reload() {
