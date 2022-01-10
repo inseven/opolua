@@ -23,6 +23,7 @@ import UIKit
 class DirectoryViewController : UIViewController {
     
     var directory: Directory
+    var items: [Directory.Item] = []
     var installer: Installer?
     var applicationActiveObserver: Any?
 
@@ -33,9 +34,16 @@ class DirectoryViewController : UIViewController {
         tableView.dataSource = self
         return tableView
     }()
+
+    lazy var searchController: UISearchController = {
+        let searchController = UISearchController()
+        searchController.searchResultsUpdater = self
+        return searchController
+    }()
     
     init(directory: Directory, title: String? = nil) {
         self.directory = directory
+        self.items = directory.items
         super.init(nibName: nil, bundle: nil)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
@@ -44,7 +52,7 @@ class DirectoryViewController : UIViewController {
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
-
+        self.navigationItem.searchController = searchController
         self.title = title ?? directory.name
     }
     
@@ -82,6 +90,7 @@ class DirectoryViewController : UIViewController {
     func reload() {
         do {
             directory = try Directory(url: directory.url)
+            items = directory.items(filter: searchController.searchBar.text)
             tableView.reloadData()
             tableView.refreshControl?.endRefreshing()
         } catch {
@@ -135,12 +144,12 @@ extension DirectoryViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return directory.objects.count
+        return items.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
-        let item = directory.objects[indexPath.row]
+        let item = items[indexPath.row]
         cell.textLabel?.text = item.name
         cell.detailTextLabel?.text = item.type.localizedDescription
         cell.accessoryType = .disclosureIndicator
@@ -174,7 +183,7 @@ extension DirectoryViewController: UITableViewDataSource {
 extension DirectoryViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let item = directory.objects[indexPath.row]
+        let item = items[indexPath.row]
         switch item.type {
         case .object, .app, .bundle, .system:
             guard let configuration = item.configuration else {
@@ -198,7 +207,7 @@ extension DirectoryViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView,
                             contextMenuConfigurationForRowAt indexPath: IndexPath,
                             point: CGPoint) -> UIContextMenuConfiguration? {
-        let item = directory.objects[indexPath.row]
+        let item = items[indexPath.row]
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
             let deleteActions = UIAction(title: "Delete", attributes: .destructive) { action in
                 do {
@@ -230,6 +239,15 @@ extension DirectoryViewController: UITableViewDelegate {
                 return UIMenu(children: [deleteActions])
             }
         }
+    }
+
+}
+
+extension DirectoryViewController: UISearchResultsUpdating {
+
+    func updateSearchResults(for searchController: UISearchController) {
+        items = directory.items(filter: searchController.searchBar.text)
+        tableView.reloadData()
     }
 
 }
