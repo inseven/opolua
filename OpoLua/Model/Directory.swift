@@ -101,14 +101,7 @@ class Directory {
 
     }
 
-    let url: URL
-    let objects: [Item]
-
-    var name: String {
-        return url.name
-    }
-
-    static func asSystem(url: URL) throws -> Item.`Type`? {
+    private static func asSystem(url: URL) throws -> Item.`Type`? {
 
         let contents = try url.contents
         let drives: Set<String> = ["c", "C", "d", "D"]
@@ -148,7 +141,7 @@ class Directory {
         return .system(application)
     }
 
-    static func asBundle(url: URL) throws -> Item.`Type`? {
+    private static func asBundle(url: URL) throws -> Item.`Type`? {
 
         let apps = try url.contents
             .filter { $0.isApplication }
@@ -162,10 +155,17 @@ class Directory {
 
         return .bundle(application)
     }
+
+    let url: URL
+    let items: [Item]
+
+    var name: String {
+        return url.name
+    }
     
     init(url: URL) throws {
         self.url = url
-        objects = try url.contents
+        items = try url.contents
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
                 if FileManager.default.directoryExists(atPath: url.path) {
@@ -188,6 +188,17 @@ class Directory {
                 }
             }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
+    }
+
+    func items(filter: String?) -> [Item] {
+        return items.filter { item in
+            guard let filter = filter,
+                  !filter.isEmpty
+            else {
+                return true
+            }
+            return item.name.localizedCaseInsensitiveContains(filter)
+        }
     }
     
 }
