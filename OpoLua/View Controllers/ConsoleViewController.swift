@@ -47,12 +47,20 @@ class ConsoleViewController: UIViewController {
         return barButtonItem
     }()
 
+    lazy var shareBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(barButtonSystemItem: .action,
+                                            target: self,
+                                            action: #selector(actionTapped(sender:)))
+        return barButtonItem
+    }()
+
     init(program: Program) {
         self.program = program
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
         title = "Console"
         navigationItem.leftBarButtonItem = doneBarButtonItem
+        navigationItem.rightBarButtonItem = shareBarButtonItem
         view.addSubview(textView)
         NSLayoutConstraint.activate([
 
@@ -72,6 +80,14 @@ class ConsoleViewController: UIViewController {
 
     @objc func doneTapped(sender: UIBarButtonItem) {
         delegate?.consoleViewControllerDidDismiss(self)
+    }
+
+    @objc func actionTapped(sender: UIBarButtonItem) {
+        guard let text = textView.text else {
+            return
+        }
+        let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        self.present(activityViewController, animated: true)
     }
 
 }
