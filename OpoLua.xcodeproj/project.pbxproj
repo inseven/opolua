@@ -17,7 +17,7 @@
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
 		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
 		D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724F12771672A009C7246 /* InterpreterThread.swift */; };
-		D86FBAB5278C74A3003DF611 /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86FBAB4278C74A3003DF611 /* AboutViewController.swift */; };
+		D86FBAB5278C74A3003DF611 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86FBAB4278C74A3003DF611 /* AboutView.swift */; };
 		D86FBAB7278C75E1003DF611 /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D86FBAB6278C75E1003DF611 /* Diligence */; };
 		D86FBABA278C76FB003DF611 /* Lua.txt in Resources */ = {isa = PBXBuildFile; fileRef = D86FBAB9278C76FB003DF611 /* Lua.txt */; };
 		D87A62742752A67500075CB8 /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62732752A67500075CB8 /* CGSize.swift */; };
@@ -184,7 +184,7 @@
 		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		D86724F12771672A009C7246 /* InterpreterThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterThread.swift; sourceTree = "<group>"; };
 		D86FBAB3278C730B003DF611 /* diligence */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = diligence; sourceTree = "<group>"; };
-		D86FBAB4278C74A3003DF611 /* AboutViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutViewController.swift; sourceTree = "<group>"; };
+		D86FBAB4278C74A3003DF611 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		D86FBAB9278C76FB003DF611 /* Lua.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Lua.txt; sourceTree = "<group>"; };
 		D87A62732752A67500075CB8 /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
 		D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFileSystem.swift; sourceTree = "<group>"; };
@@ -411,7 +411,7 @@
 		D8C679BB27484BB800BD8720 /* View Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				D86FBAB4278C74A3003DF611 /* AboutViewController.swift */,
+				D86FBAB4278C74A3003DF611 /* AboutView.swift */,
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
 				D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */,
 				D8891346274BF2D200794D55 /* DialogViewController.swift */,
@@ -763,7 +763,7 @@
 				D8DCD040277ACD7800760302 /* Sprite.swift in Sources */,
 				D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */,
 				DB7900012742E6F6005E904F /* ldo.c in Sources */,
-				D86FBAB5278C74A3003DF611 /* AboutViewController.swift in Sources */,
+				D86FBAB5278C74A3003DF611 /* AboutView.swift in Sources */,
 				D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */,
 				DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */,
 				D8BA0970275196CA00F4730D /* String.swift in Sources */,
