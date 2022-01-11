@@ -1082,7 +1082,7 @@ end
 
 local function globToMatch(glob)
     local m = glob:gsub("[.+%%^$%(%)%[%]-]", "%%%0"):gsub("%?", "."):gsub("%*", ".*")
-    return m
+    return m:upper()
 end
 
 function Runtime:dir(path)
@@ -1106,7 +1106,7 @@ function Runtime:dir(path)
         for i, path in ipairs(contents) do
             local _, name = oplpath.split(path)
             -- printf("Checking %s against match %s\n", name, m)
-            if name:match(m) then
+            if name:upper():match(m) then
                 table.insert(filtered, path)
             end
         end
