@@ -1561,7 +1561,8 @@ end
 function Stop(stack, runtime) -- 0xBB
     -- OPL uses User::Leave(0) for this (and for returning from the main fn) but
     -- I can't bring myself to error with a zero code so KStopErr is a made-up
-    -- value that's somthing more obvious
+    -- value that's something more obvious
+    printf("Stop called.\n")
     error(KStopErr)
 end
 
@@ -2137,7 +2138,9 @@ function DefaultWin(stack, runtime) -- 0x101
 end
 
 function Font(stack, runtime) -- 0x104
-    error("Unimplemented opcode Font!")
+    local uid = stack:pop()
+    local style = stack:pop()
+    printf("Font(0x%08X, %d)\n", uid, style)
 end
 
 function Style(stack, runtime) -- 0x105
