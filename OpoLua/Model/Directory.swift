@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 import Foundation
+import UIKit
 
 class Directory {
 
@@ -96,6 +97,31 @@ class Directory {
                 return Program.Configuration(url: application.url, fileSystem: SystemFileSystem(rootUrl: url))
             default:
                 return Program.Configuration(url: url, fileSystem: ObjectFileSystem(objectUrl: url))
+            }
+        }
+
+        var icon: UIImage {
+            switch type {
+            case .object:
+                return .oplIcon
+            case .directory:
+                return .folderIcon
+            case .app:
+                return .unknownAppIcon
+            case .bundle(let application):
+                if let appIcon = application.appInfo.appIcon {
+                    return appIcon
+                } else {
+                    return .unknownAppIcon
+                }
+            case .system(let application):
+                if let appIcon = application.appInfo.appIcon {
+                    return appIcon
+                } else {
+                    return .unknownAppIcon
+                }
+            case .installer:
+                return .sisIcon
             }
         }
 
