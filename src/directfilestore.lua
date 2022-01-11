@@ -27,6 +27,7 @@ _ENV = module()
 function parse(data)
     local uid1, uid2, uid3, checksum, tocOffset = string.unpack("<I4I4I4I4I4", data)
     assert(uid1 == KUidDirectFileStore)
+    assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
     local toc = {}
     local tocLen, pos = string.unpack("B", data, 1 + tocOffset)
     local n = tocLen // 2 -- tocLen is count of longs (as a byte), and each entry is 2 longs (uid and offset)

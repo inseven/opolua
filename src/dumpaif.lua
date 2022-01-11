@@ -33,6 +33,7 @@ function main()
     local data = f:read("a")
     f:close()
     local info = aif.parseAif(data)
+    printf("UID3: 0x%08X\n", info.uid3)
     for lang, caption in pairs(info.captions) do
         printf("Caption[%s]: %s\n", lang, caption)
     end

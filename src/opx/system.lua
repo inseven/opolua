@@ -336,7 +336,12 @@ function ReadRscLong(stack, runtime) -- 46
 end
 
 function CheckUid(stack, runtime) -- 47
-    error("Unimplemented system.opx function CheckUid!")
+    local uid3 = touint32(stack:pop())
+    local uid2 = touint32(stack:pop())
+    local uid1 = touint32(stack:pop())
+    local checksum = require("crc").getUidsChecksum(uid1, uid2, uid3)
+    local result = string.pack("<I4I4I4I4", uid1, uid2, uid3, checksum)
+    stack:push(result)
 end
 
 function SetPointerGrabOn(stack, runtime) -- 48

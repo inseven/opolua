@@ -930,6 +930,7 @@ class OpoInterpreter {
 
     struct AppInfo {
         let caption: String
+        let uid3: UInt32
         let icons: [Graphics.MaskedBitmap]
     }
 
@@ -953,6 +954,8 @@ class OpoInterpreter {
         lua_getfield(L, -1, "EN")
         guard let caption = L.tostring(-1) else { return nil }
         L.pop(2) // EN caption, captions
+
+        guard let uid3 = L.toint(-1, key: "uid3") else { return nil }
 
         lua_getfield(L, -1, "icons")
         var icons: [Graphics.MaskedBitmap] = []
@@ -978,7 +981,7 @@ class OpoInterpreter {
                 icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
             }
         }
-        return AppInfo(caption: caption, icons: icons)
+        return AppInfo(caption: caption, uid3: UInt32(uid3), icons: icons)
     }
 
     struct Error {

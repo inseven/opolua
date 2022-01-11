@@ -61,6 +61,10 @@ function touint16(val)
     return string.unpack("<I2", string.pack("<i2", val))
 end
 
+function touint32(val)
+    return string.unpack("<I4", string.pack("<i4", val))
+end
+
 DataTypes = enum {
     EWord = 0, -- 2 bytes
     ELong = 1, -- 4 bytes

@@ -34,11 +34,12 @@ function parseOpo(data, verbose)
     end
 
     -- TOpoStoreHeader
-    local uid1, uid2, uid3, uid4, rootStreamIdx, pos = string.unpack("<I4I4I4I4I4", data)
+    local uid1, uid2, uid3, checksum, rootStreamIdx, pos = string.unpack("<I4I4I4I4I4", data)
     assert(uid1 == KUidDirectFileStore, "Bad header uid1!")
+    assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
     -- assert(uid2 == KUidOPO, string.format("Bad header uid2 0x%08X", uid2))
     -- assert(uid3 == KUidOplInterpreter, "Bad header uid3!")
-    -- No clue what uid4 is
+    vprintf("UID3: 0x%08X\n", uid3)
 
     -- TOpoRootStream
     local interpreterUid, translatorVersion, minRunVersion, srcNameIdx, procTableIdx, opxTableIdx, debugFlag =

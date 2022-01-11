@@ -29,6 +29,7 @@ function parseAif(data)
     local mbm = require("mbm")
     local uid1, uid2, uid3, checksum, trailerOffset = string.unpack("<I4I4I4I4I4", data)
     assert(uid1 == KUidDirectFileStore and uid2 == KUidAppInfoFile8, "Not an AIF file!")
+    assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
 
     local nCaptions, pos = string.unpack("<B", data, 1 + trailerOffset)
     local captions = {} -- keyed by lang code
@@ -60,6 +61,7 @@ function parseAif(data)
     end
 
     return {
+        uid3 = uid3,
         captions = captions,
         icons = icons,
     }

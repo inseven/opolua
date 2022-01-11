@@ -40,7 +40,7 @@ class Directory {
                   let appInfo = OpoInterpreter.shared.getAppInfo(aifPath: applicationInfoFile.path)
             else {
                 self.url = url
-                self.appInfo = OpoInterpreter.AppInfo(caption: url.name, icons: [])
+                self.appInfo = OpoInterpreter.AppInfo(caption: url.name, uid3: 0, icons: [])
                 return
             }
             self.url = url
