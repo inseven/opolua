@@ -22,6 +22,26 @@ import UIKit
 
 extension UIImage {
 
+    static var epoc: UIImage = {
+        return UIImage(named: "Epoc")!
+    }()
+
+    static var unknownAppIcon: UIImage = {
+        return UIImage(named: "UnknownAppIcon")!
+    }()
+
+    static var oplIcon: UIImage = {
+        return UIImage(named: "OplIcon")!
+    }()
+
+    static var folderIcon: UIImage = {
+        return UIImage(named: "FolderIcon")!
+    }()
+
+    static var sisIcon: UIImage = {
+        return UIImage(named: "SisIcon")!
+    }()
+
     static func emptyImage(with size: CGSize) -> UIImage? {
         UIGraphicsBeginImageContext(size)
         let image = UIGraphicsGetImageFromCurrentImageContext()
@@ -35,6 +55,25 @@ extension UIImage {
             context.cgContext.setFillColor(color.cgColor)
             context.cgContext.fill(CGRect(origin: .zero, size: size))
         }
+    }
+
+    func scale(_ scale: CGFloat) -> UIImage? {
+        let size = CGSize(width: size.width * scale, height: size.height * scale)
+        UIGraphicsBeginImageContext(size)
+        defer {
+            UIGraphicsEndImageContext()
+        }
+        guard let context = UIGraphicsGetCurrentContext() else {
+            return nil
+        }
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: size.height);
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.draw(self.cgImage!, in: CGRect(origin: .zero, size: size))
+        guard let cgImage = context.makeImage() else {
+            return nil
+        }
+        return UIImage(cgImage: cgImage)
     }
 
 }

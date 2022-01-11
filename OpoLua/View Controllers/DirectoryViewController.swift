@@ -18,21 +18,116 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
 import UIKit
+import SwiftUI
 
 class DirectoryViewController : UIViewController {
+
+    class Cell: UICollectionViewCell {
+
+        lazy var imageView: UIImageView = {
+            let imageView = UIImageView()
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.backgroundColor = .clear
+            return imageView
+        }()
+
+        lazy var textLabel: UILabel = {
+            let label = UILabel()
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.font = UIFont.preferredFont(forTextStyle: .body)
+            label.adjustsFontForContentSizeCategory = true
+            return label
+        }()
+
+        lazy var detailTextLabel: UILabel = {
+            let label = UILabel()
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.textColor = .secondaryLabel
+            label.font = UIFont.preferredFont(forTextStyle: .footnote)
+            label.adjustsFontForContentSizeCategory = true
+            return label
+        }()
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            self.addSubview(imageView)
+            self.addSubview(textLabel)
+            self.addSubview(detailTextLabel)
+
+            let layoutGuide = UILayoutGuide()
+            addLayoutGuide(layoutGuide)
+
+            self.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+            NSLayoutConstraint.activate([
+
+                imageView.widthAnchor.constraint(equalToConstant: 48.0),
+                imageView.heightAnchor.constraint(equalToConstant: 48.0),
+
+                imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
+                textLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+                detailTextLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+
+                imageView.topAnchor.constraint(equalTo: topAnchor),
+                imageView.bottomAnchor.constraint(equalTo: textLabel.topAnchor, constant: -8.0),
+                textLabel.bottomAnchor.constraint(equalTo: detailTextLabel.topAnchor, constant: -2.0),
+                detailTextLabel.bottomAnchor.constraint(equalTo: layoutGuide.topAnchor),
+                layoutGuide.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+            ])
+        }
+
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+    }
+
+    static var cell = "Cell"
     
     var directory: Directory
     var items: [Directory.Item] = []
     var installer: Installer?
     var applicationActiveObserver: Any?
 
-    lazy var tableView: UITableView = {
-        let tableView = UITableView(frame: .zero, style: .plain)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.delegate = self
-        tableView.dataSource = self
-        return tableView
+    private func createLayout() -> UICollectionViewLayout {
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.33),
+                                             heightDimension: .fractionalHeight(1.0))
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                               heightDimension: .fractionalWidth(0.33))
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        let section = NSCollectionLayoutSection(group: group)
+        let layout = UICollectionViewCompositionalLayout(section: section)
+        return layout
+    }
+
+
+    lazy var wallpaperView: UIView = {
+        let image = UIImage.epoc
+        let pixelView = PixelView(image: image)
+        pixelView.translatesAutoresizingMaskIntoConstraints = false
+        pixelView.backgroundColor = .clear
+        let view = UIView(frame: .zero)
+        view.addSubview(pixelView)
+        NSLayoutConstraint.activate([
+            pixelView.widthAnchor.constraint(equalToConstant: image.size.width),
+            pixelView.heightAnchor.constraint(equalToConstant: image.size.height),
+            pixelView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            pixelView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+        return view
+    }()
+
+    lazy var collectionView: UICollectionView = {
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(Cell.self, forCellWithReuseIdentifier: Self.cell)
+        collectionView.alwaysBounceVertical = true
+        return collectionView
     }()
 
     lazy var searchController: UISearchController = {
@@ -45,14 +140,17 @@ class DirectoryViewController : UIViewController {
         self.directory = directory
         self.items = directory.items
         super.init(nibName: nil, bundle: nil)
-        view.addSubview(tableView)
+        view.backgroundColor = .systemBackground
+        view.addSubview(collectionView)
         NSLayoutConstraint.activate([
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+        collectionView.backgroundView = wallpaperView
         self.navigationItem.searchController = searchController
+        self.navigationItem.largeTitleDisplayMode = .never
         self.title = title ?? directory.name
     }
     
@@ -63,15 +161,13 @@ class DirectoryViewController : UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.isToolbarHidden = true
-        tableView.refreshControl = UIRefreshControl()
-        tableView.refreshControl?.addTarget(self, action: #selector(refresh(sender:)), for: .valueChanged)
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         applicationActiveObserver = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification,
-                                               object: nil,
-                                               queue: nil) { notification in
+                                                                           object: nil,
+                                                                           queue: nil) { notification in
             self.reload()
         }
     }
@@ -83,16 +179,11 @@ class DirectoryViewController : UIViewController {
         }
     }
 
-    @objc func refresh(sender: UIRefreshControl) {
-        reload()
-    }
-
     func reload() {
         do {
             directory = try Directory(url: directory.url)
             items = directory.items(filter: searchController.searchBar.text)
-            tableView.reloadData()
-            tableView.refreshControl?.endRefreshing()
+            collectionView.reloadData()
         } catch {
             present(error: error)
         }
@@ -111,11 +202,15 @@ class DirectoryViewController : UIViewController {
     }
 
     func actions(for configuration: Program.Configuration) -> [UIMenuElement] {
+        var actions: [UIMenuElement] = []
+
         let runAction = UIAction(title: "Run") { action in
             let program = Program(configuration: configuration)
             let viewController = ProgramViewController(program: program)
             self.navigationController?.pushViewController(viewController, animated: true)
         }
+        actions.append(runAction)
+
         let runAsActions = Device.allCases.map { device in
             UIAction(title: device.name) { action in
                 let program = Program(configuration: configuration, device: device)
@@ -124,70 +219,41 @@ class DirectoryViewController : UIViewController {
             }
         }
         let runAsMenu = UIMenu(title: "Run As...", children: runAsActions)
-        let procedureActions = configuration.procedures.map { procedure in
-            UIAction(title: procedure.name) { action in
-                let program = Program(configuration: configuration, procedureName: procedure.name)
-                let viewController = ProgramViewController(program: program)
-                self.navigationController?.pushViewController(viewController, animated: true)
-            }
-        }
-        let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
-        return [runAction, runAsMenu, procedureMenu]
+        actions.append(runAsMenu)
+
+        return actions
     }
 
 }
 
-extension DirectoryViewController: UITableViewDataSource {
+extension DirectoryViewController: UICollectionViewDataSource {
 
-    func numberOfSections(in tableView: UITableView) -> Int {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 1
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return items.count
     }
 
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Self.cell, for: indexPath) as! Cell
         let item = items[indexPath.row]
-        cell.textLabel?.text = item.name
-        cell.detailTextLabel?.text = item.type.localizedDescription
-        cell.accessoryType = .disclosureIndicator
-        switch item.type {
-        case .object:
-            cell.imageView?.image = UIImage(systemName: "applescript", withConfiguration: symbolConfiguration)
-        case .directory:
-            cell.imageView?.image = UIImage(named: "FolderIcon")
-        case .app:
-            cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
-        case .bundle(let application):
-            if let appIcon = application.appInfo.appIcon {
-                cell.imageView?.image = appIcon
-            } else {
-                cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
-            }
-        case .system(let application):
-            if let appIcon = application.appInfo.appIcon {
-                cell.imageView?.image = appIcon
-            } else {
-                cell.imageView?.image = UIImage(systemName: "app", withConfiguration: symbolConfiguration)
-            }
-        case .installer:
-            cell.imageView?.image = UIImage(named: "SisIcon")
-        }
+        cell.textLabel.text = item.name
+        cell.detailTextLabel.text = item.type.localizedDescription
+        cell.imageView.image = item.icon.scale(view.window?.screen.nativeScale ?? 1.0)
         return cell
     }
 
 }
 
-extension DirectoryViewController: UITableViewDelegate {
+extension DirectoryViewController: UICollectionViewDelegate {
 
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = items[indexPath.row]
         switch item.type {
         case .object, .app, .bundle, .system:
             guard let configuration = item.configuration else {
-                tableView.deselectRow(at: indexPath, animated: true)
                 return
             }
             let program = Program(configuration: configuration)
@@ -195,20 +261,38 @@ extension DirectoryViewController: UITableViewDelegate {
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
             pushDirectoryViewController(for: item.url)
-            tableView.deselectRow(at: indexPath, animated: true)
         case .installer:
             installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
             installer?.delegate = self
             installer?.run()
-            tableView.deselectRow(at: indexPath, animated: true)
         }
     }
 
-    func tableView(_ tableView: UITableView,
-                            contextMenuConfigurationForRowAt indexPath: IndexPath,
-                            point: CGPoint) -> UIContextMenuConfiguration? {
+    func collectionView(_ collectionView: UICollectionView,
+                        previewForHighlightingContextMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+        guard let item = configuration.identifier as? NSNumber,
+              let itemInt = item as? Int,
+              let cell = collectionView.cellForItem(at: IndexPath(item: itemInt, section: 0)) as? Cell else {
+            return nil
+        }
+        return UITargetedPreview(view: cell.imageView)
+    }
+
+    func collectionView(_ collectionView: UICollectionView,
+                        previewForDismissingContextMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+        guard let item = configuration.identifier as? NSNumber,
+              let itemInt = item as? Int,
+              let cell = collectionView.cellForItem(at: IndexPath(item: itemInt, section: 0)) as? Cell else {
+            return nil
+        }
+        return UITargetedPreview(view: cell.imageView)
+    }
+
+    func collectionView(_ collectionView: UICollectionView,
+                        contextMenuConfigurationForItemAt indexPath: IndexPath,
+                        point: CGPoint) -> UIContextMenuConfiguration? {
         let item = items[indexPath.row]
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+        return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
             let deleteActions = UIAction(title: "Delete", attributes: .destructive) { action in
                 do {
                     try FileManager.default.removeItem(at: item.url)
@@ -218,7 +302,21 @@ extension DirectoryViewController: UITableViewDelegate {
                 }
             }
             switch item.type {
-            case .object, .app:
+            case .object:
+                guard let configuration = item.configuration else {
+                    return nil
+                }
+                let actions = self.actions(for: configuration)
+                let procedureActions = configuration.procedures.map { procedure in
+                    UIAction(title: procedure.name) { action in
+                        let program = Program(configuration: configuration, procedureName: procedure.name)
+                        let viewController = ProgramViewController(program: program)
+                        self.navigationController?.pushViewController(viewController, animated: true)
+                    }
+                }
+                let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
+                return UIMenu(children: actions + [procedureMenu, deleteActions])
+            case .app:
                 guard let configuration = item.configuration else {
                     return nil
                 }
@@ -247,7 +345,7 @@ extension DirectoryViewController: UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
         items = directory.items(filter: searchController.searchBar.text)
-        tableView.reloadData()
+        collectionView.reloadData()
     }
 
 }
