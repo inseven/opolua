@@ -611,6 +611,18 @@ function SCREEN(w, h, x, y)
     screen.y = y
 end
 
+function CLS()
+    -- TODO this should honour SCREEN size
+    local prev = gIDENTITY()
+    gUSE(1)
+    local state = runtime:saveGraphicsState()
+    gAT(0, 0)
+    gFILL(gWIDTH(), gHEIGHT(), GraphicsMode.Clear)
+    runtime:restoreGraphicsState(state)
+    gUSE(prev)
+    runtime:flushGraphicsOps()
+end
+
 function KEY()
     local charcode = runtime:iohandler().key()
     return charcode

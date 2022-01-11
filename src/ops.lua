@@ -1342,7 +1342,7 @@ function Close(stack, runtime) -- 0xA1
 end
 
 function Cls(stack, runtime) -- 0xA2
-    error("Unimplemented opcode Cls!")
+    runtime:CLS()
 end
 
 function Copy(stack, runtime) -- 0xA4
