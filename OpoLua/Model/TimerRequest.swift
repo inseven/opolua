@@ -26,28 +26,23 @@ import Combine
  */
 class TimerRequest: Scheduler.Request {
 
-    private let interval: Double
-    private var cancellable: Cancellable?
+    private let interval: TimeInterval
+    private var workItem: DispatchWorkItem!
 
-    init(request: Async.Request) {
-        precondition(request.type == .sleep && request.intVal != nil)
-        self.interval = Double(request.intVal!) / 1000.0
-        super.init(requestHandle: request.requestHandle)
+    init(handle: Async.RequestHandle, after interval: TimeInterval) {
+        self.interval = interval
+        super.init(handle: handle)
+        self.workItem = DispatchWorkItem(block: {
+            self.scheduler?.complete(request: self, response: .completed)
+        })
     }
 
     override func start() {
-        self.cancellable = DispatchQueue.main.schedule(after: .init(.now() + interval),
-                interval: .init(integerLiteral: 1),
-                tolerance: .init(floatLiteral: 0.001),
-                options: nil) {
-            self.cancellable?.cancel() // Stop the timer firing again
-            self.cancellable = nil
-            self.scheduler?.complete(request: self, response: .completed)
-        }
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + interval, execute: workItem)
     }
 
     override func cancel() {
-        cancellable?.cancel()
+        workItem.cancel()
     }
 
 }

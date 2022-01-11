@@ -626,15 +626,33 @@ private func fsop(_ L: LuaState!) -> Int32 {
 private func asyncRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let name = L.tostring(1) else { return 0 }
-    guard let type = Async.RequestType(rawValue: name) else {
-        fatalError("Unhandled asyncRequest type \(name)")
-    }
     lua_settop(L, 2)
     lua_remove(L, 1) // Removes name, so requestTable is now at position 1
     lua_getfield(L, 1, "var") // Put var at 2 for compat with code below
 
-    L.push(type.rawValue)
+    L.push(name)
     lua_setfield(L, 1, "type") // requestTable.type = name
+
+    let type: Async.RequestType
+    switch name {
+    case "getevent":
+        type = .getevent
+    case "sleep":
+        guard let period = L.toint(1, key: "period") else {
+            print("Bad param to sleep asyncRequest")
+            return 0
+        }
+        let interval = Double(period) / 1000
+        type = .sleep(interval)
+    case "playsound":
+        guard let data = L.todata(1, key: "data") else {
+            print("Bad param to playsound asyncRequest")
+            return 0
+        }
+        type = .playsound(data)
+    default:
+        fatalError("Unhandled asyncRequest type \(name)")
+    }
 
     // Use registry ref to map swift int to statusVar
     // Then set registry[statusVar] = requestTable
@@ -649,21 +667,7 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
     lua_pushvalue(L, 1) // dup requestTable
     lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = requestTable
 
-    var data: Data? = nil
-    var intVal: Int? = nil
-    switch type {
-    case .getevent:
-        break
-    case .playsound:
-        data = L.todata(1, key: "data")
-    case .sleep:
-        guard let period = L.toint(1, key: "period") else {
-            print("Bad param to sleep asyncRequest")
-            return 0
-        }
-        intVal = period
-    }
-    let req = Async.Request(type: type, requestHandle: requestHandle, data: data, intVal: intVal)
+    let req = Async.Request(type: type, handle: requestHandle)
 
     iohandler.asyncRequest(req)
     return 0
@@ -1038,22 +1042,17 @@ class OpoInterpreter {
 
     func completeRequest(_ L: LuaState!, _ response: Async.Response) {
         lua_settop(L, 0)
-        var t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.requestHandle)) // 1: registry[requestHandle] -> statusVar
-        assert(t == LUA_TTABLE, "Failed to locate statusVar for requestHandle \(response.requestHandle)!")
+        var t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.handle)) // 1: registry[requestHandle] -> statusVar
+        assert(t == LUA_TTABLE, "Failed to locate statusVar for requestHandle \(response.handle)!")
         lua_pushvalue(L, 1) // 2: statusVar
         t = lua_gettable(L, LUA_REGISTRYINDEX) // 2: registry[statusVar] -> requestTable
-        assert(t == LUA_TTABLE, "Failed to locate requestTable for requestHandle \(response.requestHandle)!")
-
-        lua_getfield(L, 2, "type") // 3: requestTable["type"] -> type
-        guard let type = Async.RequestType(rawValue: L.tostring(-1) ?? "") else {
-            fatalError("Failed to get type from requestTable!")
-        }
-        L.pop() // type
+        assert(t == LUA_TTABLE, "Failed to locate requestTable for requestHandle \(response.handle)!")
 
         // Deal with writing any result data
 
+        let type = L.tostring(2, key: "type") ?? ""
         switch type {
-        case .getevent:
+        case "getevent":
             var ev = Array<Int>(repeating: 0, count: 16)
             switch (response.value) {
             case .keypressevent(let event):
@@ -1092,7 +1091,7 @@ class OpoInterpreter {
             L.push(ev) // ev as a table
             L.push(1) // DataTypes.ELong
             lua_call(L, 3, 0)
-        case .playsound, .sleep:
+        default:
             break // No data for these
         }
 
@@ -1115,7 +1114,7 @@ class OpoInterpreter {
         lua_settop(L, 1) // 1: statusVar
         lua_pushnil(L)
         lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = nil
-        luaL_unref(L, LUA_REGISTRYINDEX, response.requestHandle) // registry[requestHandle] = nil
+        luaL_unref(L, LUA_REGISTRYINDEX, response.handle) // registry[requestHandle] = nil
     }
 
     func installSisFile(path: String) -> Result {

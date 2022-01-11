@@ -26,12 +26,12 @@ class Scheduler {
     /// Base class for all asynchronous tasks managed by the Scheduler.
     // TODO: Make this a protocol.
     class Request {
-        let requestHandle: Int32
+        let handle: Async.RequestHandle
         fileprivate(set) weak var scheduler: Scheduler?
         fileprivate var response: Async.ResponseValue?
 
-        init(requestHandle: Int32) {
-            self.requestHandle = requestHandle
+        init(handle: Async.RequestHandle) {
+            self.handle = handle
             response = nil
         }
 
@@ -77,11 +77,11 @@ class Scheduler {
         lock.broadcast()
     }
 
-    func cancelRequest(_ requestHandle: Int32) {
+    func cancelRequest(_ handle: Async.RequestHandle) {
         // Note, it's not an error if the request has already been completed or
         // even already gone from requests.
         lock.lock()
-        if let req = requests.first(where: { $0.requestHandle == requestHandle }) {
+        if let req = requests.first(where: { $0.handle == handle }) {
             if req.response == nil {
                 req.cancel()
                 completeLocked(request: req, response: .cancelled)
@@ -97,7 +97,7 @@ class Scheduler {
         if let idx = requests.firstIndex(where: { $0.response != nil }) {
             let req = requests.remove(at: idx)
             req.scheduler = nil
-            let response = Async.Response(requestHandle: req.requestHandle, value: req.response!)
+            let response = Async.Response(handle: req.handle, value: req.response!)
             return response
         } else {
             return nil

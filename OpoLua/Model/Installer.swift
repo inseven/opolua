@@ -77,8 +77,8 @@ extension Installer: OpoIoHandler {
     }
 
     func asyncRequest(_ request: Async.Request) {}
-    func cancelRequest(_ requestHandle: Int32) {}
-    func waitForAnyRequest() -> Async.Response { return .init(requestHandle: 0, value: .cancelled) }
+    func cancelRequest(_ requestHandle: Async.RequestHandle) {}
+    func waitForAnyRequest() -> Async.Response { return .init(handle: 0, value: .cancelled) }
     func anyRequest() -> Async.Response? { return nil }
     func testEvent() -> Bool { return false }
     func key() -> OplKeyCode? { return nil }

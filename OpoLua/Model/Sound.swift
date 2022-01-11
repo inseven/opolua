@@ -26,10 +26,9 @@ class PlaySoundRequest: Scheduler.Request {
 
     private let data: Data
 
-    init(request: Async.Request) {
-        precondition(request.type == .playsound && request.data != nil)  // TODO: 🤢
-        self.data = request.data!
-        super.init(requestHandle: request.requestHandle)
+    init(handle: Async.RequestHandle, data: Data) {
+        self.data = data
+        super.init(handle: handle)
     }
 
     override func start() {

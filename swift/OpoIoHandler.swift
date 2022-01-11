@@ -427,16 +427,15 @@ enum Modifier: Int, FlagEnum {
 typealias Modifiers = Set<Modifier>
 
 struct Async {
-    enum RequestType: String {
+    enum RequestType {
         case getevent
-        case playsound
-        case sleep
+        case playsound(Data)
+        case sleep(TimeInterval)
     }
+    typealias RequestHandle = Int32
     struct Request {
         let type: RequestType
-        let requestHandle: Int32
-        let data: Data? // For playsound
-        let intVal: Int? // For sleep. Ugh need a neater way to pass parameters to async requests...
+        let handle: RequestHandle
     }
     struct KeyPressEvent {
         let timestamp: Int // Microseconds since boot, or something
@@ -474,7 +473,7 @@ struct Async {
         case penevent(PenEvent)
     }
     struct Response {
-        let requestHandle: Int32
+        let handle: RequestHandle
         let value: ResponseValue
     }
 }
@@ -529,7 +528,7 @@ protocol OpoIoHandler {
     func fsop(_ op: Fs.Operation) -> Fs.Result
 
     func asyncRequest(_ request: Async.Request)
-    func cancelRequest( _ requestHandle: Int32)
+    func cancelRequest( _ requestHandle: Async.RequestHandle)
     func waitForAnyRequest() -> Async.Response
     func anyRequest() -> Async.Response?
 
@@ -587,7 +586,7 @@ class DummyIoHandler : OpoIoHandler {
     func asyncRequest(_ request: Async.Request) {
     }
 
-    func cancelRequest(_ requestHandle: Int32) {
+    func cancelRequest(_ requestHandle: Async.RequestHandle) {
     }
 
     func waitForAnyRequest() -> Async.Response {

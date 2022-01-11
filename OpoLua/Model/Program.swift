@@ -66,9 +66,9 @@ class Program {
     class GetEventRequest: Scheduler.Request {
         weak var program: Program?
 
-        init(requestHandle: Int32, program: Program) {
+        init(handle: Async.RequestHandle, program: Program) {
             self.program = program
-            super.init(requestHandle: requestHandle)
+            super.init(handle: handle)
         }
 
         override func cancel() {
@@ -267,25 +267,25 @@ extension Program: OpoIoHandler {
     func asyncRequest(_ request: Async.Request) {
         switch request.type {
         case .getevent:
-            let req = GetEventRequest(requestHandle: request.requestHandle, program: self)
+            let req = GetEventRequest(handle: request.handle, program: self)
             scheduler.addPendingRequest(req)
             if let event = eventQueue.first() {
                 scheduler.complete(request: req, response: event)
             } else {
                 req.start()
             }
-        case .sleep:
-            let req = TimerRequest(request: request)
+        case .sleep(let interval):
+            let req = TimerRequest(handle: request.handle, after: interval)
             scheduler.addPendingRequest(req)
             req.start()
-        case .playsound:
-            let req = PlaySoundRequest(request: request)
+        case .playsound(let data):
+            let req = PlaySoundRequest(handle: request.handle, data: data)
             scheduler.addPendingRequest(req)
             req.start()
         }
     }
 
-    func cancelRequest(_ requestHandle: Int32) {
+    func cancelRequest(_ requestHandle: Async.RequestHandle) {
         scheduler.cancelRequest(requestHandle)
     }
 
