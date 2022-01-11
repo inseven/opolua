@@ -26,11 +26,23 @@ import Combine
  */
 class TimerRequest: Scheduler.Request {
 
-    private let interval: TimeInterval
+    private enum TimerType {
+        case interval(TimeInterval)
+        case date(Date)
+    }
+    private let type: TimerType
     private var workItem: DispatchWorkItem!
 
     init(handle: Async.RequestHandle, after interval: TimeInterval) {
-        self.interval = interval
+        self.type = .interval(interval)
+        super.init(handle: handle)
+        self.workItem = DispatchWorkItem(block: {
+            self.scheduler?.complete(request: self, response: .completed)
+        })
+    }
+
+    init(handle: Async.RequestHandle, at date: Date) {
+        self.type = .date(date)
         super.init(handle: handle)
         self.workItem = DispatchWorkItem(block: {
             self.scheduler?.complete(request: self, response: .completed)
@@ -38,7 +50,14 @@ class TimerRequest: Scheduler.Request {
     }
 
     override func start() {
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + interval, execute: workItem)
+        switch type {
+        case .interval(let interval):
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + interval, execute: workItem)
+        case .date(let date):
+            // No better way to get a DispatchWallTime from a Date? It probably doesn't matter for our purposes...
+            let delta = date.timeIntervalSince(Date.now)
+            DispatchQueue.main.asyncAfter(wallDeadline: DispatchWallTime.now() + delta, execute: workItem)
+        }
     }
 
     override func cancel() {

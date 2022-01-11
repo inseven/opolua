@@ -630,7 +630,8 @@ private func fsop(_ L: LuaState!) -> Int32 {
 
 // asyncRequest(requestName, requestTable)
 // asyncRequest("getevent", { var = ..., ev = ... })
-// asyncRequest("sleep", { var = ..., interval = ... })
+// asyncRequest("after", { var = ..., period = ... })
+// asyncRequest("at", { var = ..., time = ...})
 // asyncRequest("playsound", { var = ..., data = ... })
 private func asyncRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
@@ -646,13 +647,20 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
     switch name {
     case "getevent":
         type = .getevent
-    case "sleep":
+    case "after":
         guard let period = L.toint(1, key: "period") else {
-            print("Bad param to sleep asyncRequest")
+            print("Bad param to after asyncRequest")
             return 0
         }
         let interval = Double(period) / 1000
-        type = .sleep(interval)
+        type = .after(interval)
+    case "at":
+        guard let time = L.toint(1, key: "time") else {
+            print("Bad param to at asyncRequest")
+            return 0
+        }
+        let date = Date(timeIntervalSince1970: Double(time))
+        type = .at(date)
     case "playsound":
         guard let data = L.todata(1, key: "data") else {
             print("Bad param to playsound asyncRequest")

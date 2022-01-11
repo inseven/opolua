@@ -675,6 +675,12 @@ function MKDIR(path)
 end
 
 function IOOPEN(path, mode)
+    if path == "TIM:" then
+        local f = runtime:newFileHandle()
+        f.timer = true
+        return f.h
+    end
+
     path = runtime:abs(path)
     local openMode = mode & IoOpenMode.OpenModeMask
     -- printf("IOOPEN %s mode=%d\n", path, mode)
@@ -721,6 +727,7 @@ function IOREAD(h, maxLen)
     if not f then
         return nil, KOplErrInvalidArgs
     end
+    assert(f.pos, "Cannot IOREAD a non-file handle!")
 
     if f.mode & IoOpenMode.TextFlag > 0 then
         local startPos, endPos = f.data:find("\r?\n", f.pos)
@@ -750,6 +757,7 @@ function IOWRITE(h, data)
     end
     -- What's the right actual error code for this? KOplErrWrite? KOplErrReadOnly? KOplErrAccess?
     assert(f.mode & IoOpenMode.WriteFlag > 0, "Cannot write to a readonly file handle!")
+    assert(f.pos, "Cannot IOWRITE a non-file handle!")
     -- Not the most efficient operation, oh well
     f.data = f.data:sub(1, f.pos - 1)..data..f.data:sub(f.pos + #data)
 
@@ -766,6 +774,7 @@ function IOSEEK(h, mode, offset)
         printf("Invalid handle to IOSEEK!\n")
         return KOplErrInvalidArgs
     end
+    assert(f.pos, "Cannot IOSEEK a non-file handle!")
     local newPos
     if mode == 1 then
         newPos = 1 + offset
@@ -791,14 +800,55 @@ function IOCLOSE(h)
     local err = KErrNone
     local f = runtime:getFile(h)
     if f then
-        if f.mode & IoOpenMode.WriteFlag > 0 then
+        if f.pos and f.mode & IoOpenMode.WriteFlag > 0 then
             err = runtime:iohandler().fsop("write", f.path, f.data)
+        end
+        if f.timer and f.stat and f.stat:isPending() then
+            runtime:iohandler().cancelRequest(f.stat)
+            -- OPL doesn't worry about consuming the signal here, so we won't either
         end
         runtime:closeFile(h)
     else
         err = KOplErrInvalidArgs
     end
     return err
+end
+
+local KFnTimerRelative = 1
+local KFnTimerAbsolute = 2
+
+function IOA(h, fn, stat, a, b)
+    local f = runtime:getFile(h)
+    if not f or not f.timer then
+        return KOplErrInvalidArgs
+    end
+    
+    if f.timer then
+        assert(f.stat == nil or not f.stat:isPending(), "Cannot have 2 outstanding timer requests at once!")
+        if fn == KFnTimerRelative then
+            -- relative timer period is 1/10 second, and period should be in ms
+            local period = a() * 100
+            stat(KOplErrFilePending)
+            runtime:iohandler().asyncRequest("after", { var = stat, period = period })
+            f.stat = stat
+        elseif fn == KFnTimerAbsolute then
+            -- a is time in seconds since epoch
+            stat(KOplErrFilePending)
+            runtime:iohandler().asyncRequest("at", { var = stat, time = a() })
+        else
+            error("Unknown IOA timer operation")
+        end
+    else
+        error("Unknown IOA operation")
+    end
+    return 0
+end
+
+function IOC(h, fn, stat, a, b)
+    local err = IOA(h, fn, stat, a, b)
+    if err ~= 0 then
+        stat(err)
+    end
 end
 
 return _ENV

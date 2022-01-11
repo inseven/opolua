@@ -317,7 +317,13 @@ function Get(stack, runtime) -- 0x0A
 end
 
 function Ioa(stack, runtime) -- 0x0B
-    error("Unimplemented function Ioa!")
+    local b = stack:pop() -- TODO this should be a dereference? Or both should be AddrSlice reads?
+    local a = stack:pop():dereference()
+    local stat = stack:pop():dereference()
+    local fn = stack:pop()
+    local h = stack:pop()
+    local err = runtime:IOA(h, fn, stat, a, b)
+    stack:push(err)
 end
 
 function Iow(stack, runtime) -- 0x0C
@@ -727,8 +733,22 @@ function LenAlloc(stack, runtime) -- 0x4E
 end
 
 function Ioc(stack, runtime) -- 0x4F
-    error("Unimplemented function Ioc!")
+    local numParams = runtime:IP8()
+    local a, b
+    if numParams >= 5 then
+        b = stack:pop() -- TODO: See comment in Ioa
+    end
+    if numParams >= 4 then
+        a = stack:pop():dereference()
+    end
+    local stat = stack:pop():dereference()
+    local fn = stack:pop()
+    local h = stack:pop()
+    runtime:IOC(h, fn, stat, a, b)
+    stack:push(0)
 end
+
+Ioc_dump = numParams_dump
 
 function Uadd(stack, runtime) -- 0x50
     local right = stack:pop()

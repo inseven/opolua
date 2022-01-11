@@ -274,8 +274,12 @@ extension Program: OpoIoHandler {
             } else {
                 req.start()
             }
-        case .sleep(let interval):
+        case .after(let interval):
             let req = TimerRequest(handle: request.handle, after: interval)
+            scheduler.addPendingRequest(req)
+            req.start()
+        case .at(let date):
+            let req = TimerRequest(handle: request.handle, at: date)
             scheduler.addPendingRequest(req)
             req.start()
         case .playsound(let data):

@@ -437,7 +437,8 @@ struct Async {
     enum RequestType {
         case getevent
         case playsound(Data)
-        case sleep(TimeInterval)
+        case after(TimeInterval)
+        case at(Date)
     }
     typealias RequestHandle = Int32
     struct Request {

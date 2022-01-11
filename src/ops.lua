@@ -1521,7 +1521,7 @@ function Pause(stack, runtime) -- 0xB5
     local period = val * 50 -- now in ms
     local sleepVar = runtime:makeTemporaryVar(DataTypes.EWord)
     sleepVar(KOplErrFilePending)
-    runtime:iohandler().asyncRequest("sleep", { var = sleepVar, period = period })
+    runtime:iohandler().asyncRequest("after", { var = sleepVar, period = period })
     -- TODO also return if there's a key event...
     runtime:waitForRequest(sleepVar)
 end
