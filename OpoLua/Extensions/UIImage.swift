@@ -49,14 +49,6 @@ extension UIImage {
         return image
     }
 
-    static func image(color: UIColor, size: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { context in
-            context.cgContext.setFillColor(color.cgColor)
-            context.cgContext.fill(CGRect(origin: .zero, size: size))
-        }
-    }
-
     func scale(_ scale: CGFloat) -> UIImage? {
         let size = CGSize(width: size.width * scale, height: size.height * scale)
         UIGraphicsBeginImageContext(size)
