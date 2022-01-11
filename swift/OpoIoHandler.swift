@@ -397,9 +397,15 @@ struct Fs {
             case read // return none, notFound, notReady
             case dir // return .strings(paths)
             case rename(String) // return none, notFound, notReady, alreadyExists
+            case stat
         }
         let path: String
         let type: OpType
+    }
+
+    struct Stat {
+        let size: UInt64
+        let lastModified: Date
     }
 
     enum Err: Int {
@@ -414,6 +420,7 @@ struct Fs {
     enum Result {
         case err(Err)
         case data(Data)
+        case stat(Stat)
         case strings([String])
     }
 }

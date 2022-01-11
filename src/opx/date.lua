@@ -70,8 +70,31 @@ local function popTimeFromStack(stack)
     return t
 end
 
+function setDate(handle, val)
+    assert(handles[handle], "Bad date/time handle!")
+    handles[handle] = val
+end
+
 function DTNewDateTime(stack, runtime) -- 1
-    error("Unimplemented date.opx function DTNewDateTime!")
+    local micro = stack:pop()
+    local sec = stack:pop()
+    local min = stack:pop()
+    local hour = stack:pop()
+    local day = stack:pop()
+    local month = stack:pop()
+    local year = stack:pop()
+    local tt = {
+        year = year,
+        month = month,
+        day = day,
+        hour = hour,
+        min = min,
+        sec = sec
+    }
+    local t = os.time(tt) + (micro / 1000000)
+    local h = #handles + 1
+    handles[h] = t
+    stack:push(h)
 end
 
 function DTDeleteDateTime(stack, runtime) -- 2

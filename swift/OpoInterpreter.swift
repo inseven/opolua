@@ -561,6 +561,8 @@ private func fsop(_ L: LuaState!) -> Int32 {
     switch cmd {
     case "exists":
         op = .exists
+    case "stat":
+        op = .stat
     case "isdir":
         op = .isdir
     case "delete":
@@ -598,7 +600,7 @@ private func fsop(_ L: LuaState!) -> Int32 {
         if err != .none {
             print("Error \(err) for cmd \(op) path \(path)")
         }
-        if cmd == "read" || cmd == "dir" {
+        if cmd == "read" || cmd == "dir" || cmd == "stat" {
             L.pushnil()
             L.push(err.rawValue)
             return 2
@@ -615,6 +617,13 @@ private func fsop(_ L: LuaState!) -> Int32 {
             L.push(string)
             lua_rawseti(L, -2, lua_Integer(i + 1))
         }
+        return 1
+    case .stat(let stat):
+        lua_newtable(L)
+        L.push(stat.size)
+        lua_setfield(L, -2, "size")
+        L.push(stat.lastModified.timeIntervalSince1970)
+        lua_setfield(L, -2, "lastModified")
         return 1
     }
 }

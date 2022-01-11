@@ -213,7 +213,15 @@ function MediaType(stack, runtime) -- 26
 end
 
 function GetFileTime(stack, runtime) -- 27
-    error("Unimplemented system.opx function GetFileTime!")
+    local dateh = stack:pop()
+    local path = stack:pop()
+    local stat, err = runtime:iohandler().fsop("stat", path)
+    if stat then
+        require("opx.date").setDate(dateh, stat.lastModified)
+        stack:push(0)
+    else
+        error(err)
+    end
 end
 
 function SetFileTime(stack, runtime) -- 28

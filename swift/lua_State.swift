@@ -273,8 +273,16 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         lua_pushinteger(self, lua_Integer(int))
     }
 
-    func push(_ int: lua_Integer) {
+    func push(_ int: Int64) {
         lua_pushinteger(self, int)
+    }
+
+    func push(_ int: UInt64) {
+        if int < 0x8000000000000000 {
+            lua_pushinteger(self, lua_Integer(int))
+        } else {
+            lua_pushnumber(self, Double(int))
+        }
     }
 
     func push(_ double: Double) {
