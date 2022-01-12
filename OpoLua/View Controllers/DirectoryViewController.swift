@@ -134,11 +134,36 @@ class DirectoryViewController : UIViewController {
         searchController.searchResultsUpdater = self
         return searchController
     }()
+
+    lazy var menuBarButtonItem: UIBarButtonItem = {
+        let newFolderAction = UIAction(title: "New Folder", image: UIImage(systemName: "folder.badge.plus")) { action in
+            let alertController = UIAlertController(title: "New Folder", message: nil, preferredStyle: .alert)
+            alertController.addTextField { textField in
+                textField.placeholder = "Name"
+            }
+            alertController.addAction(UIAlertAction(title: "OK", style: .default) { [unowned self, alertController] _ in
+                do {
+                    try self.directory.createDirectory(name: alertController.textFields![0].text!)
+                } catch {
+                    self.present(error: error)
+                }
+            })
+            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            self.present(alertController, animated: true)
+        }
+        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [newFolderAction])
+        let menuBarButtonItem = UIBarButtonItem(title: nil,
+                                                image: UIImage(systemName: "ellipsis.circle"),
+                                                primaryAction: nil,
+                                                menu: menu)
+        return menuBarButtonItem
+    }()
     
     init(directory: Directory, title: String? = nil) {
         self.directory = directory
         self.items = directory.items
         super.init(nibName: nil, bundle: nil)
+        self.directory.delegate = self
         view.backgroundColor = .systemBackground
         view.addSubview(collectionView)
         NSLayoutConstraint.activate([
@@ -148,9 +173,10 @@ class DirectoryViewController : UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
         collectionView.backgroundView = wallpaperView
+        self.title = title ?? directory.name
         self.navigationItem.searchController = searchController
         self.navigationItem.largeTitleDisplayMode = .never
-        self.title = title ?? directory.name
+        self.navigationItem.rightBarButtonItem = menuBarButtonItem
     }
     
     required init?(coder: NSCoder) {
@@ -180,9 +206,7 @@ class DirectoryViewController : UIViewController {
 
     func reload() {
         do {
-            directory = try Directory(url: directory.url)
-            items = directory.items(filter: searchController.searchBar.text)
-            collectionView.reloadData()
+            try directory.refresh()
         } catch {
             present(error: error)
         }
@@ -343,6 +367,15 @@ extension DirectoryViewController: UICollectionViewDelegate {
 extension DirectoryViewController: UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
+        items = directory.items(filter: searchController.searchBar.text)
+        collectionView.reloadData()
+    }
+
+}
+
+extension DirectoryViewController: DirectoryDelegate {
+
+    func directoryDidChange(_ directory: Directory) {
         items = directory.items(filter: searchController.searchBar.text)
         collectionView.reloadData()
     }

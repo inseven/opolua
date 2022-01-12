@@ -21,6 +21,12 @@
 import Foundation
 import UIKit
 
+protocol DirectoryDelegate: AnyObject {
+
+    func directoryDidChange(_ directory: Directory)
+
+}
+
 class Directory {
 
     struct Application {
@@ -183,7 +189,9 @@ class Directory {
     }
 
     let url: URL
-    let items: [Item]
+    var items: [Item] = []
+
+    weak var delegate: DirectoryDelegate?
 
     var name: String {
         return url.name
@@ -191,6 +199,21 @@ class Directory {
     
     init(url: URL) throws {
         self.url = url
+        try self.refresh()
+    }
+
+    func items(filter: String?) -> [Item] {
+        return items.filter { item in
+            guard let filter = filter,
+                  !filter.isEmpty
+            else {
+                return true
+            }
+            return item.name.localizedCaseInsensitiveContains(filter)
+        }
+    }
+
+    func refresh() throws {
         items = try url.contents
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
@@ -214,17 +237,13 @@ class Directory {
                 }
             }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
+        delegate?.directoryDidChange(self)
     }
 
-    func items(filter: String?) -> [Item] {
-        return items.filter { item in
-            guard let filter = filter,
-                  !filter.isEmpty
-            else {
-                return true
-            }
-            return item.name.localizedCaseInsensitiveContains(filter)
-        }
+    func createDirectory(name: String) throws {
+        try FileManager.default.createDirectory(at: url.appendingPathComponent(name),
+                                                withIntermediateDirectories: false)
+        try refresh()
     }
     
 }
