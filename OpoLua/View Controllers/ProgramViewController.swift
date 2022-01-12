@@ -123,6 +123,7 @@ class ProgramViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.isToolbarHidden = false
+        windowServer.canvasView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -134,6 +135,25 @@ class ProgramViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         virtualController?.disconnect()
+    }
+
+    override func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
+        UIView.animate(withDuration: duration) {
+            self.windowServer.canvasView.transform = self.transformForInterfaceOrientation(toInterfaceOrientation)
+        }
+    }
+
+    func transformForInterfaceOrientation(_ interfaceOrientation: UIInterfaceOrientation) -> CGAffineTransform {
+        switch interfaceOrientation {
+        case .portrait, .portraitUpsideDown:
+            return CGAffineTransform(rotationAngle:  -.pi / 2)
+        case .landscapeLeft, .landscapeRight:
+            return CGAffineTransform(rotationAngle:  0)
+        case .unknown:
+            return CGAffineTransform(rotationAngle:  0)
+        @unknown default:
+            return CGAffineTransform(rotationAngle:  0)
+        }
     }
 
     func observeMenuDismiss() {
