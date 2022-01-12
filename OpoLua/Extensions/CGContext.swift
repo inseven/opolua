@@ -129,7 +129,7 @@ extension CGContext {
         case .text(let str, let font):
             let pt = operation.origin.cgPoint()
             if let font = font.toBitmapFont() {
-                let renderer = BitmapFontRenderer(font: font)
+                let renderer = BitmapFontCache.shared.getRenderer(font: font)
                 var x = operation.origin.x
                 var y = operation.origin.y
                 for ch in str {

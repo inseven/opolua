@@ -31,7 +31,7 @@ class WindowServer {
 
     static func textSize(string: String, fontInfo: Graphics.FontInfo) -> TextDetails {
         if let font = fontInfo.toBitmapFont() {
-            let renderer = BitmapFontRenderer(font: font)
+            let renderer = BitmapFontCache.shared.getRenderer(font: font)
             let (w, h) = renderer.getTextSize(string)
             return TextDetails(size: Graphics.Size(width: w, height: h), ascent: font.ascent)
         } else {

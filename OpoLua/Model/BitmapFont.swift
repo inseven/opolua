@@ -152,3 +152,18 @@ class BitmapFontRenderer {
         }
     }
 }
+
+class BitmapFontCache {
+    static var shared = BitmapFontCache()
+    private var cache: [String : BitmapFontRenderer] = [:] // Map of bitmapName key to BitmapFontRenderer
+
+    func getRenderer(font: BitmapFontInfo, simulateBold: Bool = false) -> BitmapFontRenderer {
+        if let result = cache[font.bitmapName] {
+            return result
+        } else {
+            let result = BitmapFontRenderer(font: font)
+            cache[font.bitmapName] = result
+            return result
+        }
+    }
+}
