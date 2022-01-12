@@ -245,5 +245,10 @@ class Directory {
                                                 withIntermediateDirectories: false)
         try refresh()
     }
+
+    func delete(_ item: Item) throws {
+        try FileManager.default.removeItem(at: item.url)
+        try refresh()
+    }
     
 }

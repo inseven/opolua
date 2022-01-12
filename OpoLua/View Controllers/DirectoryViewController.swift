@@ -136,20 +136,9 @@ class DirectoryViewController : UIViewController {
     }()
 
     lazy var menuBarButtonItem: UIBarButtonItem = {
-        let newFolderAction = UIAction(title: "New Folder", image: UIImage(systemName: "folder.badge.plus")) { action in
-            let alertController = UIAlertController(title: "New Folder", message: nil, preferredStyle: .alert)
-            alertController.addTextField { textField in
-                textField.placeholder = "Name"
-            }
-            alertController.addAction(UIAlertAction(title: "OK", style: .default) { [unowned self, alertController] _ in
-                do {
-                    try self.directory.createDirectory(name: alertController.textFields![0].text!)
-                } catch {
-                    self.present(error: error)
-                }
-            })
-            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-            self.present(alertController, animated: true)
+        let newFolderAction = UIAction(title: "New Folder",
+                                       image: UIImage(systemName: "folder.badge.plus")) { [unowned self] action in
+            self.createDirectory()
         }
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [newFolderAction])
         let menuBarButtonItem = UIBarButtonItem(title: nil,
@@ -202,6 +191,35 @@ class DirectoryViewController : UIViewController {
         if let observer = applicationActiveObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+    }
+
+    func createDirectory() {
+        let alertController = UIAlertController(title: "New Folder", message: nil, preferredStyle: .alert)
+        alertController.addTextField { textField in
+            textField.placeholder = "Name"
+        }
+        alertController.addAction(UIAlertAction(title: "OK", style: .default) { [unowned self, alertController] _ in
+            do {
+                try self.directory.createDirectory(name: alertController.textFields![0].text!)
+            } catch {
+                self.present(error: error)
+            }
+        })
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        self.present(alertController, animated: true)
+    }
+
+    func delete(item: Directory.Item) {
+        let alertController = UIAlertController(title: "Delete '\(item.name)'?", message: nil, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "Delete", style: .destructive) { action in
+            do {
+                try self.directory.delete(item)
+            } catch {
+                self.present(error: error)
+            }
+        })
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        self.present(alertController, animated: true)
     }
 
     func reload() {
@@ -316,14 +334,12 @@ extension DirectoryViewController: UICollectionViewDelegate {
                         point: CGPoint) -> UIContextMenuConfiguration? {
         let item = items[indexPath.row]
         return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
-            let deleteActions = UIAction(title: "Delete", attributes: .destructive) { action in
-                do {
-                    try FileManager.default.removeItem(at: item.url)
-                    self.reload()
-                } catch {
-                    self.present(error: error)
-                }
+            let deleteAction = UIAction(title: "Delete",
+                                         image: UIImage(systemName: "trash"),
+                                         attributes: .destructive) { action in
+                self.delete(item: item)
             }
+            let fileMenu = UIMenu(options: [.displayInline], children: [deleteAction])
             switch item.type {
             case .object:
                 guard let configuration = item.configuration else {
@@ -338,13 +354,13 @@ extension DirectoryViewController: UICollectionViewDelegate {
                     }
                 }
                 let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
-                return UIMenu(children: actions + [procedureMenu, deleteActions])
+                return UIMenu(children: actions + [procedureMenu, fileMenu])
             case .app:
                 guard let configuration = item.configuration else {
                     return nil
                 }
                 let actions = self.actions(for: configuration)
-                return UIMenu(children: actions + [deleteActions])
+                return UIMenu(children: actions + [fileMenu])
             case .bundle, .system:
                 guard let configuration = item.configuration else {
                     return nil
@@ -353,11 +369,11 @@ extension DirectoryViewController: UICollectionViewDelegate {
                     self.pushDirectoryViewController(for: item.url)
                 }
                 let actions = self.actions(for: configuration)
-                return UIMenu(children: actions + [contentsAction, deleteActions])
+                return UIMenu(children: actions + [contentsAction, fileMenu])
             case .directory:
-                return UIMenu(children: [deleteActions])
+                return UIMenu(children: [fileMenu])
             case .installer:
-                return UIMenu(children: [deleteActions])
+                return UIMenu(children: [fileMenu])
             }
         }
     }
