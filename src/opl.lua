@@ -85,7 +85,7 @@ function gVISIBLE(show)
 end
 
 function gFONT(id)
-    local font = FontIds[id]
+    local font = FontIds[FontAliases[id] or id]
     if not font then
         printf("No font found for 0x%08X\n", id)
         error(KOplErrFontNotLoaded)
@@ -133,9 +133,13 @@ end
 -- Only support a single arg since we can't express the difference between comma and semicolon separators
 function gPRINT(val)
     local str = tostring(val)
-    runtime:drawCmd("text", { string = str })
     local context = runtime:getGraphicsContext()
-    local w, h = runtime:iohandler().graphicsop("textsize", str, context.font)
+    local w, h, ascent = runtime:iohandler().graphicsop("textsize", str, context.font)
+    -- gPRINT and friends have this nonsense about text coords being relative to
+    -- the baseline rather than the top left or bottom left corners; all our
+    -- native operations assume text coords are for the top-left of the text.
+    -- Since we always have to ask about the text size anyway, fix it up here.
+    runtime:drawCmd("text", { string = str, y = context.pos.y - ascent })
     context.pos.x = context.pos.x + w
 end
 
@@ -167,7 +171,7 @@ function gPRINTB(text, width, align, top, bottom, margin)
 
     runtime:drawCmd("text", {
         x = textX,
-        y = context.pos.y - fontAscent + texth,
+        y = context.pos.y - fontAscent,
         mode = GraphicsMode.Set,
         string = text,
     })
@@ -307,9 +311,9 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         textX = textX + bmpWidth + 1
     end
 
-    gAT(textX, s.pos.y + ((height + texth) // 2) + state)
+    local textY = s.pos.y + ((height - texth) // 2) + state
     black()
-    gPRINT(text)
+    runtime:drawCmd("text", { string = text, x = textX, y = textY })
 
     runtime:restoreGraphicsState(s) -- also restores gUPDATE state
 end
@@ -500,12 +504,14 @@ local function drawInfoPrint(drawable, text, corner)
     gUSE(1)
     local screenWidth = gWIDTH()
     local screenHeight = gHEIGHT()
-    local winHeight = 23
+    local winHeight = 23 -- 15 plus 4 pixels top and bottom
     gUSE(drawable)
+    gFONT(KFontArialNormal15)
 
     local cornerInset = 5
     local inset = 6
-    local textWidth = gTWIDTH(text)
+    local font = runtime:getGraphicsContext().font
+    local textWidth, textHeight, ascent = runtime:iohandler().graphicsop("textsize", text, font)
     local w = math.min(screenWidth - 2 * cornerInset, textWidth + inset * 2)
     local actualTextWidth = w - 2 * inset
 
@@ -535,9 +541,9 @@ local function drawInfoPrint(drawable, text, corner)
     gFILL(w, winHeight)
     gXBORDER(2, 0x94)
     gCOLOR(255, 255, 255)
-    gAT(inset, 20)
+    gAT(inset, 4 + ascent)
     gPRINTCLIP(text, w - 2 * inset)
-    return { x = inset, y = inset, w = actualTextWidth, h = 15 }
+    return { x = inset, y = gY() - ascent, w = actualTextWidth, h = textHeight }
 end
 
 function gIPRINT(text, corner)
@@ -549,7 +555,6 @@ function gIPRINT(text, corner)
     local infoWinId = runtime:getResource("infowin")
     if not infoWinId then
         infoWinId = gCREATE(0, 0, 1, 1, false)
-        gFONT(KFontArialNormal15)
         runtime:setResource("infowin", infoWinId)
     end
     drawInfoPrint(infoWinId, text, corner or 3)
@@ -571,7 +576,6 @@ function BUSY(text, corner, delay)
 
     local state = runtime:saveGraphicsState()
     busyWinId = gCREATE(0, 0, 1, 1, false)
-    gFONT(KFontArialNormal15)
     runtime:setResource("busy", busyWinId)
     local textRect = drawInfoPrint(busyWinId, text, corner or 1)
 

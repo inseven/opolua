@@ -223,17 +223,6 @@ KFontDigital35 = 0x10000128
 KDefaultFontUid = KFontArialNormal15
 
 FontIds = {
-    [4] = { face = "courier", size = 8 },
-    [5] = { face = "times", size = 8 },
-    [6] = { face = "times", size = 11 },
-    [7] = { face = "times", size = 13 },
-    [8] = { face = "times", size = 15 },
-    [9] = { face = "arial", size = 8 },
-    [10] = { face = "arial", size = 11 },
-    [11] = { face = "arial", size = 13 },
-    [12] = { face = "arial", size = 15 },
-    [13] = { face = "tiny", size = 4 },
-    [0x9A] = { face = "arial", size = 15 },
     [KFontTiny4] = { face = "tiny", size = 4 },
     [KFontArialBold8] = { face = "arial", size = 8, bold = true },
     [KFontArialBold11] = { face = "arial", size = 11, bold = true },
@@ -270,6 +259,22 @@ FontIds = {
     [KFontCourierNormal32] = { face = "courier", size = 32 },
     [KFontSquashed] = { face = "squashed", size = 11, bold = true },
     [KFontDigital35] = { face = "digit", size = 35 },
+}
+
+for uid, font in pairs(FontIds) do font.uid = uid end
+
+FontAliases = {
+    [4] = KFontCourierNormal8,
+    [5] = KFontTimesNormal8,
+    [6] = KFontTimesNormal11,
+    [7] = KFontTimesNormal13,
+    [8] = KFontTimesNormal15,
+    [9] = KFontArialNormal8,
+    [10] = KFontArialNormal11,
+    [11] = KFontArialNormal13,
+    [12] = KFontArialNormal15,
+    [13] = KFontTiny4,
+    [0x9A] = KFontArialNormal15,
 }
 
 GraphicsMode = enum {

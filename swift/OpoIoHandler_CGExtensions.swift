@@ -77,11 +77,6 @@ extension Graphics.FontInfo {
     }
 
     func toBitmapFont() -> BitmapFontInfo? {
-        switch self.face {
-        case .digit:
-            return BitmapFontInfo.digit
-        default:
-            return nil
-        }
+        return BitmapFontInfo(uid: self.uid)
     }
 }

@@ -531,6 +531,7 @@ function Runtime:drawCmd(type, op)
     op.style = context.style
     op.penwidth = context.penwidth
     op.tmode = context.tmode
+    op.fontuid = context.font.uid
     op.fontface = context.font.face
     op.fontsize = context.font.size
     op.fontbold = context.font.bold

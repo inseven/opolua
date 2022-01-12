@@ -40,7 +40,7 @@ local KTbFlgLatchEnd = 0x32
 local KTbFlgLatched = 0x04
 
 local KTbFont = KFontSquashed
-local KTbTitleFont = KFontArialBold11 --KFontArialNormal11
+local KTbTitleFont = KFontArialBold11
 
 -- Global vars
 local visibleVar

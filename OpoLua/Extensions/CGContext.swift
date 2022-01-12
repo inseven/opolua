@@ -128,29 +128,41 @@ extension CGContext {
             }
         case .text(let str, let font):
             let pt = operation.origin.cgPoint()
-            // OPL text drawing coords are for the bottom left of the text, not the top left, so we have to adjust
-            // the coords we pass to UIKit
-            if let uifont = font.toUiFont() {
+            if let font = font.toBitmapFont() {
+                let renderer = BitmapFontRenderer(font: font)
+                var x = operation.origin.x
+                var y = operation.origin.y
+                for ch in str {
+                    if ch == "\n" {
+                        y = y + font.charh
+                        x = operation.origin.x
+                        continue
+                    }
+                    if let img = renderer.getImageForChar(ch) {
+                        let rect = CGRect(x: x, y: y, width: img.width, height: img.height)
+                        self.saveGState()
+                        self.concatenate(self.coordinateFlipTransform.inverted())
+                        let unflippedRect = CGRect(x: rect.minX, y: CGFloat(self.height) - rect.minY - rect.height, width: rect.width, height: rect.height)
+                        if operation.mode == .replace {
+                            self.setFillColor(operation.bgcolor.cgColor())
+                            self.fill(unflippedRect)
+                            self.setFillColor(operation.color.cgColor())
+                        }
+                        self.clip(to: unflippedRect, mask: img)
+                        self.fill(unflippedRect)
+                        self.restoreGState()
+                        x = x + img.width
+                    }
+                }
+            } else {
+                let uifont = font.toUiFont()!
                 UIGraphicsPushContext(self)
                 let attribStr = NSAttributedString(string: str, attributes: [
                     .font: uifont,
                     .foregroundColor: UIColor(cgColor: col)
                 ])
-                let sz = attribStr.size()
-                attribStr.draw(at: CGPoint(x: pt.x, y: pt.y - sz.height))
+                attribStr.draw(at: CGPoint(x: pt.x, y: pt.y))
                 UIGraphicsPopContext()
-            } else {
-                let font = font.toBitmapFont()! // One or other has to return non-nil
-                let renderer = BitmapFontRenderer(font: font)
-                var x = operation.origin.x
-                let y = operation.origin.y - font.charh
-                for ch in str {
-                    if let img = renderer.getImageForChar(ch) {
-                        let rect = CGRect(x: x, y: y, width: img.width, height: img.height)
-                        drawUnflippedImage(img, in: rect, mode: operation.mode)
-                        x = x + img.width
-                    }
-                }
             }
         case .border(let rect, let type):
             gXBorder(type: type, frame: rect.cgRect())

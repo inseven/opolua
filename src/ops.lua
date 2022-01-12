@@ -2374,13 +2374,13 @@ function gInfo32(stack, runtime) -- 0x128
     local data = {
         0, -- 1 reserved
         0, -- 2 reserved
-        context.font.height, -- 3 font height
-        context.font.height, -- 4 font descent
+        h, -- 3 font height
+        h - ascent, -- 4 font descent
         ascent, -- 5 font ascent
         w, -- 6 width of '0' (really?)
         17, -- 7 max character width
         17, -- 8 font flags
-        0, -- 9 font uid (TODO)
+        context.font.uid, -- 9 font uid
         0, -- 10
         0, -- 11
         0, -- 12
@@ -2402,12 +2402,12 @@ function gInfo32(stack, runtime) -- 0x128
         0, -- 28 drawableIsBitmap
         6, -- 29 cursor effects
         0, -- 30 color mode of current window
-        context.color, -- 31 fg r
-        context.color, -- 32 fg g
-        context.color, -- 33 fg b
-        context.bgcolor, -- 34 bg r
-        context.bgcolor, -- 35 bg g
-        context.bgcolor, -- 36 bg b
+        context.color[1], -- 31 fg r
+        context.color[2], -- 32 fg g
+        context.color[3], -- 33 fg b
+        context.bgcolor[1], -- 34 bg r
+        context.bgcolor[2], -- 35 bg g
+        context.bgcolor[3], -- 36 bg b
         0, -- 37
         0, -- 38
         0, -- 39

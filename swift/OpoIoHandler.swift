@@ -277,6 +277,7 @@ struct Graphics {
     typealias FontFlags = Set<FontFlag>
 
     struct FontInfo {
+        let uid: UInt32
         let face: FontFace
         let size: Int
         let flags: FontFlags

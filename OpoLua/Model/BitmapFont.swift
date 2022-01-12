@@ -23,22 +23,46 @@ import CoreGraphics
 import UIKit
 
 struct BitmapFontInfo {
+    struct MetadataJson: Codable {
+        let name: String
+        let charh: Int
+        let ascent: Int
+        let maxwidth: Int
+        let firstch: Int
+        let widths: [Int]
+    }
     let bitmapName: String
     let startIndex: Unicode.Scalar
     let charw: Int
     let charh: Int // aka ascent + descent, same as the "point size" of a TTF font
-    let descent: Int
+    let ascent: Int
+    let widths: [Int]
 
-    var ascent: Int {
-        return charh - descent
+    init?(uid: UInt32) {
+        let uidstr = String(uid, radix: 16, uppercase: true)
+        guard let url = Bundle.main.url(forResource: "fonts/\(uidstr)/\(uidstr).json", withExtension: nil),
+              let json = try? Data(contentsOf: url),
+              let metadata = try? JSONDecoder().decode(MetadataJson.self, from: json) else {
+            return nil
+        }
+        self.init(bitmapName: uidstr, startIndex: Unicode.Scalar(metadata.firstch)!, charw: metadata.maxwidth,
+            charh: metadata.charh, ascent: metadata.ascent, widths: metadata.widths)
     }
 
-    static let digit = BitmapFontInfo(bitmapName: "digitfont", startIndex: "0", charw: 12, charh: 35, descent: 0)
+    init(bitmapName: String, startIndex: Unicode.Scalar, charw: Int, charh: Int, ascent: Int, widths: [Int]) {
+        self.bitmapName = bitmapName
+        self.startIndex = startIndex
+        self.charw = charw
+        self.charh = charh
+        self.ascent = ascent
+        self.widths = widths
+    }
 }
 
 class BitmapFontRenderer {
     let font: BitmapFontInfo
     private let img: CGImage
+    private var charCache: [Character: CGImage] = [:]
     let imagew: Int
     let imageh: Int
     var charw: Int { return font.charw }
@@ -48,18 +72,22 @@ class BitmapFontRenderer {
 
     init(font: BitmapFontInfo) {
         self.font = font
-        self.img = UIImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!
+        self.img = UIImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!.inverted()!
         self.imagew = self.img.width
         self.imageh = self.img.height
     }
 
-    func charInImage(_ char: Character) -> Bool {
+    func imgCharWidth(_ char: Character) -> Int? {
         if char.unicodeScalars.count != 1 {
-            return false
+            return nil
         }
         let scalarValue = char.unicodeScalars.first!.value
         let maxValue = font.startIndex.value + UInt32(self.charsPerRow * self.numRows)
-        return scalarValue >= font.startIndex.value && scalarValue < maxValue
+        if scalarValue >= font.startIndex.value && scalarValue < maxValue {
+            return font.widths[Int(scalarValue - font.startIndex.value)]
+        } else {
+            return nil
+        }
     }
 
     static func getCharName(_ ch: Character) -> String {
@@ -72,11 +100,10 @@ class BitmapFontRenderer {
     }
 
     func getCharWidth(_ char: Character) -> Int {
-        if charInImage(char) {
-            // Can't optimise unless it's a character within the image range and the image doesn't require trimming
-            return font.charw
+        if let w = imgCharWidth(char) {
+            return w
         } else {
-            if let img = individualImageForChar(char) {
+            if let img = getImageForChar(char) {
                 return img.width
             } else {
                 return 0
@@ -84,22 +111,42 @@ class BitmapFontRenderer {
         }
     }
 
-    func getTextWidth<T>(_ text: T) -> Int where T : StringProtocol {
-        var result = 0
+    func getTextSize<T>(_ text: T) -> (Int, Int) where T : StringProtocol {
+        var maxw = 0
+        var w = 0
+        var h = charh
         for ch in text {
-            result = result + getCharWidth(ch)
+            if ch == "\n" {
+                maxw = max(maxw, w)
+                w = 0
+                h = h + charh // assuming there's something after the newline anyway...
+            } else {
+                w = w + getCharWidth(ch)
+            }
         }
-        return result
+        return (max(w, maxw), h)
     }
 
     func getImageForChar(_ char: Character) -> CGImage? {
-        if charInImage(char) {
+        if let img = charCache[char] {
+            return img
+        }
+        if let img = calculateImageForChar(char) {
+            charCache[char] = img
+            return img
+        }
+        return nil
+    }
+
+    private func calculateImageForChar(_ char: Character) -> CGImage? {
+        if let width = imgCharWidth(char) {
+            if width == 0 {
+                return nil
+            }
             let charIdx = char.unicodeScalars.first!.value - font.startIndex.value
             let x = Int(charIdx % UInt32(self.charsPerRow))
-            // y is counting from the bottom because of stupid coordinate space rubbish
-            let y = self.numRows - Int(charIdx / UInt32(self.charsPerRow)) - 1
-            let cropped = self.img.cropping(to: CGRect(x: x * charw, y: y * charh, width: charw, height: charh))!
-            return cropped
+            let y = Int(charIdx / UInt32(self.charsPerRow))
+            return self.img.cropping(to: CGRect(x: x * charw, y: y * charh, width: width, height: charh))!
         } else {
             return individualImageForChar(char)
         }

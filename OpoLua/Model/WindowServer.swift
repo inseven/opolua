@@ -30,7 +30,12 @@ class WindowServer {
     }
 
     static func textSize(string: String, fontInfo: Graphics.FontInfo) -> TextDetails {
-        if let font = fontInfo.toUiFont() {
+        if let font = fontInfo.toBitmapFont() {
+            let renderer = BitmapFontRenderer(font: font)
+            let (w, h) = renderer.getTextSize(string)
+            return TextDetails(size: Graphics.Size(width: w, height: h), ascent: font.ascent)
+        } else {
+            let font = fontInfo.toUiFont()! // One or other has to return non-nil
             let attribStr = NSAttributedString(string: string, attributes: [.font: font])
             let sz = attribStr.size()
             // This is not really the right definition for ascent but it seems to work for where epoc expects
@@ -38,10 +43,6 @@ class WindowServer {
             let ascent = Int(ceil(sz.height) + font.descender)
             return TextDetails(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
                                ascent: ascent)
-        } else {
-            let font = fontInfo.toBitmapFont()! // One or other has to return non-nil
-            let renderer = BitmapFontRenderer(font: font)
-            return TextDetails(size: Graphics.Size(width: renderer.getTextWidth(string), height: font.charh), ascent: font.ascent)
         }
     }
 
