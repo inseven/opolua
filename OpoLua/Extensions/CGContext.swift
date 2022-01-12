@@ -113,9 +113,11 @@ extension CGContext {
             let srcImage = obj as! CGImage // CF types are weird...
             drawUnflippedImage(srcImage, in: info.rect.cgRect(), mode: operation.mode, tile: true)
         case .scroll(let dx, let dy, let rect):
-            let origRect = rect.cgRect()
+            // Make sure we don't inadvertently stretch or try to scroll beyond image limits
+            let contextRect = CGRect(x: 0, y: 0, width: self.width, height: self.height)
+            let origRect = rect.cgRect().intersection(contextRect)
             if let img = makeImage()?.cropping(to: origRect) {
-                let newRect = CGRect(x: rect.minX + dx, y: rect.minY + dy, width: rect.width, height: rect.height).standardized
+                let newRect = CGRect(x: origRect.minX + CGFloat(dx), y: origRect.minY + CGFloat(dy), width: origRect.width, height: origRect.height).standardized
                 // This is not entirely the right logic if both dx and dy are non-zero, but probably good enough for now
                 let minX = min(origRect.minX, newRect.minX)
                 let minY = min(origRect.minY, newRect.minY)
