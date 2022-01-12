@@ -151,11 +151,15 @@ end
 
 function graphicsop(cmd, ...)
     printf("graphicsop %s\n", cmd)
+    if cmd == "textsize" then
+        local text = ...
+        return 7 * #text, 11, 9
+    end
     return 0 -- Pretend we succeed (probably)
 end
 
-function getScreenSize()
-    return 640, 240
+function getScreenInfo()
+    return 640, 240, DrawableMode.Gray4
 end
 
 local fsmaps = {}

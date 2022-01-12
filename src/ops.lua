@@ -1200,9 +1200,7 @@ AssignFloat = AssignUntyped -- 0x86
 AssignString = AssignUntyped -- 0x87
 
 function PrintUntyped(stack, runtime)
-    if stack then
-        runtime:iohandler().print(stack:pop())
-    end
+    runtime:PRINT(tostring(stack:pop()))
 end
 
 PrintInt = PrintUntyped -- 0x88
@@ -1234,7 +1232,7 @@ function LPrintString(stack, runtime) -- 0x8F
 end
 
 function PrintSpace(stack, runtime) -- 0x90
-    runtime:iohandler().print(" ")
+    runtime:PRINT(" ")
 end
 
 function LPrintSpace(stack, runtime) -- 0x91
@@ -1243,7 +1241,7 @@ function LPrintSpace(stack, runtime) -- 0x91
 end
 
 function PrintCarriageReturn(stack, runtime) -- 0x92
-    runtime:iohandler().print("\n")
+    runtime:PRINT("\n")
 end
 
 function LPrintCarriageReturn(stack, runtime) -- 0x93
@@ -1320,7 +1318,8 @@ function Append(stack, runtime) -- 0x9D
 end
 
 function At(stack, runtime) -- 0x9E
-    error("Unimplemented opcode At!")
+    local x, y = stack:popXY()
+    runtime:AT(x, y)
 end
 
 function Back(stack, runtime) -- 0x9F
@@ -1865,8 +1864,8 @@ function gPeekLine(stack, runtime) -- 0xE6
 end
 
 function Screen4(stack, runtime) -- 0xE7
-    local w, h = stack:popXY()
     local x, y = stack:popXY()
+    local w, h = stack:popXY()
     runtime:SCREEN(w, h, x, y)
 end
 
@@ -2140,7 +2139,7 @@ end
 function Font(stack, runtime) -- 0x104
     local uid = stack:pop()
     local style = stack:pop()
-    printf("Font(0x%08X, %d)\n", uid, style)
+    runtime:FONT(uid, style)
 end
 
 function Style(stack, runtime) -- 0x105
@@ -2194,12 +2193,12 @@ function ScreenInfo(stack, runtime) -- 0x114
     local result = {
         [1] = screen.x, -- Left margin in pixels
         [2] = screen.y, -- Top margin in pixels
-        [3] = screen.w, -- text screen width in chars (to match Series 5)
-        [4] = screen.h, -- text screen height in chars (ditto)
+        [3] = screen.w, -- text screen width in chars
+        [4] = screen.h, -- text screen height in chars
         [5] = 1, -- text win window id (ie default window)
         [6] = 0, -- unused
-        [7] = 7, -- screen font char width
-        [8] = 11, -- screen font char height
+        [7] = screen.charw, -- screen font char width
+        [8] = screen.charh, -- screen font char height
         [9] = screen.fontid & 0xFFFF,
         [10] = (screen.fontid >> 16) & 0xFFFF,
     }
@@ -2369,7 +2368,7 @@ function gInfo32(stack, runtime) -- 0x128
     assert(addr:getValidLength() >= 48*4, "Too small an array passed to gInfo32!")
 
     local context = runtime:getGraphicsContext()
-    local w, h, ascent = runtime:iohandler().graphicsop("textsize", "0", context.font)
+    local w, h, ascent = runtime:gTWIDTH("0")
 
     local data = {
         0, -- 1 reserved

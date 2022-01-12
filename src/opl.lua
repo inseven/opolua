@@ -134,7 +134,7 @@ end
 function gPRINT(val)
     local str = tostring(val)
     local context = runtime:getGraphicsContext()
-    local w, h, ascent = runtime:iohandler().graphicsop("textsize", str, context.font)
+    local w, h, ascent = gTWIDTH(str)
     -- gPRINT and friends have this nonsense about text coords being relative to
     -- the baseline rather than the top left or bottom left corners; all our
     -- native operations assume text coords are for the top-left of the text.
@@ -149,7 +149,7 @@ function gPRINTB(text, width, align, top, bottom, margin)
     if not bottom then bottom = 0 end
     if not margin then margin = 0 end
     local context = runtime:getGraphicsContext()
-    local textw, texth, fontAscent = runtime:iohandler().graphicsop("textsize", text, context.font)
+    local textw, texth, fontAscent = gTWIDTH(text)
 
     runtime:drawCmd("fill", {
         x = context.pos.x,
@@ -186,8 +186,9 @@ function gPRINTCLIP(text, width)
 end
 
 function gTWIDTH(text)
-    local width = runtime:iohandler().graphicsop("textsize", text, runtime:getGraphicsContext().font)
-    return width
+    local font = runtime:getGraphicsContext().font
+    local width, height, ascent = runtime:iohandler().graphicsop("textsize", text, font)
+    return width, height, ascent
 end
 
 function gLINEBY(dx, dy)
@@ -262,7 +263,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     -- The Series 5 appears to ignore type and treat 1 as 2 the same
     -- printf("gBUTTON %s type=%d state=%d\n", text, type, state)
 
-    local textw, texth = runtime:iohandler().graphicsop("textsize", text, s.font)
+    local textw, texth = gTWIDTH(text)
 
     lightGrey()
     if state == 0 then
@@ -337,8 +338,9 @@ function gSCROLL(dx, dy, x, y, w, h)
         rect = { x = x, y = y, w = w, h = h }
     else
         local ctx = runtime:getGraphics().current
-        rect = { x = 0, y = 0, w = ctx.width, h = ctx.h }
+        rect = { x = 0, y = 0, w = ctx.width, h = ctx.height }
     end
+    -- printf("gSCROLL(dx=%d dy=%d x=%d y=%d w=%d h=%d)\n", dx, dy, rect.x, rect.y, rect.w, rect.h)
     runtime:drawCmd("scroll", { dx = dx, dy = dy, rect = rect })
 end
 
@@ -510,8 +512,7 @@ local function drawInfoPrint(drawable, text, corner)
 
     local cornerInset = 5
     local inset = 6
-    local font = runtime:getGraphicsContext().font
-    local textWidth, textHeight, ascent = runtime:iohandler().graphicsop("textsize", text, font)
+    local textWidth, textHeight, ascent = gTWIDTH(text)
     local w = math.min(screenWidth - 2 * cornerInset, textWidth + inset * 2)
     local actualTextWidth = w - 2 * inset
 
@@ -599,32 +600,126 @@ function BUSY(text, corner, delay)
     runtime:restoreGraphicsState(state)
 end
 
-function SCREEN(w, h, x, y)
-    -- Since we don't draw text into the main window this command doesn't
-    -- currently have any effect, but we will update the info returned by
-    -- SCREENINFO just to be polite.
+function FONT(id, style)
+    -- printf("FONT(0x%08X, %d)\n", id, style)
     local screen = runtime:getGraphics().screen
-    screen.w = w
-    screen.h = h
-    if not x then
-        local scrw, scrh = runtime:iohandler().getScreenSize()
-        x = (scrw - w) // 2
-        y = (scrh - h) // 2
-    end
-    screen.x = x
-    screen.y = y
+    local defaultWin = runtime:getGraphicsContext(1)
+    local font = FontIds[FontAliases[id] or id]
+    assert(font, KOplErrFontNotLoaded)
+    -- Font keyword always resets text window size, position and text pos
+    local charw, charh = runtime:iohandler().graphicsop("textsize", "0", font)
+    local numcharsx = defaultWin.width // charw
+    local numcharsy = defaultWin.height // charh
+    runtime:getGraphics().screen = {
+        x = (defaultWin.width - numcharsx * charw) // 2,
+        y = (defaultWin.height - numcharsy * charh) // 2,
+        w = numcharsx,
+        h = numcharsy,
+        cursorx = 0,
+        cursory = 0,
+        charh = charh,
+        charw = charw,
+        fontid = font.uid,
+        style = style,
+    }
+end
+
+function SCREEN(widthInChars, heightInChars, xInChars, yInChars)
+    -- printf("SCREEN %d %d %s %s\n", widthInChars, heightInChars, xInChars, yInChars)
+    local screen = runtime:getGraphics().screen
+    local defaultWin = runtime:getGraphicsContext(1)
+    screen.w = widthInChars
+    screen.h = heightInChars
+    local marginx = (defaultWin.width % screen.charw) // 2
+    local marginy = (defaultWin.height % screen.charh) // 2
+
+    -- TODO the logic around x and y params needs fixing...
+    xInChars = 0
+    yInChars = 0
+
+    screen.x = marginx + xInChars * screen.charw
+    screen.y = marginy + yInChars * screen.charh
+end
+
+function AT(x, y)
+    local screen = runtime:getGraphics().screen
+    assert(x > 0 and y > 0, KOplErrInvalidArgs)
+    screen.cursorx = x - 1
+    screen.cursory = y - 1
+    -- TODO cursor
 end
 
 function CLS()
-    -- TODO this should honour SCREEN size
     local prev = gIDENTITY()
     gUSE(1)
     local state = runtime:saveGraphicsState()
-    gAT(0, 0)
-    gFILL(gWIDTH(), gHEIGHT(), GraphicsMode.Clear)
+    local screen = runtime:getGraphics().screen
+    gAT(screen.x, screen.y)
+    gFILL(screen.w * screen.charw, screen.h * screen.charh, GraphicsMode.Clear)
     runtime:restoreGraphicsState(state)
     gUSE(prev)
     runtime:flushGraphicsOps()
+end
+
+function PRINT(str)
+    local handlerPrint = runtime:iohandler().print
+    if handlerPrint then
+        handlerPrint(str)
+        return
+    end
+
+    local prevId = gIDENTITY()
+    gUSE(1)
+    local state = runtime:saveGraphicsState()
+    gUPDATE(false)
+    local screen = runtime:getGraphics().screen
+    gCOLOR(0, 0, 0)
+    gFONT(screen.fontid)
+    local strPos = 1
+    local strLen = #str
+    local charX = screen.cursorx
+    local charY = screen.cursory
+    local maxX = screen.w
+    local maxY = screen.h
+    while strPos <= strLen do
+        local lineEnd = str:find("\n", strPos, true)
+        local endPos = lineEnd
+        if not endPos then
+            endPos = #str + 1
+        end
+        local remaining = endPos - strPos
+        local lineSpace = maxX - charX
+        if lineSpace ~= 0 and lineSpace < remaining then
+            remaining = lineSpace
+        end
+        local frag = str:sub(strPos, strPos + remaining - 1)
+        strPos = strPos + #frag
+        if #frag > 0 then
+            if charX == maxX then
+                -- Wrap to next line
+                charX = 0
+                charY = charY + 1
+            end
+            while charY >= maxY do
+                gSCROLL(0, -screen.charh, screen.x, screen.y, screen.w * screen.charw, screen.h * screen.charh)
+                charY = charY - 1
+            end
+            runtime:drawCmd("text", { string = frag, x = screen.x + charX * screen.charw, y = screen.y + charY * screen.charh })
+            charX = charX + #frag
+        end
+        if lineEnd and strPos == lineEnd then
+            -- newline
+            charX = 0
+            charY = charY + 1
+            strPos = strPos + 1
+        end
+    end
+    screen.cursorx = charX
+    screen.cursory = charY
+    -- Restore drawable 1's state
+    runtime:restoreGraphicsState(state)
+    -- and switch back to prev
+    gUSE(prevId)
 end
 
 function KEY()
