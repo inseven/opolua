@@ -22,30 +22,44 @@ import SwiftUI
 
 import Diligence
 
-struct AboutView: View {
+struct SettingsView: View {
+
+    enum SheetType: Identifiable {
+
+        var id: Self { self }
+
+        case about
+    }
 
     @Environment(\.presentationMode) var presentationMode
+
+    @State var sheet: SheetType?
 
     var body: some View {
         NavigationView {
             Form {
-                BuildSection("inseven/statuspanel")
-                CreditSection("Contributors", [
-                    "Jason Morley",
-                    "Tom Sutcliffe",
-                ])
-                LicenseSection("Licenses", [
-                    License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "Lua.txt"),
-                ])
+                Section {
+                    Button("About \(UIApplication.shared.displayName!)...") {
+                        sheet = .about
+                    }
+                    .foregroundColor(.primary)
+                }
             }
-            .navigationBarTitle("About", displayMode: .inline)
+            .navigationBarTitle("Settings", displayMode: .inline)
             .navigationBarItems(trailing: Button {
                 presentationMode.wrappedValue.dismiss()
             } label: {
                 Text("Done")
                     .bold()
             })
+            .sheet(item: $sheet) { sheet in
+                switch sheet {
+                case .about:
+                    AboutView()
+                }
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
+
 }

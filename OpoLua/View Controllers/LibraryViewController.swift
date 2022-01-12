@@ -109,10 +109,10 @@ class LibraryViewController: UITableViewController {
     }()
 
     lazy var aboutBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(title: "About",
+        let barButtonItem = UIBarButtonItem(title: "Settings",
                                             style: .plain,
                                             target: self,
-                                            action: #selector(aboutTapped(sender:)))
+                                            action: #selector(settingsTapped(sender:)))
         return barButtonItem
     }()
 
@@ -143,8 +143,8 @@ class LibraryViewController: UITableViewController {
         dataSource.apply(snapshot(), animatingDifferences: false)
     }
 
-    @objc func aboutTapped(sender: UIBarButtonItem) {
-        let viewController = UIHostingController(rootView: AboutView())
+    @objc func settingsTapped(sender: UIBarButtonItem) {
+        let viewController = UIHostingController(rootView: SettingsView())
         self.present(viewController, animated: true)
     }
 
