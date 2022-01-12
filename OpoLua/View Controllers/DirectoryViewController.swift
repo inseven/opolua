@@ -103,7 +103,6 @@ class DirectoryViewController : UIViewController {
         return layout
     }
 
-
     lazy var wallpaperView: UIView = {
         let image = UIImage.epoc
         let pixelView = PixelView(image: image)

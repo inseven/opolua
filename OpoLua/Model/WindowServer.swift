@@ -65,7 +65,7 @@ class WindowServer {
         let canvasView = CanvasView(canvas: canvas)
         canvasView.translatesAutoresizingMaskIntoConstraints = false
         canvasView.layer.borderWidth = 1.0
-        canvasView.layer.borderColor = UIColor.black.cgColor
+        canvasView.layer.borderColor = UIColor.lightGray.cgColor
         canvasView.clipsToBounds = true
         canvasView.delegate = program
         drawables[.defaultWindow] = canvasView
