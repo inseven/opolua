@@ -31,13 +31,37 @@ struct SettingsView: View {
         case about
     }
 
+    @State var theme: Settings.Theme = .series5
+
     @Environment(\.presentationMode) var presentationMode
 
     @State var sheet: SheetType?
 
+    init() {
+        _theme = State(initialValue: AppDelegate.shared.settings.theme)
+    }
+
+    func themeBinding(value: Settings.Theme) -> Binding<Bool> {
+        return Binding {
+            return theme == value
+        } set: { newState in
+            if newState {
+                theme = value
+            }
+        }
+    }
+
     var body: some View {
         NavigationView {
             Form {
+                Section("Theme") {
+                    ForEach(Settings.Theme.allCases) { theme in
+                        Toggle(isOn: themeBinding(value: theme)) {
+                            Text(theme.localizedDescription)
+                        }
+                        .toggleStyle(ColoredCheckbox(color: Color(uiColor: theme.color)))
+                    }
+                }
                 Section {
                     Button("About \(UIApplication.shared.displayName!)...") {
                         sheet = .about
@@ -60,6 +84,10 @@ struct SettingsView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .onChange(of: theme) { newValue in
+            AppDelegate.shared.settings.theme = newValue
+            AppDelegate.shared.setTheme(newValue)
+        }
     }
 
 }

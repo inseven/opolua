@@ -97,7 +97,7 @@ class LibraryViewController: UITableViewController {
 
     static let cellIdentifier = "Cell"
 
-    var settings = Settings()
+    var settings: Settings
     var dataSource: LibraryDataSource!
 
     lazy var addBarButtonItem: UIBarButtonItem = {
@@ -116,7 +116,8 @@ class LibraryViewController: UITableViewController {
         return barButtonItem
     }()
 
-    init() {
+    init(settings: Settings) {
+        self.settings = settings
         super.init(style: .insetGrouped)
         title = "OPL"
         navigationItem.rightBarButtonItem = addBarButtonItem

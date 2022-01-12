@@ -18,35 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import SwiftUI
 
-@main
-class AppDelegate: UIResponder, UIApplicationDelegate {
+struct ColoredCheckbox: ToggleStyle {
 
-    var window: UIWindow?
-    var settings = Settings()
+    var color: Color
 
-    static var shared: AppDelegate {
-        return UIApplication.shared.delegate as! AppDelegate
+    func makeBody(configuration: Self.Configuration) -> some View {
+        Button {
+            configuration.isOn.toggle()
+        } label: {
+            HStack {
+                if configuration.isOn {
+                    Image(systemName: "checkmark.circle.fill")
+                        .imageScale(.large)
+                        .foregroundColor(color)
+                } else {
+                    Image(systemName: "circle")
+                        .imageScale(.large)
+                        .foregroundColor(color)
+                }
+                configuration.label
+                    .foregroundColor(.primary)
+            }
+        }
     }
 
-    func application(_ application: UIApplication,
-                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-
-        let viewController = LibraryViewController(settings: settings)
-        let navigationController = UINavigationController(rootViewController: viewController)
-        navigationController.navigationBar.prefersLargeTitles = true
-        
-        window = UIWindow()
-        window?.rootViewController = navigationController
-        window?.tintColor = settings.theme.color
-        window?.makeKeyAndVisible()
-
-        return true
-    }
-
-    func setTheme(_ theme: Settings.Theme) {
-        window?.tintColor = theme.color
-    }
-    
 }

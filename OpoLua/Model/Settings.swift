@@ -19,8 +19,14 @@
 // SOFTWARE.
 
 import Foundation
+import SwiftUI
+import UIKit
 
 class Settings {
+
+    private enum Key: String {
+        case theme
+    }
 
     let userDefaults = UserDefaults()
 
@@ -29,6 +35,14 @@ class Settings {
     // TODO: Should be immutable.
     var locations: [ExternalLocation]
 
+    enum Theme: Int, CaseIterable, Identifiable {
+
+        var id: Self { self }
+
+        case series5 = 0
+        case series7 = 1
+    }
+
     init() {
         do {
             locations = try userDefaults.secureLocations(forKey: locationsKey)
@@ -36,6 +50,14 @@ class Settings {
             print("Failed to load locations with error \(error).")
             locations = []
         }
+    }
+
+    private func integer(for key: Key) -> Int {
+        return self.userDefaults.integer(forKey: key.rawValue)
+    }
+
+    private func set(_ value: Int, for key: Key) {
+        self.userDefaults.set(value, forKey: key.rawValue)
     }
 
     func addLocation(_ url: URL) throws {
@@ -49,5 +71,35 @@ class Settings {
         try userDefaults.set(secureLocations: locations, forKey: locationsKey)
     }
 
+    var theme: Settings.Theme {
+        get {
+            Theme.init(rawValue: self.integer(for: .theme))!
+        }
+        set {
+            self.set(newValue.rawValue, for: .theme)
+        }
+    }
+
 }
 
+extension Settings.Theme {
+
+    var localizedDescription: String {
+        switch self {
+        case .series5:
+            return "Series 5"
+        case .series7:
+            return "Series 7"
+        }
+    }
+
+    var color: UIColor {
+        switch self {
+        case .series5:
+            return .orange
+        case .series7:
+            return .cyan
+        }
+    }
+
+}

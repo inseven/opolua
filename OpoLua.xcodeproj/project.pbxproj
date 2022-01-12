@@ -15,6 +15,7 @@
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
 		D8535A2A277139D900DFCE29 /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A29277139D900DFCE29 /* Tone.swift */; };
 		D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8553767278F535A00ED67C0 /* SettingsView.swift */; };
+		D855376B278F63EA00ED67C0 /* ColoredCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D855376A278F63EA00ED67C0 /* ColoredCheckbox.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
 		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
 		D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724F12771672A009C7246 /* InterpreterThread.swift */; };
@@ -184,6 +185,7 @@
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
 		D8535A29277139D900DFCE29 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		D8553767278F535A00ED67C0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D855376A278F63EA00ED67C0 /* ColoredCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColoredCheckbox.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		D86724F12771672A009C7246 /* InterpreterThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterThread.swift; sourceTree = "<group>"; };
@@ -326,6 +328,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D8553769278F63D600ED67C0 /* Styles */ = {
+			isa = PBXGroup;
+			children = (
+				D855376A278F63EA00ED67C0 /* ColoredCheckbox.swift */,
+			);
+			path = Styles;
+			sourceTree = "<group>";
+		};
 		D861E8D9274A818D003C8D3D /* Model */ = {
 			isa = PBXGroup;
 			children = (
@@ -467,7 +477,6 @@
 		DB79FE6127428292005E904F /* OpoLua */ = {
 			isa = PBXGroup;
 			children = (
-				D86FBAB8278C76E4003DF611 /* Licenses */,
 				D893EAD4276073CA00E64219 /* Borders */,
 				DB0B919227836E70006F5CD0 /* fonts */,
 				DB79FE6A27428294005E904F /* OpoLua.entitlements */,
@@ -478,7 +487,9 @@
 				D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */,
 				D8DF3FAD278B3DA100FF658B /* Release.xcconfig */,
 				D889134B274C17F300794D55 /* Extensions */,
+				D86FBAB8278C76E4003DF611 /* Licenses */,
 				D861E8D9274A818D003C8D3D /* Model */,
+				D8553769278F63D600ED67C0 /* Styles */,
 				D8C679BB27484BB800BD8720 /* View Controllers */,
 				D8891343274BF24D00794D55 /* Views */,
 			);
@@ -791,6 +802,7 @@
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
 				DB7900072742E6F6005E904F /* llex.c in Sources */,
+				D855376B278F63EA00ED67C0 /* ColoredCheckbox.swift in Sources */,
 				D884A3D7277914CF008954A0 /* Installer.swift in Sources */,
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
 				D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */,
