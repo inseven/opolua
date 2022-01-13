@@ -38,6 +38,10 @@ class DirectoryViewController : UIViewController {
             label.translatesAutoresizingMaskIntoConstraints = false
             label.font = UIFont.preferredFont(forTextStyle: .body)
             label.adjustsFontForContentSizeCategory = true
+            label.numberOfLines = 1
+            label.textAlignment = .center
+            label.lineBreakMode = .byTruncatingTail
+            // TODO: Truncation mode.
             return label
         }()
 
@@ -47,17 +51,20 @@ class DirectoryViewController : UIViewController {
             label.textColor = .secondaryLabel
             label.font = UIFont.preferredFont(forTextStyle: .footnote)
             label.adjustsFontForContentSizeCategory = true
+            label.numberOfLines = 1
+            label.textAlignment = .center
+            label.lineBreakMode = .byTruncatingTail
             return label
         }()
 
         override init(frame: CGRect) {
             super.init(frame: frame)
-            self.addSubview(imageView)
-            self.addSubview(textLabel)
-            self.addSubview(detailTextLabel)
+            contentView.addSubview(imageView)
+            contentView.addSubview(textLabel)
+            contentView.addSubview(detailTextLabel)
 
             let layoutGuide = UILayoutGuide()
-            addLayoutGuide(layoutGuide)
+            contentView.addLayoutGuide(layoutGuide)
 
             self.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
             NSLayoutConstraint.activate([
@@ -65,9 +72,13 @@ class DirectoryViewController : UIViewController {
                 imageView.widthAnchor.constraint(equalToConstant: 48.0),
                 imageView.heightAnchor.constraint(equalToConstant: 48.0),
 
-                imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
-                textLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-                detailTextLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+                imageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+
+                textLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                textLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+
+                detailTextLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                detailTextLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
 
                 imageView.topAnchor.constraint(equalTo: topAnchor),
                 imageView.bottomAnchor.constraint(equalTo: textLabel.topAnchor, constant: -8.0),
@@ -92,7 +103,7 @@ class DirectoryViewController : UIViewController {
     var applicationActiveObserver: Any?
 
     private func createLayout() -> UICollectionViewLayout {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(100),
+        let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(100),
                                               heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
@@ -121,6 +132,7 @@ class DirectoryViewController : UIViewController {
     }()
 
     lazy var collectionView: UICollectionView = {
+        // TODO: Switch this to being a layout provider; and use the trait collection to determine the sizes.
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.delegate = self
