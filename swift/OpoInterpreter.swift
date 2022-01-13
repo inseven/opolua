@@ -1070,30 +1070,39 @@ class OpoInterpreter {
         // Deal with writing any result data
 
         let type = L.tostring(2, key: "type") ?? ""
+        func timestampToInt32(_ timestamp: TimeInterval) -> Int {
+            let microsecs = Int(timestamp * 1000000)
+            let us32 = UInt32(microsecs % Int(UInt32.max))
+            let intVal = Int32(bitPattern: us32)
+            return Int(intVal)
+        }
         switch type {
         case "getevent":
             var ev = Array<Int>(repeating: 0, count: 16)
             switch (response.value) {
             case .keypressevent(let event):
+                // print("keypress \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
                 // Remember, ev[0] here means ev[1] in the OPL docs because they're one-based
                 ev[0] = event.modifiedKeycode()!
-                ev[1] = event.timestamp
+                ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
                 ev[4] = event.isRepeat ? 1 : 0
             case .keydownevent(let event):
+                // print("keydown \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
                 ev[0] = 0x406
-                ev[1] = event.timestamp
+                ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
             case .keyupevent(let event):
+                // print("keyup \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
                 ev[0] = 0x407
-                ev[1] = event.timestamp
+                ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
             case .penevent(let event):
                 ev[0] = 0x408
-                ev[1] = event.timestamp
+                ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.windowId.value
                 ev[3] = event.type.rawValue
                 ev[4] = 0 // TODO oh god what

@@ -138,19 +138,22 @@ class Program {
     }
 
     func sendKeyDown(_ key: OplKeyCode) {
-        sendEvent(.keydownevent(.init(timestamp: .now(),
+        let timestamp = ProcessInfo.processInfo.systemUptime
+        sendEvent(.keydownevent(.init(timestamp: timestamp,
                                       keycode: key,
                                       modifiers: Modifiers())))
     }
 
     func sendKeyUp(_ key: OplKeyCode) {
-        sendEvent(.keyupevent(.init(timestamp: .now(),
+        let timestamp = ProcessInfo.processInfo.systemUptime
+        sendEvent(.keyupevent(.init(timestamp: timestamp,
                                     keycode: key,
                                     modifiers: Modifiers())))
     }
 
     func sendKeyPress(_ key: OplKeyCode) {
-        sendEvent(.keypressevent(.init(timestamp: .now(),
+        let timestamp = ProcessInfo.processInfo.systemUptime
+        sendEvent(.keypressevent(.init(timestamp: timestamp,
                                        keycode: key,
                                        modifiers: Modifiers(),
                                        isRepeat: false)))
@@ -188,7 +191,7 @@ class Program {
     private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
         let location = touch.location(in: view)
         let screenLocation = touch.location(in: view.superview)
-        sendEvent(.penevent(.init(timestamp: Int(event.timestamp),
+        sendEvent(.penevent(.init(timestamp: event.timestamp,
                                   windowId: view.id,
                                   type: type,
                                   modifiers: 0,

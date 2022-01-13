@@ -447,13 +447,13 @@ struct Async {
         let handle: RequestHandle
     }
     struct KeyPressEvent {
-        let timestamp: Int // Microseconds since boot, or something
+        let timestamp: TimeInterval // Since boot
         let keycode: OplKeyCode
         let modifiers: Modifiers
         let isRepeat: Bool
     }
     struct KeyUpDownEvent {
-        let timestamp: Int // Microseconds since boot, or something
+        let timestamp: TimeInterval // Since boot
         let keycode: OplKeyCode
         let modifiers: Modifiers
     }
@@ -463,7 +463,7 @@ struct Async {
         case drag = 6
     }
     struct PenEvent {
-        let timestamp: Int // Microseconds since boot, or something
+        let timestamp: TimeInterval // Since boot
         let windowId: Graphics.DrawableId
         let type: PenEventType
         let modifiers: Int

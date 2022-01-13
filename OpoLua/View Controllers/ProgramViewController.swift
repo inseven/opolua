@@ -323,7 +323,6 @@ class ProgramViewController: UIViewController {
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         for press in presses {
             if let key = press.key {
-                let timestamp = Int(press.timestamp)
                 let modifiers = key.oplModifiers()
 
                 let (keydownCode, keypressCode) = key.toOplCodes()
@@ -331,13 +330,13 @@ class ProgramViewController: UIViewController {
                 // The could be no legitimate keydownCode if we're inputting say
                 // a tilde which is not on a key that the Psion 5 keyboard has
                 if let code = keydownCode {
-                    program.sendEvent(.keydownevent(.init(timestamp: timestamp, keycode: code, modifiers: modifiers)))
+                    program.sendEvent(.keydownevent(.init(timestamp: press.timestamp, keycode: code, modifiers: modifiers)))
                 } else {
                     print("No keydown code for \(key)")
                 }
 
                 if let code = keypressCode, code.toCharcode() != nil {
-                    let event = Async.KeyPressEvent(timestamp: timestamp, keycode: code, modifiers: modifiers, isRepeat: false)
+                    let event = Async.KeyPressEvent(timestamp: press.timestamp, keycode: code, modifiers: modifiers, isRepeat: false)
                     if event.modifiedKeycode() != nil {
                         program.sendEvent(.keypressevent(event))
                     }
@@ -353,9 +352,8 @@ class ProgramViewController: UIViewController {
             if let key = press.key {
                 let (oplKey, _) = key.toOplCodes()
                 if let oplKey = oplKey {
-                    let timestamp = Int(press.timestamp)
                     let modifiers = key.oplModifiers()
-                    program.sendEvent(.keyupevent(.init(timestamp: timestamp, keycode: oplKey, modifiers: modifiers)))
+                    program.sendEvent(.keyupevent(.init(timestamp: press.timestamp, keycode: oplKey, modifiers: modifiers)))
                 }
             }
         }

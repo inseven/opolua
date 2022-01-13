@@ -2334,6 +2334,7 @@ function GetEvent32(stack, runtime) -- 0x122
     local ev = stack:pop()
     getEvent(runtime, stat, ev)
     runtime:waitForRequest(stat)
+    -- printf("Got event stat=%s, %s\n", stat, ev:dereference():getParent())
 end
 
 function GetEventA32(stack, runtime) -- 0x123

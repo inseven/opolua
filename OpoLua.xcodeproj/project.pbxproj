@@ -38,7 +38,6 @@
 		D8891353274C186E00794D55 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891352274C186E00794D55 /* Canvas.swift */; };
 		D893EAD32760739500E64219 /* Border.swift in Sources */ = {isa = PBXBuildFile; fileRef = D893EAD22760739500E64219 /* Border.swift */; };
 		D893EAD5276073CA00E64219 /* Borders in Resources */ = {isa = PBXBuildFile; fileRef = D893EAD4276073CA00E64219 /* Borders */; };
-		D899AAD0278FF9A00046870A /* Int.swift in Sources */ = {isa = PBXBuildFile; fileRef = D899AACF278FF9A00046870A /* Int.swift */; };
 		D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A60792756A2CC00C9757F /* FileManager.swift */; };
 		D89A607C2756A6A300C9757F /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607B2756A6A300C9757F /* URL.swift */; };
 		D89A607E2756A98200C9757F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607D2756A98200C9757F /* ViewController.swift */; };
@@ -208,7 +207,6 @@
 		D8891352274C186E00794D55 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
 		D893EAD22760739500E64219 /* Border.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Border.swift; sourceTree = "<group>"; };
 		D893EAD4276073CA00E64219 /* Borders */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Borders; sourceTree = "<group>"; };
-		D899AACF278FF9A00046870A /* Int.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Int.swift; sourceTree = "<group>"; };
 		D89A60792756A2CC00C9757F /* FileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManager.swift; sourceTree = "<group>"; };
 		D89A607B2756A6A300C9757F /* URL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
 		D89A607D2756A98200C9757F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -407,7 +405,6 @@
 				D8EB6FF9275995DB00FC139F /* Dictionary.swift */,
 				D89A60792756A2CC00C9757F /* FileManager.swift */,
 				D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */,
-				D899AACF278FF9A00046870A /* Int.swift */,
 				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
 				D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
@@ -802,7 +799,6 @@
 				D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */,
 				D89A607E2756A98200C9757F /* ViewController.swift in Sources */,
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
-				D899AAD0278FF9A00046870A /* Int.swift in Sources */,
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
 				DB7900072742E6F6005E904F /* llex.c in Sources */,

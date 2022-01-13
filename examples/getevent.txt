@@ -34,7 +34,7 @@ PROC printEvent:
 	k% = ev&(1)
 	REM PRINT "Timestamp", ev&(2), " ",
 	IF (ev&(1) AND $400) = 0
-		PRINT "Key press", k%, "scan=", ev&(3), "mod="; ev&(4), "rep="; ev&(5)
+		PRINT "Key press", k%, "scan="; ev&(3), "mod="; ev&(4), "rep="; ev&(5), "t="; ev&(2)
 	ELSE
 		k% = ev&(1)- $400
 		VECTOR k%
@@ -46,10 +46,10 @@ PROC printEvent:
 		PRINT "Got event", ev&(1)
 		RETURN
 	keyDown::
-		PRINT "Key down", ev&(3)
+		PRINT "Key down", ev&(3), "t="; ev&(2)
 		RETURN
 	keyUp::
-		PRINT "Key up", ev&(3)
+		PRINT "Key up", ev&(3), "t="; ev&(2)
 		RETURN
 	pen::
 		PRINT "Pen type="; ev&(4), "mod="; ev&(5), ev&(6), ev&(7)
