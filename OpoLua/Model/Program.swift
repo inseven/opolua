@@ -141,19 +141,19 @@ class Program {
     }
 
     func sendKeyDown(_ key: OplKeyCode) {
-        sendEvent(.keydownevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
+        sendEvent(.keydownevent(.init(timestamp: .now(),
                                       keycode: key,
                                       modifiers: Modifiers())))
     }
 
     func sendKeyUp(_ key: OplKeyCode) {
-        sendEvent(.keyupevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
+        sendEvent(.keyupevent(.init(timestamp: .now(),
                                     keycode: key,
                                     modifiers: Modifiers())))
     }
 
     func sendKeyPress(_ key: OplKeyCode) {
-        sendEvent(.keypressevent(.init(timestamp: Int(NSDate().timeIntervalSince1970),
+        sendEvent(.keypressevent(.init(timestamp: .now(),
                                        keycode: key,
                                        modifiers: Modifiers(),
                                        isRepeat: false)))
