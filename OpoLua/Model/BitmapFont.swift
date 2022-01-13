@@ -28,11 +28,18 @@ struct BitmapFontInfo {
         let charh: Int
         let ascent: Int
         let maxwidth: Int
-        let firstch: Int
+        let encoding: String
+        let firstch: UInt32
         let widths: [Int]
     }
     let bitmapName: String
-    let startIndex: Unicode.Scalar
+    // Although it is not explicitly stated that String.Encoding values are
+    // completely interchangeable with NSStringEncoding UInts it is heavily
+    // implied by the fact that the compiler (somehow) knows more about this
+    // than the docs and indicates NSUTF32StringEncoding must be replaced by
+    // String.Encoding.utf32
+    let encoding: String.Encoding
+    let startIndex: UInt32
     let charw: Int
     let charh: Int // aka ascent + descent, same as the "point size" of a TTF font
     let ascent: Int
@@ -45,12 +52,20 @@ struct BitmapFontInfo {
               let metadata = try? JSONDecoder().decode(MetadataJson.self, from: json) else {
             return nil
         }
-        self.init(bitmapName: uidstr, startIndex: Unicode.Scalar(metadata.firstch)!, charw: metadata.maxwidth,
+        let cfenc = CFStringConvertIANACharSetNameToEncoding(metadata.encoding as CFString)
+        if cfenc == kCFStringEncodingInvalidId {
+            return nil
+        }
+        let nsenc = CFStringConvertEncodingToNSStringEncoding(cfenc)
+        let encoding = String.Encoding(rawValue: nsenc)
+
+        self.init(bitmapName: uidstr, encoding: encoding, startIndex: metadata.firstch, charw: metadata.maxwidth,
             charh: metadata.charh, ascent: metadata.ascent, widths: metadata.widths)
     }
 
-    init(bitmapName: String, startIndex: Unicode.Scalar, charw: Int, charh: Int, ascent: Int, widths: [Int]) {
+    init(bitmapName: String, encoding: String.Encoding, startIndex: UInt32, charw: Int, charh: Int, ascent: Int, widths: [Int]) {
         self.bitmapName = bitmapName
+        self.encoding = encoding
         self.startIndex = startIndex
         self.charw = charw
         self.charh = charh
@@ -77,14 +92,35 @@ class BitmapFontRenderer {
         self.imageh = self.img.height
     }
 
-    func imgCharWidth(_ char: Character) -> Int? {
+    func imageIndexFor(char: Character) -> Int? {
         if char.unicodeScalars.count != 1 {
             return nil
         }
-        let scalarValue = char.unicodeScalars.first!.value
-        let maxValue = font.startIndex.value + UInt32(self.charsPerRow * self.numRows)
-        if scalarValue >= font.startIndex.value && scalarValue < maxValue {
-            return font.widths[Int(scalarValue - font.startIndex.value)]
+        let codepoint: UInt32
+        if font.encoding == .utf32 {
+            codepoint = char.unicodeScalars.first!.value
+        } else {
+            if let data = String(char).data(using: font.encoding) {
+                var b: UInt8 = 0
+                assert(data.count == 1) // not gonna handle multibyte encodings here...
+                data.copyBytes(to: &b, count: 1)
+                codepoint = UInt32(b)
+            } else {
+                // If it can't even be represented in the image's charset, we can't have an index for it
+                return nil
+            }
+        }
+        let maxValue = font.startIndex + UInt32(self.charsPerRow * self.numRows)
+        if codepoint >= font.startIndex && codepoint < maxValue {
+            return Int(codepoint - font.startIndex)
+        } else {
+            return nil
+        }
+    }
+
+    func imageCharWidth(_ char: Character) -> Int? {
+        if let idx = imageIndexFor(char: char) {
+            return font.widths[idx]
         } else {
             return nil
         }
@@ -100,7 +136,7 @@ class BitmapFontRenderer {
     }
 
     func getCharWidth(_ char: Character) -> Int {
-        if let w = imgCharWidth(char) {
+        if let w = imageCharWidth(char) {
             return w
         } else {
             if let img = getImageForChar(char) {
@@ -139,13 +175,14 @@ class BitmapFontRenderer {
     }
 
     private func calculateImageForChar(_ char: Character) -> CGImage? {
-        if let width = imgCharWidth(char) {
+        if let idx = imageIndexFor(char: char) {
+            let width = font.widths[idx]
             if width == 0 {
                 return nil
             }
-            let charIdx = char.unicodeScalars.first!.value - font.startIndex.value
-            let x = Int(charIdx % UInt32(self.charsPerRow))
-            let y = Int(charIdx / UInt32(self.charsPerRow))
+            let uidx = UInt32(idx)
+            let x = Int(uidx % UInt32(self.charsPerRow))
+            let y = Int(uidx / UInt32(self.charsPerRow))
             return self.img.cropping(to: CGRect(x: x * charw, y: y * charh, width: width, height: charh))!
         } else {
             return individualImageForChar(char)

@@ -3,6 +3,7 @@
     "charh": 35,
     "ascent": 35,
     "maxwidth": 12,
+    "encoding": "windows-1252",
     "firstch": 48,
     "widths": [
         12,
