@@ -130,7 +130,6 @@ class DrawableViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         title = "Drawables"
         view.addSubview(tableView)
-        // TODO: Safe areas.
         NSLayoutConstraint.activate([
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
