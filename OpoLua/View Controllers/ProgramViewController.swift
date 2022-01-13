@@ -88,6 +88,15 @@ class ProgramViewController: UIViewController {
         return barButtonItem
     }()
 
+    lazy var drawablesBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "square.stack.3d.up"),
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(drawablesTapped(sender:)))
+        return barButtonItem
+    }()
+
+
     lazy var keyboardBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "keyboard"),
                                             style: .plain,
@@ -118,7 +127,7 @@ class ProgramViewController: UIViewController {
             windowServer.canvasView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             windowServer.canvasView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
-        toolbarItems = [consoleBarButtonItem]
+        toolbarItems = [consoleBarButtonItem, drawablesBarButtonItem]
         navigationItem.rightBarButtonItems = [menuBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
         observeMenuDismiss()
         observeGameControllers()
@@ -247,6 +256,13 @@ class ProgramViewController: UIViewController {
         showConsole()
     }
 
+    @objc func drawablesTapped(sender: UIBarButtonItem) {
+        let viewController = DrawableViewController(windowServer: windowServer)
+        viewController.delegate = self
+        let navigationController = UINavigationController(rootViewController: viewController)
+        present(navigationController, animated: true)
+    }
+
     @objc func controllerButtonTapped(sender: UIBarButtonItem) {
         if let virtualController = virtualController {
             virtualController.disconnect()
@@ -364,6 +380,7 @@ class ProgramViewController: UIViewController {
 extension ProgramViewController: ConsoleViewControllerDelegate {
 
     func consoleViewControllerDidDismiss(_ consoleViewController: ConsoleViewController) {
+        dispatchPrecondition(condition: .onQueue(.main))
         let shouldPopViewController = program.state == .finished
         consoleViewController.dismiss(animated: true) {
             guard shouldPopViewController else {
@@ -371,6 +388,15 @@ extension ProgramViewController: ConsoleViewControllerDelegate {
             }
             self.navigationController?.popViewController(animated: true)
         }
+    }
+
+}
+
+extension ProgramViewController: DrawableViewControllerDelegate {
+
+    func drawableViewControllerDidFinish(_ drawableViewController: DrawableViewController) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        drawableViewController.dismiss(animated: true)
     }
 
 }

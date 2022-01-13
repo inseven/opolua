@@ -24,6 +24,8 @@ import UIKit
 
 protocol Drawable: AnyObject {
 
+    var id: Graphics.DrawableId { get }
+
     func draw(_ operation: Graphics.DrawCommand)
     func setSprite(_ sprite: Graphics.Sprite?, for id: Int)
     func getImage() -> CGImage?

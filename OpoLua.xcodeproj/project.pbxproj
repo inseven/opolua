@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */; };
 		D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */; };
+		D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B875B2790D52C00E71960 /* DrawableViewController.swift */; };
 		D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82639352783CAE500AB4086 /* TimerRequest.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
@@ -179,6 +180,7 @@
 /* Begin PBXFileReference section */
 		D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Graphics+CoreGraphics.swift"; sourceTree = "<group>"; };
 		D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+UIKit.swift"; sourceTree = "<group>"; };
+		D81B875B2790D52C00E71960 /* DrawableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawableViewController.swift; sourceTree = "<group>"; };
 		D82639352783CAE500AB4086 /* TimerRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRequest.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
@@ -437,6 +439,7 @@
 				DB79FFBD2742D99C005E904F /* ProgramViewController.swift */,
 				D8553767278F535A00ED67C0 /* SettingsView.swift */,
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
+				D81B875B2790D52C00E71960 /* DrawableViewController.swift */,
 			);
 			path = "View Controllers";
 			sourceTree = "<group>";
@@ -771,6 +774,7 @@
 				D86724F027715B88009C7246 /* Program.swift in Sources */,
 				DB79FFF82742E6F6005E904F /* lapi.c in Sources */,
 				DB79FFF92742E6F6005E904F /* lauxlib.c in Sources */,
+				D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */,
 				DB79FFFA2742E6F6005E904F /* lbaselib.c in Sources */,
 				DB79FFFB2742E6F6005E904F /* lbitlib.c in Sources */,
 				DB79FFFC2742E6F6005E904F /* lcode.c in Sources */,

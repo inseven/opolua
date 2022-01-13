@@ -50,7 +50,11 @@ class WindowServer {
     private var program: Program
 
     private var drawableHandle = (1...).makeIterator()
-    private var drawables: [Graphics.DrawableId: Drawable] = [:]
+    private var drawablesById: [Graphics.DrawableId: Drawable] = [:]
+
+    public var drawables: [Drawable] {
+        return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
+    }
 
     private var infoDrawableHandle: Graphics.DrawableId?
     private var infoWindowDismissTimer: Timer?
@@ -68,7 +72,7 @@ class WindowServer {
         canvasView.layer.borderColor = UIColor.lightGray.cgColor
         canvasView.clipsToBounds = true
         canvasView.delegate = program
-        drawables[.defaultWindow] = canvasView
+        drawablesById[.defaultWindow] = canvasView
         return canvasView
     }()
 
@@ -78,7 +82,7 @@ class WindowServer {
 
     func drawable(for drawableId: Graphics.DrawableId) -> Drawable? {
         dispatchPrecondition(condition: .onQueue(.main))
-        return drawables[drawableId]
+        return drawablesById[drawableId]
     }
 
     private func newCanvas(size: CGSize, color: Bool) -> Canvas {
@@ -100,7 +104,7 @@ class WindowServer {
         newView.frame = rect.cgRect()
         newView.delegate = self.program
         self.canvasView.addSubview(newView)
-        self.drawables[canvas.id] = newView
+        self.drawablesById[canvas.id] = newView
         bringInfoWindowToFront()
         return canvas
     }
@@ -109,13 +113,13 @@ class WindowServer {
         dispatchPrecondition(condition: .onQueue(.main))
         let isColor = mode == .Color16 || mode == .Color256
         let canvas = newCanvas(size: size.cgSize(), color: isColor)
-        drawables[canvas.id] = canvas
+        drawablesById[canvas.id] = canvas
         return canvas
     }
 
     func setVisiblity(handle: Graphics.DrawableId, visible: Bool) {
         dispatchPrecondition(condition: .onQueue(.main))
-        guard let view = self.drawables[handle] as? CanvasView else {
+        guard let view = self.drawablesById[handle] as? CanvasView else {
             print("No CanvasView for showWindow operation")
             return
         }
@@ -127,7 +131,7 @@ class WindowServer {
      */
     func order(drawableId: Graphics.DrawableId, position: Int) {
         dispatchPrecondition(condition: .onQueue(.main))
-        guard let view = self.drawables[drawableId] as? CanvasView else {
+        guard let view = self.drawablesById[drawableId] as? CanvasView else {
             return
         }
         let views = self.canvasView.subviews
@@ -142,11 +146,11 @@ class WindowServer {
 
     func close(drawableId: Graphics.DrawableId) {
         dispatchPrecondition(condition: .onQueue(.main))
-        guard let view = self.drawables[drawableId] as? CanvasView else {
+        guard let view = self.drawablesById[drawableId] as? CanvasView else {
             return
         }
         view.removeFromSuperview()
-        self.drawables[drawableId] = nil
+        self.drawablesById[drawableId] = nil
 
         // TODO: Clean up the sprites for this window.
     }
@@ -154,7 +158,7 @@ class WindowServer {
     func infoPrint(drawableId: Graphics.DrawableId) {
         dispatchPrecondition(condition: .onQueue(.main))
         hideInfoWindow()
-        guard let canvas = self.drawables[drawableId] as? CanvasView else {
+        guard let canvas = self.drawablesById[drawableId] as? CanvasView else {
             return
         }
         self.setVisiblity(handle: canvas.id, visible: true)
@@ -170,7 +174,7 @@ class WindowServer {
     func busy(drawableId: Graphics.DrawableId, delay: Int) {
         dispatchPrecondition(condition: .onQueue(.main))
         cancelBusyTimer()
-        guard let canvas = self.drawables[drawableId] as? CanvasView else {
+        guard let canvas = self.drawablesById[drawableId] as? CanvasView else {
             return
         }
         busyDrawableHandle = canvas.id
@@ -185,7 +189,7 @@ class WindowServer {
         dispatchPrecondition(condition: .onQueue(.main))
         if drawableId == Graphics.DrawableId.defaultWindow {
             // Let's ignore attempts to move/resize the toplevel window
-        } else if let view = self.drawables[drawableId] as? CanvasView {
+        } else if let view = self.drawablesById[drawableId] as? CanvasView {
             if let size = size {
                 view.resize(to: size.cgSize())
             }
@@ -211,7 +215,7 @@ class WindowServer {
             sprites.removeValue(forKey: id)
             return
         }
-        guard let drawable = self.drawables[sprite.window] else {
+        guard let drawable = self.drawablesById[sprite.window] else {
             return
         }
         drawable.setSprite(sprite, for: id)
@@ -270,7 +274,7 @@ class WindowServer {
 
     private func bringInfoWindowToFront() {
         guard let infoDrawableHandle = infoDrawableHandle,
-              let infoView = self.drawables[infoDrawableHandle] as? CanvasView
+              let infoView = self.drawablesById[infoDrawableHandle] as? CanvasView
         else {
             return
         }
@@ -301,7 +305,7 @@ class WindowServer {
     }
 
     @objc func tickSprites() {
-        for drawable in self.drawables.values {
+        for drawable in self.drawablesById.values {
             drawable.updateSprites()
         }
     }
