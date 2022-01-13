@@ -63,6 +63,7 @@ class Scheduler {
             request.scheduler = self
             requests.append(request)
         }
+        request.start()
     }
 
     func complete(request: Request, response: Async.ResponseValue) {
@@ -71,7 +72,7 @@ class Scheduler {
         }
     }
 
-    private func completeLocked(request: Request, response: Async.ResponseValue) {
+    func completeLocked(request: Request, response: Async.ResponseValue) {
         precondition(request.response == nil, "Cannot complete a request that already has a response set!")
         request.response = response
         lock.broadcast()

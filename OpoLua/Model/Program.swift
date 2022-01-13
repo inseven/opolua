@@ -78,14 +78,11 @@ class Program {
         }
 
         override func start() {
-            guard let scheduler = self.scheduler, let program = self.program else {
-                print("Cannot start request if scheduler or program isn't set!")
+            guard let program = self.program else {
+                print("Cannot start request if program isn't set!")
                 return
             }
-            scheduler.withLockHeld {
-                precondition(program.geteventRequest == nil, "There can only be one geteventRequest!")
-                program.geteventRequest = self
-            }
+            program.startGetEventRequest(self)
         }
     }
 
@@ -166,16 +163,25 @@ class Program {
     }
 
     func sendEvent(_ event: Async.ResponseValue) {
-        var req: GetEventRequest?
+        eventQueue.append(event)
+        checkGetEventCompletion()
+    }
+
+    func startGetEventRequest(_ request: GetEventRequest) {
         scheduler.withLockHeld {
-            req = geteventRequest
-            geteventRequest = nil
+            precondition(self.geteventRequest == nil, "Duplicate geteventRequest!")
+            self.geteventRequest = request
         }
-        if let req = req {
-            assert(eventQueue.isEmpty(), "Queue must be empty if there's a geteventRequest!")
-            scheduler.complete(request: req, response: event)
-        } else {
-            eventQueue.append(event)
+        checkGetEventCompletion()
+    }
+
+    func checkGetEventCompletion() {
+        scheduler.withLockHeld {
+            if let request = self.geteventRequest,
+               let event = eventQueue.first() {
+                self.geteventRequest = nil
+                scheduler.completeLocked(request: request, response: event)
+            }
         }
     }
 
@@ -263,30 +269,19 @@ extension Program: OpoIoHandler {
         return self.configuration.fileSystem.perform(op)
     }
 
-    // TODO: Consider returning the request?
     func asyncRequest(_ request: Async.Request) {
+        let req: Scheduler.Request
         switch request.type {
         case .getevent:
-            let req = GetEventRequest(handle: request.handle, program: self)
-            scheduler.addPendingRequest(req)
-            if let event = eventQueue.first() {
-                scheduler.complete(request: req, response: event)
-            } else {
-                req.start()
-            }
+            req = GetEventRequest(handle: request.handle, program: self)
         case .after(let interval):
-            let req = TimerRequest(handle: request.handle, after: interval)
-            scheduler.addPendingRequest(req)
-            req.start()
+            req = TimerRequest(handle: request.handle, after: interval)
         case .at(let date):
-            let req = TimerRequest(handle: request.handle, at: date)
-            scheduler.addPendingRequest(req)
-            req.start()
+            req = TimerRequest(handle: request.handle, at: date)
         case .playsound(let data):
-            let req = PlaySoundRequest(handle: request.handle, data: data)
-            scheduler.addPendingRequest(req)
-            req.start()
+            req = PlaySoundRequest(handle: request.handle, data: data)
         }
+        scheduler.addPendingRequest(req)
     }
 
     func cancelRequest(_ requestHandle: Async.RequestHandle) {
@@ -340,9 +335,7 @@ extension Program: CanvasViewDelegate {
             print("Ignoring unmapped character '\(character)'...")
             return
         }
-        sendKeyDown(keyCode)
-        sendKeyPress(keyCode)
-        sendKeyUp(keyCode)
+        sendKey(keyCode)
     }
 
     func canvasViewDeleteBackward(_ canvasView: CanvasView) {
