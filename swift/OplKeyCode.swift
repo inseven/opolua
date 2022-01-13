@@ -229,6 +229,7 @@ extension OplKeyCode {
         ">": .greaterThan,
         "/": .slash,
         "?": .questionMark,
+        "\n": .enter,
     ]
 
     static func from(string: String) -> OplKeyCode? {

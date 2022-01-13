@@ -334,4 +334,19 @@ extension Program: CanvasViewDelegate {
         handleTouch(touch, in: canvasView, with: event, type: .up)
     }
 
+    func canvasView(_ canvasView: CanvasView, insertCharacter character: Character) {
+        print("insertCharacter: '\(character)'")
+        guard let keyCode = OplKeyCode.from(string: String(character)) else {
+            print("Ignoring unmapped character '\(character)'...")
+            return
+        }
+        sendKeyDown(keyCode)
+        sendKeyPress(keyCode)
+        sendKeyUp(keyCode)
+    }
+
+    func canvasViewDeleteBackward(_ canvasView: CanvasView) {
+        sendKey(.backspace)
+    }
+
 }

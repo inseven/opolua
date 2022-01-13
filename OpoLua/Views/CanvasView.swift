@@ -25,6 +25,8 @@ protocol CanvasViewDelegate: AnyObject {
     func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent)
     func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent)
     func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent)
+    func canvasView(_ canvasView: CanvasView, insertCharacter character: Character)
+    func canvasViewDeleteBackward(_ canvasView: CanvasView)
 
 }
 
@@ -34,6 +36,11 @@ class CanvasView : UIView, Drawable {
         return canvas.id
     }
 
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
+
+    var keyboardType: UIKeyboardType = .asciiCapable
     var canvas: Canvas
     weak var delegate: CanvasViewDelegate?
 
@@ -122,6 +129,24 @@ class CanvasView : UIView, Drawable {
             self.canvas.draw(Graphics.DrawCommand(drawableId: dummyId, type: .copy(src, nil), mode: .set, origin: zero, color: dontCare, bgcolor: dontCare, penWidth: 1))
         }
         self.bounds = CGRect(origin: .zero, size: newSize)
+    }
+
+}
+
+extension CanvasView: UIKeyInput {
+
+    var hasText: Bool {
+        return true
+    }
+
+    func insertText(_ text: String) {
+        for character in text {
+            delegate?.canvasView(self, insertCharacter: character)
+        }
+    }
+
+    func deleteBackward() {
+        delegate?.canvasViewDeleteBackward(self)
     }
 
 }

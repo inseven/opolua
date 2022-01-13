@@ -88,6 +88,14 @@ class ProgramViewController: UIViewController {
         return barButtonItem
     }()
 
+    lazy var keyboardBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "keyboard"),
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(keyboardTapped(sender:)))
+        return barButtonItem
+    }()
+
     lazy var controllerBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "gamecontroller"),
                                             style: .plain,
@@ -111,7 +119,7 @@ class ProgramViewController: UIViewController {
             windowServer.canvasView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
         toolbarItems = [consoleBarButtonItem]
-        navigationItem.rightBarButtonItems = [menuBarButtonItem, controllerBarButtonItem]
+        navigationItem.rightBarButtonItems = [menuBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
         observeMenuDismiss()
         observeGameControllers()
     }
@@ -226,6 +234,14 @@ class ProgramViewController: UIViewController {
     }
 
     @objc func controllerDidDisconnect(notification: NSNotification) {}
+
+    @objc func keyboardTapped(sender: UIBarButtonItem) {
+        if windowServer.canvasView.isFirstResponder {
+            windowServer.canvasView.resignFirstResponder()
+        } else {
+            windowServer.canvasView.becomeFirstResponder()
+        }
+    }
 
     @objc func consoleTapped(sender: UIBarButtonItem) {
         showConsole()
