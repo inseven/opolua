@@ -56,19 +56,16 @@ class WindowServer {
     private var screenSize: Graphics.Size
     private var drawableHandle = (1...).makeIterator()
     private var drawablesById: [Graphics.DrawableId: Drawable] = [:]
-
-    public var drawables: [Drawable] {
-        return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
-    }
-
     private var infoDrawableHandle: Graphics.DrawableId?
     private var infoWindowDismissTimer: Timer?
     private var busyDrawableHandle: Graphics.DrawableId?
     private var busyWindowShowTimer: Timer?
+    private var spriteWindows: [Int: Graphics.DrawableId] = [:]
+    private var spriteTimer: Timer?
 
-    // TODO: Should these be private?
-    var spriteWindows: [Int: Graphics.DrawableId] = [:]
-    var spriteTimer: Timer?
+    public var drawables: [Drawable] {
+        return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
+    }
 
     lazy var canvasView: CanvasView = {
         let canvas = newCanvas(size: screenSize.cgSize(), color: true)
