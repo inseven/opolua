@@ -37,7 +37,6 @@ class Program {
     class Configuration {
 
         let url: URL
-        let fileSystem: FileSystem
 
         var name: String {
             return url.name
@@ -47,9 +46,8 @@ class Program {
             return OpoInterpreter.shared.getProcedures(file: url.path) ?? []
         }
 
-        init(url: URL, fileSystem: FileSystem) {
+        init(url: URL) {
             self.url = url
-            self.fileSystem = fileSystem
         }
 
     }
@@ -102,8 +100,8 @@ class Program {
 
     var console = Console()
 
-    // TODO: Rename this to title?
-    var title: String = "Cheese"
+    var title: String
+
     var name: String {
         if let procedureName = procedureName {
             return [configuration.name, procedureName].joined(separator: "\\")
@@ -112,19 +110,23 @@ class Program {
         }
     }
 
-    // TODO: Remove this?
-    var screenSize: Graphics.Size {
-        return device.screenSize
-    }
-
     var rootView: UIView {
         return windowServer.canvasView
     }
+
+    lazy private var fileSystem: FileSystem = {
+        do {
+            return try FileManager.default.detectSystemFileSystem(for: configuration.url) ?? ObjectFileSystem(objectUrl: configuration.url)
+        } catch {
+            return ObjectFileSystem(objectUrl: configuration.url)
+        }
+    }()
 
     init(configuration: Configuration, procedureName: String? = nil, device: Device = .psionSeries5) {
         self.configuration = configuration
         self.procedureName = procedureName
         self.device = device
+        self.title = configuration.name
         self.thread = InterpreterThread(object: configuration, procedureName: procedureName)
         self.windowServer = WindowServer(screenSize: device.screenSize)
         self.thread.delegate = self
@@ -272,7 +274,7 @@ class Program {
 extension Program: InterpreterThreadDelegate {
 
     func interpreter(_ interpreter: InterpreterThread, pathForUrl url: URL) -> String? {
-        return configuration.fileSystem.guestPath(for: url)
+        return fileSystem.guestPath(for: url)
     }
 
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result) {
@@ -340,7 +342,7 @@ extension Program: OpoIoHandler {
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
-        return self.configuration.fileSystem.perform(op)
+        return fileSystem.perform(op)
     }
 
     func asyncRequest(_ request: Async.Request) {

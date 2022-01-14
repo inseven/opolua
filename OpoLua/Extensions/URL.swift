@@ -46,7 +46,6 @@ extension URL {
         }
         components.path = components.path.deletingPathExtension
         return components.url
-
     }
 
     func appendingPathExtension(_ str: String) -> URL? {

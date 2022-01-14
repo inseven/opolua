@@ -98,11 +98,11 @@ class Directory {
         var configuration: Program.Configuration? {
             switch type {
             case .bundle(let application):
-                return Program.Configuration(url: application.url, fileSystem: ObjectFileSystem(objectUrl: application.url))
+                return Program.Configuration(url: application.url)
             case .system(let application):
-                return Program.Configuration(url: application.url, fileSystem: SystemFileSystem(rootUrl: url))
+                return Program.Configuration(url: application.url)
             default:
-                return Program.Configuration(url: url, fileSystem: ObjectFileSystem(objectUrl: url))
+                return Program.Configuration(url: url)
             }
         }
 
@@ -134,25 +134,10 @@ class Directory {
     }
 
     private static func asSystem(url: URL) throws -> Item.`Type`? {
-
-        let contents = try url.contents
-        let drives: Set<String> = ["c", "C", "d", "D"]
-
-        // Ensure there only folders named for valid drive letters present.
-        // N.B. This implementation is intetnionally strict. We can relax it as and when we find we need to.
-        for url in contents {
-            let name = url.lastPathComponent
-            if name.starts(with: ".") {
-                // Ignore hidden files.
-                continue
-            }
-            guard url.isDirectory,
-                  drives.contains(name)
-            else {
-                return nil
-            }
+        guard try FileManager.default.isSystem(at: url) else {
+            return nil
         }
-
+        
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(at: url,
                                                 includingPropertiesForKeys: [.isDirectoryKey],
