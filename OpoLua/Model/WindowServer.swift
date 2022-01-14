@@ -62,7 +62,7 @@ class WindowServer {
     private var busyDrawableHandle: Graphics.DrawableId?
     private var busyWindowShowTimer: Timer?
 
-    var sprites: [Int: Sprite] = [:]
+    var spriteWindows: [Int: Graphics.DrawableId] = [:]
     var spriteTimer: Timer?
 
     lazy var canvasView: CanvasView = {
@@ -210,16 +210,23 @@ class WindowServer {
                                                userInfo: nil,
                                                repeats: true)
         }
-        guard let sprite = sprite else {
-            // TODO: Delete sprites from the windows!
-            // TODO: We'll need to nuke these sprites when the windows are deleted.
-            sprites.removeValue(forKey: id)
+        if let sprite = sprite,
+           let spriteWindow = spriteWindows[id] {
+            precondition(spriteWindow == sprite.window, "Sprites cannot move between windows!")
+        }
+
+        guard let drawableId = sprite?.window ?? spriteWindows[id] else {
+            // A sprite we don't know about being deleted is kinda fine I guess...
             return
         }
-        guard let drawable = self.drawablesById[sprite.window] else {
+        guard let drawable = self.drawablesById[drawableId] else {
             return
         }
         drawable.setSprite(sprite, for: id)
+        if sprite == nil {
+            spriteWindows.removeValue(forKey: id)
+        }
+
     }
 
     func draw(operations: [Graphics.DrawCommand]) {

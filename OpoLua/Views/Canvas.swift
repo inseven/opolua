@@ -83,11 +83,11 @@ class Canvas: Drawable {
     }
 
     func setSprite(_ sprite: Graphics.Sprite?, for id: Int) {
-        guard let sprite = sprite else {
+        if let sprite = sprite {
+            self.sprites[id] = Sprite(sprite: sprite)
+        } else {
             self.sprites.removeValue(forKey: id)
-            return
         }
-        self.sprites[id] = Sprite(sprite: sprite)
         // print(self.sprites)
         self.image = nil
     }
