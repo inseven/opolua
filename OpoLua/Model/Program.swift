@@ -42,10 +42,6 @@ class Program {
             return url.name
         }
 
-        var procedures: [OpoInterpreter.Procedure] {
-            return OpoInterpreter.shared.getProcedures(file: url.path) ?? []
-        }
-
         init(url: URL) {
             self.url = url
         }

@@ -369,7 +369,8 @@ extension DirectoryViewController: UICollectionViewDelegate {
                     return nil
                 }
                 let actions = self.actions(for: configuration)
-                let procedureActions = configuration.procedures.map { procedure in
+                let procedures = OpoInterpreter.shared.getProcedures(file: configuration.url.path) ?? []
+                let procedureActions = procedures.map { procedure in
                     UIAction(title: procedure.name) { action in
                         let program = Program(configuration: configuration, procedureName: procedure.name)
                         let viewController = ProgramViewController(settings: self.settings, program: program)
