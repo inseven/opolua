@@ -16,6 +16,9 @@
 		D80D65B0279E31220020F994 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AF279E31220020F994 /* Configuration.swift */; };
 		D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B875B2790D52C00E71960 /* DrawableViewController.swift */; };
 		D81C12A8279EF0C0000E70D0 /* AllProgramsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */; };
+		D81B875E2790DAAD00E71960 /* InstallerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B875D2790DAAD00E71960 /* InstallerViewController.swift */; };
+		D81B87612790ECC500E71960 /* InstallerIntroductionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B87602790ECC500E71960 /* InstallerIntroductionViewController.swift */; };
+		D81B87632790ED0300E71960 /* InstallerSummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B87622790ED0300E71960 /* InstallerSummaryViewController.swift */; };
 		D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82639352783CAE500AB4086 /* TimerRequest.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
@@ -205,6 +208,9 @@
 		D80D65AF279E31220020F994 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		D81B875B2790D52C00E71960 /* DrawableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawableViewController.swift; sourceTree = "<group>"; };
 		D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllProgramsViewController.swift; sourceTree = "<group>"; };
+		D81B875D2790DAAD00E71960 /* InstallerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallerViewController.swift; sourceTree = "<group>"; };
+		D81B87602790ECC500E71960 /* InstallerIntroductionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallerIntroductionViewController.swift; sourceTree = "<group>"; };
+		D81B87622790ED0300E71960 /* InstallerSummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallerSummaryViewController.swift; sourceTree = "<group>"; };
 		D82639352783CAE500AB4086 /* TimerRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRequest.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
@@ -366,6 +372,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D81B875F2790E9A600E71960 /* Installer */ = {
+			isa = PBXGroup;
+			children = (
+				D81B87602790ECC500E71960 /* InstallerIntroductionViewController.swift */,
+				D81B875D2790DAAD00E71960 /* InstallerViewController.swift */,
+				D81B87622790ED0300E71960 /* InstallerSummaryViewController.swift */,
+			);
+			path = Installer;
+			sourceTree = "<group>";
+		};
 		D861E8D9274A818D003C8D3D /* Model */ = {
 			isa = PBXGroup;
 			children = (
@@ -467,6 +483,7 @@
 		D8C679BB27484BB800BD8720 /* View Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				D81B875F2790E9A600E71960 /* Installer */,
 				D86FBAB4278C74A3003DF611 /* AboutView.swift */,
 				D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */,
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
@@ -835,6 +852,7 @@
 				D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */,
 				D893EAD32760739500E64219 /* Border.swift in Sources */,
 				DB7900232746C771005E904F /* lua_State.swift in Sources */,
+				D81B87612790ECC500E71960 /* InstallerIntroductionViewController.swift in Sources */,
 				DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */,
 				DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */,
 				D86724F027715B88009C7246 /* Program.swift in Sources */,
@@ -852,6 +870,7 @@
 				DB7900002742E6F6005E904F /* ldebug.c in Sources */,
 				D80D65A8279DD2060020F994 /* Icon.swift in Sources */,
 				D8FE60052757177200711717 /* Settings.swift in Sources */,
+				D81B875E2790DAAD00E71960 /* InstallerViewController.swift in Sources */,
 				D8DCD040277ACD7800760302 /* Sprite.swift in Sources */,
 				D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */,
 				DB7900012742E6F6005E904F /* ldo.c in Sources */,
@@ -859,6 +878,7 @@
 				D8D95504279B52370049A3C3 /* Localization.swift in Sources */,
 				D86FBAB5278C74A3003DF611 /* AboutView.swift in Sources */,
 				D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */,
+				D81B87632790ED0300E71960 /* InstallerSummaryViewController.swift in Sources */,
 				DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */,
 				D8BA0970275196CA00F4730D /* String.swift in Sources */,
 				D8F4835D278D3D31008AF80C /* PixelView.swift in Sources */,

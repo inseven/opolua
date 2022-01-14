@@ -23,4 +23,7 @@ import CoreGraphics
 
 enum OpoLuaError: Error {
 
+    case fileExists
+    case interpreterError(OpoInterpreter.Error)
+
 }

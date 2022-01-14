@@ -46,11 +46,22 @@ class Installer {
             do {
                 let destinationUrl = self.url.deletingPathExtension()
                 print("Installing to \(destinationUrl)...")
-                try FileManager.default.createDirectory(at: destinationUrl, withIntermediateDirectories: true)
-                try FileManager.default.createDirectory(at: destinationUrl.appendingPathComponent("c"), withIntermediateDirectories: true)
-                try FileManager.default.createDirectory(at: destinationUrl.appendingPathComponent("d"), withIntermediateDirectories: true)
+
+                let fileManager = FileManager.default
+
+                guard !fileManager.fileExists(atPath: destinationUrl.path, isDirectory: nil) else {
+                    print("File exists at path; giving up")
+                    self.delegate?.installer(self, didFailWithError: OpoLuaError.fileExists)
+                    return
+                }
+
+                try fileManager.createDirectory(at: destinationUrl, withIntermediateDirectories: true)
+                try fileManager.createDirectory(at: destinationUrl.appendingPathComponent("c"), withIntermediateDirectories: true)
+                try fileManager.createDirectory(at: destinationUrl.appendingPathComponent("d"), withIntermediateDirectories: true)
+
                 let result = self.interpreter.installSisFile(path: self.url.path)
                 self.delegate?.installer(self, didFinishWithResult: result)
+
             } catch {
                 // TODO: Clean up if we've failed to install the file.
                 self.delegate?.installer(self, didFailWithError: error)

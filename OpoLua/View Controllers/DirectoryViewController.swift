@@ -299,9 +299,9 @@ class DirectoryViewController : UICollectionViewController {
         case .directory:
             pushDirectoryViewController(for: item.url)
         case .installer:
-            installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
-            installer?.delegate = self
-            installer?.run()
+            let installerViewController = InstallerViewController(url: item.url)
+            installerViewController.installerDelegate = self
+            present(installerViewController, animated: true)
         case .image:
             let viewController = ImageViewController(url: item.url)
             navigationController?.pushViewController(viewController, animated: true)
@@ -365,27 +365,12 @@ extension DirectoryViewController: DirectoryDelegate {
     }
 }
 
-extension DirectoryViewController: InstallerDelegate {
+extension DirectoryViewController: InstallerViewControllerDelegate {
 
-    func installer(_ installer: Installer, didFinishWithResult result: OpoInterpreter.Result) {
-        DispatchQueue.main.async {
-            switch result {
-            case .none:
-                let alert = UIAlertController(title: "Installer", message: "Complete!", preferredStyle: .alert)
-                alert.addAction(.init(title: "OK", style: .default, handler: nil))
-                self.present(alert, animated: true, completion: nil)
-            case .error(let error):
-                self.present(error: error)
-            }
-            self.reload()
-        }
-    }
-
-    func installer(_ installer: Installer, didFailWithError error: Error) {
-        DispatchQueue.main.async {
-            self.present(error: error)
-            self.reload()
-        }
+    func installerViewControllerDidFinish(_ installerViewController: InstallerViewController) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        installerViewController.dismiss(animated: true)
+        reload()
     }
 
 }
