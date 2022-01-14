@@ -22,7 +22,13 @@ import UIKit
 
 class PixelView: UIView {
 
-    var image: UIImage?
+    var image: UIImage? {
+        didSet {
+            dispatchPrecondition(condition: .onQueue(.main))
+            setNeedsLayout()
+            setNeedsDisplay()
+        }
+    }
 
     init(image: UIImage? = nil) {
         super.init(frame: .zero)
@@ -47,12 +53,18 @@ class PixelView: UIView {
 
     override var frame: CGRect {
         didSet {
+            dispatchPrecondition(condition: .onQueue(.main))
+            setNeedsLayout()
             setNeedsDisplay()
         }
     }
 
     override var description: String {
         return String(format: "<OpoLua.PixelView: %p, frame = %@, layer = %@, image = %@>", self, NSCoder.string(for: frame), layer, image ?? "nil")
+    }
+
+    override var intrinsicContentSize: CGSize {
+        return image?.size ?? .zero
     }
 
 }

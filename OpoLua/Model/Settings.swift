@@ -22,7 +22,7 @@ import Foundation
 import SwiftUI
 import UIKit
 
-class Settings {
+class Settings: ObservableObject {
 
     private enum Key: String {
         case theme
@@ -53,11 +53,14 @@ class Settings {
     }
 
     private func integer(for key: Key) -> Int {
+        dispatchPrecondition(condition: .onQueue(.main))
         return self.userDefaults.integer(forKey: key.rawValue)
     }
 
     private func set(_ value: Int, for key: Key) {
+        dispatchPrecondition(condition: .onQueue(.main))
         self.userDefaults.set(value, forKey: key.rawValue)
+        self.objectWillChange.send()
     }
 
     func addLocation(_ url: URL) throws {
@@ -99,6 +102,15 @@ extension Settings.Theme {
             return UIColor(named: "Series5Color")!
         case .series7:
             return UIColor(named: "Series7Color")!
+        }
+    }
+
+    var wallpaper: UIImage {
+        switch self {
+        case .series5:
+            return .epocLogo
+        case .series7:
+            return .epocLogoC
         }
     }
 

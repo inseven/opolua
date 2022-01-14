@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import GameController
 import UIKit
 
@@ -42,15 +43,17 @@ class ProgramViewController: UIViewController {
         .b: .enter,
     ]
 
+    var settings: Settings
     var program: Program
     var windowServer: WindowServer
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
-
     let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
 
     var virtualController: GCVirtualController?
+
+    var settingsSink: AnyCancellable?
 
     lazy var controllerState: [ControllerButton: Bool] = {
         return ControllerButton.allCases.reduce(into: [ControllerButton: Bool]()) { partialResult, button in
@@ -113,7 +116,8 @@ class ProgramViewController: UIViewController {
         return barButtonItem
     }()
 
-    init(program: Program) {
+    init(settings: Settings, program: Program) {
+        self.settings = settings
         self.program = program
         self.windowServer = WindowServer(program: program)
         super.init(nibName: nil, bundle: nil)
@@ -141,6 +145,7 @@ class ProgramViewController: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.isToolbarHidden = false
         windowServer.canvasView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
+        settingsSink = settings.objectWillChange.sink { _ in }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -152,6 +157,8 @@ class ProgramViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         virtualController?.disconnect()
+        settingsSink?.cancel()
+        settingsSink = nil
     }
 
     override func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {

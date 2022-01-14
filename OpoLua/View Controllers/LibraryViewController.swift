@@ -184,7 +184,7 @@ class LibraryViewController: UITableViewController {
         }
         do {
             let directory = try Directory(url: item.location.url)
-            let viewController = DirectoryViewController(directory: directory, title: item.name)
+            let viewController = DirectoryViewController(settings: settings, directory: directory, title: item.name)
             navigationController?.pushViewController(viewController, animated: true)
         } catch {
             present(error: error)

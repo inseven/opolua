@@ -18,9 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import Foundation
 import UIKit
-import SwiftUI
 
 class DirectoryViewController : UIViewController {
 
@@ -96,11 +96,13 @@ class DirectoryViewController : UIViewController {
     }
 
     static var cell = "Cell"
-    
+
+    var settings: Settings
     var directory: Directory
     var items: [Directory.Item] = []
     var installer: Installer?
     var applicationActiveObserver: Any?
+    var settingsSink: AnyCancellable?
 
     private func createLayout() -> UICollectionViewLayout {
         let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(100),
@@ -115,18 +117,20 @@ class DirectoryViewController : UIViewController {
         return layout
     }
 
-    lazy var wallpaperView: UIView = {
-        let image = UIImage.epoc
+    lazy var wallpaperPixelView: PixelView = {
+        let image = settings.theme.wallpaper
         let pixelView = PixelView(image: image)
         pixelView.translatesAutoresizingMaskIntoConstraints = false
         pixelView.backgroundColor = .clear
+        return pixelView
+    }()
+
+    lazy var wallpaperView: UIView = {
         let view = UIView(frame: .zero)
-        view.addSubview(pixelView)
+        view.addSubview(wallpaperPixelView)
         NSLayoutConstraint.activate([
-            pixelView.widthAnchor.constraint(equalToConstant: image.size.width),
-            pixelView.heightAnchor.constraint(equalToConstant: image.size.height),
-            pixelView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            pixelView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            wallpaperPixelView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            wallpaperPixelView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
         return view
     }()
@@ -161,7 +165,8 @@ class DirectoryViewController : UIViewController {
         return menuBarButtonItem
     }()
     
-    init(directory: Directory, title: String? = nil) {
+    init(settings: Settings, directory: Directory, title: String? = nil) {
+        self.settings = settings
         self.directory = directory
         self.items = directory.items
         super.init(nibName: nil, bundle: nil)
@@ -197,6 +202,9 @@ class DirectoryViewController : UIViewController {
                                                                            queue: nil) { notification in
             self.reload()
         }
+        settingsSink = settings.objectWillChange.sink { [unowned self] settings in
+            self.wallpaperPixelView.image = self.settings.theme.wallpaper
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -204,6 +212,8 @@ class DirectoryViewController : UIViewController {
         if let observer = applicationActiveObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+        settingsSink?.cancel()
+        settingsSink = nil
     }
 
     func createDirectory() {
@@ -248,7 +258,7 @@ class DirectoryViewController : UIViewController {
     func pushDirectoryViewController(for url: URL) {
         do {
             let directory = try Directory(url: url)
-            let viewController = DirectoryViewController(directory: directory)
+            let viewController = DirectoryViewController(settings: settings, directory: directory)
             navigationController?.pushViewController(viewController, animated: true)
         } catch {
             present(error: error)
@@ -260,7 +270,7 @@ class DirectoryViewController : UIViewController {
 
         let runAction = UIAction(title: "Run") { action in
             let program = Program(configuration: configuration)
-            let viewController = ProgramViewController(program: program)
+            let viewController = ProgramViewController(settings: self.settings, program: program)
             self.navigationController?.pushViewController(viewController, animated: true)
         }
         actions.append(runAction)
@@ -268,7 +278,7 @@ class DirectoryViewController : UIViewController {
         let runAsActions = Device.allCases.map { device in
             UIAction(title: device.name) { action in
                 let program = Program(configuration: configuration, device: device)
-                let viewController = ProgramViewController(program: program)
+                let viewController = ProgramViewController(settings: self.settings, program: program)
                 self.navigationController?.pushViewController(viewController, animated: true)
             }
         }
@@ -311,7 +321,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
                 return
             }
             let program = Program(configuration: configuration)
-            let viewController = ProgramViewController(program: program)
+            let viewController = ProgramViewController(settings: settings, program: program)
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
             pushDirectoryViewController(for: item.url)
@@ -362,7 +372,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
                 let procedureActions = configuration.procedures.map { procedure in
                     UIAction(title: procedure.name) { action in
                         let program = Program(configuration: configuration, procedureName: procedure.name)
-                        let viewController = ProgramViewController(program: program)
+                        let viewController = ProgramViewController(settings: self.settings, program: program)
                         self.navigationController?.pushViewController(viewController, animated: true)
                     }
                 }

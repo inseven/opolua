@@ -22,8 +22,12 @@ import UIKit
 
 extension UIImage {
 
-    static var epoc: UIImage = {
-        return UIImage(named: "Epoc")!
+    static var epocLogo: UIImage = {
+        return UIImage(named: "EpocLogo")!
+    }()
+
+    static var epocLogoC: UIImage = {
+        return UIImage(named: "EpocLogoC")!
     }()
 
     static var unknownAppIcon: UIImage = {
