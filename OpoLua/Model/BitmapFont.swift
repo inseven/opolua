@@ -132,7 +132,7 @@ class BitmapFontRenderer {
 
     func individualImageForChar(_ char: Character) -> CGImage? {
         let charName = Self.getCharName(char)
-        return UIImage(named: "fonts/\(font.bitmapName)/\(charName)")?.cgImage
+        return UIImage(named: "fonts/\(font.bitmapName)/\(charName)")?.cgImage?.inverted()
     }
 
     func getCharWidth(_ char: Character) -> Int {
