@@ -205,7 +205,9 @@ extension CGContext {
                 print("Image masking operation failed!")
             }
         case .clear:
-            print("TODO: drawUnflippedImage .clear")
+            self.clip(to: unflippedRect, mask: img.inverted()!.masking(componentRange: 0, to: 0)!)
+            fill(unflippedRect)
+            return
         case .invert:
             print("TODO: drawUnflippedImage .invert")
         case .replace:
