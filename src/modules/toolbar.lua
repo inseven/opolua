@@ -40,7 +40,7 @@ local KTbFlgLatchEnd = 0x32
 local KTbFlgLatched = 0x04
 
 local KTbFont = KFontSquashed
-local KTbTitleFont = KFontArialBold11
+local KTbTitleFont = KFontArialNormal11
 
 -- Global vars
 local visibleVar
@@ -69,7 +69,7 @@ local function drawButton(runtime, pos)
         state = state + 1
     end
     gUSE(tbWinId)
-    gFONT(KFontSquashed)
+    gFONT(KTbFont)
     gAT(0, KTbBtTop + (pos - 1) * KTbBtH)
     gBUTTON(button.text, 2, KTbWidth, KTbBtH + 1, state, button.bmp, button.mask)
 end
@@ -84,6 +84,7 @@ function TBarInitC(runtime, title, screenWidth, screenHeight, winMode)
     local w = KTbWidth
     local h = screenHeight
     tbWinId = gCREATE(screenWidth - w, 0, w, h, false, winMode)
+    gSTYLE(1) -- bold everything
     gBOX(w, h)
     gAT(w // 2, h - w // 2 + 1)
     gCIRCLE(w // 2 - 4)

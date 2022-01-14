@@ -373,9 +373,7 @@ private func draw(_ L: LuaState!) -> Int32 {
             let face = Graphics.FontFace(rawValue: L.tostring(-1, key: "fontface") ?? "arial") ?? .arial
             let uid = UInt32(L.toint(-1, key: "fontuid") ?? 0)
             if L.toboolean(-1, key: "fontbold") {
-                // We're not going to support any of this double-bold nonsense with applying simulated bold on top
-                // of a boldface font. Just set the flag.
-                flags.insert(.bold)
+                flags.insert(.boldHint)
             }
             let sz = L.toint(-1, key: "fontsize") ?? 15
             let fontInfo = Graphics.FontInfo(uid: uid, face: face, size: sz, flags: flags)
@@ -420,7 +418,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("close", drawableId)
 // graphicsop("show", drawableId, flag)
 // graphicsop("order", drawableId, pos)
-// graphicsop("textsize", str, font)
+// graphicsop("textsize", str, font, style)
 // graphicsop("busy", drawableId, delay)
 // graphicsop("giprint", drawableId)
 // graphicsop("setwin", drawableId, x, y, [w, h])
@@ -455,9 +453,9 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         }
     case "textsize":
         let str = L.tostring(2) ?? ""
-        var flags = Graphics.FontFlags(flags: 0)
+        var flags = Graphics.FontFlags(flags: L.toint(4) ?? 0)
         if L.toboolean(3, key: "bold") {
-            flags.insert(.bold)
+            flags.insert(.boldHint)
         }
         if let fontName = L.tostring(3, key: "face"),
            let face = Graphics.FontFace(rawValue: fontName),

@@ -128,10 +128,11 @@ extension CGContext {
                 fill(clearRect)
                 drawUnflippedImage(img, in: newRect)
             }
-        case .text(let str, let font):
+        case .text(let str, let fontInfo):
             let pt = operation.origin.cgPoint()
-            if let font = font.toBitmapFont() {
-                let renderer = BitmapFontCache.shared.getRenderer(font: font)
+            if let font = fontInfo.toBitmapFont() {
+                let bold = fontInfo.flags.contains(.bold)
+                let renderer = BitmapFontCache.shared.getRenderer(font: font, embolden: bold)
                 var x = operation.origin.x
                 var y = operation.origin.y
                 for ch in str {
@@ -157,7 +158,7 @@ extension CGContext {
                     }
                 }
             } else {
-                let uifont = font.toUiFont()!
+                let uifont = fontInfo.toUiFont()!
                 UIGraphicsPushContext(self)
                 let attribStr = NSAttributedString(string: str, attributes: [
                     .font: uifont,

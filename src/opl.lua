@@ -186,8 +186,8 @@ function gPRINTCLIP(text, width)
 end
 
 function gTWIDTH(text)
-    local font = runtime:getGraphicsContext().font
-    local width, height, ascent = runtime:iohandler().graphicsop("textsize", text, font)
+    local context = runtime:getGraphicsContext()
+    local width, height, ascent = runtime:iohandler().graphicsop("textsize", text, context.font, context.style)
     return width, height, ascent
 end
 
@@ -607,7 +607,7 @@ function FONT(id, style)
     local font = FontIds[FontAliases[id] or id]
     assert(font, KOplErrFontNotLoaded)
     -- Font keyword always resets text window size, position and text pos
-    local charw, charh = runtime:iohandler().graphicsop("textsize", "0", font)
+    local charw, charh = runtime:iohandler().graphicsop("textsize", "0", font, style)
     local numcharsx = defaultWin.width // charw
     local numcharsy = defaultWin.height // charh
     runtime:getGraphics().screen = {
@@ -675,6 +675,7 @@ function PRINT(str)
     local screen = runtime:getGraphics().screen
     gCOLOR(0, 0, 0)
     gFONT(screen.fontid)
+    gSTYLE(screen.style)
     local strPos = 1
     local strLen = #str
     local charX = screen.cursorx

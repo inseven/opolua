@@ -267,12 +267,15 @@ struct Graphics {
     }
 
     enum FontFlag: Int, FlagEnum {
+        // These are gSTYLE values
         case bold = 1
         case underlined = 2
         case inverse = 4
         case doubleHeight = 8
         case mono = 16
         case italic = 32
+        // extras we define
+        case boldHint = 64 // Indicates the font is inherently bold
     }
     typealias FontFlags = Set<FontFlag>
 

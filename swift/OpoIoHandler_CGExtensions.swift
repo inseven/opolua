@@ -50,7 +50,7 @@ extension Graphics.FontInfo {
         let sz = CGFloat(self.size)
         let uiFontName: String
         var traits: UIFontDescriptor.SymbolicTraits = []
-        if self.flags.contains(.bold) {
+        if self.flags.contains(.bold) || self.flags.contains(.boldHint) {
             traits.insert(.traitBold)
         }
         switch self.face {

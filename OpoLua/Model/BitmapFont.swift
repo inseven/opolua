@@ -76,17 +76,18 @@ struct BitmapFontInfo {
 
 class BitmapFontRenderer {
     let font: BitmapFontInfo
+    let boldWeight: Int
     private let img: CGImage
     private var charCache: [Character: CGImage] = [:]
     let imagew: Int
     let imageh: Int
-    var charw: Int { return font.charw }
     var charh: Int { return font.charh }
-    var charsPerRow: Int { return imagew / charw }
-    var numRows: Int { return imageh / charh }
+    var charsPerRow: Int { return imagew / font.charw }
+    var numRows: Int { return imageh / font.charh }
 
-    init(font: BitmapFontInfo) {
+    init(font: BitmapFontInfo, embolden: Bool = false) {
         self.font = font
+        self.boldWeight = embolden ? 1 : 0
         self.img = UIImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!.inverted()!
         self.imagew = self.img.width
         self.imageh = self.img.height
@@ -120,7 +121,7 @@ class BitmapFontRenderer {
 
     func imageCharWidth(_ char: Character) -> Int? {
         if let idx = imageIndexFor(char: char) {
-            return font.widths[idx]
+            return font.widths[idx] + boldWeight
         } else {
             return nil
         }
@@ -130,7 +131,7 @@ class BitmapFontRenderer {
         return ch.unicodeScalars.map({ String(format:"U+%04X", $0.value) }).joined(separator: "_")
     }
 
-    func individualImageForChar(_ char: Character) -> CGImage? {
+    private func individualImageForChar(_ char: Character) -> CGImage? {
         let charName = Self.getCharName(char)
         return UIImage(named: "fonts/\(font.bitmapName)/\(charName)")?.cgImage?.inverted()
     }
@@ -175,6 +176,7 @@ class BitmapFontRenderer {
     }
 
     private func calculateImageForChar(_ char: Character) -> CGImage? {
+        let img: CGImage?
         if let idx = imageIndexFor(char: char) {
             let width = font.widths[idx]
             if width == 0 {
@@ -183,23 +185,49 @@ class BitmapFontRenderer {
             let uidx = UInt32(idx)
             let x = Int(uidx % UInt32(self.charsPerRow))
             let y = Int(uidx / UInt32(self.charsPerRow))
-            return self.img.cropping(to: CGRect(x: x * charw, y: y * charh, width: width, height: charh))!
+            img = self.img.cropping(to: CGRect(x: x * font.charw, y: y * charh, width: width, height: charh))!
         } else {
-            return individualImageForChar(char)
+            img = individualImageForChar(char)
+        }
+
+        guard let img = img else {
+            return nil
+        }
+        if boldWeight > 0 {
+            let colSpace = CGColorSpaceCreateDeviceGray()
+            let context = CGContext(data: nil, width: img.width + boldWeight, height: img.height, bitsPerComponent: 8,
+                                    bytesPerRow: img.width + boldWeight, space: colSpace, bitmapInfo: 0)!
+            // The resulting image needs to be black with white text so we can
+            // use the clip mask trick for drawing it, hence why we use these
+            // colours.
+            context.setFillColor(UIColor.black.cgColor)
+            context.fill(CGRect(x: 0, y: 0, width: context.width, height: context.height))
+            context.setFillColor(UIColor.white.cgColor)
+            for i in 0...boldWeight {
+                let rect = CGRect(x: i, y: 0, width: img.width, height: context.height)
+                context.saveGState()
+                context.clip(to: rect, mask: img)
+                context.fill(rect)
+                context.restoreGState()
+            }
+            return context.makeImage()!
+        } else {
+            return img
         }
     }
 }
 
 class BitmapFontCache {
     static var shared = BitmapFontCache()
-    private var cache: [String : BitmapFontRenderer] = [:] // Map of bitmapName key to BitmapFontRenderer
+    private var cache: [String : BitmapFontRenderer] = [:] // Map of bitmapName_<bold> key to BitmapFontRenderer
 
-    func getRenderer(font: BitmapFontInfo, simulateBold: Bool = false) -> BitmapFontRenderer {
-        if let result = cache[font.bitmapName] {
+    func getRenderer(font: BitmapFontInfo, embolden: Bool = false) -> BitmapFontRenderer {
+        let key = "\(font.bitmapName)_\(embolden ? 1 : 0)"
+        if let result = cache[key] {
             return result
         } else {
-            let result = BitmapFontRenderer(font: font)
-            cache[font.bitmapName] = result
+            let result = BitmapFontRenderer(font: font, embolden: embolden)
+            cache[key] = result
             return result
         }
     }
