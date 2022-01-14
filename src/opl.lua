@@ -503,9 +503,7 @@ end
 
 local function drawInfoPrint(drawable, text, corner)
     gUPDATE(false)
-    gUSE(1)
-    local screenWidth = gWIDTH()
-    local screenHeight = gHEIGHT()
+    local screenWidth, screenHeight = runtime:iohandler().getScreenInfo()
     local winHeight = 23 -- 15 plus 4 pixels top and bottom
     gUSE(drawable)
     gFONT(KFontArialNormal15)
