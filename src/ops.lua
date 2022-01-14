@@ -2137,8 +2137,8 @@ function DefaultWin(stack, runtime) -- 0x101
 end
 
 function Font(stack, runtime) -- 0x104
-    local uid = stack:pop()
     local style = stack:pop()
+    local uid = stack:pop()
     runtime:FONT(uid, style)
 end
 
