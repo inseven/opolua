@@ -45,7 +45,6 @@ class ProgramViewController: UIViewController {
 
     var settings: Settings
     var program: Program
-    var windowServer: WindowServer
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
@@ -119,18 +118,16 @@ class ProgramViewController: UIViewController {
     init(settings: Settings, program: Program) {
         self.settings = settings
         self.program = program
-        self.windowServer = WindowServer(screenSize: program.screenSize)
-        self.windowServer.delegate = program
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
         view.backgroundColor = .systemBackground
         navigationItem.title = program.name
         view.clipsToBounds = true
-        view.addSubview(windowServer.canvasView)
+        view.addSubview(program.rootView)
         NSLayoutConstraint.activate([
-            windowServer.canvasView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            windowServer.canvasView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            program.rootView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            program.rootView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
         toolbarItems = [consoleBarButtonItem, drawablesBarButtonItem]
         navigationItem.rightBarButtonItems = [menuBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
@@ -145,7 +142,7 @@ class ProgramViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.isToolbarHidden = false
-        windowServer.canvasView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
+        program.rootView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
         settingsSink = settings.objectWillChange.sink { _ in }
     }
 
@@ -164,7 +161,7 @@ class ProgramViewController: UIViewController {
 
     override func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
         UIView.animate(withDuration: duration) {
-            self.windowServer.canvasView.transform = self.transformForInterfaceOrientation(toInterfaceOrientation)
+            self.program.rootView.transform = self.transformForInterfaceOrientation(toInterfaceOrientation)
         }
     }
 
@@ -253,11 +250,7 @@ class ProgramViewController: UIViewController {
     @objc func controllerDidDisconnect(notification: NSNotification) {}
 
     @objc func keyboardTapped(sender: UIBarButtonItem) {
-        if windowServer.canvasView.isFirstResponder {
-            windowServer.canvasView.resignFirstResponder()
-        } else {
-            windowServer.canvasView.becomeFirstResponder()
-        }
+        program.toggleOnScreenKeyboard()
     }
 
     @objc func consoleTapped(sender: UIBarButtonItem) {
@@ -265,7 +258,7 @@ class ProgramViewController: UIViewController {
     }
 
     @objc func drawablesTapped(sender: UIBarButtonItem) {
-        let viewController = DrawableViewController(windowServer: windowServer)
+        let viewController = DrawableViewController(windowServer: program.windowServer)
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
         present(navigationController, animated: true)
@@ -288,56 +281,6 @@ class ProgramViewController: UIViewController {
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
         present(navigationController, animated: true)
-    }
-
-    func performGraphicsOperation(_ operation: Graphics.Operation) -> Graphics.Result {
-        dispatchPrecondition(condition: .onQueue(.main))
-        switch (operation) {
-
-        case .createBitmap(let size, let mode):
-            let canvas = windowServer.createBitmap(size: size, mode: mode)
-            return .handle(canvas.id)
-
-        case .createWindow(let rect, let mode, let shadowSize):
-            let canvas = windowServer.createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
-            return .handle(canvas.id)
-
-        case .close(let drawableId):
-            windowServer.close(drawableId: drawableId)
-            return .nothing
-
-        case .order(let drawableId, let position):
-            windowServer.order(drawableId: drawableId, position: position)
-            return .nothing
-
-        case .show(let drawableId, let flag):
-            windowServer.setVisiblity(handle: drawableId, visible: flag)
-            return .nothing
-
-        case .textSize(let string, let fontInfo):
-            let details = WindowServer.textSize(string: string, fontInfo: fontInfo)
-            return .sizeAndAscent(details.size, details.ascent)
-
-        case .busy(let drawableId, let delay):
-            windowServer.busy(drawableId: drawableId, delay: delay)
-            return .nothing
-
-        case .giprint(let drawableId):
-            windowServer.infoPrint(drawableId: drawableId)
-            return .nothing
-
-        case .setwin(let drawableId, let pos, let size):
-            windowServer.setWin(drawableId: drawableId, position: pos, size: size)
-            return .nothing
-
-        case .sprite(let id, let sprite):
-            windowServer.setSprite(id: id, sprite: sprite)
-            return .nothing
-
-        case .setAppTitle(let title):
-            navigationItem.title = title
-            return .nothing
-        }
     }
 
     override var canBecomeFirstResponder: Bool {
@@ -412,13 +355,12 @@ extension ProgramViewController: DrawableViewControllerDelegate {
 extension ProgramViewController: ProgramDelegate {
 
     func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
-        windowServer.shutdown()
         if case OpoInterpreter.Result.none = result {
             self.navigationController?.popViewController(animated: true)
             return
         }
         UIView.animate(withDuration: 0.3) {
-            self.windowServer.canvasView.alpha = 0.3
+            self.program.rootView.alpha = 0.3
         } completion: { _ in
             self.showConsole()
         }
@@ -426,6 +368,10 @@ extension ProgramViewController: ProgramDelegate {
 
     func program(_ program: Program, didEncounterError error: Error) {
         present(error: error)
+    }
+
+    func program(_ program: Program, didUpdateTitle title: String) {
+        self.title = title
     }
     
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
@@ -485,18 +431,6 @@ extension ProgramViewController: ProgramDelegate {
         })
         semaphore.wait()
         return result
-    }
-
-    func draw(operations: [Graphics.DrawCommand]) {
-        DispatchQueue.main.sync {
-            windowServer.draw(operations: operations)
-        }
-    }
-
-    func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
-        return DispatchQueue.main.sync {
-            return performGraphicsOperation(operation)
-        }
     }
 
 }

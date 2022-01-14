@@ -24,14 +24,13 @@ protocol ProgramDelegate: AnyObject {
 
     func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result)
     func program(_ program: Program, didEncounterError error: Error)
+    func program(_ program: Program, didUpdateTitle title: String)
 
     // TODO: These are directly copied from OpoIoHandler and should be thinned over time.
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
     func alert(lines: [String], buttons: [String]) -> Int
     func dialog(_ d: Dialog) -> Dialog.Result
     func menu(_ m: Menu.Bar) -> Menu.Result
-    func draw(operations: [Graphics.DrawCommand])
-    func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
 }
 
@@ -91,6 +90,7 @@ class Program {
     private let device: Device
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
+    let windowServer: WindowServer
     private let scheduler = Scheduler()
     fileprivate var geteventRequest: GetEventRequest?
 
@@ -104,6 +104,8 @@ class Program {
 
     var console = Console()
 
+    // TODO: Rename this to title?
+    var title: String = "Cheese"
     var name: String {
         if let procedureName = procedureName {
             return [configuration.name, procedureName].joined(separator: "\\")
@@ -112,8 +114,13 @@ class Program {
         }
     }
 
+    // TODO: Remove this?
     var screenSize: Graphics.Size {
         return device.screenSize
+    }
+
+    var rootView: UIView {
+        return windowServer.canvasView
     }
 
     init(configuration: Configuration, procedureName: String? = nil, device: Device = .psionSeries5) {
@@ -121,8 +128,10 @@ class Program {
         self.procedureName = procedureName
         self.device = device
         self.thread = InterpreterThread(object: configuration, procedureName: procedureName)
+        self.windowServer = WindowServer(screenSize: device.screenSize)
         self.thread.delegate = self
         self.thread.handler = self
+        self.windowServer.delegate = self
     }
 
     func start() {
@@ -131,6 +140,14 @@ class Program {
         }
         _state = .running
         thread.start()
+    }
+
+    func toggleOnScreenKeyboard() {
+        if windowServer.canvasView.isFirstResponder {
+            windowServer.canvasView.resignFirstResponder()
+        } else {
+            windowServer.canvasView.becomeFirstResponder()
+        }
     }
 
     func sendMenu() {
@@ -188,6 +205,57 @@ class Program {
         }
     }
 
+    private func performGraphicsOperation(_ operation: Graphics.Operation) -> Graphics.Result {
+        dispatchPrecondition(condition: .onQueue(.main))
+        switch (operation) {
+
+        case .createBitmap(let size, let mode):
+            let canvas = windowServer.createBitmap(size: size, mode: mode)
+            return .handle(canvas.id)
+
+        case .createWindow(let rect, let mode, let shadowSize):
+            let canvas = windowServer.createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
+            return .handle(canvas.id)
+
+        case .close(let drawableId):
+            windowServer.close(drawableId: drawableId)
+            return .nothing
+
+        case .order(let drawableId, let position):
+            windowServer.order(drawableId: drawableId, position: position)
+            return .nothing
+
+        case .show(let drawableId, let flag):
+            windowServer.setVisiblity(handle: drawableId, visible: flag)
+            return .nothing
+
+        case .textSize(let string, let fontInfo):
+            let details = WindowServer.textSize(string: string, fontInfo: fontInfo)
+            return .sizeAndAscent(details.size, details.ascent)
+
+        case .busy(let drawableId, let delay):
+            windowServer.busy(drawableId: drawableId, delay: delay)
+            return .nothing
+
+        case .giprint(let drawableId):
+            windowServer.infoPrint(drawableId: drawableId)
+            return .nothing
+
+        case .setwin(let drawableId, let pos, let size):
+            windowServer.setWin(drawableId: drawableId, position: pos, size: size)
+            return .nothing
+
+        case .sprite(let id, let sprite):
+            windowServer.setSprite(id: id, sprite: sprite)
+            return .nothing
+
+        case .setAppTitle(let title):
+            self.title = title
+            delegate?.program(self, didUpdateTitle: title)
+            return .nothing
+        }
+    }
+
     private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
         let location = touch.location(in: view)
         let screenLocation = touch.location(in: view.superview)
@@ -211,6 +279,7 @@ extension Program: InterpreterThreadDelegate {
 
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result) {
         DispatchQueue.main.async {
+            self.windowServer.shutdown()
             switch result {
             case .none:
                 self.console.append("\n---Completed---")
@@ -257,11 +326,15 @@ extension Program: OpoIoHandler {
     }
 
     func draw(operations: [Graphics.DrawCommand]) {
-        return delegate!.draw(operations: operations)
+        return DispatchQueue.main.sync {
+            return windowServer.draw(operations: operations)
+        }
     }
 
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
-        return delegate!.graphicsop(operation)
+        return DispatchQueue.main.sync {
+            return performGraphicsOperation(operation)
+        }
     }
 
     func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
