@@ -25,10 +25,8 @@ protocol ProgramDelegate: AnyObject {
     func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result)
     func program(_ program: Program, didEncounterError error: Error)
     func program(_ program: Program, didUpdateTitle title: String)
-
-    // TODO: These are directly copied from OpoIoHandler and should be thinned over time.
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
-    func alert(lines: [String], buttons: [String]) -> Int
+    func program(_ program: Program, showAlertWithLines lines: [String], buttons: [String]) -> Int
     func dialog(_ d: Dialog) -> Dialog.Result
     func menu(_ m: Menu.Bar) -> Menu.Result
 
@@ -306,7 +304,7 @@ extension Program: OpoIoHandler {
     }
 
     func alert(lines: [String], buttons: [String]) -> Int {
-        return delegate!.alert(lines: lines, buttons: buttons)
+        return delegate!.program(self, showAlertWithLines: lines, buttons: buttons)
     }
 
     func beep(frequency: Double, duration: Double) {

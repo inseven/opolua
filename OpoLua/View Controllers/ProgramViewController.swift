@@ -378,8 +378,8 @@ extension ProgramViewController: ProgramDelegate {
         // TODO: Implement INPUT
         return "123"
     }
-    
-    func alert(lines: [String], buttons: [String]) -> Int {
+
+    func program(_ program: Program, showAlertWithLines lines: [String], buttons: [String]) -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var result = 1
         DispatchQueue.main.async {
