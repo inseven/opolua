@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import UIKit
 
 @main
@@ -25,6 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     var settings = Settings()
+    var settingsSink: AnyCancellable?
 
     static var shared: AppDelegate {
         return UIApplication.shared.delegate as! AppDelegate
@@ -36,11 +38,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let viewController = LibraryViewController(settings: settings)
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.navigationBar.prefersLargeTitles = true
-        
+
         window = UIWindow()
         window?.rootViewController = navigationController
         window?.tintColor = settings.theme.color
         window?.makeKeyAndVisible()
+
+        settingsSink = settings.objectWillChange.sink { _ in
+            self.window?.tintColor = self.settings.theme.color
+        }
 
         return true
     }

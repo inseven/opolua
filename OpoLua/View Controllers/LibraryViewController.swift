@@ -145,7 +145,7 @@ class LibraryViewController: UITableViewController {
     }
 
     @objc func settingsTapped(sender: UIBarButtonItem) {
-        let viewController = UIHostingController(rootView: SettingsView())
+        let viewController = UIHostingController(rootView: SettingsView(settings: settings))
         self.present(viewController, animated: true)
     }
 

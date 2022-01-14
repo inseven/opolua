@@ -31,22 +31,18 @@ struct SettingsView: View {
         case about
     }
 
-    @State var theme: Settings.Theme = .series5
-
     @Environment(\.presentationMode) var presentationMode
+
+    @ObservedObject var settings: Settings
 
     @State var sheet: SheetType?
 
-    init() {
-        _theme = State(initialValue: AppDelegate.shared.settings.theme)
-    }
-
     func themeBinding(value: Settings.Theme) -> Binding<Bool> {
         return Binding {
-            return theme == value
+            return settings.theme == value
         } set: { newState in
             if newState {
-                theme = value
+                settings.theme = value
             }
         }
     }
@@ -84,10 +80,6 @@ struct SettingsView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
-        .onChange(of: theme) { newValue in
-            AppDelegate.shared.settings.theme = newValue
-            AppDelegate.shared.setTheme(newValue)
-        }
     }
 
 }
