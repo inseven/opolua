@@ -21,6 +21,10 @@
 import GameController
 import UIKit
 
+protocol WindowServerDelegate: CanvasViewDelegate {
+
+}
+
 class WindowServer {
 
     // TODO: Move this up into the Opo layer
@@ -47,9 +51,9 @@ class WindowServer {
         }
     }
 
-    // TODO: This should probably be done by a delegate model.
-    private var program: Program
+    weak var delegate: WindowServerDelegate?
 
+    private var screenSize: Graphics.Size
     private var drawableHandle = (1...).makeIterator()
     private var drawablesById: [Graphics.DrawableId: Drawable] = [:]
 
@@ -62,23 +66,24 @@ class WindowServer {
     private var busyDrawableHandle: Graphics.DrawableId?
     private var busyWindowShowTimer: Timer?
 
+    // TODO: Should these be private?
     var spriteWindows: [Int: Graphics.DrawableId] = [:]
     var spriteTimer: Timer?
 
     lazy var canvasView: CanvasView = {
-        let canvas = newCanvas(size: program.screenSize.cgSize(), color: true)
+        let canvas = newCanvas(size: screenSize.cgSize(), color: true)
         let canvasView = CanvasView(canvas: canvas)
         canvasView.translatesAutoresizingMaskIntoConstraints = false
         canvasView.layer.borderWidth = 1.0
         canvasView.layer.borderColor = UIColor.lightGray.cgColor
         canvasView.clipsToBounds = true
-        canvasView.delegate = program
+        canvasView.delegate = self
         drawablesById[.defaultWindow] = canvasView
         return canvasView
     }()
 
-    init(program: Program) {
-        self.program = program
+    init(screenSize: Graphics.Size) {
+        self.screenSize = screenSize
     }
 
     func drawable(for drawableId: Graphics.DrawableId) -> Drawable? {
@@ -103,7 +108,7 @@ class WindowServer {
         let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
         newView.isHidden = true
         newView.frame = rect.cgRect()
-        newView.delegate = self.program
+        newView.delegate = self
         self.canvasView.addSubview(newView)
         self.drawablesById[canvas.id] = newView
         bringInfoWindowToFront()
@@ -323,6 +328,30 @@ class WindowServer {
         hideInfoWindow()
         spriteTimer?.invalidate()
         spriteTimer = nil
+    }
+
+}
+
+extension WindowServer: CanvasViewDelegate {
+
+    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
+        delegate?.canvasView(canvasView, touchBegan: touch, with: event)
+    }
+
+    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
+        delegate?.canvasView(canvasView, touchMoved: touch, with: event)
+    }
+
+    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
+        delegate?.canvasView(canvasView, touchEnded: touch, with: event)
+    }
+
+    func canvasView(_ canvasView: CanvasView, insertCharacter character: Character) {
+        delegate?.canvasView(canvasView, insertCharacter: character)
+    }
+
+    func canvasViewDeleteBackward(_ canvasView: CanvasView) {
+        delegate?.canvasViewDeleteBackward(canvasView)
     }
 
 }

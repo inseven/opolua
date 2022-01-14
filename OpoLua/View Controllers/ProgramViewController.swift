@@ -119,7 +119,8 @@ class ProgramViewController: UIViewController {
     init(settings: Settings, program: Program) {
         self.settings = settings
         self.program = program
-        self.windowServer = WindowServer(program: program)
+        self.windowServer = WindowServer(screenSize: program.screenSize)
+        self.windowServer.delegate = program
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never

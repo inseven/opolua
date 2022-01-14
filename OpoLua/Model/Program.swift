@@ -318,7 +318,7 @@ extension Program: OpoIoHandler {
 
 }
 
-extension Program: CanvasViewDelegate {
+extension Program: WindowServerDelegate {
 
     func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
         handleTouch(touch, in: canvasView, with: event, type: .down)
