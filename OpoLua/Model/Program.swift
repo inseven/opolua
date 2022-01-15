@@ -84,14 +84,6 @@ class Program {
 
     var title: String
 
-    var name: String {
-        if let procedureName = procedureName {
-            return [url.name, procedureName].joined(separator: "\\")
-        } else {
-            return url.name
-        }
-    }
-
     var rootView: UIView {
         return windowServer.canvasView
     }
@@ -108,7 +100,7 @@ class Program {
         self.url = url
         self.procedureName = procedureName
         self.device = device
-        self.title = url.name
+        self.title = Directory.appInfo(forApplicationUrl: url)?.caption ?? url.name
         self.thread = InterpreterThread(url: url, procedureName: procedureName)
         self.windowServer = WindowServer(screenSize: device.screenSize)
         self.thread.delegate = self

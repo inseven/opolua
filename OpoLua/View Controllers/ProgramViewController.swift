@@ -122,7 +122,7 @@ class ProgramViewController: UIViewController {
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
         view.backgroundColor = .systemBackground
-        navigationItem.title = program.name
+        title = program.title
         view.clipsToBounds = true
         view.addSubview(program.rootView)
         NSLayoutConstraint.activate([
