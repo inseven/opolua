@@ -144,7 +144,6 @@ class Directory {
             .filter { $0.isApplication }
             .compactMap { Application(url: $0) }
 
-        // TODO: Allow systems containing more than one app.
         guard apps.count == 1,
               let application = apps.first else {
             return nil
