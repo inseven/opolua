@@ -66,14 +66,15 @@ class ClockView: UIView {
                 context.draw(cgImage, in: CGRect(origin: .zero, size: clockImage.size))
             }
             let centerPos = CGPoint(x: clockImage.size.width / 2, y: clockImage.size.height / 2)
-            let hourHandLen = 15.0
+            let minFrac = Double(minutes) / 60
+            let hourHandLen = 18.0
             let minuteHandLen = 25.0
-            let hAngle = 2 * Double.pi * (Double(hours % 12) / 12)
+            let hAngle = 2 * Double.pi * ((Double(hours % 12) + minFrac) / 12)
             context.setLineWidth(2)
             context.move(to: centerPos)
             context.addLine(to: CGPoint(x: centerPos.x + sin(hAngle) * hourHandLen, y: centerPos.y + cos(hAngle) * hourHandLen))
             context.strokePath()
-            let mAngle = 2 * Double.pi * (Double(minutes) / 60)
+            let mAngle = 2 * Double.pi * (minFrac)
             context.move(to: centerPos)
             context.addLine(to: CGPoint(x: centerPos.x + sin(mAngle) * minuteHandLen, y: centerPos.y + cos(mAngle) * minuteHandLen))
             context.strokePath()
