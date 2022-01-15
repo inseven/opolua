@@ -295,6 +295,13 @@ class DirectoryViewController : UIViewController {
         let runAsMenu = UIMenu(title: "Run As...", children: runAsActions)
         actions.append(runAsMenu)
 
+        if taskManager.isRunning(url) {
+            let quitAction = UIAction(title: "Quit") { action in
+                self.taskManager.quit(url)
+            }
+            actions.append(quitAction)
+        }
+
         return actions
     }
 

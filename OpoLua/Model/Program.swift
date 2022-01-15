@@ -154,6 +154,10 @@ class Program {
         }
     }
 
+    func quit() {
+        sendEvent(.quitevent)
+    }
+
     func sendMenu() {
         sendKey(.menu)
     }

@@ -53,6 +53,14 @@ class TaskManager: NSObject {
         return programs[url] != nil
     }
 
+    func quit(_ url: URL) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard let program = programs[url] else {
+            return
+        }
+        program.quit()
+    }
+
     func addObserver(_ observer: TaskManagerObserver) {
         dispatchPrecondition(condition: .onQueue(.main))
         observers.append(observer)
