@@ -42,12 +42,28 @@ function BitmapLoad(stack, runtime)
     local path = stack:pop()
     local cur = runtime:gIDENTITY()
     local id = runtime:gLOADBIT(path, false, idx)
+    runtime:getGraphicsContext().bmpRefCount = 1
     runtime:gUSE(cur)
     stack:push(id)
 end
 
+local function incRefcount(runtime, bitmapId)
+    local bitmap = runtime:getGraphicsContext(bitmapId)
+    assert(bitmap, "incRefcount on invalid bitmapId!")
+    bitmap.bmpRefCount = (bitmap.bmpRefCount or 1) + 1
+end
+
+local function decRefcount(runtime, bitmapId)
+    local bitmap = runtime:getGraphicsContext(bitmapId)
+    assert(bitmap, "decRefcount on invalid bitmapId!")
+    bitmap.bmpRefCount = bitmap.bmpRefCount - 1
+    if bitmap.bmpRefCount == 0 then
+        runtime:gCLOSE(bitmapId)
+    end
+end
+
 function BitmapUnload(stack, runtime)
-    runtime:gCLOSE(stack:pop())
+    decRefcount(runtime, stack:pop())
     stack:push(0)
 end
 
@@ -98,6 +114,8 @@ function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
     local sprite = graphics.currentSprite
     assert(sprite, "No current sprite!")
 
+    incRefcount(runtime, bitmap)
+    incRefcount(runtime, maskBitmap)
     local frame = {
         dx = dx,
         dy = dy,
@@ -121,7 +139,13 @@ function SpriteChange(stack, runtime)
 
     local sprite = graphics.currentSprite
     assert(sprite, "No current sprite!")
-    assert(sprite.frames[frameId], "No frame for id!")
+    local oldFrame = sprite.frames[frameId]
+    assert(oldFrame, "No frame for id!")
+
+    incRefcount(runtime, bitmap)
+    incRefcount(runtime, maskBitmap)
+    decRefcount(runtime, oldFrame.bitmap)
+    decRefcount(runtime, oldFrame.maskBitmap)
 
     local frame = {
         dx = dx,
@@ -172,6 +196,10 @@ function SpriteDelete(stack, runtime)
     local graphics = runtime:getGraphics()
     local sprite = graphics.sprites[stack:pop()]
     assert(sprite, "Bad sprite ID!")
+    for _, frame in ipairs(sprite.frames) do
+        decRefcount(runtime, frame.bitmap)
+        decRefcount(runtime, frame.mask)
+    end
     graphics.sprites[sprite.id] = nil
     runtime:iohandler().graphicsop("sprite", sprite.id, nil)
     stack:push(0)
