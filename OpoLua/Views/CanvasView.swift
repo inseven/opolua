@@ -42,6 +42,7 @@ class CanvasView : UIView, Drawable {
 
     var keyboardType: UIKeyboardType = .asciiCapable
     var canvas: Canvas
+    var clock: Graphics.ClockInfo?
     weak var delegate: CanvasViewDelegate?
 
     required init?(coder: NSCoder) {
@@ -91,6 +92,15 @@ class CanvasView : UIView, Drawable {
         context.translateBy(x: 0, y: canvas.size.height);
         context.scaleBy(x: 1.0, y: -1.0)
         context.draw(image, in: CGRect(origin: .zero, size: canvas.size))
+
+        if let clock = self.clock,
+           let clockImg = UIImage(named: "ClockMedium")?.cgImage {
+            // For some reason the coords of the actual image seem to be smaller than what
+            // the APIs expect, hence the addition to the x coord here to make things line up.
+            let pos = CGPoint(x: clock.position.x + 1, y: Int(canvas.size.height) - clock.position.y - clockImg.height)
+            let sz = CGSize(width: clockImg.width, height: clockImg.height)
+            context.draw(clockImg, in: CGRect(origin: pos, size: sz))
+        }
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {

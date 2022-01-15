@@ -227,6 +227,11 @@ class Program {
             self.title = title
             delegate?.program(self, didUpdateTitle: title)
             return .nothing
+
+        case .clock(let drawableId, let clockInfo):
+            windowServer.clock(drawableId: drawableId, info: clockInfo)
+            return .nothing
+    
         }
     }
 

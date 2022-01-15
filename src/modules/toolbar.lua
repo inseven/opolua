@@ -41,6 +41,8 @@ local KTbFlgLatched = 0x04
 
 local KTbFont = KFontSquashed
 local KTbTitleFont = KFontArialNormal11
+local KTbClockPosX = 3
+local KTbClockHeight = 64
 
 -- Global vars
 local visibleVar
@@ -86,9 +88,9 @@ function TBarInitC(runtime, title, screenWidth, screenHeight, winMode)
     tbWinId = gCREATE(screenWidth - w, 0, w, h, false, winMode)
     gSTYLE(1) -- bold everything
     gBOX(w, h)
-    gAT(w // 2, h - w // 2 + 1)
-    gCIRCLE(w // 2 - 4)
     TBarSetTitle(runtime, title)
+    gAT(KTbClockPosX, h - KTbClockHeight)
+    gCLOCK(6)
     gUSE(prevId)
 end
 
@@ -121,7 +123,7 @@ function TBarButt(runtime, shortcut, pos, text, state, bmp, mask, flags)
     gUSE(prevId)
 end
 
-_ENV["TBarOffer%"] = function(runtime, winId, ptrType, ptrX, ptrY)
+local function TBarOffer(runtime, winId, ptrType, ptrX, ptrY)
     -- printf("TBarOffer id=%d ptrType=%d ptrX=%d ptrY=%d\n", winId, ptrType, ptrX, ptrY)
     local butId = 1 + ((ptrY - KTbBtTop) // KTbBtH)
     if not buttons[butId] or winId ~= tbWinId or ptrX < 0 or ptrX >= KTbWidth then
@@ -171,6 +173,7 @@ _ENV["TBarOffer%"] = function(runtime, winId, ptrType, ptrX, ptrY)
         return 0
     end
 end
+_ENV["TBarOffer%"] = TBarOffer
 
 local function unlatch(runtime, button)
     if button.flags & KTbFlgLatched > 0 then

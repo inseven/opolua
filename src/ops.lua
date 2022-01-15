@@ -2071,8 +2071,28 @@ end
 gBorder_dump = numParams_dump
 
 function gClock(stack, runtime) -- 0xF5
-    error("Unimplemented opcode gClock!")
+    local numParams = runtime:IP8()
+    local mode, offset, format, font, style
+    if numParams == 6 then
+        style = stack:pop()
+    end
+    if numParams >= 5 then
+       font = stack:pop()
+    end
+    if numParams >= 4 then
+        format = stack:pop()
+    end
+    if numParams >= 3 then
+        offset = stack:pop()
+    end
+    if numParams >= 2 then
+        mode = stack:pop()
+    end
+    -- TODO support the rest of the params
+    runtime:gCLOCK(mode)
 end
+
+gClock_dump = numParams_dump
 
 function MkDir(stack, runtime) -- 0xF8
     local path = stack:pop()

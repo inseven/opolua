@@ -499,6 +499,16 @@ function gSETPENWIDTH(width)
     runtime:getGraphicsContext().penwidth = width
 end
 
+function gCLOCK(mode)
+    local context = runtime:getGraphicsContext()
+    assert(context.isWindow, KOplErrInvalidWindow)
+    local x, y
+    if mode then
+        x, y = context.pos.x, context.pos.y
+    end
+    runtime:iohandler().graphicsop("clock", context.id, mode, x, y)
+end
+
 -- Screen APIs
 
 local function drawInfoPrint(drawable, text, corner)

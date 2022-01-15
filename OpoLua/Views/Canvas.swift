@@ -73,7 +73,7 @@ class Canvas: Drawable {
                             bitmapInfo: bitmapInfo)!
         context.concatenate(context.coordinateFlipTransform)
         // All drawables should start off filled with white
-        context.setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
+        context.setFillColor(UIColor.white.cgColor)
         context.fill(CGRect(x: 0, y: 0, width: context.width, height: context.height))
     }
 

@@ -368,6 +368,17 @@ struct Graphics {
         let frames: [Frame]
     }
 
+    struct ClockInfo {
+        enum Mode: Int {
+            case systemSetting = 6
+            case analog = 7
+            case digital = 8
+        }
+        let mode: Mode
+        let position: Point
+        // TODO offset, format, etc
+    }
+
     enum Operation {
         case close(DrawableId)
         case createBitmap(Size, Bitmap.Mode) // returns handle
@@ -380,6 +391,7 @@ struct Graphics {
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
         case sprite(Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
         case setAppTitle(String)
+        case clock(DrawableId, ClockInfo?)
     }
 
     enum Result {

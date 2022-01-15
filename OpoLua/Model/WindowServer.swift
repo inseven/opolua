@@ -211,6 +211,15 @@ class WindowServer {
         }
     }
 
+    func clock(drawableId: Graphics.DrawableId, info: Graphics.ClockInfo?) {
+        guard let view = self.window(for: drawableId) else {
+            print("No CanvasView for clock operation")
+            return
+        }
+        view.clock = info
+        view.setNeedsDisplay()
+    }
+
     func setSprite(id: Int, sprite: Graphics.Sprite?) {
         dispatchPrecondition(condition: .onQueue(.main))
         // TODO: Start and stop the timer instead?

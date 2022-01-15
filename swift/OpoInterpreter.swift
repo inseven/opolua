@@ -424,6 +424,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("setwin", drawableId, x, y, [w, h])
 // graphicsop("sprite", id, [sprite])
 // graphicsop("title", appTitle)
+// graphicsop("clock", drawableId, [mode, x, y])
 private func graphicsop(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""
@@ -534,6 +535,19 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         if let title = L.tostring(2) {
             return doGraphicsOp(L, iohandler, .setAppTitle(title))
         }
+    case "clock":
+        let drawableId = Graphics.DrawableId(value: L.toint(2) ?? 0)
+        let clockInfo: Graphics.ClockInfo?
+        if let modeVal = L.toint(3),
+           let mode = Graphics.ClockInfo.Mode(rawValue: modeVal),
+           let x = L.toint(4),
+           let y = L.toint(5) {
+            let pos = Graphics.Point(x: x, y: y)
+            clockInfo = Graphics.ClockInfo(mode: mode, position: pos)
+        } else {
+            clockInfo = nil
+        }
+        return doGraphicsOp(L, iohandler, .clock(drawableId, clockInfo))
     default:
         print("Unknown graphicsop \(cmd)!")
     }
