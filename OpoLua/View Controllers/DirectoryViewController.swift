@@ -113,6 +113,7 @@ class DirectoryViewController : UIViewController {
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         group.interItemSpacing = .flexible(8.0)
         let section = NSCollectionLayoutSection(group: group)
+        section.contentInsetsReference = .layoutMargins
         let layout = UICollectionViewCompositionalLayout(section: section)
         return layout
     }
@@ -143,6 +144,8 @@ class DirectoryViewController : UIViewController {
         collectionView.dataSource = self
         collectionView.register(Cell.self, forCellWithReuseIdentifier: Self.cell)
         collectionView.alwaysBounceVertical = true
+        collectionView.preservesSuperviewLayoutMargins = true
+        collectionView.insetsLayoutMarginsFromSafeArea = true
         return collectionView
     }()
 
