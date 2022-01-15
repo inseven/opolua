@@ -265,11 +265,11 @@ class DirectoryViewController : UIViewController {
         }
     }
 
-    func actions(for configuration: Program.Configuration) -> [UIMenuElement] {
+    func actions(for url: URL) -> [UIMenuElement] {
         var actions: [UIMenuElement] = []
 
         let runAction = UIAction(title: "Run") { action in
-            let program = Program(configuration: configuration)
+            let program = Program(url: url)
             let viewController = ProgramViewController(settings: self.settings, program: program)
             self.navigationController?.pushViewController(viewController, animated: true)
         }
@@ -277,7 +277,7 @@ class DirectoryViewController : UIViewController {
 
         let runAsActions = Device.allCases.map { device in
             UIAction(title: device.name) { action in
-                let program = Program(configuration: configuration, device: device)
+                let program = Program(url: url, device: device)
                 let viewController = ProgramViewController(settings: self.settings, program: program)
                 self.navigationController?.pushViewController(viewController, animated: true)
             }
@@ -316,13 +316,15 @@ extension DirectoryViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = items[indexPath.row]
         switch item.type {
-        case .object, .app, .bundle, .system:
-            guard let configuration = item.configuration else {
-                return
-            }
-            let program = Program(configuration: configuration)
+        case .object, .app:
+            let program = Program(url: item.url)
             let viewController = ProgramViewController(settings: settings, program: program)
             navigationController?.pushViewController(viewController, animated: true)
+        case .bundle(let application), .system(let application):
+            let program = Program(url: application.url)
+            let viewController = ProgramViewController(settings: settings, program: program)
+            navigationController?.pushViewController(viewController, animated: true)
+
         case .directory:
             pushDirectoryViewController(for: item.url)
         case .installer:
@@ -365,14 +367,11 @@ extension DirectoryViewController: UICollectionViewDelegate {
             let fileMenu = UIMenu(options: [.displayInline], children: [deleteAction])
             switch item.type {
             case .object:
-                guard let configuration = item.configuration else {
-                    return nil
-                }
-                let actions = self.actions(for: configuration)
-                let procedures = OpoInterpreter.shared.getProcedures(file: configuration.url.path) ?? []
+                let actions = self.actions(for: item.url)
+                let procedures = OpoInterpreter.shared.getProcedures(file: item.url.path) ?? []
                 let procedureActions = procedures.map { procedure in
                     UIAction(title: procedure.name) { action in
-                        let program = Program(configuration: configuration, procedureName: procedure.name)
+                        let program = Program(url: item.url, procedureName: procedure.name)
                         let viewController = ProgramViewController(settings: self.settings, program: program)
                         self.navigationController?.pushViewController(viewController, animated: true)
                     }
@@ -380,19 +379,13 @@ extension DirectoryViewController: UICollectionViewDelegate {
                 let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
                 return UIMenu(children: actions + [procedureMenu, fileMenu])
             case .app:
-                guard let configuration = item.configuration else {
-                    return nil
-                }
-                let actions = self.actions(for: configuration)
+                let actions = self.actions(for: item.url)
                 return UIMenu(children: actions + [fileMenu])
             case .bundle, .system:
-                guard let configuration = item.configuration else {
-                    return nil
-                }
                 let contentsAction = UIAction(title: "Show Package Contents") { action in
                     self.pushDirectoryViewController(for: item.url)
                 }
-                let actions = self.actions(for: configuration)
+                let actions = self.actions(for: item.url)
                 return UIMenu(children: actions + [contentsAction, fileMenu])
             case .directory:
                 return UIMenu(children: [fileMenu])

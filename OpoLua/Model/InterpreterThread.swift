@@ -29,7 +29,7 @@ protocol InterpreterThreadDelegate: AnyObject {
 
 class InterpreterThread: Thread {
 
-    private let object: Program.Configuration
+    private let url: URL
     private let procedureName: String?
     private let interpreter = OpoInterpreter()
 
@@ -44,15 +44,15 @@ class InterpreterThread: Thread {
         }
     }
 
-    init(object: Program.Configuration, procedureName: String? = nil) {
-        self.object = object
+    init(url: URL, procedureName: String? = nil) {
+        self.url = url
         self.procedureName = procedureName
         super.init()
     }
 
     override func main() {
-        let oplPath = delegate!.interpreter(self, pathForUrl: self.object.url)!
-        let result = self.interpreter.run(devicePath: oplPath, procedureName: self.procedureName)
+        let oplPath = delegate!.interpreter(self, pathForUrl: url)!
+        let result = interpreter.run(devicePath: oplPath, procedureName: procedureName)
         delegate?.interpreter(self, didFinishWithResult: result)
     }
 

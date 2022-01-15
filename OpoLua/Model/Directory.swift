@@ -95,17 +95,6 @@ class Directory {
             }
         }
 
-        var configuration: Program.Configuration? {
-            switch type {
-            case .bundle(let application):
-                return Program.Configuration(url: application.url)
-            case .system(let application):
-                return Program.Configuration(url: application.url)
-            default:
-                return Program.Configuration(url: url)
-            }
-        }
-
         var icon: UIImage {
             switch type {
             case .object:

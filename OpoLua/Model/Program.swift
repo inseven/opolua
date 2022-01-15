@@ -34,20 +34,6 @@ protocol ProgramDelegate: AnyObject {
 
 class Program {
 
-    class Configuration {
-
-        let url: URL
-
-        var name: String {
-            return url.name
-        }
-
-        init(url: URL) {
-            self.url = url
-        }
-
-    }
-
     enum State {
         case idle
         case running
@@ -77,7 +63,7 @@ class Program {
         }
     }
 
-    private let configuration: Configuration
+    private let url: URL
     private let procedureName: String?
     private let device: Device
     private let thread: InterpreterThread
@@ -100,9 +86,9 @@ class Program {
 
     var name: String {
         if let procedureName = procedureName {
-            return [configuration.name, procedureName].joined(separator: "\\")
+            return [url.name, procedureName].joined(separator: "\\")
         } else {
-            return configuration.name
+            return url.name
         }
     }
 
@@ -112,18 +98,18 @@ class Program {
 
     lazy private var fileSystem: FileSystem = {
         do {
-            return try FileManager.default.detectSystemFileSystem(for: configuration.url) ?? ObjectFileSystem(objectUrl: configuration.url)
+            return try FileManager.default.detectSystemFileSystem(for: url) ?? ObjectFileSystem(objectUrl: url)
         } catch {
-            return ObjectFileSystem(objectUrl: configuration.url)
+            return ObjectFileSystem(objectUrl: url)
         }
     }()
 
-    init(configuration: Configuration, procedureName: String? = nil, device: Device = .psionSeries5) {
-        self.configuration = configuration
+    init(url: URL, procedureName: String? = nil, device: Device = .psionSeries5) {
+        self.url = url
         self.procedureName = procedureName
         self.device = device
-        self.title = configuration.name
-        self.thread = InterpreterThread(object: configuration, procedureName: procedureName)
+        self.title = url.name
+        self.thread = InterpreterThread(url: url, procedureName: procedureName)
         self.windowServer = WindowServer(screenSize: device.screenSize)
         self.thread.delegate = self
         self.thread.handler = self
