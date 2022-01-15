@@ -434,15 +434,15 @@ function gLOADBIT(path, writable, index)
     local bitmap = bitmaps[1 + index]
     assert(bitmap, KOplErrNotExists)
     -- (2)
-    local id = gCREATEBIT(bitmap.width, bitmap.height, bitmap.mode)
+    local id = gCREATEBIT(bitmap.width, bitmap.height, bitmap.drawableMode)
     -- printf(" %dx%d drawableid=%d\n", bitmap.width, bitmap.height, id)
     -- (3)
     runtime:drawCmd("bitblt", {
         bmpWidth = bitmap.width,
         bmpHeight = bitmap.height,
-        bmpMode = bitmap.mode,
+        bmpMode = bitmap.drawableMode,
         bmpStride = bitmap.stride,
-        bmpData = mbm.decodeBitmap(bitmap, data)
+        bmpData = bitmap:getImageData()
     })
     runtime:flushGraphicsOps()
     return id

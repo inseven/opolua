@@ -49,12 +49,12 @@ function parseAif(data)
         offset, size, pos = string.unpack("<I4I2", data, pos)
         local bitmap = mbm.parseBitmap(data, offset)
         -- print(offset, size, bitmap.len)
-        bitmap.imgData = mbm.decodeBitmap(bitmap, data)
+        bitmap.imgData = bitmap:getImageData()
 
         local maskStart = (offset + bitmap.len)
         local mask = mbm.parseBitmap(data, maskStart)
         -- printf("Mask: 0x%08X w=%d h=%d, len=%d\n", maskStart, mask.width, mask.height, mask.len)
-        mask.imgData = mbm.decodeBitmap(mask, data)
+        mask.imgData = mask:getImageData()
         bitmap.mask = mask
 
         icons[i] = bitmap

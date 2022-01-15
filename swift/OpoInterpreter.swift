@@ -983,7 +983,7 @@ class OpoInterpreter {
         func getBitmap() -> Graphics.Bitmap? {
             if let width = L.toint(-1, key: "width"),
                let height = L.toint(-1, key: "height"),
-               let modeVal = L.toint(-1, key: "mode"),
+               let modeVal = L.toint(-1, key: "drawableMode"),
                let mode = Graphics.Bitmap.Mode(rawValue: modeVal),
                let stride = L.toint(-1, key: "stride"),
                let data = L.todata(-1, key: "imgData") {

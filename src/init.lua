@@ -136,6 +136,7 @@ KUidDirectFileStore = 0x10000037 -- OPL/OPO/AIF/MBM uid1
 KUidAppInfoFile8 = 0x1000006A -- AIF file uid2
 -- KUidAppDllDoc8 = 0x1000006D
 KUidOPO = 0x10000073 -- pre-unicode OPO uid2
+KMultiBitmapRomImageUid = 0x10000041 -- uid1
 KUidMultiBitmapFileImage = 0x10000042
 KUidOplInterpreter = 0x10000168
 

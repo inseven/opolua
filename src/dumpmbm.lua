@@ -2,7 +2,7 @@
 
 --[[
 
-Copyright (c) 2021-2022 Jason Morley, Tom Sutcliffe
+Copyright (c) 2022 Jason Morley, Tom Sutcliffe
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,26 +26,28 @@ SOFTWARE.
 
 function main()
     local filename = arg[1]
-    local dumpIcons = arg[2] == "--expand"
+    local expand = arg[2] == "--expand"
     require("init")
-    local aif = require("aif")
-    local mbm = require("mbm")
+    mbm = require("mbm")
     local f = assert(io.open(filename, "rb"))
     local data = f:read("a")
     f:close()
-    local info = aif.parseAif(data)
-    printf("UID3: 0x%08X\n", info.uid3)
-    for lang, caption in pairs(info.captions) do
-        printf("Caption[%s]: %s\n", lang, caption)
+    local bitmaps = mbm.parseMbmHeader(data)
+    for i, bitmap in ipairs(bitmaps) do
+        dump(filename, i, bitmap, data, expand)
     end
-    for _, icon in ipairs(info.icons) do
-        printf("Icon %dx%d bpp=%d\n", icon.width, icon.height, icon.bpp)
-        if dumpIcons then
-            local iconName = string.format("%s_icon_%dx%d_%dbpp.bin", filename, icon.width, icon.height, icon.bpp)
-            local f = assert(io.open(iconName, "wb"))
-            f:write(mbm.widenTo8bpp(icon.imgData, icon.bpp))
-            f:close()
-        end
+end
+
+function dump(filename, i, bitmap, data, expand)
+    print(string.format("%d: len=%d w=%d h=%d stride=%d bpp=%d col=%s paletteSz=%d compression=%d",
+        i, bitmap.imgLen, bitmap.width, bitmap.height, bitmap.stride, bitmap.bpp, bitmap.isColor, bitmap.paletteSz, bitmap.compression))
+    local img = mbm.decodeBitmap(bitmap, data)
+    if expand then
+        local bmpName = string.format("%s_bmp_%d_%dx%d_%dbpp.bin", filename, i, bitmap.width, bitmap.height, bitmap.bpp)
+        local f = assert(io.open(bmpName, "wb"))
+        local imgData = bitmap:getImageData(8)
+        f:write(imgData)
+        f:close()
     end
 end
 
