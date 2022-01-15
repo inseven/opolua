@@ -1,0 +1,3 @@
+PROC main:
+	PAUSE 200
+ENDP
