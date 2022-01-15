@@ -838,6 +838,24 @@ private func setAppTitle(_ L: LuaState!) -> Int32 {
     return 0
 }
 
+private func displayTaskList(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    iohandler.displayTaskList()
+    return 0
+}
+
+private func setForeground(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    iohandler.setForeground()
+    return 0
+}
+
+private func setBackground(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    iohandler.setBackground()
+    return 0
+}
+
 class OpoInterpreter {
 
     static let kOpTime: TimeInterval = 3.5 / 1000000 // Make this bigger to slow the interpreter down
@@ -944,6 +962,9 @@ class OpoInterpreter {
             ("getConfig", getConfig),
             ("setConfig", setConfig),
             ("setAppTitle", setAppTitle),
+            ("displayTaskList", displayTaskList),
+            ("setForeground", setForeground),
+            ("setBackground", setBackground),
         ]
         L.setfuncs(fns, nup: 1)
     }
@@ -1153,6 +1174,14 @@ class OpoInterpreter {
                 ev[6] = event.y
                 ev[7] = event.screenx
                 ev[8] = event.screeny
+            case .foregrounded(let event):
+                ev[0] = 0x401
+                ev[1] = timestampToInt32(event.timestamp)
+            case .backgrounded(let event):
+                ev[0] = 0x402
+                ev[1] = timestampToInt32(event.timestamp)
+            case .quitevent:
+                ev[0] = 0x404
             case .cancelled, .completed:
                 break // No completion data for these
             }

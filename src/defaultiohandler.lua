@@ -284,4 +284,13 @@ end
 function setAppTitle(title)
 end
 
+function displayTaskList()
+end
+
+function setForeground()
+end
+
+function setBackground()
+end
+
 return _ENV

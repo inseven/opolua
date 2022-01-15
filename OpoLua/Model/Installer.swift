@@ -85,4 +85,7 @@ extension Installer: OpoIoHandler {
     func setConfig(key: ConfigName, value: String) {}
     func getConfig(key: ConfigName) -> String { return "" }
     func setAppTitle(_ title: String) {}
+    func displayTaskList() {}
+    func setForeground() {}
+    func setBackground() {}
 }

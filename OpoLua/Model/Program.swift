@@ -394,6 +394,16 @@ extension Program: OpoIoHandler {
         }
     }
 
+    func displayTaskList() {
+        // TODO
+    }
+    func setForeground() {
+        // TODO
+    }
+
+    func setBackground() {
+        // TODO
+    }
 }
 
 extension Program: WindowServerDelegate {

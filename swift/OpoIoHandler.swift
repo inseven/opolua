@@ -486,6 +486,9 @@ struct Async {
         let screenx: Int
         let screeny: Int
     }
+    struct ActivationEvent {
+        let timestamp: TimeInterval // Since boot
+    }
     enum ResponseValue {
         case cancelled
         case completed
@@ -494,6 +497,9 @@ struct Async {
         case keydownevent(KeyUpDownEvent)
         case keyupevent(KeyUpDownEvent)
         case penevent(PenEvent)
+        case foregrounded(ActivationEvent)
+        case backgrounded(ActivationEvent)
+        case quitevent
     }
     struct Response {
         let handle: RequestHandle
@@ -568,6 +574,9 @@ protocol OpoIoHandler {
     func getConfig(key: ConfigName) -> String
 
     func setAppTitle(_ title: String)
+    func displayTaskList()
+    func setForeground()
+    func setBackground()
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -646,5 +655,16 @@ class DummyIoHandler : OpoIoHandler {
 
     func setAppTitle(_ title: String) {
     }
+
+    func displayTaskList() {
+    }
+
+    func setForeground() {
+    }
+
+    func setBackground() {
+    }
+
+
 
 }

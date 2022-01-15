@@ -1074,7 +1074,8 @@ function UpperStr(stack, runtime) -- 0xD3
 end
 
 function WCmd(stack, runtime) -- 0xD5
-    error("Unimplemented function WCmd!")
+    -- This is the onld cmd event we ever send, so...
+    stack:push("X")
 end
 
 function CmdStr(stack, runtime) -- 0xD6

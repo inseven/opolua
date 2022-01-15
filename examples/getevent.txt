@@ -1,3 +1,5 @@
+INCLUDE "system.oxh"
+
 PROC main:
 	GLOBAL ev&(16)
 	LOCAL info%(10), i%
@@ -23,6 +25,8 @@ PROC main:
 			IF ev&(1) = 13
 				PRINT "Saving screenshot..."
 				gSAVEBIT "D:\screenshot.mbm"
+			ELSEIF ev&(1) = $74
+				DisplayTaskList:
 			ENDIF
 			printEvent:
 		ENDIF
@@ -38,12 +42,21 @@ PROC printEvent:
 	ELSE
 		k% = ev&(1)- $400
 		VECTOR k%
-			nop, nop, nop, nop, nop
+			fg, bg, nop, nop, cmd
 			keyDown, keyUp
 			pen, penDown, penUp
 		ENDV
 	nop::
 		PRINT "Got event", ev&(1)
+		RETURN
+	fg::
+		PRINT "Foreground!"
+		RETURN
+	bg::
+		PRINT "Background!"
+		RETURN
+	cmd::
+		PRINT "Cmd", GETCMD$
 		RETURN
 	keyDown::
 		PRINT "Key down", ev&(3), "t="; ev&(2)

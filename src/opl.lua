@@ -975,6 +975,17 @@ end
 
 function DisplayTaskList()
     printf("system.DisplayTaskList()\n")
+    runtime:iohandler():displayTaskList()
+end
+
+function SetForeground()
+    printf("system.SetForeground()\n")
+    runtime:iohandler():setForeground()
+end
+
+function SetBackground()
+    printf("system.SetBackground()\n")
+    runtime:iohandler():setBackground()
 end
 
 -- date OPX

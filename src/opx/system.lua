@@ -389,12 +389,12 @@ function GetThreadIdFromAppUid(stack, runtime) -- 54
 end
 
 function SetForeground(stack, runtime) -- 55
-    printf("system.SetForeground()\n")
+    runtime:SetForeground()
     stack:push(0)
 end
 
 function SetBackground(stack, runtime) -- 56
-    printf("system.SetBackground()\n")
+    runtime:SetBackground()
     stack:push(0)
 end
 
