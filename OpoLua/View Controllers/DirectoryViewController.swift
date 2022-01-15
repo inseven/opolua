@@ -316,7 +316,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = items[indexPath.row]
         switch item.type {
-        case .object, .app:
+        case .object, .application:
             let program = Program(url: item.url)
             let viewController = ProgramViewController(settings: settings, program: program)
             navigationController?.pushViewController(viewController, animated: true)
@@ -330,7 +330,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
             installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
             installer?.delegate = self
             installer?.run()
-        case .unknown:
+        case .unknown, .applicationInformation:
             break
         }
     }
@@ -379,7 +379,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
                 }
                 let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
                 return UIMenu(children: actions + [procedureMenu, fileMenu])
-            case .app:
+            case .application:
                 let actions = self.actions(for: item.url)
                 return UIMenu(children: actions + [fileMenu])
             case .bundle, .system:
@@ -388,7 +388,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
                 }
                 let actions = self.actions(for: item.url)
                 return UIMenu(children: actions + [contentsAction, fileMenu])
-            case .directory, .installer, .unknown:
+            case .directory, .installer, .unknown, .applicationInformation:
                 return UIMenu(children: [fileMenu])
             }
         }

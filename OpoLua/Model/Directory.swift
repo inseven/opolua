@@ -27,32 +27,28 @@ protocol DirectoryDelegate: AnyObject {
 
 }
 
+
 class Directory {
 
     struct Application {
 
         let url: URL
-        let appInfo: OpoInterpreter.AppInfo
-
-        init(url: URL, appInfo: OpoInterpreter.AppInfo) {
-            self.url = url
-            self.appInfo = appInfo
-        }
+        let appInfo: OpoInterpreter.AppInfo?
 
         init(url: URL) {
-            guard url.isApplication,
-                  let applicationInfoFile = url.applicationInfoFile,
-                  FileManager.default.fileExists(atUrl: applicationInfoFile),
-                  let appInfo = OpoInterpreter.shared.getAppInfo(aifPath: applicationInfoFile.path)
-            else {
-                self.url = url
-                self.appInfo = OpoInterpreter.AppInfo(caption: url.name, uid3: 0, icons: [])
-                return
-            }
             self.url = url
-            self.appInfo = appInfo
+            self.appInfo = Directory.appInfo(forApplicationUrl: url)
         }
 
+    }
+
+    static func appInfo(forApplicationUrl url: URL) -> OpoInterpreter.AppInfo? {
+        guard let applicationInfoFile = url.applicationInfoFile,
+              FileManager.default.fileExists(atUrl: applicationInfoFile)
+        else {
+            return nil
+        }
+        return OpoInterpreter.shared.getAppInfo(aifPath: applicationInfoFile.path)
     }
 
     struct Item {
@@ -60,10 +56,11 @@ class Directory {
         enum `Type` {
             case object
             case directory
-            case app
+            case application(OpoInterpreter.AppInfo?)
             case bundle(Application)
             case system(Application)
             case installer
+            case applicationInformation(OpoInterpreter.AppInfo?)
             case unknown
 
             var localizedDescription: String {
@@ -72,7 +69,7 @@ class Directory {
                     return "Object"
                 case .directory:
                     return "Directory"
-                case .app:
+                case .application:
                     return "Application"
                 case .bundle:
                     return "Bundle"
@@ -80,6 +77,8 @@ class Directory {
                     return "System"
                 case .installer:
                     return "Installer"
+                case .applicationInformation:
+                    return "App Info"
                 case .unknown:
                     return "Unknown"
                 }
@@ -92,7 +91,7 @@ class Directory {
         var name: String {
             switch type {
             case .bundle(let application):
-                return application.appInfo.caption
+                return application.appInfo?.caption ?? url.lastPathComponent
             default:
                 return url.lastPathComponent
             }
@@ -104,22 +103,24 @@ class Directory {
                 return .oplIcon
             case .directory:
                 return .folderIcon
-            case .app:
-                return .unknownAppIcon
+            case .application(let appInfo):
+                return appInfo?.appIcon ?? .unknownAppIcon
             case .bundle(let application):
-                if let appIcon = application.appInfo.appIcon {
+                if let appIcon = application.appInfo?.appIcon {
                     return appIcon
                 } else {
                     return .unknownAppIcon
                 }
             case .system(let application):
-                if let appIcon = application.appInfo.appIcon {
+                if let appIcon = application.appInfo?.appIcon {
                     return appIcon
                 } else {
                     return .unknownAppIcon
                 }
             case .installer:
                 return .sisIcon
+            case .applicationInformation(let appInfo):
+                return appInfo?.appIcon ?? .unknownAppIcon
             case .unknown:
                 return .unknownAppIcon
             }
@@ -207,9 +208,12 @@ class Directory {
                 } else if url.pathExtension.lowercased() == "opo" {
                     return Item(url: url, type: .object)
                 } else if url.pathExtension.lowercased() == "app" {
-                    return Item(url: url, type: .app)
+                    return Item(url: url, type: .application(Self.appInfo(forApplicationUrl: url)))
                 } else if url.pathExtension.lowercased() == "sis" {
                     return Item(url: url, type: .installer)
+                } else if url.pathExtension.lowercased() == "aif" {
+                    return Item(url: url,
+                                type: .applicationInformation(OpoInterpreter.shared.getAppInfo(aifPath: url.path)))
                 } else {
                     return Item(url: url, type: .unknown)
                 }
