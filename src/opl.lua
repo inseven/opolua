@@ -971,4 +971,21 @@ function IOC(h, fn, stat, a, b)
     end
 end
 
+-- system OPX stuff
+
+function DisplayTaskList()
+    printf("system.DisplayTaskList()\n")
+end
+
+-- date OPX
+
+function LCClockFormat()
+    local fmt = runtime:iohandler().getConfig("clockFormat")
+    return fmt == "1" and 1 or 0
+end
+
+function LCSetClockFormat(fmt)
+    runtime:iohandler().setConfig("clockFormat", tostring(fmt))
+end
+
 return _ENV

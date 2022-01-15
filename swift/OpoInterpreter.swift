@@ -810,6 +810,30 @@ private func opsync(_ L: LuaState!) -> Int32 {
     return 0
 }
 
+private func getConfig(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    if let keyName = L.tostring(1),
+       let key = ConfigName(rawValue: keyName) {
+        L.push(iohandler.getConfig(key: key))
+        return 1
+    } else {
+        print("Bad keyname to getConfig")
+        return 0
+    }    
+}
+
+private func setConfig(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    if let keyName = L.tostring(1),
+       let key = ConfigName(rawValue: keyName),
+       let val = L.tostring(2) {
+        iohandler.setConfig(key: key, value: val)
+    } else {
+        print("Bad key/val to setConfig")
+    }    
+    return 0
+}
+
 class OpoInterpreter {
 
     static let kOpTime: TimeInterval = 3.5 / 1000000 // Make this bigger to slow the interpreter down
@@ -913,6 +937,8 @@ class OpoInterpreter {
             ("getTime", getTime),
             ("key", key),
             ("opsync", opsync),
+            ("getConfig", getConfig),
+            ("setConfig", setConfig),
         ]
         L.setfuncs(fns, nup: 1)
     }

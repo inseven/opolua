@@ -517,6 +517,10 @@ extension Async.KeyPressEvent {
     }
 }
 
+enum ConfigName: String, CaseIterable {
+    case clockFormat // 0: analog, 1: digital
+}
+
 protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
@@ -560,6 +564,9 @@ protocol OpoIoHandler {
     func testEvent() -> Bool
 
     func key() -> OplKeyCode?
+
+    func setConfig(key: ConfigName, value: String)
+    func getConfig(key: ConfigName) -> String
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -628,4 +635,12 @@ class DummyIoHandler : OpoIoHandler {
     func key() -> OplKeyCode? {
         return nil
     }
+
+    func setConfig(key: ConfigName, value: String) {
+    }
+
+    func getConfig(key: ConfigName) -> String {
+        return ""
+    }
+
 }

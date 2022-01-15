@@ -273,4 +273,12 @@ end
 function opsync()
 end
 
+function getConfig(key)
+    return ""
+end
+
+function setConfig(key, val)
+    printf("setConfig(%q, %q)\n", key, val)
+end
+
 return _ENV

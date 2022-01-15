@@ -74,6 +74,8 @@ class Program {
 
     private var _state: State = .idle
 
+    private var oplConfig: [ConfigName: String] = [:]
+
     public var state: State {
         return _state
     }
@@ -106,6 +108,12 @@ class Program {
         self.thread.delegate = self
         self.thread.handler = self
         self.windowServer.delegate = self
+        for key in ConfigName.allCases {
+            switch key {
+            case .clockFormat:
+                oplConfig[key] = "0" // analog
+            }
+        }
     }
 
     func start() {
@@ -368,6 +376,14 @@ extension Program: OpoIoHandler {
         return event.keycode
     }
 
+    func setConfig(key: ConfigName, value: String) {
+        print("setConfig \(key.rawValue) \(value)")
+        oplConfig[key] = value
+    }
+
+    func getConfig(key: ConfigName) -> String {
+        return oplConfig[key]!
+    }
 }
 
 extension Program: WindowServerDelegate {

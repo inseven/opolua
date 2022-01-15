@@ -237,15 +237,18 @@ function LCCountryCode(stack, runtime) -- 31
 end
 
 function LCDecimalSeparator(stack, runtime) -- 32
-    error("Unimplemented date.opx.function LCDecimalSeparator!")
+    error("Unimplemented date.opx function LCDecimalSeparator!")
 end
 
 function LCSetClockFormat(stack, runtime) -- 33
-    error("Unimplemented date.opx.function LCSetClockFormat!")
+    local fmt = stack:pop()
+    runtime:LCSetClockFormat(fmt)
+    stack:push(0)
 end
 
 function LCClockFormat(stack, runtime) -- 34
-    error("Unimplemented date.opx.function LCClockFormat!")
+    local fmt = runtime:LCClockFormat()
+    stack:push(fmt)
 end
 
 function LCStartOfWeek(stack, runtime) -- 35

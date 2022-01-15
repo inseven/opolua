@@ -82,4 +82,6 @@ extension Installer: OpoIoHandler {
     func anyRequest() -> Async.Response? { return nil }
     func testEvent() -> Bool { return false }
     func key() -> OplKeyCode? { return nil }
+    func setConfig(key: ConfigName, value: String) {}
+    func getConfig(key: ConfigName) -> String { return "" }
 }
