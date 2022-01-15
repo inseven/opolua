@@ -531,10 +531,6 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         let origin = Graphics.Point(x: x, y: y)
         let sprite = Graphics.Sprite(window: winId, origin: origin, frames: frames)
         return doGraphicsOp(L, iohandler, .sprite(spriteId, sprite))
-    case "title":
-        if let title = L.tostring(2) {
-            return doGraphicsOp(L, iohandler, .setAppTitle(title))
-        }
     case "clock":
         let drawableId = Graphics.DrawableId(value: L.toint(2) ?? 0)
         let clockInfo: Graphics.ClockInfo?
@@ -834,6 +830,14 @@ private func setConfig(_ L: LuaState!) -> Int32 {
     return 0
 }
 
+private func setAppTitle(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    if let title = L.tostring(1) {
+        iohandler.setAppTitle(title)
+    }
+    return 0
+}
+
 class OpoInterpreter {
 
     static let kOpTime: TimeInterval = 3.5 / 1000000 // Make this bigger to slow the interpreter down
@@ -939,6 +943,7 @@ class OpoInterpreter {
             ("opsync", opsync),
             ("getConfig", getConfig),
             ("setConfig", setConfig),
+            ("setAppTitle", setAppTitle),
         ]
         L.setfuncs(fns, nup: 1)
     }

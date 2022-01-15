@@ -281,4 +281,7 @@ function setConfig(key, val)
     printf("setConfig(%q, %q)\n", key, val)
 end
 
+function setAppTitle(title)
+end
+
 return _ENV

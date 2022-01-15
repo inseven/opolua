@@ -231,11 +231,6 @@ class Program {
             windowServer.setSprite(id: id, sprite: sprite)
             return .nothing
 
-        case .setAppTitle(let title):
-            self.title = title
-            delegate?.program(self, didUpdateTitle: title)
-            return .nothing
-
         case .clock(let drawableId, let clockInfo):
             windowServer.clock(drawableId: drawableId, info: clockInfo)
             return .nothing
@@ -391,6 +386,14 @@ extension Program: OpoIoHandler {
     func getConfig(key: ConfigName) -> String {
         return oplConfig[key]!
     }
+
+    func setAppTitle(_ title: String) {
+        DispatchQueue.main.sync {
+            self.title = title
+            delegate?.program(self, didUpdateTitle: title)
+        }
+    }
+
 }
 
 extension Program: WindowServerDelegate {

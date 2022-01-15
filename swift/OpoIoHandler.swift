@@ -390,7 +390,6 @@ struct Graphics {
         case giprint(DrawableId)
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
         case sprite(Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
-        case setAppTitle(String)
         case clock(DrawableId, ClockInfo?)
     }
 
@@ -567,6 +566,8 @@ protocol OpoIoHandler {
 
     func setConfig(key: ConfigName, value: String)
     func getConfig(key: ConfigName) -> String
+
+    func setAppTitle(_ title: String)
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -641,6 +642,9 @@ class DummyIoHandler : OpoIoHandler {
 
     func getConfig(key: ConfigName) -> String {
         return ""
+    }
+
+    func setAppTitle(_ title: String) {
     }
 
 }

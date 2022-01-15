@@ -84,4 +84,5 @@ extension Installer: OpoIoHandler {
     func key() -> OplKeyCode? { return nil }
     func setConfig(key: ConfigName, value: String) {}
     func getConfig(key: ConfigName) -> String { return "" }
+    func setAppTitle(_ title: String) {}
 }

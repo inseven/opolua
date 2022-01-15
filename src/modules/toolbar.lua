@@ -107,7 +107,7 @@ function TBarSetTitle(runtime, name)
     end
     gPRINTB(name, KTbWidth - 2, align, 6, 6)
     gUSE(prevId)
-    runtime:iohandler().graphicsop("title", name)
+    runtime:iohandler().setAppTitle(name)
 end
 
 function TBarButt(runtime, shortcut, pos, text, state, bmp, mask, flags)
