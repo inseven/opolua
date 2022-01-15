@@ -324,13 +324,14 @@ extension DirectoryViewController: UICollectionViewDelegate {
             let program = Program(url: application.url)
             let viewController = ProgramViewController(settings: settings, program: program)
             navigationController?.pushViewController(viewController, animated: true)
-
         case .directory:
             pushDirectoryViewController(for: item.url)
         case .installer:
             installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
             installer?.delegate = self
             installer?.run()
+        case .unknown:
+            break
         }
     }
 
@@ -387,9 +388,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
                 }
                 let actions = self.actions(for: item.url)
                 return UIMenu(children: actions + [contentsAction, fileMenu])
-            case .directory:
-                return UIMenu(children: [fileMenu])
-            case .installer:
+            case .directory, .installer, .unknown:
                 return UIMenu(children: [fileMenu])
             }
         }

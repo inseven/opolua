@@ -64,6 +64,7 @@ class Directory {
             case bundle(Application)
             case system(Application)
             case installer
+            case unknown
 
             var localizedDescription: String {
                 switch self {
@@ -79,6 +80,8 @@ class Directory {
                     return "System"
                 case .installer:
                     return "Installer"
+                case .unknown:
+                    return "Unknown"
                 }
             }
         }
@@ -91,7 +94,7 @@ class Directory {
             case .bundle(let application):
                 return application.appInfo.caption
             default:
-                return url.name
+                return url.lastPathComponent
             }
         }
 
@@ -117,6 +120,8 @@ class Directory {
                 }
             case .installer:
                 return .sisIcon
+            case .unknown:
+                return .unknownAppIcon
             }
         }
 
@@ -207,7 +212,7 @@ class Directory {
                 } else if url.pathExtension.lowercased() == "sis" {
                     return Item(url: url, type: .installer)
                 } else {
-                    return nil
+                    return Item(url: url, type: .unknown)
                 }
             }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
