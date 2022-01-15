@@ -486,6 +486,10 @@ struct Async {
         let screenx: Int
         let screeny: Int
     }
+    struct PenUpDownEvent {
+        let timestamp: TimeInterval // Since boot
+        let windowId: Graphics.DrawableId
+    }
     struct ActivationEvent {
         let timestamp: TimeInterval // Since boot
     }
@@ -497,6 +501,8 @@ struct Async {
         case keydownevent(KeyUpDownEvent)
         case keyupevent(KeyUpDownEvent)
         case penevent(PenEvent)
+        case pendownevent(PenUpDownEvent)
+        case penupevent(PenUpDownEvent)
         case foregrounded(ActivationEvent)
         case backgrounded(ActivationEvent)
         case quitevent

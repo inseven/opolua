@@ -1174,6 +1174,14 @@ class OpoInterpreter {
                 ev[6] = event.y
                 ev[7] = event.screenx
                 ev[8] = event.screeny
+            case .pendownevent(let event):
+                ev[0] = 0x409
+                ev[1] = timestampToInt32(event.timestamp)
+                ev[2] = event.windowId.value
+            case .penupevent(let event):
+                ev[0] = 0x40A
+                ev[1] = timestampToInt32(event.timestamp)
+                ev[2] = event.windowId.value
             case .foregrounded(let event):
                 ev[0] = 0x401
                 ev[1] = timestampToInt32(event.timestamp)

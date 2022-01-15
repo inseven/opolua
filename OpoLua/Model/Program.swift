@@ -265,6 +265,9 @@ class Program {
     private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
         let location = touch.location(in: view)
         let screenLocation = touch.location(in: view.superview)
+        if type == .down {
+            sendEvent(.pendownevent(.init(timestamp: event.timestamp, windowId: view.id)))
+        }
         sendEvent(.penevent(.init(timestamp: event.timestamp,
                                   windowId: view.id,
                                   type: type,
@@ -273,6 +276,8 @@ class Program {
                                   y: Int(location.y),
                                   screenx: Int(screenLocation.x),
                                   screeny: Int(screenLocation.y))))
+        // .penupevent is only sent when the pen is dragged into non-screen area
+        // (ie the softkeys) which we don't have, so we basically never need to send it
     }
 
 }
