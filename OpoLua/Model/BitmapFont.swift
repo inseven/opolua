@@ -72,6 +72,15 @@ struct BitmapFontInfo {
         self.ascent = ascent
         self.widths = widths
     }
+
+    static var digit: BitmapFontInfo = {
+        return BitmapFontInfo(uid: 0x10000128)!
+    }()
+
+    static var arial15: BitmapFontInfo = {
+        return BitmapFontInfo(uid: 0x100001F5)!
+    }()
+
 }
 
 class BitmapFontRenderer {

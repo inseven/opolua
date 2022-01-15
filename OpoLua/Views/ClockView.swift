@@ -1,0 +1,105 @@
+// Copyright (c) 2022 Jason Morley, Tom Sutcliffe
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+import UIKit
+
+class ClockView: UIView {
+    var clockInfo: Graphics.ClockInfo
+    var systemClockDigital: Bool
+    private let clockImage: UIImage
+
+    init(clockInfo: Graphics.ClockInfo, systemClockDigital: Bool) {
+        self.clockInfo = clockInfo
+        self.systemClockDigital = systemClockDigital
+        // We are always the size of the analog clock, even if we're going to be digital
+        clockImage = UIImage(named: "ClockMedium")!
+        super.init(frame: CGRect(origin: clockInfo.position.cgPoint(), size: clockImage.size))
+        self.isOpaque = false
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func draw(_ rect: CGRect) {
+        guard let context = UIGraphicsGetCurrentContext() else {
+            return
+        }
+
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.translateBy(x: 0, y: -self.bounds.height);
+
+        let now = Date()
+        let components = Calendar.current.dateComponents([.hour, .minute], from: now)
+        guard let hours = components.hour, let minutes = components.minute else {
+            print("Date fail!")
+            return
+        }
+
+        let digital = clockInfo.mode == .digital || (clockInfo.mode == .systemSetting && systemClockDigital)
+        if digital {
+            let text = String(format: "%d:%02d", hours % 12, minutes) // TODO: we should honour the iOS 24hr format preference
+            drawCenteredText(text, context: context, font: BitmapFontInfo.digit, y: 4)
+            let df = DateFormatter()
+            df.dateFormat = "EEE d"
+            let day = df.string(from: now)
+            drawCenteredText(day, context: context, font: BitmapFontInfo.arial15, y: 45)
+        } else {
+            if let cgImage = clockImage.cgImage {
+                context.draw(cgImage, in: CGRect(origin: .zero, size: clockImage.size))
+            }
+            let centerPos = CGPoint(x: clockImage.size.width / 2, y: clockImage.size.height / 2)
+            let hourHandLen = 15.0
+            let minuteHandLen = 25.0
+            let hAngle = 2 * Double.pi * (Double(hours % 12) / 12)
+            context.setLineWidth(2)
+            context.move(to: centerPos)
+            context.addLine(to: CGPoint(x: centerPos.x + sin(hAngle) * hourHandLen, y: centerPos.y + cos(hAngle) * hourHandLen))
+            context.strokePath()
+            let mAngle = 2 * Double.pi * (Double(minutes) / 60)
+            context.move(to: centerPos)
+            context.addLine(to: CGPoint(x: centerPos.x + sin(mAngle) * minuteHandLen, y: centerPos.y + cos(mAngle) * minuteHandLen))
+            context.strokePath()
+        }
+    }
+
+    func drawCenteredText(_ text: String, context: CGContext, font: BitmapFontInfo, y: CGFloat) {
+        let renderer = BitmapFontCache.shared.getRenderer(font: font)
+        let (w, h) = renderer.getTextSize(text)
+        var x = (self.bounds.width - CGFloat(w)) / 2
+        context.setFillColor(UIColor.black.cgColor)
+        for ch in text {
+            context.saveGState()
+            if let img = renderer.getImageForChar(ch) {
+                let rect = CGRect(x: x, y: self.bounds.height - CGFloat(h) - y, width: CGFloat(img.width), height: CGFloat(img.height))
+                context.clip(to: rect, mask: img)
+                context.fill(rect)
+                context.restoreGState()
+                x = x + CGFloat(img.width)
+            }
+        }
+    }
+
+    func clockChanged() {
+        self.frame = CGRect(origin: clockInfo.position.cgPoint(), size: clockImage.size)
+        self.setNeedsDisplay()
+    }
+
+}

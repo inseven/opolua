@@ -63,6 +63,8 @@ class WindowServer {
     private var busyWindowShowTimer: Timer?
     private var spriteWindows: [Int: Graphics.DrawableId] = [:]
     private var spriteTimer: Timer?
+    private var clockTimer: Timer?
+    private var systemClockDigital: Bool = false
 
     public var drawables: [Drawable] {
         return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
@@ -216,8 +218,32 @@ class WindowServer {
             print("No CanvasView for clock operation")
             return
         }
-        view.clock = info
-        view.setNeedsDisplay()
+
+        if let clockInfo = info {
+            if view.clockView == nil {
+                let v = ClockView(clockInfo: clockInfo, systemClockDigital: systemClockDigital)
+                view.clockView = v
+                view.addSubview(v)
+            }
+            view.clockView?.clockInfo = clockInfo
+        } else {
+            if let clockView = view.clockView {
+                clockView.removeFromSuperview()
+                view.clockView = nil
+            }
+        }
+        view.clockView?.clockChanged()
+        if clockTimer == nil {
+            let d = Calendar.current.nextDate(after: Date(), matching: DateComponents(second: 0), matchingPolicy: .nextTimePreservingSmallerComponents)!
+            let timer = Timer(fireAt: d,
+                              interval: 60,
+                              target: self,
+                              selector: #selector(clocksChanged),
+                              userInfo: nil,
+                              repeats: true)
+            RunLoop.current.add(timer, forMode: .common)
+            clockTimer = timer
+        }
     }
 
     func setSprite(id: Int, sprite: Graphics.Sprite?) {
@@ -343,6 +369,20 @@ class WindowServer {
         hideInfoWindow()
         spriteTimer?.invalidate()
         spriteTimer = nil
+        clockTimer?.invalidate()
+        clockTimer = nil
+    }
+
+    @objc func clocksChanged() {
+        for (_, window) in windows {
+            window.clockView?.systemClockDigital = self.systemClockDigital
+            window.clockView?.clockChanged()
+        }
+    }
+
+    public func systemClockFormatChanged(newValue: Bool) {
+        self.systemClockDigital = newValue
+        clocksChanged()
     }
 
 }

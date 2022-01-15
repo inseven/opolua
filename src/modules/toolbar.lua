@@ -41,7 +41,7 @@ local KTbFlgLatched = 0x04
 
 local KTbFont = KFontSquashed
 local KTbTitleFont = KFontArialNormal11
-local KTbClockPosX = 3
+local KTbClockPosX = 4
 local KTbClockHeight = 64
 
 -- Global vars

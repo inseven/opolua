@@ -379,6 +379,13 @@ extension Program: OpoIoHandler {
     func setConfig(key: ConfigName, value: String) {
         print("setConfig \(key.rawValue) \(value)")
         oplConfig[key] = value
+        switch key {
+        case .clockFormat:
+            let digital = value == "1"
+            DispatchQueue.main.sync {
+                windowServer.systemClockFormatChanged(newValue: digital)
+            }
+        }
     }
 
     func getConfig(key: ConfigName) -> String {

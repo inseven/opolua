@@ -161,6 +161,7 @@
 		DB9B7C31274A771A006B6F60 /* loslib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB9B7C30274A771A006B6F60 /* loslib.c */; };
 		DBACE9C3274F895D002612DF /* modules in Resources */ = {isa = PBXBuildFile; fileRef = DBACE9C2274F895D002612DF /* modules */; };
 		DBE2917C278CCB0B00EE824B /* crc.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE2917B278CCB0B00EE824B /* crc.lua */; };
+		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
 		DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE91522276A9D0900BDB8F5 /* memory.lua */; };
 		DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE91524276D25A900BDB8F5 /* UIKey.swift */; };
 /* End PBXBuildFile section */
@@ -306,6 +307,7 @@
 		DB9B7C33274A7B9B006B6F60 /* luauser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = luauser.h; sourceTree = "<group>"; };
 		DBACE9C2274F895D002612DF /* modules */ = {isa = PBXFileReference; lastKnownFileType = folder; path = modules; sourceTree = "<group>"; };
 		DBE2917B278CCB0B00EE824B /* crc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crc.lua; sourceTree = "<group>"; };
+		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
 		DBE91522276A9D0900BDB8F5 /* memory.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = memory.lua; sourceTree = "<group>"; };
 		DBE91524276D25A900BDB8F5 /* UIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKey.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -392,6 +394,7 @@
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
 				D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */,
 				D8F4835C278D3D31008AF80C /* PixelView.swift */,
+				DBE2917D27932C5300EE824B /* ClockView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -847,6 +850,7 @@
 				D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */,
 				D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
+				DBE2917E27932C5400EE824B /* ClockView.swift in Sources */,
 				D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */,
 				DB7900162742E6F6005E904F /* lutf8lib.c in Sources */,
 				D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */,
