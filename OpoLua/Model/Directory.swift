@@ -57,7 +57,6 @@ class Directory {
             case object
             case directory
             case application(OpoInterpreter.AppInfo?)
-            case bundle(Application)
             case system(Application)
             case installer
             case applicationInformation(OpoInterpreter.AppInfo?)
@@ -71,8 +70,6 @@ class Directory {
                     return "Directory"
                 case .application:
                     return "Application"
-                case .bundle:
-                    return "Bundle"
                 case .system:
                     return "System"
                 case .installer:
@@ -90,7 +87,7 @@ class Directory {
 
         var name: String {
             switch type {
-            case .bundle(let application):
+            case .system(let application):
                 return application.appInfo?.caption ?? url.lastPathComponent
             default:
                 return url.lastPathComponent
@@ -105,12 +102,6 @@ class Directory {
                 return .folderIcon
             case .application(let appInfo):
                 return appInfo?.appIcon ?? .unknownAppIcon
-            case .bundle(let application):
-                if let appIcon = application.appInfo?.appIcon {
-                    return appIcon
-                } else {
-                    return .unknownAppIcon
-                }
             case .system(let application):
                 if let appIcon = application.appInfo?.appIcon {
                     return appIcon
@@ -152,21 +143,6 @@ class Directory {
         return .system(application)
     }
 
-    private static func asBundle(url: URL) throws -> Item.`Type`? {
-
-        let apps = try url.contents
-            .filter { $0.isApplication }
-            .compactMap { Application(url: $0) }
-
-        // TODO: Allow bundles containing more than one app.
-        guard apps.count == 1,
-              let application = apps.first else {
-            return nil
-        }
-
-        return .bundle(application)
-    }
-
     let url: URL
     var items: [Item] = []
 
@@ -199,8 +175,6 @@ class Directory {
                 if FileManager.default.directoryExists(atPath: url.path) {
                     // Check for an app 'bundle'.
                     if let type = try Self.asSystem(url: url) {
-                        return Item(url: url, type: type)
-                    } else if let type = try Self.asBundle(url: url) {
                         return Item(url: url, type: type)
                     } else {
                         return Item(url: url, type: .directory)

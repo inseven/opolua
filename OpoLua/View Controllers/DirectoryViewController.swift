@@ -320,7 +320,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
             let program = Program(url: item.url)
             let viewController = ProgramViewController(settings: settings, program: program)
             navigationController?.pushViewController(viewController, animated: true)
-        case .bundle(let application), .system(let application):
+        case .system(let application):
             let program = Program(url: application.url)
             let viewController = ProgramViewController(settings: settings, program: program)
             navigationController?.pushViewController(viewController, animated: true)
@@ -382,7 +382,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
             case .application:
                 let actions = self.actions(for: item.url)
                 return UIMenu(children: actions + [fileMenu])
-            case .bundle, .system:
+            case .system:
                 let contentsAction = UIAction(title: "Show Package Contents") { action in
                     self.pushDirectoryViewController(for: item.url)
                 }
