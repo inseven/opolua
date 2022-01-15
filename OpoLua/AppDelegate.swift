@@ -25,6 +25,9 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+
+    var taskManager = TaskManager()
+
     var settings = Settings()
     var settingsSink: AnyCancellable?
 
@@ -35,7 +38,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        let viewController = LibraryViewController(settings: settings)
+        let viewController = LibraryViewController(settings: settings, taskManager: taskManager)
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.navigationBar.prefersLargeTitles = true
 

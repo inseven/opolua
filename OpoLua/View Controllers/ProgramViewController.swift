@@ -144,6 +144,7 @@ class ProgramViewController: UIViewController {
         navigationController?.isToolbarHidden = false
         program.rootView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
         settingsSink = settings.objectWillChange.sink { _ in }
+        program.addObserver(self)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -157,6 +158,7 @@ class ProgramViewController: UIViewController {
         virtualController?.disconnect()
         settingsSink?.cancel()
         settingsSink = nil
+        program.removeObserver(self)
     }
 
     override func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
@@ -353,26 +355,6 @@ extension ProgramViewController: DrawableViewControllerDelegate {
 }
 
 extension ProgramViewController: ProgramDelegate {
-
-    func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
-        if case OpoInterpreter.Result.none = result {
-            self.navigationController?.popViewController(animated: true)
-            return
-        }
-        UIView.animate(withDuration: 0.3) {
-            self.program.rootView.alpha = 0.3
-        } completion: { _ in
-            self.showConsole()
-        }
-    }
-
-    func program(_ program: Program, didEncounterError error: Error) {
-        present(error: error)
-    }
-
-    func program(_ program: Program, didUpdateTitle title: String) {
-        self.title = title
-    }
     
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
         // TODO: Implement INPUT
@@ -431,6 +413,30 @@ extension ProgramViewController: ProgramDelegate {
         })
         semaphore.wait()
         return result
+    }
+
+}
+
+extension ProgramViewController: ProgramLifecycleObserver {
+
+    func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
+        if case OpoInterpreter.Result.none = result {
+            self.navigationController?.popViewController(animated: true)
+            return
+        }
+        UIView.animate(withDuration: 0.3) {
+            self.program.rootView.alpha = 0.3
+        } completion: { _ in
+            self.showConsole()
+        }
+    }
+
+    func program(_ program: Program, didEncounterError error: Error) {
+        present(error: error)
+    }
+
+    func program(_ program: Program, didUpdateTitle title: String) {
+        self.title = title
     }
 
 }

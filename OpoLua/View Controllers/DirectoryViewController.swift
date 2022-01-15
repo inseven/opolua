@@ -98,6 +98,7 @@ class DirectoryViewController : UIViewController {
     static var cell = "Cell"
 
     var settings: Settings
+    var taskManager: TaskManager
     var directory: Directory
     var items: [Directory.Item] = []
     var installer: Installer?
@@ -168,8 +169,9 @@ class DirectoryViewController : UIViewController {
         return menuBarButtonItem
     }()
     
-    init(settings: Settings, directory: Directory, title: String? = nil) {
+    init(settings: Settings, taskManager: TaskManager, directory: Directory, title: String? = nil) {
         self.settings = settings
+        self.taskManager = taskManager
         self.directory = directory
         self.items = directory.items
         super.init(nibName: nil, bundle: nil)
@@ -196,10 +198,6 @@ class DirectoryViewController : UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.isToolbarHidden = true
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
         applicationActiveObserver = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification,
                                                                            object: nil,
                                                                            queue: nil) { notification in
@@ -208,6 +206,12 @@ class DirectoryViewController : UIViewController {
         settingsSink = settings.objectWillChange.sink { [unowned self] settings in
             self.wallpaperPixelView.image = self.settings.theme.wallpaper
         }
+        taskManager.addObserver(self)
+        collectionView.reloadData()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -217,6 +221,7 @@ class DirectoryViewController : UIViewController {
         }
         settingsSink?.cancel()
         settingsSink = nil
+        taskManager.removeObserver(self)
     }
 
     func createDirectory() {
@@ -261,7 +266,9 @@ class DirectoryViewController : UIViewController {
     func pushDirectoryViewController(for url: URL) {
         do {
             let directory = try Directory(url: url)
-            let viewController = DirectoryViewController(settings: settings, directory: directory)
+            let viewController = DirectoryViewController(settings: settings,
+                                                         taskManager: taskManager,
+                                                         directory: directory)
             navigationController?.pushViewController(viewController, animated: true)
         } catch {
             present(error: error)
@@ -272,7 +279,7 @@ class DirectoryViewController : UIViewController {
         var actions: [UIMenuElement] = []
 
         let runAction = UIAction(title: "Run") { action in
-            let program = Program(url: url)
+            let program = self.taskManager.program(for: url)
             let viewController = ProgramViewController(settings: self.settings, program: program)
             self.navigationController?.pushViewController(viewController, animated: true)
         }
@@ -309,6 +316,11 @@ extension DirectoryViewController: UICollectionViewDataSource {
         cell.textLabel.text = item.name
         cell.detailTextLabel.text = item.type.localizedDescription
         cell.imageView.image = item.icon.scale(view.window?.screen.nativeScale ?? 1.0)
+        if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
+            cell.backgroundColor = .magenta
+        } else {
+            cell.backgroundColor = .clear
+        }
         return cell
     }
 
@@ -320,11 +332,11 @@ extension DirectoryViewController: UICollectionViewDelegate {
         let item = items[indexPath.row]
         switch item.type {
         case .object, .application:
-            let program = Program(url: item.url)
+            let program = taskManager.program(for: item.programUrl!)
             let viewController = ProgramViewController(settings: settings, program: program)
             navigationController?.pushViewController(viewController, animated: true)
-        case .system(let application):
-            let program = Program(url: application.url)
+        case .system:
+            let program = taskManager.program(for: item.programUrl!)
             let viewController = ProgramViewController(settings: settings, program: program)
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
@@ -371,7 +383,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
             let fileMenu = UIMenu(options: [.displayInline], children: [deleteAction])
             switch item.type {
             case .object:
-                let actions = self.actions(for: item.url)
+                let actions = self.actions(for: item.programUrl!)
                 let procedures = OpoInterpreter.shared.getProcedures(file: item.url.path) ?? []
                 let procedureActions = procedures.map { procedure in
                     UIAction(title: procedure.name) { action in
@@ -383,13 +395,13 @@ extension DirectoryViewController: UICollectionViewDelegate {
                 let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
                 return UIMenu(children: actions + [procedureMenu, fileMenu])
             case .application:
-                let actions = self.actions(for: item.url)
+                let actions = self.actions(for: item.programUrl!)
                 return UIMenu(children: actions + [fileMenu])
             case .system:
                 let contentsAction = UIAction(title: "Show Package Contents") { action in
                     self.pushDirectoryViewController(for: item.url)
                 }
-                let actions = self.actions(for: item.url)
+                let actions = self.actions(for: item.programUrl!)
                 return UIMenu(children: actions + [contentsAction, fileMenu])
             case .directory, .installer, .unknown, .applicationInformation:
                 return UIMenu(children: [fileMenu])
@@ -439,6 +451,15 @@ extension DirectoryViewController: InstallerDelegate {
             self.present(error: error)
             self.reload()
         }
+    }
+
+}
+
+extension DirectoryViewController: TaskManagerObserver {
+
+    func taskManagerDidUpdate(_ taskManager: TaskManager) {
+        print("reloading data")
+        collectionView.reloadData()
     }
 
 }

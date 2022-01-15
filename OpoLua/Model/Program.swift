@@ -20,11 +20,22 @@
 
 import UIKit
 
-protocol ProgramDelegate: AnyObject {
+/**
+ Called on the main queue.
+ */
+protocol ProgramLifecycleObserver: NSObject {
 
     func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result)
     func program(_ program: Program, didEncounterError error: Error)
     func program(_ program: Program, didUpdateTitle title: String)
+
+}
+
+/**
+ Called on the program's runtime queue.
+ */
+protocol ProgramDelegate: AnyObject {
+
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
     func program(_ program: Program, showAlertWithLines lines: [String], buttons: [String]) -> Int
     func dialog(_ d: Dialog) -> Dialog.Result
@@ -63,14 +74,14 @@ class Program {
         }
     }
 
-    private let url: URL
+    let url: URL
     private let procedureName: String?
     private let device: Device
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     let windowServer: WindowServer
     private let scheduler = Scheduler()
-    fileprivate var geteventRequest: GetEventRequest?
+    private var geteventRequest: GetEventRequest?
 
     private var _state: State = .idle
 
@@ -80,6 +91,7 @@ class Program {
         return _state
     }
 
+    private var observers: [ProgramLifecycleObserver] = []
     weak var delegate: ProgramDelegate?
 
     var console = Console()
@@ -114,6 +126,16 @@ class Program {
                 oplConfig[key] = "0" // analog
             }
         }
+    }
+
+    func addObserver(_ observer: ProgramLifecycleObserver) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        self.observers.append(observer)
+    }
+
+    func removeObserver(_ observer: ProgramLifecycleObserver) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        self.observers.removeAll { $0.isEqual(observer) }
     }
 
     func start() {
@@ -260,7 +282,7 @@ extension Program: InterpreterThreadDelegate {
     }
 
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.sync {
             self.windowServer.shutdown()
             switch result {
             case .none:
@@ -269,7 +291,9 @@ extension Program: InterpreterThreadDelegate {
                 self.console.append("\n---Error occurred:---\n\(err.description)")
             }
             self._state = .finished
-            self.delegate?.program(self, didFinishWithResult: result)
+            for observer in self.observers {
+                observer.program(self, didFinishWithResult: result)
+            }
         }
     }
 
@@ -295,7 +319,11 @@ extension Program: OpoIoHandler {
         do {
             try Sound.beep(frequency: frequency * 1000, duration: duration)
         } catch {
-            delegate?.program(self, didEncounterError: error)
+            DispatchQueue.main.sync {
+                for observer in self.observers {
+                    observer.program(self, didEncounterError: error)
+                }
+            }
         }
     }
 
@@ -390,7 +418,9 @@ extension Program: OpoIoHandler {
     func setAppTitle(_ title: String) {
         DispatchQueue.main.sync {
             self.title = title
-            delegate?.program(self, didUpdateTitle: title)
+            for observer in self.observers {
+                observer.program(self, didUpdateTitle: title)
+            }
         }
     }
 

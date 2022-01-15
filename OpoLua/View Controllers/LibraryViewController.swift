@@ -98,6 +98,7 @@ class LibraryViewController: UITableViewController {
     static let cellIdentifier = "Cell"
 
     var settings: Settings
+    var taskManager: TaskManager
     var dataSource: LibraryDataSource!
 
     lazy var addBarButtonItem: UIBarButtonItem = {
@@ -116,8 +117,9 @@ class LibraryViewController: UITableViewController {
         return barButtonItem
     }()
 
-    init(settings: Settings) {
+    init(settings: Settings, taskManager: TaskManager) {
         self.settings = settings
+        self.taskManager = taskManager
         super.init(style: .insetGrouped)
         title = "OPL"
         navigationItem.rightBarButtonItem = addBarButtonItem
@@ -184,7 +186,10 @@ class LibraryViewController: UITableViewController {
         }
         do {
             let directory = try Directory(url: item.location.url)
-            let viewController = DirectoryViewController(settings: settings, directory: directory, title: item.name)
+            let viewController = DirectoryViewController(settings: settings,
+                                                         taskManager: taskManager,
+                                                         directory: directory,
+                                                         title: item.name)
             navigationController?.pushViewController(viewController, animated: true)
         } catch {
             present(error: error)

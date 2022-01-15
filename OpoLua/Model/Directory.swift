@@ -117,6 +117,25 @@ class Directory {
             }
         }
 
+        var programUrl: URL? {
+            switch type {
+            case .object:
+                return url
+            case .directory:
+                return nil
+            case .application:
+                return url
+            case .system(let application):
+                return application.url
+            case .installer:
+                return nil
+            case .applicationInformation:
+                return nil
+            case .unknown:
+                return nil
+            }
+        }
+
     }
 
     private static func asSystem(url: URL) throws -> Item.`Type`? {
