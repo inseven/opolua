@@ -184,12 +184,12 @@ class Program {
         switch (operation) {
 
         case .createBitmap(let size, let mode):
-            let canvas = windowServer.createBitmap(size: size, mode: mode)
-            return .handle(canvas.id)
+            let id = windowServer.createBitmap(size: size, mode: mode)
+            return .handle(id)
 
         case .createWindow(let rect, let mode, let shadowSize):
-            let canvas = windowServer.createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
-            return .handle(canvas.id)
+            let id = windowServer.createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
+            return .handle(id)
 
         case .close(let drawableId):
             windowServer.close(drawableId: drawableId)
