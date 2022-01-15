@@ -49,6 +49,8 @@ local visibleVar
 
 -- Actual state
 local tbWinId
+local KTitleButtonId = 0
+local KClockButtonId = 5
 local buttons = {}
 local pressedButtonId
 
@@ -126,8 +128,25 @@ end
 local function TBarOffer(runtime, winId, ptrType, ptrX, ptrY)
     -- printf("TBarOffer id=%d ptrType=%d ptrX=%d ptrY=%d\n", winId, ptrType, ptrX, ptrY)
     local butId = 1 + ((ptrY - KTbBtTop) // KTbBtH)
-    if not buttons[butId] or winId ~= tbWinId or ptrX < 0 or ptrX >= KTbWidth then
+    if winId ~= tbWinId or ptrY < 0 or ptrX < 0 or ptrX >= KTbWidth then
         butId = nil
+    elseif butId >= KClockButtonId then
+        butId = KClockButtonId
+    elseif butId < 0 or (butId > 0 and not buttons[butId]) then
+        butId = nil
+    end
+
+    if butId == KTitleButtonId then
+        if ptrType == KPenDown then
+            runtime:DisplayTaskList()
+        end
+        return
+    elseif butId == KClockButtonId then
+        if ptrType == KPenDown then
+            local fmt = runtime:LCClockFormat()
+            LCSetClockFormat(fmt == 0 and 1 or 0)
+        end
+        return
     end
 
     if pressedButtonId then

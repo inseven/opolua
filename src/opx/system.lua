@@ -229,7 +229,7 @@ function SetFileTime(stack, runtime) -- 28
 end
 
 function DisplayTaskList(stack, runtime) -- 29
-    printf("system.DisplayTaskList()\n")
+    runtime:DisplayTaskList()
     stack:push(0)
 end
 
