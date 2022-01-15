@@ -75,7 +75,6 @@ class Program {
     }
 
     let url: URL
-    private let procedureName: String?
     private let device: Device
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
@@ -110,12 +109,11 @@ class Program {
         }
     }()
 
-    init(url: URL, procedureName: String? = nil, device: Device = .psionSeries5) {
+    init(url: URL, device: Device = .psionSeries5) {
         self.url = url
-        self.procedureName = procedureName
         self.device = device
         self.title = Directory.appInfo(forApplicationUrl: url)?.caption ?? url.name
-        self.thread = InterpreterThread(url: url, procedureName: procedureName)
+        self.thread = InterpreterThread(url: url)
         self.windowServer = WindowServer(screenSize: device.screenSize)
         self.thread.delegate = self
         self.thread.handler = self

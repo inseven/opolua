@@ -389,19 +389,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
             }
             let fileMenu = UIMenu(options: [.displayInline], children: [deleteAction])
             switch item.type {
-            case .object:
-                let actions = self.actions(for: item.programUrl!)
-                let procedures = OpoInterpreter.shared.getProcedures(file: item.url.path) ?? []
-                let procedureActions = procedures.map { procedure in
-                    UIAction(title: procedure.name) { action in
-                        let program = Program(url: item.url, procedureName: procedure.name)
-                        let viewController = ProgramViewController(settings: self.settings, program: program)
-                        self.navigationController?.pushViewController(viewController, animated: true)
-                    }
-                }
-                let procedureMenu = UIMenu(title: "Procedures", children: procedureActions)
-                return UIMenu(children: actions + [procedureMenu, fileMenu])
-            case .application:
+            case .object, .application:
                 let actions = self.actions(for: item.programUrl!)
                 return UIMenu(children: actions + [fileMenu])
             case .system:

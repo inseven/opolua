@@ -30,7 +30,6 @@ protocol InterpreterThreadDelegate: AnyObject {
 class InterpreterThread: Thread {
 
     private let url: URL
-    private let procedureName: String?
     private let interpreter = OpoInterpreter()
 
     weak var delegate: InterpreterThreadDelegate?
@@ -44,15 +43,14 @@ class InterpreterThread: Thread {
         }
     }
 
-    init(url: URL, procedureName: String? = nil) {
+    init(url: URL) {
         self.url = url
-        self.procedureName = procedureName
         super.init()
     }
 
     override func main() {
         let oplPath = delegate!.interpreter(self, pathForUrl: url)!
-        let result = interpreter.run(devicePath: oplPath, procedureName: procedureName)
+        let result = interpreter.run(devicePath: oplPath)
         delegate?.interpreter(self, didFinishWithResult: result)
     }
 
