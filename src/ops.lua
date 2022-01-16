@@ -341,7 +341,7 @@ codes = {
     [0x134] = "gSetPenWidth", -- in ER6 is "dEditMulti",
     [0x135] = "IllegalOpCode", --"gColorInfo",
     [0x136] = "gColorInfo", --"gColorBackground",
-    [0x137] = "mCardX",
+    [0x137] = "gColorBackground", -- ER6 "mCardX",
     [0x138] = "SetHelp",
     [0x139] = "ShowHelp",
     [0x13A] = "SetHelpUid",
@@ -2533,7 +2533,7 @@ function mCardX(stack, runtime) -- 0x137
     error("Unimplemented opcode mCardX!")
 end
 
-function gColorBackground(stack, runtime) -- ER5: ??, ER6: 0x136
+function gColorBackground(stack, runtime) -- ER5: 0x137, ER6: 0x136
     local blue = stack:pop()
     local green = stack:pop()
     local red = stack:pop()
