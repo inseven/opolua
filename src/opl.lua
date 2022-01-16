@@ -788,7 +788,8 @@ function EXIST(path)
 end
 
 function MKDIR(path)
-    local err = runtime:iohandler().fsop("mkdir", runtime:abs(path))
+    path = assertPathValid(runtime:abs(path))
+    local err = runtime:iohandler().fsop("mkdir", path)
     if err ~= KErrNone then
         error(err)
     end
@@ -802,42 +803,40 @@ function IOOPEN(path, mode)
     end
 
     path = runtime:abs(path)
-    local openMode = mode & IoOpenMode.OpenModeMask
     -- printf("IOOPEN %s mode=%d\n", path, mode)
 
-    if openMode == IoOpenMode.Open then
-        local f = runtime:newFileHandle()
-        f.pos = 1
-        f.mode = mode
-        local data, err = runtime:iohandler().fsop("read", path)
-        if data then
-            f.data = data
-            f.path = path
-            return f.h
-        else
-            runtime:closeFile(f.h)
-            return nil, err, nil
-        end
-    end
-
-    -- Write support
-    mode = mode | IoOpenMode.WriteFlag -- Apparently this _isn't_ mandatory...
+    local openMode = mode & IoOpenMode.OpenModeMask
     assert(openMode ~= IoOpenMode.Append, "Don't support append yet!")
     assert(openMode ~= IoOpenMode.Unique, "Don't support unique yet!")
 
-    if openMode == IoOpenMode.Create then
+    local ok, err = checkPathValid(path)
+    if not ok then
+        return nil, err
+    end
+
+    local data
+
+    if openMode == IoOpenMode.Open then
+        data, err = runtime:iohandler().fsop("read", path)
+        if not data then
+            return nil, err, nil
+        end
+    elseif openMode == IoOpenMode.Create then
         local err = runtime:iohandler().fsop("exists", path)
         if err ~= KOplErrNotExists then
             printf("IOOPEN(%s) failed: %d\n", path, err)
             return nil, err
         end
+        mode = mode | IoOpenMode.WriteFlag -- Not sure about this...
+    elseif openMode == IoOpenMode.Replace then
+        mode = mode | IoOpenMode.WriteFlag -- Not sure about this...
     end
 
     local f = runtime:newFileHandle()
     f.path = path
     f.pos = 1
     f.mode = mode
-    f.data = ""
+    f.data = data or ""
     return f.h
 end
 
@@ -894,6 +893,7 @@ function IOSEEK(h, mode, offset)
         printf("Invalid handle to IOSEEK!\n")
         return KOplErrInvalidArgs
     end
+    assert(f.mode & IoOpenMode.SeekableFlag > 0, KOplErrInvalidArgs)
     assert(f.pos, "Cannot IOSEEK a non-file handle!")
     local newPos
     if mode == 1 then
@@ -997,6 +997,24 @@ end
 
 function LCSetClockFormat(fmt)
     runtime:iohandler().setConfig("clockFormat", tostring(fmt))
+end
+
+-- misc
+
+function checkPathValid(path)
+    local toCheck = path
+    if oplpath.isabs(path) then
+        toCheck = path:sub(3)
+    end
+    if toCheck:match('[:"*?/]') then
+        return nil, KOplErrName
+    end
+
+    return path
+end
+
+function assertPathValid(path)
+    return assert(checkPathValid(path))
 end
 
 return _ENV

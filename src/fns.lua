@@ -993,6 +993,7 @@ end
 
 function LeftStr(stack, runtime) -- 0xCA
     local numChars = stack:pop()
+    assert(numChars >= 0, KOplErrInvalidArgs)
     local str = stack:pop()
     stack:push(string.sub(str, 1, numChars))
 end
@@ -1006,7 +1007,10 @@ function MidStr(stack, runtime) -- 0xCC
     local offset = stack:pop()
     local str = stack:pop()
     assert(offset >= 1, KOplErrInvalidArgs)
-    stack:push(str:sub(offset, offset + len - 1))
+    assert(len >= 0, KOplErrInvalidArgs)
+    local result = str:sub(offset, offset + len - 1)
+    -- printf("MID$('%s', %d, %d)='%s'\n", str, offset, len, result)
+    stack:push(result)
 end
 
 local months = {

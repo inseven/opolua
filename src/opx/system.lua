@@ -329,6 +329,7 @@ end
 
 function LoadRsc(stack, runtime) -- 43
     local path = stack:pop()
+    -- printf("LoadRsc(%s)\n", path)
     local data, err = runtime:iohandler().fsop("read", path)
     assert(data, err)
     local resources = require("rsc").parseRsc(data)

@@ -683,6 +683,7 @@ function newRuntime(handler)
         ioh = handler or require("defaultiohandler"),
         resources = {}, -- keyed by string, anything that code wants to use to provide singleton/mutex/etc semantics
         signal = 0,
+        -- callTrace = true,
     }
 
     local opl = newModuleInstance("opl")

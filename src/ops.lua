@@ -1387,7 +1387,7 @@ Cursor_dump = numParams_dump
 function Delete(stack, runtime) -- 0xA7
     local filename = stack:pop()
     assert(#filename > 0, KOplErrName)
-    filename = runtime:abs(filename)
+    filename = runtime:assertPathValid(runtime:abs(filename))
     local err = runtime:iohandler().fsop("delete", filename)
     if err ~= 0 then
         error(err)
@@ -1435,7 +1435,7 @@ function Vector_dump(runtime)
     local strings = {}
     for i = 1, maxIndex do
         local relJmp = runtime:IPs16()
-        strings[i] = fmt("%08X     %d (->0x%08X)", runtime:getIp() - 2, relJmp, ip + relJmp)
+        strings[i] = fmt("%08X     %d (->%08X)", runtime:getIp() - 2, relJmp, ip + relJmp)
     end
     return fmt("maxIndex=%d\n%s", maxIndex, table.concat(strings, "\n"))
 end
@@ -1498,7 +1498,7 @@ end
 
 function OnErr_dump(runtime)
     local newIp, offset = decodeOnErr(runtime)
-    return newIp and fmt("%d (->0x%08X)", offset, newIp) or "OFF"
+    return newIp and fmt("%d (->%08X)", offset, newIp) or "OFF"
 end
 
 function Off(stack, runtime) -- 0xB2

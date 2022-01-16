@@ -374,7 +374,7 @@ function oplpath.join(path, component)
     return path..component
 end
 
-function oplpath.abs(path, relativeTo)
+local function abs(path, relativeTo)
     if path == "" then
         return relativeTo
     elseif oplpath.isabs(path) then
@@ -391,6 +391,13 @@ function oplpath.abs(path, relativeTo)
         return oplpath.join(dir, path)
     end
 end
+
+function oplpath.abs(path, relativeTo)
+    local result = abs(path, relativeTo)
+    -- printf("ABS(%s, %s)->%s\n", path, relativeTo, result)
+    return result
+end
+
 
 -- For whenever you need to compare paths for equality - not to be used for anything else
 function oplpath.canon(path)
