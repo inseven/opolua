@@ -1378,8 +1378,11 @@ function Create_dump(runtime)
 end
 
 function Cursor(stack, runtime) -- 0xA6
-    error("Unimplemented opcode Cursor!")
+    local numParams = runtime:IP8()
+    printf("CURSOR numParams=%d\n", numParams) -- TODO
 end
+
+Cursor_dump = numParams_dump
 
 function Delete(stack, runtime) -- 0xA7
     local filename = stack:pop()
