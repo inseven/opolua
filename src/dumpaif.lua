@@ -43,9 +43,9 @@ function main()
     for _, icon in ipairs(info.icons) do
         printf("Icon %dx%d bpp=%d\n", icon.width, icon.height, icon.bpp)
         if args.expand then
-            local iconName = string.format("%s_icon_%dx%d_%dbpp.bin", args.filename, icon.width, icon.height, icon.bpp)
+            local iconName = string.format("%s_%dx%d_%dbpp.bmp", args.filename, icon.width, icon.height, icon.bpp)
             local f = assert(io.open(iconName, "wb"))
-            f:write(mbm.widenTo8bpp(icon.imgData, icon.bpp))
+            f:write(icon:toBmp())
             f:close()
         end
     end
