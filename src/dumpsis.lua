@@ -36,15 +36,6 @@ function main()
     f:close()
     local sisfile = sis.parseSisFile(data, false)
 
-    local langIdx = 1
-    -- Find which language index refers to English (not worrying about extracting other langs just yet)
-    for i, lang in ipairs(sisfile.langs) do
-        if lang == "EN" then
-            langIdx = i
-            break
-        end
-    end
-
     if args.dest then
         installSis(sisfile, args.dest)
     else
@@ -53,10 +44,23 @@ function main()
     end
 end
 
+local function getLangIdx(sisfile)
+    local langIdx = 1
+    -- Find which language index refers to English (not worrying about extracting other langs just yet)
+    for i, lang in ipairs(sisfile.langs) do
+        if lang == "EN" then
+            langIdx = i
+            break
+        end
+    end
+    return langIdx
+end
+
 function describeSis(sisfile, indent)
     for _, lang in ipairs(sisfile.langs) do
         printf("%sLanguage: %s\n", indent, lang)
     end
+    local langIdx = getLangIdx(sisfile)
     for _, file in ipairs(sisfile.files) do
         local len
         if file.data then
@@ -73,6 +77,7 @@ function describeSis(sisfile, indent)
 end
 
 function installSis(sisfile, dest)
+    local langIdx = getLangIdx(sisfile)
     for _, file in ipairs(sisfile.files) do
         if file.type == sis.FileType.File then
             extractFile(file, langIdx, dest)
