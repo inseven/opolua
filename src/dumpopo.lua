@@ -24,31 +24,29 @@ SOFTWARE.
 
 ]]
 
-require("init")
-_ENV = module()
-opofile = require("opofile")
-runtime = require("runtime")
-
-function main(args)
-    local filename = args[1]
-    if filename == "--help" then
-        printf("Syntax: dumpopo.lua <filename> [<fnName>|--all]\n")
+function main()
+    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+        "filename",
+        "fnName",
+        "startAddr",
+        all = true,
+        help = true, h = "help",
+    })
+    local fnName = args.fnName
+    local all = args.all
+    if args.help then
+        printf("Syntax: dumpopo.lua <filename> [--all]\n")
+        printf("        dumpopo.lua <filename> [<fnName> [<startAddr>]]\n")
         return os.exit(false)
     end
-    local f = assert(io.open(filename, "rb"))
+    local f = assert(io.open(args.filename, "rb"))
     local data = f:read("a")
     f:close()
 
-    local fnName
-    local all = (args[2] == "--all")
-    if not all then
-        fnName = args[2]
-    end
-    local startAddr
-    if args[3] then
-        startAddr = tonumber(args[3], 16)
-    end
+    local startAddr = args.startAddr and tonumber(args.startAddr, 16)
     local verbose = all or fnName == nil
+    opofile = require("opofile")
+    runtime = require("runtime")
     local procTable, opxTable = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime()
     rt:addModule("C:\\module", procTable, opxTable)
@@ -94,4 +92,4 @@ function printProc(proc)
     printf("    iTotalTableSize: %d (0x%08X)\n", proc.iTotalTableSize, proc.iTotalTableSize)
 end
 
-if arg then main(arg) end
+main()

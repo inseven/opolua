@@ -25,11 +25,13 @@ SOFTWARE.
 ]]
 
 function main()
-    local filename = arg[1]
-    local dest = arg[2]
-    require("init")
+    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+        "filename",
+        "dest"
+    })
+
     sis = require("sis")
-    local f = assert(io.open(filename, "rb"))
+    local f = assert(io.open(args.filename, "rb"))
     local data = f:read("a")
     f:close()
     local sisfile = sis.parseSisFile(data, false)
@@ -43,12 +45,12 @@ function main()
         end
     end
 
-    if not dest then
+    if args.dest then
+        installSis(sisfile, args.dest)
+    else
         describeSis(sisfile, "")
         return
     end
-
-    installSis(sisfile, dest)
 end
 
 function describeSis(sisfile, indent)

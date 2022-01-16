@@ -25,16 +25,24 @@ SOFTWARE.
 ]]
 
 function main()
-    local filename = arg[1]
-    local expand = arg[2] == "--expand"
-    require("init")
+    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+        "filename",
+        "index",
+        expand = true
+    })
+
     mbm = require("mbm")
-    local f = assert(io.open(filename, "rb"))
+    local f = assert(io.open(args.filename, "rb"))
     local data = f:read("a")
     f:close()
     local bitmaps = mbm.parseMbmHeader(data)
-    for i, bitmap in ipairs(bitmaps) do
-        dump(filename, i, bitmap, data, expand)
+    if args.index then
+        local i = tonumber(args.index)
+        dump(args.filename, i, bitmaps[i], data, args.expand)
+    else
+        for i, bitmap in ipairs(bitmaps) do
+            dump(args.filename, i, bitmap, data, args.expand)
+        end
     end
 end
 

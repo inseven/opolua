@@ -25,12 +25,14 @@ SOFTWARE.
 ]]
 
 function main()
-    local filename = arg[1]
-    local dumpIcons = arg[2] == "--expand"
-    require("init")
+    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+        "filename",
+        expand = true, e = "expand"
+    })
+
     local aif = require("aif")
     local mbm = require("mbm")
-    local f = assert(io.open(filename, "rb"))
+    local f = assert(io.open(args.filename, "rb"))
     local data = f:read("a")
     f:close()
     local info = aif.parseAif(data)
@@ -40,8 +42,8 @@ function main()
     end
     for _, icon in ipairs(info.icons) do
         printf("Icon %dx%d bpp=%d\n", icon.width, icon.height, icon.bpp)
-        if dumpIcons then
-            local iconName = string.format("%s_icon_%dx%d_%dbpp.bin", filename, icon.width, icon.height, icon.bpp)
+        if args.expand then
+            local iconName = string.format("%s_icon_%dx%d_%dbpp.bin", args.filename, icon.width, icon.height, icon.bpp)
             local f = assert(io.open(iconName, "wb"))
             f:write(mbm.widenTo8bpp(icon.imgData, icon.bpp))
             f:close()

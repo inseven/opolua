@@ -25,11 +25,12 @@ SOFTWARE.
 ]]
 
 function main()
-    local filename = arg[1]
-    local dest = arg[2]
-    require("init")
+    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+        "filename"
+    })
+
     directfilestore = require("directfilestore")
-    local f = assert(io.open(filename, "rb"))
+    local f = assert(io.open(args.filename, "rb"))
     local data = f:read("a")
     f:close()
     local toc = directfilestore.parse(data)
