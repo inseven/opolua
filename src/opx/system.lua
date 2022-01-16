@@ -328,19 +328,52 @@ function XOR(stack, runtime) -- 42
 end
 
 function LoadRsc(stack, runtime) -- 43
-    error("Unimplemented system.opx function LoadRsc!")
+    local path = stack:pop()
+    local data, err = runtime:iohandler().fsop("read", path)
+    assert(data, err)
+    local resources = require("rsc").parseRsc(data)
+    local rsc = runtime:getResource("rsc")
+    if not rsc then
+        rsc = { resources = {}}
+        runtime:setResource("rsc", rsc)
+    end
+    local h = #rsc + 1
+    rsc[h] = res
+    -- Might as well add all the resources now
+    for id, val in pairs(resources) do
+        assert(rsc.resources[id] == nil, "Duplicate resource found!")
+        rsc.resources[id] = val
+    end
+    stack:push(h)
 end
 
 function UnLoadRsc(stack, runtime) -- 44
-    error("Unimplemented system.opx function UnLoadRsc!")
+    local h = stack:pop()
+    local rsc = runtime:getResource("rsc")
+    assert(rsc and rsc[h], KOplErrNotExists)
+    for id, val in pairs(rsc[h]) do
+        rsc.resources[id] = nil
+    end
+    rsc[h] = nil
+    stack:push(0)
 end
 
 function ReadRsc(stack, runtime) -- 45
-    error("Unimplemented system.opx function ReadRsc!")
+    local id = stack:pop()
+    local rsc = runtime:getResource("rsc")
+    local result = rsc and rsc.resources[id]
+    assert(result, KOplErrNotExists)
+    stack:push(result)
 end
 
 function ReadRscLong(stack, runtime) -- 46
-    error("Unimplemented system.opx function ReadRscLong!")
+    local id = stack:pop()
+    local rsc = runtime:getResource("rsc")
+    local result = rsc and rsc.resources[id]
+    assert(result, KOplErrNotExists)
+    assert(#result == 4, "Bad resource length for ReadRscLong!")
+    result = string.unpack("<i4", result)
+    stack:push(result)
 end
 
 function CheckUid(stack, runtime) -- 47

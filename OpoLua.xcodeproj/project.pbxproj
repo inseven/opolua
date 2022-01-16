@@ -163,6 +163,7 @@
 		DBACE9C3274F895D002612DF /* modules in Resources */ = {isa = PBXBuildFile; fileRef = DBACE9C2274F895D002612DF /* modules */; };
 		DBE2917C278CCB0B00EE824B /* crc.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE2917B278CCB0B00EE824B /* crc.lua */; };
 		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
+		DBE291802794813F00EE824B /* rsc.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE2917F2794813D00EE824B /* rsc.lua */; };
 		DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE91522276A9D0900BDB8F5 /* memory.lua */; };
 		DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE91524276D25A900BDB8F5 /* UIKey.swift */; };
 /* End PBXBuildFile section */
@@ -310,6 +311,7 @@
 		DBACE9C2274F895D002612DF /* modules */ = {isa = PBXFileReference; lastKnownFileType = folder; path = modules; sourceTree = "<group>"; };
 		DBE2917B278CCB0B00EE824B /* crc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crc.lua; sourceTree = "<group>"; };
 		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
+		DBE2917F2794813D00EE824B /* rsc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rsc.lua; sourceTree = "<group>"; };
 		DBE91522276A9D0900BDB8F5 /* memory.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = memory.lua; sourceTree = "<group>"; };
 		DBE91524276D25A900BDB8F5 /* UIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKey.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -578,6 +580,7 @@
 				DB0B91842771031F006F5CD0 /* sis.lua */,
 				DB0B91942789C561006F5CD0 /* directfilestore.lua */,
 				DBE2917B278CCB0B00EE824B /* crc.lua */,
+				DBE2917F2794813D00EE824B /* rsc.lua */,
 				DBACE9C2274F895D002612DF /* modules */,
 				DB5AC97727583DC70043FE5C /* opx */,
 			);
@@ -698,6 +701,7 @@
 				DB0B91862771031F006F5CD0 /* sis.lua in Resources */,
 				DB5AC97C275CD5690043FE5C /* opl.lua in Resources */,
 				DB0B91852771031F006F5CD0 /* aif.lua in Resources */,
+				DBE291802794813F00EE824B /* rsc.lua in Resources */,
 				DBE2917C278CCB0B00EE824B /* crc.lua in Resources */,
 				DB0B91952789C561006F5CD0 /* directfilestore.lua in Resources */,
 				D8DF3FAF278B3DA100FF658B /* Debug.xcconfig in Resources */,
