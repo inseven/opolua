@@ -322,7 +322,7 @@ extension DirectoryViewController: UICollectionViewDataSource {
         let item = items[indexPath.row]
         cell.textLabel.text = item.name
         cell.detailTextLabel.text = item.type.localizedDescription
-        cell.imageView.image = item.icon.scale(view.window?.screen.nativeScale ?? 1.0)
+        cell.imageView.image = item.icon(for: settings.theme).scale(view.window?.screen.nativeScale ?? 1.0)
         if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
             cell.backgroundColor = .magenta
         } else {

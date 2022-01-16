@@ -30,20 +30,36 @@ extension UIImage {
         return UIImage(named: "EpocLogoC")!
     }()
 
-    static var unknownAppIcon: UIImage = {
-        return UIImage(named: "UnknownAppIcon")!
+    static var folderIcon: UIImage = {
+        return UIImage(named: "FolderIcon")!
+    }()
+
+    static var folderIconC: UIImage = {
+        return UIImage(named: "FolderIconC")!
+    }()
+
+    static var installerIcon: UIImage = {
+        return UIImage(named: "InstallerIcon")!
+    }()
+
+    static var installerIconC: UIImage = {
+        return UIImage(named: "InstallerIconC")!
     }()
 
     static var oplIcon: UIImage = {
         return UIImage(named: "OplIcon")!
     }()
 
-    static var folderIcon: UIImage = {
-        return UIImage(named: "FolderIcon")!
+    static var oplIconC: UIImage = {
+        return UIImage(named: "OplIconC")!
     }()
 
-    static var sisIcon: UIImage = {
-        return UIImage(named: "SisIcon")!
+    static var unknownAppIcon: UIImage = {
+        return UIImage(named: "UnknownAppIcon")!
+    }()
+
+    static var unknownFileIconC: UIImage = {
+        return UIImage(named: "UnknownFileIconC")!
     }()
 
     static func emptyImage(with size: CGSize) -> UIImage? {

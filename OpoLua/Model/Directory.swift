@@ -28,6 +28,47 @@ protocol DirectoryDelegate: AnyObject {
 }
 
 
+extension Settings.Theme {
+
+    var folderIcon: UIImage {
+        switch self {
+        case .series5:
+            return .folderIcon
+        case .series7:
+            return .folderIconC
+        }
+    }
+
+    var installerIcon: UIImage {
+        switch self {
+        case .series5:
+            return .installerIcon
+        case .series7:
+            return .installerIconC
+        }
+    }
+
+    var oplIcon: UIImage {
+        switch self {
+        case .series5:
+            return .oplIcon
+        case .series7:
+            return .oplIconC
+        }
+    }
+
+    var unknownFileIcon: UIImage {
+        switch self {
+        case .series5:
+            return .unknownAppIcon
+        case .series7:
+            return .unknownFileIconC
+        }
+    }
+
+}
+
+
 class Directory {
 
     struct Application {
@@ -94,12 +135,12 @@ class Directory {
             }
         }
 
-        var icon: UIImage {
+        func icon(for theme: Settings.Theme) -> UIImage {
             switch type {
             case .object:
-                return .oplIcon
+                return theme.oplIcon
             case .directory:
-                return .folderIcon
+                return theme.folderIcon
             case .application(let appInfo):
                 return appInfo?.appIcon ?? .unknownAppIcon
             case .system(let application):
@@ -109,11 +150,11 @@ class Directory {
                     return .unknownAppIcon
                 }
             case .installer:
-                return .sisIcon
+                return theme.installerIcon
             case .applicationInformation(let appInfo):
                 return appInfo?.appIcon ?? .unknownAppIcon
             case .unknown:
-                return .unknownAppIcon
+                return theme.unknownFileIcon
             }
         }
 
