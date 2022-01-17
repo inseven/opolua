@@ -20,13 +20,45 @@
 
 import UIKit
 
+extension Graphics.Size {
+
+    func greater(than size: Graphics.Size) -> Bool {
+        return width > size.width && height > size.height
+    }
+
+    func less(thanOrEqualTo size: Graphics.Size) -> Bool {
+        return width <= size.width && height <= size.height
+    }
+
+}
+
 extension OpoInterpreter.AppInfo {
 
+    // TODO: Let this accept a size.
     var appIcon: UIImage? {
-        guard let icon = icons.first(where: { $0.bitmap.size == .icon }) else {
+        print("Icons for \(caption):")
+        var bitmap: Graphics.MaskedBitmap? = nil
+        for icon in icons {
+            print("\(icon.bitmap.size)")
+            // Skip bitmaps that are too large.
+            guard icon.bitmap.size.less(thanOrEqualTo: Graphics.Size.icon) else {
+                print("Ignoring large bitmap")
+                continue
+            }
+            guard let currentBitmap = bitmap else {
+                print("Selecting as initial candidate")
+                bitmap = icon
+                continue
+            }
+            if icon.bitmap.size.greater(than: currentBitmap.bitmap.size) {
+                print("Selecting as candidate")
+                bitmap = icon
+            }
+        }
+        guard let bitmap = bitmap else {
             return nil
         }
-        if let cgImg = icon.cgImage {
+        if let cgImg = bitmap.cgImage {
             return UIImage(cgImage: cgImg)
         }
         return nil
