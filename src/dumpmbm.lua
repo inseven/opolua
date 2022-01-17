@@ -29,7 +29,7 @@ function main()
     local args = getopt({
         "filename",
         "index",
-        expand = true, e = "expand",
+        extract = true, e = "extract",
     })
 
     mbm = require("mbm")
@@ -37,19 +37,19 @@ function main()
     local bitmaps = mbm.parseMbmHeader(data)
     if args.index then
         local i = tonumber(args.index)
-        dump(args.filename, i, bitmaps[i], data, args.expand)
+        dump(args.filename, i, bitmaps[i], data, args.extract)
     else
         for i, bitmap in ipairs(bitmaps) do
-            dump(args.filename, i, bitmap, data, args.expand)
+            dump(args.filename, i, bitmap, data, args.extract)
         end
     end
 end
 
-function dump(filename, i, bitmap, data, expand)
+function dump(filename, i, bitmap, data, extract)
     print(string.format("%d: len=%d w=%d h=%d stride=%d bpp=%d col=%s paletteSz=%d compression=%d",
         i, bitmap.imgLen, bitmap.width, bitmap.height, bitmap.stride, bitmap.bpp, bitmap.isColor, bitmap.paletteSz, bitmap.compression))
     local img = mbm.decodeBitmap(bitmap, data)
-    if expand then
+    if extract then
         local bmpName = string.format("%s_%d_%dx%d_%dbpp.bmp", filename, i, bitmap.width, bitmap.height, bitmap.bpp)
         writeFile(bmpName, bitmap:toBmp())
     end

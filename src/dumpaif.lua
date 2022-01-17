@@ -28,7 +28,7 @@ function main()
     dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
     local args = getopt({
         "filename",
-        expand = true, e = "expand"
+        extract = true, e = "extract"
     })
 
     local aif = require("aif")
@@ -39,17 +39,20 @@ function main()
     for lang, caption in pairs(info.captions) do
         printf("Caption[%s]: %s\n", lang, caption)
     end
-    for _, icon in ipairs(info.icons) do
+    for i, icon in ipairs(info.icons) do
         printf("Icon %dx%d bpp=%d", icon.width, icon.height, icon.bpp)
-        if icon.mask then
-            printf(" mask %dx%d bpp=%d", icon.mask.width, icon.mask.height, icon.bpp)
+        local mask = icon.mask
+        if mask then
+            printf(" mask %dx%d bpp=%d", mask.width, mask.height, mask.bpp)
         end
         printf("\n")
-        if args.expand then
-            local iconName = string.format("%s_%dx%d_%dbpp.bmp", args.filename, icon.width, icon.height, icon.bpp)
-            local f = assert(io.open(iconName, "wb"))
-            f:write(icon:toBmp())
-            f:close()
+        if args.extract then
+            local iconName = string.format("%s_%d_%dx%d_%dbpp.bmp", args.filename, i, icon.width, icon.height, icon.bpp)
+            writeFile(iconName, icon:toBmp())
+            if mask then
+                local maskName = string.format("%s_%d_mask_%dx%d_%dbpp.bmp", args.filename, i, mask.width, mask.height, mask.bpp)
+                writeFile(maskName, mask:toBmp())
+            end
         end
     end
 end
