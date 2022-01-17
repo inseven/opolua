@@ -48,12 +48,12 @@ extension Settings.Theme {
         }
     }
 
-    var oplIcon: UIImage {
+    var opoIcon: UIImage {
         switch self {
         case .series5:
-            return .oplIcon
+            return .opoIcon
         case .series7:
-            return .oplIconC
+            return .opoIconC
         }
     }
 
@@ -138,7 +138,7 @@ class Directory {
         func icon(for theme: Settings.Theme) -> UIImage {
             switch type {
             case .object:
-                return theme.oplIcon
+                return theme.opoIcon
             case .directory:
                 return theme.folderIcon
             case .application(let appInfo):
