@@ -41,7 +41,11 @@ function main()
         printf("Caption[%s]: %s\n", lang, caption)
     end
     for _, icon in ipairs(info.icons) do
-        printf("Icon %dx%d bpp=%d\n", icon.width, icon.height, icon.bpp)
+        printf("Icon %dx%d bpp=%d", icon.width, icon.height, icon.bpp)
+        if icon.mask then
+            printf(" mask %dx%d bpp=%d", icon.mask.width, icon.mask.height, icon.bpp)
+        end
+        printf("\n")
         if args.expand then
             local iconName = string.format("%s_%dx%d_%dbpp.bmp", args.filename, icon.width, icon.height, icon.bpp)
             local f = assert(io.open(iconName, "wb"))
