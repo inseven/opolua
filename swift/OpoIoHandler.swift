@@ -480,7 +480,7 @@ struct Async {
         let timestamp: TimeInterval // Since boot
         let windowId: Graphics.DrawableId
         let type: PenEventType
-        let modifiers: Int
+        let modifiers: Modifiers
         let x: Int
         let y: Int
         let screenx: Int

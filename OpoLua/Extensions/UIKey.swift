@@ -46,18 +46,7 @@ extension UIKey {
     }
 
     func oplModifiers() -> Modifiers {
-        let flags = self.modifierFlags
-        var result = Modifiers()
-        if flags.contains(.shift) {
-            result.insert(.shift)
-        }
-        if flags.contains(.control) {
-            result.insert(.control)
-        }
-        if flags.contains(.alphaShift) {
-            result.insert(.capsLock)
-        }
-        return result
+        return self.modifierFlags.oplModifiers()
     }
 
     func toOplCodes() -> (OplKeyCode?, OplKeyCode?) {

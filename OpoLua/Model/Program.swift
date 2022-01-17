@@ -271,7 +271,7 @@ class Program {
         sendEvent(.penevent(.init(timestamp: event.timestamp,
                                   windowId: view.id,
                                   type: type,
-                                  modifiers: 0,
+                                  modifiers: event.modifierFlags.oplModifiers(),
                                   x: Int(location.x),
                                   y: Int(location.y),
                                   screenx: Int(screenLocation.x),

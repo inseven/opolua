@@ -1123,6 +1123,24 @@ class OpoInterpreter {
         }
     }
 
+    // Pen events actually use TEventModifers not TOplModifiers (despite what the documentation says)
+    private static func modifiersToTEventModifiers(_ modifiers: Modifiers) -> Int {
+        var result: Int = 0
+        if modifiers.contains(.shift) {
+            result |= 0x500 // EModifierLeftShift | EModifierShift
+        }
+        if modifiers.contains(.control) {
+            result |= 0xA0 // EModifierLeftCtrl | EModifierCtrl
+        }
+        if modifiers.contains(.capsLock) {
+            result |= 0x4000 // EModifierCapsLock
+        }
+        if modifiers.contains(.fn) {
+            result |= 0x2800 // EModifierLeftFunc | EModifierFunc
+        }
+        return result
+    }
+
     func completeRequest(_ L: LuaState!, _ response: Async.Response) {
         lua_settop(L, 0)
         var t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.handle)) // 1: registry[requestHandle] -> statusVar
@@ -1169,7 +1187,7 @@ class OpoInterpreter {
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.windowId.value
                 ev[3] = event.type.rawValue
-                ev[4] = 0 // TODO oh god what
+                ev[4] = Self.modifiersToTEventModifiers(event.modifiers)
                 ev[5] = event.x
                 ev[6] = event.y
                 ev[7] = event.screenx
