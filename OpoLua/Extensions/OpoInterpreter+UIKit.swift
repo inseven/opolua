@@ -22,11 +22,28 @@ import UIKit
 
 extension OpoInterpreter.AppInfo {
 
-    var appIcon: UIImage? {
-        guard let icon = icons.first(where: { $0.bitmap.size == .icon }) else {
+    func image(for size: Graphics.Size) -> UIImage? {
+        var bitmap: Graphics.MaskedBitmap? = nil
+        for icon in icons {
+            guard icon.bitmap.size <= size && icon.bitmap.size == icon.mask?.size else {
+                continue
+            }
+            guard let currentBitmap = bitmap else {
+                bitmap = icon
+                continue
+            }
+            if icon.bitmap.size > currentBitmap.bitmap.size {
+                bitmap = icon
+            }
+        }
+        guard let bitmap = bitmap else {
+            print("Failed to find icon for '\(self.caption)'.")
+            for icon in icons {
+                print("  bitmap = \(icon.bitmap.size), mask = \(icon.mask!.size)")
+            }
             return nil
         }
-        if let cgImg = icon.cgImage {
+        if let cgImg = bitmap.cgImage {
             return UIImage(cgImage: cgImg)
         }
         return nil

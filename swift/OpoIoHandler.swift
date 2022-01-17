@@ -109,7 +109,11 @@ struct Dialog {
 
 struct Graphics {
 
-    struct Size: Equatable {
+    struct Size: Equatable, Comparable {
+
+        static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
+            lhs.width < rhs.width && lhs.height < rhs.height
+        }
 
         let width: Int
         let height: Int
