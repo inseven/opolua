@@ -25,7 +25,8 @@ SOFTWARE.
 ]]
 
 function main()
-    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+    local args = getopt({
         "filename",
         "fnName",
         "startAddr",
@@ -39,10 +40,7 @@ function main()
         printf("        dumpopo.lua <filename> [<fnName> [<startAddr>]]\n")
         return os.exit(false)
     end
-    local f = assert(io.open(args.filename, "rb"))
-    local data = f:read("a")
-    f:close()
-
+    local data = readFile(args.filename)
     local startAddr = args.startAddr and tonumber(args.startAddr, 16)
     local verbose = all or fnName == nil
     opofile = require("opofile")

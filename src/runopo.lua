@@ -25,7 +25,8 @@ SOFTWARE.
 ]]
 
 function main()
-    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+    local args = getopt({
         "path",
         "procName",
         verbose = true, v = "verbose",

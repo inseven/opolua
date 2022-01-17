@@ -25,14 +25,13 @@ SOFTWARE.
 ]]
 
 function main()
-    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+    local args = getopt({
         "filename"
     })
 
     directfilestore = require("directfilestore")
-    local f = assert(io.open(args.filename, "rb"))
-    local data = f:read("a")
-    f:close()
+    local data = readFile(args.filename, "rb")
     local toc = directfilestore.parse(data)
     local offsets = {}
     local offsetToUid = {}

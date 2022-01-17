@@ -25,16 +25,15 @@ SOFTWARE.
 ]]
 
 function main()
-    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+    local args = getopt({
         "filename",
         expand = true, e = "expand"
     })
 
     local aif = require("aif")
     local mbm = require("mbm")
-    local f = assert(io.open(args.filename, "rb"))
-    local data = f:read("a")
-    f:close()
+    local data = readFile(args.filename)
     local info = aif.parseAif(data)
     printf("UID3: 0x%08X\n", info.uid3)
     for lang, caption in pairs(info.captions) do

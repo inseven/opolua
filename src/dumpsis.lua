@@ -25,15 +25,14 @@ SOFTWARE.
 ]]
 
 function main()
-    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+    local args = getopt({
         "filename",
         "dest"
     })
 
     sis = require("sis")
-    local f = assert(io.open(args.filename, "rb"))
-    local data = f:read("a")
-    f:close()
+    local data = readFile(args.filename)
     local sisfile = sis.parseSisFile(data, false)
 
     if args.dest then
@@ -93,13 +92,11 @@ function extractFile(file, langIdx, dest)
     local dir = oplpath.dirname(outName)
     -- print(dir)
     os.execute(string.format('mkdir -p "%s"', dir))
-    local f = assert(io.open(outName, "wb"))
     local data = file.data
     if not data then
         data = file.langData[langIdx]
     end
-    f:write(data)
-    f:close()
+    writeFile(outName, data)
 end
 
 main()

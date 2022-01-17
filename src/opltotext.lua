@@ -33,14 +33,12 @@ local specialChars = {
 }
 
 function main()
-    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+    local args = getopt({
         "filename",
     })
 
-    local f = assert(io.open(args.filename, "rb"))
-    local data = f:read("a")
-    f:close()
-
+    local data = readFile(args.filename)
     local toc = require("directfilestore").parse(data)
     local texted = toc[KUidTextEdSection]
     assert(texted, "No text found in file!")

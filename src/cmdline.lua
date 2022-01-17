@@ -23,7 +23,8 @@ SOFTWARE.
 ]]
 
 -- Use to bootstrap cmdline scripts with the following magic:
--- local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({ ... })
+-- dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+-- local args = getopt({ ... })
 
 local args = arg
 -- Have to redo the calculation of our base path here, which is a bit annoying
@@ -155,7 +156,7 @@ args = getopt({
 -- args is { param1 = "bar", param2 = "baz", include = "widgets", verbose = 2 }
 
 ]]
-local function getopt(params)
+function getopt(params)
     local simulateHelp = false
     if not params.help then
         params.help = true
@@ -226,5 +227,15 @@ local function getopt(params)
     return result
 end
 
+function readFile(filename)
+    local f = assert(io.open(filename, "rb"))
+    local data = f:read("a")
+    f:close()
+    return data
+end
 
-return { getopt = getopt }
+function writeFile(filename, data)
+    local f = assert(io.open(filename, "wb"))
+    f:write(data)
+    f:close()
+end

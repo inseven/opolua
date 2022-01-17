@@ -25,16 +25,15 @@ SOFTWARE.
 ]]
 
 function main()
-    local args = dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua").getopt({
+    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+    local args = getopt({
         "filename",
         "index",
         expand = true, e = "expand",
     })
 
     mbm = require("mbm")
-    local f = assert(io.open(args.filename, "rb"))
-    local data = f:read("a")
-    f:close()
+    local data = readFile(args.filename)
     local bitmaps = mbm.parseMbmHeader(data)
     if args.index then
         local i = tonumber(args.index)
@@ -52,10 +51,7 @@ function dump(filename, i, bitmap, data, expand)
     local img = mbm.decodeBitmap(bitmap, data)
     if expand then
         local bmpName = string.format("%s_%d_%dx%d_%dbpp.bmp", filename, i, bitmap.width, bitmap.height, bitmap.bpp)
-        local f = assert(io.open(bmpName, "wb"))
-        local imgData = bitmap:toBmp()
-        f:write(imgData)
-        f:close()
+        writeFile(bmpName, bitmap:toBmp())
     end
 end
 
