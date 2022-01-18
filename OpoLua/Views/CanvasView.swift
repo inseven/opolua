@@ -55,8 +55,9 @@ class CanvasView : UIView, Drawable {
         clipsToBounds = false
         isMultipleTouchEnabled = false
         if shadowSize > 0 {
-            self.layer.shadowRadius = CGFloat(shadowSize)
-            self.layer.shadowOpacity = 1
+            self.layer.shadowRadius = 0
+            self.layer.shadowOffset = CGSize(width: shadowSize, height: shadowSize)
+            self.layer.shadowOpacity = 0.3
         }
     }
 
