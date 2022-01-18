@@ -45,10 +45,18 @@ _ENV = module()
 
 local mbm = require("mbm")
 
-local runtime = nil
-
 function _setRuntime(r)
-    runtime = r
+    _ENV.runtime = r
+    -- Load everything that's defined elsewhere
+    local separateModules = {
+        -- TODO
+    }
+    for _, module in ipairs(separateModules) do
+        for name, fn in pairs(runtime:newOplModule(module)) do
+            assert(_ENV[name] == nil, "Duplicate definition of "..name)
+            _ENV[name] = fn
+        end
+    end
 end
 
 local function darkGrey()

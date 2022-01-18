@@ -316,7 +316,7 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         for i, var in ipairs(frame.indirects) do
             args[i] = var()
         end
-        local result = proc.fn(self, table.unpack(args))
+        local result = proc.fn(table.unpack(args))
         self:returnFromFrame(stack, result or 0)
     end
 end
@@ -662,6 +662,13 @@ function Runtime:getResource(name)
     return self.resources[name]
 end
 
+function Runtime:newOplModule(moduleName)
+    local module = newModuleInstance(moduleName)
+    -- All "OPL modules" get the OPL API imported
+    setmetatable(module, {__index = self.opl})
+    return module
+end
+
 function newModuleInstance(moduleName)
     -- Because opl.lua uses a shared upvalue for its runtime pointer, we need to
     -- give each runtime its own copy of the module, meaning we can't just
@@ -687,15 +694,15 @@ function newRuntime(handler)
     }
 
     local opl = newModuleInstance("opl")
+    rt.opl = opl
+    opl._setRuntime(rt)
     -- And make all the opl functions accessible as eg runtime:gCLS()
     for name, fn in pairs(opl) do
-        if type(fn) == "function" then
+        if type(fn) == "function" and not name:match("^_") then
             assert(rt[name] == nil, "Overlapping function names between Runtime and opl.lua!")
             rt[name] = function(self, ...) return opl[name](...) end
         end
     end
-    opl._setRuntime(rt)
-    rt.opl = opl
     return rt
 end
 
@@ -967,7 +974,7 @@ function Runtime:loadModule(path)
     -- If not, see if we have a built-in
     path = origPath
     local modName = oplpath.splitext(oplpath.basename(path:lower()))
-    local ok, mod = pcall(newModuleInstance, "modules."..modName)
+    local ok, mod = pcall(self.newOplModule, self, "modules."..modName)
 
     if not ok then
         printf("Module %s (from %s) not found\n", modName, path)
