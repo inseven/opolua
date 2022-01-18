@@ -796,8 +796,21 @@ function InTrans(stack, runtime) -- 0x57
 end
 
 function mPopup(stack, runtime) -- 0x58
-    error("Unimplemented function mPopup!")
+    local numParams = runtime:IP8()
+    local items = {}
+    while numParams > 3 do
+        local key = stack:pop()
+        local text = stack:pop()
+        table.insert(items, 1, { key = key, text = text })
+        numParams = numParams - 2
+    end
+    local pos = stack:pop()
+    local x, y = stack:popXY()
+    local result = runtime:mPOPUP(x, y, pos, items)
+    stack:push(result)
 end
+
+mPopup_dump = numParams_dump
 
 function Abs(stack, runtime) -- 0x80
     stack:push(math.abs(stack:pop()))

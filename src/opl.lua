@@ -49,7 +49,7 @@ function _setRuntime(r)
     _ENV.runtime = r
     -- Load everything that's defined elsewhere
     local separateModules = {
-        -- TODO
+        "menu",
     }
     for _, module in ipairs(separateModules) do
         for name, fn in pairs(runtime:newOplModule(module)) do
@@ -745,6 +745,15 @@ function KEYSTR()
     else
         return ""
     end
+end
+
+function PAUSE(val)
+    local period = val * 50 -- now in ms
+    local sleepVar = runtime:makeTemporaryVar(DataTypes.EWord)
+    sleepVar(KErrFilePending)
+    runtime:iohandler().asyncRequest("after", { var = sleepVar, period = period })
+    -- TODO also return if there's a key event...
+    runtime:waitForRequest(sleepVar)
 end
 
 function GET()

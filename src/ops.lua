@@ -1520,12 +1520,7 @@ Open_dump = Create_dump
 
 function Pause(stack, runtime) -- 0xB5
     local val = stack:pop() -- pause time in 1/20 seconds
-    local period = val * 50 -- now in ms
-    local sleepVar = runtime:makeTemporaryVar(DataTypes.EWord)
-    sleepVar(KErrFilePending)
-    runtime:iohandler().asyncRequest("after", { var = sleepVar, period = period })
-    -- TODO also return if there's a key event...
-    runtime:waitForRequest(sleepVar)
+    runtime:PAUSE(val)
 end
 
 function Position(stack, runtime) -- 0xB6

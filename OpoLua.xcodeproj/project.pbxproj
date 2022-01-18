@@ -166,6 +166,7 @@
 		DBE291802794813F00EE824B /* rsc.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE2917F2794813D00EE824B /* rsc.lua */; };
 		DBE291822795F86200EE824B /* UIKeyModifierFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */; };
 		DBE291842796FA1900EE824B /* const.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE291832796FA1900EE824B /* const.lua */; };
+		DBE29186279747D100EE824B /* menu.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE29185279747D000EE824B /* menu.lua */; };
 		DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE91522276A9D0900BDB8F5 /* memory.lua */; };
 		DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE91524276D25A900BDB8F5 /* UIKey.swift */; };
 /* End PBXBuildFile section */
@@ -316,6 +317,7 @@
 		DBE2917F2794813D00EE824B /* rsc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rsc.lua; sourceTree = "<group>"; };
 		DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKeyModifierFlags.swift; sourceTree = "<group>"; };
 		DBE291832796FA1900EE824B /* const.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = const.lua; sourceTree = "<group>"; };
+		DBE29185279747D000EE824B /* menu.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu.lua; sourceTree = "<group>"; };
 		DBE91522276A9D0900BDB8F5 /* memory.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = memory.lua; sourceTree = "<group>"; };
 		DBE91524276D25A900BDB8F5 /* UIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKey.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -577,6 +579,7 @@
 				DB79FFED2742E631005E904F /* dumpopo.lua */,
 				DB79FFEE2742E631005E904F /* stack.lua */,
 				DB5AC97B275CD5690043FE5C /* opl.lua */,
+				DBE29185279747D000EE824B /* menu.lua */,
 				DB79FFEF2742E631005E904F /* ops.lua */,
 				DB7900242746D915005E904F /* defaultiohandler.lua */,
 				DB5AC96F275198A20043FE5C /* database.lua */,
@@ -691,6 +694,7 @@
 				DB5AC970275198A20043FE5C /* database.lua in Resources */,
 				DB5AC97827583DC70043FE5C /* opx in Resources */,
 				DB79FFF22742E631005E904F /* fns.lua in Resources */,
+				DBE29186279747D100EE824B /* menu.lua in Resources */,
 				D8C679BD27484BF400BD8720 /* examples in Resources */,
 				DB79FFF72742E631005E904F /* ops.lua in Resources */,
 				DB79FFF52742E631005E904F /* dumpopo.lua in Resources */,

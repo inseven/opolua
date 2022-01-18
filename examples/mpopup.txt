@@ -1,0 +1,48 @@
+INCLUDE "toolbar.oph"
+
+PROC main:
+	LOADM "Z:\System\OPL\TOOLBAR.OPO"
+	TBarLink:("go")
+ENDP
+
+PROC go:
+	GLOBAL x%, y%
+	LOCAL ev&(16)
+	TBarInit:("Woop", gWIDTH, gHEIGHT)
+	PRINT "TbWidth%=", TbWidth%
+	TBarButt:("x", 1, "Big", 0, 0, 0, 0)
+	TBarButt:("s", 2, "Simple", 0, 0, 0, 0)
+	TBarButt:("w", 3, "Wide", 0, 0, 0, 0)
+	TBarButt:("q", 4, "Quit", 0, 0, 0, 0)
+	TBarShow:
+	WHILE 1
+		GETEVENT32 ev&()
+		IF ev&(1) = &408
+			x% = ev&(8)
+			y% = ev&(9)
+			TBarOffer%:(ev&(3), ev&(4), ev&(6), ev&(7))
+		ENDIF
+	ENDWH
+ENDP
+
+PROC CmdS%:
+	LOCAL ret%
+	ret% = mPOPUP(x%, y%, 1, "First", 1, "2nd", 2, "3rd", 3)
+	PRINT ret%
+ENDP
+
+PROC CmdW%:
+	LOCAL ret%
+	ret% = mPOPUP(x%, y%, 1, "Something longer", 1, "2nd", 2, "3rd", 3)
+	PRINT ret%
+ENDP
+
+PROC CmdX%:
+	LOCAL ret%
+	ret% = mPOPUP(x%, y%, 1, "Woop!", %w, "Something longer", $5A, "Check", %c + $2800, "Unshort", -1, "Dimmed", $1002)
+	PRINT ret%
+ENDP
+
+PROC CmdQ%:
+	STOP
+ENDP
