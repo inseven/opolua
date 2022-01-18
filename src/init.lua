@@ -260,6 +260,7 @@ FontIds = {
     [KFontCourierNormal22] = { face = "courier", size = 22 },
     [KFontCourierNormal27] = { face = "courier", size = 27 },
     [KFontCourierNormal32] = { face = "courier", size = 32 },
+    [KFontEiksym15] = { face = "eiksym", size = 15 },
     [KFontSquashed] = { face = "squashed", size = 11, bold = true },
     [KFontDigital35] = { face = "digit", size = 35 },
 }

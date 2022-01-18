@@ -533,6 +533,7 @@ KFontCourierNormal22 = 0x10000266
 KFontCourierNormal27 = 0x10000267
 KFontCourierNormal32 = 0x10000268
 KFontTiny4 = 0x10000030
+KFontEiksym15 = 0x100000CD
 KFontSquashed = 0x100000F5
 KFontDigital35 = 0x10000128
 
