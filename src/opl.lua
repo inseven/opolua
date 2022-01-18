@@ -772,6 +772,60 @@ function GETSTR()
     end
 end
 
+function GETEVENTA32(stat, ev)
+    -- It's important not to call checkCompletions here, because that could make
+    -- it look like the program had correctly managed its GetEventA32 calls when
+    -- it potentially hadn't, which we can only determine by whether or not the
+    -- onAssignCallback has fired and unset the getevent resource.
+    local existingEvent = runtime:getResource("getevent")
+    if existingEvent and stat:sameOrigin(existingEvent.var) and ev:sameOrigin(existingEvent.ev) then
+        -- This is a workaround for programs that misuse GetEventA32 which only
+        -- work on hardware because they're getting lucky with memory layout,
+        -- relying on undefined behaviour that does not behave the same in our
+        -- memory model.
+        --
+        -- The exact circumstance being handled here is when the program passes
+        -- a stack variable as GetEventA32's ev and then returns from the
+        -- stack frame, meaning by the time the completion happens it's writing
+        -- to an invalid stack location which just happens not to have been
+        -- trampled by the time the function is entered again, at which point
+        -- it's in the right place because stack frame memory is not zeroed when
+        -- the new stack frame is created. We have to handle that by explicitly
+        -- tracking the last GetEventA32 call and if necessary making the second
+        -- call reuse the first's data.
+        --
+        -- We only do this when the second GetEventA32 call uses stat and ev
+        -- vars declared in exactly the same place (ie, that would've gotten
+        -- exactly the same address on the Series 5), on the basis that anything
+        -- else would have not worked anyway and this workaround would not
+        -- apply.
+        -- printf("Duplicate GetEventA32 request, applying workaround\n")
+        assert(existingEvent.var == stat, "Workaround does not support using a different status variable instance!")
+        existingEvent.ev = ev
+        return
+    end
+    if existingEvent then
+        -- printf("Outstanding getevent request, cancelling\n")
+        runtime:iohandler().cancelRequest(existingEvent.var)
+        runtime:waitForRequest(existingEvent.var)
+        assert(runtime:getResource("getevent") == nil, "cancelRequest did not release getevent resource!")
+        -- printf("Cancel complete\n")
+    end
+
+    stat(KOplErrFilePending)
+    stat:setOnAssignCallback(function(stat)
+        -- printf("GetEvent stat set to %s\n", stat())
+        runtime:setResource("getevent", nil)
+        stat:setOnAssignCallback(nil)
+    end)
+    local requestTable = {
+        var = stat,
+        ev = ev,
+    }
+    runtime:setResource("getevent", requestTable)
+    runtime:iohandler().asyncRequest("getevent", requestTable)
+end
+
 -- Menu APIs
 
 function mINIT()
