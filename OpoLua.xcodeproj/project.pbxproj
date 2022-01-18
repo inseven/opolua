@@ -165,6 +165,7 @@
 		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
 		DBE291802794813F00EE824B /* rsc.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE2917F2794813D00EE824B /* rsc.lua */; };
 		DBE291822795F86200EE824B /* UIKeyModifierFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */; };
+		DBE291842796FA1900EE824B /* const.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE291832796FA1900EE824B /* const.lua */; };
 		DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE91522276A9D0900BDB8F5 /* memory.lua */; };
 		DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE91524276D25A900BDB8F5 /* UIKey.swift */; };
 /* End PBXBuildFile section */
@@ -314,6 +315,7 @@
 		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
 		DBE2917F2794813D00EE824B /* rsc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rsc.lua; sourceTree = "<group>"; };
 		DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKeyModifierFlags.swift; sourceTree = "<group>"; };
+		DBE291832796FA1900EE824B /* const.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = const.lua; sourceTree = "<group>"; };
 		DBE91522276A9D0900BDB8F5 /* memory.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = memory.lua; sourceTree = "<group>"; };
 		DBE91524276D25A900BDB8F5 /* UIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKey.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -565,6 +567,7 @@
 		DB79FFE72742E631005E904F /* src */ = {
 			isa = PBXGroup;
 			children = (
+				DBE291832796FA1900EE824B /* const.lua */,
 				DB79FFE92742E631005E904F /* init.lua */,
 				DB79FFE82742E631005E904F /* runtime.lua */,
 				DBE91522276A9D0900BDB8F5 /* memory.lua */,
@@ -704,6 +707,7 @@
 				DB0B91862771031F006F5CD0 /* sis.lua in Resources */,
 				DB5AC97C275CD5690043FE5C /* opl.lua in Resources */,
 				DB0B91852771031F006F5CD0 /* aif.lua in Resources */,
+				DBE291842796FA1900EE824B /* const.lua in Resources */,
 				DBE291802794813F00EE824B /* rsc.lua in Resources */,
 				DBE2917C278CCB0B00EE824B /* crc.lua in Resources */,
 				DB0B91952789C561006F5CD0 /* directfilestore.lua in Resources */,

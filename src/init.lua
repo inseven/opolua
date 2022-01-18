@@ -22,6 +22,8 @@ SOFTWARE.
 
 ]]
 
+require("const")
+
 function module()
     return setmetatable({}, {__index=_G})
 end
@@ -95,36 +97,90 @@ SizeofType = {
 
 -- Since we never have to worry about actual epoc error codes (eg -8 meaning
 -- KErrBadHandle) we can just always use the OPL1993 values
-Errors = {
-    KErrNone = 0,
-    KOplErrGenFail = -1,
-    KOplErrInvalidArgs = -2,
-    KOplErrDivideByZero = -8,
-    KOplErrInUse = -9,
-    KOplErrFontNotLoaded = -21,
-    KOplErrExists = -32,
-    KOplErrNotExists = -33,
-    KOplErrWrite = -34,
-    KOplErrEof = -36,
-    KOplErrName = -38,
-    KOplErrAccess = -39,
-    KOplErrRecord = -43, -- Specifically can mean "record too large"
-    KOplErrFilePending = -46,
-    KOplErrIOCancelled = -48,
-    KOplErrNotReady = -62,
-    KOplStructure = -85,
-    KOplErrIllegal = -96,
-    KOplErrNoFld = -100,
-    KOplErrOpen = -101,
-    KOplErrClosed = -102,
-    KOplErrNoMod = -106,
-    KOplErrSubs = -111,
-    KOplErrDevOpen = -113,
-    KOplErrEsc = -114,
-    KOplErrDrawNotOpen = -118,
-    KOplErrInvalidWindow = -119,
-    KOplErrIncompatibleUpdateMode = -125,
-    KStopErr = -999, -- Made this one up
+
+KErrNone = 0
+KErrNotReady = -62
+KStopErr = -999 -- Made this one up
+
+Errors = enum {
+    KErrNone = KErrNone,
+    KErrNotReady = KErrNotReady,
+    KStopErr = KStopErr,
+
+    -- redefinitions from const.lua follow
+    KErrGenFail = KErrGenFail,
+    KErrInvalidArgs = KErrInvalidArgs,
+    KErrOs = KErrOs,
+    KErrNotSupported = KErrNotSupported,
+    KErrUnderflow = KErrUnderflow,
+    KErrOverflow = KErrOverflow,
+    KErrOutOfRange = KErrOutOfRange,
+    KErrDivideByZero = KErrDivideByZero,
+    KErrInUse = KErrInUse,
+    KErrNoMemory = KErrNoMemory,
+    KErrNoSegments = KErrNoSegments,
+    KErrNoSemaphore = KErrNoSemaphore,
+    KErrNoProcess = KErrNoProcess,
+    KErrAlreadyOpen = KErrAlreadyOpen,
+    KErrNotOpen = KErrNotOpen,
+    KErrImage = KErrImage,
+    KErrNoReceiver = KErrNoReceiver,
+    KErrNoDevices = KErrNoDevices,
+    KErrNoFileSystem = KErrNoFileSystem,
+    KErrFailedToStart = KErrFailedToStart,
+    KErrFontNotLoaded = KErrFontNotLoaded,
+    KErrTooWide = KErrTooWide,
+    KErrTooManyItems = KErrTooManyItems,
+    KErrBatLowSound = KErrBatLowSound,
+    KErrBatLowFlash = KErrBatLowFlash,
+    KErrExists = KErrExists,
+    KErrNotExists = KErrNotExists,
+    KErrWrite = KErrWrite,
+    KErrRead = KErrRead,
+    KErrEof = KErrEof,
+    KErrFull = KErrFull,
+    KErrName = KErrName,
+    KErrAccess = KErrAccess,
+    KErrLocked = KErrLocked,
+    KErrDevNotExist = KErrDevNotExist,
+    KErrDir = KErrDir,
+    KErrRecord = KErrRecord,
+    KErrReadOnly = KErrReadOnly,
+    KErrInvalidIO = KErrInvalidIO,
+    KErrFilePending = KErrFilePending,
+    KErrVolume = KErrVolume,
+    KErrIOCancelled = KErrIOCancelled,
+    KErrSyntax = KErrSyntax,
+    KOplStructure = KOplStructure,
+    KErrIllegal = KErrIllegal,
+    KErrNumArg = KErrNumArg,
+    KErrUndef = KErrUndef,
+    KErrNoProc = KErrNoProc,
+    KErrNoFld = KErrNoFld,
+    KErrOpen = KErrOpen,
+    KErrClosed = KErrClosed,
+    KErrRecSize = KErrRecSize,
+    KErrModLoad = KErrModLoad,
+    KErrMaxLoad = KErrMaxLoad,
+    KErrNoMod = KErrNoMod,
+    KErrNewVer = KErrNewVer,
+    KErrModNotLoaded = KErrModNotLoaded,
+    KErrBadFileType = KErrBadFileType,
+    KErrTypeViol = KErrTypeViol,
+    KErrSubs = KErrSubs,
+    KErrStrTooLong = KErrStrTooLong,
+    KErrDevOpen = KErrDevOpen,
+    KErrEsc = KErrEsc,
+    KErrMaxDraw = KErrMaxDraw,
+    KErrDrawNotOpen = KErrDrawNotOpen,
+    KErrInvalidWindow = KErrInvalidWindow,
+    KErrScreenDenied = KErrScreenDenied,
+    KErrOpxNotFound = KErrOpxNotFound,
+    KErrOpxVersion = KErrOpxVersion,
+    KErrOpxProcNotFound = KErrOpxProcNotFound,
+    KErrStopInCallback = KErrStopInCallback,
+    KErrIncompUpdateMode = KErrIncompUpdateMode,
+    KErrInTransaction = KErrInTransaction,
 }
 
 -- Except when we do :-(
@@ -132,33 +188,22 @@ KRequestPending = toint32(0x80000001)
 assert(KRequestPending == -2147483647)
 
 -- Some misc uids used for file formats
-KUidDirectFileStore = 0x10000037 -- OPL/OPO/AIF/MBM uid1
+-- OPL/OPO/AIF/MBM uid1 is KUidDirectFileStore
+KDynamicLibraryUid = 0x10000079 -- ie a native app
 KUidAppInfoFile8 = 0x1000006A -- AIF file uid2
 -- KUidAppDllDoc8 = 0x1000006D
-KUidOPO = 0x10000073 -- pre-unicode OPO uid2
+-- KUidOPO = 0x10000073 -- pre-unicode OPO uid2
 KMultiBitmapRomImageUid = 0x10000041 -- uid1
 KUidMultiBitmapFileImage = 0x10000042
 KUidOplInterpreter = 0x10000168
 
 KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
-KUidExternalOplFile = 0x1000008A -- DB file UID2
+-- KUidOplFile = 0x1000008A -- DB file UID2
 
 KUidSoundData = 0x10000052 -- Not sure what this uid is officially called, can't find a reference...
 KUidTextEdSection = 0x10000085 -- ditto
 
-IoOpenMode = {
-    Open = 0,
-    Create = 1,
-    Replace = 2,
-    Append = 3,
-    Unique = 4,
-    OpenModeMask = 0x3,
-
-    TextFlag = 0x20,
-    WriteFlag = 0x100,
-    SeekableFlag = 0x200,
-    ReadonlyShared = 0x400, -- We can safely ignore this one
-}
+KIoOpenModeMask = 0xF
 
 dItemTypes = enum {
     dTEXT = 0,
@@ -177,49 +222,6 @@ dItemTypes = enum {
     -- simulated types, not actually used by OPL
     dSEPARATOR = 13,
 }
-
-KPenDown = 0
-KPenUp = 1
-KPenDrag = 6
-
--- UIDs converted with
--- lua -e "for line in io.lines() do print((line:gsub('(%s+)([0-9]+)%s*', function(s, m) return string.format('%s0x%08X', s, tonumber(m)) end))) end"
-KFontArialBold8 = 0x100001EF
-KFontArialBold11 = 0x100001F0
-KFontArialBold13 = 0x100001F1
-KFontArialNormal8 = 0x100001F2
-KFontArialNormal11 = 0x100001F3
-KFontArialNormal13 = 0x100001F4
-KFontArialNormal15 = 0x100001F5
-KFontArialNormal18 = 0x100001F6
-KFontArialNormal22 = 0x100001F7
-KFontArialNormal27 = 0x100001F8
-KFontArialNormal32 = 0x100001F9
-KFontTimesBold8 = 0x100001FA
-KFontTimesBold11 = 0x100001FB
-KFontTimesBold13 = 0x100001FC
-KFontTimesNormal8 = 0x100001FD
-KFontTimesNormal11 = 0x100001FE
-KFontTimesNormal13 = 0x100001FF
-KFontTimesNormal15 = 0x10000200
-KFontTimesNormal18 = 0x10000201
-KFontTimesNormal22 = 0x10000202
-KFontTimesNormal27 = 0x10000203
-KFontTimesNormal32 = 0x10000204
-KFontCourierBold8 = 0x1000025E
-KFontCourierBold11 = 0x1000025F
-KFontCourierBold13 = 0x10000260
-KFontCourierNormal8 = 0x10000261
-KFontCourierNormal11 = 0x10000262
-KFontCourierNormal13 = 0x10000263
-KFontCourierNormal15 = 0x10000264
-KFontCourierNormal18 = 0x10000265
-KFontCourierNormal22 = 0x10000266
-KFontCourierNormal27 = 0x10000267
-KFontCourierNormal32 = 0x10000268
-KFontTiny4 = 0x10000030
-KFontSquashed = 0x100000F5
-KFontDigital35 = 0x10000128
 
 KDefaultFontUid = KFontArialNormal15
 
@@ -278,31 +280,16 @@ FontAliases = {
     [0x9A] = KFontArialNormal15,
 }
 
-GraphicsMode = enum {
-    Set = 0,
-    Clear = 1,
-    Invert = 2,
-}
-
-DrawableMode = enum {
-    Gray2 = 0, -- ie 1bpp
-    Gray4 = 1, -- ie 2bpp
-    Gray16 = 2, -- ie 4bpp grayscale
-    Gray256 = 3, -- ie 8bpp grayscale
-    Color16 = 4, -- ie 4bpp color
-    Color256 = 5, -- ie 8bpp color
-}
-
 local GrayBppToMode = {
-    [1] = DrawableMode.Gray2,
-    [2] = DrawableMode.Gray4,
-    [4] = DrawableMode.Gray16,
-    [8] = DrawableMode.Gray256,
+    [1] = KgCreate2GrayMode,
+    [2] = KgCreate4GrayMode,
+    [4] = KgCreate16GrayMode,
+    [8] = KgCreate256GrayMode,
 }
 
 local ColorBppToMode = {
-    [4] = DrawableMode.Color16,
-    [8] = DrawableMode.Color256,
+    [4] = KgCreate16ColorMode,
+    [8] = KgCreate256ColorMode,
 }    
 
 function bppColorToMode(bpp, color)
@@ -312,17 +299,6 @@ function bppColorToMode(bpp, color)
     end
     return result
 end
-
-Align = enum {
-    Left = 2,
-    Right = 1,
-    Center = 3,
-}
-
--- Errors are global for convenience
-for k, v in pairs(Errors) do _ENV[k] = v end
--- And allow reverse lookup
-Errors = enum(Errors)
 
 function sortedKeys(tbl)
     local result = {}

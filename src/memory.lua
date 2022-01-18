@@ -45,7 +45,7 @@ function ArrayValue:__index(k)
     if not (k > 0 and k <= len) then
         error(string.format("Out of bounds: %d len=%d for %s\n", k, len, ArrayValue.__tostring(self)))
     end
-    assert(k > 0 and k <= len, KOplErrSubs)
+    assert(k > 0 and k <= len, KErrSubs)
     local valType = rawget(self, "_type")
     local maxLen = rawget(self, "_stringMaxLen")
     local result = makeVar(valType, maxLen)
@@ -252,7 +252,7 @@ end
 function Variable:isPending()
     local t = self:type()
     if t == DataTypes.EWord then
-        return self() == KOplErrFilePending
+        return self() == KErrFilePending
     elseif t == DataTypes.ELong then
         return self() == KRequestPending
     else

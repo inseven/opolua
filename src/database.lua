@@ -70,10 +70,10 @@ end
 function Db:setView(tableName, fields, variables)
     local tbl = self.tables[tableName]
     assert(tbl, "No such tableName in setView!")
-    assert(#fields == #variables, KOplErrInvalidArgs)
+    assert(#fields == #variables, KErrInvalidArgs)
     local map = {}
     for i, var in ipairs(variables) do
-        assert(fields[i].type == var.type, KOplErrInvalidArgs)
+        assert(fields[i].type == var.type, KErrInvalidArgs)
         map[var.name] = fields[i]
     end
     self.currentTable = tbl
@@ -106,7 +106,7 @@ function Db:isWriteable()
 end
 
 function Db:setModified()
-    assert(self.writeable, KOplErrWrite)
+    assert(self.writeable, KErrWrite)
     self.modified = true
 end
 
@@ -249,7 +249,7 @@ end
 
 function Db:createTable(tableName, fields)
     if self.tables[tableName] then
-        error(KOplErrExists)
+        error(KErrExists)
     end
     self:setModified()
     local tbl = {

@@ -37,9 +37,9 @@ function Stack:push(val)
     if type(val) == "boolean" then
         -- As a convenience allow this and map to how it's expected to be represented
         if val then
-            val = -1
+            val = KTrue
         else
-            val = 0
+            val = KFalse
         end
     elseif val == nil then
         error("Can't push a nil val!")

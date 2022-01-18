@@ -545,7 +545,7 @@ codes = {
 }
 
 function IllegalOpCode(stack)
-    error(KOplErrIllegal)
+    error(KErrIllegal)
 end
 
 local function index_dump(runtime)
@@ -777,7 +777,7 @@ local function fieldLeftSide(stack, runtime)
     local varName = stack:pop()
     local db = runtime:getDb(logName)
     -- printf("fieldLeftSide %s\n", varName)
-    local var = assert(db.currentVars[varName], KOplErrNoFld)
+    local var = assert(db.currentVars[varName], KErrNoFld)
     stack:push(var)
 end
 
@@ -984,7 +984,7 @@ end
 function DivideInt(stack) -- 0x54
     local denominator = stack:pop()
     if denominator == 0 then
-        error(KOplErrDivideByZero)
+        error(KErrDivideByZero)
     end
     stack:push(stack:pop() // denominator)
 end
@@ -994,7 +994,7 @@ DivideLong = DivideInt -- 0x55
 function DivideFloat(stack) -- 0x56
     local denominator = stack:pop()
     if denominator == 0 then
-        error(KOplErrDivideByZero)
+        error(KErrDivideByZero)
     end
     stack:push(stack:pop() / denominator)
 end
@@ -1018,7 +1018,7 @@ function PowerOfUntyped(stack)
     local number = stack:pop()
     if powerOf <= 0 and number == 0 then
         -- No infs here thank you very much
-        error(KOplErrInvalidArgs)
+        error(KErrInvalidArgs)
     end
     stack:push(number ^ powerOf)
 end
@@ -1226,7 +1226,7 @@ end
 function LPrintString(stack, runtime) -- 0x8F
     local str = stack:pop()
     local handle = runtime:getResource("lopen")
-    assert(handle, KOplErrClosed)
+    assert(handle, KErrClosed)
     local err = runtime:IOWRITE(handle, str)
     assert(err == 0, err)
 end
@@ -1258,7 +1258,7 @@ function InputInt(stack, runtime) -- 0x94
         if result == nil then
             if trapped then
                 -- We can error and the trap check in runtime will deal with it
-                error(KOplErrGenFail)
+                error(KErrGenFail)
             else
                 -- iohandler is responsible for outputting a linefeed after reading the line
                 runtime:iohandler().print("?")
@@ -1386,7 +1386,7 @@ Cursor_dump = numParams_dump
 
 function Delete(stack, runtime) -- 0xA7
     local filename = stack:pop()
-    assert(#filename > 0, KOplErrName)
+    assert(#filename > 0, KErrName)
     filename = runtime:assertPathValid(runtime:abs(filename))
     local err = runtime:iohandler().fsop("delete", filename)
     if err ~= 0 then
@@ -1467,10 +1467,10 @@ end
 
 function LOpen(stack, runtime) -- 0xAF
     if runtime:getResource("lopen") then
-        error(KOplErrDevOpen)
+        error(KErrDevOpen)
     end
     local name = stack:pop()
-    local mode = IoOpenMode.Replace
+    local mode = KIoOpenModeReplace
     local handle, err = runtime:IOOPEN(name, mode)
     assert(handle, err)
     runtime:setResource("lopen", handle)
@@ -1522,7 +1522,7 @@ function Pause(stack, runtime) -- 0xB5
     local val = stack:pop() -- pause time in 1/20 seconds
     local period = val * 50 -- now in ms
     local sleepVar = runtime:makeTemporaryVar(DataTypes.EWord)
-    sleepVar(KOplErrFilePending)
+    sleepVar(KErrFilePending)
     runtime:iohandler().asyncRequest("after", { var = sleepVar, period = period })
     -- TODO also return if there's a key event...
     runtime:waitForRequest(sleepVar)
@@ -1641,7 +1641,7 @@ gSaveBit_dump = numParams_dump
 
 function gClose(stack, runtime) -- 0xC6
     local id = stack:pop()
-    assert(id ~= 1, KOplErrInvalidArgs) -- Cannot close the console
+    assert(id ~= KDefaultWin, KErrInvalidArgs) -- Cannot close the console
     runtime:closeGraphicsContext(id)
     runtime:setTrap(false)
 end
@@ -1944,8 +1944,8 @@ function dItem(stack, runtime) -- 0xED
         item.align = flagToAlign[flags & 3]
         item.value = stack:pop()
         item.prompt = stack:pop()
-        item.selectable = (flags & 0x400) > 0
-        if item.prompt == "" and item.value == "" and (flags & 0x800) > 0 then
+        item.selectable = (flags & KDTextAllowSelection) > 0
+        if item.prompt == "" and item.value == "" and (flags & KDTextSeparator) > 0 then
             item = { type = dItemTypes.dSEPARATOR }
         end
         -- Ignoring the other flags for now
@@ -1975,7 +1975,7 @@ function dItem(stack, runtime) -- 0xED
     elseif itemType == dItemTypes.dLONG or itemType == dItemTypes.dFLOAT or itemType == dItemTypes.dDATE or itemType == dItemTypes.dTIME then
         item.max = stack:pop()
         item.min = stack:pop()
-        assert(item.max >= item.min, KOplErrInvalidArgs)
+        assert(item.max >= item.min, KErrInvalidArgs)
         local timeFlags
         if itemType == dItemTypes.dTIME then
             timeFlags = stack:pop()

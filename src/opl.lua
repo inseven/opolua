@@ -80,7 +80,7 @@ end
 
 function gVISIBLE(show)
     local context = runtime:getGraphicsContext()
-    assert(context.isWindow, KOplErrInvalidWindow)
+    assert(context.isWindow, KErrInvalidWindow)
     runtime:iohandler().graphicsop("show", context.id, show)
 end
 
@@ -88,7 +88,7 @@ function gFONT(id)
     local font = FontIds[FontAliases[id] or id]
     if not font then
         printf("No font found for 0x%08X\n", id)
-        error(KOplErrFontNotLoaded)
+        error(KErrFontNotLoaded)
     end
     runtime:getGraphicsContext().font = font
 end
@@ -107,7 +107,7 @@ end
 
 function gORDER(id, pos)
     local graphics = runtime:getGraphics()
-    assert(graphics[id] and graphics[id].isWindow, KOplErrInvalidWindow)
+    assert(graphics[id] and graphics[id].isWindow, KErrInvalidWindow)
     runtime:iohandler().graphicsop("order", id, pos)
 end
 
@@ -144,7 +144,7 @@ function gPRINT(val)
 end
 
 function gPRINTB(text, width, align, top, bottom, margin)
-    if not align then align = Align.Left end
+    if not align then align = KgPrintBLeftAligned end
     if not top then top = 0 end
     if not bottom then bottom = 0 end
     if not margin then margin = 0 end
@@ -156,13 +156,13 @@ function gPRINTB(text, width, align, top, bottom, margin)
         y = context.pos.y - fontAscent - top,
         width = width,
         height = top + texth + bottom,
-        mode = GraphicsMode.Clear
+        mode = KgModeClear
     })
 
     local textX
-    if align == Align.Right then
+    if align == KgPrintBRightAligned then
         textX = context.pos.x + width - margin - textw
-    elseif align == Align.Center then
+    elseif align == KgPrintBCentredAligned then
         -- Ugh how does margin work for center, docs aren't clear to me right now...
         textX = context.pos.x + (width // 2) - (textw // 2)
     else
@@ -172,7 +172,7 @@ function gPRINTB(text, width, align, top, bottom, margin)
     runtime:drawCmd("text", {
         x = textX,
         y = context.pos.y - fontAscent,
-        mode = GraphicsMode.Set,
+        mode = KgModeSet,
         string = text,
     })
 end
@@ -217,13 +217,9 @@ function gFILL(width, height, mode)
     runtime:drawCmd("fill", { width = width, height = height, mode = mode })
 end
 
-local KExtraPixelInset = 0x100
-local KExtraRoundedCorners = 0x200
-local KLoseSinglePixel = 0x400 -- I have no idea wtf this is supposed to do
-
 function gBORDER(flags, w, h)
-    if flags & KExtraPixelInset > 0 then
-        flags = flags & ~KExtraPixelInset
+    if flags & KBordGapAllRound > 0 then
+        flags = flags & ~KBordGapAllRound
         local pos = runtime:getGraphicsContext().pos
         -- No I don't understand the reason for this flag either
         runtime:drawCmd("border", { x = pos.x + 1, y = pos.y + 1, width = w - 2, height = h - 2, btype = flags })
@@ -243,14 +239,14 @@ function gXBORDER(type, flags, w, h)
     elseif type == 2 and flags == 1 then
         gBOX(w, h)
     else
-        if type == 1 and flags & KExtraPixelInset > 0 then
-            flags = flags & ~KExtraPixelInset -- KExtraPixelInset has no effect on type 1
+        if type == 1 and flags & KBordGapAllRound > 0 then
+            flags = flags & ~KBordGapAllRound -- KBordGapAllRound has no effect on type 1
         end
-        if type == 2 and flags & KExtraRoundedCorners > 0 then
-            flags = flags & ~KExtraRoundedCorners -- rounded corners is ignored on type 2 borders
+        if type == 2 and flags & KBordRoundCorners > 0 then
+            flags = flags & ~KBordRoundCorners -- rounded corners is ignored on type 2 borders
         end
-        if flags & KLoseSinglePixel > 0 then
-            flags = flags & ~KLoseSinglePixel
+        if flags & KBordLosePixel > 0 then
+            flags = flags & ~KBordLosePixel
         end
         runtime:drawCmd("border", { width = w, height = h, btype = (type << 16) | flags })
     end
@@ -273,7 +269,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     elseif state == 1 then
         gXBORDER(2, 0x42, width, height)
         gMOVE(2, 2)
-        gFILL(width - 4, height - 4, GraphicsMode.Clear)
+        gFILL(width - 4, height - 4, KgModeClear)
     elseif state == 2 then
         gXBORDER(2, 0x54, width, height)
         gMOVE(3, 3)
@@ -399,7 +395,7 @@ end
 
 function gCREATE(x, y, w, h, visible, flags)
     -- printf("gCREATE w=%d h=%d flags=%X", w, h, flags or 0)
-    local id = runtime:iohandler().createWindow(x, y, w, h, flags or 0)
+    local id = runtime:iohandler().createWindow(x, y, w, h, flags or KgCreate2GrayMode)
     assert(id, "Failed to createWindow!")
     -- printf(" id=%d\n", id)
     runtime:newGraphicsContext(id, w, h, true, (flags or 0) & 0xF)
@@ -430,9 +426,9 @@ function gLOADBIT(path, writable, index)
     local data, err = iohandler.fsop("read", runtime:abs(path))
     assert(data, err)
     local bitmaps = mbm.parseMbmHeader(data)
-    assert(bitmaps, KOplErrGenFail)
+    assert(bitmaps, KErrGenFail)
     local bitmap = bitmaps[1 + index]
-    assert(bitmap, KOplErrNotExists)
+    assert(bitmap, KErrNotExists)
     -- (2)
     local id = gCREATEBIT(bitmap.width, bitmap.height, bitmap.drawableMode)
     -- printf(" %dx%d drawableid=%d\n", bitmap.width, bitmap.height, id)
@@ -476,10 +472,10 @@ function gPOLY(array)
     local flush = runtime:getGraphicsAutoFlush()
     runtime:setGraphicsAutoFlush(false)
     local prevX, prevY = gX(), gY()
-    gAT(array[1], array[2])
-    local n = array[3]
+    gAT(array[KgPolyAStartX], array[KgPolyAStartY])
+    local n = array[KgPolyANumPairs]
     for i = 0, n-1 do
-        local dx, dy = array[4 + i*2], array[4 + i*2 + 1]
+        local dx, dy = array[KgPolyANumDx1 + i*2], array[KgPolyANumDy1 + i*2]
         if dx & 1 > 0 then
             -- printf("gmove %d %d\n", (dx - 1) // 2, dy)
             gMOVE((dx - 1)// 2, dy)
@@ -501,7 +497,7 @@ end
 
 function gCLOCK(mode)
     local context = runtime:getGraphicsContext()
-    assert(context.isWindow, KOplErrInvalidWindow)
+    assert(context.isWindow, KErrInvalidWindow)
     local x, y
     if mode then
         x, y = context.pos.x, context.pos.y
@@ -525,20 +521,16 @@ local function drawInfoPrint(drawable, text, corner)
     local actualTextWidth = w - 2 * inset
 
     local x, y
-    if corner == 0 then
-        -- Top left
+    if corner == KBusyTopLeft then
         x = cornerInset
         y = cornerInset
-    elseif corner == 1 then
-        -- Bottom left
+    elseif corner == KBusyBottomLeft then
         x = cornerInset
         y = screenHeight - winHeight - cornerInset
-    elseif corner == 2 then
-        -- Top right
+    elseif corner == KBusyTopRight then
         x = screenWidth - w - cornerInset
         y = cornerInset
-    elseif corner == 3 then
-        -- Bottom right
+    elseif corner == KBusyBottomRight then
         x = screenWidth - w - cornerInset
         y = screenHeight - winHeight - cornerInset
     else
@@ -563,10 +555,10 @@ function gIPRINT(text, corner)
     local state = runtime:saveGraphicsState()
     local infoWinId = runtime:getResource("infowin")
     if not infoWinId then
-        infoWinId = gCREATE(0, 0, 1, 1, false)
+        infoWinId = gCREATE(0, 0, 1, 1, false, KgCreate4GrayMode)
         runtime:setResource("infowin", infoWinId)
     end
-    drawInfoPrint(infoWinId, text, corner or 3)
+    drawInfoPrint(infoWinId, text, corner or KBusyBottomRight)
     runtime:flushGraphicsOps()
     runtime:iohandler().graphicsop("giprint", infoWinId)
     runtime:restoreGraphicsState(state)
@@ -584,13 +576,13 @@ function BUSY(text, corner, delay)
     end
 
     local state = runtime:saveGraphicsState()
-    busyWinId = gCREATE(0, 0, 1, 1, false)
+    busyWinId = gCREATE(0, 0, 1, 1, false, KgCreate4GrayMode)
     runtime:setResource("busy", busyWinId)
-    local textRect = drawInfoPrint(busyWinId, text, corner or 1)
+    local textRect = drawInfoPrint(busyWinId, text, corner or KBusyBottomLeft)
 
     local bmp = require("opx.bmp")
     local sprite = bmp.SPRITECREATE(runtime, busyWinId, textRect.x, textRect.y, 0)
-    local blackBmp = gCREATEBIT(textRect.w, textRect.h, 0)
+    local blackBmp = gCREATEBIT(textRect.w, textRect.h, KgCreate2GrayMode)
     gCOLOR(0, 0, 0)
     gFILL(gWIDTH(), gHEIGHT())
     gUSE(busyWinId)
@@ -613,7 +605,7 @@ function FONT(id, style)
     local screen = runtime:getGraphics().screen
     local defaultWin = runtime:getGraphicsContext(1)
     local font = FontIds[FontAliases[id] or id]
-    assert(font, KOplErrFontNotLoaded)
+    assert(font, KErrFontNotLoaded)
     -- Font keyword always resets text window size, position and text pos
     local charw, charh = runtime:iohandler().graphicsop("textsize", "0", font, style)
     local numcharsx = defaultWin.width // charw
@@ -651,7 +643,7 @@ end
 
 function AT(x, y)
     local screen = runtime:getGraphics().screen
-    assert(x > 0 and y > 0, KOplErrInvalidArgs)
+    assert(x > 0 and y > 0, KErrInvalidArgs)
     screen.cursorx = x - 1
     screen.cursory = y - 1
     -- TODO cursor
@@ -659,11 +651,11 @@ end
 
 function CLS()
     local prev = gIDENTITY()
-    gUSE(1)
+    gUSE(KDefaultWin)
     local state = runtime:saveGraphicsState()
     local screen = runtime:getGraphics().screen
     gAT(screen.x, screen.y)
-    gFILL(screen.w * screen.charw, screen.h * screen.charh, GraphicsMode.Clear)
+    gFILL(screen.w * screen.charw, screen.h * screen.charh, KgModeClear)
     runtime:restoreGraphicsState(state)
     gUSE(prev)
     runtime:flushGraphicsOps()
@@ -677,7 +669,7 @@ function PRINT(str)
     end
 
     local prevId = gIDENTITY()
-    gUSE(1)
+    gUSE(KDefaultWin)
     local state = runtime:saveGraphicsState()
     gUPDATE(false)
     local screen = runtime:getGraphics().screen
@@ -750,15 +742,11 @@ end
 function GET()
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
     local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
+    local evAddr = ev()[1]:addressOf()
     repeat
-        stat(KOplErrFilePending)
-        local requestTable = {
-            var = stat,
-            ev = ev:addressOf()
-        }
-        runtime:iohandler().asyncRequest("getevent", requestTable)
+        GETEVENTA32(stat, evAddr)
         runtime:waitForRequest(stat)
-    until ev()[1]() & 0x400 == 0
+    until ev()[1]() & KEvNotKeyMask == 0
 
     return keycodeToCharacterCode(ev()[1]())
 end
@@ -812,7 +800,7 @@ function GETEVENTA32(stat, ev)
         -- printf("Cancel complete\n")
     end
 
-    stat(KOplErrFilePending)
+    stat(KErrFilePending)
     stat:setOnAssignCallback(function(stat)
         -- printf("GetEvent stat set to %s\n", stat())
         runtime:setResource("getevent", nil)
@@ -838,7 +826,7 @@ end
 
 function EXIST(path)
     local ret = runtime:iohandler().fsop("exists", runtime:abs(path))
-    return ret == KOplErrExists
+    return ret == KErrExists
 end
 
 function MKDIR(path)
@@ -859,9 +847,9 @@ function IOOPEN(path, mode)
     path = runtime:abs(path)
     -- printf("IOOPEN %s mode=%d\n", path, mode)
 
-    local openMode = mode & IoOpenMode.OpenModeMask
-    assert(openMode ~= IoOpenMode.Append, "Don't support append yet!")
-    assert(openMode ~= IoOpenMode.Unique, "Don't support unique yet!")
+    local openMode = mode & KIoOpenModeMask
+    assert(openMode ~= KIoOpenModeAppend, "Don't support append yet!")
+    assert(openMode ~= KIoOpenModeUnique, "Don't support unique yet!")
 
     local ok, err = checkPathValid(path)
     if not ok then
@@ -870,20 +858,20 @@ function IOOPEN(path, mode)
 
     local data
 
-    if openMode == IoOpenMode.Open then
+    if openMode == KIoOpenModeOpen then
         data, err = runtime:iohandler().fsop("read", path)
         if not data then
             return nil, err, nil
         end
-    elseif openMode == IoOpenMode.Create then
+    elseif openMode == KIoOpenModeCreate then
         local err = runtime:iohandler().fsop("exists", path)
-        if err ~= KOplErrNotExists then
+        if err ~= KErrNotExists then
             printf("IOOPEN(%s) failed: %d\n", path, err)
             return nil, err
         end
-        mode = mode | IoOpenMode.WriteFlag -- Not sure about this...
-    elseif openMode == IoOpenMode.Replace then
-        mode = mode | IoOpenMode.WriteFlag -- Not sure about this...
+        mode = mode | KIoOpenAccessUpdate -- Not sure about this...
+    elseif openMode == KIoOpenModeReplace then
+        mode = mode | KIoOpenAccessUpdate -- Not sure about this...
     end
 
     local f = runtime:newFileHandle()
@@ -898,18 +886,18 @@ end
 function IOREAD(h, maxLen)
     local f = runtime:getFile(h)
     if not f then
-        return nil, KOplErrInvalidArgs
+        return nil, KErrInvalidArgs
     end
     assert(f.pos, "Cannot IOREAD a non-file handle!")
 
-    if f.mode & IoOpenMode.TextFlag > 0 then
+    if f.mode & KIoOpenFormatText > 0 then
         local startPos, endPos = f.data:find("\r?\n", f.pos)
         if startPos then
             local data = f.data:sub(f.pos, startPos - 1)
             f.pos = endPos + 1
             if #data > maxLen then
                 -- Yes returning both data and an error is a weird way to do things, it's what the API requires...
-                return data:sub(1, maxLen), KOplErrRecord
+                return data:sub(1, maxLen), KErrRecord
             end
             return data
         else
@@ -926,15 +914,15 @@ end
 function IOWRITE(h, data)
     local f = runtime:getFile(h)
     if not f then
-        return KOplErrInvalidArgs
+        return KErrInvalidArgs
     end
-    -- What's the right actual error code for this? KOplErrWrite? KOplErrReadOnly? KOplErrAccess?
-    assert(f.mode & IoOpenMode.WriteFlag > 0, "Cannot write to a readonly file handle!")
+    -- What's the right actual error code for this? KErrWrite? KOplErrReadOnly? KErrAccess?
+    assert(f.mode & KIoOpenAccessUpdate > 0, "Cannot write to a readonly file handle!")
     assert(f.pos, "Cannot IOWRITE a non-file handle!")
     -- Not the most efficient operation, oh well
     f.data = f.data:sub(1, f.pos - 1)..data..f.data:sub(f.pos + #data)
 
-    if f.mode & IoOpenMode.TextFlag > 0 then
+    if f.mode & KIoOpenFormatText > 0 then
         f.data = f.data.."\r\n"
     end
     f.pos = #f.data + 1
@@ -945,18 +933,18 @@ function IOSEEK(h, mode, offset)
     local f = runtime:getFile(h)
     if not f then
         printf("Invalid handle to IOSEEK!\n")
-        return KOplErrInvalidArgs
+        return KErrInvalidArgs
     end
-    assert(f.mode & IoOpenMode.SeekableFlag > 0, KOplErrInvalidArgs)
+    assert(f.mode & KIoOpenAccessRandom > 0, KErrInvalidArgs)
     assert(f.pos, "Cannot IOSEEK a non-file handle!")
     local newPos
-    if mode == 1 then
+    if mode == KIoSeekFromStart then
         newPos = 1 + offset
-    elseif mode == 2 then
+    elseif mode == KIoSeekFromEnd then
         newPos = 1 + #f.data + offset -- I think it's plus...?
-    elseif mode == 3 then
+    elseif mode == KIoSeekFromCurrent then
         newPos = self.pos + offset
-    elseif mode == 6 then
+    elseif mode == KIoSeekFirstRecord then
         newPos = 1
     else
         error("Unknown mode to IOSEEK!")
@@ -974,7 +962,7 @@ function IOCLOSE(h)
     local err = KErrNone
     local f = runtime:getFile(h)
     if f then
-        if f.pos and f.mode & IoOpenMode.WriteFlag > 0 then
+        if f.pos and f.mode & KIoOpenAccessUpdate > 0 then
             err = runtime:iohandler().fsop("write", f.path, f.data)
         end
         if f.timer and f.stat and f.stat:isPending() then
@@ -983,7 +971,7 @@ function IOCLOSE(h)
         end
         runtime:closeFile(h)
     else
-        err = KOplErrInvalidArgs
+        err = KErrInvalidArgs
     end
     return err
 end
@@ -994,7 +982,7 @@ local KFnTimerAbsolute = 2
 function IOA(h, fn, stat, a, b)
     local f = runtime:getFile(h)
     if not f or not f.timer then
-        return KOplErrInvalidArgs
+        return KErrInvalidArgs
     end
     
     if f.timer then
@@ -1002,12 +990,12 @@ function IOA(h, fn, stat, a, b)
         if fn == KFnTimerRelative then
             -- relative timer period is 1/10 second, and period should be in ms
             local period = a() * 100
-            stat(KOplErrFilePending)
+            stat(KErrFilePending)
             runtime:iohandler().asyncRequest("after", { var = stat, period = period })
             f.stat = stat
         elseif fn == KFnTimerAbsolute then
             -- a is time in seconds since epoch
-            stat(KOplErrFilePending)
+            stat(KErrFilePending)
             runtime:iohandler().asyncRequest("at", { var = stat, time = a() })
         else
             error("Unknown IOA timer operation")
@@ -1061,7 +1049,7 @@ function checkPathValid(path)
         toCheck = path:sub(3)
     end
     if toCheck:match('[:"*?/]') then
-        return nil, KOplErrName
+        return nil, KErrName
     end
 
     return path

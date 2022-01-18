@@ -101,9 +101,9 @@ function TBarSetTitle(runtime, name)
     gUSE(tbWinId)
     gAT(1, KTbBtTop - 8)
     gFONT(KTbTitleFont)
-    local align = Align.Center
+    local align = KgPrintBCentredAligned
     if gTWIDTH(name) > KTbWidth - 2 then
-        align = Align.Left
+        align = KgPrintBLeftAligned
     end
     gPRINTB(name, KTbWidth - 2, align, 6, 6)
     gUSE(prevId)
@@ -137,12 +137,12 @@ local function TBarOffer(runtime, winId, ptrType, ptrX, ptrY)
     end
 
     if butId == KTitleButtonId then
-        if ptrType == KPenDown then
+        if ptrType == KEvPtrPenDown then
             runtime:DisplayTaskList()
         end
         return
     elseif butId == KClockButtonId then
-        if ptrType == KPenDown then
+        if ptrType == KEvPtrPenDown then
             local fmt = runtime:LCClockFormat()
             LCSetClockFormat(fmt == 0 and 1 or 0)
         end
@@ -153,7 +153,7 @@ local function TBarOffer(runtime, winId, ptrType, ptrX, ptrY)
         local gupdateState = gUPDATE(false)
         local prevId = gIDENTITY()
         local procToCall = nil
-        if ptrType == KPenUp then
+        if ptrType == KEvPtrPenUp then
             if buttons[pressedButtonId].isPushedDown then
                 buttons[pressedButtonId].isPushedDown = false
                 drawButton(runtime, pressedButtonId)
@@ -166,7 +166,7 @@ local function TBarOffer(runtime, winId, ptrType, ptrX, ptrY)
                 procToCall = string.upper("cmd" .. (shifted and "S" or "")..shortcut.."%")
             end
             pressedButtonId = nil
-        elseif ptrType == KPenDrag then
+        elseif ptrType == KEvPtrDrag then
             if butId ~= pressedButtonId and buttons[pressedButtonId].isPushedDown then
                 buttons[pressedButtonId].isPushedDown = false
                 drawButton(runtime, pressedButtonId)
@@ -181,7 +181,7 @@ local function TBarOffer(runtime, winId, ptrType, ptrX, ptrY)
             runtime:callProc(procToCall)
         end
         return -1
-    elseif butId and ptrType == KPenDown then
+    elseif butId and ptrType == KEvPtrPenDown then
         pressedButtonId = butId
         buttons[butId].isPushedDown = true
         local prevId = gIDENTITY()

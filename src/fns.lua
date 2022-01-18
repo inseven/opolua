@@ -269,7 +269,7 @@ function Addr(stack, runtime) -- 0x00
 end
 
 function IllegalFuncOpCode(stack, runtime)
-    error(KOplErrIllegal)
+    error(KErrIllegal)
 end
 
 function Asc(stack, runtime) -- 0x01
@@ -484,7 +484,7 @@ function IoOpenUnique(stack, runtime) -- 0x25
 end
 
 function gCreate(stack, runtime) -- 0x26
-    stack:push(0)
+    stack:push(KgCreate2GrayMode)
     gCreateEnhanced(stack, runtime)
 end
 
@@ -993,7 +993,7 @@ end
 
 function LeftStr(stack, runtime) -- 0xCA
     local numChars = stack:pop()
-    assert(numChars >= 0, KOplErrInvalidArgs)
+    assert(numChars >= 0, KErrInvalidArgs)
     local str = stack:pop()
     stack:push(string.sub(str, 1, numChars))
 end
@@ -1006,8 +1006,8 @@ function MidStr(stack, runtime) -- 0xCC
     local len = stack:pop()
     local offset = stack:pop()
     local str = stack:pop()
-    assert(offset >= 1, KOplErrInvalidArgs)
-    assert(len >= 0, KOplErrInvalidArgs)
+    assert(offset >= 1, KErrInvalidArgs)
+    assert(len >= 0, KErrInvalidArgs)
     local result = str:sub(offset, offset + len - 1)
     -- printf("MID$('%s', %d, %d)='%s'\n", str, offset, len, result)
     stack:push(result)
@@ -1029,7 +1029,7 @@ local months = {
 }
 
 function MonthStr(stack, runtime) -- 0xCD
-    stack:push(assert(months[stack:pop()], KOplErrInvalidArgs))
+    stack:push(assert(months[stack:pop()], KErrInvalidArgs))
 end
 
 function NumStr(stack, runtime) -- 0xCE
@@ -1060,7 +1060,7 @@ end
 
 function RightStr(stack, runtime) -- 0xD1
     local numChars = stack:pop()
-    assert(numChars >= 0, KOplErrInvalidArgs)
+    assert(numChars >= 0, KErrInvalidArgs)
     local str = stack:pop()
     if numChars == 0 then
         stack:push("")

@@ -279,7 +279,7 @@ function PlaySound(stack, runtime) -- 38
 end
 
 function PlaySoundA(stack, runtime) -- 39
-    assert(runtime:getResource("sound") == nil, KOplErrInUse)
+    assert(runtime:getResource("sound") == nil, KErrInUse)
     local var = stack:pop():dereference()
     local volume = stack:pop()
     local file = runtime:abs(stack:pop())
@@ -351,7 +351,7 @@ end
 function UnLoadRsc(stack, runtime) -- 44
     local h = stack:pop()
     local rsc = runtime:getResource("rsc")
-    assert(rsc and rsc[h], KOplErrNotExists)
+    assert(rsc and rsc[h], KErrNotExists)
     for id, val in pairs(rsc[h]) do
         rsc.resources[id] = nil
     end
@@ -363,7 +363,7 @@ function ReadRsc(stack, runtime) -- 45
     local id = stack:pop()
     local rsc = runtime:getResource("rsc")
     local result = rsc and rsc.resources[id]
-    assert(result, KOplErrNotExists)
+    assert(result, KErrNotExists)
     stack:push(result)
 end
 
@@ -371,7 +371,7 @@ function ReadRscLong(stack, runtime) -- 46
     local id = stack:pop()
     local rsc = runtime:getResource("rsc")
     local result = rsc and rsc.resources[id]
-    assert(result, KOplErrNotExists)
+    assert(result, KErrNotExists)
     assert(#result == 4, "Bad resource length for ReadRscLong!")
     result = string.unpack("<i4", result)
     stack:push(result)

@@ -324,13 +324,6 @@ struct Graphics {
         case horizontalBar = 0x2002A
     }
 
-    enum Corner: Int {
-        case topLeft = 0
-        case bottomLeft = 1
-        case topRight = 2
-        case bottomRight = 3
-    }
-
     struct DrawCommand {
         enum OpType {
             case fill(Size)

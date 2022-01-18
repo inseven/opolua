@@ -199,7 +199,7 @@ function Runtime:unloadModule(path)
         end
     end
     printf("No loaded module found for %s!\n", path)
-    error(KOplErrNotExists)
+    error(KErrNotExists)
 end
 
 function Runtime:findProc(procName)
@@ -443,7 +443,7 @@ function Runtime:getGraphics()
     if not self.graphics then
         self.graphics = {}
         local w, h, mode = self.ioh.getScreenInfo()
-        self:newGraphicsContext(1, w, h, true, mode)
+        self:newGraphicsContext(KDefaultWin, w, h, true, mode)
         self:FONT(KFontCourierNormal11, 0)
         self.graphics.sprites = {}
     end
@@ -463,7 +463,7 @@ function Runtime:setGraphicsContext(id)
     -- printf("setGraphicsContext %d\n", id)
     local graphics = self:getGraphics()
     local context = graphics[id]
-    assert(context, KOplErrDrawNotOpen)
+    assert(context, KErrDrawNotOpen)
     graphics.current = context
 end
 
@@ -562,7 +562,7 @@ function Runtime:getGraphicsAutoFlush()
 end
 
 function Runtime:openDb(logName, tableSpec, variables, op)
-    assert(self.dbs[logName] == nil, KOplErrOpen)
+    assert(self.dbs[logName] == nil, KErrOpen)
     local path, tableName, fields = database.parseTableSpec(tableSpec)
     path = self:abs(path)
     if fields == nil then
@@ -588,7 +588,7 @@ function Runtime:openDb(logName, tableSpec, variables, op)
     for _, db in pairs(self.dbs) do
         if oplpath.canon(db:getPath()) == cpath then
             if not readonly or db:isWriteable() then
-                error(KOplErrInUse)
+                error(KErrInUse)
             end
         end
     end
@@ -598,7 +598,7 @@ function Runtime:openDb(logName, tableSpec, variables, op)
     local dbData, err = self.ioh.fsop("read", path)
     if dbData then
         db:load(dbData)
-    elseif err == KOplErrNotExists and op == "Create" then
+    elseif err == KErrNotExists and op == "Create" then
         -- This is fine
     else
         error(err)
@@ -615,7 +615,7 @@ end
 
 function Runtime:getDb(logName)
     local db = self.dbs[logName or self.dbs.current]
-    assert(db, KOplErrClosed)
+    assert(db, KErrClosed)
     return db
 end
 
@@ -687,7 +687,7 @@ function newRuntime(handler)
     }
 
     local opl = newModuleInstance("opl")
-    -- And make all the opl functions accessible as eg runtime:gUSE(1)
+    -- And make all the opl functions accessible as eg runtime:gCLS()
     for name, fn in pairs(opl) do
         if type(fn) == "function" then
             assert(rt[name] == nil, "Overlapping function names between Runtime and opl.lua!")
@@ -971,7 +971,7 @@ function Runtime:loadModule(path)
 
     if not ok then
         printf("Module %s (from %s) not found\n", modName, path)
-        error(KOplErrNoMod)
+        error(KErrNoMod)
     end
 
     local procTable = {}
@@ -1276,7 +1276,7 @@ function installSis(data, iohandler)
             -- extractFile(file, langIdx, dest)
             local path = file.dest:gsub("^.:\\", "C:\\")
             local dir = oplpath.dirname(path)
-            if iohandler:fsop("isdir", dir) == KOplErrNotExists then
+            if iohandler:fsop("isdir", dir) == KErrNotExists then
                 rt:MKDIR(dir)
             end
             local data = file.data

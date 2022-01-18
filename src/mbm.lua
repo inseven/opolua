@@ -388,7 +388,7 @@ function parseMbmHeader(data)
     assert(uid1 == KUidDirectFileStore, "Bad uid1 in MBM file!")
     -- UID2 should be KUidMultiBitmapFileImage, and usually is, but of course
     -- there are some otherwise-valid MBMs out there where it isn't (and is eg
-    -- KUidExternalOplFile)
+    -- KUidOplFile)
     -- assert(uid2 == KUidMultiBitmapFileImage, "Bad uid2 in MBM file!")
 
     local numBitmaps, pos = string_unpack("<I4", data, 1 + trailerOffset)

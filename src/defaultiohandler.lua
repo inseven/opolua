@@ -40,7 +40,7 @@ function readLine(escapeShouldErrorEmptyInput)
     -- We don't support pressing esc to clear the line, oh well
     if escapeShouldErrorEmptyInput and line:byte(1, 1) == 27 then
         -- Close enough...
-        error(KOplErrEsc)
+        error(KErrEsc)
     end
     return line
 end
@@ -159,7 +159,7 @@ function graphicsop(cmd, ...)
 end
 
 function getScreenInfo()
-    return 640, 240, DrawableMode.Gray4
+    return 640, 240, KgCreate4GrayMode
 end
 
 local fsmaps = {}
@@ -180,9 +180,9 @@ end
 
 local function fileErrToOpl(errno)
     if errno == 2 then -- ENOENT = 2
-        return KOplErrNotExists
+        return KErrNotExists
     else
-        return KOplErrNotReady
+        return KErrNotReady
     end
 end
 
@@ -193,9 +193,9 @@ function fsop(cmd, path, ...)
         local f = io.open(filename, "r")
         if f then
             f:close()
-            return KOplErrExists
+            return KErrExists
         else
-            return KOplErrNotExists
+            return KErrNotExists
         end
     elseif cmd == "delete" then
         printf("delete %s\n", filename)
@@ -208,7 +208,7 @@ function fsop(cmd, path, ...)
         if ret then
             return KErrNone
         else
-            return KOplErrNotReady
+            return KErrNotReady
         end
     elseif cmd == "write" then
         printf("write %s\n", filename)
