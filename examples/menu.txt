@@ -1,24 +1,57 @@
+INCLUDE "const.oph"
+
 PROC main:
-	local k%, m%
-	m% = 1
+	GLOBAL selected%
+	LOCAL k%, m%
+	selected% = 1
 	DO
-		PRINT "Press a key..."
+		PRINT "Press MENU, m or q"
 		k% = GET
 		PRINT "Pressed key", k%
-		IF k% = 290
-			m% = menu%:
+		IF k% = %m
+			m% = simplemenu%:
+		ELSEIF k% = 290
+			m% = bigmenu%:
 		ENDIF
-	UNTIL m% = %q
+
+		PRINT "Menu returned", m%, "selected", selected%
+
+	UNTIL k% = %q
 ENDP
 
-PROC menu%:
-	LOCAL x%, ret%
-	x% = 2
+PROC simplemenu%:
+	LOCAL ret%
 	mINIT
 	mCASC "More", "Explode", 1, "Fly", 2
 	mCARD "File", "More>", -16, "Quit", %q
 	mCARD "Edit", "Cut", %x, "Copy", %c, "Paste", %v
-	ret% = MENU(x%)
-	PRINT "Menu selected:", ret%, "highlight=", x%
+	ret% = MENU(selected%)
 	RETURN ret%
+ENDP
+
+PROC bigmenu%:
+	mINIT
+	mCASC "Create new", "File...", %n, "Folder...", %N
+	mCASC "Close", "File", %e, "Folder", %z, "All files", %E
+	mCASC "List", "List open files...", %j, "List recent files...", %J
+	mCARD "File", "Open", %o, "Create new>", 16, "Close>", -17, "Delete...", %d, "Rename...", %r, "Properties...", -%p, "List>", 18, "Browse folders...", %g
+
+	mCASC "Find files", "Find files...", %f, "Find again...", %F
+	mCARD "Edit", "Cut (move)", %x, "Copy", %c, "Paste", %v, "Clear clipboard", %X, "Select all", -%a, "Set bookmark", %B, "Go to bookmark", -%b, "Find files>", 19
+
+	mCASC "Current disk", "C “Internal”", %C, "D “CF_CARD”", %D
+	mCARD "Disk", "Copy disk...", %y, "Format disk...", %R, "Name disk...", -%G, "Current disk>", %q
+
+	mCASC "Title position", "Top of columns", 21 + KMenuOptionStart% + KMenuSymbolOn%, "Left of columns", 22 + KMenuOptionEnd%
+	mCASC "Column width", "Wider", %w, "Narrower", %W
+	mCASC "Sort files", "By name", 23 + KMenuOptionStart% + KMenuSymbolOn%, "By type", 24 + KMenuOptionMiddle%, "By size", 25 + KMenuOptionMiddle%, "By date", 26 + KMenuOptionEnd%
+	mCASC "Show file details", "None", 27 + KMenuOptionStart%, "Size", 28 + KMenuOptionMiddle%, "Date", 29 + KMenuOptionMiddle%, "Size & date", 30 + KMenuOptionMiddle%, "As for ‘Sort’", 31 + KMenuOptionEnd% + KMenuSymbolOn%
+	mCARD "View", "Zoom in", %m, "Zoom out", -%M, "Show disk gauge", %u + $2800, "Show toolbar", %t + $2800, "Title position>", -%T, "Column width>", 20, "Sort files>", %i, "Show file details>", 32
+
+	mCARD "Information", "Owner...", -%O, "Machine...", %Q, "Memory...", %I, "Disk...", %K, "Battery", -%P, "About EPOC...", %h
+
+	mCASC "Infrared", "Send", 3, "Receive", 4
+	mCARD "Tools", "Preferences...", %k, "Control panel...", %s, "Re-install sample files...", -%S, "Link to desktop...", %l, "Infrared>", -1, "Switch off", 2
+
+	RETURN MENU(selected%)
 ENDP
