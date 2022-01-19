@@ -28,7 +28,7 @@ protocol DataSourceDelegate: AnyObject {
 
 }
 
-class LibraryViewController: UITableViewController {
+class LibraryViewController: UIViewController {
 
     enum Section {
         case examples
@@ -101,6 +101,23 @@ class LibraryViewController: UITableViewController {
     var taskManager: TaskManager
     var dataSource: LibraryDataSource!
 
+    lazy var tableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .insetGrouped)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.delegate = self
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: Self.cellIdentifier)
+        dataSource = LibraryDataSource(tableView: tableView) { tableView, indexPath, itemIdentifier in
+            let location = itemIdentifier
+            let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
+            cell.textLabel?.text = location.name
+            cell.imageView?.image = UIImage(systemName: "folder")
+            cell.accessoryType = .disclosureIndicator
+            return cell
+        }
+        dataSource.delegate = self
+        return tableView
+    }()
+
     lazy var addBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
                                             style: .plain,
@@ -120,21 +137,17 @@ class LibraryViewController: UITableViewController {
     init(settings: Settings, taskManager: TaskManager) {
         self.settings = settings
         self.taskManager = taskManager
-        super.init(style: .insetGrouped)
+        super.init(nibName: nil, bundle: nil)
         title = "OPL"
         navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.leftBarButtonItem = aboutBarButtonItem
-        tableView.dataSource = nil
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: Self.cellIdentifier)
-        dataSource = LibraryDataSource(tableView: tableView) { tableView, indexPath, itemIdentifier in
-            let location = itemIdentifier
-            let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
-            cell.textLabel?.text = location.name
-            cell.imageView?.image = UIImage(systemName: "folder")
-            cell.accessoryType = .disclosureIndicator
-            return cell
-        }
-        dataSource.delegate = self
+        view.addSubview(tableView)
+        NSLayoutConstraint.activate([
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
     }
 
     required init?(coder: NSCoder) {
@@ -180,7 +193,29 @@ class LibraryViewController: UITableViewController {
         present(documentPicker, animated: true)
     }
 
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+
+
+    func addUrl(_ url: URL) {
+        do {
+            try settings.addLocation(url)
+            reload()
+        } catch {
+            present(error: error)
+        }
+    }
+
+}
+
+//extension LibraryViewController: UITableViewDataSource {
+//
+//    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//    }
+//
+//}
+
+extension LibraryViewController: UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let item = dataSource.itemIdentifier(for: indexPath) else {
             return
         }
@@ -194,15 +229,6 @@ class LibraryViewController: UITableViewController {
         } catch {
             present(error: error)
             tableView.deselectRow(at: indexPath, animated: true)
-        }
-    }
-
-    func addUrl(_ url: URL) {
-        do {
-            try settings.addLocation(url)
-            reload()
-        } catch {
-            present(error: error)
         }
     }
 
