@@ -22,7 +22,7 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-class LibraryViewController: UIViewController {
+class LibraryViewController: UICollectionViewController {
 
     enum Section {
         case examples
@@ -58,14 +58,35 @@ class LibraryViewController: UIViewController {
     }
 
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
-
-    class LibraryDataSource: UICollectionViewDiffableDataSource<Section, Item> {}
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
 
     var settings: Settings
     var taskManager: TaskManager
-    var dataSource: LibraryDataSource!
+    var dataSource: DataSource!
 
-    lazy var collectionView: UICollectionView = {
+    lazy var addBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(addTapped(sender:)))
+        return barButtonItem
+    }()
+
+    lazy var aboutBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(title: "Settings",
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(settingsTapped(sender:)))
+        return barButtonItem
+    }()
+
+    init(settings: Settings, taskManager: TaskManager) {
+        self.settings = settings
+        self.taskManager = taskManager
+        super.init(collectionViewLayout: UICollectionViewCompositionalLayout.list(using: UICollectionLayoutListConfiguration(appearance: .insetGrouped)))
+        title = "OPL"
+        navigationItem.rightBarButtonItem = addBarButtonItem
+        navigationItem.leftBarButtonItem = aboutBarButtonItem
 
         var configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
         configuration.headerMode = .supplementary
@@ -81,11 +102,7 @@ class LibraryViewController: UIViewController {
             action.backgroundColor = .systemRed
             return UISwipeActionsConfiguration(actions: [action])
         }
-
-        let collectionViewLayout = UICollectionViewCompositionalLayout.list(using: configuration)
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.delegate = self
+        collectionView.collectionViewLayout = UICollectionViewCompositionalLayout.list(using: configuration)
 
         let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item> { cell, _, item in
             var configuration = cell.defaultContentConfiguration()
@@ -110,7 +127,7 @@ class LibraryViewController: UIViewController {
             supplementaryView.contentConfiguration = configuration
         }
 
-        dataSource = LibraryDataSource(collectionView: collectionView) { collectionView, indexPath, item in
+        dataSource = DataSource(collectionView: collectionView) { collectionView, indexPath, item in
             return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
         }
         dataSource.supplementaryViewProvider = { collectionView, elementKind, indexPath in
@@ -122,42 +139,6 @@ class LibraryViewController: UIViewController {
             }
         }
 
-        collectionView.alwaysBounceVertical = true
-        collectionView.preservesSuperviewLayoutMargins = true
-        collectionView.insetsLayoutMarginsFromSafeArea = true
-        return collectionView
-    }()
-
-    lazy var addBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(addTapped(sender:)))
-        return barButtonItem
-    }()
-
-    lazy var aboutBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(title: "Settings",
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(settingsTapped(sender:)))
-        return barButtonItem
-    }()
-
-    init(settings: Settings, taskManager: TaskManager) {
-        self.settings = settings
-        self.taskManager = taskManager
-        super.init(nibName: nil, bundle: nil)
-        title = "OPL"
-        navigationItem.rightBarButtonItem = addBarButtonItem
-        navigationItem.leftBarButtonItem = aboutBarButtonItem
-        view.addSubview(collectionView)
-        NSLayoutConstraint.activate([
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
     }
 
     required init?(coder: NSCoder) {
@@ -217,11 +198,7 @@ class LibraryViewController: UIViewController {
         }
     }
 
-}
-
-extension LibraryViewController: UICollectionViewDelegate {
-
-    func collectionView(_ collectionView: UICollectionView,
+    override func collectionView(_ collectionView: UICollectionView,
                         contextMenuConfigurationForItemAt indexPath: IndexPath,
                         point: CGPoint) -> UIContextMenuConfiguration? {
         guard let item = dataSource.itemIdentifier(for: indexPath), !item.readonly else {
@@ -239,7 +216,7 @@ extension LibraryViewController: UICollectionViewDelegate {
         }
     }
 
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let item = dataSource.itemIdentifier(for: indexPath) else {
             collectionView.deselectItem(at: indexPath, animated: true)
             return
