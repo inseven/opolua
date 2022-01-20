@@ -29,33 +29,53 @@ protocol TaskManagerObserver: NSObject {
 
 }
 
+/**
+ Called on the main queue.
+ */
+protocol TaskManagerDelegate: AnyObject {
+
+    func foregroundProgram(_ program: Program)
+
+}
+
 class TaskManager: NSObject {
 
-    private var programs: [URL: Program] = [:]
+    private var programsByUrl: [URL: Program] = [:]
     private var observers: [TaskManagerObserver] = []
+
+    weak var delegate: TaskManagerDelegate?
+
+    var programs: [Program] {
+        return Array(programsByUrl.values)
+    }
 
     // TODO: Consider whether this should be responsible for restarting in a different mode?
     func program(for url: URL) -> Program {
         dispatchPrecondition(condition: .onQueue(.main))
-        if let program = programs[url] {
+        if let program = programsByUrl[url] {
             return program
         }
         // TODO: Lifecycle delegate.
         let program = Program(url: url)
         program.addObserver(self)
-        programs[url] = program
+        programsByUrl[url] = program
         notifyObservers()
         return program
     }
 
     func isRunning(_ url: URL) -> Bool {
         dispatchPrecondition(condition: .onQueue(.main))
-        return programs[url] != nil
+        return programsByUrl[url] != nil
+    }
+
+    func foregroundProgram(_ program: Program) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        delegate?.foregroundProgram(program)
     }
 
     func quit(_ url: URL) {
         dispatchPrecondition(condition: .onQueue(.main))
-        guard let program = programs[url] else {
+        guard let program = programsByUrl[url] else {
             return
         }
         program.quit()
@@ -85,14 +105,14 @@ extension TaskManager: ProgramLifecycleObserver {
     func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
         dispatchPrecondition(condition: .onQueue(.main))
         print("program did finish")
-        programs.removeValue(forKey: program.url)
+        programsByUrl.removeValue(forKey: program.url)
         notifyObservers()
     }
 
     func program(_ program: Program, didEncounterError error: Error) {
         dispatchPrecondition(condition: .onQueue(.main))
         print("program did encouter error")
-        programs.removeValue(forKey: program.url)
+        programsByUrl.removeValue(forKey: program.url)
         notifyObservers()
     }
 

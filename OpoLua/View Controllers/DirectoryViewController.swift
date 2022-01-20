@@ -280,7 +280,7 @@ class DirectoryViewController : UIViewController {
 
         let runAction = UIAction(title: "Run") { action in
             let program = self.taskManager.program(for: url)
-            let viewController = ProgramViewController(settings: self.settings, program: program)
+            let viewController = ProgramViewController(settings: self.settings, taskManager: self.taskManager, program: program)
             self.navigationController?.pushViewController(viewController, animated: true)
         }
         actions.append(runAction)
@@ -288,7 +288,7 @@ class DirectoryViewController : UIViewController {
         let runAsActions = Device.allCases.map { device in
             UIAction(title: device.name) { action in
                 let program = Program(url: url, device: device)
-                let viewController = ProgramViewController(settings: self.settings, program: program)
+                let viewController = ProgramViewController(settings: self.settings, taskManager: self.taskManager, program: program)
                 self.navigationController?.pushViewController(viewController, animated: true)
             }
         }
@@ -340,11 +340,11 @@ extension DirectoryViewController: UICollectionViewDelegate {
         switch item.type {
         case .object, .application:
             let program = taskManager.program(for: item.programUrl!)
-            let viewController = ProgramViewController(settings: settings, program: program)
+            let viewController = ProgramViewController(settings: settings, taskManager: taskManager, program: program)
             navigationController?.pushViewController(viewController, animated: true)
         case .system:
             let program = taskManager.program(for: item.programUrl!)
-            let viewController = ProgramViewController(settings: settings, program: program)
+            let viewController = ProgramViewController(settings: settings, taskManager: taskManager, program: program)
             navigationController?.pushViewController(viewController, animated: true)
         case .directory:
             pushDirectoryViewController(for: item.url)

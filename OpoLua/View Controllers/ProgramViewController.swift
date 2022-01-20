@@ -44,6 +44,7 @@ class ProgramViewController: UIViewController {
     ]
 
     var settings: Settings
+    var taskManager: TaskManager
     var program: Program
 
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
@@ -115,8 +116,9 @@ class ProgramViewController: UIViewController {
         return barButtonItem
     }()
 
-    init(settings: Settings, program: Program) {
+    init(settings: Settings, taskManager: TaskManager, program: Program) {
         self.settings = settings
+        self.taskManager = taskManager
         self.program = program
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
@@ -358,8 +360,17 @@ extension ProgramViewController: DrawableViewControllerDelegate {
 extension ProgramViewController: ProgramDelegate {
 
     func programDidRequestBackground(_ program: Program) {
+        program.sendBackgroundEvent()
         DispatchQueue.main.async {
             self.navigationController?.popViewController(animated: true)
+        }
+    }
+
+    func programDidRequestTaskList(_ program: Program) {
+        DispatchQueue.main.async {
+            let taskManagerViewController = TaskManagerViewController(taskManager: self.taskManager)
+            let navigationController = UINavigationController(rootViewController: taskManagerViewController)
+            self.present(navigationController, animated: true)
         }
     }
 

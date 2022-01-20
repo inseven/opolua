@@ -59,11 +59,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             self.window?.tintColor = self.settings.theme.color
         }
 
+        taskManager.delegate = self
+
         return true
     }
 
-    func setTheme(_ theme: Settings.Theme) {
-        window?.tintColor = theme.color
+    func setDetailViewController(_ viewController: UIViewController) {
+        if splitViewController.isCollapsed {
+            guard let navigationController = splitViewController.viewControllers[0] as? UINavigationController else {
+                return
+            }
+            navigationController.pushViewController(viewController, animated: true)
+        } else {
+            // N.B. Somewhat counterintuitively we need to place our view controller in a navigation view controller
+            // to ensure that it replaces the top level detail view controller, rather than always pushing onto it.
+            let navigationController = UINavigationController(rootViewController: viewController)
+            splitViewController.setViewController(navigationController, for: .secondary)
+        }
     }
     
 }
@@ -113,18 +125,20 @@ extension AppDelegate: UISplitViewControllerDelegate {
 
 extension AppDelegate: LibraryViewControllerDelegate {
 
-    func libraryViewController(_ libraryViewController: LibraryViewController, presentViewController viewController: UIViewController) {
-        if splitViewController.isCollapsed {
-            guard let navigationController = splitViewController.viewControllers[0] as? UINavigationController else {
-                return
-            }
-            navigationController.pushViewController(viewController, animated: true)
-        } else {
-            // N.B. Somewhat counterintuitively we need to place our view controller in a navigation view controller
-            // to ensure that it replaces the top level detail view controller, rather than always pushing onto it.
-            let navigationController = UINavigationController(rootViewController: viewController)
-            splitViewController.setViewController(navigationController, for: .secondary)
-        }
+    func libraryViewController(_ libraryViewController: LibraryViewController,
+                               presentViewController viewController: UIViewController) {
+        setDetailViewController(viewController)
     }
     
+}
+
+extension AppDelegate: TaskManagerDelegate {
+
+    func foregroundProgram(_ program: Program) {
+        let programViewController = ProgramViewController(settings: settings,
+                                                          taskManager: taskManager,
+                                                          program: program)
+        setDetailViewController(programViewController)
+    }
+
 }

@@ -41,6 +41,7 @@ protocol ProgramDelegate: AnyObject {
     func dialog(_ d: Dialog) -> Dialog.Result
     func menu(_ m: Menu.Bar) -> Menu.Result
     func programDidRequestBackground(_ program: Program)
+    func programDidRequestTaskList(_ program: Program)
 
 }
 
@@ -452,8 +453,9 @@ extension Program: OpoIoHandler {
     }
 
     func displayTaskList() {
-        // TODO
+        delegate?.programDidRequestTaskList(self)
     }
+
     func setForeground() {
         // TODO
     }
