@@ -59,21 +59,7 @@ class LibraryViewController: UIViewController {
 
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
 
-    class LibraryDataSource: UICollectionViewDiffableDataSource<Section, Item> {
-
-//        override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-//            guard let section = sectionIdentifier(for: section) else {
-//                return nil
-//            }
-//            switch section {
-//            case .examples:
-//                return "Examples"
-//            case .locations:
-//                return "Locations"
-//            }
-//        }
-
-    }
+    class LibraryDataSource: UICollectionViewDiffableDataSource<Section, Item> {}
 
     class HeaderView: UICollectionReusableView {
 
