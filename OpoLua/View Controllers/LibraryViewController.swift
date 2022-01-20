@@ -22,6 +22,12 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
+protocol LibraryViewControllerDelegate: AnyObject {
+
+    func libraryViewController(_ libraryViewController: LibraryViewController, presentViewController viewController: UIViewController)
+
+}
+
 class LibraryViewController: UICollectionViewController {
 
     enum Section {
@@ -63,6 +69,7 @@ class LibraryViewController: UICollectionViewController {
     var settings: Settings
     var taskManager: TaskManager
     var dataSource: DataSource!
+    var delegate: LibraryViewControllerDelegate?
 
     lazy var addBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
@@ -73,7 +80,7 @@ class LibraryViewController: UICollectionViewController {
     }()
 
     lazy var aboutBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(title: "Settings",
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "gear"),
                                             style: .plain,
                                             target: self,
                                             action: #selector(settingsTapped(sender:)))
@@ -88,21 +95,7 @@ class LibraryViewController: UICollectionViewController {
         navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.leftBarButtonItem = aboutBarButtonItem
 
-        var configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
-        configuration.headerMode = .supplementary
-        configuration.trailingSwipeActionsConfigurationProvider = { [unowned self] indexPath in
-            guard let item = self.dataSource.itemIdentifier(for: indexPath), !item.readonly else {
-                return nil
-            }
-            let action = UIContextualAction(style: .normal, title: "Done!") { action, view, completion in
-                deleteLocation(item.location)
-                completion(true)
-            }
-            action.title = "Delete"
-            action.backgroundColor = .systemRed
-            return UISwipeActionsConfiguration(actions: [action])
-        }
-        collectionView.collectionViewLayout = UICollectionViewCompositionalLayout.list(using: configuration)
+        collectionView.collectionViewLayout = makeLayout()
 
         let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item> { cell, _, item in
             var configuration = cell.defaultContentConfiguration()
@@ -146,8 +139,8 @@ class LibraryViewController: UICollectionViewController {
     }
 
     override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(true)
-        dataSource.apply(snapshot(), animatingDifferences: false)
+        super.viewDidAppear(animated)
+        dataSource.apply(snapshot(), animatingDifferences: animated)
     }
 
     @objc func settingsTapped(sender: UIBarButtonItem) {
@@ -169,6 +162,25 @@ class LibraryViewController: UICollectionViewController {
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
         snapshot.appendItems(locations, toSection: .locations)
         return snapshot
+    }
+
+    func makeLayout() -> UICollectionViewLayout {
+        let appearance: UICollectionLayoutListConfiguration.Appearance = (splitViewController?.isCollapsed ?? true) ? .insetGrouped : .sidebar
+        var configuration = UICollectionLayoutListConfiguration(appearance: appearance)
+        configuration.headerMode = .supplementary
+        configuration.trailingSwipeActionsConfigurationProvider = { [unowned self] indexPath in
+            guard let item = self.dataSource.itemIdentifier(for: indexPath), !item.readonly else {
+                return nil
+            }
+            let action = UIContextualAction(style: .normal, title: "Done!") { action, view, completion in
+                deleteLocation(item.location)
+                completion(true)
+            }
+            action.title = "Delete"
+            action.backgroundColor = .systemRed
+            return UISwipeActionsConfiguration(actions: [action])
+        }
+        return UICollectionViewCompositionalLayout.list(using: configuration)
     }
 
     @objc func addTapped(sender: UIBarButtonItem) {
@@ -196,6 +208,10 @@ class LibraryViewController: UICollectionViewController {
         } catch {
             present(error: error)
         }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        collectionView.collectionViewLayout = makeLayout()
     }
 
     override func collectionView(_ collectionView: UICollectionView,
@@ -227,7 +243,7 @@ class LibraryViewController: UICollectionViewController {
                                                          taskManager: taskManager,
                                                          directory: directory,
                                                          title: item.name)
-            navigationController?.pushViewController(viewController, animated: true)
+            delegate?.libraryViewController(self, presentViewController: viewController)
         } catch {
             present(error: error)
             collectionView.deselectItem(at: indexPath, animated: true)

@@ -21,6 +21,7 @@
 		D8647C702793540500DCC261 /* TaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8647C6F2793540500DCC261 /* TaskManager.swift */; };
 		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
 		D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724F12771672A009C7246 /* InterpreterThread.swift */; };
+		D86E428A2799C0CC00D5596D /* UISplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86E42892799C0CC00D5596D /* UISplitViewController.swift */; };
 		D86FBAB5278C74A3003DF611 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86FBAB4278C74A3003DF611 /* AboutView.swift */; };
 		D86FBAB7278C75E1003DF611 /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D86FBAB6278C75E1003DF611 /* Diligence */; };
 		D86FBABA278C76FB003DF611 /* Lua.txt in Resources */ = {isa = PBXBuildFile; fileRef = D86FBAB9278C76FB003DF611 /* Lua.txt */; };
@@ -198,6 +199,7 @@
 		D8647C6F2793540500DCC261 /* TaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManager.swift; sourceTree = "<group>"; };
 		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		D86724F12771672A009C7246 /* InterpreterThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterThread.swift; sourceTree = "<group>"; };
+		D86E42892799C0CC00D5596D /* UISplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISplitViewController.swift; sourceTree = "<group>"; };
 		D86FBAB3278C730B003DF611 /* diligence */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = diligence; sourceTree = "<group>"; };
 		D86FBAB4278C74A3003DF611 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		D86FBAB9278C76FB003DF611 /* Lua.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Lua.txt; sourceTree = "<group>"; };
@@ -428,6 +430,7 @@
 				D8891350274C184C00794D55 /* UIImage.swift */,
 				DBE91524276D25A900BDB8F5 /* UIKey.swift */,
 				DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */,
+				D86E42892799C0CC00D5596D /* UISplitViewController.swift */,
 				D89A607B2756A6A300C9757F /* URL.swift */,
 				D89A607D2756A98200C9757F /* ViewController.swift */,
 			);
@@ -819,6 +822,7 @@
 				D8891353274C186E00794D55 /* Canvas.swift in Sources */,
 				D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */,
 				DB0B918227710120006F5CD0 /* CGImage.swift in Sources */,
+				D86E428A2799C0CC00D5596D /* UISplitViewController.swift in Sources */,
 				D889134D274C17FF00794D55 /* CGContext.swift in Sources */,
 				DB5AC9762757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift in Sources */,
 				DB7900022742E6F6005E904F /* ldump.c in Sources */,
