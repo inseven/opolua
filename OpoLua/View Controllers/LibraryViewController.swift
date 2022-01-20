@@ -22,12 +22,6 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-protocol DataSourceDelegate: AnyObject {
-
-    func deleteLocation(_ location: Location)
-
-}
-
 class LibraryViewController: UIViewController {
 
     enum Section {
@@ -47,75 +41,91 @@ class LibraryViewController: UIViewController {
 
         let location: Location
         let name: String
+        let readonly: Bool
 
-        init(location: Location) {
+        init(location: Location, readonly: Bool = false) {
             self.location = location
             self.name = location.url.name
+            self.readonly = readonly
         }
 
-        init(location: Location, name: String) {
+        init(location: Location, name: String, readonly: Bool = false) {
             self.location = location
             self.name = name
+            self.readonly = readonly
         }
 
     }
 
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
 
-    class LibraryDataSource: UITableViewDiffableDataSource<Section, Item> {
-
-        weak var delegate: DataSourceDelegate?
-
-        override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-            guard let section = sectionIdentifier(for: section) else {
-                return nil
-            }
-            switch section {
-            case .examples:
-                return "Examples"
-            case .locations:
-                return "Locations"
-            }
-        }
-
-        override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-            return true
-        }
-
-        override func tableView(_ tableView: UITableView,
-                                commit editingStyle: UITableViewCell.EditingStyle,
-                                forRowAt indexPath: IndexPath) {
-            guard editingStyle == .delete,
-                  let item = itemIdentifier(for: indexPath)
-            else {
-                return
-            }
-            delegate?.deleteLocation(item.location)
-        }
-
-    }
-
-    static let cellIdentifier = "Cell"
+    class LibraryDataSource: UICollectionViewDiffableDataSource<Section, Item> {}
 
     var settings: Settings
     var taskManager: TaskManager
     var dataSource: LibraryDataSource!
 
-    lazy var tableView: UITableView = {
-        let tableView = UITableView(frame: .zero, style: .insetGrouped)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: Self.cellIdentifier)
-        dataSource = LibraryDataSource(tableView: tableView) { tableView, indexPath, itemIdentifier in
-            let location = itemIdentifier
-            let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
-            cell.textLabel?.text = location.name
-            cell.imageView?.image = UIImage(systemName: "folder")
-            cell.accessoryType = .disclosureIndicator
-            return cell
+    lazy var collectionView: UICollectionView = {
+
+        var configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
+        configuration.headerMode = .supplementary
+        configuration.trailingSwipeActionsConfigurationProvider = { [unowned self] indexPath in
+            guard let item = self.dataSource.itemIdentifier(for: indexPath), !item.readonly else {
+                return nil
+            }
+            let action = UIContextualAction(style: .normal, title: "Done!") { action, view, completion in
+                deleteLocation(item.location)
+                completion(true)
+            }
+            action.title = "Delete"
+            action.backgroundColor = .systemRed
+            return UISwipeActionsConfiguration(actions: [action])
         }
-        dataSource.delegate = self
-        return tableView
+
+        let collectionViewLayout = UICollectionViewCompositionalLayout.list(using: configuration)
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.delegate = self
+
+        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item> { cell, _, item in
+            var configuration = cell.defaultContentConfiguration()
+            configuration.image = UIImage(systemName: "folder")
+            configuration.text = item.name
+            cell.contentConfiguration = configuration
+            cell.accessories = [UICellAccessory.disclosureIndicator()]
+        }
+
+        let headerRegistration = UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(elementKind: UICollectionView.elementKindSectionHeader) {
+            supplementaryView, string, indexPath in
+            guard let section = self.dataSource.sectionIdentifier(for: indexPath.section) else {
+                return
+            }
+            var configuration = UIListContentConfiguration.extraProminentInsetGroupedHeader()
+            switch section {
+            case .examples:
+                configuration.text = "Examples"
+            case .locations:
+                configuration.text = "Locations"
+            }
+            supplementaryView.contentConfiguration = configuration
+        }
+
+        dataSource = LibraryDataSource(collectionView: collectionView) { collectionView, indexPath, item in
+            return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
+        }
+        dataSource.supplementaryViewProvider = { collectionView, elementKind, indexPath in
+            if elementKind == UICollectionView.elementKindSectionHeader {
+                return collectionView.dequeueConfiguredReusableSupplementary(using: headerRegistration, for: indexPath)
+            }
+            else {
+                return nil
+            }
+        }
+
+        collectionView.alwaysBounceVertical = true
+        collectionView.preservesSuperviewLayoutMargins = true
+        collectionView.insetsLayoutMarginsFromSafeArea = true
+        return collectionView
     }()
 
     lazy var addBarButtonItem: UIBarButtonItem = {
@@ -141,12 +151,12 @@ class LibraryViewController: UIViewController {
         title = "OPL"
         navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.leftBarButtonItem = aboutBarButtonItem
-        view.addSubview(tableView)
+        view.addSubview(collectionView)
         NSLayoutConstraint.activate([
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
     }
 
@@ -169,21 +179,14 @@ class LibraryViewController: UIViewController {
     }
 
     func snapshot() -> Snapshot {
-
         var snapshot = Snapshot()
         snapshot.appendSections([.examples, .locations])
-
-        // Examples
-
-        snapshot.appendItems([Item(location: LocalLocation(url: Bundle.main.examplesUrl))],
+        snapshot.appendItems([Item(location: LocalLocation(url: Bundle.main.examplesUrl), readonly: true)],
                              toSection: .examples)
-
-        // Locations
         let locations = settings.locations
             .map { Item(location: $0) }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
         snapshot.appendItems(locations, toSection: .locations)
-
         return snapshot
     }
 
@@ -192,8 +195,6 @@ class LibraryViewController: UIViewController {
         documentPicker.delegate = self
         present(documentPicker, animated: true)
     }
-
-
 
     func addUrl(_ url: URL) {
         do {
@@ -204,19 +205,43 @@ class LibraryViewController: UIViewController {
         }
     }
 
+    func deleteLocation(_ location: Location) {
+        guard let location = location as? ExternalLocation else {
+            return
+        }
+        do {
+            try settings.removeLocation(location)
+            reload()
+        } catch {
+            present(error: error)
+        }
+    }
+
 }
 
-//extension LibraryViewController: UITableViewDataSource {
-//
-//    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//    }
-//
-//}
+extension LibraryViewController: UICollectionViewDelegate {
 
-extension LibraryViewController: UITableViewDelegate {
+    func collectionView(_ collectionView: UICollectionView,
+                        contextMenuConfigurationForItemAt indexPath: IndexPath,
+                        point: CGPoint) -> UIContextMenuConfiguration? {
+        guard let item = dataSource.itemIdentifier(for: indexPath), !item.readonly else {
+            return nil
+        }
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+            var actions: [UIMenuElement] = []
+            let runAction = UIAction(title: "Delete",
+                                     image: UIImage(systemName: "trash"),
+                                     attributes: [.destructive]) { action in
+                self.deleteLocation(item.location)
+            }
+            actions.append(runAction)
+            return UIMenu(children: suggestedActions + actions)
+        }
+    }
 
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let item = dataSource.itemIdentifier(for: indexPath) else {
+            collectionView.deselectItem(at: indexPath, animated: true)
             return
         }
         do {
@@ -228,23 +253,7 @@ extension LibraryViewController: UITableViewDelegate {
             navigationController?.pushViewController(viewController, animated: true)
         } catch {
             present(error: error)
-            tableView.deselectRow(at: indexPath, animated: true)
-        }
-    }
-
-}
-
-extension LibraryViewController: DataSourceDelegate {
-
-    func deleteLocation(_ location: Location) {
-        guard let location = location as? ExternalLocation else {
-            return
-        }
-        do {
-            try settings.removeLocation(location)
-            reload()
-        } catch {
-            present(error: error)
+            collectionView.deselectItem(at: indexPath, animated: true)
         }
     }
 
