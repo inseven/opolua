@@ -40,6 +40,7 @@ protocol ProgramDelegate: AnyObject {
     func program(_ program: Program, showAlertWithLines lines: [String], buttons: [String]) -> Int
     func dialog(_ d: Dialog) -> Dialog.Result
     func menu(_ m: Menu.Bar) -> Menu.Result
+    func programDidRequestBackground(_ program: Program)
 
 }
 
@@ -138,10 +139,15 @@ class Program {
 
     func start() {
         guard state == .idle else {
+            sendForegroundEvent()
             return
         }
         _state = .running
         thread.start()
+    }
+
+    func suspend() {
+        sendBackgroundEvent()
     }
 
     func toggleOnScreenKeyboard() {
@@ -154,6 +160,10 @@ class Program {
 
     func quit() {
         sendEvent(.quitevent)
+    }
+
+    func forceQuit() {
+
     }
 
     func sendMenu() {
@@ -191,6 +201,16 @@ class Program {
     func sendEvent(_ event: Async.ResponseValue) {
         eventQueue.append(event)
         checkGetEventCompletion()
+    }
+
+    func sendForegroundEvent() {
+        print("Send Foreground")
+        sendEvent(.foregrounded(.init(timestamp: ProcessInfo.processInfo.systemUptime)))
+    }
+
+    func sendBackgroundEvent() {
+        print("Send Background")
+        sendEvent(.backgrounded(.init(timestamp: ProcessInfo.processInfo.systemUptime)))
     }
 
     func startGetEventRequest(_ request: GetEventRequest) {
@@ -439,7 +459,7 @@ extension Program: OpoIoHandler {
     }
 
     func setBackground() {
-        // TODO
+        self.delegate?.programDidRequestBackground(self)
     }
 }
 

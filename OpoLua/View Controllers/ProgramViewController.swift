@@ -158,6 +158,7 @@ class ProgramViewController: UIViewController {
         virtualController?.disconnect()
         settingsSink?.cancel()
         settingsSink = nil
+        program.suspend()
         program.removeObserver(self)
     }
 
@@ -355,7 +356,13 @@ extension ProgramViewController: DrawableViewControllerDelegate {
 }
 
 extension ProgramViewController: ProgramDelegate {
-    
+
+    func programDidRequestBackground(_ program: Program) {
+        DispatchQueue.main.async {
+            self.navigationController?.popViewController(animated: true)
+        }
+    }
+
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
         // TODO: Implement INPUT
         return "123"
