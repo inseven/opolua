@@ -47,6 +47,8 @@ class ProgramViewController: UIViewController {
     var taskManager: TaskManager
     var program: Program
 
+    var screenView: UIView
+
     let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
     let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
     let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
@@ -147,21 +149,37 @@ class ProgramViewController: UIViewController {
         self.settings = settings
         self.taskManager = taskManager
         self.program = program
+        self.screenView = UIView(frame: CGRect(origin: .zero, size: program.getScreenInfo().0.cgSize()))
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
         view.backgroundColor = .systemBackground
+
+        screenView.translatesAutoresizingMaskIntoConstraints = false
+        screenView.addSubview(program.rootView)
+
         title = program.title
         view.clipsToBounds = true
-        view.addSubview(program.rootView)
-        view.addSubview(menuButton)
+        screenView.addSubview(menuButton)
+
+        view.addSubview(screenView)
         NSLayoutConstraint.activate([
-            program.rootView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            program.rootView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+
+            program.rootView.centerXAnchor.constraint(equalTo: screenView.centerXAnchor),
+            program.rootView.centerYAnchor.constraint(equalTo: screenView.centerYAnchor),
+
             menuButton.widthAnchor.constraint(equalToConstant: 24.0),
             menuButton.heightAnchor.constraint(equalToConstant: 24.0),
             menuButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -8.0),
             menuButton.topAnchor.constraint(equalTo: program.rootView.topAnchor),
+
+            program.rootView.leadingAnchor.constraint(equalTo: screenView.leadingAnchor, constant: 32.0),
+            program.rootView.trailingAnchor.constraint(equalTo: screenView.trailingAnchor, constant: -32.0),
+            program.rootView.topAnchor.constraint(equalTo: screenView.topAnchor),
+            program.rootView.bottomAnchor.constraint(equalTo: screenView.bottomAnchor),
+
+            screenView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            screenView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
         navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
         observeMenuDismiss()
@@ -174,7 +192,7 @@ class ProgramViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        program.rootView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
+        screenView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
         settingsSink = settings.objectWillChange.sink { _ in }
         program.addObserver(self)
     }
@@ -198,7 +216,7 @@ class ProgramViewController: UIViewController {
 
     override func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
         UIView.animate(withDuration: duration) {
-            self.program.rootView.transform = self.transformForInterfaceOrientation(toInterfaceOrientation)
+            self.screenView.transform = self.transformForInterfaceOrientation(toInterfaceOrientation)
         }
     }
 
