@@ -72,7 +72,7 @@ class WindowServer {
     }
 
     lazy var canvasView: CanvasView = {
-        let canvas = newCanvas(size: screenSize.cgSize(), color: true)
+        let canvas = newCanvas(size: screenSize.cgSize(), mode: .Color256)
         let canvasView = CanvasView(canvas: canvas)
         canvasView.translatesAutoresizingMaskIntoConstraints = false
         canvasView.layer.borderWidth = 1.0
@@ -99,10 +99,10 @@ class WindowServer {
         return windows[drawableId]
     }
 
-    private func newCanvas(size: CGSize, color: Bool) -> Canvas {
+    private func newCanvas(size: CGSize, mode: Graphics.Bitmap.Mode) -> Canvas {
         dispatchPrecondition(condition: .onQueue(.main))
         let id = Graphics.DrawableId(value: drawableHandle.next()!)
-        let canvas = Canvas(windowServer: self, id: id, size: size, color: color)
+        let canvas = Canvas(windowServer: self, id: id, size: size, mode: mode)
         return canvas
     }
 
@@ -111,8 +111,7 @@ class WindowServer {
      */
     func createWindow(rect: Graphics.Rect, mode: Graphics.Bitmap.Mode, shadowSize: Int) -> Graphics.DrawableId {
         dispatchPrecondition(condition: .onQueue(.main))
-        let isColor = mode == .Color16 || mode == .Color256
-        let canvas = self.newCanvas(size: rect.size.cgSize(), color: isColor)
+        let canvas = self.newCanvas(size: rect.size.cgSize(), mode: mode)
         let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
         newView.isHidden = true
         newView.frame = rect.cgRect()
@@ -126,8 +125,7 @@ class WindowServer {
 
     func createBitmap(size: Graphics.Size, mode: Graphics.Bitmap.Mode) -> Graphics.DrawableId {
         dispatchPrecondition(condition: .onQueue(.main))
-        let isColor = mode == .Color16 || mode == .Color256
-        let canvas = newCanvas(size: size.cgSize(), color: isColor)
+        let canvas = newCanvas(size: size.cgSize(), mode: mode)
         drawablesById[canvas.id] = canvas
         return canvas.id
     }

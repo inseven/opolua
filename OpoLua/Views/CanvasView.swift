@@ -36,6 +36,10 @@ class CanvasView : UIView, Drawable {
         return canvas.id
     }
 
+    var mode: Graphics.Bitmap.Mode {
+        return canvas.mode
+    }
+
     override var canBecomeFirstResponder: Bool {
         return true
     }
@@ -123,7 +127,7 @@ class CanvasView : UIView, Drawable {
 
     func resize(to newSize: CGSize) {
         let oldCanvas = self.canvas
-        self.canvas = Canvas(windowServer: oldCanvas.windowServer, id: id, size: newSize, color: true)
+        self.canvas = Canvas(windowServer: oldCanvas.windowServer, id: id, size: newSize, mode: .Color256)
         if let img = oldCanvas.getImage() {
             let dummyId = Graphics.DrawableId(value: 0)
             let src = Graphics.CopySource(drawableId: dummyId, rect: Graphics.Rect(x: 0, y: 0, width: img.width, height: img.height), extra: img)

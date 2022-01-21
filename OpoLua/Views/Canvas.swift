@@ -25,6 +25,7 @@ import UIKit
 protocol Drawable: AnyObject {
 
     var id: Graphics.DrawableId { get }
+    var mode: Graphics.Bitmap.Mode { get }
 
     func draw(_ operation: Graphics.DrawCommand)
     func setSprite(_ sprite: Graphics.Sprite?, for id: Int)
@@ -37,6 +38,7 @@ protocol Drawable: AnyObject {
 class Canvas: Drawable {
 
     let id: Graphics.DrawableId
+    let mode: Graphics.Bitmap.Mode
     let size: CGSize
     private var image: CGImage?
     private let context: CGContext
@@ -45,14 +47,16 @@ class Canvas: Drawable {
 
     var sprites: [Int: Sprite] = [:]
 
-    init(windowServer: WindowServer, id: Graphics.DrawableId, size: CGSize, color: Bool) {
+    init(windowServer: WindowServer, id: Graphics.DrawableId, size: CGSize, mode: Graphics.Bitmap.Mode) {
         self.windowServer = windowServer
         self.id = id
         self.size = size
+        self.mode = mode
         let colorSpace: CGColorSpace
         let bytesPerPixel: Int
         let bitmapInfo: UInt32
-        if color {
+        let isColor = mode == .Color16 || mode == .Color256
+        if isColor {
             colorSpace = CGColorSpaceCreateDeviceRGB()
             bytesPerPixel = 4
             bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
