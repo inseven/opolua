@@ -65,7 +65,7 @@ extension Graphics.FontInfo {
         case .squashed:
             uiFontName = "Helvetica Neue"
             traits.insert(.traitCondensed)
-        case .digit:
+        case .digit, .eiksym:
             return nil
         }
 

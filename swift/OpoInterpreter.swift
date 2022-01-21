@@ -230,7 +230,7 @@ private func menu(_ L: LuaState!) -> Int32 {
         let title = L.tostring(-1, key: "title") ?? ""
         var items: [Menu.Item] = []
         for _ in L.ipairs(-1, requiredType: .table) {
-            var rawcode = L.toint(-1, key: "keycode") ?? 0
+            var rawcode = L.toint(-1, key: "key") ?? 0
             var flags = 0
             if rawcode < 0 {
                 flags |= Menu.Item.Flags.separatorAfter.rawValue

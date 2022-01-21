@@ -59,19 +59,19 @@ function _setRuntime(r)
     end
 end
 
-local function darkGrey()
+function darkGrey()
     gCOLOR(0x55, 0x55, 0x55)
 end
 
-local function lightGrey()
+function lightGrey()
     gCOLOR(0xAA, 0xAA, 0xAA)
 end
 
-local function black()
+function black()
     gCOLOR(0, 0, 0)
 end
 
-local function white()
+function white()
     gCOLOR(0xFF, 0xFF, 0xFF)
 end
 
@@ -517,7 +517,7 @@ end
 
 local function drawInfoPrint(drawable, text, corner)
     gUPDATE(false)
-    local screenWidth, screenHeight = runtime:iohandler().getScreenInfo()
+    local screenWidth, screenHeight = runtime:getScreenInfo()
     local winHeight = 23 -- 15 plus 4 pixels top and bottom
     gUSE(drawable)
     gFONT(KFontArialNormal15)

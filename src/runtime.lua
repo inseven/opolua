@@ -441,13 +441,22 @@ end
 
 function Runtime:getGraphics()
     if not self.graphics then
-        self.graphics = {}
         local w, h, mode = self.ioh.getScreenInfo()
+        self.graphics = {
+            screenWidth = w,
+            screenHeight = h,
+            screenMode = mode,
+            sprites = {},
+        }
         self:newGraphicsContext(KDefaultWin, w, h, true, mode)
         self:FONT(KFontCourierNormal11, 0)
-        self.graphics.sprites = {}
     end
     return self.graphics
+end
+
+function Runtime:getScreenInfo()
+    local graphics = self:getGraphics()
+    return graphics.screenWidth, graphics.screenHeight, graphics.screenMode
 end
 
 function Runtime:getGraphicsContext(id)

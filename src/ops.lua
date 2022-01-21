@@ -1886,7 +1886,7 @@ function mCard(stack, runtime) -- 0xEB
     local card = {}
     for i = 1, numParams do
         local item = {}
-        item.keycode = stack:pop()
+        item.key = stack:pop()
         item.text = stack:pop()
         if item.text:match(">$") then
             -- It's a cascade
@@ -2426,10 +2426,10 @@ function mCasc(stack, runtime) -- 0x130
     local numParams = runtime:IP8()
     local card = {}
     for i = 1, numParams do
-        local keycode = stack:pop()
+        local key = stack:pop()
         local text = stack:pop()
         -- Last item is popped first
-        table.insert(card, 1, { keycode = keycode, text = text })
+        table.insert(card, 1, { key = key, text = text })
     end
     local title = stack:pop()
     card.title = title
