@@ -90,6 +90,7 @@ class CanvasView : UIView, Drawable {
         else {
             return
         }
+        context.interpolationQuality = .none
         context.translateBy(x: 0, y: canvas.size.height)
         context.scaleBy(x: 1.0, y: -1.0)
         context.draw(image, in: CGRect(origin: .zero, size: canvas.size))
