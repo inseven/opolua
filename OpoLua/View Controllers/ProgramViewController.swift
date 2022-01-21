@@ -181,7 +181,7 @@ class ProgramViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        program.start()
+        program.resume()
         configureControllers()
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(titleBarTapped(sender:)))
         navigationController?.navigationBar.addGestureRecognizer(tapGestureRecognizer)
@@ -385,8 +385,7 @@ extension ProgramViewController: DrawableViewControllerDelegate {
 extension ProgramViewController: ProgramDelegate {
 
     func programDidRequestBackground(_ program: Program) {
-        program.sendBackgroundEvent()
-        DispatchQueue.main.async {
+        _ = DispatchQueue.main.sync {
             self.navigationController?.popViewController(animated: true)
         }
     }

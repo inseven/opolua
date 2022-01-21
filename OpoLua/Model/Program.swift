@@ -138,7 +138,7 @@ class Program {
         self.observers.removeAll { $0.isEqual(observer) }
     }
 
-    func start() {
+    func resume() {
         guard state == .idle else {
             sendForegroundEvent()
             return
@@ -204,13 +204,11 @@ class Program {
         checkGetEventCompletion()
     }
 
-    func sendForegroundEvent() {
-        print("Send Foreground")
+    private func sendForegroundEvent() {
         sendEvent(.foregrounded(.init(timestamp: ProcessInfo.processInfo.systemUptime)))
     }
 
-    func sendBackgroundEvent() {
-        print("Send Background")
+    private func sendBackgroundEvent() {
         sendEvent(.backgrounded(.init(timestamp: ProcessInfo.processInfo.systemUptime)))
     }
 
