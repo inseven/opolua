@@ -317,12 +317,12 @@ extension CGImage {
     // TODO: This should be a convenience constructor
     static func from(bitmap: Graphics.Bitmap) -> CGImage {
         switch bitmap.mode {
-        case .Gray2, .Gray4, .Gray16:
+        case .gray2, .gray4, .gray16:
             // CoreGraphics doesn't seem to like <8bpp, so expand it
             // (It renders it, it just makes a mess)
             var wdat = Data()
             let stride: Int
-            if bitmap.mode == .Gray2 {
+            if bitmap.mode == .gray2 {
                 wdat.reserveCapacity(bitmap.data.count * 8)
                 for b in bitmap.data {
                     for i in 0 ..< 8 {
@@ -330,7 +330,7 @@ extension CGImage {
                     }
                 }
                 stride = bitmap.stride * 8
-            } else if bitmap.mode == .Gray4 {
+            } else if bitmap.mode == .gray4 {
                 wdat.reserveCapacity(bitmap.data.count * 4)
                 for b in bitmap.data {
                     wdat.append(scale2bpp(b & 0x3))
@@ -356,7 +356,7 @@ extension CGImage {
                 bitmapInfo: CGBitmapInfo.byteOrder32Little,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
-        case .Gray256:
+        case .gray256:
             let provider = CGDataProvider(data: bitmap.data as CFData)!
             let sp = CGColorSpaceCreateDeviceGray()
             return CGImage(width: bitmap.width, height: bitmap.height,
@@ -365,7 +365,7 @@ extension CGImage {
                 bitmapInfo: CGBitmapInfo.byteOrder32Little,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
-        case .Color16:
+        case .color16:
             var wdat = Data()
             wdat.reserveCapacity(bitmap.data.count * 2)
             for b in bitmap.data {
@@ -381,7 +381,7 @@ extension CGImage {
                 bitmapInfo: inf,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
-        case .Color256:
+        case .color256:
             let provider = CGDataProvider(data: bitmap.data as CFData)!
             let sp = CGColorSpace(indexedBaseSpace: CGColorSpaceCreateDeviceRGB(), last: 255, colorTable: kEpoc8bitPalette)!
             let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
@@ -391,7 +391,7 @@ extension CGImage {
                 bitmapInfo: inf,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
-        case .Color64K:
+        case .color64K:
             let provider = CGDataProvider(data: bitmap.data as CFData)!
             let sp = CGColorSpaceCreateDeviceRGB()
             let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
@@ -401,7 +401,7 @@ extension CGImage {
                 bitmapInfo: inf,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
-        case .Color16M:
+        case .color16M:
             let provider = CGDataProvider(data: bitmap.data as CFData)!
             let sp = CGColorSpaceCreateDeviceRGB()
             let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)

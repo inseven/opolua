@@ -127,7 +127,7 @@ class CanvasView : UIView, Drawable {
 
     func resize(to newSize: CGSize) {
         let oldCanvas = self.canvas
-        self.canvas = Canvas(windowServer: oldCanvas.windowServer, id: id, size: newSize, mode: .Color256)
+        self.canvas = Canvas(windowServer: oldCanvas.windowServer, id: id, size: newSize, mode: .color256)
         if let img = oldCanvas.getImage() {
             let dummyId = Graphics.DrawableId(value: 0)
             let src = Graphics.CopySource(drawableId: dummyId, rect: Graphics.Rect(x: 0, y: 0, width: img.width, height: img.height), extra: img)

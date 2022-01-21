@@ -72,7 +72,7 @@ class WindowServer {
     }
 
     lazy var canvasView: CanvasView = {
-        let canvas = newCanvas(size: screenSize.cgSize(), mode: .Color256)
+        let canvas = newCanvas(size: screenSize.cgSize(), mode: .color256)
         let canvasView = CanvasView(canvas: canvas)
         canvasView.translatesAutoresizingMaskIntoConstraints = false
         canvasView.layer.borderWidth = 1.0

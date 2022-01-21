@@ -206,14 +206,14 @@ struct Graphics {
 
     struct Bitmap {
         enum Mode: Int {
-            case Gray2 = 0 // ie 1bpp
-            case Gray4 = 1 // ie 2bpp
-            case Gray16 = 2 // ie 4bpp grayscale
-            case Gray256 = 3 // ie 8bpp grayscale
-            case Color16 = 4 // ie 4bpp color
-            case Color256 = 5 // ie 8bpp color
-            case Color64K = 6 // 16bpp color
-            case Color16M = 7 // 24bpp color
+            case gray2 = 0 // ie 1bpp
+            case gray4 = 1 // ie 2bpp
+            case gray16 = 2 // ie 4bpp grayscale
+            case gray256 = 3 // ie 8bpp grayscale
+            case color16 = 4 // ie 4bpp color
+            case color256 = 5 // ie 8bpp color
+            case color64K = 6 // 16bpp color
+            case color16M = 7 // 24bpp color
         }
         let mode: Mode
         let size: Size
@@ -225,16 +225,16 @@ struct Graphics {
         var height: Int { return size.height }
         var bpp: Int {
             switch mode {
-            case .Gray2: return 1
-            case .Gray4: return 2
-            case .Gray16, .Color16: return 4
-            case .Gray256, .Color256: return 8
-            case .Color64K: return 16
-            case .Color16M: return 24
+            case .gray2: return 1
+            case .gray4: return 2
+            case .gray16, .color16: return 4
+            case .gray256, .color256: return 8
+            case .color64K: return 16
+            case .color16M: return 24
             }
         }
-        var color: Bool {
-            return mode.rawValue >= Mode.Color16.rawValue
+        var isColor: Bool {
+            mode.isColor
         }
     }
 
@@ -391,6 +391,14 @@ struct Graphics {
         case handle(DrawableId)
         case sizeAndAscent(Size, Int)
     }
+}
+
+extension Graphics.Bitmap.Mode {
+
+    var isColor: Bool {
+        return rawValue >= Self.color16.rawValue
+    }
+
 }
 
 struct Fs {
@@ -616,7 +624,7 @@ class DummyIoHandler : OpoIoHandler {
     }
 
     func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
-        return (Graphics.Size(width: 640, height: 240), .Gray4)
+        return (Graphics.Size(width: 640, height: 240), .gray4)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {

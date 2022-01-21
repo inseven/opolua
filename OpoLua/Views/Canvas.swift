@@ -55,8 +55,7 @@ class Canvas: Drawable {
         let colorSpace: CGColorSpace
         let bytesPerPixel: Int
         let bitmapInfo: UInt32
-        let isColor = mode == .Color16 || mode == .Color256
-        if isColor {
+        if mode.isColor {
             colorSpace = CGColorSpaceCreateDeviceRGB()
             bytesPerPixel = 4
             bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue

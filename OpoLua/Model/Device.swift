@@ -61,13 +61,13 @@ extension Device {
     var screenMode: Graphics.Bitmap.Mode {
         switch self {
         case .psionSeries5:
-            return .Gray16
+            return .gray16
         case .psionRevo:
-            return .Gray16 // Is this right?
+            return .gray16 // Is this right?
         case .psionSeries7:
-            return .Color256 // ?
+            return .color256 // ?
         case .geofoxOne:
-            return .Color256 // ?
+            return .color256 // ?
         }
     }
 

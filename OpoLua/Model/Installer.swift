@@ -70,7 +70,7 @@ extension Installer: OpoIoHandler {
     func menu(_ m: Menu.Bar) -> Menu.Result { return .none }
     func draw(operations: [Graphics.DrawCommand]) {}
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result { return .nothing }
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) { return (.zero, .Gray2) }
+    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) { return (.zero, .gray2) }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
         return fileSystem.perform(op)
