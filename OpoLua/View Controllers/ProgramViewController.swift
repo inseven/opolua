@@ -88,6 +88,45 @@ class ProgramViewController: UIViewController {
         return button
     }()
 
+    lazy var clipboardButton: UIButton = {
+        let button = UIButton(type: .roundedRect)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setBackgroundImage(UIImage(systemName: "doc.on.clipboard"), for: .normal)
+        button.addAction(UIAction() { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.program.sendKey(.clipboardSoftkey)
+        }, for: .touchUpInside)
+        return button
+    }()
+
+    lazy var zoomInButton: UIButton = {
+        let button = UIButton(type: .roundedRect)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setBackgroundImage(UIImage(systemName: "plus.magnifyingglass"), for: .normal)
+        button.addAction(UIAction() { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.program.sendKey(.zoomInSoftkey)
+        }, for: .touchUpInside)
+        return button
+    }()
+
+    lazy var zoomOutButton: UIButton = {
+        let button = UIButton(type: .roundedRect)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setBackgroundImage(UIImage(systemName: "minus.magnifyingglass"), for: .normal)
+        button.addAction(UIAction() { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.program.sendKey(.zoomOutSoftkey)
+        }, for: .touchUpInside)
+        return button
+    }()
+
     lazy var optionsBarButtonItem: UIBarButtonItem = {
         let quitAction = UIAction(title: "Close Program", image: UIImage(systemName: "xmark")) { [weak self] action in
             guard let self = self else {
@@ -161,6 +200,14 @@ class ProgramViewController: UIViewController {
         title = program.title
         view.clipsToBounds = true
         screenView.addSubview(menuButton)
+        screenView.addSubview(clipboardButton)
+        screenView.addSubview(zoomInButton)
+        screenView.addSubview(zoomOutButton)
+
+        let silkScreenButtonWidth = 24.0
+        let silkScreenButtonHorizontalSpacing = 8.0
+        let silkScreenButtonVerticalSpacing = 16.0
+        let gutterWidth = silkScreenButtonWidth + silkScreenButtonHorizontalSpacing
 
         view.addSubview(screenView)
         NSLayoutConstraint.activate([
@@ -168,13 +215,28 @@ class ProgramViewController: UIViewController {
             program.rootView.centerXAnchor.constraint(equalTo: screenView.centerXAnchor),
             program.rootView.centerYAnchor.constraint(equalTo: screenView.centerYAnchor),
 
-            menuButton.widthAnchor.constraint(equalToConstant: 24.0),
-            menuButton.heightAnchor.constraint(equalToConstant: 24.0),
-            menuButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -8.0),
+            menuButton.widthAnchor.constraint(equalToConstant: silkScreenButtonWidth),
+            menuButton.heightAnchor.constraint(equalToConstant: silkScreenButtonWidth),
             menuButton.topAnchor.constraint(equalTo: program.rootView.topAnchor),
+            menuButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -silkScreenButtonHorizontalSpacing),
 
-            program.rootView.leadingAnchor.constraint(equalTo: screenView.leadingAnchor, constant: 32.0),
-            program.rootView.trailingAnchor.constraint(equalTo: screenView.trailingAnchor, constant: -32.0),
+            clipboardButton.widthAnchor.constraint(equalToConstant: silkScreenButtonWidth),
+            clipboardButton.heightAnchor.constraint(equalToConstant: silkScreenButtonWidth),
+            clipboardButton.topAnchor.constraint(equalTo: menuButton.bottomAnchor, constant: silkScreenButtonVerticalSpacing),
+            clipboardButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -silkScreenButtonHorizontalSpacing),
+
+            zoomInButton.widthAnchor.constraint(equalToConstant: silkScreenButtonWidth),
+            zoomInButton.heightAnchor.constraint(equalToConstant: silkScreenButtonWidth),
+            zoomInButton.topAnchor.constraint(equalTo: clipboardButton.bottomAnchor, constant: silkScreenButtonVerticalSpacing),
+            zoomInButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -silkScreenButtonHorizontalSpacing),
+
+            zoomOutButton.widthAnchor.constraint(equalToConstant: silkScreenButtonWidth),
+            zoomOutButton.heightAnchor.constraint(equalToConstant: silkScreenButtonWidth),
+            zoomOutButton.topAnchor.constraint(equalTo: zoomInButton.bottomAnchor, constant: silkScreenButtonVerticalSpacing),
+            zoomOutButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -silkScreenButtonHorizontalSpacing),
+
+            program.rootView.leadingAnchor.constraint(equalTo: screenView.leadingAnchor, constant: gutterWidth),
+            program.rootView.trailingAnchor.constraint(equalTo: screenView.trailingAnchor, constant: -gutterWidth),
             program.rootView.topAnchor.constraint(equalTo: screenView.topAnchor),
             program.rootView.bottomAnchor.constraint(equalTo: screenView.bottomAnchor),
 
