@@ -61,7 +61,11 @@ class ProgramViewController: UIViewController {
         }
     }()
 
-    lazy var menuBarButtonItem: UIBarButtonItem = {
+    lazy var menuButton: UIButton = {
+        let button = UIButton(type: .roundedRect)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setBackgroundImage(UIImage(systemName: "filemenu.and.selection"), for: .normal)
+
         let items = UIDeferredMenuElement.uncached { [weak self] completion in
             guard let self = self else {
                 return
@@ -76,27 +80,44 @@ class ProgramViewController: UIViewController {
             }
         }
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [items])
-        let menuBarButtonItem = UIBarButtonItem(title: nil,
-                                                image: UIImage(systemName: "filemenu.and.selection"),
-                                                primaryAction: nil,
-                                                menu: menu)
-        return menuBarButtonItem
+        button.menu = menu
+        button.showsMenuAsPrimaryAction = true
+
+        return button
     }()
 
     lazy var optionsBarButtonItem: UIBarButtonItem = {
-        let quitAction = UIAction(title: "Close", image: UIImage(systemName: "xmark")) { [weak self] action in
+        let quitAction = UIAction(title: "Close Program", image: UIImage(systemName: "xmark")) { [weak self] action in
             guard let self = self else {
                 return
             }
             self.program.sendQuit()
         }
-        let taskManagerAction = UIAction(title: "Open Programs", image: UIImage(systemName: "list.bullet.rectangle")) { [weak self] action in
+        let taskManagerAction = UIAction(title: "Show Open Programs",
+                                         image: UIImage(systemName: "list.bullet.rectangle")) { [weak self] action in
             guard let self = self else {
                 return
             }
             self.taskManager.showTaskList()
         }
-        let actions = [quitAction, taskManagerAction]
+        let consoleAction = UIAction(title: "Show Console", image: UIImage(systemName: "terminal")) { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.showConsole()
+        }
+        let drawablesAction = UIAction(title: "Show Drawables",
+                                       image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            let viewController = DrawableViewController(windowServer: self.program.windowServer)
+            viewController.delegate = self
+            let navigationController = UINavigationController(rootViewController: viewController)
+            self.present(navigationController, animated: true)
+        }
+
+        let actions = [quitAction, taskManagerAction, consoleAction, drawablesAction]
 
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: actions)
         let menuBarButtonItem = UIBarButtonItem(title: nil,
@@ -105,23 +126,6 @@ class ProgramViewController: UIViewController {
                                                 menu: menu)
         return menuBarButtonItem
     }()
-
-    lazy var consoleBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "terminal"),
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(consoleTapped(sender:)))
-        return barButtonItem
-    }()
-
-    lazy var drawablesBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "square.stack.3d.up"),
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(drawablesTapped(sender:)))
-        return barButtonItem
-    }()
-
 
     lazy var keyboardBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "keyboard"),
@@ -150,12 +154,16 @@ class ProgramViewController: UIViewController {
         title = program.title
         view.clipsToBounds = true
         view.addSubview(program.rootView)
+        view.addSubview(menuButton)
         NSLayoutConstraint.activate([
             program.rootView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             program.rootView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            menuButton.widthAnchor.constraint(equalToConstant: 24.0),
+            menuButton.heightAnchor.constraint(equalToConstant: 24.0),
+            menuButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -8.0),
+            menuButton.topAnchor.constraint(equalTo: program.rootView.topAnchor),
         ])
-        toolbarItems = [consoleBarButtonItem, drawablesBarButtonItem]
-        navigationItem.rightBarButtonItems = [optionsBarButtonItem, menuBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
+        navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
         observeMenuDismiss()
         observeGameControllers()
     }
@@ -166,7 +174,6 @@ class ProgramViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.isToolbarHidden = false
         program.rootView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
         settingsSink = settings.objectWillChange.sink { _ in }
         program.addObserver(self)
@@ -176,6 +183,8 @@ class ProgramViewController: UIViewController {
         super.viewDidAppear(animated)
         program.start()
         configureControllers()
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(titleBarTapped(sender:)))
+        navigationController?.navigationBar.addGestureRecognizer(tapGestureRecognizer)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -204,6 +213,10 @@ class ProgramViewController: UIViewController {
         @unknown default:
             return CGAffineTransform(rotationAngle:  0)
         }
+    }
+
+    @objc func titleBarTapped(sender: UITapGestureRecognizer) {
+        taskManager.showTaskList()
     }
 
     func observeMenuDismiss() {
@@ -279,17 +292,6 @@ class ProgramViewController: UIViewController {
 
     @objc func keyboardTapped(sender: UIBarButtonItem) {
         program.toggleOnScreenKeyboard()
-    }
-
-    @objc func consoleTapped(sender: UIBarButtonItem) {
-        showConsole()
-    }
-
-    @objc func drawablesTapped(sender: UIBarButtonItem) {
-        let viewController = DrawableViewController(windowServer: program.windowServer)
-        viewController.delegate = self
-        let navigationController = UINavigationController(rootViewController: viewController)
-        present(navigationController, animated: true)
     }
 
     @objc func controllerButtonTapped(sender: UIBarButtonItem) {
