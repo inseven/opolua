@@ -91,11 +91,11 @@ class DirectoryViewController : UIViewController {
                 detailTextLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
                 detailTextLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
 
-                imageView.topAnchor.constraint(equalTo: topAnchor),
+                imageView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
                 imageView.bottomAnchor.constraint(equalTo: textLabel.topAnchor, constant: -8.0),
                 textLabel.bottomAnchor.constraint(equalTo: detailTextLabel.topAnchor, constant: -2.0),
                 detailTextLabel.bottomAnchor.constraint(equalTo: layoutGuide.topAnchor),
-                layoutGuide.bottomAnchor.constraint(equalTo: bottomAnchor),
+                layoutGuide.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
 
             ])
         }
@@ -116,11 +116,10 @@ class DirectoryViewController : UIViewController {
     var settingsSink: AnyCancellable?
 
     private func createLayout() -> UICollectionViewLayout {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(100),
-                                              heightDimension: .fractionalHeight(1.0))
+
+        let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(100), heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                               heightDimension: .estimated(140))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(108))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         group.interItemSpacing = .flexible(8.0)
         let section = NSCollectionLayoutSection(group: group)
@@ -164,17 +163,13 @@ class DirectoryViewController : UIViewController {
                 return
             }
             cell.textLabel.text = item.directoryItem.name
-            cell.detailTextLabel.text = item.directoryItem.type.localizedDescription
+            cell.detailTextLabel.text = item.isRunning ? "Running" : nil
             cell.imageView.image = item.directoryItem.icon(for: self.settings.theme).scale(self.view.window?.screen.nativeScale ?? 1.0)
-            if let programUrl = item.directoryItem.programUrl, self.taskManager.isRunning(programUrl) {
-                cell.backgroundColor = .magenta
-            } else {
-                cell.backgroundColor = .clear
-            }
         }
-        return DataSource(collectionView: collectionView) { collectionView, indexPath, item in
+        let dataSource = DataSource(collectionView: collectionView) { collectionView, indexPath, item in
             return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
         }
+        return dataSource
     }()
 
     lazy var searchController: UISearchController = {

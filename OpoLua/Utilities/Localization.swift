@@ -20,29 +20,6 @@
 
 import Foundation
 
-extension Directory.Item.ItemType {
-
-    var localizedDescription: String {
-        switch self {
-        case .object:
-            return "Object"
-        case .directory:
-            return "Directory"
-        case .application:
-            return "Application"
-        case .system:
-            return "System"
-        case .installer:
-            return "Installer"
-        case .applicationInformation:
-            return "App Info"
-        case .unknown:
-            return "Unknown"
-        }
-    }
-    
-}
-
 extension Graphics.Bitmap.Mode {
 
     var localizedDescription: String {
