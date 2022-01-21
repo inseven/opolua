@@ -62,6 +62,10 @@ extension UIImage {
         return UIImage(named: "UnknownAppIcon")!
     }()
 
+    static var unknownFileIcon: UIImage = {
+        return UIImage(named: "UnknownFileIcon")!
+    }()
+
     static var unknownFileIconC: UIImage = {
         return UIImage(named: "UnknownFileIconC")!
     }()

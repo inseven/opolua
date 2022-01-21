@@ -60,7 +60,7 @@ extension Settings.Theme {
     var unknownFileIcon: UIImage {
         switch self {
         case .series5:
-            return .unknownAppIcon
+            return .unknownFileIcon
         case .series7:
             return .unknownFileIconC
         }
