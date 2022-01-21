@@ -49,10 +49,6 @@ class ProgramViewController: UIViewController {
 
     var screenView: UIView
 
-    let menu: ConcurrentBox<[UIMenuElement]> = ConcurrentBox()
-    let menuCompletion: ConcurrentBox<(Int) -> Void> = ConcurrentBox()
-    let menuQueue = DispatchQueue(label: "ProgramViewController.menuQueue")
-
     var virtualController: GCVirtualController?
 
     var settingsSink: AnyCancellable?
@@ -67,24 +63,12 @@ class ProgramViewController: UIViewController {
         let button = UIButton(type: .roundedRect)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setBackgroundImage(UIImage(systemName: "filemenu.and.selection"), for: .normal)
-
-        let items = UIDeferredMenuElement.uncached { [weak self] completion in
+        button.addAction(UIAction() { [weak self] action in
             guard let self = self else {
                 return
             }
-            self.menuQueue.async {
-                self.program.sendMenu()
-                let disabled = UIAction(title: "None", attributes: .disabled) { _ in }
-                let items = self.menu.tryTake(until: Date().addingTimeInterval(0.1)) ?? [disabled]
-                DispatchQueue.main.async {
-                    completion(items)
-                }
-            }
-        }
-        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [items])
-        button.menu = menu
-        button.showsMenuAsPrimaryAction = true
-
+            self.program.sendKey(.menu)
+        }, for: .touchUpInside)
         return button
     }()
 
@@ -244,7 +228,6 @@ class ProgramViewController: UIViewController {
             screenView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
         navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
-        observeMenuDismiss()
         observeGameControllers()
     }
 
@@ -297,25 +280,6 @@ class ProgramViewController: UIViewController {
 
     @objc func titleBarTapped(sender: UITapGestureRecognizer) {
         taskManager.showTaskList()
-    }
-
-    func observeMenuDismiss() {
-        // Unfortunately there doesn't seem to be a great way to detect when the user dismisses the menu.
-        // This implementation uses SPI to do just that by watching the notification center for presentation dismiss
-        // notifications and ignores notifications for anything that isn't a menu.
-        NotificationCenter.default.addObserver(forName: NSNotification.Name.UIPresentationControllerDismissalTransitionDidEndNotification,
-                                               object: nil,
-                                               queue: .main) { notification in
-            guard let UIContextMenuActionsOnlyViewController = NSClassFromString("_UIContextMenuActionsOnlyViewController"),
-                  let object = notification.object,
-                  type(of: object) == UIContextMenuActionsOnlyViewController
-            else {
-                return
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                self.menuCompletion.tryTake()?(0)
-            }
-        }
     }
 
     func observeGameControllers() {
@@ -522,17 +486,7 @@ extension ProgramViewController: ProgramDelegate {
     }
 
     func menu(_ menu: Menu.Bar) -> Menu.Result {
-        let semaphore = DispatchSemaphore(value: 0)
-        var result: Menu.Result = .none
-        self.menuCompletion.put { keycode in
-            result = Menu.Result(selected: keycode, highlighted: keycode)
-            semaphore.signal()
-        }
-        self.menu.put(menu.menuElements { keycode in
-            self.menuCompletion.tryTake()?(keycode)
-        })
-        semaphore.wait()
-        return result
+        return .none
     }
 
 }
