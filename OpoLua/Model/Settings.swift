@@ -90,9 +90,9 @@ extension Settings.Theme {
     var color: UIColor {
         switch self {
         case .series5:
-            return UIColor(named: "Series5Color")!
+            return .series5
         case .series7:
-            return UIColor(named: "Series7Color")!
+            return .series7
         }
     }
 

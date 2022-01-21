@@ -58,6 +58,7 @@
 		D8D44C49279A0B87007340B5 /* TaskManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
 		D8D95504279B52370049A3C3 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95503279B52370049A3C3 /* Localization.swift */; };
+		D8D95506279B7B100049A3C3 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95505279B7B100049A3C3 /* UIColor.swift */; };
 		D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03D277AC9B300760302 /* WindowServer.swift */; };
 		D8DCD040277ACD7800760302 /* Sprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03F277ACD7800760302 /* Sprite.swift */; };
 		D8DF3FAE278B3DA100FF658B /* Common.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAB278B3DA100FF658B /* Common.xcconfig */; };
@@ -237,6 +238,7 @@
 		D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerViewController.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		D8D95503279B52370049A3C3 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		D8D95505279B7B100049A3C3 /* UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
 		D8DCD03D277AC9B300760302 /* WindowServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowServer.swift; sourceTree = "<group>"; };
 		D8DCD03F277ACD7800760302 /* Sprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprite.swift; sourceTree = "<group>"; };
 		D8DF3FAB278B3DA100FF658B /* Common.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Common.xcconfig; sourceTree = "<group>"; };
@@ -430,6 +432,7 @@
 				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
 				D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
+				D8D95505279B7B100049A3C3 /* UIColor.swift */,
 				D8BA09712751BBEA00F4730D /* UIElement.swift */,
 				D8891350274C184C00794D55 /* UIImage.swift */,
 				DBE91524276D25A900BDB8F5 /* UIKey.swift */,
@@ -873,6 +876,7 @@
 				D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */,
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
 				DB79000F2742E6F6005E904F /* lstate.c in Sources */,
+				D8D95506279B7B100049A3C3 /* UIColor.swift in Sources */,
 				DB7900102742E6F6005E904F /* lstring.c in Sources */,
 				DB7900112742E6F6005E904F /* lstrlib.c in Sources */,
 				D8891351274C184C00794D55 /* UIImage.swift in Sources */,

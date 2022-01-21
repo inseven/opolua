@@ -77,7 +77,7 @@ class Program {
     }
 
     let url: URL
-    private let device: Device
+    let device: Device
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     let windowServer: WindowServer

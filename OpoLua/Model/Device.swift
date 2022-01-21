@@ -84,4 +84,17 @@ extension Device {
         }
     }
 
+    var tintColor: UIColor {
+        switch self {
+        case .psionSeries5:
+            return .series5
+        case .psionRevo:
+            return .series5
+        case .psionSeries7:
+            return .series7
+        case .geofoxOne:
+            return .series5
+        }
+    }
+
 }

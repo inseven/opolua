@@ -174,6 +174,7 @@ class ProgramViewController: UIViewController {
         self.program = program
         self.screenView = UIView(frame: CGRect(origin: .zero, size: program.getScreenInfo().0.cgSize()))
         super.init(nibName: nil, bundle: nil)
+        view.tintColor = program.device.tintColor
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
         view.backgroundColor = .systemBackground
