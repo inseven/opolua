@@ -159,7 +159,7 @@ class Program {
         }
     }
 
-    func quit() {
+    func sendQuit() {
         sendEvent(.quitevent)
     }
 

@@ -77,6 +77,29 @@ class ProgramViewController: UIViewController {
         }
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [items])
         let menuBarButtonItem = UIBarButtonItem(title: nil,
+                                                image: UIImage(systemName: "filemenu.and.selection"),
+                                                primaryAction: nil,
+                                                menu: menu)
+        return menuBarButtonItem
+    }()
+
+    lazy var optionsBarButtonItem: UIBarButtonItem = {
+        let quitAction = UIAction(title: "Close", image: UIImage(systemName: "xmark")) { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.program.sendQuit()
+        }
+        let taskManagerAction = UIAction(title: "Open Programs", image: UIImage(systemName: "list.bullet.rectangle")) { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.taskManager.showTaskList()
+        }
+        let actions = [quitAction, taskManagerAction]
+
+        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: actions)
+        let menuBarButtonItem = UIBarButtonItem(title: nil,
                                                 image: UIImage(systemName: "ellipsis.circle"),
                                                 primaryAction: nil,
                                                 menu: menu)
@@ -132,7 +155,7 @@ class ProgramViewController: UIViewController {
             program.rootView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
         toolbarItems = [consoleBarButtonItem, drawablesBarButtonItem]
-        navigationItem.rightBarButtonItems = [menuBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
+        navigationItem.rightBarButtonItems = [optionsBarButtonItem, menuBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
         observeMenuDismiss()
         observeGameControllers()
     }

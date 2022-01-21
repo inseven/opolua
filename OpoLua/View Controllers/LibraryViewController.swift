@@ -222,12 +222,12 @@ class LibraryViewController: UICollectionViewController {
         }
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
             var actions: [UIMenuElement] = []
-            let runAction = UIAction(title: "Delete",
-                                     image: UIImage(systemName: "trash"),
-                                     attributes: [.destructive]) { action in
+            let deleteAction = UIAction(title: "Delete",
+                                        image: UIImage(systemName: "trash"),
+                                        attributes: [.destructive]) { action in
                 self.deleteLocation(item.location)
             }
-            actions.append(runAction)
+            actions.append(deleteAction)
             return UIMenu(children: suggestedActions + actions)
         }
     }

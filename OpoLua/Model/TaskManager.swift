@@ -84,7 +84,7 @@ class TaskManager: NSObject {
         guard let program = programsByUrl[url] else {
             return
         }
-        program.quit()
+        program.sendQuit()
     }
 
     func addObserver(_ observer: TaskManagerObserver) {
