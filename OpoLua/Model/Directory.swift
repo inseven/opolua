@@ -102,25 +102,6 @@ class Directory {
             case installer
             case applicationInformation(OpoInterpreter.AppInfo?)
             case unknown
-
-            var localizedDescription: String {
-                switch self {
-                case .object:
-                    return "Object"
-                case .directory:
-                    return "Directory"
-                case .application:
-                    return "Application"
-                case .system:
-                    return "System"
-                case .installer:
-                    return "Installer"
-                case .applicationInformation:
-                    return "App Info"
-                case .unknown:
-                    return "Unknown"
-                }
-            }
         }
 
         let url: URL

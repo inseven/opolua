@@ -166,7 +166,7 @@ extension DrawableViewController: UITableViewDataSource {
         cell.drawableView.image = UIImage(cgImage: cgImage)
         cell.identifierLabel.text = "#\(drawable.id.value)"
         cell.sizeLabel.text = "\(cgImage.width) x \(cgImage.height)"
-        cell.modeLabel.text = "Unknown Mode"
+        cell.modeLabel.text = drawable.mode.localizedDescription
         cell.selectionStyle = .none
         return cell
     }

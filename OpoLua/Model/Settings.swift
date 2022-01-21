@@ -87,15 +87,6 @@ class Settings: ObservableObject {
 
 extension Settings.Theme {
 
-    var localizedDescription: String {
-        switch self {
-        case .series5:
-            return "Series 5"
-        case .series7:
-            return "Series 7"
-        }
-    }
-
     var color: UIColor {
         switch self {
         case .series5:

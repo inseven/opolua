@@ -57,6 +57,7 @@
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
 		D8D44C49279A0B87007340B5 /* TaskManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
+		D8D95504279B52370049A3C3 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95503279B52370049A3C3 /* Localization.swift */; };
 		D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03D277AC9B300760302 /* WindowServer.swift */; };
 		D8DCD040277ACD7800760302 /* Sprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03F277ACD7800760302 /* Sprite.swift */; };
 		D8DF3FAE278B3DA100FF658B /* Common.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAB278B3DA100FF658B /* Common.xcconfig */; };
@@ -235,6 +236,7 @@
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
 		D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerViewController.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
+		D8D95503279B52370049A3C3 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		D8DCD03D277AC9B300760302 /* WindowServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowServer.swift; sourceTree = "<group>"; };
 		D8DCD03F277ACD7800760302 /* Sprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprite.swift; sourceTree = "<group>"; };
 		D8DF3FAB278B3DA100FF658B /* Common.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Common.xcconfig; sourceTree = "<group>"; };
@@ -465,6 +467,14 @@
 			path = "View Controllers";
 			sourceTree = "<group>";
 		};
+		D8D95502279B52250049A3C3 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				D8D95503279B52370049A3C3 /* Localization.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
 		DB0B91502770A1F6006F5CD0 /* luac */ = {
 			isa = PBXGroup;
 			children = (
@@ -514,6 +524,7 @@
 				D86FBAB8278C76E4003DF611 /* Licenses */,
 				D861E8D9274A818D003C8D3D /* Model */,
 				D8553769278F63D600ED67C0 /* Styles */,
+				D8D95502279B52250049A3C3 /* Utilities */,
 				D8C679BB27484BB800BD8720 /* View Controllers */,
 				D8891343274BF24D00794D55 /* Views */,
 			);
@@ -816,6 +827,7 @@
 				D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */,
 				DB7900012742E6F6005E904F /* ldo.c in Sources */,
 				DBE291822795F86200EE824B /* UIKeyModifierFlags.swift in Sources */,
+				D8D95504279B52370049A3C3 /* Localization.swift in Sources */,
 				D86FBAB5278C74A3003DF611 /* AboutView.swift in Sources */,
 				D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */,
 				DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */,
