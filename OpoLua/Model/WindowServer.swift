@@ -53,6 +53,7 @@ class WindowServer {
 
     weak var delegate: WindowServerDelegate?
 
+    private var device: Device
     private var screenSize: Graphics.Size
     private var drawableHandle = (1...).makeIterator()
     private var drawablesById: [Graphics.DrawableId: Drawable] = [:]
@@ -83,7 +84,8 @@ class WindowServer {
         return canvasView
     }()
 
-    init(screenSize: Graphics.Size) {
+    init(device: Device, screenSize: Graphics.Size) {
+        self.device = device
         self.screenSize = screenSize
     }
 
@@ -221,7 +223,9 @@ class WindowServer {
 
         if let clockInfo = info {
             if view.clockView == nil {
-                let v = ClockView(clockInfo: clockInfo, systemClockDigital: systemClockDigital)
+                let v = ClockView(analogClockImage: device.analogClockImage,
+                                  clockInfo: clockInfo,
+                                  systemClockDigital: systemClockDigital)
                 view.clockView = v
                 view.addSubview(v)
             }

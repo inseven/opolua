@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 import Foundation
+import UIKit
 
 enum Device: CaseIterable {
 
@@ -67,6 +68,19 @@ extension Device {
             return .Color256 // ?
         case .geofoxOne:
             return .Color256 // ?
+        }
+    }
+
+    var analogClockImage: UIImage {
+        switch self {
+        case .psionSeries5:
+            return .clockMedium
+        case .psionRevo:
+            return .clockMedium
+        case .psionSeries7:
+            return .clockMediumC
+        case .geofoxOne:
+            return .clockMedium
         }
     }
 

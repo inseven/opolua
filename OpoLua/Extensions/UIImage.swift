@@ -22,6 +22,14 @@ import UIKit
 
 extension UIImage {
 
+    static var clockMedium: UIImage = {
+        return UIImage(named: "ClockMedium")!
+    }()
+
+    static var clockMediumC: UIImage = {
+        return UIImage(named: "ClockMediumC")!
+    }()
+
     static var epocLogo: UIImage = {
         return UIImage(named: "EpocLogo")!
     }()

@@ -116,7 +116,7 @@ class Program {
         self.device = device
         self.title = Directory.appInfo(forApplicationUrl: url)?.caption ?? url.name
         self.thread = InterpreterThread(url: url)
-        self.windowServer = WindowServer(screenSize: device.screenSize)
+        self.windowServer = WindowServer(device: device, screenSize: device.screenSize)
         self.thread.delegate = self
         self.thread.handler = self
         self.windowServer.delegate = self

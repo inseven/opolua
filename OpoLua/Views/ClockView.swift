@@ -23,14 +23,13 @@ import UIKit
 class ClockView: UIView {
     var clockInfo: Graphics.ClockInfo
     var systemClockDigital: Bool
-    private let clockImage: UIImage
+    private let analogClockImage: UIImage
 
-    init(clockInfo: Graphics.ClockInfo, systemClockDigital: Bool) {
+    init(analogClockImage: UIImage, clockInfo: Graphics.ClockInfo, systemClockDigital: Bool) {
         self.clockInfo = clockInfo
         self.systemClockDigital = systemClockDigital
-        // We are always the size of the analog clock, even if we're going to be digital
-        clockImage = UIImage(named: "ClockMedium")!
-        super.init(frame: CGRect(origin: clockInfo.position.cgPoint(), size: clockImage.size))
+        self.analogClockImage = analogClockImage
+        super.init(frame: CGRect(origin: clockInfo.position.cgPoint(), size: CGSize(width: 61.0, height: 61.0)))
         self.isOpaque = false
     }
 
@@ -62,10 +61,10 @@ class ClockView: UIView {
             let day = df.string(from: now)
             drawCenteredText(day, context: context, font: BitmapFontInfo.arial15, y: 45)
         } else {
-            if let cgImage = clockImage.cgImage {
-                context.draw(cgImage, in: CGRect(origin: .zero, size: clockImage.size))
+            if let cgImage = analogClockImage.cgImage {
+                context.draw(cgImage, in: CGRect(origin: .zero, size: analogClockImage.size))
             }
-            let centerPos = CGPoint(x: clockImage.size.width / 2, y: clockImage.size.height / 2)
+            let centerPos = CGPoint(x: analogClockImage.size.width / 2, y: analogClockImage.size.height / 2)
             let minFrac = Double(minutes) / 60
             let hourHandLen = 18.0
             let minuteHandLen = 25.0
@@ -99,7 +98,7 @@ class ClockView: UIView {
     }
 
     func clockChanged() {
-        self.frame = CGRect(origin: clockInfo.position.cgPoint(), size: clockImage.size)
+        self.frame = CGRect(origin: clockInfo.position.cgPoint(), size: analogClockImage.size)
         self.setNeedsDisplay()
     }
 
