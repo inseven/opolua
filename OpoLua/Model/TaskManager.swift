@@ -34,7 +34,8 @@ protocol TaskManagerObserver: NSObject {
  */
 protocol TaskManagerDelegate: AnyObject {
 
-    func foregroundProgram(_ program: Program)
+    func taskManagerShowTaskList(_ taskManager: TaskManager)
+    func taskManager(_ taskManager: TaskManager, bringProgramToForeground program: Program)
 
 }
 
@@ -68,9 +69,14 @@ class TaskManager: NSObject {
         return programsByUrl[url] != nil
     }
 
+    func showTaskList() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        delegate?.taskManagerShowTaskList(self)
+    }
+
     func foregroundProgram(_ program: Program) {
         dispatchPrecondition(condition: .onQueue(.main))
-        delegate?.foregroundProgram(program)
+        delegate?.taskManager(self, bringProgramToForeground: program)
     }
 
     func quit(_ url: URL) {

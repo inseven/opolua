@@ -368,9 +368,7 @@ extension ProgramViewController: ProgramDelegate {
 
     func programDidRequestTaskList(_ program: Program) {
         DispatchQueue.main.async {
-            let taskManagerViewController = TaskManagerViewController(taskManager: self.taskManager)
-            let navigationController = UINavigationController(rootViewController: taskManagerViewController)
-            self.present(navigationController, animated: true)
+            self.taskManager.showTaskList()
         }
     }
 

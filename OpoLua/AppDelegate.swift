@@ -69,7 +69,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             guard let navigationController = splitViewController.viewControllers[0] as? UINavigationController else {
                 return
             }
-            navigationController.pushViewController(viewController, animated: true)
+            navigationController.setViewControllers([navigationController.viewControllers[0], viewController], animated: true)
         } else {
             // N.B. Somewhat counterintuitively we need to place our view controller in a navigation view controller
             // to ensure that it replaces the top level detail view controller, rather than always pushing onto it.
@@ -134,7 +134,13 @@ extension AppDelegate: LibraryViewControllerDelegate {
 
 extension AppDelegate: TaskManagerDelegate {
 
-    func foregroundProgram(_ program: Program) {
+    func taskManagerShowTaskList(_ taskManager: TaskManager) {
+        let taskManagerViewController = TaskManagerViewController(taskManager: self.taskManager)
+        let navigationController = UINavigationController(rootViewController: taskManagerViewController)
+        splitViewController.present(navigationController, animated: true)
+    }
+
+    func taskManager(_ taskManager: TaskManager, bringProgramToForeground program: Program) {
         let programViewController = ProgramViewController(settings: settings,
                                                           taskManager: taskManager,
                                                           program: program)
