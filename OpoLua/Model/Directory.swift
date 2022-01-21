@@ -68,7 +68,6 @@ extension Settings.Theme {
 
 }
 
-
 class Directory {
 
     struct Application {
@@ -92,20 +91,28 @@ class Directory {
         return OpoInterpreter.shared.getAppInfo(aifPath: applicationInfoFile.path)
     }
 
-    struct Item {
+    struct Item: Hashable {
 
-        enum `Type` {
+        static func == (lhs: Directory.Item, rhs: Directory.Item) -> Bool {
+            return lhs.url == rhs.url
+        }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(url)
+        }
+
+        enum ItemType {
             case object
             case directory
             case application(OpoInterpreter.AppInfo?)
-            case system(Application)
+            case system(Application)  // TODO: Flatten down Application
             case installer
             case applicationInformation(OpoInterpreter.AppInfo?)
             case unknown
         }
 
         let url: URL
-        let type: `Type`
+        let type: ItemType
 
         var name: String {
             switch type {
@@ -160,7 +167,7 @@ class Directory {
 
     }
 
-    private static func asSystem(url: URL) throws -> Item.`Type`? {
+    private static func asSystem(url: URL) throws -> Item.ItemType? {
         guard try FileManager.default.isSystem(at: url) else {
             return nil
         }

@@ -24,6 +24,18 @@ import UIKit
 
 class DirectoryViewController : UIViewController {
 
+    enum Section {
+        case none
+    }
+
+    struct Item: Hashable {
+        var directoryItem: Directory.Item
+        var isRunning: Bool
+    }
+
+    typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
+
     class Cell: UICollectionViewCell {
 
         lazy var imageView: UIImageView = {
@@ -41,7 +53,6 @@ class DirectoryViewController : UIViewController {
             label.numberOfLines = 1
             label.textAlignment = .center
             label.lineBreakMode = .byTruncatingTail
-            // TODO: Truncation mode.
             return label
         }()
 
@@ -100,7 +111,6 @@ class DirectoryViewController : UIViewController {
     var settings: Settings
     var taskManager: TaskManager
     var directory: Directory
-    var items: [Directory.Item] = []
     var installer: Installer?
     var applicationActiveObserver: Any?
     var settingsSink: AnyCancellable?
@@ -138,16 +148,33 @@ class DirectoryViewController : UIViewController {
     }()
 
     lazy var collectionView: UICollectionView = {
-        // TODO: Switch this to being a layout provider; and use the trait collection to determine the sizes.
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.delegate = self
-        collectionView.dataSource = self
         collectionView.register(Cell.self, forCellWithReuseIdentifier: Self.cell)
         collectionView.alwaysBounceVertical = true
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         return collectionView
+    }()
+
+    lazy var dataSource: DataSource = {
+        let cellRegistration = UICollectionView.CellRegistration<Cell, Item> { [weak self] cell, _, item in
+            guard let self = self else {
+                return
+            }
+            cell.textLabel.text = item.directoryItem.name
+            cell.detailTextLabel.text = item.directoryItem.type.localizedDescription
+            cell.imageView.image = item.directoryItem.icon(for: self.settings.theme).scale(self.view.window?.screen.nativeScale ?? 1.0)
+            if let programUrl = item.directoryItem.programUrl, self.taskManager.isRunning(programUrl) {
+                cell.backgroundColor = .magenta
+            } else {
+                cell.backgroundColor = .clear
+            }
+        }
+        return DataSource(collectionView: collectionView) { collectionView, indexPath, item in
+            return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
+        }
     }()
 
     lazy var searchController: UISearchController = {
@@ -173,7 +200,6 @@ class DirectoryViewController : UIViewController {
         self.settings = settings
         self.taskManager = taskManager
         self.directory = directory
-        self.items = directory.items
         super.init(nibName: nil, bundle: nil)
         self.directory.delegate = self
         view.backgroundColor = .systemBackground
@@ -185,6 +211,7 @@ class DirectoryViewController : UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
         collectionView.backgroundView = wallpaperView
+        collectionView.dataSource = dataSource
         self.title = title ?? directory.name
         self.navigationItem.searchController = searchController
         self.navigationItem.largeTitleDisplayMode = .never
@@ -197,21 +224,21 @@ class DirectoryViewController : UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.isToolbarHidden = true
-        applicationActiveObserver = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification,
-                                                                           object: nil,
-                                                                           queue: nil) { notification in
+        let notificationCenter = NotificationCenter.default
+        applicationActiveObserver = notificationCenter.addObserver(forName: UIApplication.didBecomeActiveNotification,
+                                                                   object: nil,
+                                                                   queue: nil) { notification in
             self.reload()
         }
         settingsSink = settings.objectWillChange.sink { [unowned self] settings in
             self.wallpaperPixelView.image = self.settings.theme.wallpaper
         }
         taskManager.addObserver(self)
-        collectionView.reloadData()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        dataSource.apply(snapshot(), animatingDifferences: animated)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -280,7 +307,9 @@ class DirectoryViewController : UIViewController {
 
         let runAction = UIAction(title: "Run") { action in
             let program = self.taskManager.program(for: url)
-            let viewController = ProgramViewController(settings: self.settings, taskManager: self.taskManager, program: program)
+            let viewController = ProgramViewController(settings: self.settings,
+                                                       taskManager: self.taskManager,
+                                                       program: program)
             self.navigationController?.pushViewController(viewController, animated: true)
         }
         actions.append(runAction)
@@ -288,7 +317,9 @@ class DirectoryViewController : UIViewController {
         let runAsActions = Device.allCases.map { device in
             UIAction(title: device.name) { action in
                 let program = Program(url: url, device: device)
-                let viewController = ProgramViewController(settings: self.settings, taskManager: self.taskManager, program: program)
+                let viewController = ProgramViewController(settings: self.settings,
+                                                           taskManager: self.taskManager,
+                                                           program: program)
                 self.navigationController?.pushViewController(viewController, animated: true)
             }
         }
@@ -305,30 +336,19 @@ class DirectoryViewController : UIViewController {
         return actions
     }
 
-}
-
-extension DirectoryViewController: UICollectionViewDataSource {
-
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 1
-    }
-
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return items.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Self.cell, for: indexPath) as! Cell
-        let item = items[indexPath.row]
-        cell.textLabel.text = item.name
-        cell.detailTextLabel.text = item.type.localizedDescription
-        cell.imageView.image = item.icon(for: settings.theme).scale(view.window?.screen.nativeScale ?? 1.0)
-        if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
-            cell.backgroundColor = .magenta
-        } else {
-            cell.backgroundColor = .clear
-        }
-        return cell
+    func snapshot() -> Snapshot {
+        var snapshot = Snapshot()
+        snapshot.appendSections([.none])
+        let items = directory.items(filter: searchController.searchBar.text)
+            .map { item -> Item in
+                var isRunning = false
+                if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
+                    isRunning = true
+                }
+                return Item(directoryItem: item, isRunning: isRunning)
+            }
+        snapshot.appendItems(items, toSection: nil)
+        return snapshot
     }
 
 }
@@ -336,7 +356,10 @@ extension DirectoryViewController: UICollectionViewDataSource {
 extension DirectoryViewController: UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = items[indexPath.row]
+        guard let item = dataSource.itemIdentifier(for: indexPath)?.directoryItem else {
+            collectionView.deselectItem(at: indexPath, animated: true)
+            return
+        }
         switch item.type {
         case .object, .application:
             let program = taskManager.program(for: item.programUrl!)
@@ -380,7 +403,9 @@ extension DirectoryViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView,
                         contextMenuConfigurationForItemAt indexPath: IndexPath,
                         point: CGPoint) -> UIContextMenuConfiguration? {
-        let item = items[indexPath.row]
+        guard let item = dataSource.itemIdentifier(for: indexPath)?.directoryItem else {
+            return nil
+        }
         return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
             let deleteAction = UIAction(title: "Delete",
                                          image: UIImage(systemName: "trash"),
@@ -409,8 +434,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
 extension DirectoryViewController: UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
-        items = directory.items(filter: searchController.searchBar.text)
-        collectionView.reloadData()
+        dataSource.apply(snapshot())
     }
 
 }
@@ -418,10 +442,8 @@ extension DirectoryViewController: UISearchResultsUpdating {
 extension DirectoryViewController: DirectoryDelegate {
 
     func directoryDidChange(_ directory: Directory) {
-        items = directory.items(filter: searchController.searchBar.text)
-        collectionView.reloadData()
+        dataSource.apply(snapshot())
     }
-
 }
 
 extension DirectoryViewController: InstallerDelegate {
@@ -453,8 +475,7 @@ extension DirectoryViewController: InstallerDelegate {
 extension DirectoryViewController: TaskManagerObserver {
 
     func taskManagerDidUpdate(_ taskManager: TaskManager) {
-        print("reloading data")
-        collectionView.reloadData()
+        dataSource.apply(snapshot(), animatingDifferences: true)
     }
 
 }

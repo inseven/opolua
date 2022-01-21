@@ -149,7 +149,7 @@ class LibraryViewController: UICollectionViewController {
     }
 
     func reload() {
-        self.dataSource.apply(snapshot())
+        dataSource.apply(snapshot())
     }
 
     func snapshot() -> Snapshot {
@@ -169,7 +169,7 @@ class LibraryViewController: UICollectionViewController {
         var configuration = UICollectionLayoutListConfiguration(appearance: appearance)
         configuration.headerMode = .supplementary
         configuration.trailingSwipeActionsConfigurationProvider = { [unowned self] indexPath in
-            guard let item = self.dataSource.itemIdentifier(for: indexPath), !item.readonly else {
+            guard let item = dataSource.itemIdentifier(for: indexPath), !item.readonly else {
                 return nil
             }
             let action = UIContextualAction(style: .normal, title: "Done!") { action, view, completion in

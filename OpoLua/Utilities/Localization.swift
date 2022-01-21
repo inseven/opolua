@@ -20,7 +20,7 @@
 
 import Foundation
 
-extension Directory.Item.`Type` {
+extension Directory.Item.ItemType {
 
     var localizedDescription: String {
         switch self {
