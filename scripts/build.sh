@@ -130,7 +130,7 @@ function cleanup {
 trap cleanup EXIT
 
 # Determine the version and build number.
-VERSION_NUMBER=`changes --scope macOS version`
+VERSION_NUMBER=`changes version`
 BUILD_NUMBER=`build-tools generate-build-number`
 
 # Import the certificates into our dedicated keychain.
@@ -169,6 +169,7 @@ if $TESTFLIGHT_UPLOAD ; then
         api_key:"$API_KEY_PATH" \
         api_key_id:"$APPLE_API_KEY_ID" \
         api_key_issuer_id:"$APPLE_API_KEY_ISSUER_ID" \
-        ipa:"$IPA_PATH"
+        ipa:"$IPA_PATH" \
+        changelog:"$( changes notes )"
     unlink "$API_KEY_PATH"
 fi
