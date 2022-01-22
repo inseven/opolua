@@ -20,9 +20,9 @@
 
 import Foundation
 
-class ExternalLocation: Hashable {
+class SecureLocation: Hashable {
 
-    static func == (lhs: ExternalLocation, rhs: ExternalLocation) -> Bool {
+    static func == (lhs: SecureLocation, rhs: SecureLocation) -> Bool {
         return lhs.url == rhs.url
     }
 

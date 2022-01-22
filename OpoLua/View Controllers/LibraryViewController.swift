@@ -41,7 +41,7 @@ class LibraryViewController: UICollectionViewController {
         case runningPrograms  // TODO: RENAME
         case allPrograms
         case local(URL)
-        case external(ExternalLocation)
+        case external(SecureLocation)
 
     }
 
@@ -241,7 +241,7 @@ class LibraryViewController: UICollectionViewController {
     }
 
     // TODO: Consider just passing in the item here.
-    func deleteLocation(_ location: ExternalLocation) {
+    func deleteLocation(_ location: SecureLocation) {
         do {
             try settings.removeLocation(location)
             reload()
