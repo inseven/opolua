@@ -20,7 +20,7 @@
 
 import Foundation
 
-protocol Location {
+protocol Location: Hashable {
 
     var url: URL { get }
 
@@ -36,6 +36,14 @@ protocol SecureLocationProtocol: Location {
 }
 
 class LocalLocation: Location {
+
+    static func == (lhs: LocalLocation, rhs: LocalLocation) -> Bool {
+        return lhs.url == rhs.url
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(url)
+    }
 
     var url: URL
 
@@ -74,6 +82,14 @@ class ExternalLocation: SecureLocationProtocol {
 #else
 
 class ExternalLocation: SecureLocationProtocol {
+
+    static func == (lhs: ExternalLocation, rhs: ExternalLocation) -> Bool {
+        return lhs.url == rhs.url
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(url)
+    }
 
     private let backingUrl: URL
     let url: URL

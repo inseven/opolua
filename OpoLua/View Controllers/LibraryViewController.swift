@@ -31,33 +31,52 @@ protocol LibraryViewControllerDelegate: AnyObject {
 class LibraryViewController: UICollectionViewController {
 
     enum Section {
+        case special
         case examples
         case locations
+    }
+
+    enum ItemType: Hashable {
+
+        case runningPrograms  // TODO: RENAME
+        case allPrograms
+        case local(LocalLocation)
+        case external(ExternalLocation)
+
     }
 
     struct Item: Hashable {
 
         static func == (lhs: Item, rhs: Item) -> Bool {
-            return lhs.location.url == rhs.location.url
+            return lhs.type == rhs.type
         }
 
         func hash(into hasher: inout Hasher) {
-            hasher.combine(location.url)
+            hasher.combine(type)
         }
 
-        let location: Location
+        let type: ItemType
         let name: String
+        let image: UIImage
         let readonly: Bool
 
-        init(location: Location, readonly: Bool = false) {
-            self.location = location
-            self.name = location.url.name
-            self.readonly = readonly
+        var url: URL? {
+            switch type {
+            case .runningPrograms:
+                return nil
+            case .allPrograms:
+                return nil
+            case .local(let location):
+                return location.url
+            case .external(let location):
+                return location.url
+            }
         }
 
-        init(location: Location, name: String, readonly: Bool = false) {
-            self.location = location
+        init(type: ItemType, name: String, image: UIImage, readonly: Bool = false) {
+            self.type = type
             self.name = name
+            self.image = image
             self.readonly = readonly
         }
 
@@ -99,7 +118,7 @@ class LibraryViewController: UICollectionViewController {
 
         let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item> { cell, _, item in
             var configuration = cell.defaultContentConfiguration()
-            configuration.image = UIImage(systemName: "folder")
+            configuration.image = item.image
             configuration.text = item.name
             cell.contentConfiguration = configuration
             cell.accessories = [UICellAccessory.disclosureIndicator()]
@@ -112,6 +131,8 @@ class LibraryViewController: UICollectionViewController {
             }
             var configuration = UIListContentConfiguration.extraProminentInsetGroupedHeader()
             switch section {
+            case .special:
+                configuration.text = nil
             case .examples:
                 configuration.text = "Examples"
             case .locations:
@@ -154,13 +175,30 @@ class LibraryViewController: UICollectionViewController {
 
     func snapshot() -> Snapshot {
         var snapshot = Snapshot()
-        snapshot.appendSections([.examples, .locations])
-        snapshot.appendItems([Item(location: LocalLocation(url: Bundle.main.examplesUrl), readonly: true)],
+        snapshot.appendSections([.special, .examples])
+        snapshot.appendItems([Item(type: .runningPrograms,
+                                   name: "Runnning Programs",
+                                   image: UIImage(systemName: "play.square")!),
+                             Item(type: .allPrograms,
+                                   name: "All Programs",
+                                   image: UIImage(systemName: "square")!)],
+                             toSection: .special)
+        snapshot.appendItems([Item(type: .local(LocalLocation(url: Bundle.main.bundleURL)),
+                                   name: "Files",
+                                   image: UIImage(systemName: "folder")!,
+                                   readonly: true),
+                              Item(type: .local(LocalLocation(url: Bundle.main.examplesUrl)),
+                                   name: "Scripts",
+                                   image: UIImage(systemName: "folder")!,
+                                   readonly: true)],
                              toSection: .examples)
         let locations = settings.locations
-            .map { Item(location: $0) }
+            .map { Item(type: .external($0), name: $0.url.name, image: UIImage(systemName: "folder")!) }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
-        snapshot.appendItems(locations, toSection: .locations)
+        if locations.count > 0 {
+            snapshot.appendSections([.locations])
+            snapshot.appendItems(locations, toSection: .locations)
+        }
         return snapshot
     }
 
@@ -168,12 +206,16 @@ class LibraryViewController: UICollectionViewController {
         let appearance: UICollectionLayoutListConfiguration.Appearance = (splitViewController?.isCollapsed ?? true) ? .insetGrouped : .sidebar
         var configuration = UICollectionLayoutListConfiguration(appearance: appearance)
         configuration.headerMode = .supplementary
-        configuration.trailingSwipeActionsConfigurationProvider = { [unowned self] indexPath in
-            guard let item = dataSource.itemIdentifier(for: indexPath), !item.readonly else {
+        configuration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
+            guard let self = self,
+                  let item = self.dataSource.itemIdentifier(for: indexPath),
+                  !item.readonly else {
                 return nil
             }
             let action = UIContextualAction(style: .normal, title: "Done!") { action, view, completion in
-                deleteLocation(item.location)
+                if case .external(let location) = item.type {
+                    self.deleteLocation(location)
+                }
                 completion(true)
             }
             action.title = "Delete"
@@ -198,10 +240,8 @@ class LibraryViewController: UICollectionViewController {
         }
     }
 
-    func deleteLocation(_ location: Location) {
-        guard let location = location as? ExternalLocation else {
-            return
-        }
+    // TODO: Consider just passing in the item here.
+    func deleteLocation(_ location: ExternalLocation) {
         do {
             try settings.removeLocation(location)
             reload()
@@ -225,7 +265,9 @@ class LibraryViewController: UICollectionViewController {
             let deleteAction = UIAction(title: "Delete",
                                         image: UIImage(systemName: "trash"),
                                         attributes: [.destructive]) { action in
-                self.deleteLocation(item.location)
+                if case .external(let location) = item.type {
+                    self.deleteLocation(location)
+                }
             }
             actions.append(deleteAction)
             return UIMenu(children: suggestedActions + actions)
@@ -237,16 +279,34 @@ class LibraryViewController: UICollectionViewController {
             collectionView.deselectItem(at: indexPath, animated: true)
             return
         }
-        do {
-            let directory = try Directory(url: item.location.url)
-            let viewController = DirectoryViewController(settings: settings,
-                                                         taskManager: taskManager,
-                                                         directory: directory,
-                                                         title: item.name)
+        switch item.type {
+        case .runningPrograms:
+            let viewController = UIViewController(nibName: nil, bundle: nil)
+            viewController.view.backgroundColor = .systemBackground
+            viewController.navigationItem.largeTitleDisplayMode = .never
+            viewController.title = "Running Programs"
             delegate?.libraryViewController(self, presentViewController: viewController)
-        } catch {
-            present(error: error)
-            collectionView.deselectItem(at: indexPath, animated: true)
+        case .allPrograms:
+            let viewController = UIViewController(nibName: nil, bundle: nil)
+            viewController.view.backgroundColor = .systemBackground
+            viewController.navigationItem.largeTitleDisplayMode = .never
+            viewController.title = "All Programs"
+            delegate?.libraryViewController(self, presentViewController: viewController)
+        case .local, .external:
+            do {
+                guard let url = item.url else {
+                    return
+                }
+                let directory = try Directory(url: url)
+                let viewController = DirectoryViewController(settings: settings,
+                                                             taskManager: taskManager,
+                                                             directory: directory,
+                                                             title: item.name)
+                delegate?.libraryViewController(self, presentViewController: viewController)
+            } catch {
+                present(error: error)
+                collectionView.deselectItem(at: indexPath, animated: true)
+            }
         }
     }
 
