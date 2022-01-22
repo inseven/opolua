@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import UIKit
 
 /**
@@ -76,6 +77,7 @@ class Program {
         }
     }
 
+    let settings: Settings
     let url: URL
     let device: Device
     let appInfo: OpoInterpreter.AppInfo?
@@ -84,6 +86,7 @@ class Program {
     let windowServer: WindowServer
     private let scheduler = Scheduler()
     private var geteventRequest: GetEventRequest?
+    private var settingsSink: AnyCancellable?
 
     private var _state: State = .idle
 
@@ -116,7 +119,8 @@ class Program {
         }
     }()
 
-    init(url: URL, device: Device = .psionSeries5) {
+    init(settings: Settings, url: URL, device: Device = .psionSeries5) {
+        self.settings = settings
         self.url = url
         self.device = device
         let appInfo = Directory.appInfo(forApplicationUrl: url)
@@ -154,6 +158,15 @@ class Program {
         if let uid3 = uid3 {
             print("Starting program with UID3 \(uid3.description)")
         }
+        settingsSink = settings.objectWillChange.sink { [weak self] _ in
+            guard let self = self else {
+                return
+            }
+            dispatchPrecondition(condition: .onQueue(.main))
+            self.oplConfig[.clockFormat] = self.settings.clockType == .analog ? "0" : "1"
+            self.windowServer.systemClockFormatChanged(isDigital: self.settings.clockType == .digital)
+        }
+        oplConfig[.clockFormat] = settings.clockType == .analog ? "0" : "1"
         thread.start()
     }
 
@@ -436,19 +449,20 @@ extension Program: OpoIoHandler {
     }
 
     func setConfig(key: ConfigName, value: String) {
-        print("setConfig \(key.rawValue) \(value)")
-        oplConfig[key] = value
-        switch key {
-        case .clockFormat:
-            let digital = value == "1"
-            DispatchQueue.main.sync {
-                windowServer.systemClockFormatChanged(newValue: digital)
+        DispatchQueue.main.sync {
+            oplConfig[key] = value
+            switch key {
+            case .clockFormat:
+                let clockType: Settings.ClockType = value == "1" ? .digital : .analog
+                settings.clockType = clockType
             }
         }
     }
 
     func getConfig(key: ConfigName) -> String {
-        return oplConfig[key]!
+        return DispatchQueue.main.sync {
+            return oplConfig[key]!
+        }
     }
 
     func setAppTitle(_ title: String) {
@@ -474,6 +488,10 @@ extension Program: OpoIoHandler {
 }
 
 extension Program: WindowServerDelegate {
+
+    func windowServerClockIsDigital(_ windowServer: WindowServer) -> Bool {
+        return self.oplConfig[.clockFormat] == "1"
+    }
 
     func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
         handleTouch(touch, in: canvasView, with: event, type: .down)

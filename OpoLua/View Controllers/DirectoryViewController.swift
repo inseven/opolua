@@ -317,7 +317,7 @@ class DirectoryViewController : UIViewController {
 
         let runAsActions = Device.allCases.map { device in
             UIAction(title: device.name) { action in
-                let program = Program(url: url, device: device)
+                let program = Program(settings: self.settings, url: url, device: device)
                 let viewController = ProgramViewController(settings: self.settings,
                                                            taskManager: self.taskManager,
                                                            program: program)

@@ -26,9 +26,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    var taskManager = TaskManager()
-
     var settings = Settings()
+    lazy var taskManager: TaskManager = {
+        return TaskManager(settings: settings)
+    }()
     var splitViewController: UISplitViewController!
     var settingsSink: AnyCancellable?
 

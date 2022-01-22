@@ -78,11 +78,9 @@ class ProgramViewController: UIViewController {
     var taskManager: TaskManager
     var program: Program
 
-    var screenView: UIView
-
-    var virtualController: GCVirtualController?
-
-    var settingsSink: AnyCancellable?
+    private var screenView: UIView
+    private var virtualController: GCVirtualController?
+    private var settingsSink: AnyCancellable?
 
     lazy var controllerState: [ControllerButton: Bool] = {
         return ControllerButton.allCases.reduce(into: [ControllerButton: Bool]()) { partialResult, button in

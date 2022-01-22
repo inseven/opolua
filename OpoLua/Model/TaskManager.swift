@@ -41,13 +41,18 @@ protocol TaskManagerDelegate: AnyObject {
 
 class TaskManager: NSObject {
 
+    var settings: Settings
+    weak var delegate: TaskManagerDelegate?
+
     private var programsByUrl: [URL: Program] = [:]
     private var observers: [TaskManagerObserver] = []
 
-    weak var delegate: TaskManagerDelegate?
-
     var programs: [Program] {
         return Array(programsByUrl.values)
+    }
+
+    init(settings: Settings) {
+        self.settings = settings
     }
 
     // TODO: Consider whether this should be responsible for restarting in a different mode?
@@ -57,7 +62,7 @@ class TaskManager: NSObject {
             return program
         }
         // TODO: Lifecycle delegate.
-        let program = Program(url: url)
+        let program = Program(settings: settings, url: url)
         program.addObserver(self)
         programsByUrl[url] = program
         notifyObservers()

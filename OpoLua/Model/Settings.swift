@@ -24,10 +24,16 @@ import UIKit
 
 class Settings: ObservableObject {
 
+    enum ClockType: String {
+        case analog
+        case digital
+    }
+
     private enum Key: String {
-        case theme = "theme"
-        case showWallpaper = "showWallpaper"
+        case theme = "Theme"
+        case showWallpaper = "ShowWallpaper"
         case locations = "Locations"
+        case clockType = "Clock"
     }
 
     let userDefaults = UserDefaults()
@@ -74,6 +80,10 @@ class Settings: ObservableObject {
         return value
     }
 
+    private func string(for key: Key) -> String? {
+        return self.userDefaults.string(forKey: key.rawValue)
+    }
+
     private func secureLocations(for key: Key) throws -> [ExternalLocation] {
         guard let urls = array(for: key) as? [Data] else {
             print("Failed to load security scoped URLs for '\(key)'.")
@@ -104,29 +114,43 @@ class Settings: ObservableObject {
     func addLocation(_ url: URL) throws {
         locations.append(try ExternalLocation(url: url))
         try set(secureLocations: locations, for: .locations)
+        self.objectWillChange.send()
     }
 
     func removeLocation(_ location: ExternalLocation) throws {
         try location.cleanup()
         locations.removeAll { $0.url == location.url }
         try set(secureLocations: locations, for: .locations)
+        self.objectWillChange.send()
     }
 
     var theme: Settings.Theme {
         get {
-            Theme.init(rawValue: self.integer(for: .theme, default: Theme.series7.rawValue)) ?? .series7
+            return Theme.init(rawValue: self.integer(for: .theme, default: Theme.series7.rawValue)) ?? .series7
         }
         set {
             self.set(newValue.rawValue, for: .theme)
+            self.objectWillChange.send()
         }
     }
 
     var showWallpaper: Bool {
         get {
-            self.bool(for: .showWallpaper, default: true)
+            return self.bool(for: .showWallpaper, default: true)
         }
         set {
             self.set(newValue, for: .showWallpaper)
+            self.objectWillChange.send()
+        }
+    }
+
+    var clockType: ClockType {
+        get {
+            return ClockType.init(rawValue: self.string(for: .clockType) ?? ClockType.analog.rawValue) ?? .analog
+        }
+        set {
+            self.set(newValue.rawValue, for: .clockType)
+            self.objectWillChange.send()
         }
     }
 

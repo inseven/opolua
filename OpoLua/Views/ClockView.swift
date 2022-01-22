@@ -22,7 +22,13 @@ import UIKit
 
 class ClockView: UIView {
     var clockInfo: Graphics.ClockInfo
-    var systemClockDigital: Bool
+
+    var systemClockDigital: Bool {
+        didSet {
+            setNeedsDisplay()
+        }
+    }
+    
     private let analogClockImage: UIImage
 
     init(analogClockImage: UIImage, clockInfo: Graphics.ClockInfo, systemClockDigital: Bool) {

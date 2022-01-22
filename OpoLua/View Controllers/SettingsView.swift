@@ -55,6 +55,10 @@ struct SettingsView: View {
                         Text("Series 5").tag(Settings.Theme.series5)
                         Text("Series 7").tag(Settings.Theme.series7)
                     }
+                    Picker("Clock", selection: $settings.clockType) {
+                        Text("Analog").tag(Settings.ClockType.analog)
+                        Text("Digital").tag(Settings.ClockType.digital)
+                    }
                     Toggle("Show Wallpaper", isOn: $settings.showWallpaper)
                 }
                 Section {

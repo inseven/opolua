@@ -23,6 +23,8 @@ import UIKit
 
 protocol WindowServerDelegate: CanvasViewDelegate {
 
+    func windowServerClockIsDigital(_ windowServer: WindowServer) -> Bool
+
 }
 
 class WindowServer {
@@ -65,7 +67,6 @@ class WindowServer {
     private var spriteWindows: [Int: Graphics.DrawableId] = [:]
     private var spriteTimer: Timer?
     private var clockTimer: Timer?
-    private var systemClockDigital: Bool = false
 
     public var drawables: [Drawable] {
         return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
@@ -223,7 +224,7 @@ class WindowServer {
             if view.clockView == nil {
                 let v = ClockView(analogClockImage: device.analogClockImage,
                                   clockInfo: clockInfo,
-                                  systemClockDigital: systemClockDigital)
+                                  systemClockDigital: delegate!.windowServerClockIsDigital(self))
                 view.clockView = v
                 view.addSubview(v)
             }
@@ -376,14 +377,14 @@ class WindowServer {
     }
 
     @objc func clocksChanged() {
+        let isDigital = delegate!.windowServerClockIsDigital(self)
         for (_, window) in windows {
-            window.clockView?.systemClockDigital = self.systemClockDigital
+            window.clockView?.systemClockDigital = isDigital
             window.clockView?.clockChanged()
         }
     }
 
-    public func systemClockFormatChanged(newValue: Bool) {
-        self.systemClockDigital = newValue
+    public func systemClockFormatChanged(isDigital: Bool) {
         clocksChanged()
     }
 
