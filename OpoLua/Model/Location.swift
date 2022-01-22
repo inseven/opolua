@@ -109,20 +109,3 @@ class ExternalLocation: SecureLocationProtocol {
 }
 
 #endif
-
-extension UserDefaults {
-
-    func secureLocations(forKey defaultName: String) throws -> [ExternalLocation] {
-        guard let urls = UserDefaults.standard.array(forKey: defaultName) as? [Data] else {
-            print("Failed to load security scoped URLs for '\(defaultName)'.")
-            return []
-        }
-        return try urls.map { try ExternalLocation(data: $0) }
-    }
-
-    func set(secureLocations: [ExternalLocation], forKey defaultName: String) throws {
-        let bookmarks = try secureLocations.map { try $0.dataRepresentation() }
-        UserDefaults.standard.set(bookmarks, forKey: defaultName);
-    }
-
-}

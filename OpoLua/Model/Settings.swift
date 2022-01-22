@@ -27,14 +27,13 @@ class Settings: ObservableObject {
     private enum Key: String {
         case theme = "theme"
         case showWallpaper = "showWallpaper"
+        case locations = "Locations"
     }
 
     let userDefaults = UserDefaults()
 
-    let locationsKey = "Locations"
-
     // TODO: Should be immutable.
-    var locations: [ExternalLocation]
+    var locations: [ExternalLocation] = []
 
     enum Theme: Int, CaseIterable, Identifiable {
 
@@ -46,11 +45,18 @@ class Settings: ObservableObject {
 
     init() {
         do {
-            locations = try userDefaults.secureLocations(forKey: locationsKey)
+            locations = try secureLocations(for: .locations)
         } catch {
             print("Failed to load locations with error \(error).")
-            locations = []
         }
+    }
+
+    private func object(for key: Key) -> Any? {
+        return self.userDefaults.object(forKey: key.rawValue)
+    }
+
+    private func array(for key: Key) -> [Any]? {
+        return self.userDefaults.array(forKey: key.rawValue)
     }
 
     private func integer(for key: Key, default defaultValue: Int = 0) -> Int {
@@ -68,6 +74,18 @@ class Settings: ObservableObject {
         return value
     }
 
+    private func secureLocations(for key: Key) throws -> [ExternalLocation] {
+        guard let urls = array(for: key) as? [Data] else {
+            print("Failed to load security scoped URLs for '\(key)'.")
+            return []
+        }
+        return try urls.map { try ExternalLocation(data: $0) }
+    }
+
+    private func set(_ value: Any?, for key: Key) {
+        self.userDefaults.set(value, forKey: key.rawValue)
+    }
+
     private func set(_ value: Int, for key: Key) {
         dispatchPrecondition(condition: .onQueue(.main))
         self.userDefaults.set(value, forKey: key.rawValue)
@@ -78,15 +96,20 @@ class Settings: ObservableObject {
         self.userDefaults.set(value, forKey: key.rawValue)
     }
 
+    private func set(secureLocations: [ExternalLocation], for key: Key) throws {
+        let bookmarks = try secureLocations.map { try $0.dataRepresentation() }
+        self.set(bookmarks, for: key)
+    }
+
     func addLocation(_ url: URL) throws {
         locations.append(try ExternalLocation(url: url))
-        try userDefaults.set(secureLocations: locations, forKey: locationsKey)
+        try set(secureLocations: locations, for: .locations)
     }
 
     func removeLocation(_ location: ExternalLocation) throws {
         try location.cleanup()
         locations.removeAll { $0.url == location.url }
-        try userDefaults.set(secureLocations: locations, forKey: locationsKey)
+        try set(secureLocations: locations, for: .locations)
     }
 
     var theme: Settings.Theme {

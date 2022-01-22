@@ -16,7 +16,6 @@
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
 		D8535A2A277139D900DFCE29 /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A29277139D900DFCE29 /* Tone.swift */; };
 		D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8553767278F535A00ED67C0 /* SettingsView.swift */; };
-		D855376B278F63EA00ED67C0 /* ColoredCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D855376A278F63EA00ED67C0 /* ColoredCheckbox.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
 		D8647C702793540500DCC261 /* TaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8647C6F2793540500DCC261 /* TaskManager.swift */; };
 		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
@@ -197,7 +196,6 @@
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
 		D8535A29277139D900DFCE29 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		D8553767278F535A00ED67C0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		D855376A278F63EA00ED67C0 /* ColoredCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColoredCheckbox.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		D8647C6F2793540500DCC261 /* TaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManager.swift; sourceTree = "<group>"; };
 		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
@@ -350,14 +348,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D8553769278F63D600ED67C0 /* Styles */ = {
-			isa = PBXGroup;
-			children = (
-				D855376A278F63EA00ED67C0 /* ColoredCheckbox.swift */,
-			);
-			path = Styles;
-			sourceTree = "<group>";
-		};
 		D861E8D9274A818D003C8D3D /* Model */ = {
 			isa = PBXGroup;
 			children = (
@@ -526,7 +516,6 @@
 				D889134B274C17F300794D55 /* Extensions */,
 				D86FBAB8278C76E4003DF611 /* Licenses */,
 				D861E8D9274A818D003C8D3D /* Model */,
-				D8553769278F63D600ED67C0 /* Styles */,
 				D8D95502279B52250049A3C3 /* Utilities */,
 				D8C679BB27484BB800BD8720 /* View Controllers */,
 				D8891343274BF24D00794D55 /* Views */,
@@ -850,7 +839,6 @@
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
 				DB7900072742E6F6005E904F /* llex.c in Sources */,
-				D855376B278F63EA00ED67C0 /* ColoredCheckbox.swift in Sources */,
 				D884A3D7277914CF008954A0 /* Installer.swift in Sources */,
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
 				D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */,

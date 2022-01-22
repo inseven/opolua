@@ -50,15 +50,11 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("Theme") {
-                    ForEach(Settings.Theme.allCases) { theme in
-                        Toggle(isOn: themeBinding(value: theme)) {
-                            Text(theme.localizedDescription)
-                        }
-                        .toggleStyle(ColoredCheckbox(color: Color(uiColor: theme.color)))
-                    }
-                }
                 Section("Appearance") {
+                    Picker("Theme", selection: $settings.theme) {
+                        Text("Series 5").tag(Settings.Theme.series5)
+                        Text("Series 7").tag(Settings.Theme.series7)
+                    }
                     Toggle("Show Wallpaper", isOn: $settings.showWallpaper)
                 }
                 Section {
