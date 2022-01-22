@@ -1025,6 +1025,42 @@ class OpoInterpreter {
         return AppInfo(caption: caption, uid3: UInt32(uid3), icons: icons)
     }
 
+    func getMbmBitmaps(path: String) -> [Graphics.Bitmap]? {
+        let top = lua_gettop(L)
+        defer {
+            lua_settop(L, top)
+        }
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return nil
+        }
+        lua_getglobal(L, "require")
+        L.push("mbm")
+        guard logpcall(1, 1) else { return nil }
+        lua_getfield(L, -1, "parseMbmHeader")
+        lua_remove(L, -2) // mbm module
+        L.push(data)
+        guard logpcall(1, 1) else { return nil }
+        // top of stack should now be bitmap array
+        var result: [Graphics.Bitmap] = []
+        for _ in L.ipairs(-1, requiredType: .table) {
+            if luaL_callmeta(L, -1, "getImageData") == 0 {
+                continue
+            }
+            let data = L.todata(-1)
+            L.pop()
+            if let width = L.toint(-1, key: "width"),
+               let height = L.toint(-1, key: "height"),
+               let mode = Graphics.Bitmap.Mode(rawValue: L.toint(-1, key: "drawableMode") ?? 0),
+               let stride = L.toint(-1, key: "stride"),
+               let data = data {
+                let size = Graphics.Size(width: width, height: height)
+                let bmp = Graphics.Bitmap(mode: mode, size: size, stride: stride, data: data)
+                result.append(bmp)
+            }
+        }
+        return result
+    }
+
     struct Error {
         let code: Int?
         let opoStack: String?
