@@ -20,36 +20,14 @@
 
 import Foundation
 
-protocol Location: Hashable {
+protocol SecureLocationProtocol: Hashable {
 
     var url: URL { get }
-
-}
-
-protocol SecureLocationProtocol: Location {
 
     init(url: URL) throws
     init(data: Data) throws
     func dataRepresentation() throws -> Data
     func cleanup() throws
-
-}
-
-class LocalLocation: Location {
-
-    static func == (lhs: LocalLocation, rhs: LocalLocation) -> Bool {
-        return lhs.url == rhs.url
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(url)
-    }
-
-    var url: URL
-
-    init(url: URL) {
-        self.url = url
-    }
 
 }
 

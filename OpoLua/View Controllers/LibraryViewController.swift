@@ -40,7 +40,7 @@ class LibraryViewController: UICollectionViewController {
 
         case runningPrograms  // TODO: RENAME
         case allPrograms
-        case local(LocalLocation)
+        case local(URL)
         case external(ExternalLocation)
 
     }
@@ -66,8 +66,8 @@ class LibraryViewController: UICollectionViewController {
                 return nil
             case .allPrograms:
                 return nil
-            case .local(let location):
-                return location.url
+            case .local(let url):
+                return url
             case .external(let location):
                 return location.url
             }
@@ -183,11 +183,11 @@ class LibraryViewController: UICollectionViewController {
                                    name: "All Programs",
                                    image: UIImage(systemName: "square")!)],
                              toSection: .special)
-        snapshot.appendItems([Item(type: .local(LocalLocation(url: Bundle.main.bundleURL)),
+        snapshot.appendItems([Item(type: .local(Bundle.main.bundleURL),
                                    name: "Files",
                                    image: UIImage(systemName: "folder")!,
                                    readonly: true),
-                              Item(type: .local(LocalLocation(url: Bundle.main.examplesUrl)),
+                              Item(type: .local(Bundle.main.examplesUrl),
                                    name: "Scripts",
                                    image: UIImage(systemName: "folder")!,
                                    readonly: true)],
