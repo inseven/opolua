@@ -140,13 +140,13 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
         if ptrType == KEvPtrPenDown then
             runtime:DisplayTaskList()
         end
-        return
+        return -1
     elseif butId == KClockButtonId then
         if ptrType == KEvPtrPenDown then
             local fmt = runtime:LCClockFormat()
             LCSetClockFormat(fmt == 0 and 1 or 0)
         end
-        return
+        return -1
     end
 
     if pressedButtonId then
