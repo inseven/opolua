@@ -225,10 +225,16 @@ class DirectoryViewController : UIViewController {
                                                                    queue: nil) { notification in
             self.reload()
         }
-        settingsSink = settings.objectWillChange.sink { [unowned self] settings in
+        settingsSink = settings.objectWillChange.sink { [weak self] _ in
+            guard let self = self else {
+                return
+            }
             self.wallpaperPixelView.image = self.settings.theme.wallpaper
+            self.wallpaperPixelView.isHidden = !self.settings.showWallpaper
         }
         taskManager.addObserver(self)
+        self.wallpaperPixelView.image = self.settings.theme.wallpaper
+        wallpaperPixelView.isHidden = !settings.showWallpaper
     }
 
     override func viewDidAppear(_ animated: Bool) {

@@ -25,7 +25,8 @@ import UIKit
 class Settings: ObservableObject {
 
     private enum Key: String {
-        case theme
+        case theme = "theme"
+        case showWallpaper = "showWallpaper"
     }
 
     let userDefaults = UserDefaults()
@@ -52,15 +53,29 @@ class Settings: ObservableObject {
         }
     }
 
-    private func integer(for key: Key) -> Int {
+    private func integer(for key: Key, default defaultValue: Int = 0) -> Int {
         dispatchPrecondition(condition: .onQueue(.main))
-        return self.userDefaults.integer(forKey: key.rawValue)
+        guard let value = self.userDefaults.object(forKey: key.rawValue) as? Int else {
+            return defaultValue
+        }
+        return value
+    }
+
+    private func bool(for key: Key, default defaultValue: Bool = false) -> Bool {
+        guard let value = self.userDefaults.object(forKey: key.rawValue) as? Bool else {
+            return defaultValue
+        }
+        return value
     }
 
     private func set(_ value: Int, for key: Key) {
         dispatchPrecondition(condition: .onQueue(.main))
         self.userDefaults.set(value, forKey: key.rawValue)
         self.objectWillChange.send()
+    }
+
+    private func set(_ value: Bool, for key: Key) {
+        self.userDefaults.set(value, forKey: key.rawValue)
     }
 
     func addLocation(_ url: URL) throws {
@@ -76,10 +91,19 @@ class Settings: ObservableObject {
 
     var theme: Settings.Theme {
         get {
-            Theme.init(rawValue: self.integer(for: .theme))!
+            Theme.init(rawValue: self.integer(for: .theme, default: Theme.series7.rawValue)) ?? .series7
         }
         set {
             self.set(newValue.rawValue, for: .theme)
+        }
+    }
+
+    var showWallpaper: Bool {
+        get {
+            self.bool(for: .showWallpaper, default: true)
+        }
+        set {
+            self.set(newValue, for: .showWallpaper)
         }
     }
 

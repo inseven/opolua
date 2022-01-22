@@ -58,6 +58,9 @@ struct SettingsView: View {
                         .toggleStyle(ColoredCheckbox(color: Color(uiColor: theme.color)))
                     }
                 }
+                Section("Appearance") {
+                    Toggle("Show Wallpaper", isOn: $settings.showWallpaper)
+                }
                 Section {
                     Button("About \(UIApplication.shared.displayName!)...") {
                         sheet = .about
