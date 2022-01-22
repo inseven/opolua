@@ -177,7 +177,7 @@ class LibraryViewController: UICollectionViewController {
         var snapshot = Snapshot()
         snapshot.appendSections([.special, .examples])
         snapshot.appendItems([Item(type: .runningPrograms,
-                                   name: "Runnning Programs",
+                                   name: "Running Programs",
                                    image: UIImage(systemName: "play.square")!),
                              Item(type: .allPrograms,
                                    name: "All Programs",
