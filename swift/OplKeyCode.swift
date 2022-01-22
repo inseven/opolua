@@ -169,7 +169,7 @@ extension OplKeyCode {
         "F": .F,
         "G": .G,
         "H": .H,
-        "I": .J,
+        "I": .I,
         "J": .J,
         "K": .K,
         "L": .L,
