@@ -34,6 +34,9 @@ lane :upload do |options|
         ipa: options[:ipa],
         notify_external_testers: false,
         changelog: options[:changelog],
-        beta_app_description: "Runtime and viewer for EPOC programs and files"
+        beta_app_description: "Runtime and viewer for EPOC programs and files",
+        beta_app_review_info: {
+            notes: "OPL is a runtime and viewer for files and programs from the 90s-era Psion palmtop computers running the EPOC operating system. It lets users add and browse folders on their phone and view files that are in original EPOC formats. It is intended to let users of these early portable computers access files and data that might be long-forgotten and thought lost. For example, users can view and export image files from those original machines (.mbm) and scripts they might have written (.opo). During our early closed beta, we've included two example sections, 'Files', and 'Scripts', which include examples of the file types supported to help give you an idea of the functionality."
+        }
     )
 end
