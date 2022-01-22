@@ -32,16 +32,47 @@ class ProgramViewController: UIViewController {
         case a
         case b
         case home
+        case options
+        case menu
     }
 
-    let controllerButtonMap: [ControllerButton: OplKeyCode] = [
+    static let defaultControllerButtonMap: [ControllerButton: OplKeyCode] = [
         .up: .upArrow,
         .down: .downArrow,
         .left: .leftArrow,
         .right: .rightArrow,
-        .a: .q,
-        .b: .enter,
+        .a: .enter,
+        .b: .escape,
+        .menu: .menu,
     ]
+
+    static let controllerButtonMaps: [UID: [ControllerButton: OplKeyCode]] = [
+        .asteroids: [
+            .left: .N,
+            .right: .M,
+            .a: .space, // Fire
+            .b: .Z, // Thrust
+            .menu: .menu,
+        ],
+        .jumpy: [
+            .up: .upArrow,
+            .down: .downArrow,
+            .left: .leftArrow,
+            .right: .rightArrow,
+            .a: .q, // Jump
+            .b: .enter,
+            .menu: .menu,
+        ],
+    ]
+
+    var controllerButtonMap: [ControllerButton: OplKeyCode] {
+        guard let uid3 = program.uid3,
+              let controllerButtonMap = Self.controllerButtonMaps[uid3]
+        else {
+            return Self.defaultControllerButtonMap
+        }
+        return controllerButtonMap
+    }
 
     var settings: Settings
     var taskManager: TaskManager
@@ -306,6 +337,8 @@ class ProgramViewController: UIViewController {
             controller.extendedGamepad?.leftThumbstick.down.pressedChangedHandler = self.pressedChangeHandler(for: .down)
             controller.extendedGamepad?.leftThumbstick.left.pressedChangedHandler = self.pressedChangeHandler(for: .left)
             controller.extendedGamepad?.leftThumbstick.right.pressedChangedHandler = self.pressedChangeHandler(for: .right)
+            controller.extendedGamepad?.buttonOptions?.pressedChangedHandler = self.pressedChangeHandler(for: .options)
+            controller.extendedGamepad?.buttonMenu.pressedChangedHandler = self.pressedChangeHandler(for: .menu)
         }
     }
 

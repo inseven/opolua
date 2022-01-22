@@ -78,6 +78,7 @@ class Program {
 
     let url: URL
     let device: Device
+    let appInfo: OpoInterpreter.AppInfo?
     private let thread: InterpreterThread
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     let windowServer: WindowServer
@@ -103,6 +104,10 @@ class Program {
         return windowServer.canvasView
     }
 
+    var uid3: UID? {
+        return appInfo?.uid3
+    }
+
     lazy private var fileSystem: FileSystem = {
         do {
             return try FileManager.default.detectSystemFileSystem(for: url) ?? ObjectFileSystem(objectUrl: url)
@@ -114,7 +119,9 @@ class Program {
     init(url: URL, device: Device = .psionSeries5) {
         self.url = url
         self.device = device
-        self.title = Directory.appInfo(forApplicationUrl: url)?.caption ?? url.name
+        let appInfo = Directory.appInfo(forApplicationUrl: url)
+        self.appInfo = appInfo
+        self.title = appInfo?.caption ?? url.name
         self.thread = InterpreterThread(url: url)
         self.windowServer = WindowServer(device: device, screenSize: device.screenSize)
         self.thread.delegate = self
@@ -144,6 +151,9 @@ class Program {
             return
         }
         _state = .running
+        if let uid3 = uid3 {
+            print("Starting program with UID3 \(uid3.description)")
+        }
         thread.start()
     }
 
