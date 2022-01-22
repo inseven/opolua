@@ -20,46 +20,7 @@
 
 import Foundation
 
-protocol SecureLocationProtocol: Hashable {
-
-    var url: URL { get }
-
-    init(url: URL) throws
-    init(data: Data) throws
-    func dataRepresentation() throws -> Data
-    func cleanup() throws
-
-}
-
-#if os(macOS)
-
-class ExternalLocation: SecureLocationProtocol {
-
-    let url: URL
-
-    init(url: URL) throws {
-        self.url = url
-    }
-
-    init(data: Data) throws {
-        self.url = try URL(securityScopeBookmarkData: data)
-    }
-
-    func dataRepresentation() throws -> Data {
-        return try bookmarkData(options: .withSecurityScope,
-                                includingResourceValuesForKeys: nil,
-                                relativeTo: nil)
-    }
-
-    func cleanup() throws {
-        // Nothing to do on macOS.
-    }
-
-}
-
-#else
-
-class ExternalLocation: SecureLocationProtocol {
+class ExternalLocation: Hashable {
 
     static func == (lhs: ExternalLocation, rhs: ExternalLocation) -> Bool {
         return lhs.url == rhs.url
@@ -101,5 +62,3 @@ class ExternalLocation: SecureLocationProtocol {
     }
 
 }
-
-#endif
