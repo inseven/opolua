@@ -107,47 +107,6 @@ struct Dialog {
     let flags: Flags
 }
 
-struct Menu {
-    struct Item {
-
-        struct Flags: OptionSet {
-
-            let rawValue: Int
-
-            static let dimmed = Flags(rawValue: 0x1000)
-            static let checkbox = Flags(rawValue: 0x800)
-            static let optionStart = Flags(rawValue: 0x100) // plus checkbox
-            static let optionMiddle = Flags(rawValue: 0x200) // plus checkbox
-            static let optionEnd = Flags(rawValue: 0x300) // plus checkbox
-            static let checked = Flags(rawValue: 0x2000) // for option or checkbox
-            static let inteterminate = Flags(rawValue: 0x4000) // for option or checkbox
-            static let separatorAfter = Flags(rawValue: 0x10000)
-        }
-
-        let text: String
-        let keycode: Int
-        let shortcut: String?
-        let submenu: Menu?
-        let flags: Flags
-    }
-
-    struct Bar {
-        let menus: [Menu]
-        let highlight: Int // What item should start highlighted
-    }
-
-    struct Result {
-
-        let selected: Int // Zero if menu cancelled, otherwise keycode of selected command
-        let highlighted: Int // Index of highlighted item (even if cancelled)
-
-        static let none = Result(selected: 0, highlighted: 0)
-    }
-
-    let title: String
-    let items: [Item]
-}
-
 struct Graphics {
 
     struct Size: Equatable {
@@ -559,8 +518,6 @@ protocol OpoIoHandler {
     // contain the final results of any editable fields.
     func dialog(_ d: Dialog) -> Dialog.Result
 
-    func menu(_ m: Menu.Bar) -> Menu.Result
-
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
@@ -611,10 +568,6 @@ class DummyIoHandler : OpoIoHandler {
 
     func dialog(_ d: Dialog) -> Dialog.Result {
         return Dialog.Result(result: 0, values: [])
-    }
-
-    func menu(_ m: Menu.Bar) -> Menu.Result {
-        return Menu.Result(selected: 0, highlighted: 0)
     }
 
     func draw(operations: [Graphics.DrawCommand]) {

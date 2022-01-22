@@ -225,51 +225,6 @@ private func dialog(_ L: LuaState!) -> Int32 {
     return 1
 }
 
-private func menu(_ L: LuaState!) -> Int32 {
-    func getMenu() -> Menu { // Assumes a menu table is on top of stack
-        let title = L.tostring(-1, key: "title") ?? ""
-        var items: [Menu.Item] = []
-        for _ in L.ipairs(-1, requiredType: .table) {
-            var rawcode = L.toint(-1, key: "key") ?? 0
-            var flags = 0
-            if rawcode < 0 {
-                flags |= Menu.Item.Flags.separatorAfter.rawValue
-                rawcode = -rawcode
-            }
-            flags = flags | (rawcode & ~0xFF)
-            let keycode = rawcode & 0xFF
-            let text = L.tostring(-1, key: "text") ?? ""
-            var submenu: Menu? = nil
-            if lua_getfield(L, -1, "submenu") == LUA_TTABLE {
-                submenu = getMenu()
-            }
-            L.pop()
-            let shortcut: String?
-            if keycode >= OplKeyCode.a.rawValue && keycode <= OplKeyCode.z.rawValue {
-                shortcut = "Ctrl+"+String(Character(Unicode.Scalar(UInt8(keycode))).uppercased())
-            } else if keycode >= OplKeyCode.A.rawValue && keycode <= OplKeyCode.Z.rawValue {
-                shortcut = "Shift+Ctrl+"+String(Character(Unicode.Scalar(UInt8(keycode))))
-            } else {
-                shortcut = nil
-            }
-            let flg = Menu.Item.Flags(rawValue: flags)
-            items.append(Menu.Item(text: text, keycode: keycode, shortcut: shortcut, submenu: submenu, flags: flg))
-        }
-        return Menu(title: title, items: items)
-    }
-    let iohandler = getInterpreterUpval(L).iohandler
-    var menus: [Menu] = []
-    for _ in L.ipairs(1, requiredType: .table) {
-        menus.append(getMenu())
-    }
-    let highlight = L.toint(1, key: "highlight") ?? 0
-    let m = Menu.Bar(menus: menus, highlight: highlight)
-    let result = iohandler.menu(m)
-    L.push(result.selected)
-    L.push(result.highlighted)
-    return 2
-}
-
 private func draw(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     var ops: [Graphics.DrawCommand] = []
@@ -944,7 +899,6 @@ class OpoInterpreter {
             // ("print", print_lua),
             ("beep", beep),
             ("dialog", dialog),
-            ("menu", menu),
             ("draw", draw),
             ("graphicsop", graphicsop),
             ("getScreenInfo", getScreenInfo),

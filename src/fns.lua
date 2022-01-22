@@ -572,7 +572,12 @@ end
 function Menu(stack, runtime) -- 0x36
     local menu = runtime:getMenu()
     runtime:setMenu(nil)
-    local result = runtime:MENU(menu)
+    local result
+    if runtime:iohandler().menu then
+        result = runtime:iohandler().menu(menu)
+    else
+        result = runtime:MENU(menu)
+    end
     stack:push(result)
 end
 
@@ -633,8 +638,15 @@ function MenuWithMemory(stack, runtime) -- 0x3A
     local menu = runtime:getMenu()
     runtime:setMenu(nil)
     menu.highlight = var()
-    local selected, highlighted = runtime:MENU(menu)
-    var(highlighted) -- Update this
+    local selected, highlighted
+    if runtime:iohandler().menu then
+        selected, highlighted = runtime:iohandler().menu(menu)
+    else
+        selected, highlighted = runtime:MENU(menu)
+    end
+    if highlighted then
+        var(highlighted) -- Update this
+    end
     stack:push(selected)
 end
 

@@ -516,11 +516,6 @@ extension ProgramViewController: ProgramDelegate {
         semaphore.wait()
         return result
     }
-
-    func menu(_ menu: Menu.Bar) -> Menu.Result {
-        return .none
-    }
-
 }
 
 extension ProgramViewController: ProgramLifecycleObserver {
@@ -543,33 +538,6 @@ extension ProgramViewController: ProgramLifecycleObserver {
 
     func program(_ program: Program, didUpdateTitle title: String) {
         self.title = title
-    }
-
-}
-
-extension Menu.Bar {
-
-    func menuElements(completion: @escaping (Int) -> Void) -> [UIMenuElement] {
-        return menus.map { menu in
-            return UIMenu(title: menu.title, children: menu.menuElements(completion: completion))
-        }
-
-    }
-
-}
-
-extension Menu {
-
-    func menuElements(completion: @escaping (Int) -> Void) -> [UIMenuElement] {
-        return items.map { item in
-            if let submenu = item.submenu {
-                return UIMenu(title: submenu.title, children: submenu.menuElements(completion: completion))
-            } else {
-                return UIAction(title: item.text, subtitle: item.shortcut) { action in
-                    completion(item.keycode)
-                }
-            }
-        }
     }
 
 }
