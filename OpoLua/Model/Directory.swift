@@ -66,6 +66,15 @@ extension Settings.Theme {
         }
     }
 
+    var imageIcon: UIImage {
+        switch self {
+        case .series5:
+            return .unknownAppIcon
+        case .series7:
+            return .paintIconC
+        }
+    }
+
 }
 
 class Directory {
@@ -108,6 +117,7 @@ class Directory {
             case system(Application)  // TODO: Flatten down Application
             case installer
             case applicationInformation(OpoInterpreter.AppInfo?)
+            case image
             case unknown
         }
 
@@ -141,6 +151,8 @@ class Directory {
                 return theme.installerIcon
             case .applicationInformation(let appInfo):
                 return appInfo?.appIcon ?? .unknownAppIcon
+            case .image:
+                return theme.imageIcon
             case .unknown:
                 return theme.unknownFileIcon
             }
@@ -159,6 +171,8 @@ class Directory {
             case .installer:
                 return nil
             case .applicationInformation:
+                return nil
+            case .image:
                 return nil
             case .unknown:
                 return nil
@@ -236,6 +250,8 @@ class Directory {
                 } else if url.pathExtension.lowercased() == "aif" {
                     return Item(url: url,
                                 type: .applicationInformation(OpoInterpreter.shared.getAppInfo(aifPath: url.path)))
+                } else if url.pathExtension.lowercased() == "mbm" {
+                    return Item(url: url, type: .image)
                 } else {
                     return Item(url: url, type: .unknown)
                 }

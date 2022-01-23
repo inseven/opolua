@@ -66,6 +66,10 @@ extension UIImage {
         return UIImage(named: "OpoIconC")!
     }()
 
+    static var paintIconC: UIImage = {
+        return UIImage(named: "PaintIconC")!
+    }()
+
     static var unknownAppIcon: UIImage = {
         return UIImage(named: "UnknownAppIcon")!
     }()

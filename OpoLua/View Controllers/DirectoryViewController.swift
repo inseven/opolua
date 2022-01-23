@@ -376,7 +376,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
             installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
             installer?.delegate = self
             installer?.run()
-        case .unknown, .applicationInformation:
+        case .unknown, .applicationInformation, .image:
             break
         }
     }
@@ -424,7 +424,7 @@ extension DirectoryViewController: UICollectionViewDelegate {
                 }
                 let actions = self.actions(for: item.programUrl!)
                 return UIMenu(children: actions + [contentsAction, fileMenu])
-            case .directory, .installer, .unknown, .applicationInformation:
+            case .directory, .installer, .unknown, .applicationInformation, .image:
                 return UIMenu(children: [fileMenu])
             }
         }
