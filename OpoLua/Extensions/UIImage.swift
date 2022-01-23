@@ -70,6 +70,10 @@ extension UIImage {
         return UIImage(named: "PaintIconC")!
     }()
 
+    static var recordIconC: UIImage = {
+        return UIImage(named: "RecordIconC")!
+    }()
+
     static var unknownAppIcon: UIImage = {
         return UIImage(named: "UnknownAppIcon")!
     }()

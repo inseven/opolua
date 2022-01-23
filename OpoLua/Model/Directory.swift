@@ -75,6 +75,15 @@ extension Settings.Theme {
         }
     }
 
+    var soundIcon: UIImage {
+        switch self {
+        case .series5:
+            return .unknownAppIcon
+        case .series7:
+            return .recordIconC
+        }
+    }
+
 }
 
 class Directory {
@@ -118,6 +127,7 @@ class Directory {
             case installer
             case applicationInformation(OpoInterpreter.AppInfo?)
             case image
+            case sound
             case unknown
         }
 
@@ -153,6 +163,8 @@ class Directory {
                 return appInfo?.appIcon ?? .unknownAppIcon
             case .image:
                 return theme.imageIcon
+            case .sound:
+                return theme.soundIcon
             case .unknown:
                 return theme.unknownFileIcon
             }
@@ -173,6 +185,8 @@ class Directory {
             case .applicationInformation:
                 return nil
             case .image:
+                return nil
+            case .sound:
                 return nil
             case .unknown:
                 return nil
@@ -252,6 +266,8 @@ class Directory {
                                 type: .applicationInformation(OpoInterpreter.shared.getAppInfo(aifPath: url.path)))
                 } else if url.pathExtension.lowercased() == "mbm" {
                     return Item(url: url, type: .image)
+                } else if url.pathExtension.lowercased() == "snd" {
+                    return Item(url: url, type: .sound)
                 } else {
                     return Item(url: url, type: .unknown)
                 }
