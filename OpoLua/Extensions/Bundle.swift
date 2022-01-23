@@ -30,4 +30,8 @@ extension Bundle {
         return examplesUrl.appendingPathComponent("Files", isDirectory: true)
     }
 
+    var scriptsUrl: URL {
+        return examplesUrl.appendingPathComponent("Scripts", isDirectory: true)
+    }
+
 }

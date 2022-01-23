@@ -187,8 +187,12 @@ class LibraryViewController: UICollectionViewController {
                                    name: "Files",
                                    image: UIImage(systemName: "folder")!,
                                    readonly: true),
-                              Item(type: .local(Bundle.main.examplesUrl),
+                              Item(type: .local(Bundle.main.scriptsUrl),
                                    name: "Scripts",
+                                   image: UIImage(systemName: "folder")!,
+                                   readonly: true),
+                              Item(type: .local(Bundle.main.examplesUrl),
+                                   name: "Examples",
                                    image: UIImage(systemName: "folder")!,
                                    readonly: true)],
                              toSection: .examples)
