@@ -10,6 +10,8 @@
 		D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */; };
 		D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */; };
 		D80D65A8279DD2060020F994 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A7279DD2060020F994 /* Icon.swift */; };
+		D80D65AA279DDC290020F994 /* IconCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */; };
+		D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */; };
 		D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B875B2790D52C00E71960 /* DrawableViewController.swift */; };
 		D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82639352783CAE500AB4086 /* TimerRequest.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
@@ -193,6 +195,8 @@
 		D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Graphics+CoreGraphics.swift"; sourceTree = "<group>"; };
 		D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+UIKit.swift"; sourceTree = "<group>"; };
 		D80D65A7279DD2060020F994 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
+		D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewCell.swift; sourceTree = "<group>"; };
+		D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewLayout.swift; sourceTree = "<group>"; };
 		D81B875B2790D52C00E71960 /* DrawableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawableViewController.swift; sourceTree = "<group>"; };
 		D82639352783CAE500AB4086 /* TimerRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRequest.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
@@ -408,10 +412,11 @@
 			children = (
 				D8891352274C186E00794D55 /* Canvas.swift */,
 				DB5AC973275681510043FE5C /* CanvasView.swift */,
+				DBE2917D27932C5300EE824B /* ClockView.swift */,
+				D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */,
+				D8F4835C278D3D31008AF80C /* PixelView.swift */,
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
 				D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */,
-				D8F4835C278D3D31008AF80C /* PixelView.swift */,
-				DBE2917D27932C5300EE824B /* ClockView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -473,6 +478,7 @@
 			isa = PBXGroup;
 			children = (
 				D8D95503279B52370049A3C3 /* Localization.swift */,
+				D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -852,6 +858,7 @@
 				D889134D274C17FF00794D55 /* CGContext.swift in Sources */,
 				DB5AC9762757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift in Sources */,
 				DB7900022742E6F6005E904F /* ldump.c in Sources */,
+				D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */,
 				D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */,
 				D89A607E2756A98200C9757F /* ViewController.swift in Sources */,
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
@@ -893,6 +900,7 @@
 				D89A607C2756A6A300C9757F /* URL.swift in Sources */,
 				D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */,
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,
+				D80D65AA279DDC290020F994 /* IconCollectionViewCell.swift in Sources */,
 				DB7900132742E6F6005E904F /* ltablib.c in Sources */,
 				D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */,
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,

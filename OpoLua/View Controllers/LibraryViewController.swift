@@ -114,7 +114,7 @@ class LibraryViewController: UICollectionViewController {
         navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.leftBarButtonItem = aboutBarButtonItem
 
-        collectionView.collectionViewLayout = makeLayout()
+        collectionView.collectionViewLayout = createLayout()
 
         let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item> { cell, _, item in
             var configuration = cell.defaultContentConfiguration()
@@ -206,7 +206,7 @@ class LibraryViewController: UICollectionViewController {
         return snapshot
     }
 
-    func makeLayout() -> UICollectionViewLayout {
+    func createLayout() -> UICollectionViewLayout {
         let appearance: UICollectionLayoutListConfiguration.Appearance = (splitViewController?.isCollapsed ?? true) ? .insetGrouped : .sidebar
         var configuration = UICollectionLayoutListConfiguration(appearance: appearance)
         configuration.headerMode = .supplementary
@@ -255,7 +255,7 @@ class LibraryViewController: UICollectionViewController {
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        collectionView.collectionViewLayout = makeLayout()
+        collectionView.collectionViewLayout = createLayout()
     }
 
     override func collectionView(_ collectionView: UICollectionView,

@@ -22,7 +22,7 @@ import Combine
 import Foundation
 import UIKit
 
-class DirectoryViewController : UIViewController {
+class DirectoryViewController : UICollectionViewController {
 
     enum Section {
         case none
@@ -36,76 +36,7 @@ class DirectoryViewController : UIViewController {
 
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
     typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
-
-    class Cell: UICollectionViewCell {
-
-        lazy var imageView: UIImageView = {
-            let imageView = UIImageView()
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            imageView.backgroundColor = .clear
-            return imageView
-        }()
-
-        lazy var textLabel: UILabel = {
-            let label = UILabel()
-            label.translatesAutoresizingMaskIntoConstraints = false
-            label.font = UIFont.preferredFont(forTextStyle: .body)
-            label.adjustsFontForContentSizeCategory = true
-            label.numberOfLines = 1
-            label.textAlignment = .center
-            label.lineBreakMode = .byTruncatingTail
-            return label
-        }()
-
-        lazy var detailTextLabel: UILabel = {
-            let label = UILabel()
-            label.translatesAutoresizingMaskIntoConstraints = false
-            label.textColor = .secondaryLabel
-            label.font = UIFont.preferredFont(forTextStyle: .footnote)
-            label.adjustsFontForContentSizeCategory = true
-            label.numberOfLines = 1
-            label.textAlignment = .center
-            label.lineBreakMode = .byTruncatingTail
-            return label
-        }()
-
-        override init(frame: CGRect) {
-            super.init(frame: frame)
-            contentView.addSubview(imageView)
-            contentView.addSubview(textLabel)
-            contentView.addSubview(detailTextLabel)
-
-            let layoutGuide = UILayoutGuide()
-            contentView.addLayoutGuide(layoutGuide)
-
-            self.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
-            NSLayoutConstraint.activate([
-
-                imageView.widthAnchor.constraint(equalToConstant: 48.0),
-                imageView.heightAnchor.constraint(equalToConstant: 48.0),
-
-                imageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-
-                textLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-                textLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-
-                detailTextLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-                detailTextLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-
-                imageView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-                imageView.bottomAnchor.constraint(equalTo: textLabel.topAnchor, constant: -8.0),
-                textLabel.bottomAnchor.constraint(equalTo: detailTextLabel.topAnchor, constant: -2.0),
-                detailTextLabel.bottomAnchor.constraint(equalTo: layoutGuide.topAnchor),
-                layoutGuide.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-
-            ])
-        }
-
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-
-    }
+    typealias Cell = IconCollectionViewCell
 
     static var cell = "Cell"
 
@@ -115,19 +46,6 @@ class DirectoryViewController : UIViewController {
     var installer: Installer?
     var applicationActiveObserver: Any?
     var settingsSink: AnyCancellable?
-
-    private func createLayout() -> UICollectionViewLayout {
-
-        let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(100), heightDimension: .fractionalHeight(1.0))
-        let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(108))
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        group.interItemSpacing = .flexible(8.0)
-        let section = NSCollectionLayoutSection(group: group)
-        section.contentInsetsReference = .layoutMargins
-        let layout = UICollectionViewCompositionalLayout(section: section)
-        return layout
-    }
 
     lazy var wallpaperPixelView: PixelView = {
         let image = settings.theme.wallpaper
@@ -145,17 +63,6 @@ class DirectoryViewController : UIViewController {
             wallpaperPixelView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
         return view
-    }()
-
-    lazy var collectionView: UICollectionView = {
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.delegate = self
-        collectionView.register(Cell.self, forCellWithReuseIdentifier: Self.cell)
-        collectionView.alwaysBounceVertical = true
-        collectionView.preservesSuperviewLayoutMargins = true
-        collectionView.insetsLayoutMarginsFromSafeArea = true
-        return collectionView
     }()
 
     lazy var dataSource: DataSource = {
@@ -196,16 +103,11 @@ class DirectoryViewController : UIViewController {
         self.settings = settings
         self.taskManager = taskManager
         self.directory = directory
-        super.init(nibName: nil, bundle: nil)
+        super.init(collectionViewLayout: IconCollectionViewLayout())
         self.directory.delegate = self
         view.backgroundColor = .systemBackground
-        view.addSubview(collectionView)
-        NSLayoutConstraint.activate([
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
+        collectionView.preservesSuperviewLayoutMargins = true
+        collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
         self.title = title ?? directory.name
@@ -353,11 +255,7 @@ class DirectoryViewController : UIViewController {
         return snapshot
     }
 
-}
-
-extension DirectoryViewController: UICollectionViewDelegate {
-
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let item = dataSource.itemIdentifier(for: indexPath)?.directoryItem else {
             collectionView.deselectItem(at: indexPath, animated: true)
             return
@@ -385,36 +283,36 @@ extension DirectoryViewController: UICollectionViewDelegate {
         }
     }
 
-    func collectionView(_ collectionView: UICollectionView,
-                        previewForHighlightingContextMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+    override func collectionView(_ collectionView: UICollectionView,
+                                 previewForHighlightingContextMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
         guard let item = configuration.identifier as? NSNumber,
               let itemInt = item as? Int,
               let cell = collectionView.cellForItem(at: IndexPath(item: itemInt, section: 0)) as? Cell else {
-            return nil
-        }
+                  return nil
+              }
         return UITargetedPreview(view: cell.imageView)
     }
 
-    func collectionView(_ collectionView: UICollectionView,
-                        previewForDismissingContextMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+    override func collectionView(_ collectionView: UICollectionView,
+                                 previewForDismissingContextMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
         guard let item = configuration.identifier as? NSNumber,
               let itemInt = item as? Int,
               let cell = collectionView.cellForItem(at: IndexPath(item: itemInt, section: 0)) as? Cell else {
-            return nil
-        }
+                  return nil
+              }
         return UITargetedPreview(view: cell.imageView)
     }
 
-    func collectionView(_ collectionView: UICollectionView,
-                        contextMenuConfigurationForItemAt indexPath: IndexPath,
-                        point: CGPoint) -> UIContextMenuConfiguration? {
+    override func collectionView(_ collectionView: UICollectionView,
+                                 contextMenuConfigurationForItemAt indexPath: IndexPath,
+                                 point: CGPoint) -> UIContextMenuConfiguration? {
         guard let item = dataSource.itemIdentifier(for: indexPath)?.directoryItem else {
             return nil
         }
         return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
             let deleteAction = UIAction(title: "Delete",
-                                         image: UIImage(systemName: "trash"),
-                                         attributes: .destructive) { action in
+                                        image: UIImage(systemName: "trash"),
+                                        attributes: .destructive) { action in
                 self.delete(item: item)
             }
             let fileMenu = UIMenu(options: [.displayInline], children: [deleteAction])
