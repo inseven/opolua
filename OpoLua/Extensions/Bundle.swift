@@ -26,4 +26,8 @@ extension Bundle {
         return resourceURL!.appendingPathComponent("examples", isDirectory: true)
     }
 
+    var filesUrl: URL {
+        return examplesUrl.appendingPathComponent("Files", isDirectory: true)
+    }
+
 }

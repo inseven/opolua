@@ -183,7 +183,7 @@ class LibraryViewController: UICollectionViewController {
                                    name: "All Programs",
                                    image: UIImage(systemName: "square")!)],
                              toSection: .special)
-        snapshot.appendItems([Item(type: .local(Bundle.main.bundleURL),
+        snapshot.appendItems([Item(type: .local(Bundle.main.filesUrl),
                                    name: "Files",
                                    image: UIImage(systemName: "folder")!,
                                    readonly: true),
