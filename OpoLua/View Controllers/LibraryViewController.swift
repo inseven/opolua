@@ -285,10 +285,7 @@ class LibraryViewController: UICollectionViewController {
         }
         switch item.type {
         case .runningPrograms:
-            let viewController = UIViewController(nibName: nil, bundle: nil)
-            viewController.view.backgroundColor = .systemBackground
-            viewController.navigationItem.largeTitleDisplayMode = .never
-            viewController.title = "Running Programs"
+            let viewController = RunningProgramsViewController(settings: settings, taskManager: taskManager)
             delegate?.libraryViewController(self, presentViewController: viewController)
         case .allPrograms:
             let viewController = UIViewController(nibName: nil, bundle: nil)

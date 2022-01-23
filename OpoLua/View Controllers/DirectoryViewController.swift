@@ -192,8 +192,6 @@ class DirectoryViewController : UICollectionViewController {
         }
     }
 
-    let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 48)
-
     func pushDirectoryViewController(for url: URL) {
         do {
             let directory = try Directory(url: url)
@@ -230,14 +228,17 @@ class DirectoryViewController : UICollectionViewController {
         let runAsMenu = UIMenu(title: "Run As...", children: runAsActions)
         actions.append(runAsMenu)
 
-        if taskManager.isRunning(url) {
-            let quitAction = UIAction(title: "Quit") { action in
-                self.taskManager.quit(url)
-            }
-            actions.append(quitAction)
-        }
-
         return actions
+    }
+
+    func taskMenu(for url: URL) -> UIMenu? {
+        guard taskManager.isRunning(url) else {
+            return nil
+        }
+        let closeAction = UIAction(title: "Close Program", image: UIImage(systemName: "xmark")) { action in
+            self.taskManager.quit(url)
+        }
+        return UIMenu(options: [.displayInline], children: [closeAction])
     }
 
     func snapshot() -> Snapshot {
@@ -318,14 +319,23 @@ class DirectoryViewController : UICollectionViewController {
             let fileMenu = UIMenu(options: [.displayInline], children: [deleteAction])
             switch item.type {
             case .object, .application:
-                let actions = self.actions(for: item.programUrl!)
-                return UIMenu(children: actions + [fileMenu])
+                var actions = self.actions(for: item.programUrl!)
+                if let taskMenu = self.taskMenu(for: item.programUrl!) {
+                    actions.append(taskMenu)
+                }
+                actions.append(fileMenu)
+                return UIMenu(children: actions)
             case .system:
                 let contentsAction = UIAction(title: "Show Package Contents") { action in
                     self.pushDirectoryViewController(for: item.url)
                 }
-                let actions = self.actions(for: item.programUrl!)
-                return UIMenu(children: actions + [contentsAction, fileMenu])
+                var actions = self.actions(for: item.programUrl!)
+                actions.append(contentsAction)
+                if let taskMenu = self.taskMenu(for: item.programUrl!) {
+                    actions.append(taskMenu)
+                }
+                actions.append(fileMenu)
+                return UIMenu(children: actions)
             case .directory, .installer, .unknown, .applicationInformation, .image, .sound, .help:
                 return UIMenu(children: [fileMenu])
             }
