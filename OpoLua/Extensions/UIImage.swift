@@ -30,6 +30,10 @@ extension UIImage {
         return UIImage(named: "ClockMediumC")!
     }()
 
+    static var dataIcon: UIImage = {
+        return UIImage(named: "DataIcon")!
+    }()
+
     static var dataIconC: UIImage = {
         return UIImage(named: "DataIconC")!
     }()
@@ -70,8 +74,16 @@ extension UIImage {
         return UIImage(named: "OpoIconC")!
     }()
 
+    static var paintIcon: UIImage = {
+        return UIImage(named: "PaintIcon")!
+    }()
+
     static var paintIconC: UIImage = {
         return UIImage(named: "PaintIconC")!
+    }()
+
+    static var recordIcon: UIImage = {
+        return UIImage(named: "RecordIcon")!
     }()
 
     static var recordIconC: UIImage = {

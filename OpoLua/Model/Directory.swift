@@ -69,7 +69,7 @@ extension Settings.Theme {
     var imageIcon: UIImage {
         switch self {
         case .series5:
-            return .unknownAppIcon
+            return .paintIcon
         case .series7:
             return .paintIconC
         }
@@ -78,7 +78,7 @@ extension Settings.Theme {
     var soundIcon: UIImage {
         switch self {
         case .series5:
-            return .unknownAppIcon
+            return .recordIcon
         case .series7:
             return .recordIconC
         }
@@ -87,7 +87,7 @@ extension Settings.Theme {
     var dataIcon: UIImage {
         switch self {
         case .series5:
-            return .dataIconC
+            return .dataIcon
         case .series7:
             return .dataIconC
         }
