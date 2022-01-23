@@ -84,6 +84,15 @@ extension Settings.Theme {
         }
     }
 
+    var dataIcon: UIImage {
+        switch self {
+        case .series5:
+            return .dataIconC
+        case .series7:
+            return .dataIconC
+        }
+    }
+
 }
 
 class Directory {
@@ -128,6 +137,7 @@ class Directory {
             case applicationInformation(OpoInterpreter.AppInfo?)
             case image
             case sound
+            case help
             case unknown
         }
 
@@ -165,6 +175,8 @@ class Directory {
                 return theme.imageIcon
             case .sound:
                 return theme.soundIcon
+            case .help:
+                return theme.dataIcon
             case .unknown:
                 return theme.unknownFileIcon
             }
@@ -187,6 +199,8 @@ class Directory {
             case .image:
                 return nil
             case .sound:
+                return nil
+            case .help:
                 return nil
             case .unknown:
                 return nil
@@ -268,6 +282,8 @@ class Directory {
                     return Item(url: url, type: .image)
                 } else if url.pathExtension.lowercased() == "snd" {
                     return Item(url: url, type: .sound)
+                } else if url.pathExtension.lowercased() == "hlp" {
+                    return Item(url: url, type: .help)
                 } else {
                     return Item(url: url, type: .unknown)
                 }

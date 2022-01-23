@@ -30,6 +30,10 @@ extension UIImage {
         return UIImage(named: "ClockMediumC")!
     }()
 
+    static var dataIconC: UIImage = {
+        return UIImage(named: "DataIconC")!
+    }()
+
     static var epocLogo: UIImage = {
         return UIImage(named: "EpocLogo")!
     }()
