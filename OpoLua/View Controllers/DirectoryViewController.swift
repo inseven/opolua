@@ -376,7 +376,10 @@ extension DirectoryViewController: UICollectionViewDelegate {
             installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: item.url.deletingPathExtension()))
             installer?.delegate = self
             installer?.run()
-        case .unknown, .applicationInformation, .image, .sound, .help:
+        case .image:
+            let viewController = ImageViewController(url: item.url)
+            navigationController?.pushViewController(viewController, animated: true)
+        case .unknown, .applicationInformation, .sound, .help:
             break
         }
     }
