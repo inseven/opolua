@@ -30,6 +30,7 @@ class DirectoryViewController : UIViewController {
 
     struct Item: Hashable {
         var directoryItem: Directory.Item
+        var icon: Icon
         var isRunning: Bool
     }
 
@@ -164,7 +165,7 @@ class DirectoryViewController : UIViewController {
             }
             cell.textLabel.text = item.directoryItem.name
             cell.detailTextLabel.text = item.isRunning ? "Running" : nil
-            cell.imageView.image = item.directoryItem.icon(for: self.settings.theme).scale(self.view.window?.screen.nativeScale ?? 1.0)
+            cell.imageView.image = item.icon.image(for: self.settings.theme).scale(self.view.window?.screen.nativeScale ?? 1.0)
         }
         let dataSource = DataSource(collectionView: collectionView) { collectionView, indexPath, item in
             return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
@@ -346,7 +347,7 @@ class DirectoryViewController : UIViewController {
                 if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
                     isRunning = true
                 }
-                return Item(directoryItem: item, isRunning: isRunning)
+                return Item(directoryItem: item, icon: item.icon(), isRunning: isRunning)
             }
         snapshot.appendItems(items, toSection: nil)
         return snapshot

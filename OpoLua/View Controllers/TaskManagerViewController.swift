@@ -24,6 +24,7 @@ class TaskManagerViewController: UITableViewController {
 
     static var cell = "Cell"
 
+    var settings: Settings
     var taskManager: TaskManager
 
     lazy var doneBarButtonItem: UIBarButtonItem = {
@@ -34,7 +35,8 @@ class TaskManagerViewController: UITableViewController {
         return barButtonItem
     }()
 
-    init(taskManager: TaskManager) {
+    init(settings: Settings, taskManager: TaskManager) {
+        self.settings = settings
         self.taskManager = taskManager
         super.init(style: .plain)
         title = "Open Programs"
@@ -56,7 +58,9 @@ class TaskManagerViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Self.cell, for: indexPath)
-        cell.textLabel?.text = taskManager.programs[indexPath.row].title
+        let program = taskManager.programs[indexPath.row]
+        cell.imageView?.image = program.icon.image(for: settings.theme)
+        cell.textLabel?.text = program.title
         return cell
     }
 

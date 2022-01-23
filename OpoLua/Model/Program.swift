@@ -76,11 +76,11 @@ class Program {
         }
     }
 
-    let settings: Settings
+    private let settings: Settings
     let url: URL
-    let device: Device
-    let appInfo: OpoInterpreter.AppInfo?
+    private let device: Device
     private let thread: InterpreterThread
+    private let appInfo: OpoInterpreter.AppInfo?
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     let windowServer: WindowServer
     private let scheduler = Scheduler()
@@ -101,6 +101,7 @@ class Program {
     var console = Console()
 
     var title: String
+    var icon: Icon
 
     var rootView: UIView {
         return windowServer.canvasView
@@ -122,10 +123,11 @@ class Program {
         self.settings = settings
         self.url = url
         self.device = device
+        self.thread = InterpreterThread(url: url)
         let appInfo = Directory.appInfo(forApplicationUrl: url)
         self.appInfo = appInfo
         self.title = appInfo?.caption ?? url.name
-        self.thread = InterpreterThread(url: url)
+        self.icon = appInfo?.icon() ?? (url.pathExtension.lowercased() == "opo" ? .opo : .unknownApplication) // TODO: This should be an OPO icon if it's an OPO file.
         self.windowServer = WindowServer(device: device, screenSize: device.screenSize)
         self.thread.delegate = self
         self.thread.handler = self

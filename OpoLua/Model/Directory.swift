@@ -27,87 +27,7 @@ protocol DirectoryDelegate: AnyObject {
 
 }
 
-
-extension Settings.Theme {
-
-    var folderIcon: UIImage {
-        switch self {
-        case .series5:
-            return .folderIcon
-        case .series7:
-            return .folderIconC
-        }
-    }
-
-    var installerIcon: UIImage {
-        switch self {
-        case .series5:
-            return .installerIcon
-        case .series7:
-            return .installerIconC
-        }
-    }
-
-    var opoIcon: UIImage {
-        switch self {
-        case .series5:
-            return .opoIcon
-        case .series7:
-            return .opoIconC
-        }
-    }
-
-    var unknownFileIcon: UIImage {
-        switch self {
-        case .series5:
-            return .unknownFileIcon
-        case .series7:
-            return .unknownFileIconC
-        }
-    }
-
-    var imageIcon: UIImage {
-        switch self {
-        case .series5:
-            return .paintIcon
-        case .series7:
-            return .paintIconC
-        }
-    }
-
-    var soundIcon: UIImage {
-        switch self {
-        case .series5:
-            return .recordIcon
-        case .series7:
-            return .recordIconC
-        }
-    }
-
-    var dataIcon: UIImage {
-        switch self {
-        case .series5:
-            return .dataIcon
-        case .series7:
-            return .dataIconC
-        }
-    }
-
-}
-
 class Directory {
-
-    struct Application {
-
-        let url: URL
-        let appInfo: OpoInterpreter.AppInfo?
-
-        init(url: URL) {
-            self.url = url
-            self.appInfo = Directory.appInfo(forApplicationUrl: url)
-        }
-
-    }
 
     static func appInfo(forApplicationUrl url: URL) -> OpoInterpreter.AppInfo? {
         guard let applicationInfoFile = url.applicationInfoFile,
@@ -132,7 +52,7 @@ class Directory {
             case object
             case directory
             case application(OpoInterpreter.AppInfo?)
-            case system(Application)  // TODO: Flatten down Application
+            case system(URL, OpoInterpreter.AppInfo?)
             case installer
             case applicationInformation(OpoInterpreter.AppInfo?)
             case image
@@ -146,42 +66,38 @@ class Directory {
 
         var name: String {
             switch type {
-            case .system(let application):
-                return application.appInfo?.caption ?? url.lastPathComponent
+            case .system(_, let appInfo):
+                return appInfo?.caption ?? url.lastPathComponent
             default:
                 return url.lastPathComponent
             }
         }
 
-        func icon(for theme: Settings.Theme) -> UIImage {
+        func icon() -> Icon {
             switch type {
             case .object:
-                return theme.opoIcon
+                return .opo
             case .directory:
-                return theme.folderIcon
+                return .folder
             case .application(let appInfo):
-                return appInfo?.appIcon ?? .unknownAppIcon
-            case .system(let application):
-                if let appIcon = application.appInfo?.appIcon {
-                    return appIcon
-                } else {
-                    return .unknownAppIcon
-                }
+                return appInfo?.icon() ?? .unknownApplication
+            case .system(_, let appInfo):
+                return appInfo?.icon() ?? .unknownApplication
             case .installer:
-                return theme.installerIcon
+                return .installer
             case .applicationInformation(let appInfo):
-                return appInfo?.appIcon ?? .unknownAppIcon
+                return appInfo?.icon() ?? .unknownApplication
             case .image:
-                return theme.imageIcon
+                return .image
             case .sound:
-                return theme.soundIcon
+                return .sound
             case .help:
-                return theme.dataIcon
+                return .data
             case .unknown:
-                return theme.unknownFileIcon
+                return .unknownFile
             }
         }
-
+        
         var programUrl: URL? {
             switch type {
             case .object:
@@ -190,8 +106,8 @@ class Directory {
                 return nil
             case .application:
                 return url
-            case .system(let application):
-                return application.url
+            case .system(let url, _):
+                return url
             case .installer:
                 return nil
             case .applicationInformation:
@@ -224,13 +140,12 @@ class Directory {
         let apps = enumerator
             .map { $0 as! URL }
             .filter { $0.isApplication }
-            .compactMap { Application(url: $0) }
 
         guard apps.count == 1,
-              let application = apps.first else {
+              let url = apps.first else {
             return nil
         }
-        return .system(application)
+        return .system(url, Directory.appInfo(forApplicationUrl: url))
     }
 
     let url: URL

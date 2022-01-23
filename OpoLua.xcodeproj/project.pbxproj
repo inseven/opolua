@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */; };
 		D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */; };
+		D80D65A8279DD2060020F994 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A7279DD2060020F994 /* Icon.swift */; };
 		D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B875B2790D52C00E71960 /* DrawableViewController.swift */; };
 		D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82639352783CAE500AB4086 /* TimerRequest.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
@@ -191,6 +192,7 @@
 /* Begin PBXFileReference section */
 		D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Graphics+CoreGraphics.swift"; sourceTree = "<group>"; };
 		D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+UIKit.swift"; sourceTree = "<group>"; };
+		D80D65A7279DD2060020F994 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		D81B875B2790D52C00E71960 /* DrawableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawableViewController.swift; sourceTree = "<group>"; };
 		D82639352783CAE500AB4086 /* TimerRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRequest.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
@@ -364,6 +366,7 @@
 				D84ADB152771D937001ABFB4 /* Device.swift */,
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
 				D884A3D22778E335008954A0 /* FileSystem.swift */,
+				D80D65A7279DD2060020F994 /* Icon.swift */,
 				D884A3D6277914CF008954A0 /* Installer.swift */,
 				D86724F12771672A009C7246 /* InterpreterThread.swift */,
 				D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */,
@@ -828,6 +831,7 @@
 				DB79FFFF2742E6F6005E904F /* ldblib.c in Sources */,
 				D884A3D52779025A008954A0 /* SystemFileSystem.swift in Sources */,
 				DB7900002742E6F6005E904F /* ldebug.c in Sources */,
+				D80D65A8279DD2060020F994 /* Icon.swift in Sources */,
 				D8FE60052757177200711717 /* Settings.swift in Sources */,
 				D8DCD040277ACD7800760302 /* Sprite.swift in Sources */,
 				D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */,

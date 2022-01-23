@@ -136,7 +136,7 @@ extension AppDelegate: LibraryViewControllerDelegate {
 extension AppDelegate: TaskManagerDelegate {
 
     func taskManagerShowTaskList(_ taskManager: TaskManager) {
-        let taskManagerViewController = TaskManagerViewController(taskManager: self.taskManager)
+        let taskManagerViewController = TaskManagerViewController(settings: settings, taskManager: taskManager)
         let navigationController = UINavigationController(rootViewController: taskManagerViewController)
         splitViewController.present(navigationController, animated: true)
     }
