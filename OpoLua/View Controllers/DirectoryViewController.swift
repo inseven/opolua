@@ -40,14 +40,14 @@ class DirectoryViewController : UICollectionViewController {
 
     static var cell = "Cell"
 
-    var settings: Settings
-    var taskManager: TaskManager
-    var directory: Directory
-    var installer: Installer?
-    var applicationActiveObserver: Any?
-    var settingsSink: AnyCancellable?
+    private var settings: Settings
+    private var taskManager: TaskManager
+    private var directory: Directory
+    private var installer: Installer?
+    private var applicationActiveObserver: Any?
+    private var settingsSink: AnyCancellable?
 
-    lazy var wallpaperPixelView: PixelView = {
+    private lazy var wallpaperPixelView: PixelView = {
         let image = settings.theme.wallpaper
         let pixelView = PixelView(image: image)
         pixelView.translatesAutoresizingMaskIntoConstraints = false
@@ -55,7 +55,7 @@ class DirectoryViewController : UICollectionViewController {
         return pixelView
     }()
 
-    lazy var wallpaperView: UIView = {
+    private lazy var wallpaperView: UIView = {
         let view = UIView(frame: .zero)
         view.addSubview(wallpaperPixelView)
         NSLayoutConstraint.activate([
@@ -65,7 +65,7 @@ class DirectoryViewController : UICollectionViewController {
         return view
     }()
 
-    lazy var dataSource: DataSource = {
+    private lazy var dataSource: DataSource = {
         let cellRegistration = UICollectionView.CellRegistration<Cell, Item> { [weak self] cell, _, item in
             guard let self = self else {
                 return
@@ -80,15 +80,18 @@ class DirectoryViewController : UICollectionViewController {
         return dataSource
     }()
 
-    lazy var searchController: UISearchController = {
+    private lazy var searchController: UISearchController = {
         let searchController = UISearchController()
         searchController.searchResultsUpdater = self
         return searchController
     }()
 
-    lazy var menuBarButtonItem: UIBarButtonItem = {
+    private lazy var menuBarButtonItem: UIBarButtonItem = {
         let newFolderAction = UIAction(title: "New Folder",
-                                       image: UIImage(systemName: "folder.badge.plus")) { [unowned self] action in
+                                       image: UIImage(systemName: "folder.badge.plus")) { [weak self] action in
+            guard let self = self else {
+                return
+            }
             self.createDirectory()
         }
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [newFolderAction])
@@ -368,7 +371,6 @@ extension DirectoryViewController: InstallerDelegate {
 
     func installer(_ installer: Installer, didFinishWithResult result: OpoInterpreter.Result) {
         DispatchQueue.main.async {
-            print("installer(\(installer), didFinishWithResult: \(result))")
             switch result {
             case .none:
                 let alert = UIAlertController(title: "Installer", message: "Complete!", preferredStyle: .alert)
