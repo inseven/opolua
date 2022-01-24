@@ -120,6 +120,7 @@ class RunningProgramsViewController : UICollectionViewController {
         collectionView.backgroundView = placeholderView
         title = "Running Programs"
         navigationItem.largeTitleDisplayMode = .never
+        update(animated: false)
     }
 
     required init?(coder: NSCoder) {
@@ -149,7 +150,7 @@ class RunningProgramsViewController : UICollectionViewController {
         taskManager.removeObserver(self)
     }
 
-    func update(animated: Bool) {
+    private func update(animated: Bool) {
         collectionView.backgroundView?.isHidden = taskManager.programs.count > 0
         var snapshot = Snapshot()
         snapshot.appendSections([.none])

@@ -115,6 +115,7 @@ class DirectoryViewController : UICollectionViewController {
         navigationItem.searchController = searchController
         navigationItem.largeTitleDisplayMode = .never
         navigationItem.rightBarButtonItem = menuBarButtonItem
+        update(animated: false)
     }
     
     required init?(coder: NSCoder) {
@@ -146,7 +147,7 @@ class DirectoryViewController : UICollectionViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        dataSource.apply(snapshot(), animatingDifferences: animated)
+        update(animated: animated)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -264,7 +265,7 @@ class DirectoryViewController : UICollectionViewController {
         return [UIMenu(options: [.displayInline], children: [deleteAction])]
     }
 
-    private func snapshot() -> Snapshot {
+    private func update(animated: Bool) {
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
         let items = directory.items(filter: searchController.searchBar.text)
@@ -276,7 +277,7 @@ class DirectoryViewController : UICollectionViewController {
                 return Item(directoryItem: item, icon: item.icon(), isRunning: isRunning)
             }
         snapshot.appendItems(items, toSection: Section.none)
-        return snapshot
+        dataSource.apply(snapshot, animatingDifferences: animated)
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -350,7 +351,7 @@ class DirectoryViewController : UICollectionViewController {
 extension DirectoryViewController: UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
-        dataSource.apply(snapshot())
+        update(animated: true)
     }
 
 }
@@ -358,7 +359,7 @@ extension DirectoryViewController: UISearchResultsUpdating {
 extension DirectoryViewController: DirectoryDelegate {
 
     func directoryDidChange(_ directory: Directory) {
-        dataSource.apply(snapshot())
+        update(animated: true)
     }
 }
 
@@ -390,7 +391,7 @@ extension DirectoryViewController: InstallerDelegate {
 extension DirectoryViewController: TaskManagerObserver {
 
     func taskManagerDidUpdate(_ taskManager: TaskManager) {
-        dataSource.apply(snapshot(), animatingDifferences: true)
+        update(animated: true)
     }
 
 }
