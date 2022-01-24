@@ -88,6 +88,7 @@ class LibraryViewController: UICollectionViewController {
 
     private var settings: Settings
     private var taskManager: TaskManager
+    private var detector: ProgramDetector
     private var dataSource: DataSource!
     private var settingsSink: AnyCancellable?
 
@@ -109,9 +110,10 @@ class LibraryViewController: UICollectionViewController {
         return barButtonItem
     }()
 
-    init(settings: Settings, taskManager: TaskManager) {
+    init(settings: Settings, taskManager: TaskManager, detector: ProgramDetector) {
         self.settings = settings
         self.taskManager = taskManager
+        self.detector = detector
         super.init(collectionViewLayout: UICollectionViewCompositionalLayout.list(using: UICollectionLayoutListConfiguration(appearance: .insetGrouped)))
         title = "OPL"
         navigationItem.rightBarButtonItem = addBarButtonItem
@@ -319,7 +321,9 @@ class LibraryViewController: UICollectionViewController {
             let viewController = RunningProgramsViewController(settings: settings, taskManager: taskManager)
             delegate?.libraryViewController(self, presentViewController: viewController)
         case .allPrograms:
-            let viewController = AllProgramsViewController(settings: settings, taskManager: taskManager)
+            let viewController = AllProgramsViewController(settings: settings,
+                                                           taskManager: taskManager,
+                                                           detector: detector)
             delegate?.libraryViewController(self, presentViewController: viewController)
         case .local, .external:
             do {

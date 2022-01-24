@@ -38,8 +38,6 @@ class DirectoryViewController : UICollectionViewController {
     typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
     typealias Cell = IconCollectionViewCell
 
-    static var cell = "Cell"
-
     private var settings: Settings
     private var taskManager: TaskManager
     private var directory: Directory

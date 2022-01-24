@@ -187,6 +187,24 @@ class Settings: ObservableObject {
         }
     }
 
+    var indexableUrls: [URL] {
+        dispatchPrecondition(condition: .onQueue(.main))
+        var indexableUrls: [URL] = []
+        if self.showLibraryFiles {
+            indexableUrls.append(Bundle.main.filesUrl)
+        }
+        if self.showLibraryScripts {
+            indexableUrls.append(Bundle.main.scriptsUrl)
+        }
+        if self.showLibraryTests {
+            indexableUrls.append(Bundle.main.testsUrl)
+        }
+        for location in self.locations {
+            indexableUrls.append(location.url)
+        }
+        return indexableUrls
+    }
+
 }
 
 extension Settings.Theme {

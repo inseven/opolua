@@ -26,9 +26,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    var settings = Settings()
-    lazy var taskManager: TaskManager = {
+    private var settings = Settings()
+    private lazy var taskManager: TaskManager = {
         return TaskManager(settings: settings)
+    }()
+    private lazy var detector: ProgramDetector = {
+        return ProgramDetector(settings: settings)
     }()
     var splitViewController: UISplitViewController!
     var settingsSink: AnyCancellable?
@@ -40,7 +43,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        let libraryViewController = LibraryViewController(settings: settings, taskManager: taskManager)
+        let libraryViewController = LibraryViewController(settings: settings,
+                                                          taskManager: taskManager,
+                                                          detector: detector)
         libraryViewController.delegate = self
         let navigationController = UINavigationController(rootViewController: libraryViewController)
         navigationController.navigationBar.prefersLargeTitles = true
@@ -61,6 +66,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         taskManager.delegate = self
+
+        detector.start()
 
         return true
     }

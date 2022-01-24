@@ -18,33 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import Foundation
 
+// TODO: This should be an observer
 protocol ProgramDetectorDelegate: AnyObject {
 
-    func programDetector(_ programDetector: ProgramDetector, didUpdateItems items: [Directory.Item])
+    func programDetectorDidUpdateItems(_ programDetector: ProgramDetector)
     func programDetector(_ programDetector: ProgramDetector, didFailWithError error: Error)
 
 }
 
 class ProgramDetector {
 
-    private var locations: [URL]
+    private var settings: Settings
     private let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
+    private var settingsSink: AnyCancellable?
+    private var _items: [Directory.Item] = []
 
+    var items: [Directory.Item] {
+        return _items
+    }
     weak var delegate: ProgramDetectorDelegate?
 
-    init(locations: [URL]) {
-        self.locations = locations
+    init(settings: Settings) {
+        self.settings = settings
     }
 
-    func updateQueue_update() {
+    func updateQueue_update(urls: [URL]) {
         dispatchPrecondition(condition: .onQueue(updateQueue))
         print("Fetching items...")
         do {
             var items: [Directory.Item] = []
-            for location in locations {
-                items = items + (try Directory.items(for: location))
+            for url in urls {
+                items = items + (try Directory.items(for: url))
             }
             items = items.filter { item in
                 switch item.type {
@@ -72,7 +79,8 @@ class ProgramDetector {
             }
             DispatchQueue.main.async {
                 print("Succeeded!")
-                self.delegate?.programDetector(self, didUpdateItems: items)
+                self._items = items
+                self.delegate?.programDetectorDidUpdateItems(self)
             }
         } catch {
             print("Failed!")
@@ -83,9 +91,20 @@ class ProgramDetector {
 
     }
 
-    func update() {
+    func start() {
+        settingsSink = settings.objectWillChange.sink { [weak self] _ in
+            guard let self = self else {
+                return
+            }
+            self.update()
+        }
+        self.update()
+    }
+
+    private func update() {
+        let urls = settings.indexableUrls
         updateQueue.async {
-            self.updateQueue_update()
+            self.updateQueue_update(urls: urls)
         }
     }
 

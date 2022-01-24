@@ -38,20 +38,11 @@ class AllProgramsViewController : UICollectionViewController {
     typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
     typealias Cell = IconCollectionViewCell
 
-    static var cell = "Cell"
-
-    var settings: Settings
-    var taskManager: TaskManager
-    var detector: ProgramDetector
-    var items: [Directory.Item] = []
-    var applicationActiveObserver: Any?
-    var settingsSink: AnyCancellable?
-
-    static let defaultLocations = [
-        Bundle.main.filesUrl,
-        Bundle.main.examplesUrl,
-        Bundle.main.scriptsUrl,
-    ]
+    private var settings: Settings
+    private var taskManager: TaskManager
+    private var detector: ProgramDetector
+    private var items: [Directory.Item] = []
+    private var settingsSink: AnyCancellable?
 
     lazy var wallpaperPixelView: PixelView = {
         let image = settings.theme.wallpaper
@@ -92,17 +83,16 @@ class AllProgramsViewController : UICollectionViewController {
         return searchController
     }()
 
-    init(settings: Settings, taskManager: TaskManager) {
+    init(settings: Settings, taskManager: TaskManager, detector: ProgramDetector) {
         self.settings = settings
         self.taskManager = taskManager
-        self.detector = ProgramDetector(locations: Self.defaultLocations + settings.locations.map { $0.url })
+        self.detector = detector
         super.init(collectionViewLayout: IconCollectionViewLayout())
         view.backgroundColor = .systemBackground
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
-        detector.delegate = self
         title = "All Programs"
         navigationItem.searchController = searchController
         navigationItem.largeTitleDisplayMode = .never
@@ -114,15 +104,6 @@ class AllProgramsViewController : UICollectionViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        let notificationCenter = NotificationCenter.default
-        applicationActiveObserver = notificationCenter.addObserver(forName: UIApplication.didBecomeActiveNotification,
-                                                                   object: nil,
-                                                                   queue: nil) { [weak self] notification in
-            guard let self = self else {
-                return
-            }
-            self.reload()
-        }
         settingsSink = settings.objectWillChange.sink { [weak self] _ in
             guard let self = self else {
                 return
@@ -131,27 +112,26 @@ class AllProgramsViewController : UICollectionViewController {
             self.wallpaperPixelView.isHidden = !self.settings.showWallpaper
         }
         taskManager.addObserver(self)
+        detector.delegate = self
         self.wallpaperPixelView.image = self.settings.theme.wallpaper
         wallpaperPixelView.isHidden = !settings.showWallpaper
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        detector.update()
+        update(animated: animated)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if let observer = applicationActiveObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
         settingsSink?.cancel()
         settingsSink = nil
+        detector.delegate = nil
         taskManager.removeObserver(self)
     }
 
-    func reload() {
-        // TODO: Implement me.
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
     }
 
     func actions(for url: URL) -> [UIMenuElement] {
@@ -193,7 +173,9 @@ class AllProgramsViewController : UICollectionViewController {
         return UIMenu(options: [.displayInline], children: [closeAction])
     }
 
-    func snapshot(for items: [Directory.Item]) -> Snapshot {
+    func update(animated: Bool) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        items = detector.items.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
         let filter = searchController.searchBar.text ?? ""
@@ -206,7 +188,7 @@ class AllProgramsViewController : UICollectionViewController {
                 return Item(directoryItem: item, icon: item.icon(), isRunning: isRunning)
             }
         snapshot.appendItems(items, toSection: Section.none)
-        return snapshot
+        dataSource.apply(snapshot, animatingDifferences: animated)
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -250,7 +232,8 @@ class AllProgramsViewController : UICollectionViewController {
         guard let item = dataSource.itemIdentifier(for: indexPath)?.directoryItem else {
             return nil
         }
-        return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
+        return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber,
+                                          previewProvider: nil) { suggestedActions in
             let deleteAction = UIAction(title: "Reveal in Library") { action in
                 print("Reveal in library")
             }
@@ -274,29 +257,27 @@ class AllProgramsViewController : UICollectionViewController {
 extension AllProgramsViewController: UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
-        dataSource.apply(snapshot(for: items))
+        update(animated: true)
     }
-    
+
 }
 
 extension AllProgramsViewController: TaskManagerObserver {
 
     func taskManagerDidUpdate(_ taskManager: TaskManager) {
-        dataSource.apply(snapshot(for: items), animatingDifferences: true)
+        update(animated: true)
     }
 
 }
 
 extension AllProgramsViewController: ProgramDetectorDelegate {
 
-    func programDetector(_ programDetector: ProgramDetector, didUpdateItems items: [Directory.Item]) {
-        self.items = items.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-        dataSource.apply(snapshot(for: self.items))
+    func programDetectorDidUpdateItems(_ programDetector: ProgramDetector) {
+        update(animated: true)
     }
 
     func programDetector(_ programDetector: ProgramDetector, didFailWithError error: Error) {
         present(error: error)
     }
-
 
 }

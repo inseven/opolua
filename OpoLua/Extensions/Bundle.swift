@@ -34,4 +34,8 @@ extension Bundle {
         return examplesUrl.appendingPathComponent("Scripts", isDirectory: true)
     }
 
+    var testsUrl: URL {
+        return examplesUrl
+    }
+
 }
