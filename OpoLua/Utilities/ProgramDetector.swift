@@ -45,37 +45,32 @@ class ProgramDetector {
         self.settings = settings
     }
 
+    static func find(url: URL, filter: (Directory.Item) -> Bool) throws -> [Directory.Item] {
+        var result: [Directory.Item] = []
+        for item in try Directory.items(for: url) {
+            if filter(item) {
+                result.append(item)
+            }
+            if case Directory.Item.ItemType.directory = item.type {
+                result += try find(url: item.url, filter: filter)
+            }
+        }
+        return result
+    }
+
     func updateQueue_update(urls: [URL]) {
         dispatchPrecondition(condition: .onQueue(updateQueue))
-        print("Fetching items...")
         do {
             var items: [Directory.Item] = []
             for url in urls {
-                items = items + (try Directory.items(for: url))
-            }
-            items = items.filter { item in
-                switch item.type {
-                case .object:
-                    return true
-                case .directory:
-                    return false
-                case .application(_):
-                    return true
-                case .system(_, _):
-                    return true
-                case .installer:
-                    return false
-                case .applicationInformation(_):
-                    return false
-                case .image:
-                    return false
-                case .sound:
-                    return false
-                case .help:
-                    return false
-                case .unknown:
-                    return false
-                }
+                items += try Self.find(url: url, filter: { item in
+                    switch item.type {
+                    case .object, .system, .application:
+                        return true
+                    default:
+                        return false
+                    }
+                })
             }
             DispatchQueue.main.async {
                 self._items = items
