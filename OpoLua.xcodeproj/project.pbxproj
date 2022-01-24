@@ -15,6 +15,7 @@
 		D80D65AE279DE0CE0020F994 /* RunningProgramsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */; };
 		D80D65B0279E31220020F994 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AF279E31220020F994 /* Configuration.swift */; };
 		D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B875B2790D52C00E71960 /* DrawableViewController.swift */; };
+		D81C12A8279EF0C0000E70D0 /* AllProgramsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */; };
 		D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82639352783CAE500AB4086 /* TimerRequest.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
@@ -72,7 +73,6 @@
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */; };
-		D8EE4D88279E647900F91150 /* AllProgramsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D87279E647900F91150 /* AllProgramsViewController.swift */; };
 		D8F4835D278D3D31008AF80C /* PixelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F4835C278D3D31008AF80C /* PixelView.swift */; };
 		D8F5CADB279D07A700A2DC3F /* ImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F5CADA279D07A700A2DC3F /* ImageViewController.swift */; };
 		D8FE60032757106300711717 /* SecureLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* SecureLocation.swift */; };
@@ -204,6 +204,7 @@
 		D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningProgramsViewController.swift; sourceTree = "<group>"; };
 		D80D65AF279E31220020F994 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		D81B875B2790D52C00E71960 /* DrawableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawableViewController.swift; sourceTree = "<group>"; };
+		D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllProgramsViewController.swift; sourceTree = "<group>"; };
 		D82639352783CAE500AB4086 /* TimerRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRequest.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
@@ -260,7 +261,6 @@
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramDetector.swift; sourceTree = "<group>"; };
-		D8EE4D87279E647900F91150 /* AllProgramsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllProgramsViewController.swift; sourceTree = "<group>"; };
 		D8F4835C278D3D31008AF80C /* PixelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelView.swift; sourceTree = "<group>"; };
 		D8F5CADA279D07A700A2DC3F /* ImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageViewController.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* SecureLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureLocation.swift; sourceTree = "<group>"; };
@@ -468,7 +468,7 @@
 			isa = PBXGroup;
 			children = (
 				D86FBAB4278C74A3003DF611 /* AboutView.swift */,
-				D8EE4D87279E647900F91150 /* AllProgramsViewController.swift */,
+				D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */,
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
 				D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */,
 				D8891346274BF2D200794D55 /* DialogViewController.swift */,
@@ -900,6 +900,7 @@
 				D80D65AE279DE0CE0020F994 /* RunningProgramsViewController.swift in Sources */,
 				D87A62742752A67500075CB8 /* CGSize.swift in Sources */,
 				D8535A28277139AB00DFCE29 /* Sound.swift in Sources */,
+				D81C12A8279EF0C0000E70D0 /* AllProgramsViewController.swift in Sources */,
 				D84ADB162771D937001ABFB4 /* Device.swift in Sources */,
 				D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */,
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
@@ -920,7 +921,6 @@
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,
 				D8FE60092757208000711717 /* ApplicationError.swift in Sources */,
 				D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */,
-				D8EE4D88279E647900F91150 /* AllProgramsViewController.swift in Sources */,
 				D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
 				D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */,

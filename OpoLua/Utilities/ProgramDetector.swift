@@ -30,7 +30,7 @@ protocol ProgramDetectorDelegate: AnyObject {
 class ProgramDetector {
 
     private var locations: [URL]
-    let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
+    private let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
 
     weak var delegate: ProgramDetectorDelegate?
 

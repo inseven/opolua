@@ -125,7 +125,10 @@ class DirectoryViewController : UICollectionViewController {
         let notificationCenter = NotificationCenter.default
         applicationActiveObserver = notificationCenter.addObserver(forName: UIApplication.didBecomeActiveNotification,
                                                                    object: nil,
-                                                                   queue: nil) { notification in
+                                                                   queue: nil) { [weak self] notification in
+            guard let self = self else {
+                return
+            }
             self.reload()
         }
         settingsSink = settings.objectWillChange.sink { [weak self] _ in
