@@ -24,19 +24,19 @@ import UIKit
 
 class DirectoryViewController : UICollectionViewController {
 
-    enum Section {
+    private enum Section {
         case none
     }
 
-    struct Item: Hashable {
+    private struct Item: Hashable {
         var directoryItem: Directory.Item
         var icon: Icon
         var isRunning: Bool
     }
 
-    typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
-    typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
-    typealias Cell = IconCollectionViewCell
+    private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
+    private typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
+    private typealias Cell = IconCollectionViewCell
 
     private var settings: Settings
     private var taskManager: TaskManager
@@ -264,7 +264,7 @@ class DirectoryViewController : UICollectionViewController {
         return [UIMenu(options: [.displayInline], children: [deleteAction])]
     }
 
-    func snapshot() -> Snapshot {
+    private func snapshot() -> Snapshot {
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
         let items = directory.items(filter: searchController.searchBar.text)
