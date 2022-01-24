@@ -210,9 +210,11 @@ class DirectoryViewController : UICollectionViewController {
         }
     }
 
-    func actions(for url: URL) -> [UIMenuElement] {
+    func programActions(for item: Directory.Item) -> [UIMenuElement] {
+        guard let url = item.programUrl else {
+            return []
+        }
         var actions: [UIMenuElement] = []
-
         let runAction = UIAction(title: "Run") { action in
             let program = self.taskManager.program(for: url)
             let viewController = ProgramViewController(settings: self.settings,
@@ -221,6 +223,13 @@ class DirectoryViewController : UICollectionViewController {
             self.navigationController?.pushViewController(viewController, animated: true)
         }
         actions.append(runAction)
+
+        if case Directory.Item.ItemType.system = item.type {
+            let contentsAction = UIAction(title: "Show Package Contents") { action in
+                self.pushDirectoryViewController(for: item.url)
+            }
+            actions.append(contentsAction)
+        }
 
         let runAsActions = Device.allCases.map { device -> UIAction in
             var configuration = Configuration.load(for: url)
@@ -235,18 +244,26 @@ class DirectoryViewController : UICollectionViewController {
         }
         let runAsMenu = UIMenu(title: "Run As...", options: [.displayInline], children: runAsActions)
         actions.append(runAsMenu)
-
         return actions
     }
 
-    func taskMenu(for url: URL) -> UIMenu? {
-        guard taskManager.isRunning(url) else {
-            return nil
+    func taskActions(for item: Directory.Item) -> [UIMenuElement] {
+        guard let url = item.programUrl, taskManager.isRunning(url) else {
+            return []
         }
         let closeAction = UIAction(title: "Close Program", image: UIImage(systemName: "xmark")) { action in
             self.taskManager.quit(url)
         }
-        return UIMenu(options: [.displayInline], children: [closeAction])
+        return [UIMenu(options: [.displayInline], children: [closeAction])]
+    }
+
+    func fileActions(for item: Directory.Item) -> [UIMenuElement] {
+        let deleteAction = UIAction(title: "Delete",
+                                    image: UIImage(systemName: "trash"),
+                                    attributes: .destructive) { action in
+            self.delete(item: item)
+        }
+        return [UIMenu(options: [.displayInline], children: [deleteAction])]
     }
 
     func snapshot() -> Snapshot {
@@ -319,34 +336,11 @@ class DirectoryViewController : UICollectionViewController {
             return nil
         }
         return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
-            let deleteAction = UIAction(title: "Delete",
-                                        image: UIImage(systemName: "trash"),
-                                        attributes: .destructive) { action in
-                self.delete(item: item)
-            }
-            let fileMenu = UIMenu(options: [.displayInline], children: [deleteAction])
-            switch item.type {
-            case .object, .application:
-                var actions = self.actions(for: item.programUrl!)
-                if let taskMenu = self.taskMenu(for: item.programUrl!) {
-                    actions.append(taskMenu)
-                }
-                actions.append(fileMenu)
-                return UIMenu(children: actions)
-            case .system:
-                let contentsAction = UIAction(title: "Show Package Contents") { action in
-                    self.pushDirectoryViewController(for: item.url)
-                }
-                var actions = self.actions(for: item.programUrl!)
-                actions.append(contentsAction)
-                if let taskMenu = self.taskMenu(for: item.programUrl!) {
-                    actions.append(taskMenu)
-                }
-                actions.append(fileMenu)
-                return UIMenu(children: actions)
-            case .directory, .installer, .unknown, .applicationInformation, .image, .sound, .help:
-                return UIMenu(children: [fileMenu])
-            }
+            var actions: [UIMenuElement] = []
+            actions += self.programActions(for: item)
+            actions += self.taskActions(for: item)
+            actions += self.fileActions(for: item)
+            return UIMenu(children: actions)
         }
     }
 
