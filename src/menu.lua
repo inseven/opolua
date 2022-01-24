@@ -229,7 +229,7 @@ local function makeMenuPane(x, y, pos, values, selected, cutoutLen)
         end
         drawItem(i, DrawStyle.dismissing)
         -- wait a bit to make it obvious it's been selected
-        PAUSE(10)
+        PAUSE(5)
         return key & 0xFF
     end
 
@@ -386,7 +386,8 @@ local function runMenuEventLoop(bar, pane, shortcuts)
     return result, highlight
 end
 
-function mPOPUP(x, y, pos, values)
+function mPOPUP(x, y, pos, values, init)
+    -- Note, init isn't part of the actual OPL mPOPUP API but is needed to implement dialog choicelists properly
     local state = runtime:saveGraphicsState()
 
     local shortcuts = {}
@@ -400,7 +401,7 @@ function mPOPUP(x, y, pos, values)
         end
     end
 
-    local pane = makeMenuPane(x, y, pos, values)
+    local pane = makeMenuPane(x, y, pos, values, init)
     local result = runMenuEventLoop(nil, pane, shortcuts)
     runtime:restoreGraphicsState(state)
     return result
