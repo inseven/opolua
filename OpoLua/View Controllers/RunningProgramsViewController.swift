@@ -88,6 +88,27 @@ class RunningProgramsViewController : UICollectionViewController {
         return dataSource
     }()
 
+    lazy var placeholderView: UIView = {
+
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 0
+        label.font = UIFont.preferredFont(forTextStyle: .largeTitle)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.text = "No Running Programs"
+
+        let view = UIView(frame: .zero)
+        view.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            label.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+        ])
+
+        return view
+    }()
+
     init(settings: Settings, taskManager: TaskManager) {
         self.settings = settings
         self.taskManager = taskManager
@@ -96,6 +117,7 @@ class RunningProgramsViewController : UICollectionViewController {
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.dataSource = dataSource
+        collectionView.backgroundView = placeholderView
         title = "Running Programs"
         navigationItem.largeTitleDisplayMode = .never
     }
@@ -110,14 +132,14 @@ class RunningProgramsViewController : UICollectionViewController {
             guard let self = self else {
                 return
             }
-            self.dataSource.apply(self.snapshot(), animatingDifferences: animated)
+            self.update(animated: true)
         }
         taskManager.addObserver(self)
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        dataSource.apply(snapshot(), animatingDifferences: animated)
+        update(animated: animated)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -127,14 +149,15 @@ class RunningProgramsViewController : UICollectionViewController {
         taskManager.removeObserver(self)
     }
 
-    func snapshot() -> Snapshot {
+    func update(animated: Bool) {
+        collectionView.backgroundView?.isHidden = taskManager.programs.count > 0
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
         let items = taskManager.programs.map { program in
             return Item(title: program.title, icon: program.icon, isRunning: true, program: program)
         }
         snapshot.appendItems(items, toSection: Section.none)
-        return snapshot
+        dataSource.apply(snapshot, animatingDifferences: animated)
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -178,7 +201,7 @@ class RunningProgramsViewController : UICollectionViewController {
 extension RunningProgramsViewController: TaskManagerObserver {
 
     func taskManagerDidUpdate(_ taskManager: TaskManager) {
-        dataSource.apply(snapshot(), animatingDifferences: true)
+        update(animated: true)
     }
 
 }
