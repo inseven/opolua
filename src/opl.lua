@@ -395,6 +395,8 @@ function gSETWIN(x, y, w, h)
     runtime:flushGraphicsOps()
     local ctx = runtime:getGraphicsContext()
     runtime:iohandler().graphicsop("setwin", ctx.id, x, y, w, h)
+    ctx.winX = x
+    ctx.winY = y
     if w then
         ctx.width = w
         ctx.height = h
@@ -406,7 +408,9 @@ function gCREATE(x, y, w, h, visible, flags)
     local id = runtime:iohandler().createWindow(x, y, w, h, flags or KgCreate2GrayMode)
     assert(id, "Failed to createWindow!")
     -- printf(" id=%d\n", id)
-    runtime:newGraphicsContext(id, w, h, true, (flags or 0) & 0xF)
+    local ctx = runtime:newGraphicsContext(id, w, h, true, (flags or 0) & 0xF)
+    ctx.winX = x
+    ctx.winY = y
     if visible then
         runtime:iohandler().graphicsop("show", id, true)
     end
@@ -474,6 +478,18 @@ end
 
 function gHEIGHT()
     return runtime:getGraphicsContext().height
+end
+
+function gORIGINX()
+    local context = runtime:getGraphicsContext()
+    assert(context.isWindow, KErrInvalidWindow)
+    return context.winX
+end
+
+function gORIGINY()
+    local context = runtime:getGraphicsContext()
+    assert(context.isWindow, KErrInvalidWindow)
+    return context.winY
 end
 
 function gPOLY(array)

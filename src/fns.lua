@@ -546,11 +546,11 @@ function gHeight(stack, runtime) -- 0x2F
 end
 
 function gOriginX(stack, runtime) -- 0x30
-    error("Unimplemented function gOriginX!")
+    stack:push(runtime:gORIGINX())
 end
 
 function gOriginY(stack, runtime) -- 0x31
-    error("Unimplemented function gOriginY!")
+    stack:push(runtime:gORIGINY())
 end
 
 function gTWidth(stack, runtime) -- 0x32
