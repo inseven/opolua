@@ -266,6 +266,7 @@ local function runMenuEventLoop(bar, pane, shortcuts)
     local evAddr = ev[1]:addressOf()
     local result = nil
     local highlight = nil
+    local seenPointerDown = false
     while result == nil do
         if bar then
             pane = bar.pane
@@ -333,6 +334,12 @@ local function runMenuEventLoop(bar, pane, shortcuts)
                             bar.moveSelectionTo(i)
                             break
                         end
+                    end
+                    handled = true
+                elseif not seenPointerDown then
+                    -- Ignore everything that might've resulted from a pen down before mPOPUP was called
+                    if ev[KEvAPtrType]() == KEvPtrPenDown then
+                        seenPointerDown = true
                     end
                     handled = true
                 else
