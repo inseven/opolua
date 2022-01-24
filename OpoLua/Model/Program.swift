@@ -78,7 +78,7 @@ class Program {
 
     private let settings: Settings
     let url: URL
-    private let device: Device
+    private let configuration: Configuration
     private let thread: InterpreterThread
     private let appInfo: OpoInterpreter.AppInfo?
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
@@ -119,16 +119,16 @@ class Program {
         }
     }()
 
-    init(settings: Settings, url: URL, device: Device = .psionSeries5) {
+    init(settings: Settings, url: URL) {
         self.settings = settings
         self.url = url
-        self.device = device
+        self.configuration = Configuration.load(for: url)
         self.thread = InterpreterThread(url: url)
         let appInfo = Directory.appInfo(forApplicationUrl: url)
         self.appInfo = appInfo
         self.title = appInfo?.caption ?? url.name
         self.icon = appInfo?.icon() ?? (url.pathExtension.lowercased() == "opo" ? .opo : .unknownApplication) // TODO: This should be an OPO icon if it's an OPO file.
-        self.windowServer = WindowServer(device: device, screenSize: device.screenSize)
+        self.windowServer = WindowServer(device: configuration.device, screenSize: configuration.device.screenSize)
         self.thread.delegate = self
         self.thread.handler = self
         self.windowServer.delegate = self
@@ -394,7 +394,7 @@ extension Program: OpoIoHandler {
     }
 
     func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
-        return (device.screenSize, device.screenMode)
+        return (configuration.device.screenSize, configuration.device.screenMode)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {

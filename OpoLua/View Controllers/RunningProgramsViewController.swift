@@ -46,7 +46,7 @@ class RunningProgramsViewController : UICollectionViewController {
             if lhs.program.title != rhs.program.title {
                 return false
             }
-            return false
+            return true
         }
 
         func hash(into hasher: inout Hasher) {

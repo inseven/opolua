@@ -30,7 +30,7 @@ protocol DirectoryDelegate: AnyObject {
 class Directory {
 
     static func appInfo(forApplicationUrl url: URL) -> OpoInterpreter.AppInfo? {
-        guard let applicationInfoFile = url.applicationInfoFile,
+        guard let applicationInfoFile = url.applicationInfoUrl,
               FileManager.default.fileExists(atUrl: applicationInfoFile)
         else {
             return nil

@@ -21,12 +21,12 @@
 import Foundation
 import UIKit
 
-enum Device: CaseIterable {
+enum Device: String, CaseIterable, Codable {
 
-    case psionSeries5
-    case psionRevo
-    case psionSeries7
-    case geofoxOne
+    case psionSeries5 = "psion-series-5"
+    case psionRevo = "psion-revo"
+    case psionSeries7 = "psion-series-7"
+    case geofoxOne = "geofox-one"
 
 }
 

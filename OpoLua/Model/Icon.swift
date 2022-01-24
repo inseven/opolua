@@ -23,6 +23,10 @@ import SwiftUI
 
 struct Icon: Hashable {
 
+    static func == (lhs: Icon, rhs: Icon) -> Bool {
+        return lhs.grayscaleImage == rhs.grayscaleImage && lhs.colorImage == rhs.colorImage
+    }
+
     var grayscaleImage: UIImage
     var colorImage: UIImage
 

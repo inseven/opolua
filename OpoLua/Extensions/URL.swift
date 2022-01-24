@@ -58,8 +58,12 @@ extension URL {
         return components.url
     }
 
-    var applicationInfoFile: URL? {
+    var applicationInfoUrl: URL? {
         return deletingLastPathComponent().appendingCaseInsensitivePathComponents([basename.appendingPathExtension("aif")!])
+    }
+
+    var programConfigurationUrl: URL {
+        return deletingLastPathComponent().appendingPathComponent((basename + "-configuration").appendingPathExtension("json")!)
     }
 
     var isApplication: Bool {

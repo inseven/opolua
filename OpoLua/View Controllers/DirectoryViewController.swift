@@ -216,16 +216,18 @@ class DirectoryViewController : UICollectionViewController {
         }
         actions.append(runAction)
 
-        let runAsActions = Device.allCases.map { device in
-            UIAction(title: device.name) { action in
-                let program = Program(settings: self.settings, url: url, device: device)
-                let viewController = ProgramViewController(settings: self.settings,
-                                                           taskManager: self.taskManager,
-                                                           program: program)
-                self.navigationController?.pushViewController(viewController, animated: true)
+        let runAsActions = Device.allCases.map { device -> UIAction in
+            var configuration = Configuration.load(for: url)
+            return UIAction(title: device.name, state: configuration.device == device ? .on : .off) { action in
+                configuration.device = device
+                do {
+                    try configuration.save(for: url)
+                } catch {
+                    self.present(error: error)
+                }
             }
         }
-        let runAsMenu = UIMenu(title: "Run As...", children: runAsActions)
+        let runAsMenu = UIMenu(title: "Run As...", options: [.displayInline], children: runAsActions)
         actions.append(runAsMenu)
 
         return actions
