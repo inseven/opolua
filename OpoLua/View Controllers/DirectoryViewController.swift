@@ -100,7 +100,7 @@ class DirectoryViewController : UICollectionViewController {
         return menuBarButtonItem
     }()
     
-    init(settings: Settings, taskManager: TaskManager, directory: Directory, title: String? = nil) {
+    init(settings: Settings, taskManager: TaskManager, directory: Directory) {
         self.settings = settings
         self.taskManager = taskManager
         self.directory = directory
@@ -111,10 +111,10 @@ class DirectoryViewController : UICollectionViewController {
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
-        self.title = title ?? directory.name
-        self.navigationItem.searchController = searchController
-        self.navigationItem.largeTitleDisplayMode = .never
-        self.navigationItem.rightBarButtonItem = menuBarButtonItem
+        title = directory.name
+        navigationItem.searchController = searchController
+        navigationItem.largeTitleDisplayMode = .never
+        navigationItem.rightBarButtonItem = menuBarButtonItem
     }
     
     required init?(coder: NSCoder) {

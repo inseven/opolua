@@ -22,7 +22,7 @@ import Foundation
 
 extension Bundle {
 
-    var examplesUrl: URL {
+    private var examplesUrl: URL {
         return resourceURL!.appendingPathComponent("examples", isDirectory: true)
     }
 
@@ -35,7 +35,7 @@ extension Bundle {
     }
 
     var testsUrl: URL {
-        return examplesUrl
+        return examplesUrl.appendingPathComponent("Tests", isDirectory: true)
     }
 
 }

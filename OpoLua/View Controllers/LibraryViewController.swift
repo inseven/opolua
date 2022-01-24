@@ -219,7 +219,7 @@ class LibraryViewController: UICollectionViewController {
                                  readonly: true))
         }
         if settings.showLibraryTests {
-            examples.append(Item(type: .local(Bundle.main.examplesUrl),
+            examples.append(Item(type: .local(Bundle.main.testsUrl),
                                  name: "Tests",
                                  image: UIImage(systemName: "folder")!,
                                  readonly: true))
@@ -333,8 +333,7 @@ class LibraryViewController: UICollectionViewController {
                 let directory = try Directory(url: url)
                 let viewController = DirectoryViewController(settings: settings,
                                                              taskManager: taskManager,
-                                                             directory: directory,
-                                                             title: item.name)
+                                                             directory: directory)
                 delegate?.libraryViewController(self, presentViewController: viewController)
             } catch {
                 present(error: error)
