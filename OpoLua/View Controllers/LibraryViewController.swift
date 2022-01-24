@@ -176,12 +176,12 @@ class LibraryViewController: UICollectionViewController {
     func snapshot() -> Snapshot {
         var snapshot = Snapshot()
         snapshot.appendSections([.special, .examples])
-        snapshot.appendItems([Item(type: .runningPrograms,
-                                   name: "Running Programs",
-                                   image: UIImage(systemName: "play.square")!),
-                             Item(type: .allPrograms,
+        snapshot.appendItems([Item(type: .allPrograms,
                                    name: "All Programs",
-                                   image: UIImage(systemName: "square")!)],
+                                   image: UIImage(systemName: "square")!),
+                              Item(type: .runningPrograms,
+                                   name: "Running Programs",
+                                   image: UIImage(systemName: "play.square")!)],
                              toSection: .special)
         snapshot.appendItems([Item(type: .local(Bundle.main.filesUrl),
                                    name: "Files",
