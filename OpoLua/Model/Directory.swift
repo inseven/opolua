@@ -174,7 +174,12 @@ class Directory {
     }
 
     func refresh() throws {
-        items = try url.contents
+        items = try Self.items(for: url)
+        delegate?.directoryDidChange(self)
+    }
+
+    static func items(for url: URL) throws -> [Item] {
+        let items = try url.contents
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
                 if FileManager.default.directoryExists(atPath: url.path) {
@@ -204,8 +209,9 @@ class Directory {
                 }
             }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
-        delegate?.directoryDidChange(self)
+        return items
     }
+
 
     func createDirectory(name: String) throws {
         try FileManager.default.createDirectory(at: url.appendingPathComponent(name),

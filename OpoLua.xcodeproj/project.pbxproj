@@ -71,6 +71,8 @@
 		D8DF3FB0278B3DA100FF658B /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAD278B3DA100FF658B /* Release.xcconfig */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
+		D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */; };
+		D8EE4D88279E647900F91150 /* AllProgramsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D87279E647900F91150 /* AllProgramsViewController.swift */; };
 		D8F4835D278D3D31008AF80C /* PixelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F4835C278D3D31008AF80C /* PixelView.swift */; };
 		D8F5CADB279D07A700A2DC3F /* ImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F5CADA279D07A700A2DC3F /* ImageViewController.swift */; };
 		D8FE60032757106300711717 /* SecureLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* SecureLocation.swift */; };
@@ -257,6 +259,8 @@
 		D8DF3FAD278B3DA100FF658B /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
+		D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramDetector.swift; sourceTree = "<group>"; };
+		D8EE4D87279E647900F91150 /* AllProgramsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllProgramsViewController.swift; sourceTree = "<group>"; };
 		D8F4835C278D3D31008AF80C /* PixelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelView.swift; sourceTree = "<group>"; };
 		D8F5CADA279D07A700A2DC3F /* ImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageViewController.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* SecureLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureLocation.swift; sourceTree = "<group>"; };
@@ -464,6 +468,7 @@
 			isa = PBXGroup;
 			children = (
 				D86FBAB4278C74A3003DF611 /* AboutView.swift */,
+				D8EE4D87279E647900F91150 /* AllProgramsViewController.swift */,
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
 				D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */,
 				D8891346274BF2D200794D55 /* DialogViewController.swift */,
@@ -485,6 +490,7 @@
 			children = (
 				D8D95503279B52370049A3C3 /* Localization.swift */,
 				D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */,
+				D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -914,8 +920,10 @@
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,
 				D8FE60092757208000711717 /* ApplicationError.swift in Sources */,
 				D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */,
+				D8EE4D88279E647900F91150 /* AllProgramsViewController.swift in Sources */,
 				D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
+				D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */,
 				DBE2917E27932C5400EE824B /* ClockView.swift in Sources */,
 				D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */,
 				DB7900162742E6F6005E904F /* lutf8lib.c in Sources */,
