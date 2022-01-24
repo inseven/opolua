@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
@@ -85,9 +86,11 @@ class LibraryViewController: UICollectionViewController {
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
     typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
 
-    var settings: Settings
-    var taskManager: TaskManager
-    var dataSource: DataSource!
+    private var settings: Settings
+    private var taskManager: TaskManager
+    private var dataSource: DataSource!
+    private var settingsSink: AnyCancellable?
+
     var delegate: LibraryViewControllerDelegate?
 
     lazy var addBarButtonItem: UIBarButtonItem = {
@@ -159,9 +162,24 @@ class LibraryViewController: UICollectionViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        settingsSink = settings.objectWillChange.sink { [weak self] _ in
+            guard let self = self else {
+                return
+            }
+            self.reload()
+        }
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         dataSource.apply(snapshot(), animatingDifferences: animated)
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        settingsSink = nil
     }
 
     @objc func settingsTapped(sender: UIBarButtonItem) {
@@ -175,7 +193,7 @@ class LibraryViewController: UICollectionViewController {
 
     func snapshot() -> Snapshot {
         var snapshot = Snapshot()
-        snapshot.appendSections([.special, .examples])
+        snapshot.appendSections([.special])
         snapshot.appendItems([Item(type: .allPrograms,
                                    name: "All Programs",
                                    image: UIImage(systemName: "square")!),
@@ -183,19 +201,32 @@ class LibraryViewController: UICollectionViewController {
                                    name: "Running Programs",
                                    image: UIImage(systemName: "play.square")!)],
                              toSection: .special)
-        snapshot.appendItems([Item(type: .local(Bundle.main.filesUrl),
-                                   name: "Files",
-                                   image: UIImage(systemName: "folder")!,
-                                   readonly: true),
-                              Item(type: .local(Bundle.main.scriptsUrl),
-                                   name: "Scripts",
-                                   image: UIImage(systemName: "folder")!,
-                                   readonly: true),
-                              Item(type: .local(Bundle.main.examplesUrl),
-                                   name: "Examples",
-                                   image: UIImage(systemName: "folder")!,
-                                   readonly: true)],
-                             toSection: .examples)
+
+        // Examples
+        var examples: [Item] = []
+        if settings.showLibraryFiles {
+            examples.append(Item(type: .local(Bundle.main.filesUrl),
+                                 name: "Files",
+                                 image: UIImage(systemName: "folder")!,
+                                 readonly: true))
+        }
+        if settings.showLibraryScripts {
+            examples.append(Item(type: .local(Bundle.main.scriptsUrl),
+                                 name: "Scripts",
+                                 image: UIImage(systemName: "folder")!,
+                                 readonly: true))
+        }
+        if settings.showLibraryTests {
+            examples.append(Item(type: .local(Bundle.main.examplesUrl),
+                                 name: "Tests",
+                                 image: UIImage(systemName: "folder")!,
+                                 readonly: true))
+        }
+        if examples.count > 0 {
+            snapshot.appendSections([.examples])
+            snapshot.appendItems(examples, toSection: .examples)
+        }
+
         let locations = settings.locations
             .map { Item(type: .external($0), name: $0.url.name, image: UIImage(systemName: "folder")!) }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }

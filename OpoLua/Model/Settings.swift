@@ -34,6 +34,9 @@ class Settings: ObservableObject {
         case showWallpaper = "ShowWallpaper"
         case locations = "Locations"
         case clockType = "Clock"
+        case showLibraryFiles = "ShowLibraryFiles"
+        case showLibraryScripts = "ShowLibraryScripts"
+        case showLibraryTests = "ShowLibraryTests"
     }
 
     let userDefaults = UserDefaults()
@@ -150,6 +153,36 @@ class Settings: ObservableObject {
         }
         set {
             self.set(newValue.rawValue, for: .clockType)
+            self.objectWillChange.send()
+        }
+    }
+
+    var showLibraryFiles: Bool {
+        get {
+            return self.bool(for: .showLibraryFiles, default: true)
+        }
+        set {
+            self.set(newValue, for: .showLibraryFiles)
+            self.objectWillChange.send()
+        }
+    }
+
+    var showLibraryScripts: Bool {
+        get {
+            return self.bool(for: .showLibraryScripts, default: true)
+        }
+        set {
+            self.set(newValue, for: .showLibraryScripts)
+            self.objectWillChange.send()
+        }
+    }
+
+    var showLibraryTests: Bool {
+        get {
+            return self.bool(for: .showLibraryTests, default: false)
+        }
+        set {
+            self.set(newValue, for: .showLibraryTests)
             self.objectWillChange.send()
         }
     }

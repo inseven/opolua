@@ -61,6 +61,11 @@ struct SettingsView: View {
                     }
                     Toggle("Show Wallpaper", isOn: $settings.showWallpaper)
                 }
+                Section("Locations") {
+                    Toggle("Show Files", isOn: $settings.showLibraryFiles)
+                    Toggle("Show Scripts", isOn: $settings.showLibraryScripts)
+                    Toggle("Show Tests", isOn: $settings.showLibraryTests)
+                }
                 Section {
                     Button("About \(UIApplication.shared.displayName!)...") {
                         sheet = .about
