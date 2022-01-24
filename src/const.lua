@@ -404,7 +404,7 @@ KMPopupPosBottomRight = 3
 KParseAOffFSys = 1
 KParseAOffDev = 2
 KParseAOffPath = 3
- KParseAOffFilename = 4
+KParseAOffFilename = 4
 KParseAOffExt = 5
 KParseAOffWild = 6
 -- Wild-card flags

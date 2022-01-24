@@ -279,8 +279,8 @@ class Program {
             return .nothing
 
         case .textSize(let string, let fontInfo):
-            let details = WindowServer.textSize(string: string, fontInfo: fontInfo)
-            return .sizeAndAscent(details.size, details.ascent)
+            let metrics = WindowServer.textSize(string: string, fontInfo: fontInfo)
+            return .textMetrics(metrics)
 
         case .busy(let drawableId, let delay):
             windowServer.busy(drawableId: drawableId, delay: delay)

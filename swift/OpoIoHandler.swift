@@ -332,13 +332,19 @@ struct Graphics {
         // TODO offset, format, etc
     }
 
+    struct TextMetrics {
+        let size: Graphics.Size
+        let ascent: Int
+        let descent: Int
+    }
+
     enum Operation {
         case close(DrawableId)
         case createBitmap(Size, Bitmap.Mode) // returns handle
         case createWindow(Rect, Bitmap.Mode, Int) // Int is shadow size in pixels. returns handle
         case order(DrawableId, Int) // drawableId, position
         case show(DrawableId, Bool) // drawableId, visible flag
-        case textSize(String, FontInfo) // returns size
+        case textSize(String, FontInfo) // returns TextMetrics
         case busy(DrawableId, Int) // drawableId, delay (in ms)
         case giprint(DrawableId)
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
@@ -349,7 +355,7 @@ struct Graphics {
     enum Result {
         case nothing
         case handle(DrawableId)
-        case sizeAndAscent(Size, Int)
+        case textMetrics(TextMetrics)
     }
 }
 

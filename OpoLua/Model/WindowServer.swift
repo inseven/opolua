@@ -29,18 +29,12 @@ protocol WindowServerDelegate: CanvasViewDelegate {
 
 class WindowServer {
 
-    // TODO: Move this up into the Opo layer
-    struct TextDetails {
-        let size: Graphics.Size
-        let ascent: Int
-    }
-
-    static func textSize(string: String, fontInfo: Graphics.FontInfo) -> TextDetails {
+    static func textSize(string: String, fontInfo: Graphics.FontInfo) -> Graphics.TextMetrics {
         if let font = fontInfo.toBitmapFont() {
             let bold = fontInfo.flags.contains(.bold)
             let renderer = BitmapFontCache.shared.getRenderer(font: font, embolden: bold)
             let (w, h) = renderer.getTextSize(string)
-            return TextDetails(size: Graphics.Size(width: w, height: h), ascent: font.ascent)
+            return Graphics.TextMetrics(size: Graphics.Size(width: w, height: h), ascent: font.ascent, descent: font.descent)
         } else {
             let font = fontInfo.toUiFont()! // One or other has to return non-nil
             let attribStr = NSAttributedString(string: string, attributes: [.font: font])
@@ -48,8 +42,9 @@ class WindowServer {
             // This is not really the right definition for ascent but it seems to work for where epoc expects
             // the text to be, so...
             let ascent = Int(ceil(sz.height) + font.descender)
-            return TextDetails(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
-                               ascent: ascent)
+            let descent = Int(ceil(font.descender))
+            return Graphics.TextMetrics(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
+                                        ascent: ascent, descent: descent)
         }
     }
 

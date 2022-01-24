@@ -45,6 +45,10 @@ struct BitmapFontInfo {
     let ascent: Int
     let widths: [Int]
 
+    var descent: Int {
+        return charh - ascent
+    }
+
     init?(uid: UInt32) {
         let uidstr = String(uid, radix: 16, uppercase: true)
         guard let url = Bundle.main.url(forResource: "fonts/\(uidstr)/\(uidstr).json", withExtension: nil),

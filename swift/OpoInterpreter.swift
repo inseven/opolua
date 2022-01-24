@@ -361,11 +361,12 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
     case .handle(let h):
         L.push(h.value)
         return 1
-    case .sizeAndAscent(let sz, let ascent):
-        L.push(sz.width)
-        L.push(sz.height)
-        L.push(ascent)
-        return 3
+    case .textMetrics(let metrics):
+        L.push(metrics.size.width)
+        L.push(metrics.size.height)
+        L.push(metrics.ascent)
+        L.push(metrics.descent)
+        return 4
     }
 }
 
