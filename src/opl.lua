@@ -195,8 +195,8 @@ end
 
 function gTWIDTH(text)
     local context = runtime:getGraphicsContext()
-    local width, height, ascent = runtime:iohandler().graphicsop("textsize", text, context.font, context.style)
-    return width, height, ascent
+    local width, height, ascent, descent = runtime:iohandler().graphicsop("textsize", text, context.font, context.style)
+    return width, height, ascent, descent
 end
 
 function gLINEBY(dx, dy)
@@ -267,7 +267,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     -- The Series 5 appears to ignore type and treat 1 as 2 the same
     -- printf("gBUTTON %s type=%d state=%d\n", text, type, state)
 
-    local textw, texth = gTWIDTH(text)
+    local textw, texth, _, descent = gTWIDTH(text)
 
     lightGrey()
     if state == 0 then
@@ -316,7 +316,12 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         textX = textX + bmpWidth + 1
     end
 
-    local textY = s.pos.y + ((height - texth) // 2) + state
+    local pos = (layout or 0) & 0xF
+    if pos == KButtTextTop or pos == KButtTextBottom then
+        -- We need to center the text (note, we don't actually support layout when there actually is an image, yet)
+        textX = s.pos.x + state + (width - textw) // 2
+    end
+    local textY = s.pos.y + ((height - texth + descent) // 2) + state
     black()
     runtime:drawCmd("text", { string = text, x = textX, y = textY })
 
