@@ -305,6 +305,9 @@ class DirectoryViewController : UICollectionViewController {
             let viewController = ImageViewController(url: item.url)
             navigationController?.pushViewController(viewController, animated: true)
         case .unknown, .applicationInformation, .sound, .help:
+            let alert = UIAlertController(title: "Unsupported File", message: "Opening files of this type is currently unsupported.", preferredStyle: .alert)
+            alert.addAction(.init(title: "OK", style: .default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
             break
         }
     }
