@@ -78,12 +78,10 @@ class ProgramDetector {
                 }
             }
             DispatchQueue.main.async {
-                print("Succeeded!")
                 self._items = items
                 self.delegate?.programDetectorDidUpdateItems(self)
             }
         } catch {
-            print("Failed!")
             DispatchQueue.main.async {
                 self.delegate?.programDetector(self, didFailWithError: error)
             }
