@@ -254,7 +254,7 @@ class DirectoryViewController : UICollectionViewController {
                 }
                 return Item(directoryItem: item, icon: item.icon(), isRunning: isRunning)
             }
-        snapshot.appendItems(items, toSection: nil)
+        snapshot.appendItems(items, toSection: Section.none)
         return snapshot
     }
 

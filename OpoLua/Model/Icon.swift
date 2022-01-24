@@ -24,15 +24,30 @@ import SwiftUI
 struct Icon: Hashable {
 
     static func == (lhs: Icon, rhs: Icon) -> Bool {
-        return lhs.grayscaleImage == rhs.grayscaleImage && lhs.colorImage == rhs.colorImage
+        if lhs.grayscaleImagePngData != rhs.grayscaleImagePngData {
+            return false
+        }
+        if lhs.colorImagePngData != rhs.colorImagePngData {
+            return false
+        }
+        return true
     }
 
     var grayscaleImage: UIImage
     var colorImage: UIImage
+    private var grayscaleImagePngData: Data
+    private var colorImagePngData: Data
 
     init(grayscaleImage: UIImage, colorImage: UIImage) {
         self.grayscaleImage = grayscaleImage
         self.colorImage = colorImage
+        self.grayscaleImagePngData = grayscaleImage.pngData()!
+        self.colorImagePngData = colorImage.pngData()!
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(grayscaleImagePngData)
+        hasher.combine(colorImagePngData)
     }
 
 }
