@@ -1911,7 +1911,10 @@ mCard_dump = numParams_dump
 function dInit(stack, runtime) -- 0xEC
     local numParams = runtime:IP8()
     local dialog = {
+        title = "",
         flags = 0,
+        xpos = 0,
+        ypos = 0,
         items = {}
     }
     if numParams == 2 then
@@ -1939,8 +1942,12 @@ function dItem(stack, runtime) -- 0xED
         item.align = flagToAlign[flags & 3]
         item.value = stack:pop()
         item.prompt = stack:pop()
+        if item.prompt == "" then
+            item.prompt = nil
+        end
         item.selectable = (flags & KDTextAllowSelection) > 0
-        if item.prompt == "" and item.value == "" and (flags & KDTextSeparator) > 0 then
+        item.lineBelow = (flags & KDTextLineBelow) > 0
+        if item.prompt == nil and item.value == "" and (flags & KDTextSeparator) > 0 then
             item = { type = dItemTypes.dSEPARATOR }
         end
         -- Ignoring the other flags for now
@@ -1980,13 +1987,16 @@ function dItem(stack, runtime) -- 0xED
         item.variable = stack:pop()
         item.value = tostring(item.variable())
     elseif itemType == dItemTypes.dEDIT or itemType == dItemTypes.dEDITlen then
-        item.max = 0
         if itemType == dItemTypes.dEDITlen then
-            max = stack:pop()
+            item.len = stack:pop()
         end
         item.prompt = stack:pop()
         item.variable = stack:pop()
         item.value = tostring(item.variable())
+        -- printf("dEdit len=%s string maxlen=%d\n", item.len, item.variable:getMaxLen())
+        if not item.len then
+            item.len = item.variable:getMaxLen()
+        end
         item.type = dItemTypes.dEDIT -- No need to distinguish in higher layers
     elseif itemType == dItemTypes.dXINPUT then
         item.prompt = stack:pop()
@@ -2002,8 +2012,8 @@ function dItem(stack, runtime) -- 0xED
             table.insert(dialog.buttons, 1, { key = key, text = text })
         end
     elseif itemType == dItemTypes.dPOSITION then
-        -- We don't do anything with this yet, just keep the stack balanced
         dialog.xpos, dialog.ypos = stack:popXY()
+        shouldAdd = false
     else
         error("Unsupported dItem type "..itemType)
     end

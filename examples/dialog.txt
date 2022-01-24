@@ -1,9 +1,16 @@
 PROC main:
 	LOCAL choice%, dlg%
+	
+	REM dINIT "Smol not really long", 0
+	REM dBUTTONS "l", 13
+	REM DIALOG
+	
 	dINIT "Dialog test", 0
 	dTEXT "", "Pick a dialog type to test"
 	REM dTEXT "", "", $800
-	dCHOICE choice%, "Choose", "long,edit,checkbox,text,password,empty,date,time,buttons,cancelDlg"
+	dCHOICE choice%, "Choose", "long,edit,checkbox,text,..."
+	dCHOICE choice%, "", "password,empty,date,time,..."
+	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg"
 	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
 	choice% = 2
 	dlg% = DIALOG
@@ -30,6 +37,8 @@ PROC main:
 	ELSEIF choice% = 9
 		buttonDlg:
 	ELSEIF choice% = 10
+		bareButtonDlg:
+	ELSEIF choice% = 11
 		cancelDlg:
 	ENDIF
 ENDP
@@ -37,7 +46,7 @@ ENDP
 PROC buttonDlg:
 	LOCAL result%
 	dINIT "Buttons"
-	dBUTTONS "OK", 13, "Cancel", -27, "A", %a, "B", %b, "C", -%c
+	dBUTTONS "OK", 13, "Cancel", -27, "A", %a, "B", %b, "C", -%C
 	result% = DIALOG
 	IF result% = 13:
 		PRINT "OK"
@@ -48,6 +57,15 @@ PROC buttonDlg:
 	ELSEIF result% = 0
 		PRINT "Dialog Cancelled (Esc or Ctrl+C Pressed)"
 	ENDIF
+	GET
+ENDP
+
+PROC bareButtonDlg:
+	LOCAL result%
+	dINIT "Buttons"
+	dBUTTONS "No", $34E, "Yes", $359
+	result% = DIALOG
+	PRINT "Dialog returned", result%
 	GET
 ENDP
 
@@ -74,6 +92,7 @@ PROC checkDlg:
 	dINIT "Checkbox"
 	dCHECKBOX chk%, "check"
 	DIALOG
+	PRINT "check is", chk%
 	GET
 ENDP
 
@@ -130,7 +149,7 @@ PROC cancelDlg:
 	LOCAL result%
 	dINIT "Doom"
 	dTEXT "", "EVERYTHING IS DOOMED"
-	dBUTTONS "Sob", -27
+	dBUTTONS "Sob", 27
 	result% = DIALOG
 	PRINT "Dialog returned", result%
 	GET

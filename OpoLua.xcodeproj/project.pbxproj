@@ -172,6 +172,7 @@
 		DB79FFFE2742E6F6005E904F /* lctype.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6B2742D5BC005E904F /* lctype.c */; };
 		DB79FFFF2742E6F6005E904F /* ldblib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF692742D5BC005E904F /* ldblib.c */; };
 		DB9B7C31274A771A006B6F60 /* loslib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB9B7C30274A771A006B6F60 /* loslib.c */; };
+		DBA18836279C408A00B2954B /* dialog.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBA18835279C408A00B2954B /* dialog.lua */; };
 		DBACE9C3274F895D002612DF /* modules in Resources */ = {isa = PBXBuildFile; fileRef = DBACE9C2274F895D002612DF /* modules */; };
 		DBE2917C278CCB0B00EE824B /* crc.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE2917B278CCB0B00EE824B /* crc.lua */; };
 		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
@@ -335,6 +336,7 @@
 		DB79FFEF2742E631005E904F /* ops.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ops.lua; sourceTree = "<group>"; };
 		DB9B7C30274A771A006B6F60 /* loslib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = loslib.c; sourceTree = "<group>"; };
 		DB9B7C33274A7B9B006B6F60 /* luauser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = luauser.h; sourceTree = "<group>"; };
+		DBA18835279C408A00B2954B /* dialog.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dialog.lua; sourceTree = "<group>"; };
 		DBACE9C2274F895D002612DF /* modules */ = {isa = PBXFileReference; lastKnownFileType = folder; path = modules; sourceTree = "<group>"; };
 		DBE2917B278CCB0B00EE824B /* crc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crc.lua; sourceTree = "<group>"; };
 		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
@@ -624,6 +626,7 @@
 				DB79FFEE2742E631005E904F /* stack.lua */,
 				DB5AC97B275CD5690043FE5C /* opl.lua */,
 				DBE29185279747D000EE824B /* menu.lua */,
+				DBA18835279C408A00B2954B /* dialog.lua */,
 				DB79FFEF2742E631005E904F /* ops.lua */,
 				DB7900242746D915005E904F /* defaultiohandler.lua */,
 				DB5AC96F275198A20043FE5C /* database.lua */,
@@ -740,6 +743,7 @@
 				DB79FFF22742E631005E904F /* fns.lua in Resources */,
 				DBE29186279747D100EE824B /* menu.lua in Resources */,
 				D8C679BD27484BF400BD8720 /* examples in Resources */,
+				DBA18836279C408A00B2954B /* dialog.lua in Resources */,
 				DB79FFF72742E631005E904F /* ops.lua in Resources */,
 				DB79FFF52742E631005E904F /* dumpopo.lua in Resources */,
 				DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */,

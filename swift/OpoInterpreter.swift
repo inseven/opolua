@@ -220,8 +220,7 @@ private func dialog(_ L: LuaState!) -> Int32 {
             L.pop() // items[i]
         }
     }
-    // Be bug compatible with Psion 5 and return 0 if a negative-keycode or escape button was pressed
-    L.push(result.result < 0 || result.result == 27 ? 0 : result.result)
+    L.push(result.result)
     return 1
 }
 

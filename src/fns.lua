@@ -591,7 +591,7 @@ function Dialog(stack, runtime) -- 0x37
             item.variable = nil -- Don't expose this to iohandler
         end
     end
-    local result = runtime:iohandler().dialog(dialog)
+    local result = runtime:DIALOG(dialog)
     if result > 0 then
         -- Assign any variables eg `dCHOICE choice%`
         for item, var in pairs(varMap) do
@@ -605,6 +605,10 @@ function Dialog(stack, runtime) -- 0x37
                 var(item.value)
             end
         end
+    end
+    -- Be bug compatible with Psion 5 and return 0 if a negative-keycode or escape button was pressed
+    if result < 0 or result == 27 then
+        result = 0
     end
     stack:push(result)
 end

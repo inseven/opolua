@@ -50,11 +50,14 @@ function _setRuntime(r)
     -- Load everything that's defined elsewhere
     local separateModules = {
         "menu",
+        "dialog",
     }
     for _, module in ipairs(separateModules) do
         for name, fn in pairs(runtime:newOplModule(module)) do
-            assert(_ENV[name] == nil, "Duplicate definition of "..name)
-            _ENV[name] = fn
+            if type(fn) == "function" then
+                assert(_ENV[name] == nil, "Duplicate definition of "..name)
+                _ENV[name] = fn
+            end
         end
     end
 end
@@ -73,6 +76,11 @@ end
 
 function white()
     gCOLOR(0xFF, 0xFF, 0xFF)
+end
+
+-- convenience
+function drawText(text, x, y)
+    runtime:drawCmd("text", { string = text, x = x, y = y })
 end
 
 -- Graphics APIs

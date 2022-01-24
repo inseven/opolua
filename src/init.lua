@@ -31,7 +31,13 @@ end
 local classMt = {
     __call = function(classObj, obj)
         return setmetatable(obj or {}, classObj)
-    end
+    end,
+    __index = function(classObj, name)
+        local super = rawget(classObj, "_super")
+        if super then
+            return super[name]
+        end
+    end,
 }
 
 function class(classObj)
