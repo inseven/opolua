@@ -35,8 +35,10 @@ class ConsoleViewController: UIViewController {
     lazy var textView: UITextView = {
         let textView = UITextView()
         textView.isEditable = false
+        textView.alwaysBounceVertical = true
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.backgroundColor = .clear
+        textView.preservesSuperviewLayoutMargins = true
         return textView
     }()
 
@@ -63,19 +65,20 @@ class ConsoleViewController: UIViewController {
         navigationItem.rightBarButtonItem = shareBarButtonItem
         view.addSubview(textView)
         NSLayoutConstraint.activate([
-
-            textView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             textView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             textView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            textView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             textView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
-
         ])
-
-        textView.text = program.console.lines.joined()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        textView.text = program.console.lines.joined()
     }
 
     @objc func doneTapped(sender: UIBarButtonItem) {
@@ -95,6 +98,7 @@ class ConsoleViewController: UIViewController {
 extension ConsoleViewController: ConsoleDelegate {
 
     func console(_ console: Console, didAppendLine line: String) {
+        dispatchPrecondition(condition: .onQueue(.main))
         self.textView.text.append(line)
     }
 
