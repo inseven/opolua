@@ -81,7 +81,7 @@ extension Icon {
 extension OpoInterpreter.AppInfo {
 
     func icon() -> Icon? {
-        guard let appIcon = appIcon else {
+        guard let appIcon = image(for: .icon) else {
             return nil
         }
         // TODO: Use grayscale images

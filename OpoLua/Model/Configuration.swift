@@ -22,9 +22,16 @@ import Foundation
 
 struct Configuration: Codable {
 
+    static var defaultConfiguration = {
+        return Configuration(device: .psionSeries5)
+    }()
+
     var device: Device
 
     static func load(for url: URL) -> Configuration {
+        guard FileManager.default.fileExists(atPath: url.programConfigurationUrl.path) else {
+            return Self.defaultConfiguration
+        }
         do {
             let data = try Data(contentsOf: url.programConfigurationUrl)
             let decoder = JSONDecoder()
@@ -33,7 +40,7 @@ struct Configuration: Codable {
         } catch {
             print("Failed to load configuration with error \(error).")
         }
-        return Configuration(device: .psionSeries5)
+        return Self.defaultConfiguration
     }
 
     func save(for url: URL) throws {
