@@ -842,6 +842,8 @@ function DIALOG(dialog)
 
     local screenWidth, screenHeight = runtime:getScreenInfo()
     local w = maxWidth + (borderWidth + hMargin) * 2
+    w = math.min(w, screenWidth)
+    h = math.min(h, screenHeight)
     local winX, winY
     if dialog.xpos < 0 then
         winX = 0
