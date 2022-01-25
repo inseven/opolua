@@ -138,7 +138,7 @@ private func beep(_ L: LuaState!) -> Int32 {
 private func readLine(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let b = L.toboolean(1)
-    if let result = iohandler.readLine(escapeShouldErrorEmptyInput: b) {
+    if let result = iohandler.readLine(allowCancel: b) {
         L.push(result)
     } else {
         L.pushnil()

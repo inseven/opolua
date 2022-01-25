@@ -37,7 +37,7 @@ protocol ProgramLifecycleObserver: NSObject {
  */
 protocol ProgramDelegate: AnyObject {
 
-    func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
+    func readLine(allowCancel: Bool) -> String?
     func program(_ program: Program, showAlertWithLines lines: [String], buttons: [String]) -> Int
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
@@ -356,8 +356,8 @@ extension Program: OpoIoHandler {
         }
     }
 
-    func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
-        return delegate!.readLine(escapeShouldErrorEmptyInput: escapeShouldErrorEmptyInput)
+    func readLine(allowCancel: Bool) -> String? {
+        return delegate!.readLine(allowCancel: allowCancel)
     }
 
     func alert(lines: [String], buttons: [String]) -> Int {

@@ -471,7 +471,7 @@ extension ProgramViewController: ProgramDelegate {
         }
     }
 
-    func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
+    func readLine(allowCancel: Bool) -> String? {
         let semaphore = DispatchSemaphore(value: 0)
         var text = ""
         DispatchQueue.main.async {

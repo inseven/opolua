@@ -35,10 +35,10 @@ function print(val)
     printf("%s", val)
 end
 
-function readLine(escapeShouldErrorEmptyInput)
+function readLine(allowCancel)
     local line = io.stdin:read()
     -- We don't support pressing esc to clear the line, oh well
-    if escapeShouldErrorEmptyInput and line:byte(1, 1) == 27 then
+    if allowCancel and line:byte(1, 1) == 27 then
         -- Close enough...
         error(KErrEsc)
     end

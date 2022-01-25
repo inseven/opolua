@@ -440,8 +440,8 @@ protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
 
-    // nil return means escape (must only return nil if escapeShouldErrorEmptyInput is true)
-    func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
+    // nil return means escape (must only return nil if allowCancel is true)
+    func readLine(allowCancel: Bool) -> String?
 
     // lines is 1-2 strings, buttons is 0-3 strings.
     // return should be 1, 2, or 3
@@ -481,7 +481,7 @@ class DummyIoHandler : OpoIoHandler {
         print(val, terminator: "")
     }
 
-    func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
+    func readLine(allowCancel: Bool) -> String? {
         return "123"
     }
 

@@ -348,9 +348,7 @@ function DialogItemEdit:handleKeyPress(k, modifiers)
 end
 
 function DialogItemEdit:showEditor()
-    local trapped = runtime:getTrap()
-    self.value = runtime:iohandler().readLine(trapped)
-    runtime:setTrap(false)
+    self.value = runtime:iohandler().readLine(true)
     self:setNeedsRedraw()
 end
 
