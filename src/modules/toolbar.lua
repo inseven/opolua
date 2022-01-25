@@ -30,7 +30,6 @@ local KTbWidth = 70
 local KTbBtTop = 24
 local KTbBtH = 37
 local KTbClockSize = 70
-local KTbNumButtons = 4
 local KTbNumComps = 6
 
 local KTbFlgLatchable = 0x2
@@ -50,10 +49,10 @@ local visibleVar
 -- Actual state
 local tbWinId
 local KTitleButtonId = 0
-local KClockButtonId = 5
+local KClockButtonId = 1000 -- Not an index into buttons
 local buttons = {}
 local pressedButtonId
-
+local toolbarHeight
 
 function TBarLink(appLink)
     local tbWidthVar = runtime:declareGlobal("TbWidth%")
@@ -86,12 +85,12 @@ end
 function TBarInitC(title, screenWidth, screenHeight, winMode)
     local prevId = gIDENTITY()
     local w = KTbWidth
-    local h = screenHeight
-    tbWinId = gCREATE(screenWidth - w, 0, w, h, false, winMode)
+    toolbarHeight = screenHeight
+    tbWinId = gCREATE(screenWidth - w, 0, w, toolbarHeight, false, winMode)
     gSTYLE(1) -- bold everything
-    gBOX(w, h)
+    gBOX(w, toolbarHeight)
     TBarSetTitle(title)
-    gAT(KTbClockPosX, h - KTbClockHeight)
+    gAT(KTbClockPosX, toolbarHeight - KTbClockHeight)
     gCLOCK(6)
     gUSE(prevId)
 end
@@ -127,26 +126,22 @@ end
 
 local function TBarOffer(winId, ptrType, ptrX, ptrY)
     -- printf("TBarOffer id=%d ptrType=%d ptrX=%d ptrY=%d\n", winId, ptrType, ptrX, ptrY)
-    local butId = 1 + ((ptrY - KTbBtTop) // KTbBtH)
-    if winId ~= tbWinId or ptrY < 0 or ptrX < 0 or ptrX >= KTbWidth then
-        butId = nil
-    elseif butId >= KClockButtonId then
-        butId = KClockButtonId
-    elseif butId < 0 or (butId > 0 and not buttons[butId]) then
-        butId = nil
+    if toolbarHeight == nil then
+        -- We haven't even been TBarInit'd yet, people shouldn't be offering us events, but they do...
+        return 0
     end
 
-    if butId == KTitleButtonId then
-        if ptrType == KEvPtrPenDown then
-            runtime:DisplayTaskList()
-        end
-        return -1
-    elseif butId == KClockButtonId then
-        if ptrType == KEvPtrPenDown then
-            local fmt = runtime:LCClockFormat()
-            LCSetClockFormat(fmt == 0 and 1 or 0)
-        end
-        return -1
+    local butId
+    if ptrY >= toolbarHeight - KTbClockHeight then
+        butId = KClockButtonId
+    else
+        butId = 1 + ((ptrY - KTbBtTop) // KTbBtH)
+    end
+
+    if winId ~= tbWinId or ptrY < 0 or ptrX < 0 or ptrX >= KTbWidth then
+        butId = nil
+    elseif butId < 0 or (butId > 0 and butId ~= KClockButtonId and not buttons[butId]) then
+        butId = nil
     end
 
     if pressedButtonId then
@@ -182,11 +177,18 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
         end
         return -1
     elseif butId and ptrType == KEvPtrPenDown then
-        pressedButtonId = butId
-        buttons[butId].isPushedDown = true
-        local prevId = gIDENTITY()
-        drawButton(butId)
-        gUSE(prevId)
+        if butId == KTitleButtonId then
+            runtime:DisplayTaskList()
+        elseif butId == KClockButtonId then
+            local fmt = runtime:LCClockFormat()
+            LCSetClockFormat(fmt == 0 and 1 or 0)
+        else
+            pressedButtonId = butId
+            buttons[butId].isPushedDown = true
+            local prevId = gIDENTITY()
+            drawButton(butId)
+            gUSE(prevId)
+        end
         return -1
     else
         return 0
