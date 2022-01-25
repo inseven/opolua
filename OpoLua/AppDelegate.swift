@@ -25,6 +25,9 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    var section: LibraryViewController.ItemType?
+    var previousSection: LibraryViewController.ItemType = .allPrograms  // Represents the previously active section; always the one we expand to when entering split view.
+    // N.B. We only ever store previous section for state restoration as we always want to restore to at least the top-level of the section.
 
     private var settings = Settings()
     private lazy var taskManager: TaskManager = {
@@ -34,6 +37,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ProgramDetector(settings: settings)
     }()
     var splitViewController: UISplitViewController!
+    var libraryViewController: LibraryViewController!
     var settingsSink: AnyCancellable?
 
     static var shared: AppDelegate {
@@ -43,18 +47,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        let libraryViewController = LibraryViewController(settings: settings,
-                                                          taskManager: taskManager,
-                                                          detector: detector)
+        libraryViewController = LibraryViewController(settings: settings, taskManager: taskManager, detector: detector)
         libraryViewController.delegate = self
         let navigationController = UINavigationController(rootViewController: libraryViewController)
         navigationController.navigationBar.prefersLargeTitles = true
+        navigationController.delegate = self
 
         splitViewController = UISplitViewController(style: .doubleColumn)
         splitViewController.delegate = self
         splitViewController.preferredDisplayMode = .oneBesideSecondary
         splitViewController.preferredSplitBehavior = .tile
         splitViewController.setViewController(navigationController, for: .primary)
+        showSection(.allPrograms)
 
         window = UIWindow()
         window?.rootViewController = splitViewController
@@ -129,9 +133,58 @@ extension AppDelegate: UISplitViewControllerDelegate {
         }
     }
 
+    func showSection(_ section: LibraryViewController.ItemType) {
+        guard self.section != section else {
+            if let detailNavigationController = splitViewController.viewControllers[1] as? UINavigationController {
+                detailNavigationController.popToRootViewController(animated: true)
+            }
+            return
+        }
+        self.section = section
+
+        switch section {
+        case .runningPrograms:
+            let viewController = RunningProgramsViewController(settings: settings, taskManager: taskManager)
+            setDetailViewController(viewController)
+        case .allPrograms:
+            let viewController = AllProgramsViewController(settings: settings,
+                                                           taskManager: taskManager,
+                                                           detector: detector)
+            setDetailViewController(viewController)
+        case .local(let url):
+            do {
+                let directory = try Directory(url: url)
+                let viewController = DirectoryViewController(settings: settings,
+                                                             taskManager: taskManager,
+                                                             directory: directory)
+                setDetailViewController(viewController)
+            } catch {
+                splitViewController.present(error: error)
+                // TODO: Clear selection?
+            }
+        case .external(let location):
+            do {
+                let directory = try Directory(url: location.url)
+                let viewController = DirectoryViewController(settings: settings,
+                                                             taskManager: taskManager,
+                                                             directory: directory)
+                setDetailViewController(viewController)
+            } catch {
+                splitViewController.present(error: error)
+                // TODO: Clear selection?
+            }
+        }
+    }
+
 }
 
 extension AppDelegate: LibraryViewControllerDelegate {
+
+    // TODO: Return true or false for success or failure?
+    func libraryViewController(_ libraryViewController: LibraryViewController,
+                               showSection section: LibraryViewController.ItemType) {
+        showSection(section)
+    }
 
     func libraryViewController(_ libraryViewController: LibraryViewController,
                                presentViewController viewController: UIViewController) {
@@ -153,6 +206,22 @@ extension AppDelegate: TaskManagerDelegate {
                                                           taskManager: taskManager,
                                                           program: program)
         setDetailViewController(programViewController)
+    }
+
+}
+
+extension AppDelegate: UINavigationControllerDelegate {
+
+    func navigationController(_ navigationController: UINavigationController,
+                              willShow viewController: UIViewController,
+                              animated: Bool) {
+        // Detect navigation to the root view when collapsed as this indicates there's no section selected.
+        // We also store the previously selected section to ensure we can return to this when expanding.
+        guard splitViewController.isCollapsed, viewController == libraryViewController, let section = section else {
+            return
+        }
+        previousSection = section
+        self.section = nil
     }
 
 }

@@ -26,6 +26,7 @@ import UniformTypeIdentifiers
 protocol LibraryViewControllerDelegate: AnyObject {
 
     func libraryViewController(_ libraryViewController: LibraryViewController, presentViewController viewController: UIViewController)
+    func libraryViewController(_ libraryViewController: LibraryViewController, showSection section: LibraryViewController.ItemType)
 
 }
 
@@ -39,7 +40,7 @@ class LibraryViewController: UICollectionViewController {
 
     enum ItemType: Hashable {
 
-        case runningPrograms  // TODO: RENAME
+        case runningPrograms
         case allPrograms
         case local(URL)
         case external(SecureLocation)
@@ -60,19 +61,6 @@ class LibraryViewController: UICollectionViewController {
         let name: String
         let image: UIImage
         let readonly: Bool
-
-        var url: URL? {
-            switch type {
-            case .runningPrograms:
-                return nil
-            case .allPrograms:
-                return nil
-            case .local(let url):
-                return url
-            case .external(let location):
-                return location.url
-            }
-        }
 
         init(type: ItemType, name: String, image: UIImage, readonly: Bool = false) {
             self.type = type
@@ -318,27 +306,11 @@ class LibraryViewController: UICollectionViewController {
         }
         switch item.type {
         case .runningPrograms:
-            let viewController = RunningProgramsViewController(settings: settings, taskManager: taskManager)
-            delegate?.libraryViewController(self, presentViewController: viewController)
+            delegate?.libraryViewController(self, showSection: item.type)
         case .allPrograms:
-            let viewController = AllProgramsViewController(settings: settings,
-                                                           taskManager: taskManager,
-                                                           detector: detector)
-            delegate?.libraryViewController(self, presentViewController: viewController)
+            delegate?.libraryViewController(self, showSection: item.type)
         case .local, .external:
-            do {
-                guard let url = item.url else {
-                    return
-                }
-                let directory = try Directory(url: url)
-                let viewController = DirectoryViewController(settings: settings,
-                                                             taskManager: taskManager,
-                                                             directory: directory)
-                delegate?.libraryViewController(self, presentViewController: viewController)
-            } catch {
-                present(error: error)
-                collectionView.deselectItem(at: indexPath, animated: true)
-            }
+            delegate?.libraryViewController(self, showSection: item.type)
         }
     }
 
