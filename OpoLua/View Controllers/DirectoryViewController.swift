@@ -32,6 +32,7 @@ class DirectoryViewController : UICollectionViewController {
         var directoryItem: Directory.Item
         var icon: Icon
         var isRunning: Bool
+        var theme: Settings.Theme
     }
 
     private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
@@ -70,7 +71,7 @@ class DirectoryViewController : UICollectionViewController {
             }
             cell.textLabel.text = item.directoryItem.name
             cell.detailTextLabel.text = item.isRunning ? "Running" : nil
-            cell.imageView.image = item.icon.image(for: self.settings.theme).scale(self.view.window?.screen.nativeScale ?? 1.0)
+            cell.imageView.image = item.icon.image(for: item.theme).scale(self.view.window?.screen.nativeScale ?? 1.0)
         }
         let dataSource = DataSource(collectionView: collectionView) { collectionView, indexPath, item in
             return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
@@ -139,6 +140,7 @@ class DirectoryViewController : UICollectionViewController {
             }
             self.wallpaperPixelView.image = self.settings.theme.wallpaper
             self.wallpaperPixelView.isHidden = !self.settings.showWallpaper
+            self.update(animated: true)
         }
         taskManager.addObserver(self)
         self.wallpaperPixelView.image = self.settings.theme.wallpaper
@@ -274,7 +276,7 @@ class DirectoryViewController : UICollectionViewController {
                 if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
                     isRunning = true
                 }
-                return Item(directoryItem: item, icon: item.icon(), isRunning: isRunning)
+                return Item(directoryItem: item, icon: item.icon(), isRunning: isRunning, theme: settings.theme)
             }
         snapshot.appendItems(items, toSection: Section.none)
         dataSource.apply(snapshot, animatingDifferences: animated)
