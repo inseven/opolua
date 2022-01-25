@@ -904,7 +904,7 @@ end
 
 function Val(stack, runtime) -- 0x92
     local result = tonumber(stack:pop())
-    assert(result, KOplErrInvalidArgs)
+    assert(result, KErrInvalidArgs)
     stack:push(result)
 end
 
