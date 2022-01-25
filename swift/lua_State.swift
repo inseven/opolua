@@ -22,6 +22,59 @@ import Foundation
 
 typealias LuaState = UnsafeMutablePointer<lua_State>
 
+protocol Pushable {
+    func push(state L: LuaState!)
+}
+
+extension Bool: Pushable {
+    func push(state L: LuaState!) {
+        lua_pushboolean(L, self ? 1 : 0)
+    }
+}
+
+extension Int: Pushable {
+    func push(state L: LuaState!) {
+        lua_pushinteger(L, lua_Integer(self))
+    }
+}
+
+extension Int32: Pushable {
+    func push(state L: LuaState!) {
+        lua_pushinteger(L, lua_Integer(self))
+    }
+}
+
+extension Int64: Pushable {
+    func push(state L: LuaState!) {
+        lua_pushinteger(L, self)
+    }
+}
+
+extension UInt64: Pushable {
+    func push(state L: LuaState!) {
+        if self < 0x8000000000000000 {
+            lua_pushinteger(L, lua_Integer(self))
+        } else {
+            lua_pushnumber(L, Double(self))
+        }
+    }
+}
+
+extension Double: Pushable {
+    func push(state L: LuaState!) {
+        lua_pushnumber(L, self)
+    }
+}
+
+extension Data: Pushable {
+    func push(state L: LuaState!) {
+        self.withUnsafeBytes { (buf: UnsafeRawBufferPointer) -> Void in
+            let chars = buf.bindMemory(to: CChar.self)
+            lua_pushlstring(L, chars.baseAddress, chars.count)
+        }
+    }
+}
+
 extension UnsafeMutablePointer where Pointee == lua_State {
 
     enum LuaType : Int32 {
@@ -253,7 +306,7 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     // Returns a for iterator that iterates all keys in the table, in an unspecified order. Assuming value on top of
     // stack is a table { a = 1, b = 2, c = 3 } then the following code...
     //
-    // for k, v in L.pairs(-1) {
+    // for (k, v) in L.pairs(-1) {
     //     print(L.tostring(k, encoding: .utf8)!, L.toint(v)!)
     // }
     //
@@ -265,30 +318,6 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return PairsIterator(self, index)
     }
 
-    func push(_ bool: Bool) {
-        lua_pushboolean(self, bool ? 1 : 0)
-    }
-
-    func push(_ int: Int) {
-        lua_pushinteger(self, lua_Integer(int))
-    }
-
-    func push(_ int: Int64) {
-        lua_pushinteger(self, int)
-    }
-
-    func push(_ int: UInt64) {
-        if int < 0x8000000000000000 {
-            lua_pushinteger(self, lua_Integer(int))
-        } else {
-            lua_pushnumber(self, Double(int))
-        }
-    }
-
-    func push(_ double: Double) {
-        lua_pushnumber(self, double)
-    }
-
     func push(_ string: String, encoding: String.Encoding) {
         guard let data = string.data(using: encoding) else {
             assertionFailure("Cannot represent string in the given encoding?!")
@@ -298,27 +327,29 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         push(data)
     }
 
-    func push(_ data: Data) {
-        data.withUnsafeBytes { (buf: UnsafeRawBufferPointer) -> Void in
-            let chars = buf.bindMemory(to: CChar.self)
-            lua_pushlstring(self, chars.baseAddress, chars.count)
-        }
-    }
-
     func pushnil() {
         lua_pushnil(self)
     }
 
-    // Hmm, how to make this generic based on the Array type being something we have a push() overload for?
-    func push(_ array: Array<Int>) {
+    func push<T>(_ value: T) where T: Pushable {
+        value.push(state: self)
+    }
+
+    func push<T>(_ array: Array<T>) where T: Pushable {
         lua_createtable(self, Int32(array.count), 0)
         for (i, val) in array.enumerated() {
-            push(val)
+            val.push(state: self)
             lua_rawseti(self, -2, lua_Integer(i + 1))
         }
     }
 
     func pop(_ nitems: Int32 = 1) {
         lua_pop(self, nitems)
+    }
+
+    func setfield<T>(_ name: String, _ value: T) where T: Pushable {
+        self.push(name)
+        self.push(value)
+        lua_settable(self, -3)
     }
 }

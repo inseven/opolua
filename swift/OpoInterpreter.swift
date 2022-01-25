@@ -23,6 +23,12 @@ import Foundation
 // ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
 private let kEnc = String.Encoding.windowsCP1252
 
+extension String: Pushable {
+    func push(state L: LuaState!) {
+        L.push(self, encoding: kEnc)
+    }
+}
+
 extension UnsafeMutablePointer where Pointee == lua_State {
 
     func tostring(_ index: Int32, convert: Bool = false) -> String? {
@@ -36,9 +42,6 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     }
     func tostringarray(_ index: Int32, key: String, convert: Bool = false) -> [String]? {
         return tostringarray(index, key: key, encoding: kEnc, convert: convert)
-    }
-    func push(_ string: String) {
-        push(string, encoding: kEnc)
     }
 
     func toColor(_ idx: Int32, key: String) -> Graphics.Color? {
@@ -215,8 +218,7 @@ private func dialog(_ L: LuaState!) -> Int32 {
         precondition(result.values.count == d.items.count, "Bad number of result values!")
         for (i, value) in result.values.enumerated() {
             lua_rawgeti(L, -1, lua_Integer(i) + 1) // items[i]
-            L.push(value)
-            lua_setfield(L, -2, "value")
+            L.setfield("value", value)
             L.pop() // items[i]
         }
     }
@@ -585,10 +587,8 @@ private func fsop(_ L: LuaState!) -> Int32 {
         return 1
     case .stat(let stat):
         lua_newtable(L)
-        L.push(stat.size)
-        lua_setfield(L, -2, "size")
-        L.push(stat.lastModified.timeIntervalSince1970)
-        lua_setfield(L, -2, "lastModified")
+        L.setfield("size", stat.size)
+        L.setfield("lastModified", stat.lastModified.timeIntervalSince1970)
         return 1
     }
 }
@@ -603,10 +603,8 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
     guard let name = L.tostring(1) else { return 0 }
     lua_settop(L, 2)
     lua_remove(L, 1) // Removes name, so requestTable is now at position 1
+    L.setfield("type", name) // requestTable.type = name
     lua_getfield(L, 1, "var") // Put var at 2 for compat with code below
-
-    L.push(name)
-    lua_setfield(L, 1, "type") // requestTable.type = name
 
     let type: Async.RequestType
     switch name {
