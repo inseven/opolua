@@ -471,9 +471,29 @@ extension ProgramViewController: ProgramDelegate {
         }
     }
 
-    func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
-        // TODO: Implement INPUT
-        return "123"
+    func readLine(allowCancel: Bool) -> String? {
+        let semaphore = DispatchSemaphore(value: 0)
+        var text = ""
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: "Enter Text", message: nil, preferredStyle: .alert)
+            alertController.addTextField { textField in
+                textField.placeholder = "Text"
+                textField.text = text
+            }
+            alertController.addAction(UIAlertAction(title: "OK", style: .default) { [weak alertController] _ in
+                defer {
+                    semaphore.signal()
+                }
+                guard let alertController = alertController else {
+                    return
+                }
+                text = alertController.textFields![0].text!
+            })
+            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            self.present(alertController, animated: true)
+        }
+        semaphore.wait()
+        return text
     }
 
     func program(_ program: Program, showAlertWithLines lines: [String], buttons: [String]) -> Int {
@@ -500,21 +520,6 @@ extension ProgramViewController: ProgramDelegate {
         return result
     }
 
-    func dialog(_ dialog: Dialog) -> Dialog.Result {
-        let semaphore = DispatchSemaphore(value: 0)
-        var result = Dialog.Result(result: 0, values: [])
-        DispatchQueue.main.async {
-            result = Dialog.Result(result: 0, values: [])
-            let viewController = DialogViewController(dialog: dialog) { key, values in
-                result = Dialog.Result(result: key, values: values)
-                semaphore.signal()
-            }
-            let navigationController = UINavigationController(rootViewController: viewController)
-            self.present(navigationController, animated: true)
-        }
-        semaphore.wait()
-        return result
-    }
 }
 
 extension ProgramViewController: ProgramLifecycleObserver {

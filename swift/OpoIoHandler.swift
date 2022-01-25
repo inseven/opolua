@@ -40,73 +40,6 @@ extension Set where Element: FlagEnum, Element.RawValue: FixedWidthInteger {
     }
 }
 
-struct Dialog {
-    enum Flag : Int, FlagEnum {
-        // Values as defined by dINIT() API 
-        case buttonsOnRight = 1
-        case noTitleBar = 2
-        case fullscreen = 4
-        case noDrag = 8
-        case packDense = 16
-    }
-    typealias Flags = Set<Flag>
-
-    struct Item {
-        
-        enum ItemType: Int {
-            case text = 0
-            case choice = 1
-            case long = 2
-            case float = 3
-            case time = 4
-            case date = 5
-            case edit = 6
-            case xinput = 8
-            case checkbox = 12
-            case separator = 13 // OPL uses empty dTEXT with the Text Separator flag set for this but we will make it distinct
-        }
-        enum Alignment: String {
-            case left = "left"
-            case center = "center"
-            case right = "right"
-        }
-        let type: ItemType
-        let prompt: String
-        var value: String
-        let alignment: Alignment? // For .text
-        let min: Double? // For .long, .float, .time, .date
-        let max: Double? // Ditto, plus .edit (meaning max number of characters)
-        let choices: [String]? // For .choice
-        let selectable: Bool
-    }
-
-    struct Button {
-        enum Flag : Int, FlagEnum {
-            case isCancelButton = 0x10000
-            case noShortcutLabel = 0x100
-            case bareShortcutKey = 0x200 // Ie just 'Q' instead of assume 'ctrl-Q'
-        }
-        static let FlagsKeyMask: Int = 0x300
-        typealias Flags = Set<Flag>
-
-        let key: Int
-        let text: String
-        let flags: Flags
-    }
-
-    struct Result {
-        let result: Int
-        let values: [String] // Must be same length as Dialog.items
-
-        static let none = Result(result: 0, values: [])
-    }
-
-    let title: String
-    var items: [Item]
-    let buttons: [Button]
-    let flags: Flags
-}
-
 struct Graphics {
 
     struct Size: Equatable, Comparable {
@@ -507,26 +440,14 @@ protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
 
-    // nil return means escape (must only return nil if escapeShouldErrorEmptyInput is true)
-    func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
+    // nil return means escape (must only return nil if allowCancel is true)
+    func readLine(allowCancel: Bool) -> String?
 
     // lines is 1-2 strings, buttons is 0-3 strings.
     // return should be 1, 2, or 3
     func alert(lines: [String], buttons: [String]) -> Int
 
     func beep(frequency: Double, duration: Double) -> Void
-
-    // Meaning of the return value:
-    //
-    // result 0 means cancelled (eg escape pressed)
-    // If there's buttons, non-zero result is the key of the
-    // selected button.
-    // If there aren't any buttons, result should be the 1-based index
-    // of the line that was highlighted when the dialog was dismissed.
-    //
-    // values must have the same number of elements as d.items, and should
-    // contain the final results of any editable fields.
-    func dialog(_ d: Dialog) -> Dialog.Result
 
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
@@ -560,7 +481,7 @@ class DummyIoHandler : OpoIoHandler {
         print(val, terminator: "")
     }
 
-    func readLine(escapeShouldErrorEmptyInput: Bool) -> String? {
+    func readLine(allowCancel: Bool) -> String? {
         return "123"
     }
 
@@ -574,10 +495,6 @@ class DummyIoHandler : OpoIoHandler {
 
     func beep(frequency: Double, duration: Double) -> Void {
         print("BEEP \(frequency)kHz \(duration)s")
-    }
-
-    func dialog(_ d: Dialog) -> Dialog.Result {
-        return Dialog.Result(result: 0, values: [])
     }
 
     func draw(operations: [Graphics.DrawCommand]) {

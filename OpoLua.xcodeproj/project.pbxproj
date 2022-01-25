@@ -39,7 +39,6 @@
 		D884A3D7277914CF008954A0 /* Installer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D6277914CF008954A0 /* Installer.swift */; };
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
 		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
-		D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891346274BF2D200794D55 /* DialogViewController.swift */; };
 		D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */; };
 		D889134D274C17FF00794D55 /* CGContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134C274C17FF00794D55 /* CGContext.swift */; };
 		D889134F274C181F00794D55 /* CGPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134E274C181F00794D55 /* CGPoint.swift */; };
@@ -228,7 +227,6 @@
 		D884A3D6277914CF008954A0 /* Installer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Installer.swift; sourceTree = "<group>"; };
 		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
 		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
-		D8891346274BF2D200794D55 /* DialogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewController.swift; sourceTree = "<group>"; };
 		D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslucentNavigationController.swift; sourceTree = "<group>"; };
 		D889134C274C17FF00794D55 /* CGContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGContext.swift; sourceTree = "<group>"; };
 		D889134E274C181F00794D55 /* CGPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPoint.swift; sourceTree = "<group>"; };
@@ -473,7 +471,6 @@
 				D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */,
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
 				D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */,
-				D8891346274BF2D200794D55 /* DialogViewController.swift */,
 				D8C679B927483B5600BD8720 /* DirectoryViewController.swift */,
 				D81B875B2790D52C00E71960 /* DrawableViewController.swift */,
 				D89A607F2756AE8800C9757F /* LibraryViewController.swift */,
@@ -915,7 +912,6 @@
 				DB7900112742E6F6005E904F /* lstrlib.c in Sources */,
 				D8891351274C184C00794D55 /* UIImage.swift in Sources */,
 				DB7900122742E6F6005E904F /* ltable.c in Sources */,
-				D8891347274BF2D200794D55 /* DialogViewController.swift in Sources */,
 				D89A607C2756A6A300C9757F /* URL.swift in Sources */,
 				D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */,
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,

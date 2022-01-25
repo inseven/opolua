@@ -138,91 +138,11 @@ private func beep(_ L: LuaState!) -> Int32 {
 private func readLine(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let b = L.toboolean(1)
-    if let result = iohandler.readLine(escapeShouldErrorEmptyInput: b) {
+    if let result = iohandler.readLine(allowCancel: b) {
         L.push(result)
     } else {
         L.pushnil()
     }
-    return 1
-}
-
-private func dialog(_ L: LuaState!) -> Int32 {
-    let iohandler = getInterpreterUpval(L).iohandler
-    let title = L.tostring(1, key: "title")
-    let flags = Dialog.Flags(flags: L.toint(1, key: "flags") ?? 0)
-    var items: [Dialog.Item] = []
-    precondition(lua_getfield(L, 1, "items") == LUA_TTABLE, "Expected items table!")
-    for _ in L.ipairs(-1, requiredType: .table) {
-        let prompt = L.tostring(-1, key: "prompt") ?? ""
-        let value = L.tostring(-1, key: "value") ?? ""
-        let align: Dialog.Item.Alignment?
-        if let rawAlign = L.tostring(-1, key: "align") {
-            align = .init(rawValue: rawAlign)
-        } else {
-            align = nil
-        }
-        let min = L.tonumber(-1, key: "min")
-        let max = L.tonumber(-1, key: "max")
-        let choices = L.tostringarray(-1, key: "choices")
-        let selectable = L.toboolean(-1, key: "selectable")
-
-        let rawt = L.toint(-1, key: "type")
-        if let t = Dialog.Item.ItemType(rawValue: rawt ?? -1) {
-            let item = Dialog.Item(
-                type: t,
-                prompt: prompt,
-                value: value,
-                alignment: align,
-                min: min,
-                max: max,
-                choices: choices,
-                selectable: selectable)
-            items.append(item)
-        } else {
-            print("Unknown dialog item type \(String(describing: rawt))!")
-        }
-    }
-    // leave items on the stack for doing fixups at the end
-
-    var buttons: [Dialog.Button] = []
-    if lua_getfield(L, 1, "buttons") == LUA_TTABLE {
-        for _ in L.ipairs(-1, requiredType: .table) {
-            var key = L.toint(-1, key: "key") ?? 0
-            let text = L.tostring(-1, key: "text") ?? ""
-            var flags = Dialog.Button.Flags(flags: abs(key) & Dialog.Button.FlagsKeyMask)
-            if key < 0 {
-                flags.insert(.isCancelButton)
-                // The documentation says we should return the negative keycode (without flags) as the dialog result,
-                // but what actually happens on the Psion 5 is you alway get 0 returned. Oh well. We'll fix this up
-                // below and pretend to the upper layers that we obey the docs.
-                key = -(-key & 0xFF)
-            } else if key & 0xFF == 27 {
-                flags.insert(.isCancelButton)
-                key = key & 0xFF
-            } else {
-                key = key & 0xFF
-            }
-            if key >= 0x41 && key < 0x5A {
-                // if you request an upper-case key, the result you'll get will always be lowercase. Yes really!
-                key = key + 0x20
-            }
-            buttons.append(Dialog.Button(key: key, text: text, flags: flags))
-        }
-    }
-    L.pop() // buttons
-    let d = Dialog(title: title ?? "", items: items, buttons: buttons, flags: flags)
-    let result = iohandler.dialog(d)
-    // items is still on top of Lua stack here
-    if result.result > 0 && result.result != 27 {
-        // Update the values Lua-side
-        precondition(result.values.count == d.items.count, "Bad number of result values!")
-        for (i, value) in result.values.enumerated() {
-            lua_rawgeti(L, -1, lua_Integer(i) + 1) // items[i]
-            L.setfield("value", value)
-            L.pop() // items[i]
-        }
-    }
-    L.push(result.result)
     return 1
 }
 
@@ -896,7 +816,6 @@ class OpoInterpreter {
             ("alert", alert),
             // ("print", print_lua),
             ("beep", beep),
-            ("dialog", dialog),
             ("draw", draw),
             ("graphicsop", graphicsop),
             ("getScreenInfo", getScreenInfo),

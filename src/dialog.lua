@@ -348,25 +348,8 @@ function DialogItemEdit:handleKeyPress(k, modifiers)
 end
 
 function DialogItemEdit:showEditor()
-    -- This is really nasty, we should do something better
-    local dlg = {
-        title = self.prompt,
-        items = {
-            {
-            type = dItemTypes.dEDIT,
-            prompt = self.prompt,
-            value = self.value,
-            },
-        },
-        buttons = {
-            { key = -27, text = "Cancel" },
-            { key = 13, text = "OK" },
-        },
-    }
-    if runtime:iohandler().dialog(dlg) > 0 then
-        self.value = dlg.items[1].value
-        self:setNeedsRedraw()
-    end
+    self.value = runtime:iohandler().readLine(true)
+    self:setNeedsRedraw()
 end
 
 DialogChoiceList = class {
