@@ -31,8 +31,8 @@ struct AboutView: View {
             Form {
                 BuildSection("inseven/statuspanel")
                 CreditSection("Contributors", [
-                    "Jason Morley",
-                    "Tom Sutcliffe",
+                    Credit("Jason Morley", url: URL(string: "https://jbmorley.co.uk")),
+                    Credit("Tom Sutcliffe", url: URL(string: "https://github.com/tomsci")),
                 ])
                 CreditSection("Thanks", [
                     "Sara Frederixon",
