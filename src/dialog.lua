@@ -545,8 +545,13 @@ end
 function Button:getResultCode()
     -- Which is neither getShortcut nor getKey - it's the raw code less modifier flags, but still negated if necessary
     local k = self.key
-    local neg = k < 0 and -1 or 1
-    return ((neg * k) & 0xFF) * neg
+    local sign = k < 0 and -1 or 1
+    local code = ((sign * k) & 0xFF)
+    if code >= 0x41 and code < 0x5A then
+        -- if you request an upper-case key, the result you'll get will always be lowercase. Yes really!
+        code = code + 0x20
+    end
+    return code * sign
 end
 
 function Button:handleKeyPress(k, modifiers)
@@ -822,8 +827,9 @@ function DIALOG(dialog)
     local numButtons = dialog.buttons and #dialog.buttons or 0
     if numButtons > 0 then
         setmetatable(dialog.buttons, DialogButtonGroup)
-        for _, button in ipairs(dialog.buttons) do
+        for i, button in ipairs(dialog.buttons) do
             setmetatable(button, Button)
+            -- printf("Button %i key: %d text: %s\n", i, button.key, button.text)
         end
         local cw, ch = dialog.buttons:contentSize()
         maxWidth = math.max(cw, maxWidth)
