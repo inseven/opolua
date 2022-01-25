@@ -34,6 +34,11 @@ struct AboutView: View {
                     "Jason Morley",
                     "Tom Sutcliffe",
                 ])
+                CreditSection("Thanks", [
+                    "Sara Frederixon",
+                    "Sarah Barbour",
+                    "Shawn Leedy",
+                ])
                 LicenseSection("Licenses", [
                     License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "Lua.txt"),
                 ])
