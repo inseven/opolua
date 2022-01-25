@@ -39,7 +39,6 @@ protocol ProgramDelegate: AnyObject {
 
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String?
     func program(_ program: Program, showAlertWithLines lines: [String], buttons: [String]) -> Int
-    func dialog(_ d: Dialog) -> Dialog.Result
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
 
@@ -375,10 +374,6 @@ extension Program: OpoIoHandler {
                 }
             }
         }
-    }
-
-    func dialog(_ d: Dialog) -> Dialog.Result {
-        return delegate!.dialog(d)
     }
 
     func draw(operations: [Graphics.DrawCommand]) {

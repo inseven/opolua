@@ -66,7 +66,6 @@ extension Installer: OpoIoHandler {
     func readLine(escapeShouldErrorEmptyInput: Bool) -> String? { return nil }
     func alert(lines: [String], buttons: [String]) -> Int { return 0 }
     func beep(frequency: Double, duration: Double) {}
-    func dialog(_ d: Dialog) -> Dialog.Result { return .none }
     func draw(operations: [Graphics.DrawCommand]) {}
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result { return .nothing }
     func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) { return (.zero, .gray2) }
