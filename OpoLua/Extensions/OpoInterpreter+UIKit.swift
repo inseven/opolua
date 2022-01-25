@@ -22,6 +22,15 @@ import UIKit
 
 extension OpoInterpreter.AppInfo {
 
+    var caption: String {
+        for language in Locale.preferredLanguages {
+            if let caption = captions.first(where: { $0.locale.languageCode == language }) {
+                return caption.value
+            }
+        }
+        return captions.first?.value ?? "Unknown"
+    }
+
     func image(for size: Graphics.Size) -> UIImage? {
         var bitmap: Graphics.MaskedBitmap? = nil
         for icon in icons {

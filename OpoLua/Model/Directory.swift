@@ -147,7 +147,11 @@ class Directory {
               let url = apps.first else {
             return nil
         }
-        return .system(url, Directory.appInfo(forApplicationUrl: url))
+        let appInfo = Directory.appInfo(forApplicationUrl: url)
+        if appInfo == nil {
+            print("Failed to find AIF for '\(url.lastPathComponent)'.")
+        }
+        return .system(url, appInfo)
     }
 
     let url: URL

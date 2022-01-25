@@ -969,8 +969,19 @@ class OpoInterpreter {
         return procs
     }
 
+    struct LocalizedString {
+        var value: String
+        var locale: Locale
+
+        init(_ value: String, locale: Locale) {
+            self.value = value
+            self.locale = locale
+        }
+    }
+
     struct AppInfo {
-        let caption: String
+
+        let captions: [LocalizedString]
         let uid3: UInt32
         let icons: [Graphics.MaskedBitmap]
     }
@@ -992,9 +1003,16 @@ class OpoInterpreter {
         guard logpcall(1, 1) else { return nil }
 
         lua_getfield(L, -1, "captions")
-        lua_getfield(L, -1, "EN")
-        guard let caption = L.tostring(-1) else { return nil }
-        L.pop(2) // EN caption, captions
+        var captions: [LocalizedString] = []
+        for (languageIndex, captionIndex) in L.pairs(-1) {
+            guard let language = L.tostring(languageIndex),
+                  let caption = L.tostring(captionIndex)
+            else {
+                return nil
+            }
+            captions.append(LocalizedString(caption, locale: Locale(identifier: language)))
+        }
+        L.pop()
 
         guard let uid3 = L.toint(-1, key: "uid3") else { return nil }
 
@@ -1022,7 +1040,7 @@ class OpoInterpreter {
                 icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
             }
         }
-        return AppInfo(caption: caption, uid3: UInt32(uid3), icons: icons)
+        return AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons)
     }
 
     func getMbmBitmaps(path: String) -> [Graphics.Bitmap]? {

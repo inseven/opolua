@@ -226,13 +226,13 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return IPairsIterator(self, index, requiredType)
     }
 
-    private class PairsIterator : Sequence, IteratorProtocol {
+    class PairsIterator : Sequence, IteratorProtocol {
         let L: LuaState
         let index: Int32
         let top: Int32
         init(_ L: LuaState, _ index: Int32) {
             self.L = L
-            self.index = index
+            self.index = lua_absindex(L, index)
             top = lua_gettop(L)
             lua_pushnil(L) // initial k
         }
@@ -261,7 +261,7 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     // --> b 2
     // --> c 3
     // --> a 1
-    func pairs(_ index: Int32) -> some Sequence {
+    func pairs(_ index: Int32) -> PairsIterator {
         return PairsIterator(self, index)
     }
 
