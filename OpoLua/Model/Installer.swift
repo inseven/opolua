@@ -63,7 +63,7 @@ class Installer {
 extension Installer: OpoIoHandler {
 
     func printValue(_ val: String) {}
-    func readLine(allowCancel: Bool) -> String? { return nil }
+    func readLine(initialValue: String, allowCancel: Bool) -> String? { return nil }
     func alert(lines: [String], buttons: [String]) -> Int { return 0 }
     func beep(frequency: Double, duration: Double) {}
     func draw(operations: [Graphics.DrawCommand]) {}

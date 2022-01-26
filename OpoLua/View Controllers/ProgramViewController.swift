@@ -471,14 +471,14 @@ extension ProgramViewController: ProgramDelegate {
         }
     }
 
-    func readLine(allowCancel: Bool) -> String? {
+    func program(_ program: Program, editTextWithInitialValue initialValue: String, allowCancel: Bool) -> String? {
         let semaphore = DispatchSemaphore(value: 0)
-        var text = ""
+        var text: String? = nil
         DispatchQueue.main.async {
             let alertController = UIAlertController(title: "Enter Text", message: nil, preferredStyle: .alert)
             alertController.addTextField { textField in
                 textField.placeholder = "Text"
-                textField.text = text
+                textField.text = initialValue
             }
             alertController.addAction(UIAlertAction(title: "OK", style: .default) { [weak alertController] _ in
                 defer {
@@ -489,7 +489,11 @@ extension ProgramViewController: ProgramDelegate {
                 }
                 text = alertController.textFields![0].text!
             })
-            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            if allowCancel {
+                alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                    semaphore.signal()
+                })
+            }
             self.present(alertController, animated: true)
         }
         semaphore.wait()

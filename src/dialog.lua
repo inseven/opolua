@@ -348,7 +348,10 @@ function DialogItemEdit:handleKeyPress(k, modifiers)
 end
 
 function DialogItemEdit:showEditor()
-    self.value = runtime:iohandler().readLine(true)
+    local result = runtime:iohandler().readLine(self.value, true)
+    if result then
+        self.value = result
+    end
     self:setNeedsRedraw()
 end
 

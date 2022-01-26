@@ -37,7 +37,7 @@ protocol ProgramLifecycleObserver: NSObject {
  */
 protocol ProgramDelegate: AnyObject {
 
-    func readLine(allowCancel: Bool) -> String?
+    func program(_ program: Program, editTextWithInitialValue initialValue: String, allowCancel: Bool) -> String?
     func program(_ program: Program, showAlertWithLines lines: [String], buttons: [String]) -> Int
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
@@ -356,8 +356,9 @@ extension Program: OpoIoHandler {
         }
     }
 
-    func readLine(allowCancel: Bool) -> String? {
-        return delegate!.readLine(allowCancel: allowCancel)
+    // TODO: Rename this.
+    func readLine(initialValue: String, allowCancel: Bool) -> String? {
+        return delegate!.program(self, editTextWithInitialValue: initialValue, allowCancel: allowCancel)
     }
 
     func alert(lines: [String], buttons: [String]) -> Int {
