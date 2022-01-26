@@ -22,20 +22,16 @@ import UIKit
 
 extension UIViewController {
 
-    func present(error: Error, completion: @escaping () -> Void = {}) {
+    func present(error: Error) {
         let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
-        alert.addAction(.init(title: "OK", style: .default, handler: { _ in
-            completion()
-        }))
+        alert.addAction(.init(title: "OK", style: .default, handler: nil))
         present(alert, animated: true, completion: nil)
     }
 
-    func present(error: OpoInterpreter.Error, completion: @escaping () -> Void = {}) {
+    func present(error: OpoInterpreter.Error) {
         let alert = UIAlertController(title: "Error", message: error.description, preferredStyle: .alert)
-        alert.addAction(.init(title: "OK", style: .default, handler: { _ in
-            completion()
-        }))
-        present(alert, animated: true)
+        alert.addAction(.init(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
     }
 
 }
