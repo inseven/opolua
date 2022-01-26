@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D805F94D27A1BD9800DFBC20 /* AutoOrientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D805F94C27A1BD9800DFBC20 /* AutoOrientView.swift */; };
+		D805F95127A1D7FF00DFBC20 /* License.txt in Resources */ = {isa = PBXBuildFile; fileRef = D805F95027A1D7FF00DFBC20 /* License.txt */; };
 		D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */; };
 		D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */; };
 		D80D65A8279DD2060020F994 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A7279DD2060020F994 /* Icon.swift */; };
@@ -201,6 +202,7 @@
 
 /* Begin PBXFileReference section */
 		D805F94C27A1BD9800DFBC20 /* AutoOrientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoOrientView.swift; sourceTree = "<group>"; };
+		D805F95027A1D7FF00DFBC20 /* License.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = License.txt; sourceTree = "<group>"; };
 		D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Graphics+CoreGraphics.swift"; sourceTree = "<group>"; };
 		D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+UIKit.swift"; sourceTree = "<group>"; };
 		D80D65A7279DD2060020F994 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
@@ -430,6 +432,7 @@
 			isa = PBXGroup;
 			children = (
 				D86FBAB9278C76FB003DF611 /* Lua.txt */,
+				D805F95027A1D7FF00DFBC20 /* License.txt */,
 			);
 			path = Licenses;
 			sourceTree = "<group>";
@@ -758,6 +761,7 @@
 				DB5AC970275198A20043FE5C /* database.lua in Resources */,
 				DB5AC97827583DC70043FE5C /* opx in Resources */,
 				DB79FFF22742E631005E904F /* fns.lua in Resources */,
+				D805F95127A1D7FF00DFBC20 /* License.txt in Resources */,
 				DBE29186279747D100EE824B /* menu.lua in Resources */,
 				D8C679BD27484BF400BD8720 /* examples in Resources */,
 				DBA18836279C408A00B2954B /* dialog.lua in Resources */,
