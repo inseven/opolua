@@ -30,6 +30,7 @@ local kDialogFont = KFontArialNormal15
 local kButtonFont = KFontArialBold11
 local kButtonShortcutFont = KFontArialNormal11
 local kButtonHeight = 23
+local kButtonYOffset = 9
 local kButtonMinWidth = 50
 local kButtonSpacing = 10
 local kDialogLineHeight = 22 -- ?
@@ -282,9 +283,9 @@ function DialogItemText:draw()
         -- See if we need to check (and honour) alignment
         local w = gTWIDTH(self.value)
         if self.align == "center" then
-            x = x + (self.x + self.w - w) // 2
+            x = x + (self.w - w) // 2
         elseif self.align == "right" then
-            x = self.x + self.w - w
+            x = x + self.w - w
         end
     end
     drawText(self.value, x, texty)
@@ -540,6 +541,28 @@ function Button:getResultCode()
     return code * sign
 end
 
+local dialogKeyNames = {
+    [KDButtonDel] = "Del",
+    [KDButtonTab] = "Tab",
+    [KDButtonEnter] = "Enter",
+    [KDButtonEsc] = "Esc",
+    [KDButtonSpace] = "Space",
+}
+
+function Button:getLabel()
+    local key = self:getKey()
+    if key & KDButtonNoLabel == 0 then
+        local rawKey = key & 0xFF
+        local keyName = dialogKeyNames[rawKey] or string.char(rawKey):upper()
+        if keyName:match("^[A-Z]$") and key & KDButtonPlainKey == 0 then
+            keyName = "Ctrl+"..keyName
+        end
+        return keyName
+    else
+        return nil
+    end
+end
+
 function Button:handleKeyPress(k, modifiers)
     local shortcut = self:getShortcut()
     if shortcut < 32 then
@@ -603,19 +626,29 @@ function DialogButtonGroup:contentSize()
     local maxButtonWidth = 0
     gFONT(kButtonFont)
     local numButtons = #self
+    local hasLabels = false
     for _, button in ipairs(self) do
         maxButtonWidth = math.max(button:contentSize(), maxButtonWidth)
+        if button:getLabel() then
+            hasLabels = true
+        end
     end
     local buttonsWidth = maxButtonWidth * numButtons + kButtonSpacing * (numButtons - 1)
     gFONT(kDialogFont)
 
-    return buttonsWidth, kDialogLineHeight * 2, maxButtonWidth
+    local h
+    if hasLabels then
+       h = kDialogLineHeight * 2
+    else
+       h = kButtonYOffset + kButtonHeight
+    end
+    return buttonsWidth, h, maxButtonWidth
 end
 
 function DialogButtonGroup:addButtonsToView()
     local cw, ch, buttonWidth = self:contentSize()
     local x = self.x + ((self.w - cw) // 2)
-    local buttonY = self.y + 9
+    local buttonY = self.y + kButtonYOffset
     for _, button in ipairs(self) do
         self:addSubview(button, x, buttonY, buttonWidth, kButtonHeight)
         x = x + buttonWidth + kButtonSpacing
@@ -631,30 +664,17 @@ function DialogButtonGroup:handleKeyPress(k, modifiers)
     return false
 end
 
-local dialogKeyNames = {
-    [KDButtonDel] = "Del",
-    [KDButtonTab] = "Tab",
-    [KDButtonEnter] = "Enter",
-    [KDButtonEsc] = "Esc",
-    [KDButtonSpace] = "Space",
-}
-
 function DialogButtonGroup:draw()
     -- Draw the actual buttons (which are subviews)
     View.draw(self)
     -- And any shortcut labels they may have
     gFONT(kButtonShortcutFont)
     for _, button in ipairs(self) do
-        local key = button:getKey()
-        if key & KDButtonNoLabel == 0 then
-            local rawKey = key & 0xFF
-            local keyName = dialogKeyNames[rawKey] or string.char(rawKey):upper()
-            if keyName:match("^[A-Z]$") and key & KDButtonPlainKey == 0 then
-                keyName = "Ctrl+"..keyName
-            end
-            local textw = gTWIDTH(keyName)
+        local label = button:getLabel()
+        if label then
+            local textw = gTWIDTH(label)
             gAT(button.x + (button.w - textw) // 2, button.y + button.h + 2)
-            drawText(keyName)
+            drawText(label)
         end
     end
     gFONT(kDialogFont)
@@ -819,7 +839,7 @@ function DIALOG(dialog)
         end
         local cw, ch = dialog.buttons:contentSize()
         maxWidth = math.max(cw, maxWidth)
-        h = h + ch
+        h = h + ch + kDialogLineGap
     end
 
     if maxPromptWidth > 0 or maxContentWidth > 0 then
