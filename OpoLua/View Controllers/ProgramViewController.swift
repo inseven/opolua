@@ -78,7 +78,6 @@ class ProgramViewController: UIViewController {
     var taskManager: TaskManager
     var program: Program
 
-    private var screenView: UIView
     private var virtualController: GCVirtualController?
     private var settingsSink: AnyCancellable?
 
@@ -197,21 +196,11 @@ class ProgramViewController: UIViewController {
         return barButtonItem
     }()
 
-    init(settings: Settings, taskManager: TaskManager, program: Program) {
-        self.settings = settings
-        self.taskManager = taskManager
-        self.program = program
-        self.screenView = UIView(frame: CGRect(origin: .zero, size: program.getScreenInfo().0.cgSize()))
-        super.init(nibName: nil, bundle: nil)
-        program.delegate = self
-        navigationItem.largeTitleDisplayMode = .never
-        view.backgroundColor = .systemBackground
+    lazy var scaleView: AutoOrientView = {
 
+        let screenView = UIView(frame: CGRect(origin: .zero, size: program.getScreenInfo().0.cgSize()))
         screenView.translatesAutoresizingMaskIntoConstraints = false
         screenView.addSubview(program.rootView)
-
-        title = program.title
-        view.clipsToBounds = true
         screenView.addSubview(menuButton)
         screenView.addSubview(clipboardButton)
         screenView.addSubview(zoomInButton)
@@ -220,16 +209,11 @@ class ProgramViewController: UIViewController {
         let silkScreenButtonWidth = 24.0
         let silkScreenButtonHorizontalSpacing = 8.0
         let silkScreenButtonVerticalSpacing = 16.0
-        let gutterWidth = silkScreenButtonWidth + silkScreenButtonHorizontalSpacing
 
-        view.addSubview(screenView)
         NSLayoutConstraint.activate([
-
-            program.rootView.centerXAnchor.constraint(equalTo: screenView.centerXAnchor),
-            program.rootView.centerYAnchor.constraint(equalTo: screenView.centerYAnchor),
-
             menuButton.widthAnchor.constraint(equalToConstant: silkScreenButtonWidth),
             menuButton.heightAnchor.constraint(equalToConstant: silkScreenButtonWidth),
+            menuButton.leadingAnchor.constraint(equalTo: screenView.leadingAnchor),
             menuButton.topAnchor.constraint(equalTo: program.rootView.topAnchor),
             menuButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -silkScreenButtonHorizontalSpacing),
 
@@ -248,14 +232,38 @@ class ProgramViewController: UIViewController {
             zoomOutButton.topAnchor.constraint(equalTo: zoomInButton.bottomAnchor, constant: silkScreenButtonVerticalSpacing),
             zoomOutButton.trailingAnchor.constraint(equalTo: program.rootView.leadingAnchor, constant: -silkScreenButtonHorizontalSpacing),
 
-            program.rootView.leadingAnchor.constraint(equalTo: screenView.leadingAnchor, constant: gutterWidth),
-            program.rootView.trailingAnchor.constraint(equalTo: screenView.trailingAnchor, constant: -gutterWidth),
+            program.rootView.trailingAnchor.constraint(equalTo: screenView.trailingAnchor),
             program.rootView.topAnchor.constraint(equalTo: screenView.topAnchor),
             program.rootView.bottomAnchor.constraint(equalTo: screenView.bottomAnchor),
-
-            screenView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            screenView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
+
+        let scaleView = AutoOrientView(contentView: screenView)
+        scaleView.translatesAutoresizingMaskIntoConstraints = false
+        scaleView.preservesSuperviewLayoutMargins = true
+
+        return scaleView
+    }()
+
+    init(settings: Settings, taskManager: TaskManager, program: Program) {
+        self.settings = settings
+        self.taskManager = taskManager
+        self.program = program
+        super.init(nibName: nil, bundle: nil)
+        program.delegate = self
+        navigationItem.largeTitleDisplayMode = .never
+        view.backgroundColor = .systemBackground
+
+        title = program.title
+        view.clipsToBounds = true
+
+        view.addSubview(scaleView)
+        NSLayoutConstraint.activate([
+            scaleView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scaleView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scaleView.topAnchor.constraint(equalTo: view.topAnchor),
+            scaleView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
         navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
         observeGameControllers()
     }
@@ -266,7 +274,6 @@ class ProgramViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        screenView.transform = transformForInterfaceOrientation(UIApplication.shared.statusBarOrientation)
         settingsSink = settings.objectWillChange.sink { _ in }
         program.addObserver(self)
     }
@@ -286,25 +293,6 @@ class ProgramViewController: UIViewController {
         settingsSink = nil
         program.suspend()
         program.removeObserver(self)
-    }
-
-    override func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
-        UIView.animate(withDuration: duration) {
-            self.screenView.transform = self.transformForInterfaceOrientation(toInterfaceOrientation)
-        }
-    }
-
-    func transformForInterfaceOrientation(_ interfaceOrientation: UIInterfaceOrientation) -> CGAffineTransform {
-        switch interfaceOrientation {
-        case .portrait, .portraitUpsideDown:
-            return CGAffineTransform(rotationAngle:  -.pi / 2)
-        case .landscapeLeft, .landscapeRight:
-            return CGAffineTransform(rotationAngle:  0)
-        case .unknown:
-            return CGAffineTransform(rotationAngle:  0)
-        @unknown default:
-            return CGAffineTransform(rotationAngle:  0)
-        }
     }
 
     @objc func titleBarTapped(sender: UITapGestureRecognizer) {

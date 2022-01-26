@@ -28,4 +28,16 @@ extension CGSize {
         return CGSize(width: self.width + dx, height: self.height + dy)
     }
 
+    var isPortrait: Bool {
+        return height > width
+    }
+
+    func contains(size: CGSize) -> Bool {
+        return self.width >= size.width && self.height >= size.height
+    }
+
+    func scaleThatFits(in size: CGSize) -> CGFloat {
+        return min(size.width / width, size.height / height)
+    }
+
 }
