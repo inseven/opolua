@@ -38,6 +38,7 @@ struct AboutView: View {
                 }
                 Section {
                     Link("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
+                    Link("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
                     Link("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
                 }
                 .foregroundColor(.primary)
