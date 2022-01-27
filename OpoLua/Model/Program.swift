@@ -311,8 +311,27 @@ class Program {
     }
 
     private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
-        let location = touch.location(in: view)
-        let screenLocation = touch.location(in: view.superview)
+        var location = touch.location(in: view)
+        let screenView = windowServer.canvasView
+        var screenLocation = touch.location(in: screenView)
+
+        // Is there a better way of doing this?
+        let screenSize = screenView.bounds.size
+        var xdelta = 0.0
+        var ydelta = 0.0
+        if screenLocation.x < 0 {
+            xdelta = -screenLocation.x
+        } else if screenLocation.x > screenSize.width {
+            xdelta = screenSize.width - screenLocation.x
+        }
+        if screenLocation.y < 0 {
+            ydelta = -screenLocation.y
+        } else if screenLocation.y > screenSize.height {
+            ydelta = screenSize.height - screenLocation.y
+        }
+        location = location.move(x: xdelta, y: ydelta)
+        screenLocation = screenLocation.move(x: xdelta, y: ydelta)
+
         if type == .down {
             sendEvent(.pendownevent(.init(timestamp: event.timestamp, windowId: view.id)))
         }
