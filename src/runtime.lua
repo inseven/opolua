@@ -1278,18 +1278,10 @@ function installSis(data, iohandler)
     local sis = require("sis")
     local sisfile = sis.parseSisFile(data, false)
 
-    local langIdx = 1
-    -- Find which language index refers to English (not worrying about extracting other langs just yet)
-    for i, lang in ipairs(sisfile.langs) do
-        if lang == "EN" then
-            langIdx = i
-            break
-        end
-    end
+    local langIdx = sis.getBestLangIdx(sisfile.langs)
 
     for _, file in ipairs(sisfile.files) do
         if file.type == sis.FileType.File then
-            -- extractFile(file, langIdx, dest)
             local path = file.dest:gsub("^.:\\", "C:\\")
             local dir = oplpath.dirname(path)
             if iohandler:fsop("isdir", dir) == KErrNotExists then

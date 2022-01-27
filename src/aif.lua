@@ -32,14 +32,14 @@ function parseAif(data)
     assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
 
     local nCaptions, pos = string.unpack("<B", data, 1 + trailerOffset)
-    local captions = {} -- keyed by lang code
+    local captions = {} -- keyed by locale
     for i = 1, (nCaptions // 2) do
         local offset, langCode
         offset, langCode, pos = string.unpack("<I4I2", data, pos)
         local captionLen = (string.unpack("B", data, 1 + offset) - 2) // 4
         local caption = data:sub(1 + offset + 1, offset + 1 + captionLen)
-        local lang = assert(sis.Langs[langCode], "Unknown lang code "..langCode)
-        captions[lang] = caption
+        local locale = assert(sis.Locales[langCode], "Unknown lang code "..langCode)
+        captions[locale] = caption
     end
 
     local nIcons, pos = string.unpack("<B", data, pos)

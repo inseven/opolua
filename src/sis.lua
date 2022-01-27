@@ -47,104 +47,107 @@ FileType = enum {
     FileMime = 5,
 }
 
-Langs = enum {
-    Test = 0x0000,
-    EN = 0x0001, -- UK English
-    FR = 0x0002, -- French
-    GE = 0x0003, -- German
-    SP = 0x0004, -- Spanish
-    IT = 0x0005, -- Italian
-    SW = 0x0006, -- Swedish
-    DA = 0x0007, -- Danish
-    NO = 0x0008, -- Norwegian
-    FI = 0x0009, -- Finnish
-    AM = 0x000A, -- American English
-    SF = 0x000B, -- Swiss French
-    SG = 0x000C, -- Swiss German
-    PO = 0x000D, -- Portuguese
-    TU = 0x000E, -- Turkish
-    IC = 0x000F, -- Icelandic
-    RU = 0x0010, -- Russian
-    HU = 0x0011, -- Hungarian
-    DU = 0x0012, -- Dutch
-    BL = 0x0013, -- Belgian Flemish
-    AU = 0x0014, -- Australian English
-    BF = 0x0015, -- Belgian French
-    AS = 0x0016, -- Austrian German
-    NZ = 0x0017, -- New Zealand English
-    IF = 0x0018, -- International French
-    CS = 0x0019, -- Czech
-    SK = 0x001A, -- Slovak
-    PL = 0x001B, -- Polish
-    SL = 0x001C, -- Slovenian
-    TC = 0x001D, -- Taiwan Chinese
-    HK = 0x001E, -- Hong Kong Chinese
-    ZH = 0x001F, -- PRC Chinese
-    JA = 0x0020, -- Japanese
-    TH = 0x0021, -- Thai
-    AF = 0x0022, -- Afrikaans
-    SQ = 0x0023, -- Albanian
-    AH = 0x0024, -- Amharic
-    AR = 0x0025, -- Arabic
-    HY = 0x0026, -- Armenian
-    TL = 0x0027, -- Tagalog
-    BE = 0x0028, -- Belarussian
-    BN = 0x0029, -- Bengali
-    BG = 0x002A, -- Bulgarian
-    MY = 0x002B, -- Burmese
-    CA = 0x002C, -- Catalan
-    HR = 0x002D, -- Croatian
-    CE = 0x002E, -- Canadian English
-    IE = 0x002F, -- International English
-    ZF = 0x0030, -- South African English (officially this overlaps with swiss french ie SF but that's just stupid
-    ET = 0x0031, -- Estonian
-    FA = 0x0032, -- Farsi
-    CF = 0x0033, -- Canadian French
-    GD = 0x0034, -- Scots Gaelic
-    KA = 0x0035, -- Georgian
-    EL = 0x0036, -- Greek
-    CG = 0x0037, -- Cyprus Greek
-    GU = 0x0038, -- Gujarati
-    HE = 0x0039, -- Hebrew
-    HI = 0x003A, -- Hindi
-    IN = 0x003B, -- Indonesian
-    GA = 0x003C, -- Irish
-    SZ = 0x003D, -- Swiss Italian
-    KN = 0x003E, -- Kannada
-    KK = 0x003F, -- Kazakh
-    KM = 0x0040, -- Khmer
-    KO = 0x0041, -- Korean
-    LO = 0x0042, -- Laothian
-    LV = 0x0043, -- Latvian
-    LT = 0x0044, -- Lithuanian
-    MK = 0x0045, -- Macedonian
-    MS = 0x0046, -- Malay
-    ML = 0x0047, -- Malayalam
-    MR = 0x0048, -- Marathi
-    MO = 0x0049, -- Moldavian
-    MN = 0x004A, -- Mongolian
-    NN = 0x004B, -- Norwegian-Nynorsk
-    BP = 0x004C, -- Brazilian Portuguese
-    PA = 0x004D, -- Punjabi
-    RO = 0x004E, -- Romanian
-    SR = 0x004F, -- Serbian
-    SI = 0x0050, -- Sinhalese
-    SO = 0x0051, -- Somali
-    OS = 0x0052, -- International Spanish
-    LS = 0x0053, -- Latin American Spanish
-    SH = 0x0054, -- Swahili
-    FS = 0x0055, -- Finland Swedish
-    TA = 0x0057, -- Tamil
-    TE = 0x0058, -- Telugu
-    BO = 0x0059, -- Tibetan
-    TI = 0x005A, -- Tigrinya
-    CT = 0x005B, -- Cyprus Turkish
-    TK = 0x005C, -- Turkmen
-    UK = 0x005D, -- Ukrainian
-    UR = 0x005E, -- Urdu
-    VI = 0x0060, -- Vietnamese
-    CY = 0x0061, -- Welsh
-    ZU = 0x0062, -- Zulu
+-- Codes from https://thoukydides.github.io/riscos-psifs/sis.html mapped into
+-- ICU Locale identifiers based on some guesswork and
+-- https://icu4c-demos.unicode.org/icu-bin/locexp?d_=en
+Locales = enum {
+    [0x0000] = "", -- Test
+    [0x0001] = "en_GB", -- UK English (EN)
+    [0x0002] = "fr_FR", -- French (FR)
+    [0x0003] = "de_DE", -- German (GE)
+    [0x0004] = "es_ES", -- Spanish (SP)
+    [0x0005] = "it_IT", -- Italian (IT)
+    [0x0006] = "sv_SE", -- Swedish (SW)
+    [0x0007] = "da_DK", -- Danish (DA)
+    [0x0008] = "no_NO", -- Norwegian (NO)
+    [0x0009] = "fi_FI", -- Finnish (FI)
+    [0x000A] = "en_US", -- American English (AM)
+    [0x000B] = "fr_CH", -- Swiss French (SF)
+    [0x000C] = "de_CH", -- Swiss German (SG)
+    [0x000D] = "pt_PT", -- Portuguese (PO)
+    [0x000E] = "tr_TR", -- Turkish (TU)
+    [0x000F] = "is_IS", -- Icelandic (IC)
+    [0x0010] = "ru_RU", -- Russian (RU)
+    [0x0011] = "hu_HU", -- Hungarian (HU)
+    [0x0012] = "nl_NL", -- Dutch (DU)
+    [0x0013] = "nl_BE", -- Belgian Flemish (BL)
+    [0x0014] = "en_AU", -- Australian English (AU)
+    [0x0015] = "fr_BE", -- Belgian French (BF)
+    [0x0016] = "de_AT", -- Austrian German (AS)
+    [0x0017] = "en_NZ", -- New Zealand English (NZ)
+    [0x0018] = "fr", -- International French (IF)
+    [0x0019] = "cs_CZ", -- Czech (CS)
+    [0x001A] = "sk_SK", -- Slovak (SK)
+    [0x001B] = "pl_PL", -- Polish (PL)
+    [0x001C] = "sl_SI", -- Slovenian (SL)
+    [0x001D] = "zh_Hant_TW", -- Taiwan Chinese (TC)
+    [0x001E] = "zh_Hant_HK", -- Hong Kong Chinese (HK)
+    [0x001F] = "zh_Hant_CN", -- PRC Chinese (ZH)
+    [0x0020] = "ja_JP", -- Japanese (JA)
+    [0x0021] = "th_TH", -- Thai (TH)
+    [0x0022] = "af_ZA", -- Afrikaans (AF)
+    [0x0023] = "sq_AL", -- Albanian (SQ)
+    [0x0024] = "am_ET", -- Amharic (AH)
+    [0x0025] = "ar", -- Arabic (AR)
+    [0x0026] = "hy_AM", -- Armenian (HY)
+    [0x0027] = "fil_PH", -- Tagalog (TL)
+    [0x0028] = "be_BY", -- Belarussian (BE)
+    [0x0029] = "bn", -- Bengali (BN)
+    [0x002A] = "bg_BG", -- Bulgarian (BG)
+    [0x002B] = "my_MM", -- Burmese (MY)
+    [0x002C] = "ca_ES", -- Catalan (CA)
+    [0x002D] = "hr_HR", -- Croatian (HR)
+    [0x002E] = "en_CA", -- Canadian English (CE)
+    [0x002F] = "en_001", -- International English (IE)
+    [0x0030] = "en_ZA", -- South African English (SF)
+    [0x0031] = "et_EE", -- Estonian (ET)
+    [0x0032] = "fa_IR", -- Farsi (FA)
+    [0x0033] = "fr_CA", -- Canadian French (CF)
+    [0x0034] = "gd_GB", -- Scots Gaelic (GD)
+    [0x0035] = "ka_GE", -- Georgian (KA)
+    [0x0036] = "el_GR", -- Greek (EL)
+    [0x0037] = "el_CY", -- Cyprus Greek (CG)
+    [0x0038] = "gu_IN", -- Gujarati (GU)
+    [0x0039] = "he_IL", -- Hebrew (HE)
+    [0x003A] = "hi_IN", -- Hindi (HI)
+    [0x003B] = "id_ID", -- Indonesian (IN)
+    [0x003C] = "ga_IE", -- Irish (GA)
+    [0x003D] = "it_CH", -- Swiss Italian (SZ)
+    [0x003E] = "kn_IN", -- Kannada (KN)
+    [0x003F] = "kk_KZ", -- Kazakh (KK)
+    [0x0040] = "km_KH", -- Khmer (KM)
+    [0x0041] = "ko_KR", -- Korean (KO)
+    [0x0042] = "lo_LA", -- Laothian (LO)
+    [0x0043] = "lv_LV", -- Latvian (LV)
+    [0x0044] = "lt_LT", -- Lithuanian (LT)
+    [0x0045] = "mk_MK", -- Macedonian (MK)
+    [0x0046] = "ms_MY", -- Malay (MS)
+    [0x0047] = "ml_IN", -- Malayalam (ML)
+    [0x0048] = "mr_IN", -- Marathi (MR)
+    [0x0049] = "ro_MD", -- Moldavian (MO)
+    [0x004A] = "mn_MN", -- Mongolian (MN)
+    [0x004B] = "nn_NO", -- Norwegian-Nynorsk (NN)
+    [0x004C] = "pt_BR", -- Brazilian Portuguese (BP)
+    [0x004D] = "pa", -- Punjabi (PA)
+    [0x004E] = "ro_RO", -- Romanian (RO)
+    [0x004F] = "sr", -- Serbian (SR)
+    [0x0050] = "si_LK", -- Sinhalese (SI)
+    [0x0051] = "so_SO", -- Somali (SO)
+    [0x0052] = "es", -- International Spanish (OS)
+    [0x0053] = "es_419", -- Latin American Spanish (LS)
+    [0x0054] = "sw", -- Swahili (SH)
+    [0x0055] = "sv_FI", -- Finland Swedish (FS)
+    [0x0057] = "ta_LK", -- Tamil (TA)
+    [0x0058] = "te_IN", -- Telugu (TE)
+    [0x0059] = "bo", -- Tibetan (BO)
+    [0x005A] = "ti", -- Tigrinya (TI)
+    [0x005B] = "tr_CY", -- Cyprus Turkish (CT)
+    [0x005C] = "tk_TM", -- Turkmen (TK)
+    [0x005D] = "uk_UA", -- Ukrainian (UK)
+    [0x005E] = "ur", -- Urdu (UR)
+    [0x0060] = "vi_VN", -- Vietnamese (VI)
+    [0x0061] = "cy_GB", -- Welsh (CY)
+    [0x0062] = "zu_ZA", -- Zulu (ZU)
 }
 
 function parseSisFile(data, verbose)
@@ -176,11 +179,10 @@ function parseSisFile(data, verbose)
     }
 
     pos = 1 + langPtr
-    local langs = {}
     for i = 1, nLangs do
         local code
         code, pos = string.unpack("<I2", data, pos)
-        result.langs[i] = Langs[code] or code
+        result.langs[i] = code
     end
 
     pos = 1 + filesPtr
@@ -197,6 +199,17 @@ function parseSisFile(data, verbose)
         result.files[i] = file
     end
     return result
+end
+
+function getBestLangIdx(langs)
+    -- For now, just pick the first english-ish thing
+    for i, lang in ipairs(langs) do
+        local locale = Locales[lang]
+        if locale and locale:lower():match("^en") then
+            return i
+        end
+    end
+    return 1
 end
 
 function parseSimpleFileRecord(data, pos, numLangs, verbose)

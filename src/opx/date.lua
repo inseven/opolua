@@ -233,7 +233,7 @@ function DTSetHomeTime(stack, runtime) -- 30
 end
 
 function LCCountryCode(stack, runtime) -- 31
-    stack:push(require("sis").Langs.EN)
+    stack:push(require("sis").Locales["en_GB"])
 end
 
 function LCDecimalSeparator(stack, runtime) -- 32
