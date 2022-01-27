@@ -99,6 +99,10 @@ h1 {
     font-weight: 100;
 }
 
+.caption {
+    text-align: center;
+}
+
 .download {
     text-align: center;
     margin-bottom: var(--vertical-spacing);
@@ -149,4 +153,32 @@ h1 {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+.screenshot-landscape {
+    margin-bottom: var(--vertical-spacing);
+    position: relative;
+    line-height: 0;
+    padding-bottom: 51.8518518519%;
+}
+
+.screenshot-landscape::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-bottom: 51.8518518519%;
+    z-index: 10;
+    content: "";
+    display: block;
+    background-image: url('/images/bezel-landscape.png');
+    background-size: 100% 100%;
+}
+
+.screenshot-landscape img {
+    position: absolute;
+    width: 93.77777778%;
+    left: 3.1111111111%;
+    top: 8.2142857143%;
+    box-sizing: border-box;
 }
