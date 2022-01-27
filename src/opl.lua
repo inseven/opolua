@@ -1076,6 +1076,55 @@ function SetBackground()
     runtime:iohandler():setBackground()
 end
 
+function LoadRsc(path)
+    -- printf("LoadRsc(%s)\n", path)
+    local data, err = runtime:iohandler().fsop("read", path)
+    assert(data, err)
+    local resourceFile = require("rsc").parseRsc(data)
+    local loadedResources = runtime:getResource("rsc")
+    if not loadedResources then
+        loadedResources = { nextHandle = 1 }
+        runtime:setResource("rsc", loadedResources)
+    end
+    resourceFile.handle = loadedResources.nextHandle
+    loadedResources.nextHandle = loadedResources.nextHandle + 1
+    table.insert(loadedResources, resourceFile)
+    return resourceFile.handle
+end
+
+function UnLoadRsc(handle)
+    local loadedResources = runtime:getResource("rsc")
+    local resourceFileIdx
+    for i, r in ipairs(loadedResources or {}) do
+        if r.handle == handle then
+            resourceFileIdx = i
+            break
+        end
+    end
+    assert(resourceFileIdx, KErrNotExists)
+    table.remove(loadedResources, resourceFileIdx)
+end
+
+function ReadRsc(id)
+    local loadedResources = runtime:getResource("rsc")
+    for i, resourceFile in ipairs(loadedResources) do
+        local result
+        if resourceFile.idOffset then
+            result = resourceFile[id - resourceFile.idOffset + 1]
+        end
+        if not result then
+            -- Some apps seem to ask for the id directly - are they series 3 era predating the idOffset stuff?
+            result = resourceFile[id]
+        end
+        if result then
+            return result
+        end
+    end
+
+    printf("ReadRsc 0x%x not found\n", id)
+    error(KErrNotExists)
+end
+
 -- date OPX
 
 function LCClockFormat()

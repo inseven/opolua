@@ -43,12 +43,7 @@ function parseRsc(data)
     if first and #first == 8 then
         local len, id = string.unpack("<I4I4", first)
         if len == 4 then
-            -- Go through and update all the IDs
-            local updatedIds = {}
-            for i, val in pairs(result) do
-                updatedIds[id + i - 1] = val
-            end
-            return updatedIds
+            result.idOffset = id
         end
     end
     return result

@@ -329,49 +329,24 @@ end
 
 function LoadRsc(stack, runtime) -- 43
     local path = stack:pop()
-    -- printf("LoadRsc(%s)\n", path)
-    local data, err = runtime:iohandler().fsop("read", path)
-    assert(data, err)
-    local resources = require("rsc").parseRsc(data)
-    local rsc = runtime:getResource("rsc")
-    if not rsc then
-        rsc = { resources = {}}
-        runtime:setResource("rsc", rsc)
-    end
-    local h = #rsc + 1
-    rsc[h] = res
-    -- Might as well add all the resources now
-    for id, val in pairs(resources) do
-        assert(rsc.resources[id] == nil, "Duplicate resource found!")
-        rsc.resources[id] = val
-    end
-    stack:push(h)
+    local handle = runtime:LoadRsc(path)
+    stack:push(handle)
 end
 
 function UnLoadRsc(stack, runtime) -- 44
     local h = stack:pop()
-    local rsc = runtime:getResource("rsc")
-    assert(rsc and rsc[h], KErrNotExists)
-    for id, val in pairs(rsc[h]) do
-        rsc.resources[id] = nil
-    end
-    rsc[h] = nil
+    runtime:UnLoadRsc(h)
     stack:push(0)
 end
 
 function ReadRsc(stack, runtime) -- 45
     local id = stack:pop()
-    local rsc = runtime:getResource("rsc")
-    local result = rsc and rsc.resources[id]
-    assert(result, KErrNotExists)
-    stack:push(result)
+    stack:push(runtime:ReadRsc(id))
 end
 
 function ReadRscLong(stack, runtime) -- 46
     local id = stack:pop()
-    local rsc = runtime:getResource("rsc")
-    local result = rsc and rsc.resources[id]
-    assert(result, KErrNotExists)
+    local result = runtime:ReadRsc(id)
     assert(#result == 4, "Bad resource length for ReadRscLong!")
     result = string.unpack("<i4", result)
     stack:push(result)

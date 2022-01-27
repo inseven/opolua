@@ -33,8 +33,19 @@ function main()
     local rsc = require("rsc")
     local data = readFile(args.filename)
     local resources = rsc.parseRsc(data)
+    local offset = resources.idOffset
+    resources.idOffset = nil -- So sortedKeys works
+    if offset then
+        printf("Offset: %08X\n", offset)
+    end
     for _, id in ipairs(sortedKeys(resources)) do
-        printf("%08X: %s\n", id, hexEscape(resources[id]))
+        local offsetStr
+        if offset then
+            offsetStr = string.format("%08X/", offset + (id - 1))
+        else
+            offsetStr = "         "
+        end
+        printf("%s%08X: %s\n", offsetStr, id, hexEscape(resources[id]))
     end
 end
 
