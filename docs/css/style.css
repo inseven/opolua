@@ -1,0 +1,152 @@
+:root {
+    --tint-color: #57C2C0;
+    --body-color: #000000;
+    --secondary-color: #ddd;
+    --secondary-link-color: #aaa;
+    --icon-border-color: rgba(0, 0, 0, 0.2);
+    --icon-size: 120px;
+    --content-width: 800px;
+    --vertical-spacing: 1.5em;
+}
+
+body {
+    font-family: 'Inter', Helvetica, sans-serif;
+    font-weight: 300;
+    margin: 0;
+    color: var(--body-color);
+}
+
+a {
+    font-weight: 400;
+    text-decoration: underline;
+    color: var(--body-color);
+}
+
+a:hover {
+    color: var(--tint-color);
+}
+
+ul.navigation a,
+.footer a {
+    text-decoration: none;
+}
+
+ul.navigation {
+    list-style: none;
+    margin: 0;
+    padding: 1em;
+    background-color: white;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+ul.navigation > li {
+    display: inline-block;
+    padding: 0.4em;
+}
+
+.content {
+    max-width: var(--content-width);
+    margin: auto;
+    padding: 2em;
+    font-size: 1.1em;
+    line-height: var(--vertical-spacing);
+}
+
+.banner {
+    text-align: center;
+    margin-bottom: 2em;
+}
+
+.hero {
+    max-width: 800px;
+}
+
+.tagline {
+    font-size: 1.3em;
+}
+
+.footer {
+    max-width: var(--content-width);
+    margin: auto;
+    padding: 2em;
+}
+
+.footer p {
+    color: var(--secondary-color);
+    text-align: center;
+}
+
+.footer a {
+    color: var(--secondary-link-color);
+    font-weight: 200;
+}
+
+.footer a:hover {
+    color: var(--tint-color);
+}
+
+.copyright {
+    text-align: center;
+}
+
+h1 {
+    text-align: center;
+    font-size: 4em;
+    font-weight: 100;
+}
+
+.download {
+    text-align: center;
+    margin-bottom: var(--vertical-spacing);
+}
+
+.button {
+    display: inline-block;
+    transition: transform .1s;
+}
+
+.button:hover {
+    transform: scale(1.1);
+}
+
+.button > a {
+    background-color: var(--tint-color);
+    color: #ffffff;
+    border-radius: 2em;
+    padding: 1em;
+    text-decoration: none;
+}
+
+.icon {
+    position: relative;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    display: inline-block;
+    margin: 8px;
+}
+
+.icon img {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    border-radius: 17.54385965%;
+}
+
+.icon::after {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--icon-border-color);
+    border-radius: 17.54385965%;
+    box-sizing: border-box;
+    content: " ";
+    display: block;
+    z-index: 10;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
