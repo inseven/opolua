@@ -1,5 +1,4 @@
 ---
-title: About
 ---
 
 <div class="banner">
