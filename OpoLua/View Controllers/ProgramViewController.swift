@@ -282,8 +282,6 @@ class ProgramViewController: UIViewController {
         super.viewDidAppear(animated)
         program.resume()
         configureControllers()
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(titleBarTapped(sender:)))
-        navigationController?.navigationBar.addGestureRecognizer(tapGestureRecognizer)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -293,10 +291,6 @@ class ProgramViewController: UIViewController {
         settingsSink = nil
         program.suspend()
         program.removeObserver(self)
-    }
-
-    @objc func titleBarTapped(sender: UITapGestureRecognizer) {
-        taskManager.showTaskList()
     }
 
     func observeGameControllers() {

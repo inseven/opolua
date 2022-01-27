@@ -25,7 +25,6 @@ import UniformTypeIdentifiers
 
 protocol LibraryViewControllerDelegate: AnyObject {
 
-    func libraryViewController(_ libraryViewController: LibraryViewController, presentViewController viewController: UIViewController)
     func libraryViewController(_ libraryViewController: LibraryViewController, showSection section: LibraryViewController.ItemType)
 
 }
