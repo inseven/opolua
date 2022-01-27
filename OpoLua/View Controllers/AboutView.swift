@@ -22,31 +22,6 @@ import SwiftUI
 
 import Diligence
 
-struct Link: View {
-
-    var text: String
-    var url: URL
-
-    init(_ text: String, url: URL) {
-        self.text = text
-        self.url = url
-    }
-
-    var body: some View {
-        Button {
-            UIApplication.shared.open(url)
-        } label: {
-            HStack {
-                Text(text)
-                    .foregroundColor(.primary)
-                Spacer()
-                Image(systemName: "link")
-                    .foregroundColor(.secondary)
-            }
-        }
-    }
-}
-
 struct AboutView: View {
 
     @Environment(\.presentationMode) var presentationMode
@@ -54,7 +29,13 @@ struct AboutView: View {
     var body: some View {
         NavigationView {
             Form {
-                BuildSection("inseven/statuspanel")
+                BuildSection("inseven/statuspanel") {
+                    VStack(alignment: .center) {
+                        IconView(image: UIImage(named: "Icon")!)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom)
+                }
                 Section {
                     Link("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
                     Link("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
@@ -74,7 +55,7 @@ struct AboutView: View {
                     License(name: "opolua", author: "Jason Morley, Tom Sutcliffe", filename: "License.txt"),
                 ])
             }
-            .navigationBarTitle("About", displayMode: .inline)
+            .navigationBarTitle("", displayMode: .inline)
             .navigationBarItems(trailing: Button {
                 presentationMode.wrappedValue.dismiss()
             } label: {
