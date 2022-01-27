@@ -6,7 +6,7 @@
     --icon-border-color: rgba(0, 0, 0, 0.2);
     --icon-size: 120px;
     --content-width: 800px;
-    --vertical-spacing: 1.5em;
+    --vertical-spacing: 1.4em;
 }
 
 body {
@@ -97,6 +97,14 @@ h1 {
     text-align: center;
     font-size: 4em;
     font-weight: 100;
+    margin-bottom: var(--vertical-spacing);
+}
+
+h2 {
+    text-align: left;
+    font-size: 2em;
+    font-weight: 200;
+    margin-bottom: var(--vertical-spacing);
 }
 
 .caption {
