@@ -25,8 +25,8 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-    var section: LibraryViewController.ItemType?
-    var previousSection: LibraryViewController.ItemType = .allPrograms  // Represents the previously active section; always the one we expand to when entering split view.
+    var section: LibraryViewController.ApplicationSection?
+    var previousSection: LibraryViewController.ApplicationSection = .allPrograms  // Represents the previously active section; always the one we expand to when entering split view.
     // N.B. We only ever store previous section for state restoration as we always want to restore to at least the top-level of the section.
 
     private var settings = Settings()
@@ -95,7 +95,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
-    func showSection(_ section: LibraryViewController.ItemType, animated: Bool = true) {
+    func showSection(_ section: LibraryViewController.ApplicationSection, animated: Bool = true) {
         guard self.section != section else {
             if splitViewController.isCollapsed {
                 if let navigationController = splitViewController.viewControllers[0] as? UINavigationController {
@@ -198,7 +198,7 @@ extension AppDelegate: UISplitViewControllerDelegate {
 extension AppDelegate: LibraryViewControllerDelegate {
 
     func libraryViewController(_ libraryViewController: LibraryViewController,
-                               showSection section: LibraryViewController.ItemType) {
+                               showSection section: LibraryViewController.ApplicationSection) {
         showSection(section)
     }
 }
@@ -221,6 +221,7 @@ extension AppDelegate: TaskManagerDelegate {
                                                           taskManager: taskManager,
                                                           program: program)
         section = .runningPrograms
+        libraryViewController.selectSection(section: .runningPrograms)
         let runningProgramsViewController = RunningProgramsViewController(settings: settings, taskManager: taskManager)
         if splitViewController.isCollapsed {
             let navigationController = splitViewController.viewControllers[0] as! UINavigationController

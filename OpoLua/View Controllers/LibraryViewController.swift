@@ -25,7 +25,50 @@ import UniformTypeIdentifiers
 
 protocol LibraryViewControllerDelegate: AnyObject {
 
-    func libraryViewController(_ libraryViewController: LibraryViewController, showSection section: LibraryViewController.ItemType)
+    func libraryViewController(_ libraryViewController: LibraryViewController, showSection section: LibraryViewController.ApplicationSection)
+
+}
+
+extension LibraryViewController.ApplicationSection {
+
+    var name: String {
+        switch self {
+        case .runningPrograms:
+            return "Running Programs"
+        case .allPrograms:
+            return "All Programs"
+        case .local(let url):
+            return url.name
+        case .external(let url):
+            return url.url.name
+        }
+    }
+
+    var image: UIImage {
+        switch self {
+        case .runningPrograms:
+            return UIImage(systemName: "play.square")!
+        case .allPrograms:
+            return UIImage(systemName: "square")!
+        case .local(_):
+            return UIImage(systemName: "folder")!
+        case .external(_):
+            return UIImage(systemName: "folder")!
+        }
+    }
+
+    var isReadOnly: Bool {
+        switch self {
+        case .runningPrograms:
+            return true
+        case .allPrograms:
+            return true
+        case .local(_):
+            return true
+        case .external(_):
+            return false
+        }
+    }
 
 }
 
@@ -37,41 +80,15 @@ class LibraryViewController: UICollectionViewController {
         case locations
     }
 
-    enum ItemType: Hashable {
-
+    enum ApplicationSection: Hashable {
         case runningPrograms
         case allPrograms
         case local(URL)
         case external(SecureLocation)
-
     }
 
-    struct Item: Hashable {
-
-        static func == (lhs: Item, rhs: Item) -> Bool {
-            return lhs.type == rhs.type
-        }
-
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(type)
-        }
-
-        let type: ItemType
-        let name: String
-        let image: UIImage
-        let readonly: Bool
-
-        init(type: ItemType, name: String, image: UIImage, readonly: Bool = false) {
-            self.type = type
-            self.name = name
-            self.image = image
-            self.readonly = readonly
-        }
-
-    }
-
-    typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
-    typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
+    typealias Snapshot = NSDiffableDataSourceSnapshot<Section, ApplicationSection>
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, ApplicationSection>
 
     private var settings: Settings
     private var taskManager: TaskManager
@@ -81,7 +98,7 @@ class LibraryViewController: UICollectionViewController {
 
     var delegate: LibraryViewControllerDelegate?
 
-    lazy var addBarButtonItem: UIBarButtonItem = {
+    private lazy var addBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
                                             style: .plain,
                                             target: self,
@@ -89,7 +106,7 @@ class LibraryViewController: UICollectionViewController {
         return barButtonItem
     }()
 
-    lazy var aboutBarButtonItem: UIBarButtonItem = {
+    private lazy var aboutBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "gear"),
                                             style: .plain,
                                             target: self,
@@ -108,7 +125,7 @@ class LibraryViewController: UICollectionViewController {
 
         collectionView.collectionViewLayout = createLayout()
 
-        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item> { cell, _, item in
+        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, ApplicationSection> { cell, _, item in
             var configuration = cell.defaultContentConfiguration()
             configuration.image = item.image
             configuration.text = item.name
@@ -176,6 +193,13 @@ class LibraryViewController: UICollectionViewController {
         self.present(viewController, animated: true)
     }
 
+    func selectSection(section: ApplicationSection) {
+        guard let indexPath = dataSource.indexPath(for: section) else {
+            return
+        }
+        collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .top)
+    }
+
     func reload() {
         dataSource.apply(snapshot())
     }
@@ -183,33 +207,18 @@ class LibraryViewController: UICollectionViewController {
     func snapshot() -> Snapshot {
         var snapshot = Snapshot()
         snapshot.appendSections([.special])
-        snapshot.appendItems([Item(type: .allPrograms,
-                                   name: "All Programs",
-                                   image: UIImage(systemName: "square")!),
-                              Item(type: .runningPrograms,
-                                   name: "Running Programs",
-                                   image: UIImage(systemName: "play.square")!)],
-                             toSection: .special)
+        snapshot.appendItems([.allPrograms, .runningPrograms], toSection: .special)
 
         // Examples
-        var examples: [Item] = []
+        var examples: [ApplicationSection] = []
         if settings.showLibraryFiles {
-            examples.append(Item(type: .local(Bundle.main.filesUrl),
-                                 name: "Files",
-                                 image: UIImage(systemName: "folder")!,
-                                 readonly: true))
+            examples.append(.local(Bundle.main.filesUrl))
         }
         if settings.showLibraryScripts {
-            examples.append(Item(type: .local(Bundle.main.scriptsUrl),
-                                 name: "Scripts",
-                                 image: UIImage(systemName: "folder")!,
-                                 readonly: true))
+            examples.append(.local(Bundle.main.scriptsUrl))
         }
         if settings.showLibraryTests {
-            examples.append(Item(type: .local(Bundle.main.testsUrl),
-                                 name: "Tests",
-                                 image: UIImage(systemName: "folder")!,
-                                 readonly: true))
+            examples.append(.local(Bundle.main.testsUrl))
         }
         if examples.count > 0 {
             snapshot.appendSections([.examples])
@@ -217,7 +226,7 @@ class LibraryViewController: UICollectionViewController {
         }
 
         let locations = settings.locations
-            .map { Item(type: .external($0), name: $0.url.name, image: UIImage(systemName: "folder")!) }
+            .map { ApplicationSection.external($0) }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
         if locations.count > 0 {
             snapshot.appendSections([.locations])
@@ -233,11 +242,11 @@ class LibraryViewController: UICollectionViewController {
         configuration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
             guard let self = self,
                   let item = self.dataSource.itemIdentifier(for: indexPath),
-                  !item.readonly else {
+                  !item.isReadOnly else {
                 return nil
             }
             let action = UIContextualAction(style: .normal, title: "Done!") { action, view, completion in
-                if case .external(let location) = item.type {
+                if case .external(let location) = item {
                     self.deleteLocation(location)
                 }
                 completion(true)
@@ -281,7 +290,7 @@ class LibraryViewController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView,
                         contextMenuConfigurationForItemAt indexPath: IndexPath,
                         point: CGPoint) -> UIContextMenuConfiguration? {
-        guard let item = dataSource.itemIdentifier(for: indexPath), !item.readonly else {
+        guard let item = dataSource.itemIdentifier(for: indexPath), !item.isReadOnly else {
             return nil
         }
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
@@ -289,7 +298,7 @@ class LibraryViewController: UICollectionViewController {
             let deleteAction = UIAction(title: "Delete",
                                         image: UIImage(systemName: "trash"),
                                         attributes: [.destructive]) { action in
-                if case .external(let location) = item.type {
+                if case .external(let location) = item {
                     self.deleteLocation(location)
                 }
             }
@@ -303,14 +312,7 @@ class LibraryViewController: UICollectionViewController {
             collectionView.deselectItem(at: indexPath, animated: true)
             return
         }
-        switch item.type {
-        case .runningPrograms:
-            delegate?.libraryViewController(self, showSection: item.type)
-        case .allPrograms:
-            delegate?.libraryViewController(self, showSection: item.type)
-        case .local, .external:
-            delegate?.libraryViewController(self, showSection: item.type)
-        }
+        delegate?.libraryViewController(self, showSection: item)
     }
 
 }
