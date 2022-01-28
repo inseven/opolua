@@ -126,13 +126,16 @@ private func beep(_ L: LuaState!) -> Int32 {
     return 0
 }
 
-private func readLine(_ L: LuaState!) -> Int32 {
+// editValue("text", value, prompt, true, [min, max])
+private func editValue(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    if let result = iohandler.readLine(initialValue: L.tostring(1) ?? "", allowCancel: L.toboolean(2)) {
-        L.push(result)
-    } else {
-        L.pushnil()
-    }
+    let type = EditParams.InputType(rawValue: L.tostring(1) ?? "text") ?? .text
+    let initialValue = L.tostring(2) ?? ""
+    let prompt = L.tostring(3)
+    let allowCancel = L.toboolean(4)
+    let params = EditParams(type: type, initialValue: initialValue, prompt: prompt, allowCancel: allowCancel)
+    let result = iohandler.editValue(params)
+    L.push(result)
     return 1
 }
 
@@ -802,7 +805,7 @@ class OpoInterpreter {
         let val = Unmanaged<OpoInterpreter>.passUnretained(self)
         lua_pushlightuserdata(L, val.toOpaque())
         let fns: [(String, lua_CFunction)] = [
-            ("readLine", readLine),
+            ("editValue", editValue),
             // ("print", print_lua),
             ("beep", beep),
             ("draw", draw),

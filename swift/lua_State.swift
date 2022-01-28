@@ -331,8 +331,12 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         lua_pushnil(self)
     }
 
-    func push<T>(_ value: T) where T: Pushable {
-        value.push(state: self)
+    func push<T>(_ value: T?) where T: Pushable {
+        if let value = value {
+            value.push(state: self)
+        } else {
+            self.pushnil()
+        }
     }
 
     func push<T>(_ array: Array<T>) where T: Pushable {

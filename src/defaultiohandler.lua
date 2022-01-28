@@ -35,12 +35,12 @@ function print(val)
     printf("%s", val)
 end
 
-function readLine(allowCancel)
+function editValue(type, initialValue, prompt, allowCancel, min, max)
     local line = io.stdin:read()
     -- We don't support pressing esc to clear the line, oh well
     if allowCancel and line:byte(1, 1) == 27 then
         -- Close enough...
-        error(KErrEsc)
+        return nil
     end
     return line
 end

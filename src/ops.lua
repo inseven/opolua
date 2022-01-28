@@ -1253,7 +1253,10 @@ function InputInt(stack, runtime) -- 0x94
     local trapped = runtime:getTrap()
     local result
     while result == nil do
-        local line = runtime:iohandler().readLine("", trapped)
+        local line = runtime:iohandler().editValue("integer", "", "?", trapped)
+        if not line then
+            error(KErrEsc)
+        end
         result = tonumber(line)
         if result == nil then
             if trapped then
@@ -1276,7 +1279,7 @@ InputFloat = InputInt -- 0x96
 function InputString(stack, runtime) -- 0x97
     local var = stack:pop()
     local trapped = runtime:getTrap()
-    local line = runtime:iohandler().readLine("", trapped)
+    local line = runtime:iohandler().editValue("text", "", "?", trapped)
     var(line)
     runtime:setTrap(false)
 end

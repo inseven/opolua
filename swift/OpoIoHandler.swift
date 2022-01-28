@@ -436,12 +436,27 @@ enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
 }
 
+struct EditParams {
+    enum InputType: String {
+        case text
+        case password
+        case integer
+        case float
+        case date
+        case time
+    }
+
+    let type: InputType
+    let initialValue: String
+    let prompt: String?
+    let allowCancel: Bool
+}
+
 protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
 
-    // nil return means escape (must only return nil if allowCancel is true)
-    func readLine(initialValue: String, allowCancel: Bool) -> String?
+    func editValue(_ params: EditParams) -> String?
 
     func beep(frequency: Double, duration: Double) -> Void
 
@@ -477,7 +492,7 @@ class DummyIoHandler : OpoIoHandler {
         print(val, terminator: "")
     }
 
-    func readLine(initialValue: String, allowCancel: Bool) -> String? {
+    func editValue(_ params: EditParams) -> String? {
         return "123"
     }
 

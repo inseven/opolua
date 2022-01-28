@@ -349,12 +349,30 @@ function DialogItemEdit:handleKeyPress(k, modifiers)
 end
 
 function DialogItemEdit:showEditor()
-    local result = runtime:iohandler().readLine(self.value, true)
+    local result = runtime:iohandler().editValue("text", self.value, self.prompt, true)
     if result then
         self.value = result
     end
     self:setNeedsRedraw()
 end
+
+DialogItemEditLong = class { _super = DialogItemEdit }
+
+function DialogItemEditLong:contentSize()
+    -- The @ sign is an example of the widest character in the dialog font (we
+    -- should really have an easy API for getting max font width...)
+    local maxChars = math.max(#tostring(self.min), #tostring(self.max))
+    return gTWIDTH(string.rep("@", maxChars)) + 2 * kEditTextSpace, kDialogLineHeight
+end
+
+function DialogItemEditLong:showEditor()
+    local result = runtime:iohandler().editValue("integer", self.value, self.prompt, true, self.min, self.max)
+    if result then
+        self.value = tostring(math.min(self.max, math.max(tonumber(result), self.min)))
+    end
+    self:setNeedsRedraw()
+end
+
 
 DialogChoiceList = class {
     _super = View,
@@ -777,6 +795,7 @@ local itemTypes = {
     [dItemTypes.dSEPARATOR] = DialogItemSeparator,
     [dItemTypes.dCHECKBOX] = DialogCheckbox,
     [dItemTypes.dEDIT] = DialogItemEdit,
+    [dItemTypes.dLONG] = DialogItemEditLong,
 }
 
 function DIALOG(dialog)
