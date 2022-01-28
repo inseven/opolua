@@ -30,17 +30,16 @@ protocol InstallerViewControllerDelegate: AnyObject {
 class InstallerViewController: UINavigationController {
 
     var url: URL
-    var installer: Installer
+    var installer: Installer?
 
     weak var installerDelegate: InstallerViewControllerDelegate?
 
-    init(url: URL) {
+    init(url: URL, destinationUrl:URL) {
         self.url = url
-        self.installer = Installer(url: url, fileSystem: SystemFileSystem(rootUrl: url.deletingPathExtension()))
-        let introductionViewController = InstallerIntroductionViewController()
+        let destinationUrl = destinationUrl.appendingPathComponent(url.basename.deletingPathExtension)
+        let introductionViewController = InstallerIntroductionViewController(destinationUrl: destinationUrl)
         super.init(rootViewController: introductionViewController)
         isModalInPresentation = true
-        installer.delegate = self
         introductionViewController.delegate = self
     }
 
@@ -62,9 +61,17 @@ extension InstallerViewController: InstallerIntroductionViewControllerDelegate {
         self.installerDelegate?.installerViewControllerDidFinish(self)
     }
 
-    func installerIntroductionViewControllerDidContinue(_ installerIntroductionViewController: InstallerIntroductionViewController) {
+    func installerIntroductionViewController(_ installerIntroductionViewController: InstallerIntroductionViewController, continueWithDestinationUrl destinationUrl: URL) {
         dispatchPrecondition(condition: .onQueue(.main))
+        print("destination now = \(destinationUrl)")
+        let installer = Installer(url: url, fileSystem: SystemFileSystem(rootUrl: destinationUrl))
+        self.installer = installer
+        installer.delegate = self
         installer.run()
+    }
+
+    func installerIntroductionViewControllerDidContinue(_ installerIntroductionViewController: InstallerIntroductionViewController) {
+
     }
 
 }

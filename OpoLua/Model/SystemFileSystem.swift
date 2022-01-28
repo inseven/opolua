@@ -28,6 +28,13 @@ class SystemFileSystem: FileSystem {
         self.rootUrl = rootUrl
     }
 
+    func prepare() throws {
+        let fileManager = FileManager.default
+        try fileManager.createDirectory(at: rootUrl, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: rootUrl.appendingPathComponent("c"), withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: rootUrl.appendingPathComponent("d"), withIntermediateDirectories: true)
+    }
+
     func hostUrl(for path: String) -> URL? {
         let components = path.split(separator: "\\")
             .map { String($0) }

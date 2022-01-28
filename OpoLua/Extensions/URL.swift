@@ -94,4 +94,13 @@ extension URL {
         return String(destination.path.dropFirst(source.path.count))
     }
 
+    func prepareForSecureAccess() throws {
+        guard startAccessingSecurityScopedResource() else {
+            throw OpoLuaError.secureAccess
+        }
+        guard FileManager.default.isReadableFile(atPath: path) else {
+            throw OpoLuaError.secureAccess
+        }
+    }
+
 }

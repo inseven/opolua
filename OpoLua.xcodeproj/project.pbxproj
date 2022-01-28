@@ -449,11 +449,11 @@
 				DB5AC973275681510043FE5C /* CanvasView.swift */,
 				DBE2917D27932C5300EE824B /* ClockView.swift */,
 				D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */,
+				D8C93BEC27A27016002F63B9 /* IconView.swift */,
+				D8C93BEA27A27002002F63B9 /* Link.swift */,
 				D8F4835C278D3D31008AF80C /* PixelView.swift */,
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
 				D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */,
-				D8C93BEA27A27002002F63B9 /* Link.swift */,
-				D8C93BEC27A27016002F63B9 /* IconView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";

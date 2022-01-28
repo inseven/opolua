@@ -44,21 +44,7 @@ class Installer {
     func run() {
         DispatchQueue.global().async {
             do {
-                let destinationUrl = self.url.deletingPathExtension()
-                print("Installing to \(destinationUrl)...")
-
-                let fileManager = FileManager.default
-
-                guard !fileManager.fileExists(atPath: destinationUrl.path, isDirectory: nil) else {
-                    print("File exists at path; giving up")
-                    self.delegate?.installer(self, didFailWithError: OpoLuaError.fileExists)
-                    return
-                }
-
-                try fileManager.createDirectory(at: destinationUrl, withIntermediateDirectories: true)
-                try fileManager.createDirectory(at: destinationUrl.appendingPathComponent("c"), withIntermediateDirectories: true)
-                try fileManager.createDirectory(at: destinationUrl.appendingPathComponent("d"), withIntermediateDirectories: true)
-
+                try self.fileSystem.prepare()
                 let result = self.interpreter.installSisFile(path: self.url.path)
                 self.delegate?.installer(self, didFinishWithResult: result)
 

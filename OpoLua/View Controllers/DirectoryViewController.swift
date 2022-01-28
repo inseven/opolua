@@ -299,7 +299,7 @@ class DirectoryViewController : UICollectionViewController {
         case .directory:
             pushDirectoryViewController(for: item.url)
         case .installer:
-            let installerViewController = InstallerViewController(url: item.url)
+            let installerViewController = InstallerViewController(url: item.url, destinationUrl: directory.url)
             installerViewController.installerDelegate = self
             present(installerViewController, animated: true)
         case .image:

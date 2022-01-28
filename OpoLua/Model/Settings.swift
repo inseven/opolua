@@ -190,6 +190,7 @@ class Settings: ObservableObject {
     var indexableUrls: [URL] {
         dispatchPrecondition(condition: .onQueue(.main))
         var indexableUrls: [URL] = []
+        indexableUrls.append(FileManager.default.documentsUrl)
         if self.showLibraryFiles {
             indexableUrls.append(Bundle.main.filesUrl)
         }

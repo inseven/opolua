@@ -22,6 +22,7 @@ import Foundation
 
 protocol FileSystem {
 
+    func prepare() throws
     func hostUrl(for path: String) -> URL?
     func guestPath(for url: URL) -> String?
 

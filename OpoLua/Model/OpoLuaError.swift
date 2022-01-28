@@ -25,5 +25,21 @@ enum OpoLuaError: Error {
 
     case fileExists
     case interpreterError(OpoInterpreter.Error)
+    case secureAccess
+
+}
+
+extension OpoLuaError: LocalizedError {
+
+    var errorDescription: String? {
+        switch self {
+        case .fileExists:
+            return "File exists!"
+        case .interpreterError(let error):
+            return error.description
+        case .secureAccess:
+            return "Failed to prepare file for secure access."
+        }
+    }
 
 }

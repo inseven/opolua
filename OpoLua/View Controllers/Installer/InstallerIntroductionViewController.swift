@@ -35,7 +35,7 @@ class Value1TableViewCell: UITableViewCell {
 
 protocol InstallerIntroductionViewControllerDelegate: AnyObject {
 
-    func installerIntroductionViewControllerDidContinue(_ installerIntroductionViewController: InstallerIntroductionViewController)
+    func installerIntroductionViewController(_ installerIntroductionViewController: InstallerIntroductionViewController, continueWithDestinationUrl destinationUrl: URL)
     func installerIntroductionViewControllerDidCancel(_ installerIntroductionViewController: InstallerIntroductionViewController)
 
 }
@@ -45,6 +45,7 @@ class InstallerIntroductionViewController: UIViewController {
 
     static let reuseIdentifier = "Cell"
 
+    var destinationUrl: URL
     var delegate: InstallerIntroductionViewControllerDelegate?
 
     lazy var cancelBarButtonItem: UIBarButtonItem = {
@@ -103,7 +104,7 @@ class InstallerIntroductionViewController: UIViewController {
             guard let self = self else {
                 return
             }
-            self.delegate?.installerIntroductionViewControllerDidContinue(self)
+            self.delegate?.installerIntroductionViewController(self, continueWithDestinationUrl: self.destinationUrl)
         })
         buttonView.translatesAutoresizingMaskIntoConstraints = false
         buttonView.preservesSuperviewLayoutMargins = true
@@ -139,7 +140,9 @@ class InstallerIntroductionViewController: UIViewController {
         return headerView
     }()
 
-    init() {
+    init(destinationUrl: URL) {
+        print("destination = \(destinationUrl)")
+        self.destinationUrl = destinationUrl
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
         navigationItem.rightBarButtonItem = cancelBarButtonItem

@@ -84,8 +84,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
-    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        return false
+    func application(_ app: UIApplication,
+                     open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        do {
+            try url.prepareForSecureAccess()
+        } catch {
+            splitViewController.present(error: error)
+            return false
+        }
+        install(url: url)
+        return true
+    }
+
+    func install(url: URL) {
+        let installerViewController = InstallerViewController(url: url, destinationUrl: FileManager.default.documentsUrl)
+        installerViewController.installerDelegate = self
+        splitViewController.present(installerViewController, animated: true)
     }
 
     @objc func titleBarTapped(sender: UITapGestureRecognizer) {
@@ -158,6 +173,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
+}
+
+extension AppDelegate: InstallerViewControllerDelegate {
+
+    func installerViewControllerDidFinish(_ installerViewController: InstallerViewController) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        installerViewController.dismiss(animated: true)
+    }
+
 }
 
 extension AppDelegate: UISplitViewControllerDelegate {

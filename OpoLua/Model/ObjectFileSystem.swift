@@ -37,6 +37,9 @@ class ObjectFileSystem: FileSystem {
         return "C:\\SYSTEM\\APPS\\" + name.uppercased() + "\\"
     }
 
+    func prepare() throws {
+    }
+
     func hostUrl(for path: String) -> URL? {
         if path.uppercased().starts(with: guestPrefix) {
             let pathComponents = path
