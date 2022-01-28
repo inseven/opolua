@@ -61,7 +61,7 @@ struct SettingsView: View {
                     }
                     Toggle("Show Wallpaper", isOn: $settings.showWallpaper)
                 }
-                Section("Locations") {
+                Section("Examples") {
                     Toggle("Show Files", isOn: $settings.showLibraryFiles)
                     Toggle("Show Scripts", isOn: $settings.showLibraryScripts)
                     Toggle("Show Tests", isOn: $settings.showLibraryTests)

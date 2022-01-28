@@ -47,6 +47,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
+        // Ensure the documents directory exists.
+        let fileManager = FileManager.default
+        if !fileManager.directoryExists(atPath: fileManager.documentsUrl.path) {
+            try! fileManager.createDirectory(at: fileManager.documentsUrl, withIntermediateDirectories: true)
+        }
+
         libraryViewController = LibraryViewController(settings: settings, taskManager: taskManager, detector: detector)
         libraryViewController.delegate = self
         let navigationController = UINavigationController(rootViewController: libraryViewController)
@@ -78,6 +84,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        return false
+    }
+
     @objc func titleBarTapped(sender: UITapGestureRecognizer) {
         taskManager.showTaskList()
     }
@@ -92,6 +102,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(titleBarTapped(sender:)))
             navigationController.navigationBar.addGestureRecognizer(tapGestureRecognizer)
             splitViewController.setViewController(navigationController, for: .secondary)
+        }
+    }
+
+    func showDirectory(url: URL, animated: Bool) {
+        do {
+            let directory = try Directory(url: url)
+            let viewController = DirectoryViewController(settings: settings, taskManager: taskManager, directory: directory)
+            setRootDetailViewController(viewController, animated: animated)
+        } catch {
+            splitViewController.present(error: error)
         }
     }
 
@@ -119,24 +139,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         case .allPrograms:
             let viewController = AllProgramsViewController(settings: settings, taskManager: taskManager, detector: detector)
             setRootDetailViewController(viewController, animated: animated)
+        case .documents:
+            showDirectory(url: FileManager.default.documentsUrl, animated: animated)
         case .local(let url):
-            do {
-                let directory = try Directory(url: url)
-                let viewController = DirectoryViewController(settings: settings, taskManager: taskManager, directory: directory)
-                setRootDetailViewController(viewController, animated: animated)
-            } catch {
-                splitViewController.present(error: error)
-            }
+            showDirectory(url: url, animated: animated)
         case .external(let location):
-            do {
-                let directory = try Directory(url: location.url)
-                let viewController = DirectoryViewController(settings: settings,
-                                                             taskManager: taskManager,
-                                                             directory: directory)
-                setRootDetailViewController(viewController, animated: animated)
-            } catch {
-                splitViewController.present(error: error)
-            }
+            showDirectory(url: location.url, animated: animated)
         }
     }
 

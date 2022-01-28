@@ -37,6 +37,17 @@ extension LibraryViewController.ApplicationSection {
             return "Running Programs"
         case .allPrograms:
             return "All Programs"
+        case .documents:
+            switch UIDevice.current.userInterfaceIdiom {
+            case .phone:
+                return "On My iPhone"
+            case .pad:
+                return "On My iPad"
+            case .mac:
+                return "On My Mac"
+            default:
+                return "On My Device"
+            }
         case .local(let url):
             return url.name
         case .external(let url):
@@ -50,6 +61,8 @@ extension LibraryViewController.ApplicationSection {
             return UIImage(systemName: "play.square")!
         case .allPrograms:
             return UIImage(systemName: "square")!
+        case .documents:
+            return UIImage(systemName: "iphone")!
         case .local(_):
             return UIImage(systemName: "folder")!
         case .external(_):
@@ -63,6 +76,8 @@ extension LibraryViewController.ApplicationSection {
             return true
         case .allPrograms:
             return true
+        case .documents:
+            return false
         case .local(_):
             return true
         case .external(_):
@@ -83,6 +98,7 @@ class LibraryViewController: UICollectionViewController {
     enum ApplicationSection: Hashable {
         case runningPrograms
         case allPrograms
+        case documents
         case local(URL)
         case external(SecureLocation)
     }
@@ -207,7 +223,7 @@ class LibraryViewController: UICollectionViewController {
     func snapshot() -> Snapshot {
         var snapshot = Snapshot()
         snapshot.appendSections([.special])
-        snapshot.appendItems([.allPrograms, .runningPrograms], toSection: .special)
+        snapshot.appendItems([.allPrograms, .runningPrograms, .documents], toSection: .special)
 
         // Examples
         var examples: [ApplicationSection] = []

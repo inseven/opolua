@@ -41,8 +41,12 @@ extension FileManager {
         return urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
+    var applicationSupportUrl: URL {
+        return urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    }
+
     var secureBookmarksUrl: URL {
-        return documentsUrl.appendingPathComponent("SecureBookmarks")
+        return applicationSupportUrl.appendingPathComponent("SecureBookmarks")
     }
 
     func prepareUrlForSecureAccess(_ url: URL) throws {
