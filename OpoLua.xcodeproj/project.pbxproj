@@ -13,6 +13,7 @@
 		D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */; };
 		D80A9CBC27A48BED00E49AD8 /* ApplicationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBB27A48BED00E49AD8 /* ApplicationSection.swift */; };
 		D80A9CBE27A4A35E00E49AD8 /* UIDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */; };
+		D80A9CC027A4AF9200E49AD8 /* TaskManager+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */; };
 		D80D65A8279DD2060020F994 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A7279DD2060020F994 /* Icon.swift */; };
 		D80D65AA279DDC290020F994 /* IconCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */; };
 		D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */; };
@@ -209,6 +210,7 @@
 		D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+UIKit.swift"; sourceTree = "<group>"; };
 		D80A9CBB27A48BED00E49AD8 /* ApplicationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationSection.swift; sourceTree = "<group>"; };
 		D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIDevice.swift; sourceTree = "<group>"; };
+		D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TaskManager+UIKit.swift"; sourceTree = "<group>"; };
 		D80D65A7279DD2060020F994 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewCell.swift; sourceTree = "<group>"; };
 		D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewLayout.swift; sourceTree = "<group>"; };
@@ -471,6 +473,7 @@
 				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
 				D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
+				D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */,
 				D8D95505279B7B100049A3C3 /* UIColor.swift */,
 				D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */,
 				D8BA09712751BBEA00F4730D /* UIElement.swift */,
@@ -937,6 +940,7 @@
 				D80D65AE279DE0CE0020F994 /* RunningProgramsViewController.swift in Sources */,
 				D87A62742752A67500075CB8 /* CGSize.swift in Sources */,
 				D8535A28277139AB00DFCE29 /* Sound.swift in Sources */,
+				D80A9CC027A4AF9200E49AD8 /* TaskManager+UIKit.swift in Sources */,
 				D81C12A8279EF0C0000E70D0 /* AllProgramsViewController.swift in Sources */,
 				D84ADB162771D937001ABFB4 /* Device.swift in Sources */,
 				D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */,

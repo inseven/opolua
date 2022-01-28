@@ -249,16 +249,6 @@ class DirectoryViewController : UICollectionViewController {
         return actions
     }
 
-    func taskActions(for item: Directory.Item) -> [UIMenuElement] {
-        guard let url = item.programUrl, taskManager.isRunning(url) else {
-            return []
-        }
-        let closeAction = UIAction(title: "Close Program", image: UIImage(systemName: "xmark")) { action in
-            self.taskManager.quit(url)
-        }
-        return [UIMenu(options: [.displayInline], children: [closeAction])]
-    }
-
     func fileActions(for item: Directory.Item) -> [UIMenuElement] {
         let deleteAction = UIAction(title: "Delete",
                                     image: UIImage(systemName: "trash"),
@@ -343,7 +333,9 @@ class DirectoryViewController : UICollectionViewController {
         return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
             var actions: [UIMenuElement] = []
             actions += self.programActions(for: item)
-            actions += self.taskActions(for: item)
+            if let programUrl = item.programUrl {
+                actions += self.taskManager.actions(for: programUrl)
+            }
             actions += self.fileActions(for: item)
             return UIMenu(children: actions)
         }

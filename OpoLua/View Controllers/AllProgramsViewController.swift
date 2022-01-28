@@ -166,16 +166,6 @@ class AllProgramsViewController : UICollectionViewController {
         return actions
     }
 
-    func taskMenu(for url: URL) -> UIMenu? {
-        guard taskManager.isRunning(url) else {
-            return nil
-        }
-        let closeAction = UIAction(title: "Close Program", image: UIImage(systemName: "xmark")) { action in
-            self.taskManager.quit(url)
-        }
-        return UIMenu(options: [.displayInline], children: [closeAction])
-    }
-
     func update(animated: Bool) {
         dispatchPrecondition(condition: .onQueue(.main))
         items = detector.items.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
@@ -237,20 +227,15 @@ class AllProgramsViewController : UICollectionViewController {
         }
         return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber,
                                           previewProvider: nil) { suggestedActions in
-            let deleteAction = UIAction(title: "Reveal in Library") { action in
-                print("Reveal in library")
-            }
-            let fileMenu = UIMenu(options: [.displayInline], children: [deleteAction])
             switch item.type {
             case .object, .application, .system:
                 var actions = self.actions(for: item.programUrl!)
-                if let taskMenu = self.taskMenu(for: item.programUrl!) {
-                    actions.append(taskMenu)
+                if let programUrl = item.programUrl {
+                    actions += self.taskManager.actions(for: programUrl)
                 }
-                actions.append(fileMenu)
                 return UIMenu(children: actions)
             case .directory, .installer, .unknown, .applicationInformation, .image, .sound, .help:
-                return UIMenu(children: [fileMenu])
+                return nil
             }
         }
     }

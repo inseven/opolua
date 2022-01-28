@@ -61,8 +61,8 @@ class ConsoleViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
         title = "Console"
-        navigationItem.leftBarButtonItem = doneBarButtonItem
-        navigationItem.rightBarButtonItem = shareBarButtonItem
+        navigationItem.leftBarButtonItem = shareBarButtonItem
+        navigationItem.rightBarButtonItem = doneBarButtonItem
         view.addSubview(textView)
         NSLayoutConstraint.activate([
             textView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),

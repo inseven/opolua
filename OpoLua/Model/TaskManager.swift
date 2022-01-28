@@ -55,13 +55,11 @@ class TaskManager: NSObject {
         self.settings = settings
     }
 
-    // TODO: Consider whether this should be responsible for restarting in a different mode?
     func program(for url: URL) -> Program {
         dispatchPrecondition(condition: .onQueue(.main))
         if let program = programsByUrl[url] {
             return program
         }
-        // TODO: Lifecycle delegate.
         let program = Program(settings: settings, url: url)
         program.addObserver(self)
         programsByUrl[url] = program

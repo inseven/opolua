@@ -194,8 +194,13 @@ class RunningProgramsViewController : UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView,
                                  contextMenuConfigurationForItemAt indexPath: IndexPath,
                                  point: CGPoint) -> UIContextMenuConfiguration? {
-        // TODO: Support closing programs from the context menu.
-        return nil
+        guard let item = dataSource.itemIdentifier(for: indexPath) else {
+            return nil
+        }
+        return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
+            let actions = self.taskManager.actions(for: item.program.url)
+            return UIMenu(children: actions)
+        }
     }
 
 }

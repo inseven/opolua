@@ -140,19 +140,8 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var optionsBarButtonItem: UIBarButtonItem = {
-        let quitAction = UIAction(title: "Close Program", image: UIImage(systemName: "xmark")) { [weak self] action in
-            guard let self = self else {
-                return
-            }
-            self.program.sendQuit()
-        }
-        let taskManagerAction = UIAction(title: "Show Open Programs",
-                                         image: UIImage(systemName: "list.bullet.rectangle")) { [weak self] action in
-            guard let self = self else {
-                return
-            }
-            self.taskManager.showTaskList()
-        }
+        var actions: [UIMenuElement] = []
+        actions = actions + taskManager.actions(for: program.url)
         let consoleAction = UIAction(title: "Show Console", image: UIImage(systemName: "terminal")) { [weak self] action in
             guard let self = self else {
                 return
@@ -170,7 +159,8 @@ class ProgramViewController: UIViewController {
             self.present(navigationController, animated: true)
         }
 
-        let actions = [quitAction, taskManagerAction, consoleAction, drawablesAction]
+        let developerMenu = UIMenu(options: [.displayInline], children: [consoleAction, drawablesAction])
+        actions.append(developerMenu)
 
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: actions)
         let menuBarButtonItem = UIBarButtonItem(title: nil,

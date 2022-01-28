@@ -136,7 +136,7 @@ class DrawableViewController: UIViewController {
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        navigationItem.leftBarButtonItem = doneBarButtonItem
+        navigationItem.rightBarButtonItem = doneBarButtonItem
     }
 
     required init?(coder: NSCoder) {
