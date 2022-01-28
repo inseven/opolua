@@ -407,4 +407,8 @@ extension WindowServer: CanvasViewDelegate {
         delegate?.canvasViewDeleteBackward(canvasView)
     }
 
+    func canvasView(_ canvasView: CanvasView, sendKey key: OplKeyCode) {
+        delegate?.canvasView(canvasView, sendKey: key)
+    }
+
 }

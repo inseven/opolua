@@ -511,4 +511,8 @@ extension Program: WindowServerDelegate {
         sendKey(.backspace)
     }
 
+    func canvasView(_ canvasView: CanvasView, sendKey key: OplKeyCode) {
+        sendKey(key)
+    }
+
 }
