@@ -115,6 +115,12 @@ class Settings: ObservableObject {
     }
 
     func addLocation(_ url: URL) throws {
+
+        // Ensure the location is unique.
+        guard !locations.contains(where: { $0.url == url }) else {
+            throw OpoLuaError.locationExists
+        }
+
         locations.append(try SecureLocation(url: url))
         try set(secureLocations: locations, for: .locations)
         self.objectWillChange.send()

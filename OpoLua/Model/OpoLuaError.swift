@@ -24,6 +24,7 @@ import CoreGraphics
 enum OpoLuaError: Error {
 
     case fileExists
+    case locationExists
     case interpreterError(OpoInterpreter.Error)
     case secureAccess
 
@@ -34,7 +35,9 @@ extension OpoLuaError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fileExists:
-            return "File exists!"
+            return "File already exists."
+        case .locationExists:
+            return "Location already exists."
         case .interpreterError(let error):
             return error.description
         case .secureAccess:
