@@ -20,6 +20,7 @@
 
 import Combine
 import UIKit
+import GameController
 
 /**
  Called on the main queue.
@@ -219,7 +220,12 @@ class Program {
     func sendKey(_ key: OplKeyCode) {
         sendKeyDown(key)
         sendKeyPress(key)
-        sendKeyUp(key)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.sendKeyUp(key)
+        }
     }
 
     func sendEvent(_ event: Async.ResponseValue) {
