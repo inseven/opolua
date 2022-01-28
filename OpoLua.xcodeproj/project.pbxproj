@@ -67,7 +67,6 @@
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
 		D8C93BEB27A27002002F63B9 /* Link.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C93BEA27A27002002F63B9 /* Link.swift */; };
-		D8C93BED27A27016002F63B9 /* IconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C93BEC27A27016002F63B9 /* IconView.swift */; };
 		D8D44C49279A0B87007340B5 /* TaskManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
 		D8D95504279B52370049A3C3 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95503279B52370049A3C3 /* Localization.swift */; };
@@ -263,7 +262,6 @@
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
 		D8C93BEA27A27002002F63B9 /* Link.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Link.swift; sourceTree = "<group>"; };
-		D8C93BEC27A27016002F63B9 /* IconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconView.swift; sourceTree = "<group>"; };
 		D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerViewController.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		D8D95503279B52370049A3C3 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
@@ -452,7 +450,6 @@
 				DB5AC973275681510043FE5C /* CanvasView.swift */,
 				DBE2917D27932C5300EE824B /* ClockView.swift */,
 				D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */,
-				D8C93BEC27A27016002F63B9 /* IconView.swift */,
 				D8C93BEA27A27002002F63B9 /* Link.swift */,
 				D8F4835C278D3D31008AF80C /* PixelView.swift */,
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
@@ -879,7 +876,6 @@
 				D805F94D27A1BD9800DFBC20 /* AutoOrientView.swift in Sources */,
 				DB79FFFB2742E6F6005E904F /* lbitlib.c in Sources */,
 				DB79FFFC2742E6F6005E904F /* lcode.c in Sources */,
-				D8C93BED27A27016002F63B9 /* IconView.swift in Sources */,
 				D8C3BD652774BEC2003B1AD0 /* Console.swift in Sources */,
 				DB79FFFD2742E6F6005E904F /* lcorolib.c in Sources */,
 				DB79FFFE2742E6F6005E904F /* lctype.c in Sources */,

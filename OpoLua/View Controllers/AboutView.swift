@@ -29,13 +29,10 @@ struct AboutView: View {
     var body: some View {
         NavigationView {
             Form {
-                BuildSection("inseven/statuspanel") {
-                    VStack(alignment: .center) {
-                        IconView(image: UIImage(named: "Icon")!)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom)
+                HeaderSection {
+                    IconView(uiImage: UIImage(named: "Icon")!)
                 }
+                BuildSection("inseven/statuspanel")
                 Section {
                     Link("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
                     Link("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
