@@ -283,7 +283,7 @@ class ProgramViewController: UIViewController {
         super.viewWillAppear(animated)
         settingsSink = settings.objectWillChange.sink { _ in }
         program.addObserver(self)
-        navigationController?.isToolbarHidden = false
+        navigationController?.setToolbarHidden(false, animated: animated)
     }
 
     override func viewDidAppear(_ animated: Bool) {

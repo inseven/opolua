@@ -136,6 +136,7 @@ class RunningProgramsViewController : UICollectionViewController {
             self.update(animated: true)
         }
         taskManager.addObserver(self)
+        navigationController?.setToolbarHidden(true, animated: animated)
     }
 
     override func viewDidAppear(_ animated: Bool) {

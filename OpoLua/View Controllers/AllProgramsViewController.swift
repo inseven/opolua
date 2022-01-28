@@ -116,6 +116,7 @@ class AllProgramsViewController : UICollectionViewController {
         detector.delegate = self
         self.wallpaperPixelView.image = self.settings.theme.wallpaper
         wallpaperPixelView.isHidden = !settings.showWallpaper
+        navigationController?.setToolbarHidden(true, animated: animated)
     }
 
     override func viewDidAppear(_ animated: Bool) {
