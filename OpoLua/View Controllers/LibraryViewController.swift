@@ -25,65 +25,7 @@ import UniformTypeIdentifiers
 
 protocol LibraryViewControllerDelegate: AnyObject {
 
-    func libraryViewController(_ libraryViewController: LibraryViewController, showSection section: LibraryViewController.ApplicationSection)
-
-}
-
-extension LibraryViewController.ApplicationSection {
-
-    var name: String {
-        switch self {
-        case .runningPrograms:
-            return "Running Programs"
-        case .allPrograms:
-            return "All Programs"
-        case .documents:
-            switch UIDevice.current.userInterfaceIdiom {
-            case .phone:
-                return "On My iPhone"
-            case .pad:
-                return "On My iPad"
-            case .mac:
-                return "On My Mac"
-            default:
-                return "On My Device"
-            }
-        case .local(let url):
-            return url.name
-        case .external(let url):
-            return url.url.name
-        }
-    }
-
-    var image: UIImage {
-        switch self {
-        case .runningPrograms:
-            return UIImage(systemName: "play.square")!
-        case .allPrograms:
-            return UIImage(systemName: "square")!
-        case .documents:
-            return UIImage(systemName: "iphone")!
-        case .local(_):
-            return UIImage(systemName: "folder")!
-        case .external(_):
-            return UIImage(systemName: "folder")!
-        }
-    }
-
-    var isReadOnly: Bool {
-        switch self {
-        case .runningPrograms:
-            return true
-        case .allPrograms:
-            return true
-        case .documents:
-            return false
-        case .local(_):
-            return true
-        case .external(_):
-            return false
-        }
-    }
+    func libraryViewController(_ libraryViewController: LibraryViewController, showSection section: ApplicationSection)
 
 }
 
@@ -93,14 +35,6 @@ class LibraryViewController: UICollectionViewController {
         case special
         case examples
         case locations
-    }
-
-    enum ApplicationSection: Hashable {
-        case runningPrograms
-        case allPrograms
-        case documents
-        case local(URL)
-        case external(SecureLocation)
     }
 
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, ApplicationSection>

@@ -25,8 +25,8 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-    var section: LibraryViewController.ApplicationSection?
-    var previousSection: LibraryViewController.ApplicationSection = .allPrograms  // Represents the previously active section; always the one we expand to when entering split view.
+    var section: ApplicationSection?
+    var previousSection: ApplicationSection = .allPrograms  // Represents the previously active section; always the one we expand to when entering split view.
     // N.B. We only ever store previous section for state restoration as we always want to restore to at least the top-level of the section.
 
     private var settings = Settings()
@@ -130,7 +130,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
-    func showSection(_ section: LibraryViewController.ApplicationSection, animated: Bool = true) {
+    func showSection(_ section: ApplicationSection, animated: Bool = true) {
         guard self.section != section else {
             if splitViewController.isCollapsed {
                 if let navigationController = splitViewController.viewControllers[0] as? UINavigationController {
@@ -230,7 +230,7 @@ extension AppDelegate: UISplitViewControllerDelegate {
 extension AppDelegate: LibraryViewControllerDelegate {
 
     func libraryViewController(_ libraryViewController: LibraryViewController,
-                               showSection section: LibraryViewController.ApplicationSection) {
+                               showSection section: ApplicationSection) {
         showSection(section)
     }
 }
