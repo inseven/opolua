@@ -114,15 +114,6 @@ private func getInterpreterUpval(_ L: LuaState!) -> OpoInterpreter {
     return Unmanaged<OpoInterpreter>.fromOpaque(rawPtr).takeUnretainedValue()
 }
 
-private func alert(_ L: LuaState!) -> Int32 {
-    let iohandler = getInterpreterUpval(L).iohandler
-    let lines = L.tostringarray(1) ?? []
-    let buttons = L.tostringarray(2) ?? []
-    let ret = iohandler.alert(lines: lines, buttons: buttons)
-    L.push(ret)
-    return 1
-}
-
 // private func print_lua(_ L: LuaState!) -> Int32 {
 //     let iohandler = getInterpreterUpval(L).iohandler
 //     iohandler.printValue(L.tostring(1, convert: true) ?? "<<STRING DECODE ERR>>")
@@ -812,7 +803,6 @@ class OpoInterpreter {
         lua_pushlightuserdata(L, val.toOpaque())
         let fns: [(String, lua_CFunction)] = [
             ("readLine", readLine),
-            ("alert", alert),
             // ("print", print_lua),
             ("beep", beep),
             ("draw", draw),

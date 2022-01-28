@@ -45,25 +45,6 @@ function readLine(allowCancel)
     return line
 end
 
-function alert(lines, buttons)
-    printf("---ALERT---\n%s\n", lines[1])
-    if lines[2] then
-        printf("%s\n", lines[2])
-    end
-    printf("[1]: %s\n", buttons[1] or "Continue")
-    if buttons[2] then
-        printf("[2]: %s\n", buttons[2])
-    end
-    if buttons[3] then
-        printf("[3]: %s\n", buttons[3])
-    end
-    local choice = tonumber(io.stdin:read())
-    if choice == nil or buttons[choice] == nil then
-        choice = 1
-    end
-    return choice
-end
-
 function getch()
     -- Can't really do this with what Lua's io provides, as stdin is always in line mode
     printf("GET called:")
@@ -74,7 +55,6 @@ end
 function beep(freq, duration)
     printf("BEEP %gkHz for %gs", freq, duration)
 end
-
 
 function dialog(d)
     printf("---DIALOG---\n%s\n", d.title)

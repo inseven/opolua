@@ -622,7 +622,41 @@ function Alert(stack, runtime) -- 0x38
     if nargs >= 2 then line2 = stack:pop() end
     if nargs >= 1 then line1 = stack:pop() end
 
-    local choice = runtime:iohandler().alert({line1, line2}, {but1, but2, but3})
+    local dlg = {
+        title = "Information",
+        flags = 0,
+        xpos = 0,
+        ypos = 0,
+        items = {
+            {
+            type = dItemTypes.dTEXT,
+            align = "center",
+            value = line1,
+            },
+            {
+            type = dItemTypes.dTEXT,
+            align = "center",
+            value = line2 or "",
+            }
+        },
+        buttons = {
+            { key = KKeyEsc, text = but1 or "Continue" },
+        },
+    }
+
+    if but2 then
+        table.insert(dlg.buttons, { key = KKeyEnter, text = but2 })
+    end
+    if but3 then
+        table.insert(dlg.buttons, 2, { key = KKeySpace, text = but3 })
+    end
+    local key = runtime:DIALOG(dlg)
+    local returnValues = {
+        [KKeyEsc] = 1,
+        [KKeyEnter] = 2,
+        [KKeySpace] = 3,
+    }
+    local choice = assert(returnValues[key])
     stack:push(choice)
 end
 

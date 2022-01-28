@@ -443,10 +443,6 @@ protocol OpoIoHandler {
     // nil return means escape (must only return nil if allowCancel is true)
     func readLine(initialValue: String, allowCancel: Bool) -> String?
 
-    // lines is 1-2 strings, buttons is 0-3 strings.
-    // return should be 1, 2, or 3
-    func alert(lines: [String], buttons: [String]) -> Int
-
     func beep(frequency: Double, duration: Double) -> Void
 
     func draw(operations: [Graphics.DrawCommand])
