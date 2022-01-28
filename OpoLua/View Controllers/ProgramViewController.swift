@@ -264,7 +264,14 @@ class ProgramViewController: UIViewController {
             scaleView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
-        navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
+        if traitCollection.horizontalSizeClass == .compact {
+            navigationItem.rightBarButtonItems = [optionsBarButtonItem]
+            toolbarItems = [.flexibleSpace(), keyboardBarButtonItem, .fixedSpace(16.0), controllerBarButtonItem, .flexibleSpace()]
+        } else {
+            navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
+            toolbarItems = []
+        }
+
         observeGameControllers()
     }
 
@@ -276,6 +283,7 @@ class ProgramViewController: UIViewController {
         super.viewWillAppear(animated)
         settingsSink = settings.objectWillChange.sink { _ in }
         program.addObserver(self)
+        navigationController?.isToolbarHidden = false
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -293,6 +301,10 @@ class ProgramViewController: UIViewController {
         program.removeObserver(self)
     }
 
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        configureToolbar(animated: true)
+    }
+
     func observeGameControllers() {
         dispatchPrecondition(condition: .onQueue(.main))
         let notificationCenter = NotificationCenter.default
@@ -300,6 +312,24 @@ class ProgramViewController: UIViewController {
                                        object: nil,
                                        queue: .main) { notification in
             self.configureControllers()
+        }
+    }
+
+    func configureToolbar(animated: Bool) {
+        if traitCollection.horizontalSizeClass == .compact {
+            navigationItem.setRightBarButtonItems([optionsBarButtonItem], animated: animated)
+            setToolbarItems([.flexibleSpace(),
+                             keyboardBarButtonItem,
+                             .fixedSpace(16.0),
+                             controllerBarButtonItem,
+                             .flexibleSpace()],
+                            animated: animated)
+        } else {
+            navigationItem.setRightBarButtonItems([optionsBarButtonItem,
+                                                   keyboardBarButtonItem,
+                                                   controllerBarButtonItem],
+                                                  animated: animated)
+            setToolbarItems([], animated: animated)
         }
     }
 
@@ -357,7 +387,12 @@ class ProgramViewController: UIViewController {
             self.virtualController = nil
         } else {
             let configuration = GCVirtualController.Configuration()
-            configuration.elements = [GCInputButtonA, GCInputButtonB, GCInputDirectionPad, GCInputDirectionPad, GCInputButtonHome, GCInputButtonOptions]
+            configuration.elements = [GCInputButtonA,
+                                      GCInputButtonB,
+                                      GCInputDirectionPad,
+                                      GCInputDirectionPad,
+                                      GCInputButtonHome,
+                                      GCInputButtonOptions]
             virtualController = GCVirtualController(configuration: configuration)
             virtualController?.connect()
         }
@@ -384,13 +419,18 @@ class ProgramViewController: UIViewController {
                 // The could be no legitimate keydownCode if we're inputting say
                 // a tilde which is not on a key that the Psion 5 keyboard has
                 if let code = keydownCode {
-                    program.sendEvent(.keydownevent(.init(timestamp: press.timestamp, keycode: code, modifiers: modifiers)))
+                    program.sendEvent(.keydownevent(.init(timestamp: press.timestamp,
+                                                          keycode: code,
+                                                          modifiers: modifiers)))
                 } else {
                     print("No keydown code for \(key)")
                 }
 
                 if let code = keypressCode, code.toCharcode() != nil {
-                    let event = Async.KeyPressEvent(timestamp: press.timestamp, keycode: code, modifiers: modifiers, isRepeat: false)
+                    let event = Async.KeyPressEvent(timestamp: press.timestamp,
+                                                    keycode: code,
+                                                    modifiers: modifiers,
+                                                    isRepeat: false)
                     if event.modifiedKeycode() != nil {
                         program.sendEvent(.keypressevent(event))
                     }
@@ -407,7 +447,9 @@ class ProgramViewController: UIViewController {
                 let (oplKey, _) = key.toOplCodes()
                 if let oplKey = oplKey {
                     let modifiers = key.oplModifiers()
-                    program.sendEvent(.keyupevent(.init(timestamp: press.timestamp, keycode: oplKey, modifiers: modifiers)))
+                    program.sendEvent(.keyupevent(.init(timestamp: press.timestamp,
+                                                        keycode: oplKey,
+                                                        modifiers: modifiers)))
                 }
             }
         }
