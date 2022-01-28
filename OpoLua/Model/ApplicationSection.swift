@@ -37,16 +37,7 @@ extension ApplicationSection {
         case .allPrograms:
             return "All Programs"
         case .documents:
-            switch UIDevice.current.userInterfaceIdiom {
-            case .phone:
-                return "On My iPhone"
-            case .pad:
-                return "On My iPad"
-            case .mac:
-                return "On My Mac"
-            default:
-                return "On My Device"
-            }
+            return UIDevice.current.localizedDocumentsName
         case .local(let url):
             return url.name
         case .external(let url):

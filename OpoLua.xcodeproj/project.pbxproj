@@ -12,6 +12,7 @@
 		D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */; };
 		D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */; };
 		D80A9CBC27A48BED00E49AD8 /* ApplicationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBB27A48BED00E49AD8 /* ApplicationSection.swift */; };
+		D80A9CBE27A4A35E00E49AD8 /* UIDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */; };
 		D80D65A8279DD2060020F994 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A7279DD2060020F994 /* Icon.swift */; };
 		D80D65AA279DDC290020F994 /* IconCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */; };
 		D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */; };
@@ -207,6 +208,7 @@
 		D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Graphics+CoreGraphics.swift"; sourceTree = "<group>"; };
 		D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+UIKit.swift"; sourceTree = "<group>"; };
 		D80A9CBB27A48BED00E49AD8 /* ApplicationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationSection.swift; sourceTree = "<group>"; };
+		D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIDevice.swift; sourceTree = "<group>"; };
 		D80D65A7279DD2060020F994 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewCell.swift; sourceTree = "<group>"; };
 		D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewLayout.swift; sourceTree = "<group>"; };
@@ -470,6 +472,7 @@
 				D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
 				D8D95505279B7B100049A3C3 /* UIColor.swift */,
+				D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */,
 				D8BA09712751BBEA00F4730D /* UIElement.swift */,
 				D8891350274C184C00794D55 /* UIImage.swift */,
 				DBE91524276D25A900BDB8F5 /* UIKey.swift */,
@@ -929,6 +932,7 @@
 				D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */,
 				D889134F274C181F00794D55 /* CGPoint.swift in Sources */,
 				DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */,
+				D80A9CBE27A4A35E00E49AD8 /* UIDevice.swift in Sources */,
 				D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */,
 				D80D65AE279DE0CE0020F994 /* RunningProgramsViewController.swift in Sources */,
 				D87A62742752A67500075CB8 /* CGSize.swift in Sources */,

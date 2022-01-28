@@ -19,10 +19,14 @@
 // SOFTWARE.
 
 import Foundation
+import UIKit
 
 extension URL {
 
     var name: String {
+        if self == FileManager.default.documentsUrl {
+            return UIDevice.current.localizedDocumentsName
+        }
         return (FileManager.default.displayName(atPath: path) as NSString).deletingPathExtension
     }
 
