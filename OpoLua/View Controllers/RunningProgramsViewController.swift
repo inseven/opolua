@@ -93,7 +93,7 @@ class RunningProgramsViewController : UICollectionViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 0
-        label.font = UIFont.preferredFont(forTextStyle: .largeTitle)
+        label.font = UIFont.preferredFont(forTextStyle: .title1)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.text = "No Running Programs"
@@ -101,9 +101,10 @@ class RunningProgramsViewController : UICollectionViewController {
         let view = UIView(frame: .zero)
         view.addSubview(label)
         NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            label.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            label.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -16.0),
+            label.widthAnchor.constraint(lessThanOrEqualTo: view.heightAnchor, constant: -16.0),
         ])
 
         return view
