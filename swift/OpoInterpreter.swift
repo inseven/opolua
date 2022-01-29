@@ -658,12 +658,14 @@ private func getTime(_ L: LuaState!) -> Int32 {
 
 private func key(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    if let keycode = iohandler.key(), let charcode = keycode.toCharcode() {
+    if let event = iohandler.key(), let charcode = event.keycode.toCharcode() {
         L.push(charcode)
+        L.push(event.modifiers.rawValue)
     } else {
         L.push(0)
+        L.push(0)
     }
-    return 1
+    return 2
 }
 
 private func opsync(_ L: LuaState!) -> Int32 {

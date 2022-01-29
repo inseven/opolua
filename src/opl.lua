@@ -761,7 +761,8 @@ function PRINT(str)
 end
 
 function KEY()
-    local charcode = runtime:iohandler().key()
+    local charcode, modifiers = runtime:iohandler().key()
+    runtime:setResource("kmod", modifiers)
     return charcode
 end
 
@@ -792,9 +793,10 @@ function GET()
     repeat
         GETEVENTA32(stat, evAddr)
         runtime:waitForRequest(stat)
-    until ev()[1]() & KEvNotKeyMask == 0
+    until ev()[KEvAType]() & KEvNotKeyMask == 0
 
-    return keycodeToCharacterCode(ev()[1]())
+    runtime:setResource("kmod", ev()[KEvAKMod]())
+    return keycodeToCharacterCode(ev()[KEvAType]())
 end
 
 function GETSTR()

@@ -447,7 +447,7 @@ extension Program: OpoIoHandler {
         return !eventQueue.isEmpty()
     }
 
-    func key() -> OplKeyCode? {
+    func key() -> Async.KeyPressEvent? {
         let responseValue = eventQueue.first { responseValue in
             if case .keypressevent(_) = responseValue {
                 return true
@@ -457,7 +457,7 @@ extension Program: OpoIoHandler {
         guard case .keypressevent(let event) = responseValue else {
             return nil
         }
-        return event.keycode
+        return event
     }
 
     func setConfig(key: ConfigName, value: String) {

@@ -454,7 +454,8 @@ function IoSeek(stack, runtime) -- 0x21
 end
 
 function Kmod(stack, runtime) -- 0x22
-    error("Unimplemented function Kmod!")
+    local modifiers = runtime:getResource("kmod") or 0
+    stack:push(modifiers)
 end
 
 function KeyA(stack, runtime) -- 0x23

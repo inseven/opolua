@@ -475,7 +475,7 @@ protocol OpoIoHandler {
     // Return true if there is an event waiting
     func testEvent() -> Bool
 
-    func key() -> OplKeyCode?
+    func key() -> Async.KeyPressEvent?
 
     func setConfig(key: ConfigName, value: String)
     func getConfig(key: ConfigName) -> String
@@ -541,7 +541,7 @@ class DummyIoHandler : OpoIoHandler {
         return false
     }
 
-    func key() -> OplKeyCode? {
+    func key() -> Async.KeyPressEvent? {
         return nil
     }
 
