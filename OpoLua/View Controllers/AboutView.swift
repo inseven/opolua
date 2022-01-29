@@ -32,7 +32,7 @@ struct AboutView: View {
                 HeaderSection {
                     IconView(uiImage: UIImage(named: "Icon")!)
                 }
-                BuildSection("inseven/statuspanel")
+                BuildSection("inseven/opolua")
                 Section {
                     Link("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
                     Link("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
@@ -49,11 +49,12 @@ struct AboutView: View {
                     "Shawn Leedy",
                 ])
                 LicenseSection("Licenses", [
+                    License(name: "Diligence", author: "InSeven Limited", filename: "Diligence.txt"),
                     License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "Lua.txt"),
                     License(name: "opolua", author: "Jason Morley, Tom Sutcliffe", filename: "License.txt"),
                 ])
             }
-            .navigationBarTitle("", displayMode: .inline)
+            .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(trailing: Button {
                 presentationMode.wrappedValue.dismiss()
             } label: {
