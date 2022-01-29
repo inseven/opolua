@@ -370,7 +370,7 @@ end
 
 function Runtime:setTrap(flag)
     self.trap = flag
-    if trap then
+    if flag then
         -- Setting trap also clears current error
         self.errorValue = 0
     end
