@@ -250,6 +250,9 @@ class DirectoryViewController : UICollectionViewController {
     }
 
     func fileActions(for item: Directory.Item) -> [UIMenuElement] {
+        guard item.isWriteable else {
+            return []
+        }
         let deleteAction = UIAction(title: "Delete",
                                     image: UIImage(systemName: "trash"),
                                     attributes: .destructive) { action in
@@ -333,13 +336,16 @@ class DirectoryViewController : UICollectionViewController {
         guard let item = dataSource.itemIdentifier(for: indexPath)?.directoryItem else {
             return nil
         }
+        var actions: [UIMenuElement] = []
+        actions += self.programActions(for: item)
+        if let programUrl = item.programUrl {
+            actions += self.taskManager.actions(for: programUrl)
+        }
+        actions += self.fileActions(for: item)
+        guard actions.count > 0 else {
+            return nil
+        }
         return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
-            var actions: [UIMenuElement] = []
-            actions += self.programActions(for: item)
-            if let programUrl = item.programUrl {
-                actions += self.taskManager.actions(for: programUrl)
-            }
-            actions += self.fileActions(for: item)
             return UIMenu(children: actions)
         }
     }

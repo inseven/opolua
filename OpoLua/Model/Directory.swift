@@ -96,11 +96,13 @@ class Directory {
         let url: URL
         let type: ItemType
         var icon: Icon
+        var isWriteable: Bool
 
-        init(url: URL, type: ItemType) {
+        init(url: URL, type: ItemType, isWriteable: Bool) {
             self.url = url
             self.type = type
             self.icon = type.icon()
+            self.isWriteable = isWriteable
         }
 
         var name: String {
@@ -213,35 +215,39 @@ class Directory {
     }
 
     static func items(for url: URL) throws -> [Item] {
+        let isWriteable = FileManager.default.isWritableFile(atPath: url.path)
         let items = try url.contents
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
                 if FileManager.default.directoryExists(atPath: url.path) {
                     // Check for an app 'bundle'.
                     if let type = try Self.asSystem(url: url) {
-                        return Item(url: url, type: type)
+                        return Item(url: url, type: type, isWriteable: isWriteable)
                     } else {
-                        return Item(url: url, type: .directory)
+                        return Item(url: url, type: .directory, isWriteable: isWriteable)
                     }
                 } else if url.pathExtension.lowercased() == "opo" {
-                    return Item(url: url, type: .object)
+                    return Item(url: url, type: .object, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "app" {
-                    return Item(url: url, type: .application(Self.appInfo(forApplicationUrl: url)))
+                    return Item(url: url,
+                                type: .application(Self.appInfo(forApplicationUrl: url)),
+                                isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "sis" {
-                    return Item(url: url, type: .installer)
+                    return Item(url: url, type: .installer, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "aif" {
                     return Item(url: url,
-                                type: .applicationInformation(OpoInterpreter.shared.getAppInfo(aifPath: url.path)))
+                                type: .applicationInformation(OpoInterpreter.shared.getAppInfo(aifPath: url.path)),
+                                isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "mbm" {
-                    return Item(url: url, type: .image)
+                    return Item(url: url, type: .image, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "snd" {
-                    return Item(url: url, type: .sound)
+                    return Item(url: url, type: .sound, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "hlp" {
-                    return Item(url: url, type: .help)
+                    return Item(url: url, type: .help, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "txt" {
-                    return Item(url: url, type: .text)
+                    return Item(url: url, type: .text, isWriteable: isWriteable)
                 } else {
-                    return Item(url: url, type: .unknown)
+                    return Item(url: url, type: .unknown, isWriteable: isWriteable)
                 }
             }
             .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
