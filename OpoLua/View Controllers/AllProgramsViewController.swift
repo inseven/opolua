@@ -178,7 +178,7 @@ class AllProgramsViewController : UICollectionViewController {
                 if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
                     isRunning = true
                 }
-                return Item(directoryItem: item, icon: item.icon(), isRunning: isRunning)
+                return Item(directoryItem: item, icon: item.icon, isRunning: isRunning)
             }
         snapshot.appendItems(items, toSection: Section.none)
         dataSource.apply(snapshot, animatingDifferences: animated)

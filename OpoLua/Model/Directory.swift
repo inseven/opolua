@@ -27,6 +27,37 @@ protocol DirectoryDelegate: AnyObject {
 
 }
 
+extension Directory.Item.ItemType {
+
+    func icon() -> Icon {
+        switch self {
+        case .object:
+            return .opo
+        case .directory:
+            return .folder
+        case .application(let appInfo):
+            return appInfo?.icon() ?? .unknownApplication
+        case .system(_, let appInfo):
+            return appInfo?.icon() ?? .unknownApplication
+        case .installer:
+            return .installer
+        case .applicationInformation(let appInfo):
+            return appInfo?.icon() ?? .unknownApplication
+        case .image:
+            return .image
+        case .sound:
+            return .sound
+        case .help:
+            return .data
+        case .text:
+            return .opl
+        case .unknown:
+            return .unknownFile
+        }
+    }
+
+}
+
 class Directory {
 
     static func appInfo(forApplicationUrl url: URL) -> OpoInterpreter.AppInfo? {
@@ -64,6 +95,13 @@ class Directory {
 
         let url: URL
         let type: ItemType
+        var icon: Icon
+
+        init(url: URL, type: ItemType) {
+            self.url = url
+            self.type = type
+            self.icon = type.icon()
+        }
 
         var name: String {
             switch type {
@@ -76,33 +114,6 @@ class Directory {
             }
         }
 
-        func icon() -> Icon {
-            switch type {
-            case .object:
-                return .opo
-            case .directory:
-                return .folder
-            case .application(let appInfo):
-                return appInfo?.icon() ?? .unknownApplication
-            case .system(_, let appInfo):
-                return appInfo?.icon() ?? .unknownApplication
-            case .installer:
-                return .installer
-            case .applicationInformation(let appInfo):
-                return appInfo?.icon() ?? .unknownApplication
-            case .image:
-                return .image
-            case .sound:
-                return .sound
-            case .help:
-                return .data
-            case .text:
-                return .opl
-            case .unknown:
-                return .unknownFile
-            }
-        }
-        
         var programUrl: URL? {
             switch type {
             case .object:
@@ -164,13 +175,15 @@ class Directory {
 
     weak var delegate: DirectoryDelegate?
 
+    private let updateQueue = DispatchQueue(label: "Directory.updateQueue")
+
     var name: String {
         return url.name
     }
     
     init(url: URL) throws {
         self.url = url
-        try self.refresh()
+        self.refresh()
     }
 
     func items(filter: String?) -> [Item] {
@@ -184,9 +197,19 @@ class Directory {
         }
     }
 
-    func refresh() throws {
-        items = try Self.items(for: url)
-        delegate?.directoryDidChange(self)
+    func refresh() {
+        updateQueue.async {
+            do {
+                let items = try Self.items(for: self.url)
+                DispatchQueue.main.async {
+                    self.items = items
+                    self.delegate?.directoryDidChange(self)
+                }
+            } catch {
+                // TODO: Report this error
+                print("Failed to get items with error \(error)")
+            }
+        }
     }
 
     static func items(for url: URL) throws -> [Item] {
@@ -229,12 +252,12 @@ class Directory {
     func createDirectory(name: String) throws {
         try FileManager.default.createDirectory(at: url.appendingPathComponent(name),
                                                 withIntermediateDirectories: false)
-        try refresh()
+        refresh()
     }
 
     func delete(_ item: Item) throws {
         try FileManager.default.removeItem(at: item.url)
-        try refresh()
+        refresh()
     }
     
 }
