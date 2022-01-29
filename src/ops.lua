@@ -1870,7 +1870,20 @@ function gLineTo(stack, runtime) -- 0xE5
 end
 
 function gPeekLine(stack, runtime) -- 0xE6
-    error("Unimplemented opcode gPeekLine!")
+    local mode = stack:pop()
+    assert(mode >= -1 and mode <= 2, KErrInvalidArgs)
+    local numPixels = stack:pop()
+    local numBits = numPixels << (mode == -1 and 0 or mode)
+    local numWords = (numBits + 15) // 16
+    local numBytes = numWords * 2
+    local d = stack:pop()
+    assert(d:getValidLength() >= numBytes, "gPeekLine data array too small!")
+    local x, y = stack:popXY()
+    local drawable = stack:pop()
+    -- printf("gPeekLine %d,%d id=%d numPixels=%d mode=%d\n", x, y, drawable, numPixels, mode)
+    runtime:flushGraphicsOps()
+    local result = runtime:iohandler().graphicsop("peekline", drawable, x, y, numPixels, mode)
+    d:write(result)
 end
 
 function Screen4(stack, runtime) -- 0xE7

@@ -281,6 +281,9 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
         L.push(metrics.ascent)
         L.push(metrics.descent)
         return 4
+    case .peekedData(let data):
+        L.push(data)
+        return 1
     }
 }
 
@@ -295,6 +298,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("sprite", id, [sprite])
 // graphicsop("title", appTitle)
 // graphicsop("clock", drawableId, [mode, x, y])
+// graphicsop("peekline", drawableId, x, y, numPixels, mode)
 private func graphicsop(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""
@@ -414,6 +418,20 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
             clockInfo = nil
         }
         return doGraphicsOp(L, iohandler, .clock(drawableId, clockInfo))
+    case "peekline":
+        if let id = L.toint(2),
+           let x = L.toint(3),
+           let y = L.toint(4),
+           let numPixels = L.toint(5),
+           let rawMode = L.toint(6),
+           let mode = Graphics.PeekMode(rawValue: rawMode) {
+            let drawableId = Graphics.DrawableId(value: id)
+            let pos = Graphics.Point(x: x, y: y)
+            return doGraphicsOp(L, iohandler, .peekline(drawableId, pos, numPixels, mode))
+        } else {
+            print("Missing peekline params!")
+            break
+        }
     default:
         print("Unknown graphicsop \(cmd)!")
     }

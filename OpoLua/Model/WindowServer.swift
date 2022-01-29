@@ -385,6 +385,60 @@ class WindowServer {
         clocksChanged()
     }
 
+    public func peekLine(drawableId: Graphics.DrawableId, position: Graphics.Point, numPixels: Int, mode: Graphics.PeekMode) -> Data {
+        guard let canvas = self.drawablesById[drawableId],
+              let image = canvas.getImage()
+        else {
+            print("Failed to get canvas image!")
+            return Data()
+        }
+        var result = Data()
+        let pixelData = image.dataProvider!.data!
+        let ptr: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+        let offset = position.y * image.bytesPerRow + position.x // TODO flip needed?
+        var bitIdx: Int = 0
+        var currentByte: UInt8 = 0
+        func addPixel(_ value: UInt8) {
+            switch mode {
+            case .oneBitBlack:
+                currentByte |= (value == 0 ? 1 : 0) << bitIdx
+                bitIdx += 1
+            case .oneBitWhite:
+                currentByte |= (value != 0 ? 1 : 0) << bitIdx
+                bitIdx += 1
+            case .twoBit:
+                currentByte |= (value >> 6) << bitIdx
+                bitIdx += 2
+            case .fourBit:
+                currentByte |= (value >> 4) << bitIdx
+                bitIdx += 4
+            }
+
+            if bitIdx == 8 {
+                result.append(currentByte)
+                currentByte = 0
+                bitIdx = 0
+            }
+        }
+
+        if image.bitsPerPixel == 8 {
+            // We only ever use 8bpp contexts in Canvas for greyscale images
+            for i in 0 ..< numPixels {
+                let px = ptr[offset + i]
+                addPixel(px)
+            }
+        } else {
+            for i in 0 ..< numPixels {
+                let px = UInt32(ptr[offset + i]) + UInt32(ptr[offset + i]) + UInt32(ptr[offset + i + 1]) + UInt32(ptr[offset + i + 2])
+                addPixel(UInt8(px / 3))
+            }
+        }
+        if bitIdx != 0 {
+            result.append(currentByte)
+        }
+        return result
+    }
+
 }
 
 extension WindowServer: CanvasViewDelegate {

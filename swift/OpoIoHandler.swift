@@ -275,6 +275,13 @@ struct Graphics {
         let descent: Int
     }
 
+    enum PeekMode: Int {
+        case oneBitBlack = -1
+        case oneBitWhite = 0
+        case twoBit = 1
+        case fourBit = 2
+    }
+
     enum Operation {
         case close(DrawableId)
         case createBitmap(Size, Bitmap.Mode) // returns handle
@@ -287,12 +294,14 @@ struct Graphics {
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
         case sprite(Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
         case clock(DrawableId, ClockInfo?)
+        case peekline(DrawableId, Point, Int, PeekMode) // drawableId, pos, numPixels, peekMode
     }
 
     enum Result {
         case nothing
         case handle(DrawableId)
         case textMetrics(TextMetrics)
+        case peekedData(Data)
     }
 }
 

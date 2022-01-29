@@ -305,7 +305,11 @@ class Program {
         case .clock(let drawableId, let clockInfo):
             windowServer.clock(drawableId: drawableId, info: clockInfo)
             return .nothing
-    
+
+        case .peekline(let drawableId, let position, let numPixels, let mode):
+            let data = windowServer.peekLine(drawableId: drawableId, position: position, numPixels: numPixels, mode: mode)
+            return .peekedData(data)
+
         }
     }
 
