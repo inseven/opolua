@@ -103,7 +103,7 @@ class Program {
     var icon: Icon
 
     var rootView: UIView {
-        return windowServer.canvasView
+        return windowServer.rootView
     }
 
     var uid3: UID? {
@@ -175,10 +175,10 @@ class Program {
     }
 
     func toggleOnScreenKeyboard() {
-        if windowServer.canvasView.isFirstResponder {
-            windowServer.canvasView.resignFirstResponder()
+        if windowServer.rootView.isFirstResponder {
+            windowServer.rootView.resignFirstResponder()
         } else {
-            windowServer.canvasView.becomeFirstResponder()
+            windowServer.rootView.becomeFirstResponder()
         }
     }
 
@@ -311,7 +311,7 @@ class Program {
 
     private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
         var location = touch.location(in: view)
-        let screenView = windowServer.canvasView
+        let screenView = windowServer.rootView
         var screenLocation = touch.location(in: screenView)
 
         // Is there a better way of doing this?

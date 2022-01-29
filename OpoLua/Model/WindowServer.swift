@@ -67,17 +67,15 @@ class WindowServer {
         return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
     }
 
-    lazy var canvasView: CanvasView = {
-        let canvas = newCanvas(size: screenSize.cgSize(), mode: .color256)
-        let canvasView = CanvasView(canvas: canvas)
-        canvasView.translatesAutoresizingMaskIntoConstraints = false
-        canvasView.layer.borderWidth = 1.0
-        canvasView.layer.borderColor = UIColor.lightGray.cgColor
-        canvasView.clipsToBounds = true
-        canvasView.delegate = self
-        drawablesById[.defaultWindow] = canvasView
-        windows[.defaultWindow] = canvasView
-        return canvasView
+    lazy var rootView: UIView = {
+        let view = RootView(screenSize: screenSize.cgSize())
+        let screenRect = Graphics.Rect(origin: .zero, size: screenSize)
+        let id = createWindow(rect: screenRect, mode: .color256, shadowSize: 0)
+        assert(id == .defaultWindow)
+        let defaultWindow = self.windows[id]!
+        view.addSubview(defaultWindow)
+        defaultWindow.isHidden = false
+        return view
     }()
 
     init(device: Device, screenSize: Graphics.Size) {
@@ -112,7 +110,11 @@ class WindowServer {
         newView.isHidden = true
         newView.frame = rect.cgRect()
         newView.delegate = self
-        self.canvasView.addSubview(newView)
+        // Bit messy this, but it makes the code reuse better if we special case this (we can't add the default
+        // window because this fn is called from within self.rootView's lazy construction).
+        if canvas.id != .defaultWindow {
+            self.rootView.addSubview(newView)
+        }
         self.drawablesById[canvas.id] = newView
         self.windows[canvas.id] = newView
         bringInfoWindowToFront()
@@ -143,12 +145,12 @@ class WindowServer {
         guard let view = self.window(for: drawableId) else {
             return
         }
-        let views = self.canvasView.subviews
+        let views = self.rootView.subviews
         let uipos = views.count - position
         if views.count == 0 || uipos < 0 {
-            self.canvasView.sendSubviewToBack(view)
+            self.rootView.sendSubviewToBack(view)
         } else {
-            self.canvasView.insertSubview(view, aboveSubview: views[uipos])
+            self.rootView.insertSubview(view, aboveSubview: views[uipos])
         }
         bringInfoWindowToFront()
     }
@@ -330,7 +332,7 @@ class WindowServer {
         else {
             return
         }
-        self.canvasView.bringSubviewToFront(infoView)
+        self.rootView.bringSubviewToFront(infoView)
     }
 
     @objc func hideInfoWindow() {
