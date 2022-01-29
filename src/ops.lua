@@ -1348,7 +1348,16 @@ function Cls(stack, runtime) -- 0xA2
 end
 
 function Copy(stack, runtime) -- 0xA4
-    error("Unimplemented opcode Copy!")
+    local dest = stack:pop()
+    local src = stack:pop()
+    assert(not src:match("%*"), "COPY doesn't support wildcards yet!")
+    local data, err = runtime:iohandler().fsop("read", src)
+    assert(data, err)
+    if dest:match("\\$") then
+        dest = dest..oplpath.basename(src)
+    end
+    err = runtime:iohandler().fsop("write", dest, data)
+    assert(err == KErrNone, err)
     runtime:setTrap(false)
 end
 
