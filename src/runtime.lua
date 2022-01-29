@@ -1107,7 +1107,7 @@ function Runtime:dir(path)
         return result or ""
     end
 
-    local dir, filenameFilter = oplpath.split(path)
+    local dir, filenameFilter = oplpath.split(self:abs(path))
     local contents, err = self.ioh.fsop("dir", oplpath.join(dir, ""))
     if not contents then
         error(err)
