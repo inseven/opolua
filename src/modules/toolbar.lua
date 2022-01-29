@@ -53,6 +53,8 @@ local KClockButtonId = 1000 -- Not an index into buttons
 local buttons = {}
 local pressedButtonId
 local toolbarHeight
+local fgColour = { 0, 0, 0 } -- black
+local bgColour = { 0xFF, 0xFF, 0xFF } -- white
 
 function TBarLink(appLink)
     local tbWidthVar = runtime:declareGlobal("TbWidth%")
@@ -87,7 +89,10 @@ function TBarInitC(title, screenWidth, screenHeight, winMode)
     local w = KTbWidth
     toolbarHeight = screenHeight
     tbWinId = gCREATE(screenWidth - w, 0, w, toolbarHeight, false, winMode)
+    gCOLOR(table.unpack(fgColour))
+    gCOLORBACKGROUND(table.unpack(bgColour))
     gSTYLE(1) -- bold everything
+    gFILL(w, toolbarHeight, KgModeClear)
     gBOX(w, toolbarHeight)
     TBarSetTitle(title)
     gAT(KTbClockPosX, toolbarHeight - KTbClockHeight)
@@ -100,6 +105,8 @@ function TBarSetTitle(name)
     gUSE(tbWinId)
     gAT(1, KTbBtTop - 8)
     gFONT(KTbTitleFont)
+    gCOLOR(table.unpack(fgColour))
+    gCOLORBACKGROUND(table.unpack(bgColour))
     local align = KgPrintBCentredAligned
     if gTWIDTH(name) > KTbWidth - 2 then
         align = KgPrintBLeftAligned
@@ -244,6 +251,11 @@ function TBarHide()
     gVISIBLE(false)
     visibleVar(0)
     gUSE(prevId)
+end
+
+function TBarColor(fgR, fgG, fgB, bgR, bgG, bgB)
+    fgColour = { fgR, fgG, fgB }
+    bgColour = { bgR, bgG, bgB }
 end
 
 return _ENV
