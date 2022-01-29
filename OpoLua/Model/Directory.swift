@@ -58,6 +58,7 @@ class Directory {
             case image
             case sound
             case help
+            case text
             case unknown
         }
 
@@ -66,7 +67,7 @@ class Directory {
 
         var name: String {
             switch type {
-            case .object:
+            case .object, .image, .text:
                 return url.lastPathComponent.deletingPathExtension
             case .system(_, let appInfo):
                 return appInfo?.caption ?? url.lastPathComponent
@@ -95,6 +96,8 @@ class Directory {
                 return .sound
             case .help:
                 return .data
+            case .text:
+                return .opl
             case .unknown:
                 return .unknownFile
             }
@@ -119,6 +122,8 @@ class Directory {
             case .sound:
                 return nil
             case .help:
+                return nil
+            case .text:
                 return nil
             case .unknown:
                 return nil
@@ -210,6 +215,8 @@ class Directory {
                     return Item(url: url, type: .sound)
                 } else if url.pathExtension.lowercased() == "hlp" {
                     return Item(url: url, type: .help)
+                } else if url.pathExtension.lowercased() == "txt" {
+                    return Item(url: url, type: .text)
                 } else {
                     return Item(url: url, type: .unknown)
                 }

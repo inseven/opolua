@@ -194,7 +194,7 @@ class AllProgramsViewController : UICollectionViewController {
             let program = taskManager.program(for: item.programUrl!)
             let viewController = ProgramViewController(settings: settings, taskManager: taskManager, program: program)
             navigationController?.pushViewController(viewController, animated: true)
-        case .unknown, .applicationInformation, .sound, .help, .directory, .installer, .image:
+        case .unknown, .applicationInformation, .sound, .help, .directory, .installer, .image, .text:
             break
         }
     }
@@ -234,7 +234,7 @@ class AllProgramsViewController : UICollectionViewController {
                     actions += self.taskManager.actions(for: programUrl)
                 }
                 return UIMenu(children: actions)
-            case .directory, .installer, .unknown, .applicationInformation, .image, .sound, .help:
+            case .directory, .installer, .unknown, .applicationInformation, .image, .sound, .help, .text:
                 return nil
             }
         }
