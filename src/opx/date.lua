@@ -233,7 +233,7 @@ function DTSetHomeTime(stack, runtime) -- 30
 end
 
 function LCCountryCode(stack, runtime) -- 31
-    stack:push(require("sis").Locales["en_GB"])
+    stack:push(44) -- This is supposed to be the dialling prefix? So +44 for UK?
 end
 
 function LCDecimalSeparator(stack, runtime) -- 32

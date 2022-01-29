@@ -71,7 +71,7 @@ function LCNearestLanguageFile(stack, runtime) -- 5
 end
 
 function LCLanguage(stack, runtime) -- 6
-    error("Unimplemented sysram1.opx function LCLanguage!")
+    stack:push(require("sis").Locales["en_GB"])
 end
 
 function OSVersionMajor(stack, runtime) -- 7
