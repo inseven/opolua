@@ -501,6 +501,13 @@ extension Program: OpoIoHandler {
     func setBackground() {
         self.delegate?.programDidRequestBackground(self)
     }
+
+    func stop() {
+        // This calls interpreter.interrupt() which sets a hook to force any exectuting Lua code to call error(KStopErr)
+        thread.interrupt()
+        // And this unblocks the interpreter thread if it was blocked in waitForAnyRequest()
+        scheduler.interrupt()
+    }
 }
 
 extension Program: WindowServerDelegate {

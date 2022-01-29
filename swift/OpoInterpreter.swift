@@ -608,7 +608,11 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     let interpreter = getInterpreterUpval(L)
     let iohandler = interpreter.iohandler
     let response = iohandler.waitForAnyRequest()
-    interpreter.completeRequest(L, response)
+    if case .interrupt = response.value {
+        L.push(false)
+    } else {
+        interpreter.completeRequest(L, response)
+    }
     L.push(true)
     return 1
 }
@@ -740,6 +744,13 @@ private func setBackground(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.setBackground()
     return 0
+}
+
+private func stop(_ L: LuaState!, _: UnsafeMutablePointer<lua_Debug>!) {
+    print("Stop hook called, exiting interpreter with error(KStopErr)")
+    lua_sethook(L, nil, 0, 0)
+    L.push(KStopErr)
+    lua_error(L)
 }
 
 class OpoInterpreter {
@@ -1145,7 +1156,7 @@ class OpoInterpreter {
                 ev[1] = timestampToInt32(event.timestamp)
             case .quitevent:
                 ev[0] = 0x404
-            case .cancelled, .completed:
+            case .cancelled, .completed, .interrupt:
                 break // No completion data for these
             }
             lua_getfield(L, 2, "ev") // Pushes eventArray (AddrSlice)
@@ -1205,5 +1216,10 @@ class OpoInterpreter {
     func syncOpTimer() {
         Thread.sleep(until: lastOpTime.addingTimeInterval(Self.kOpTime))
         lastOpTime = Date()
+    }
+
+    // Safe to call from any thread
+    func interrupt() {
+        lua_sethook(L, stop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT, 1)
     }
 }

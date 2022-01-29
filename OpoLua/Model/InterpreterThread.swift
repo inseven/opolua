@@ -54,4 +54,7 @@ class InterpreterThread: Thread {
         delegate?.interpreter(self, didFinishWithResult: result)
     }
 
+    func interrupt() {
+        interpreter.interrupt()
+    }
 }

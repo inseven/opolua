@@ -50,6 +50,7 @@ class Scheduler {
 
     var requests: [Request] = []
     var lock = NSCondition()
+    var interrupted = false
 
     func withLockHeld(run code: () -> Void) {
         lock.lock()
@@ -93,6 +94,16 @@ class Scheduler {
         lock.unlock()
     }
 
+    // Unblocks the interpreter thread without completing any specific request
+    func interrupt() {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        interrupted = true
+        lock.broadcast()
+    }
+
     private func removeCompletedRequest() -> Async.Response? {
         // lock must be held
         if let idx = requests.firstIndex(where: { $0.response != nil }) {
@@ -111,7 +122,10 @@ class Scheduler {
             lock.unlock()
         }
         repeat {
-            if let response = removeCompletedRequest() {
+            if interrupted {
+                interrupted = false
+                return Async.Response(handle: -1, value: .interrupt)
+            } else if let response = removeCompletedRequest() {
                 return response
             }
             lock.wait()

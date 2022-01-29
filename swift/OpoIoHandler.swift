@@ -419,6 +419,7 @@ struct Async {
         case foregrounded(ActivationEvent)
         case backgrounded(ActivationEvent)
         case quitevent
+        case interrupt
     }
     struct Response {
         let handle: RequestHandle
