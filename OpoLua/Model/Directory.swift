@@ -60,13 +60,13 @@ extension Directory.Item.ItemType {
 
 class Directory {
 
-    static func appInfo(forApplicationUrl url: URL) -> OpoInterpreter.AppInfo? {
+    static func appInfo(forApplicationUrl url: URL, interpreter: OpoInterpreter) -> OpoInterpreter.AppInfo? {
         guard let applicationInfoFile = url.applicationInfoUrl,
               FileManager.default.fileExists(atUrl: applicationInfoFile)
         else {
             return nil
         }
-        return OpoInterpreter.shared.getAppInfo(aifPath: applicationInfoFile.path)
+        return interpreter.getAppInfo(aifPath: applicationInfoFile.path)
     }
 
     struct Item: Hashable {
@@ -145,7 +145,7 @@ class Directory {
 
     }
 
-    private static func asSystem(url: URL) throws -> Item.ItemType? {
+    private static func asSystem(url: URL, interpreter: OpoInterpreter) throws -> Item.ItemType? {
         guard try FileManager.default.isSystem(at: url) else {
             return nil
         }
@@ -165,7 +165,7 @@ class Directory {
               let url = apps.first else {
             return nil
         }
-        let appInfo = Directory.appInfo(forApplicationUrl: url)
+        let appInfo = Directory.appInfo(forApplicationUrl: url, interpreter: interpreter)
         if appInfo == nil {
             print("Failed to find AIF for '\(url.lastPathComponent)'.")
         }
@@ -178,6 +178,7 @@ class Directory {
     weak var delegate: DirectoryDelegate?
 
     private let updateQueue = DispatchQueue(label: "Directory.updateQueue")
+    private let interpreter = OpoInterpreter()
 
     var name: String {
         return url.name
@@ -202,7 +203,7 @@ class Directory {
     func refresh() {
         updateQueue.async {
             do {
-                let items = try Self.items(for: self.url)
+                let items = try Self.items(for: self.url, interpreter: self.interpreter)
                 DispatchQueue.main.async {
                     self.items = items
                     self.delegate?.directoryDidChange(self)
@@ -214,14 +215,14 @@ class Directory {
         }
     }
 
-    static func items(for url: URL) throws -> [Item] {
+    static func items(for url: URL, interpreter: OpoInterpreter) throws -> [Item] {
         let isWriteable = FileManager.default.isWritableFile(atPath: url.path)
         let items = try url.contents
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
                 if FileManager.default.directoryExists(atPath: url.path) {
                     // Check for an app 'bundle'.
-                    if let type = try Self.asSystem(url: url) {
+                    if let type = try Self.asSystem(url: url, interpreter: interpreter) {
                         return Item(url: url, type: type, isWriteable: isWriteable)
                     } else {
                         return Item(url: url, type: .directory, isWriteable: isWriteable)
@@ -230,13 +231,13 @@ class Directory {
                     return Item(url: url, type: .object, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "app" {
                     return Item(url: url,
-                                type: .application(Self.appInfo(forApplicationUrl: url)),
+                                type: .application(Self.appInfo(forApplicationUrl: url, interpreter: interpreter)),
                                 isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "sis" {
                     return Item(url: url, type: .installer, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "aif" {
                     return Item(url: url,
-                                type: .applicationInformation(OpoInterpreter.shared.getAppInfo(aifPath: url.path)),
+                                type: .applicationInformation(interpreter.getAppInfo(aifPath: url.path)),
                                 isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "mbm" {
                     return Item(url: url, type: .image, isWriteable: isWriteable)
