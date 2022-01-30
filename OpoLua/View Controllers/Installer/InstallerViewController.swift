@@ -29,15 +29,18 @@ protocol InstallerViewControllerDelegate: AnyObject {
 
 class InstallerViewController: UINavigationController {
 
+    private let settings: Settings
     var url: URL
     var installer: Installer?
 
     weak var installerDelegate: InstallerViewControllerDelegate?
 
-    init(url: URL, destinationUrl:URL) {
+    init(settings: Settings, url: URL, preferredDestinationUrl: URL? = nil) {
+        self.settings = settings
         self.url = url
-        let destinationUrl = destinationUrl.appendingPathComponent(url.basename.deletingPathExtension)
-        let introductionViewController = InstallerIntroductionViewController(destinationUrl: destinationUrl)
+        let introductionViewController = InstallerIntroductionViewController(settings: settings,
+                                                                             url: url,
+                                                                             preferredDestinationUrl: preferredDestinationUrl)
         super.init(rootViewController: introductionViewController)
         isModalInPresentation = true
         introductionViewController.delegate = self
@@ -61,10 +64,20 @@ extension InstallerViewController: InstallerIntroductionViewControllerDelegate {
         self.installerDelegate?.installerViewControllerDidFinish(self)
     }
 
-    func installerIntroductionViewController(_ installerIntroductionViewController: InstallerIntroductionViewController, continueWithDestinationUrl destinationUrl: URL) {
+    func installerIntroductionViewController(_ installerIntroductionViewController: InstallerIntroductionViewController,
+                                             continueWithDestinationUrl destinationUrl: URL) {
         dispatchPrecondition(condition: .onQueue(.main))
-        print("destination now = \(destinationUrl)")
-        let installer = Installer(url: url, fileSystem: SystemFileSystem(rootUrl: destinationUrl))
+
+        let systemUrl = destinationUrl.appendingPathComponent(url.basename.deletingPathExtension)
+        guard !FileManager.default.fileExists(atUrl: systemUrl) else {
+            // Since we don't provide a mechanism to explicitly pick existing systems, we explicitly fail if a system
+            // already exists with the auto-generated name. In the future, when we have a better picker, we can relax
+            // this constraint.
+            self.showSummary(state: .failure(OpoLuaError.fileExists))
+            return
+        }
+
+        let installer = Installer(url: url, fileSystem: SystemFileSystem(rootUrl: systemUrl))
         self.installer = installer
         installer.delegate = self
         installer.run()

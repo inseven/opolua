@@ -98,7 +98,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func install(url: URL) {
-        let installerViewController = InstallerViewController(url: url, destinationUrl: FileManager.default.documentsUrl)
+        let installerViewController = InstallerViewController(settings: settings, url: url)
         installerViewController.installerDelegate = self
         splitViewController.present(installerViewController, animated: true)
     }

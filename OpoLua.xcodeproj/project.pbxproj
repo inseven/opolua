@@ -72,6 +72,7 @@
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
 		D8D44C49279A0B87007340B5 /* TaskManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
+		D8D6701527A72B2100D12E96 /* DestinationPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */; };
 		D8D95504279B52370049A3C3 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95503279B52370049A3C3 /* Localization.swift */; };
 		D8D95506279B7B100049A3C3 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95505279B7B100049A3C3 /* UIColor.swift */; };
 		D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03D277AC9B300760302 /* WindowServer.swift */; };
@@ -271,6 +272,7 @@
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
 		D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerViewController.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
+		D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationPickerViewController.swift; sourceTree = "<group>"; };
 		D8D95503279B52370049A3C3 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		D8D95505279B7B100049A3C3 /* UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
 		D8DCD03D277AC9B300760302 /* WindowServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowServer.swift; sourceTree = "<group>"; };
@@ -521,6 +523,7 @@
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
 				D81B875F2790E9A600E71960 /* Installer */,
 				D8F5CAD9279D079A00A2DC3F /* Viewers */,
+				D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */,
 			);
 			path = "View Controllers";
 			sourceTree = "<group>";
@@ -974,6 +977,7 @@
 				D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */,
 				D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
+				D8D6701527A72B2100D12E96 /* DestinationPickerViewController.swift in Sources */,
 				D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */,
 				DBE2917E27932C5400EE824B /* ClockView.swift in Sources */,
 				D80A9CC227A4B66400E49AD8 /* SourceViewController.swift in Sources */,
