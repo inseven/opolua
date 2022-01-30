@@ -55,7 +55,7 @@ class ImageViewController: UITableViewController {
 
     init(url: URL) {
         self.url = url
-        let bitmaps = OpoInterpreter.shared.getMbmBitmaps(path: url.path) ?? []
+        let bitmaps = OpoInterpreter().getMbmBitmaps(path: url.path) ?? []
         self.images = bitmaps
             .compactMap { CGImage.from(bitmap: $0) }
             .compactMap { UIImage(cgImage: $0) }

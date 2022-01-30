@@ -757,10 +757,6 @@ class OpoInterpreter {
 
     static let kOpTime: TimeInterval = 3.5 / 1000000 // Make this bigger to slow the interpreter down
 
-    static var shared: OpoInterpreter = {
-        return OpoInterpreter()
-    }()
-
     private let L: LuaState
     var iohandler: OpoIoHandler
     var lastOpTime = Date()

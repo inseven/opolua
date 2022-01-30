@@ -35,6 +35,7 @@ class ProgramDetector {
     private let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
     private var settingsSink: AnyCancellable?
     private var _items: [Directory.Item] = []
+    private var interpreter = OpoInterpreter()
 
     var items: [Directory.Item] {
         return _items
@@ -45,14 +46,14 @@ class ProgramDetector {
         self.settings = settings
     }
 
-    static func find(url: URL, filter: (Directory.Item) -> Bool) throws -> [Directory.Item] {
+    static func find(url: URL, filter: (Directory.Item) -> Bool, interpreter: OpoInterpreter) throws -> [Directory.Item] {
         var result: [Directory.Item] = []
-        for item in try Directory.items(for: url) {
+        for item in try Directory.items(for: url, interpreter: interpreter) {
             if filter(item) {
                 result.append(item)
             }
             if case Directory.Item.ItemType.directory = item.type {
-                result += try find(url: item.url, filter: filter)
+                result += try find(url: item.url, filter: filter, interpreter: interpreter)
             }
         }
         return result
@@ -70,7 +71,7 @@ class ProgramDetector {
                     default:
                         return false
                     }
-                })
+                }, interpreter: interpreter)
             }
             DispatchQueue.main.async {
                 self._items = items
