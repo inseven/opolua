@@ -96,7 +96,7 @@ class WindowServer {
     private func newCanvas(size: CGSize, mode: Graphics.Bitmap.Mode) -> Canvas {
         dispatchPrecondition(condition: .onQueue(.main))
         let id = Graphics.DrawableId(value: drawableHandle.next()!)
-        let canvas = Canvas(windowServer: self, id: id, size: size, mode: mode)
+        let canvas = Canvas(id: id, size: size, mode: mode)
         return canvas
     }
 
@@ -265,14 +265,35 @@ class WindowServer {
             // A sprite we don't know about being deleted is kinda fine I guess...
             return
         }
-        guard let drawable = self.drawablesById[drawableId] else {
+        guard let window = self.windows[drawableId] else {
             return
         }
-        drawable.setSprite(sprite, for: id)
-        if sprite == nil {
+
+        // Convert Graphics.Sprite to CanvasSprite
+        let canvasSprite: CanvasSprite?
+        if let sprite = sprite {
+            var frames: [CanvasSprite.Frame] = []
+            for frame in sprite.frames {
+                guard let bitmap = drawablesById[frame.bitmap],
+                      let mask = drawablesById[frame.mask]
+                else {
+                    print("Bad bitmap/mask to setSprite!")
+                    continue
+                }
+                frames.append(CanvasSprite.Frame(offset: frame.offset,
+                                                 bitmap: bitmap,
+                                                 mask: mask,
+                                                 invertMask: frame.invertMask,
+                                                 time: frame.time))
+            }
+            canvasSprite = CanvasSprite(origin: sprite.origin, frames: frames)
+            spriteWindows[id] = drawableId
+        } else {
+            canvasSprite = nil
             spriteWindows.removeValue(forKey: id)
         }
 
+        window.setSprite(canvasSprite, for: id)
     }
 
     func draw(operations: [Graphics.DrawCommand]) {
@@ -359,8 +380,8 @@ class WindowServer {
     }
 
     @objc func tickSprites() {
-        for drawable in self.drawablesById.values {
-            drawable.updateSprites()
+        for window in self.windows.values {
+            window.updateSprites()
         }
     }
 

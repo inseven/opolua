@@ -28,10 +28,7 @@ protocol Drawable: AnyObject {
     var mode: Graphics.Bitmap.Mode { get }
 
     func draw(_ operation: Graphics.DrawCommand)
-    func setSprite(_ sprite: Graphics.Sprite?, for id: Int)
     func getImage() -> CGImage?
-
-    func updateSprites()
 
 }
 
@@ -43,12 +40,7 @@ class Canvas: Drawable {
     private var image: CGImage?
     private let context: CGContext
 
-    var windowServer: WindowServer
-
-    var sprites: [Int: Sprite] = [:]
-
-    init(windowServer: WindowServer, id: Graphics.DrawableId, size: CGSize, mode: Graphics.Bitmap.Mode) {
-        self.windowServer = windowServer
+    init(id: Graphics.DrawableId, size: CGSize, mode: Graphics.Bitmap.Mode) {
         self.id = id
         self.size = size
         self.mode = mode
@@ -85,84 +77,10 @@ class Canvas: Drawable {
         self.image = nil
     }
 
-    func setSprite(_ sprite: Graphics.Sprite?, for id: Int) {
-        if let sprite = sprite {
-            self.sprites[id] = Sprite(sprite: sprite)
-        } else {
-            self.sprites.removeValue(forKey: id)
-        }
-        // print(self.sprites)
-        self.image = nil
-    }
-
-    func updateSprites() {
-        guard !sprites.isEmpty else {
-            return
-        }
-        for sprite in self.sprites.values {
-            sprite.tick()
-        }
-        self.image = nil
-    }
-
     func getImage() -> CGImage? {
-
-        // Return the cached image.
-        if image != nil {
-            return self.image
+        if self.image == nil {
+            self.image = self.context.makeImage()
         }
-
-        // Render the context.
-        guard let cgImage = self.context.makeImage() else {
-            return nil
-        }
-
-        // Check to see if we have any active sprites; if not, then we can stop here.
-        if sprites.isEmpty {
-            self.image = cgImage
-            return cgImage
-        }
-
-        // If our window contains any sprites, we composite these into a secondary context.
-        guard let context = CGContext(data: nil,
-                                      width: context.width,
-                                      height: context.height,
-                                      bitsPerComponent: context.bitsPerComponent,
-                                      bytesPerRow: context.bytesPerRow,
-                                      space: context.colorSpace!,
-                                      bitmapInfo: context.bitmapInfo.rawValue) else {
-            return nil
-        }
-        context.draw(cgImage, in: CGRect(origin: .zero, size: cgImage.cgSize))
-        for sprite in self.sprites.values {
-            guard let image = windowServer.drawable(for: sprite.frame.bitmap)?.getImage(),
-                  let mask = windowServer.drawable(for: sprite.frame.mask)?.getImage()
-            else {
-                continue
-            }
-            let maskedImage: CGImage
-            if sprite.frame.invertMask {
-                guard let inverted = mask.inverted(),
-                      let invertedGray = inverted.copyInDeviceGrayColorSpace(),
-                      let result = image.masking(invertedGray) else {
-                        continue
-                }
-                maskedImage = result
-            } else {
-                guard let maskGray = mask.copyInDeviceGrayColorSpace(),
-                      let result = image.masking(maskGray) else {
-                        continue
-                }
-                maskedImage = result
-            }
-
-            let origin = self.invertCoordinates(point: sprite.sprite.origin + sprite.frame.offset)
-            let adjustedOrigin = origin - Graphics.Point(x: 0, y: image.size.height)
-            let destRect = Graphics.Rect(origin: adjustedOrigin, size: image.size)
-            context.draw(maskedImage, in: destRect.cgRect())
-        }
-        self.image = context.makeImage()
-
         return self.image
     }
 

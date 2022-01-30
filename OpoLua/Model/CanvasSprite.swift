@@ -20,23 +20,34 @@
 
 import Foundation
 
-class Sprite {
+class CanvasSprite {
 
-    let sprite: Graphics.Sprite
-    var index: Int = 0
-
-    var frame: Graphics.Sprite.Frame {
-        return sprite.frames[index]
+    struct Frame {
+        let offset: Graphics.Point
+        let bitmap: Drawable // Strictly this will always be a Canvas, but close enough
+        let mask: Drawable
+        let invertMask: Bool
+        let time: TimeInterval
     }
 
-    init(sprite: Graphics.Sprite) {
-        self.sprite = sprite
+    let origin: Graphics.Point
+    let frames: [Frame]
+
+    var currentFrameIndex: Int = 0
+
+    var currentFrame: Frame {
+        return frames[currentFrameIndex]
+    }
+
+    init(origin: Graphics.Point, frames: [Frame]) {
+        self.origin = origin
+        self.frames = frames
     }
 
     func tick() {
-        index = index + 1
-        if index >= sprite.frames.count {
-            index = 0
+        currentFrameIndex = currentFrameIndex + 1
+        if currentFrameIndex >= frames.count {
+            currentFrameIndex = 0
         }
     }
 

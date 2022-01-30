@@ -49,6 +49,7 @@ class CanvasView : UIView, Drawable {
     var canvas: Canvas
     var clockView: ClockView?
     weak var delegate: CanvasViewDelegate?
+    var sprites: [Int: CanvasSprite] = [:]
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -71,18 +72,80 @@ class CanvasView : UIView, Drawable {
         setNeedsDisplay()
     }
 
-    func setSprite(_ sprite: Graphics.Sprite?, for id: Int) {
-        canvas.setSprite(sprite, for: id)
+    func setSprite(_ sprite: CanvasSprite?, for id: Int) {
+        if let sprite = sprite {
+            self.sprites[id] = sprite
+        } else {
+            self.sprites.removeValue(forKey: id)
+        }
+        // print(self.sprites)
+        // self.image = nil
         setNeedsDisplay()
     }
 
     func updateSprites() {
-        canvas.updateSprites()
+        guard !sprites.isEmpty else {
+            return
+        }
+        for sprite in self.sprites.values {
+            sprite.tick()
+        }
+        // self.image = nil
         setNeedsDisplay()
     }
 
     func getImage() -> CGImage? {
-        return canvas.getImage()
+        guard let canvasImage = canvas.getImage() else {
+            return nil
+        }
+        // Check to see if we have any active sprites; if not, then we can stop here.
+        if sprites.isEmpty {
+            return canvasImage
+        }
+
+        // If our window contains any sprites, we composite these into a secondary context.
+        guard let context = CGContext(data: nil,
+                                      width: canvasImage.width,
+                                      height: canvasImage.height,
+                                      bitsPerComponent: canvasImage.bitsPerComponent,
+                                      bytesPerRow: canvasImage.bytesPerRow,
+                                      space: canvasImage.colorSpace!,
+                                      bitmapInfo: canvasImage.bitmapInfo.rawValue) else {
+            return nil
+        }
+        context.draw(canvasImage, in: CGRect(origin: .zero, size: canvasImage.cgSize))
+        for sprite in self.sprites.values {
+            let frame = sprite.currentFrame
+            guard let image = frame.bitmap.getImage(),
+                  let mask = frame.mask.getImage()
+            else {
+                continue
+            }
+            let maskedImage: CGImage
+            if frame.invertMask {
+                guard let inverted = mask.inverted(),
+                      let invertedGray = inverted.copyInDeviceGrayColorSpace(),
+                      let result = image.masking(invertedGray) else {
+                        continue
+                }
+                maskedImage = result
+            } else {
+                guard let maskGray = mask.copyInDeviceGrayColorSpace(),
+                      let result = image.masking(maskGray) else {
+                        continue
+                }
+                maskedImage = result
+            }
+
+            let origin = self.canvas.invertCoordinates(point: sprite.origin + frame.offset)
+            let adjustedOrigin = origin - Graphics.Point(x: 0, y: image.size.height)
+            let destRect = Graphics.Rect(origin: adjustedOrigin, size: image.size)
+            context.draw(maskedImage, in: destRect.cgRect())
+        }
+        let image = context.makeImage()
+        // should we try to cache the en-sprite-ified image?
+        return image
+
     }
 
     override var intrinsicContentSize: CGSize {
@@ -90,7 +153,7 @@ class CanvasView : UIView, Drawable {
     }
 
     override func draw(_ rect: CGRect) {
-        guard let image = canvas.getImage(),
+        guard let image = getImage(),
               let context = UIGraphicsGetCurrentContext()
         else {
             return
@@ -128,7 +191,7 @@ class CanvasView : UIView, Drawable {
 
     func resize(to newSize: CGSize) {
         let oldCanvas = self.canvas
-        self.canvas = Canvas(windowServer: oldCanvas.windowServer, id: id, size: newSize, mode: .color256)
+        self.canvas = Canvas(id: id, size: newSize, mode: .color256)
         if let img = oldCanvas.getImage() {
             let dummyId = Graphics.DrawableId(value: 0)
             let src = Graphics.CopySource(drawableId: dummyId, rect: Graphics.Rect(x: 0, y: 0, width: img.width, height: img.height), extra: img)
