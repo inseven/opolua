@@ -61,18 +61,19 @@ local function makeMenuPane(x, y, pos, values, selected, cutoutLen)
         if lineAfter then
             key = -key
         end
+        local keyNoFlags = key & 0xFF
         local shortcutText
-        if key <= 32 then
+        if keyNoFlags <= 32 then
             shortcutText = nil
-        elseif key >= 0x41 and key <= 0x5A then
-            shortcutText = string.format("Shift+Ctrl+%c", key)
-        elseif key >= 0x61 and key <= 0x7A then
-            shortcutText = string.format("Ctrl+%c", key - 0x20)
+        elseif keyNoFlags >= 0x41 and keyNoFlags <= 0x5A then
+            shortcutText = string.format("Shift+Ctrl+%c", keyNoFlags)
+        elseif keyNoFlags >= 0x61 and keyNoFlags <= 0x7A then
+            shortcutText = string.format("Ctrl+%c", keyNoFlags - 0x20)
         end
         gFONT(kMenuFont)
         local w = gTWIDTH(value.text)
         if shortcutText then
-            shortcuts[key & 0xFF] = i
+            shortcuts[keyNoFlags] = i
             gFONT(kShortcutFont)
             local sw = gTWIDTH(shortcutText)
             maxShortcutTextWidth = math.max(maxShortcutTextWidth, textGap + sw)
