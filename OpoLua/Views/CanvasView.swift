@@ -83,15 +83,22 @@ class CanvasView : UIView, Drawable {
         setNeedsDisplay()
     }
 
-    func updateSprites() {
-        guard !sprites.isEmpty else {
-            return
+    // Returns true if we still have any sprites being animated
+    func updateSprites(elapsedTime: TimeInterval) -> Bool {
+        if sprites.isEmpty {
+            return false
         }
+        var anythingChanged = false
         for sprite in self.sprites.values {
-            sprite.tick()
+            if sprite.update(elapsedTime: elapsedTime) {
+                anythingChanged = true
+            }
         }
-        // self.image = nil
-        setNeedsDisplay()
+        if anythingChanged {
+            // self.image = nil
+            setNeedsDisplay()
+        }
+        return true
     }
 
     func getImage() -> CGImage? {

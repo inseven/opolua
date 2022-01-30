@@ -63,6 +63,13 @@ class WindowServer {
     private var spriteTimer: Timer?
     private var clockTimer: Timer?
 
+    // We run the timer at a fixed 0.05 (ie, 20Hz) interval on the basis that
+    // the series 5 probably couldn't render anything faster than that anyway.
+    private let kSpriteTimerInterval: TimeInterval = 0.05
+    // Some games ask for an unreasonably small interval that the series 5
+    // absolutely isn't able to honour - emperically this looks about right.
+    private let kMinSpriteTime: TimeInterval = 0.1
+
     public var drawables: [Drawable] {
         return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
     }
@@ -248,11 +255,10 @@ class WindowServer {
 
     func setSprite(id: Int, sprite: Graphics.Sprite?) {
         dispatchPrecondition(condition: .onQueue(.main))
-        // TODO: Start and stop the timer instead?
-        if spriteTimer == nil {
-            spriteTimer = Timer.scheduledTimer(timeInterval: 0.25,
+        if sprite != nil && spriteTimer == nil {
+            spriteTimer = Timer.scheduledTimer(timeInterval: kSpriteTimerInterval,
                                                target: self,
-                                               selector: #selector(tickSprites),
+                                               selector: #selector(tickSprites(timer:)),
                                                userInfo: nil,
                                                repeats: true)
         }
@@ -284,7 +290,7 @@ class WindowServer {
                                                  bitmap: bitmap,
                                                  mask: mask,
                                                  invertMask: frame.invertMask,
-                                                 time: frame.time))
+                                                 time: max(frame.time, kMinSpriteTime)))
             }
             canvasSprite = CanvasSprite(origin: sprite.origin, frames: frames)
             spriteWindows[id] = drawableId
@@ -379,9 +385,17 @@ class WindowServer {
         self.busyDrawableHandle = nil
     }
 
-    @objc func tickSprites() {
+    @objc func tickSprites(timer: Timer) {
+        var gotSprites = false
         for window in self.windows.values {
-            window.updateSprites()
+            if window.updateSprites(elapsedTime: timer.timeInterval) {
+                gotSprites = true
+            }
+        }
+        if !gotSprites {
+            print("No more sprites, stopping timer")
+            timer.invalidate()
+            spriteTimer = nil
         }
     }
 

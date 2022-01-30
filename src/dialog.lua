@@ -828,7 +828,7 @@ function DIALOG(dialog)
     end
 
     for i, item in ipairs(dialog.items) do
-        printf("Item %i is type %d\n", i, item.type)
+        -- printf("Item %i is type %d\n", i, item.type)
         setmetatable(item, itemTypes[item.type] or PlaceholderView)
         if item.type == dItemTypes.dCHOICE then
             item.index = tonumber(item.value)

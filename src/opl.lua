@@ -624,8 +624,8 @@ function BUSY(text, corner, delay)
     gFILL(gWIDTH(), gHEIGHT())
     gUSE(busyWinId)
     runtime:flushGraphicsOps()
-    bmp.SPRITEAPPEND(runtime, 1000000, blackBmp, blackBmp, true, 0, 0)
-    bmp.SPRITEAPPEND(runtime, 1000000, blackBmp, blackBmp, false, 0, 0)
+    bmp.SPRITEAPPEND(runtime, 500000, blackBmp, blackBmp, true, 0, 0)
+    bmp.SPRITEAPPEND(runtime, 500000, blackBmp, blackBmp, false, 0, 0)
     bmp.SPRITEDRAW(runtime)
 
     if delay and delay > 0 then
