@@ -35,7 +35,7 @@ class InstallerSummaryViewController: UIViewController {
 
     var state: State
 
-    var delegate: InstallerSummaryViewControllerDelegate?
+    weak var delegate: InstallerSummaryViewControllerDelegate?
 
     lazy var doneBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(title: "Done",

@@ -46,7 +46,7 @@ class LibraryViewController: UICollectionViewController {
     private var dataSource: DataSource!
     private var settingsSink: AnyCancellable?
 
-    var delegate: LibraryViewControllerDelegate?
+    weak var delegate: LibraryViewControllerDelegate?
 
     private lazy var addBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
