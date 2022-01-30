@@ -298,8 +298,8 @@ class Program {
             windowServer.setWin(drawableId: drawableId, position: pos, size: size)
             return .nothing
 
-        case .sprite(let id, let sprite):
-            windowServer.setSprite(id: id, sprite: sprite)
+        case .sprite(let windowId, let id, let sprite):
+            windowServer.setSprite(window: windowId, id: id, sprite: sprite)
             return .nothing
 
         case .clock(let drawableId, let clockInfo):

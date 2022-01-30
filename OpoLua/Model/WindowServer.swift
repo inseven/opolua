@@ -59,7 +59,6 @@ class WindowServer {
     private var infoWindowDismissTimer: Timer?
     private var busyDrawableHandle: Graphics.DrawableId?
     private var busyWindowShowTimer: Timer?
-    private var spriteWindows: [Int: Graphics.DrawableId] = [:]
     private var spriteTimer: Timer?
     private var clockTimer: Timer?
 
@@ -171,8 +170,6 @@ class WindowServer {
         if let view = view {
             view.removeFromSuperview()
         }
-
-        // TODO: Clean up the sprites for this window.
     }
 
     func infoPrint(drawableId: Graphics.DrawableId) {
@@ -254,7 +251,7 @@ class WindowServer {
         }
     }
 
-    func setSprite(id: Int, sprite: Graphics.Sprite?) {
+    func setSprite(window windowId: Graphics.DrawableId, id: Int, sprite: Graphics.Sprite?) {
         dispatchPrecondition(condition: .onQueue(.main))
         if sprite != nil && spriteTimer == nil {
             spriteTimer = Timer.scheduledTimer(timeInterval: kSpriteTimerInterval,
@@ -263,16 +260,7 @@ class WindowServer {
                                                userInfo: nil,
                                                repeats: true)
         }
-        if let sprite = sprite,
-           let spriteWindow = spriteWindows[id] {
-            precondition(spriteWindow == sprite.window, "Sprites cannot move between windows!")
-        }
-
-        guard let drawableId = sprite?.window ?? spriteWindows[id] else {
-            // A sprite we don't know about being deleted is kinda fine I guess...
-            return
-        }
-        guard let window = self.windows[drawableId] else {
+        guard let window = self.windows[windowId] else {
             return
         }
 
@@ -294,10 +282,8 @@ class WindowServer {
                                                  time: max(frame.time, kMinSpriteTime)))
             }
             canvasSprite = CanvasSprite(origin: sprite.origin, frames: frames)
-            spriteWindows[id] = drawableId
         } else {
             canvasSprite = nil
-            spriteWindows.removeValue(forKey: id)
         }
 
         window.setSprite(canvasSprite, for: id)

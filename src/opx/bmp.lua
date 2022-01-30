@@ -156,7 +156,7 @@ function SpriteChange(stack, runtime)
         invert = invertMask,
     }
     sprite.frames[frameId] = frame
-    runtime:iohandler().graphicsop("sprite", sprite.id, sprite)
+    runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
     stack:push(0)
 end
 
@@ -176,7 +176,7 @@ function SPRITEDRAW(runtime)
     -- printf("SpriteDraw\n")
     local sprite = getCurrentSprite(runtime)
     sprite.drawn = true
-    runtime:iohandler().graphicsop("sprite", sprite.id, sprite)
+    runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
 end
 
 function SpritePos(stack, runtime)
@@ -186,7 +186,7 @@ function SpritePos(stack, runtime)
     sprite.x = x
     sprite.y = y
     if sprite.drawn then
-        runtime:iohandler().graphicsop("sprite", sprite.id, sprite)
+        runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
     end
     stack:push(0)
 end
@@ -201,7 +201,7 @@ function SpriteDelete(stack, runtime)
         decRefcount(runtime, frame.mask)
     end
     graphics.sprites[sprite.id] = nil
-    runtime:iohandler().graphicsop("sprite", sprite.id, nil)
+    runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, nil)
     stack:push(0)
 end
 

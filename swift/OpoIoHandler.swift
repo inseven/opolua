@@ -253,7 +253,6 @@ struct Graphics {
             let invertMask: Bool
             let time: TimeInterval
         }
-        let window: DrawableId
         let origin: Point
         let frames: [Frame]
     }
@@ -292,7 +291,7 @@ struct Graphics {
         case busy(DrawableId, Int) // drawableId, delay (in ms)
         case giprint(DrawableId)
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
-        case sprite(Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
+        case sprite(DrawableId, Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
         case clock(DrawableId, ClockInfo?)
         case peekline(DrawableId, Point, Int, PeekMode) // drawableId, pos, numPixels, peekMode
     }
