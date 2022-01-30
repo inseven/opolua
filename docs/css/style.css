@@ -5,8 +5,35 @@
     --secondary-link-color: #aaa;
     --icon-border-color: rgba(0, 0, 0, 0.2);
     --icon-size: 120px;
+    --navigation-padding: 1em;
     --content-width: 800px;
-    --vertical-spacing: 1.4em;
+    --content-padding: 2em;
+    --vertical-spacing: 20px;
+    --line-height: 1.7em;
+    --h1-size: 3em;
+    --h2-size: 1.5em;
+}
+
+@media only screen and (max-width: 600px) {
+
+    :root {
+        --navigation-padding: 0.4em;
+        --content-padding: 16px;
+        --vertical-spacing: 10px;
+        --h1-size: 2.6em;
+        --h2-size: 1.2em;
+    }
+
+}
+
+@media only screen and (max-width: 320px) {
+
+    :root {
+        --content-padding: 10px;
+        --vertical-spacing: 6px;
+        --h1-size: 2em;
+    }
+
 }
 
 body {
@@ -14,6 +41,7 @@ body {
     font-weight: 300;
     margin: 0;
     color: var(--body-color);
+    line-height: var(--line-height);
 }
 
 a {
@@ -34,13 +62,24 @@ ul.navigation a,
 ul.navigation {
     list-style: none;
     margin: 0;
-    padding: 1em;
+    padding: var(--navigation-padding);
     background-color: white;
     position: sticky;
     top: 0;
     width: 100%;
     z-index: 1000;
     box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+@media only screen and (max-width: 600px) {
+
+    ul.navigation {
+        text-align: center;
+    }
+
 }
 
 ul.navigation > li {
@@ -50,10 +89,8 @@ ul.navigation > li {
 
 .content {
     max-width: var(--content-width);
+    padding: 0 var(--content-padding);
     margin: auto;
-    padding: 2em;
-    font-size: 1.1em;
-    line-height: var(--vertical-spacing);
 }
 
 .banner {
@@ -95,42 +132,22 @@ ul.navigation > li {
 
 h1 {
     text-align: center;
-    font-size: 4em;
+    font-size: var(--h1-size);
     font-weight: 100;
+    line-height: var(--line-height);
     margin-bottom: var(--vertical-spacing);
 }
 
 h2 {
     text-align: left;
-    font-size: 2em;
+    font-size: var(--h2-size);
     font-weight: 200;
+    line-height: var(--line-height);
     margin-bottom: var(--vertical-spacing);
 }
 
 .caption {
     text-align: center;
-}
-
-.download {
-    text-align: center;
-    margin-bottom: var(--vertical-spacing);
-}
-
-.button {
-    display: inline-block;
-    transition: transform .1s;
-}
-
-.button:hover {
-    transform: scale(1.1);
-}
-
-.button > a {
-    background-color: var(--tint-color);
-    color: #ffffff;
-    border-radius: 2em;
-    padding: 1em;
-    text-decoration: none;
 }
 
 .icon {
@@ -189,4 +206,24 @@ h2 {
     left: 3.1111111111%;
     top: 8.2142857143%;
     box-sizing: border-box;
+}
+
+@media only screen and (max-width: 600px) {
+
+    .screenshot-landscape {
+        padding-bottom: 0;
+    }
+
+    .screenshot-landscape::after {
+        background: 0;
+    }
+
+    .screenshot-landscape img {
+        width: 100%;
+        position: relative;
+        border: 1px solid var(--icon-border-color);
+        top: 0;
+        left: 0;
+    }
+
 }
