@@ -73,6 +73,7 @@ struct SettingsView: View {
                     .foregroundColor(.primary)
                 }
             }
+            .tint(Color(uiColor: settings.theme.color))
             .navigationBarTitle("Settings", displayMode: .inline)
             .navigationBarItems(trailing: Button {
                 presentationMode.wrappedValue.dismiss()
