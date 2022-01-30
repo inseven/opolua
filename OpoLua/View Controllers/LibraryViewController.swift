@@ -69,7 +69,7 @@ class LibraryViewController: UICollectionViewController {
         self.taskManager = taskManager
         self.detector = detector
         super.init(collectionViewLayout: UICollectionViewCompositionalLayout.list(using: UICollectionLayoutListConfiguration(appearance: .insetGrouped)))
-        title = "OPL"
+        title = "Library"
         navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.leftBarButtonItem = aboutBarButtonItem
 
