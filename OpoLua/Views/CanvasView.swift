@@ -25,9 +25,6 @@ protocol CanvasViewDelegate: AnyObject {
     func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent)
     func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent)
     func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent)
-    func canvasView(_ canvasView: CanvasView, insertCharacter character: Character)
-    func canvasViewDeleteBackward(_ canvasView: CanvasView)
-    func canvasView(_ canvasView: CanvasView, sendKey key: OplKeyCode)
 
 }
 
@@ -45,7 +42,6 @@ class CanvasView : UIView, Drawable {
         return true
     }
 
-    var keyboardType: UIKeyboardType = .asciiCapable
     var canvas: Canvas
     var clockView: ClockView?
     weak var delegate: CanvasViewDelegate?
@@ -207,74 +203,6 @@ class CanvasView : UIView, Drawable {
             self.canvas.draw(Graphics.DrawCommand(drawableId: dummyId, type: .copy(src, nil), mode: .set, origin: zero, color: dontCare, bgcolor: dontCare, penWidth: 1))
         }
         self.bounds = CGRect(origin: .zero, size: newSize)
-    }
-
-    override var inputAccessoryView: UIView? {
-        let view = UIView()
-        view.tintColor = self.tintColor
-
-        let effectView = UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
-        effectView.translatesAutoresizingMaskIntoConstraints = false
-
-        var doneButtonConfiguration: UIButton.Configuration = .plain()
-        doneButtonConfiguration.title = "Done"
-        let doneButton = UIButton(configuration: doneButtonConfiguration, primaryAction: UIAction(handler: { [weak self] action in
-            guard let self = self else {
-                return
-            }
-            self.resignFirstResponder()
-        }))
-        doneButton.translatesAutoresizingMaskIntoConstraints = false
-
-        var escapeButtonConfiguration: UIButton.Configuration = .plain()
-        escapeButtonConfiguration.image = UIImage(systemName: "escape")
-        let escapeButton = UIButton(configuration: escapeButtonConfiguration, primaryAction: UIAction { [weak self] action in
-            guard let self = self else {
-                return
-            }
-            self.delegate?.canvasView(self, sendKey: .escape)
-        })
-        escapeButton.translatesAutoresizingMaskIntoConstraints = false
-
-        view.addSubview(effectView)
-        view.addSubview(escapeButton)
-        view.addSubview(doneButton)
-        NSLayoutConstraint.activate([
-
-            effectView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            effectView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            effectView.topAnchor.constraint(equalTo: view.topAnchor),
-            effectView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-
-            escapeButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            escapeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            escapeButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
-
-            doneButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            doneButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            doneButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
-
-        ])
-        view.frame = CGRect(origin: .zero, size: view.systemLayoutSizeFitting(CGSize(width: .max, height: .max)))
-        return view
-    }
-
-}
-
-extension CanvasView: UIKeyInput {
-
-    var hasText: Bool {
-        return true
-    }
-
-    func insertText(_ text: String) {
-        for character in text {
-            delegate?.canvasView(self, insertCharacter: character)
-        }
-    }
-
-    func deleteBackward() {
-        delegate?.canvasViewDeleteBackward(self)
     }
 
 }

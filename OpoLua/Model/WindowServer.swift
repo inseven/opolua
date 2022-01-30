@@ -21,7 +21,7 @@
 import GameController
 import UIKit
 
-protocol WindowServerDelegate: CanvasViewDelegate {
+protocol WindowServerDelegate: CanvasViewDelegate, RootViewDelegate {
 
     func windowServerClockIsDigital(_ windowServer: WindowServer) -> Bool
 
@@ -74,7 +74,7 @@ class WindowServer {
         return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
     }
 
-    lazy var rootView: UIView = {
+    lazy var rootView: RootView = {
         let view = RootView(screenSize: screenSize.cgSize())
         let screenRect = Graphics.Rect(origin: .zero, size: screenSize)
         let id = createWindow(rect: screenRect, mode: .color256, shadowSize: 0)
@@ -88,6 +88,7 @@ class WindowServer {
     init(device: Device, screenSize: Graphics.Size) {
         self.device = device
         self.screenSize = screenSize
+        rootView.delegate = self
     }
 
     func drawable(for drawableId: Graphics.DrawableId) -> Drawable? {
@@ -490,16 +491,20 @@ extension WindowServer: CanvasViewDelegate {
         delegate?.canvasView(canvasView, touchEnded: touch, with: event)
     }
 
-    func canvasView(_ canvasView: CanvasView, insertCharacter character: Character) {
-        delegate?.canvasView(canvasView, insertCharacter: character)
+}
+
+extension WindowServer: RootViewDelegate {
+
+    func rootView(_ rootView: RootView, insertCharacter character: Character) {
+        delegate?.rootView(rootView, insertCharacter: character)
     }
 
-    func canvasViewDeleteBackward(_ canvasView: CanvasView) {
-        delegate?.canvasViewDeleteBackward(canvasView)
+    func rootViewDeleteBackward(_ rootView: RootView) {
+        delegate?.rootViewDeleteBackward(rootView)
     }
 
-    func canvasView(_ canvasView: CanvasView, sendKey key: OplKeyCode) {
-        delegate?.canvasView(canvasView, sendKey: key)
+    func rootView(_ rootView: RootView, sendKey key: OplKeyCode) {
+        delegate?.rootView(rootView, sendKey: key)
     }
 
 }

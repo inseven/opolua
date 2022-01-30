@@ -20,9 +20,20 @@
 
 import UIKit
 
+protocol RootViewDelegate: AnyObject {
+
+    func rootView(_ rootView: RootView, insertCharacter character: Character)
+    func rootViewDeleteBackward(_ rootView: RootView)
+    func rootView(_ rootView: RootView, sendKey key: OplKeyCode)
+
+}
+
 class RootView : UIView {
 
+    var keyboardType: UIKeyboardType = .asciiCapable
+
     let screenSize: CGSize
+    weak var delegate: RootViewDelegate?
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -43,6 +54,74 @@ class RootView : UIView {
 
     override var intrinsicContentSize: CGSize {
         return screenSize
+    }
+
+    override var inputAccessoryView: UIView? {
+        let view = UIView()
+        view.tintColor = self.tintColor
+
+        let effectView = UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
+        effectView.translatesAutoresizingMaskIntoConstraints = false
+
+        var doneButtonConfiguration: UIButton.Configuration = .plain()
+        doneButtonConfiguration.title = "Done"
+        let doneButton = UIButton(configuration: doneButtonConfiguration, primaryAction: UIAction(handler: { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.resignFirstResponder()
+        }))
+        doneButton.translatesAutoresizingMaskIntoConstraints = false
+
+        var escapeButtonConfiguration: UIButton.Configuration = .plain()
+        escapeButtonConfiguration.image = UIImage(systemName: "escape")
+        let escapeButton = UIButton(configuration: escapeButtonConfiguration, primaryAction: UIAction { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.delegate?.rootView(self, sendKey: .escape)
+        })
+        escapeButton.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(effectView)
+        view.addSubview(escapeButton)
+        view.addSubview(doneButton)
+        NSLayoutConstraint.activate([
+
+            effectView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            effectView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            effectView.topAnchor.constraint(equalTo: view.topAnchor),
+            effectView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            escapeButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            escapeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            escapeButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+            doneButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            doneButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            doneButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+        ])
+        view.frame = CGRect(origin: .zero, size: view.systemLayoutSizeFitting(CGSize(width: .max, height: .max)))
+        return view
+    }
+
+}
+
+extension RootView: UIKeyInput {
+
+    var hasText: Bool {
+        return true
+    }
+
+    func insertText(_ text: String) {
+        for character in text {
+            delegate?.rootView(self, insertCharacter: character)
+        }
+    }
+
+    func deleteBackward() {
+        delegate?.rootViewDeleteBackward(self)
     }
 
 }

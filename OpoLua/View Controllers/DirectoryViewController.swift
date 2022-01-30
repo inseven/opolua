@@ -193,11 +193,7 @@ class DirectoryViewController : UICollectionViewController {
     }
 
     func reload() {
-        do {
-            try directory.refresh()
-        } catch {
-            present(error: error)
-        }
+        try directory.refresh()
     }
 
     func pushDirectoryViewController(for url: URL) {
