@@ -177,10 +177,10 @@ class LibraryViewController: UICollectionViewController {
         dataSource.apply(snapshot(), animatingDifferences: animated)
     }
 
-    func reconfigureItems(_ items: [ApplicationSection]) {
+    func reconfigureItems(_ items: [ApplicationSection], animated: Bool) {
         var snapshot = dataSource.snapshot()
         snapshot.reconfigureItems(items)
-        dataSource.apply(snapshot, animatingDifferences: true)
+        dataSource.apply(snapshot, animatingDifferences: animated)
     }
 
     func snapshot() -> Snapshot {
@@ -313,7 +313,7 @@ extension LibraryViewController: UIDocumentPickerDelegate {
 extension LibraryViewController: TaskManagerObserver {
 
     func taskManagerDidUpdate(_ taskManager: TaskManager) {
-        reconfigureItems([.runningPrograms])
+        reconfigureItems([.runningPrograms], animated: false)
     }
 
 }
