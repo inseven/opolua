@@ -1,9 +1,9 @@
 PROC main:
 	LOCAL ev&(16)
 	LOCAL evstat%, m%
+	PRINT "<- Press the Menu button"
 	m% = 1
 	DO
-		PRINT "Press a key..."
 		GETEVENTA32 evstat%, ev&()
 		IOWAIT
 		IF ((ev&(1) AND $400) AND ((ev&(3) = 10000) OR (ev&(3) = 148)))
