@@ -63,8 +63,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         splitViewController = UISplitViewController(style: .doubleColumn)
         splitViewController.delegate = self
-        splitViewController.preferredDisplayMode = .oneBesideSecondary
-        splitViewController.preferredSplitBehavior = .tile
+        splitViewController.preferredDisplayMode = .automatic
         splitViewController.setViewController(navigationController, for: .primary)
         showSection(.allPrograms)
 
