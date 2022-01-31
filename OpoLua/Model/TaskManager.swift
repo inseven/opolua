@@ -41,11 +41,22 @@ protocol TaskManagerDelegate: AnyObject {
 
 class TaskManager: NSObject {
 
+    private struct WeakObserver {
+
+        weak var object: TaskManagerObserver?
+
+        init(_ object: TaskManagerObserver) {
+            self.object = object
+        }
+
+    }
+
+
     var settings: Settings
     weak var delegate: TaskManagerDelegate?
 
     private var programsByUrl: [URL: Program] = [:]
-    private var observers: [TaskManagerObserver] = []
+    private var observers: [WeakObserver] = []
 
     var programs: [Program] {
         return Array(programsByUrl.values)
@@ -100,18 +111,26 @@ class TaskManager: NSObject {
 
     func addObserver(_ observer: TaskManagerObserver) {
         dispatchPrecondition(condition: .onQueue(.main))
-        observers.append(observer)
+        observers.append(WeakObserver(observer))
+        // Remove all empty observers.
+        observers.removeAll { $0.object == nil }
     }
 
     func removeObserver(_ observer: TaskManagerObserver) {
         dispatchPrecondition(condition: .onQueue(.main))
-        observers.removeAll { $0.isEqual(observer) }
+        // Remove all empty and any matching observers.
+        observers.removeAll { weakObserver in
+            guard let object = weakObserver.object else {
+                return true
+            }
+            return object.isEqual(observer)
+        }
     }
 
     private func notifyObservers() {
         dispatchPrecondition(condition: .onQueue(.main))
         for observer in observers {
-            observer.taskManagerDidUpdate(self)
+            observer.object?.taskManagerDidUpdate(self)
         }
     }
 

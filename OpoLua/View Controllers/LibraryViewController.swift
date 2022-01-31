@@ -75,12 +75,28 @@ class LibraryViewController: UICollectionViewController {
 
         collectionView.collectionViewLayout = createLayout()
 
-        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, ApplicationSection> { cell, _, item in
+        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, ApplicationSection> { [weak self] cell, _, item in
+            guard let self = self else {
+                return
+            }
             var configuration = cell.defaultContentConfiguration()
             configuration.image = item.image
             configuration.text = item.name
             cell.contentConfiguration = configuration
-            cell.accessories = [UICellAccessory.disclosureIndicator()]
+
+            var accessories: [UICellAccessory] = []
+            if item == .runningPrograms && taskManager.programs.count > 0 {
+                let badgeLabel = UILabel()
+                badgeLabel.text = String(taskManager.programs.count)
+                badgeLabel.textColor = UIColor.secondaryLabel
+                let viewConfig = UICellAccessory.CustomViewConfiguration(customView: badgeLabel, placement: .trailing(displayed: .always))
+                let badgeAccessory = UICellAccessory.customView(configuration: viewConfig)
+                accessories.append(badgeAccessory)
+            }
+            if self.splitViewController?.isCollapsed ?? true {
+                accessories.append(UICellAccessory.disclosureIndicator())
+            }
+            cell.accessories = accessories
         }
 
         let headerRegistration = UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(elementKind: UICollectionView.elementKindSectionHeader) {
@@ -112,6 +128,8 @@ class LibraryViewController: UICollectionViewController {
             }
         }
 
+        taskManager.addObserver(self)
+        reload(animated: false)
     }
 
     required init?(coder: NSCoder) {
@@ -124,13 +142,18 @@ class LibraryViewController: UICollectionViewController {
             guard let self = self else {
                 return
             }
-            self.reload()
+            self.reload(animated: animated)
         }
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         dataSource.apply(snapshot(), animatingDifferences: animated)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        settingsSink = nil
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -150,8 +173,14 @@ class LibraryViewController: UICollectionViewController {
         collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .top)
     }
 
-    func reload() {
-        dataSource.apply(snapshot())
+    func reload(animated: Bool) {
+        dataSource.apply(snapshot(), animatingDifferences: animated)
+    }
+
+    func reconfigureItems(_ items: [ApplicationSection]) {
+        var snapshot = dataSource.snapshot()
+        snapshot.reconfigureItems(items)
+        dataSource.apply(snapshot, animatingDifferences: true)
     }
 
     func snapshot() -> Snapshot {
@@ -182,6 +211,7 @@ class LibraryViewController: UICollectionViewController {
             snapshot.appendSections([.locations])
             snapshot.appendItems(locations, toSection: .locations)
         }
+
         return snapshot
     }
 
@@ -217,17 +247,16 @@ class LibraryViewController: UICollectionViewController {
     func addUrl(_ url: URL) {
         do {
             try settings.addLocation(url)
-            reload()
+            reload(animated: true)
         } catch {
             present(error: error)
         }
     }
 
-    // TODO: Consider just passing in the item here.
     func deleteLocation(_ location: SecureLocation) {
         do {
             try settings.removeLocation(location)
-            reload()
+            reload(animated: true)
         } catch {
             present(error: error)
         }
@@ -277,6 +306,14 @@ extension LibraryViewController: UIDocumentPickerDelegate {
 
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentAt url: URL) {
         addUrl(url)
+    }
+
+}
+
+extension LibraryViewController: TaskManagerObserver {
+
+    func taskManagerDidUpdate(_ taskManager: TaskManager) {
+        reconfigureItems([.runningPrograms])
     }
 
 }
