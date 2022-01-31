@@ -38,10 +38,6 @@ class CanvasView : UIView, Drawable {
         return canvas.mode
     }
 
-    override var canBecomeFirstResponder: Bool {
-        return true
-    }
-
     var canvas: Canvas
     var clockView: ClockView?
     weak var delegate: CanvasViewDelegate?
