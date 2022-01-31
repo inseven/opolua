@@ -85,22 +85,6 @@ class DirectoryViewController : UICollectionViewController {
         return searchController
     }()
 
-    private lazy var menuBarButtonItem: UIBarButtonItem = {
-        let newFolderAction = UIAction(title: "New Folder",
-                                       image: UIImage(systemName: "folder.badge.plus")) { [weak self] action in
-            guard let self = self else {
-                return
-            }
-            self.createDirectory()
-        }
-        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [newFolderAction])
-        let menuBarButtonItem = UIBarButtonItem(title: nil,
-                                                image: UIImage(systemName: "ellipsis.circle"),
-                                                primaryAction: nil,
-                                                menu: menu)
-        return menuBarButtonItem
-    }()
-    
     init(settings: Settings, taskManager: TaskManager, directory: Directory) {
         self.settings = settings
         self.taskManager = taskManager
@@ -115,7 +99,6 @@ class DirectoryViewController : UICollectionViewController {
         title = directory.name
         navigationItem.searchController = searchController
         navigationItem.largeTitleDisplayMode = .never
-        navigationItem.rightBarButtonItem = menuBarButtonItem
         update(animated: false)
     }
     
@@ -163,22 +146,6 @@ class DirectoryViewController : UICollectionViewController {
         taskManager.removeObserver(self)
     }
 
-    func createDirectory() {
-        let alertController = UIAlertController(title: "New Folder", message: nil, preferredStyle: .alert)
-        alertController.addTextField { textField in
-            textField.placeholder = "Name"
-        }
-        alertController.addAction(UIAlertAction(title: "OK", style: .default) { [unowned self, alertController] _ in
-            do {
-                try self.directory.createDirectory(name: alertController.textFields![0].text!)
-            } catch {
-                self.present(error: error)
-            }
-        })
-        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        self.present(alertController, animated: true)
-    }
-
     func delete(item: Directory.Item) {
         let alertController = UIAlertController(title: "Delete '\(item.name)'?", message: nil, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "Delete", style: .destructive) { action in
@@ -193,7 +160,7 @@ class DirectoryViewController : UICollectionViewController {
     }
 
     func reload() {
-        try directory.refresh()
+        directory.refresh()
     }
 
     func pushDirectoryViewController(for url: URL) {
