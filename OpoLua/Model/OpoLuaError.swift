@@ -25,7 +25,6 @@ enum OpoLuaError: Error {
 
     case fileExists
     case locationExists
-    case interpreterError(OpoInterpreter.Error)
     case secureAccess
 
 }
@@ -38,8 +37,6 @@ extension OpoLuaError: LocalizedError {
             return "File already exists."
         case .locationExists:
             return "Location already exists."
-        case .interpreterError(let error):
-            return error.description
         case .secureAccess:
             return "Failed to prepare file for secure access."
         }

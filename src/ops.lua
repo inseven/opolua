@@ -1335,7 +1335,8 @@ function Beep(stack, runtime) -- 0xA0
     local pitch = stack:pop()
     local freq = 512 / (pitch + 1) -- in Khz
     local duration = stack:pop() * 1/32 -- in seconds
-    runtime:iohandler().beep(freq, duration)
+    local ok, err = runtime:iohandler().beep(freq, duration)
+    assert(ok, err)
 end
 
 function Close(stack, runtime) -- 0xA1

@@ -22,7 +22,7 @@ import Foundation
 
 protocol InstallerDelegate: AnyObject {
 
-    func installer(_ installer: Installer, didFinishWithResult result: OpoInterpreter.Result)
+    func installerDidComplete(_ installer: Installer)
     func installer(_ installer: Installer, didFailWithError error: Error)
 
 }
@@ -45,9 +45,8 @@ class Installer {
         DispatchQueue.global().async {
             do {
                 try self.fileSystem.prepare()
-                let result = self.interpreter.installSisFile(path: self.url.path)
-                self.delegate?.installer(self, didFinishWithResult: result)
-
+                try self.interpreter.installSisFile(path: self.url.path)
+                self.delegate?.installerDidComplete(self)
             } catch {
                 // TODO: Clean up if we've failed to install the file.
                 self.delegate?.installer(self, didFailWithError: error)
@@ -61,7 +60,7 @@ extension Installer: OpoIoHandler {
 
     func printValue(_ val: String) {}
     func editValue(_ params: EditParams) -> String? { return nil }
-    func beep(frequency: Double, duration: Double) {}
+    func beep(frequency: Double, duration: Double) -> Error? { return nil }
     func draw(operations: [Graphics.DrawCommand]) {}
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result { return .nothing }
     func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) { return (.zero, .gray2) }

@@ -27,8 +27,7 @@ import GameController
  */
 protocol ProgramLifecycleObserver: NSObject {
 
-    func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result)
-    func program(_ program: Program, didEncounterError error: Error)
+    func program(_ program: Program, didFinishWithResult result: Error?)
     func program(_ program: Program, didUpdateTitle title: String)
 
 }
@@ -358,14 +357,16 @@ extension Program: InterpreterThreadDelegate {
         return fileSystem.guestPath(for: url)
     }
 
-    func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result) {
+    func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: Error?) {
         DispatchQueue.main.sync {
             self.windowServer.shutdown()
-            switch result {
-            case .none:
+            if let facerake = result as? OpoInterpreter.UnimplementedOperationError {
+                self.console.append("TODO: \(facerake.operation)")
+            } 
+            if let error = result {
+                self.console.append("\n---Error occurred:---\n\(error.localizedDescription)")
+            } else {
                 self.console.append("\n---Completed---")
-            case .error(let err):
-                self.console.append("\n---Error occurred:---\n\(err.description)")
             }
             self._state = .finished
             for observer in self.observers {
@@ -388,15 +389,12 @@ extension Program: OpoIoHandler {
         return delegate!.program(self, editText: params)
     }
 
-    func beep(frequency: Double, duration: Double) {
+    func beep(frequency: Double, duration: Double) -> Error? {
         do {
             try Sound.beep(frequency: frequency * 1000, duration: duration)
+            return nil
         } catch {
-            DispatchQueue.main.sync {
-                for observer in self.observers {
-                    observer.program(self, didEncounterError: error)
-                }
-            }
+            return error
         }
     }
 

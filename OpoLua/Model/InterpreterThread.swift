@@ -23,7 +23,7 @@ import Foundation
 protocol InterpreterThreadDelegate: AnyObject {
 
     func interpreter(_ interpreter: InterpreterThread, pathForUrl url: URL) -> String?
-    func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: OpoInterpreter.Result)
+    func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: Error?)
 
 }
 
@@ -50,8 +50,12 @@ class InterpreterThread: Thread {
 
     override func main() {
         let oplPath = delegate!.interpreter(self, pathForUrl: url)!
-        let result = interpreter.run(devicePath: oplPath)
-        delegate?.interpreter(self, didFinishWithResult: result)
+        do {
+            try interpreter.run(devicePath: oplPath)
+            delegate?.interpreter(self, didFinishWithResult: nil)
+        } catch {
+            delegate?.interpreter(self, didFinishWithResult: error)
+        }
     }
 
     func interrupt() {

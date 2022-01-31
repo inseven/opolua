@@ -122,8 +122,14 @@ private func getInterpreterUpval(_ L: LuaState!) -> OpoInterpreter {
 
 private func beep(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    iohandler.beep(frequency: lua_tonumber(L, 1), duration: lua_tonumber(L, 2))
-    return 0
+    if let err = iohandler.beep(frequency: lua_tonumber(L, 1), duration: lua_tonumber(L, 2)) {
+        L.pushnil()
+        L.push(err.localizedDescription)
+        return 2
+    } else {
+        L.push(true)
+        return 1
+    }
 }
 
 // editValue("text", value, prompt, true, [min, max])
@@ -1017,18 +1023,39 @@ class OpoInterpreter {
         return result
     }
 
-    struct Error {
-        let code: Int?
-        let opoStack: String?
-        let luaStack: String
-        let description: String
-    }
-    enum Result {
-        case none
-        case error(Error)
+    class InterpreterError: LocalizedError {
+        let message: String // One-line description of the error
+        let description: String // Includes all of message, leave code, lua stack trace, opo stacktrace (as appropriate)
+        init(message: String) {
+            self.message = message
+            self.description = message
+        }
+        init(message: String, description: String) {
+            self.message = message
+            self.description = description
+        }
+        var errorDescription: String? {
+            return description
+        }
     }
 
-    func run(devicePath: String, procedureName: String? = nil) -> Result {
+    class LeaveError: InterpreterError {
+        let code: Int
+        init(message: String, description: String, leaveCode: Int) {
+            self.code = leaveCode
+            super.init(message: message, description: description)
+        }
+    }
+
+    class UnimplementedOperationError: InterpreterError {
+        let operation: String
+        init(message: String, description: String, operation: String) {
+            self.operation = operation
+            super.init(message: message, description: description)
+        }
+    }
+
+    func run(devicePath: String, procedureName: String? = nil) throws {
         lua_settop(L, 0)
 
         lua_getglobal(L, "require")
@@ -1044,28 +1071,27 @@ class OpoInterpreter {
         makeIoHandlerBridge()
         let err = pcall(3, 1) // runOpo(devicePath, proc, iohandler)
         if let err = err {
-            return .error(Error(code: nil, opoStack: nil, luaStack: err, description: err))
+            throw InterpreterError(message: err)
         } else {
             let t = L.type(-1)
-            let result: Result
             switch(L.type(-1)) {
-            case nil:
-                result = .none
-            case .nilType:
-                result = .none
+            case nil, .nilType:
+                break
             case .table:
                 // An error
-                let code = L.toint(-1, key: "code")
-                let opoStack = L.tostring(-1, key: "opoStack")
-                let luaStack = L.tostring(-1, key: "luaStack") ?? "Missing Lua stack trace!"
-                let description = L.tostring(-1, convert: true) ?? "Missing description!"
-                result = .error(Error(code: code, opoStack: opoStack, luaStack: luaStack, description: description))
+                let msg = L.tostring(-1, key: "msg") ?? "(No msg!?)"
+                let description = L.tostring(-1, convert: true)!
+                if let operation = L.tostring(-1, key: "unimplemented") {
+                    throw UnimplementedOperationError(message: msg, description: description, operation: operation)
+                } else if let code = L.toint(-1, key: "code") {
+                    throw LeaveError(message: msg, description: description, leaveCode: code)
+                } else {
+                    throw InterpreterError(message: msg, description: description)
+                }
             default:
                 print("Unexpected return type \(t!.rawValue)")
-                result = .none
             }
             L.pop()
-            return result
         }
     }
 
@@ -1189,14 +1215,13 @@ class OpoInterpreter {
         luaL_unref(L, LUA_REGISTRYINDEX, response.handle) // registry[requestHandle] = nil
     }
 
-    func installSisFile(path: String) -> Result {
+    func installSisFile(path: String) throws {
         let top = lua_gettop(L)
         defer {
             lua_settop(L, top)
         }
         guard let data = FileManager.default.contents(atPath: path) else {
-            return .error(Error(code: nil, opoStack: nil, luaStack: "", description:
-                "Couldn't read \(path)"))
+            throw InterpreterError(message: "Couldn't read \(path)")
         }
         lua_getglobal(L, "require")
         L.push("runtime")
@@ -1205,9 +1230,7 @@ class OpoInterpreter {
         L.push(data)
         makeIoHandlerBridge()
         if let err = pcall(2, 0) { // installSis(data, iohandler)
-            return .error(Error(code: nil, opoStack: nil, luaStack: err, description: err))
-        } else {
-            return .none
+            throw InterpreterError(message: err)
         }
     }
 

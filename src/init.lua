@@ -438,3 +438,7 @@ function readCardinality(data, pos)
     end
     return val, pos
 end
+
+function unimplemented(opName)
+    error({ msg = "Unimplemented operation "..opName, unimplemented = opName })
+end

@@ -881,20 +881,25 @@ end
 
 local function traceback(msgOrCode)
     local t = type(msgOrCode)
-    if t == "table" then
-        -- We've already got the Lua stacktrace, nothing more to do here
-        return msgOrCode
+    local err = t == "table" and msgOrCode or {}
+    setmetatable(err, ErrObj)
+    if t == "number" then
+        err.code = msgOrCode
+        err.msg = fmt("%d (%s)", err.code, Errors[err.code] or "?")
+    elseif t == "string" then
+        err.msg = msgOrCode
+    elseif t == "table" then
+        if not err.msg then
+            -- Can't assert here, that's really confusing from inside an error handler
+            err.msg = "Missing msg in error!"
+            print(err.msg)
+        end
     end
 
-    local err = setmetatable({
-        code = t == "number" and msgOrCode,
-        luaStack = debug.traceback(nil, 2),
-    }, ErrObj)
-    if err.code then
-        err.msg = fmt("%d (%s)", err.code, Errors[err.code] or "?")
-    else
-        err.msg = msgOrCode
+    if err.luaStack == nil then
+        err.luaStack = debug.traceback(nil, 2)
     end
+
     return err
 end
 

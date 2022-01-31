@@ -534,20 +534,16 @@ extension ProgramViewController: ProgramDelegate {
 
 extension ProgramViewController: ProgramLifecycleObserver {
 
-    func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
-        if case OpoInterpreter.Result.none = result {
+    func program(_ program: Program, didFinishWithResult result: Error?) {
+        if result != nil {
+            UIView.animate(withDuration: 0.3) {
+                self.program.rootView.alpha = 0.3
+            } completion: { _ in
+                self.showConsole()
+            }
+        } else {
             self.navigationController?.popViewController(animated: true)
-            return
         }
-        UIView.animate(withDuration: 0.3) {
-            self.program.rootView.alpha = 0.3
-        } completion: { _ in
-            self.showConsole()
-        }
-    }
-
-    func program(_ program: Program, didEncounterError error: Error) {
-        present(error: error)
     }
 
     func program(_ program: Program, didUpdateTitle title: String) {

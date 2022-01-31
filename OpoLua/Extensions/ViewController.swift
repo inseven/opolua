@@ -28,10 +28,4 @@ extension UIViewController {
         present(alert, animated: true, completion: nil)
     }
 
-    func present(error: OpoInterpreter.Error) {
-        let alert = UIAlertController(title: "Error", message: error.description, preferredStyle: .alert)
-        alert.addAction(.init(title: "OK", style: .default, handler: nil))
-        present(alert, animated: true, completion: nil)
-    }
-
 }

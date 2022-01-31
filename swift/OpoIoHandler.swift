@@ -467,7 +467,7 @@ protocol OpoIoHandler {
 
     func editValue(_ params: EditParams) -> String?
 
-    func beep(frequency: Double, duration: Double) -> Void
+    func beep(frequency: Double, duration: Double) -> Error?
 
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
@@ -513,8 +513,9 @@ class DummyIoHandler : OpoIoHandler {
         return 0
     }
 
-    func beep(frequency: Double, duration: Double) -> Void {
+    func beep(frequency: Double, duration: Double) -> Error? {
         print("BEEP \(frequency)kHz \(duration)s")
+        return nil
     }
 
     func draw(operations: [Graphics.DrawCommand]) {

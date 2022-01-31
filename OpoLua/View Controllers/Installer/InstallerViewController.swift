@@ -91,14 +91,9 @@ extension InstallerViewController: InstallerIntroductionViewControllerDelegate {
 
 extension InstallerViewController: InstallerDelegate {
 
-    func installer(_ installer: Installer, didFinishWithResult result: OpoInterpreter.Result) {
+    func installerDidComplete(_ installer: Installer) {
         DispatchQueue.main.async {
-            switch result {
-            case .none:
-                self.showSummary(state: .success)
-            case .error(let error):
-                self.showSummary(state: .failure(OpoLuaError.interpreterError(error)))
-            }
+            self.showSummary(state: .success)
         }
     }
 

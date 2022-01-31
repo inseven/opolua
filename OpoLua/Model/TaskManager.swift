@@ -138,13 +138,7 @@ class TaskManager: NSObject {
 
 extension TaskManager: ProgramLifecycleObserver {
 
-    func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        programsByUrl.removeValue(forKey: program.url)
-        notifyObservers()
-    }
-
-    func program(_ program: Program, didEncounterError error: Error) {
+    func program(_ program: Program, didFinishWithResult result: Error?) {
         dispatchPrecondition(condition: .onQueue(.main))
         programsByUrl.removeValue(forKey: program.url)
         notifyObservers()
