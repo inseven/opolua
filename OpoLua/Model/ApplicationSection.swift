@@ -39,9 +39,9 @@ extension ApplicationSection {
         case .documents:
             return UIDevice.current.localizedDocumentsName
         case .local(let url):
-            return url.name
+            return url.localizedName
         case .external(let url):
-            return url.url.name
+            return url.url.localizedName
         }
     }
 

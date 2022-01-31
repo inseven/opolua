@@ -174,7 +174,7 @@ class InstallerIntroductionViewController: UICollectionViewController {
             switch item {
             case .destination(let url):
                 configuration.text = "Destination"
-                configuration.secondaryText = url.name
+                configuration.secondaryText = url.localizedName
                 cell.contentConfiguration = configuration
                 var backgroundConfiguration = UIBackgroundConfiguration.listGroupedCell()
                 backgroundConfiguration.backgroundColor = .secondarySystemBackground

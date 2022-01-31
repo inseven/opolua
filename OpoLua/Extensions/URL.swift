@@ -23,7 +23,7 @@ import UIKit
 
 extension URL {
 
-    var name: String {
+    var localizedName: String {
         if self == FileManager.default.documentsUrl {
             return UIDevice.current.localizedDocumentsName
         }

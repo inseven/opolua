@@ -37,7 +37,7 @@ class SourceViewController: UIViewController {
     init(url: URL) {
         self.url = url
         super.init(nibName: nil, bundle: nil)
-        title = url.name
+        title = url.localizedName
         view.addSubview(textView)
         NSLayoutConstraint.activate([
             textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),

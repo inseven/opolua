@@ -125,7 +125,7 @@ class Program {
         self.thread = InterpreterThread(url: url)
         let appInfo = Directory.appInfo(forApplicationUrl: url, interpreter: OpoInterpreter())
         self.appInfo = appInfo
-        self.title = appInfo?.caption ?? url.name
+        self.title = appInfo?.caption ?? url.localizedName
         self.icon = appInfo?.icon() ?? (url.pathExtension.lowercased() == "opo" ? .opo : .unknownApplication) // TODO: This should be an OPO icon if it's an OPO file.
         self.windowServer = WindowServer(device: configuration.device, screenSize: configuration.device.screenSize)
         self.thread.delegate = self

@@ -68,7 +68,7 @@ class DestinationPickerViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Self.reuseIdentifier, for: indexPath)
         let url = urls[indexPath.row]
-        cell.textLabel?.text = url.name
+        cell.textLabel?.text = url.localizedName
         cell.accessoryType = url == selectedUrl ? .checkmark : .none
         return cell
     }

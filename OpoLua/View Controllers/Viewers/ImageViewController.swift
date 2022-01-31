@@ -60,7 +60,7 @@ class ImageViewController: UITableViewController {
             .compactMap { CGImage.from(bitmap: $0) }
             .compactMap { UIImage(cgImage: $0) }
         super.init(nibName: nil, bundle: nil)
-        title = url.name
+        title = url.localizedName
         tableView.register(Cell.self, forCellReuseIdentifier: Cell.reuseIdentifier)
     }
 

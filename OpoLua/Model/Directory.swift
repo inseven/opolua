@@ -181,7 +181,7 @@ class Directory {
     private let interpreter = OpoInterpreter()
 
     var name: String {
-        return url.name
+        return url.localizedName
     }
     
     init(url: URL) throws {
