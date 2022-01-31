@@ -225,6 +225,11 @@ class InstallerIntroductionViewController: UICollectionViewController {
         update(animated: false)
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: footer.frame.size.height, right: 0)
+    }
+
     private func createLayout() -> UICollectionViewLayout {
         var configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
         configuration.backgroundColor = .systemBackground
