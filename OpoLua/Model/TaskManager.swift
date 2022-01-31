@@ -140,21 +140,18 @@ extension TaskManager: ProgramLifecycleObserver {
 
     func program(_ program: Program, didFinishWithResult result: OpoInterpreter.Result) {
         dispatchPrecondition(condition: .onQueue(.main))
-        print("program did finish")
         programsByUrl.removeValue(forKey: program.url)
         notifyObservers()
     }
 
     func program(_ program: Program, didEncounterError error: Error) {
         dispatchPrecondition(condition: .onQueue(.main))
-        print("program did encouter error")
         programsByUrl.removeValue(forKey: program.url)
         notifyObservers()
     }
 
     func program(_ program: Program, didUpdateTitle title: String) {
         dispatchPrecondition(condition: .onQueue(.main))
-        print("program did update title")
         notifyObservers()
     }
 

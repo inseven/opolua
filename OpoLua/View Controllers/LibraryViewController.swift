@@ -263,7 +263,11 @@ class LibraryViewController: UICollectionViewController {
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
         collectionView.collectionViewLayout = createLayout()
+        var snapshot = dataSource.snapshot()
+        snapshot.reloadSections([.special, .examples, .locations])
+        dataSource.apply(snapshot, animatingDifferences: false)
     }
 
     override func collectionView(_ collectionView: UICollectionView,
