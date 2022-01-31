@@ -266,7 +266,7 @@ class LibraryViewController: UICollectionViewController {
         super.traitCollectionDidChange(previousTraitCollection)
         collectionView.collectionViewLayout = createLayout()
         var snapshot = dataSource.snapshot()
-        snapshot.reloadSections([.special, .examples, .locations])
+        snapshot.reloadSections(snapshot.sectionIdentifiers)
         dataSource.apply(snapshot, animatingDifferences: false)
     }
 
