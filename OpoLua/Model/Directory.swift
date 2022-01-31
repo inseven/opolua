@@ -255,13 +255,6 @@ class Directory {
         return items
     }
 
-
-    func createDirectory(name: String) throws {
-        try FileManager.default.createDirectory(at: url.appendingPathComponent(name),
-                                                withIntermediateDirectories: false)
-        refresh()
-    }
-
     func delete(_ item: Item) throws {
         try FileManager.default.removeItem(at: item.url)
         refresh()
