@@ -54,107 +54,107 @@ fns = {
 }
 
 function AlmSetClockAlarm(stack, runtime) -- 1
-    error("Unimplemented alarm.opx function AlmSetClockAlarm!")
+    unimplemented("opx.alarm.AlmSetClockAlarm")
 end
 
 function AlmAlarmState(stack, runtime) -- 2
-    error("Unimplemented alarm.opx function AlmAlarmState!")
+    unimplemented("opx.alarm.AlmAlarmState")
 end
 
 function AlmAlarmEnable(stack, runtime) -- 3
-    error("Unimplemented alarm.opx function AlmAlarmEnable!")
+    unimplemented("opx.alarm.AlmAlarmEnable")
 end
 
 function AlmAlarmDelete(stack, runtime) -- 4
-    error("Unimplemented alarm.opx function AlmAlarmDelete!")
+    unimplemented("opx.alarm.AlmAlarmDelete")
 end
 
 function AlmQuietPeriodCancel(stack, runtime) -- 5
-    error("Unimplemented alarm.opx function AlmQuietPeriodCancel!")
+    unimplemented("opx.alarm.AlmQuietPeriodCancel")
 end
 
 function AlmQuietPeriodUntil(stack, runtime) -- 6
-    error("Unimplemented alarm.opx function AlmQuietPeriodUntil!")
+    unimplemented("opx.alarm.AlmQuietPeriodUntil")
 end
 
 function AlmQuietPeriodSet(stack, runtime) -- 7
-    error("Unimplemented alarm.opx function AlmQuietPeriodSet!")
+    unimplemented("opx.alarm.AlmQuietPeriodSet")
 end
 
 function AlmSetAlarmSound(stack, runtime) -- 8
-    error("Unimplemented alarm.opx function AlmSetAlarmSound!")
+    unimplemented("opx.alarm.AlmSetAlarmSound")
 end
 
 function AlmAlarmSoundState(stack, runtime) -- 9
-    error("Unimplemented alarm.opx function AlmAlarmSoundState!")
+    unimplemented("opx.alarm.AlmAlarmSoundState")
 end
 
 function WldFindCity(stack, runtime) -- 10
-    error("Unimplemented alarm.opx function WldFindCity!")
+    unimplemented("opx.alarm.WldFindCity")
 end
 
 function WldSunlight(stack, runtime) -- 11
-    error("Unimplemented alarm.opx function WldSunlight!")
+    unimplemented("opx.alarm.WldSunlight")
 end
 
 function WldHome(stack, runtime) -- 12
-    error("Unimplemented alarm.opx function WldHome!")
+    unimplemented("opx.alarm.WldHome")
 end
 
 function WldPreviousCity(stack, runtime) -- 13
-    error("Unimplemented alarm.opx function WldPreviousCity!")
+    unimplemented("opx.alarm.WldPreviousCity")
 end
 
 function WldPreviousCountry(stack, runtime) -- 14
-    error("Unimplemented alarm.opx function WldPreviousCountry!")
+    unimplemented("opx.alarm.WldPreviousCountry")
 end
 
 function WldNextCity(stack, runtime) -- 15
-    error("Unimplemented alarm.opx function WldNextCity!")
+    unimplemented("opx.alarm.WldNextCity")
 end
 
 function WldNextCountry(stack, runtime) -- 16
-    error("Unimplemented alarm.opx function WldNextCountry!")
+    unimplemented("opx.alarm.WldNextCountry")
 end
 
 function WldAddCity(stack, runtime) -- 17
-    error("Unimplemented alarm.opx function WldAddCity!")
+    unimplemented("opx.alarm.WldAddCity")
 end
 
 function WldAddCountry(stack, runtime) -- 18
-    error("Unimplemented alarm.opx function WldAddCountry!")
+    unimplemented("opx.alarm.WldAddCountry")
 end
 
 function WldEditCity(stack, runtime) -- 19
-    error("Unimplemented alarm.opx function WldEditCity!")
+    unimplemented("opx.alarm.WldEditCity")
 end
 
 function WldEditCountry(stack, runtime) -- 20
-    error("Unimplemented alarm.opx function WldEditCountry!")
+    unimplemented("opx.alarm.WldEditCountry")
 end
 
 function WldDeleteCity(stack, runtime) -- 21
-    error("Unimplemented alarm.opx function WldDeleteCity!")
+    unimplemented("opx.alarm.WldDeleteCity")
 end
 
 function WldDeleteCountry(stack, runtime) -- 22
-    error("Unimplemented alarm.opx function WldDeleteCountry!")
+    unimplemented("opx.alarm.WldDeleteCountry")
 end
 
 function WldNumberOfCities(stack, runtime) -- 23
-    error("Unimplemented alarm.opx function WldNumberOfCities!")
+    unimplemented("opx.alarm.WldNumberOfCities")
 end
 
 function WldNumberOfCountries(stack, runtime) -- 24
-    error("Unimplemented alarm.opx function WldNumberOfCountries!")
+    unimplemented("opx.alarm.WldNumberOfCountries")
 end
 
 function WldDataFileSave(stack, runtime) -- 25
-    error("Unimplemented alarm.opx function WldDataFileSave!")
+    unimplemented("opx.alarm.WldDataFileSave")
 end
 
 function WldDataFileRevert(stack, runtime) -- 26
-    error("Unimplemented alarm.opx function WldDataFileRevert!")
+    unimplemented("opx.alarm.WldDataFileRevert")
 end
 
 return _ENV

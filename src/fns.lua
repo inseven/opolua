@@ -291,7 +291,7 @@ function Day(stack, runtime) -- 0x04
 end
 
 function Dow(stack, runtime) -- 0x05
-    error("Unimplemented function Dow!")
+    unimplemented("fns.Dow")
 end
 
 function Eof(stack, runtime) -- 0x06
@@ -309,7 +309,7 @@ function Exist(stack, runtime) -- 0x08
 end
 
 function Find(stack, runtime) -- 0x09
-    error("Unimplemented function Find!")
+    unimplemented("fns.Find")
 end
 
 function Get(stack, runtime) -- 0x0A
@@ -327,7 +327,7 @@ function Ioa(stack, runtime) -- 0x0B
 end
 
 function Iow(stack, runtime) -- 0x0C
-    error("Unimplemented function Iow!")
+    unimplemented("fns.Iow")
 end
 
 function IoOpen(stack, runtime) -- 0x0D
@@ -439,7 +439,7 @@ function SAddr(stack, runtime) -- 0x1F
 end
 
 function Week(stack, runtime) -- 0x20
-    error("Unimplemented function Week!")
+    unimplemented("fns.Week")
 end
 
 function IoSeek(stack, runtime) -- 0x21
@@ -459,11 +459,11 @@ function Kmod(stack, runtime) -- 0x22
 end
 
 function KeyA(stack, runtime) -- 0x23
-    error("Unimplemented function KeyA!")
+    unimplemented("fns.KeyA")
 end
 
 function KeyC(stack, runtime) -- 0x24
-    error("Unimplemented function KeyC!")
+    unimplemented("fns.KeyC")
 end
 
 function IoOpenUnique(stack, runtime) -- 0x25
@@ -519,11 +519,11 @@ end
 gLoadBit_dump = numParams_dump
 
 function gLoadFont(stack, runtime) -- 0x29
-    error("Unimplemented function gLoadFont!")
+    unimplemented("fns.gLoadFont")
 end
 
 function gRank(stack, runtime) -- 0x2A
-    error("Unimplemented function gRank!")
+    unimplemented("fns.gRank")
 end
 
 function gIdentity(stack, runtime) -- 0x2B
@@ -740,7 +740,7 @@ function PeekL(stack, runtime) -- 0x43
 end
 
 function Space(stack, runtime) -- 0x44
-    error("Unimplemented function Space!")
+    unimplemented("fns.Space")
 end
 
 function DateToSecs(stack, runtime) -- 0x45
@@ -776,11 +776,11 @@ function ReAlloc(stack, runtime) -- 0x4C
 end
 
 function AdjustAlloc(stack, runtime) -- 0x4D
-    error("Unimplemented function AdjustAlloc!")
+    unimplemented("fns.AdjustAlloc")
 end
 
 function LenAlloc(stack, runtime) -- 0x4E
-    error("Unimplemented function LenAlloc!")
+    unimplemented("fns.LenAlloc")
 end
 
 function Ioc(stack, runtime) -- 0x4F
@@ -823,15 +823,15 @@ function Usub(stack, runtime) -- 0x51
 end
 
 function IoCancel(stack, runtime) -- 0x52
-    error("Unimplemented function IoCancel!")
+    unimplemented("fns.IoCancel")
 end
 
 function FindField(stack, runtime) -- 0x54
-    error("Unimplemented function FindField!")
+    unimplemented("fns.FindField")
 end
 
 function Bookmark(stack, runtime) -- 0x55
-    error("Unimplemented function Bookmark!")
+    unimplemented("fns.Bookmark")
 end
 
 function GetEventC(stack, runtime) -- 0x56
@@ -843,7 +843,7 @@ function GetEventC(stack, runtime) -- 0x56
 end
 
 function InTrans(stack, runtime) -- 0x57
-    error("Unimplemented function InTrans!")
+    unimplemented("fns.InTrans")
 end
 
 function mPopup(stack, runtime) -- 0x58
@@ -969,7 +969,7 @@ end
 Max_dump = numParams_dump
 
 function Mean(stack, runtime) -- 0x94
-    error("Unimplemented function Mean!")
+    unimplemented("fns.Mean")
 end
 
 function Min(stack, runtime) -- 0x95
@@ -979,19 +979,19 @@ end
 Min_dump = numParams_dump
 
 function Std(stack, runtime) -- 0x96
-    error("Unimplemented function Std!")
+    unimplemented("fns.Std")
 end
 
 function Sum(stack, runtime) -- 0x97
-    error("Unimplemented function Sum!")
+    unimplemented("fns.Sum")
 end
 
 function Var(stack, runtime) -- 0x98
-    error("Unimplemented function Var!")
+    unimplemented("fns.Var")
 end
 
 function Eval(stack, runtime) -- 0x99
-    error("Unimplemented function Eval!")
+    unimplemented("fns.Eval")
 end
 
 function ChrStr(stack) -- 0xC0
@@ -999,11 +999,11 @@ function ChrStr(stack) -- 0xC0
 end
 
 function DatimStr(stack, runtime) -- 0xC1
-    error("Unimplemented function DatimStr!")
+    unimplemented("fns.DatimStr")
 end
 
 function DayNameStr(stack, runtime) -- 0xC2
-    error("Unimplemented function DayNameStr!")
+    unimplemented("fns.DayNameStr")
 end
 
 function DirStr(stack, runtime) -- 0xC3
@@ -1113,7 +1113,7 @@ function NumStr(stack, runtime) -- 0xCE
 end
 
 function PeekStr(stack, runtime) -- 0xCF
-    error("Unimplemented function PeekStr!")
+    unimplemented("fns.PeekStr")
 end
 
 function ReptStr(stack, runtime) -- 0xD0
@@ -1134,7 +1134,7 @@ function RightStr(stack, runtime) -- 0xD1
 end
 
 function SciStr(stack, runtime) -- 0xD2
-    error("Unimplemented function SciStr!")
+    unimplemented("fns.SciStr")
 end
 
 function UpperStr(stack, runtime) -- 0xD3
@@ -1201,19 +1201,19 @@ function ErrxStr(stack, runtime) -- 0xD8
 end
 
 function gPixel(stack, runtime) -- 0xDC
-    error("Unimplemented function gPixel!")
+    unimplemented("fns.gPixel")
 end
 
 function LocWithCase(stack, runtime) -- 0xDB
-    error("Unimplemented function LocWithCase!")
+    unimplemented("fns.LocWithCase")
 end
 
 function Size(stack, runtime) -- 0xDA
-    error("Unimplemented function Size!")
+    unimplemented("fns.Size")
 end
 
 function GetDocStr(stack, runtime) -- 0xD9
-    error("Unimplemented function GetDocStr!")
+    unimplemented("fns.GetDocStr")
 end
 
 return _ENV

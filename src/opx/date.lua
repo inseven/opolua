@@ -140,31 +140,31 @@ function DTMicro(stack, runtime) -- 9
 end
 
 function DTSetYear(stack, runtime) -- 10
-    error("Unimplemented date.opx function DTSetYear!")
+    unimplemented("opx.date.DTSetYear")
 end
 
 function DTSetMonth(stack, runtime) -- 11
-    error("Unimplemented date.opx function DTSetMonth!")
+    unimplemented("opx.date.DTSetMonth")
 end
 
 function DTSetDay(stack, runtime) -- 12
-    error("Unimplemented date.opx function DTSetDay!")
+    unimplemented("opx.date.DTSetDay")
 end
 
 function DTSetHour(stack, runtime) -- 13
-    error("Unimplemented date.opx function DTSetHour!")
+    unimplemented("opx.date.DTSetHour")
 end
 
 function DTSetMinute(stack, runtime) -- 14
-    error("Unimplemented date.opx function DTSetMinute!")
+    unimplemented("opx.date.DTSetMinute")
 end
 
 function DTSetSecond(stack, runtime) -- 15
-    error("Unimplemented date.opx function DTSetSecond!")
+    unimplemented("opx.date.DTSetSecond")
 end
 
 function DTSetMicro(stack, runtime) -- 16
-    error("Unimplemented date.opx function DTSetMicro!")
+    unimplemented("opx.date.DTSetMicro")
 end
 
 function DTNow(stack, runtime) -- 17
@@ -175,27 +175,27 @@ function DTNow(stack, runtime) -- 17
 end
 
 function DTDateTimeDiff(stack, runtime) -- 18
-    error("Unimplemented date.opx function DTDateTimeDiff!")
+    unimplemented("opx.date.DTDateTimeDiff")
 end
 
 function DTYearsDiff(stack, runtime) -- 19
-    error("Unimplemented date.opx function DTYearsDiff!")
+    unimplemented("opx.date.DTYearsDiff")
 end
 
 function DTMonthsDiff(stack, runtime) -- 20
-    error("Unimplemented date.opx function DTMonthsDiff!")
+    unimplemented("opx.date.DTMonthsDiff")
 end
 
 function DTDaysDiff(stack, runtime) -- 21
-    error("Unimplemented date.opx function DTDaysDiff!")
+    unimplemented("opx.date.DTDaysDiff")
 end
 
 function DTHoursDiff(stack, runtime) -- 22
-    error("Unimplemented date.opx function DTHoursDiff!")
+    unimplemented("opx.date.DTHoursDiff")
 end
 
 function DTMinutesDiff(stack, runtime) -- 23
-    error("Unimplemented date.opx function DTMinutesDiff!")
+    unimplemented("opx.date.DTMinutesDiff")
 end
 
 function DTSecsDiff(stack, runtime) -- 24
@@ -213,23 +213,23 @@ function DTMicrosDiff(stack, runtime) -- 25
 end
 
 function DTWeekNoInYear(stack, runtime) -- 26
-    error("Unimplemented date.opx function DTWeekNoInYear!")
+    unimplemented("opx.date.DTWeekNoInYear")
 end
 
 function DTDayNoInYear(stack, runtime) -- 27
-    error("Unimplemented date.opx function DTDayNoInYear!")
+    unimplemented("opx.date.DTDayNoInYear")
 end
 
 function DTDayNoInWeek(stack, runtime) -- 28
-    error("Unimplemented date.opx function DTDayNoInWeek!")
+    unimplemented("opx.date.DTDayNoInWeek")
 end
 
 function DTDaysInMonth(stack, runtime) -- 29
-    error("Unimplemented date.opx function DTDaysInMonth!")
+    unimplemented("opx.date.DTDaysInMonth")
 end
 
 function DTSetHomeTime(stack, runtime) -- 30
-    error("Unimplemented date.opx function DTSetHomeTime!")
+    unimplemented("opx.date.DTSetHomeTime")
 end
 
 function LCCountryCode(stack, runtime) -- 31
@@ -237,7 +237,7 @@ function LCCountryCode(stack, runtime) -- 31
 end
 
 function LCDecimalSeparator(stack, runtime) -- 32
-    error("Unimplemented date.opx function LCDecimalSeparator!")
+    unimplemented("opx.date.LCDecimalSeparator")
 end
 
 function LCSetClockFormat(stack, runtime) -- 33
@@ -252,11 +252,11 @@ function LCClockFormat(stack, runtime) -- 34
 end
 
 function LCStartOfWeek(stack, runtime) -- 35
-    error("Unimplemented date.opx.function LCStartOfWeek!")
+    unimplemented("opx.date.LCStartOfWeek")
 end
 
 function LCThousandsSeparator(stack, runtime) -- 36
-    error("Unimplemented date.opx.function LCThousandsSeparator!")
+    unimplemented("opx.date.LCThousandsSeparator")
 end
 
 return _ENV

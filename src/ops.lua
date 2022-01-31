@@ -1127,27 +1127,27 @@ function CallProcByStringExpr_dump(runtime)
 end
 
 function PercentLessThan(stack, runtime) -- 0x6C
-    error("Unimplemented opcode PercentLessThan!")
+    unimplemented("PercentLessThan")
 end
 
 function PercentGreaterThan(stack, runtime) -- 0x6D
-    error("Unimplemented opcode PercentGreaterThan!")
+    unimplemented("PercentGreaterThan")
 end
 
 function PercentAdd(stack, runtime) -- 0x6E
-    error("Unimplemented opcode PercentAdd!")
+    unimplemented("PercentAdd")
 end
 
 function PercentSubtract(stack, runtime) -- 0x6F
-    error("Unimplemented opcode PercentSubtract!")
+    unimplemented("PercentSubtract")
 end
 
 function PercentMultiply(stack, runtime) -- 0x70
-    error("Unimplemented opcode PercentMultiply!")
+    unimplemented("PercentMultiply")
 end
 
 function PercentDivide(stack, runtime) -- 0x71
-    error("Unimplemented opcode PercentDivide!")
+    unimplemented("PercentDivide")
 end
 
 function ZeroReturn(stack, runtime)
@@ -1245,7 +1245,8 @@ function PrintCarriageReturn(stack, runtime) -- 0x92
 end
 
 function LPrintCarriageReturn(stack, runtime) -- 0x93
-    error("Unimplemented opcode LPrintCarriageReturn!")
+    stack:push("\n")
+    LPrintString(stack, runtime)
 end
 
 function InputInt(stack, runtime) -- 0x94
@@ -1515,11 +1516,11 @@ function OnErr_dump(runtime)
 end
 
 function Off(stack, runtime) -- 0xB2
-    error("Unimplemented opcode Off!")
+    unimplemented("Off")
 end
 
 function OffFor(stack, runtime) -- 0xB3
-    error("Unimplemented opcode OffFor!")
+    unimplemented("OffFor")
 end
 
 function Open(stack, runtime) -- 0xB4
@@ -1617,7 +1618,7 @@ function UnLoadM(stack, runtime) -- 0xC1
 end
 
 function Edit(stack, runtime) -- 0xC2
-    error("Unimplemented opcode Edit!")
+    unimplemented("Edit")
     runtime:setTrap(false)
 end
 
@@ -1685,7 +1686,7 @@ function gFont(stack, runtime) -- 0xCA
 end
 
 function gUnloadFont(stack, runtime) -- 0xCB
-    error("Unimplemented opcode gUnloadFont!")
+    unimplemented("gUnloadFont")
     runtime:setTrap(false)
 end
 
@@ -1862,7 +1863,7 @@ function gUpdate_dump(runtime)
 end
 
 function GetEvent(stack, runtime) -- 0xE4
-    error("Unimplemented opcode GetEvent!")
+    unimplemented("GetEvent")
 end
 
 function gLineTo(stack, runtime) -- 0xE5
@@ -2089,7 +2090,7 @@ function gInvert(stack, runtime) -- 0xF2
 end
 
 function gXPrint(stack, runtime) -- 0xF3
-    error("Unimplemented opcode gXPrint!")
+    unimplemented("gXPrint")
 end
 
 function gBorder(stack, runtime) -- 0xF4
@@ -2135,7 +2136,7 @@ function MkDir(stack, runtime) -- 0xF8
 end
 
 function RmDir(stack, runtime) -- 0xF9
-    error("Unimplemented opcode RmDir!")
+    unimplemented("RmDir")
     runtime:setTrap(false)
 end
 
@@ -2147,7 +2148,7 @@ function SetPath(stack, runtime) -- 0xFA
 end
 
 function SecsToDate(stack, runtime) -- 0xFB
-    error("Unimplemented opcode SecsToDate!")
+    unimplemented("SecsToDate")
 end
 
 function gIPrint(stack, runtime) -- 0xFC
@@ -2197,7 +2198,7 @@ function Font(stack, runtime) -- 0x104
 end
 
 function Style(stack, runtime) -- 0x105
-    error("Unimplemented opcode Style!")
+    unimplemented("Style")
 end
 
 function FreeAlloc(stack, runtime) -- 0x10C
@@ -2265,12 +2266,21 @@ function CallOpxFunc(stack, runtime) -- 0x118
     local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
     assert(opx, "Bad opx id?")
     if not opx.module then
-        opx.module = require("opx."..opx.filename:lower())
+        local ok
+        local modName = "opx."..opx.filename
+        ok, opx.module = pcall(require, modName)
+        if not ok then
+            unimplemented(modName)
+        end
     end
     local fnName = opx.module.fns[fnIdx]
-    assert(fnName, fmt("OPX function id %d not found in %s!", fnIdx, opx.filename))
+    if not fnName then
+        unimplemented(fmt("opx.%s.%d", opx.filename, fnIdx))
+    end
     local fn = opx.module[fnName]
-    assert(fn, "Unimplemented OPX function "..fnName.. " in "..opx.filename)
+    if not fn then
+        unimplemented(fmt("opx.%s.%s", opx.filename, fnName))
+    end
     fn(stack, runtime)
 end
 
@@ -2280,7 +2290,7 @@ function CallOpxFunc_dump(runtime)
     local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
     local fnName
     if opx then
-        local ok, module = pcall(require, fmt("opx.%s", opx.filename:lower()))
+        local ok, module = pcall(require, fmt("opx.%s", opx.filename))
         if ok then
             fnName = module.fns[fnIdx]
         end
@@ -2290,43 +2300,43 @@ function CallOpxFunc_dump(runtime)
 end
 
 function Statement32(stack, runtime) -- 0x119
-    error("Unimplemented opcode Statement32!")
+    unimplemented("Statement32")
 end
 
 function Modify(stack, runtime) -- 0x11A
-    error("Unimplemented opcode Modify!")
+    unimplemented("Modify")
     runtime:setTrap(false)
 end
 
 function Insert(stack, runtime) -- 0x11B
-    error("Unimplemented opcode Insert!")
+    unimplemented("Insert")
     runtime:setTrap(false)
 end
 
 function Cancel(stack, runtime) -- 0x11C
-    error("Unimplemented opcode Cancel!")
+    unimplemented("Cancel")
     runtime:setTrap(false)
 end
 
 function Put(stack, runtime) -- 0x11D
-    error("Unimplemented opcode Put!")
+    unimplemented("Put")
     runtime:setTrap(false)
 end
 
 function DeleteTable(stack, runtime) -- 0x11E
-    error("Unimplemented opcode DeleteTable!")
+    unimplemented("DeleteTable")
 end
 
 function GotoMark(stack, runtime) -- 0x11F
-    error("Unimplemented opcode GotoMark!")
+    unimplemented("GotoMark")
 end
 
 function KillMark(stack, runtime) -- 0x120
-    error("Unimplemented opcode KillMark!")
+    unimplemented("KillMark")
 end
 
 function ReturnFromEval(stack, runtime) -- 0x121
-    error("Unimplemented opcode ReturnFromEval!")
+    unimplemented("ReturnFromEval")
 end
 
 
@@ -2357,11 +2367,11 @@ function SetFlags(stack, runtime) -- 0x125
 end
 
 function SetDoc(stack, runtime) -- 0x126
-    error("Unimplemented opcode SetDoc!")
+    unimplemented("SetDoc")
 end
 
 function DaysToDate(stack, runtime) -- 0x127
-    error("Unimplemented opcode DaysToDate!")
+    unimplemented("DaysToDate")
 end
 
 function gInfo32(stack, runtime) -- 0x128
@@ -2433,23 +2443,23 @@ function IoWaitStat32(stack, runtime) -- 0x129
 end
 
 function Compact(stack, runtime) -- 0x12A
-    error("Unimplemented opcode Compact!")
+    unimplemented("Compact")
 end
 
 function BeginTrans(stack, runtime) -- 0x12B
-    error("Unimplemented opcode BeginTrans!")
+    unimplemented("BeginTrans")
 end
 
 function CommitTrans(stack, runtime) -- 0x12C
-    error("Unimplemented opcode CommitTrans!")
+    unimplemented("CommitTrans")
 end
 
 function Rollback(stack, runtime) -- 0x12D
-    error("Unimplemented opcode Rollback!")
+    unimplemented("Rollback")
 end
 
 function ClearFlags(stack, runtime) -- 0x12E
-    error("Unimplemented opcode ClearFlags!")
+    unimplemented("ClearFlags")
 end
 
 function PointerFilter(stack, runtime) -- 0x12F
@@ -2475,11 +2485,11 @@ end
 mCasc_dump = numParams_dump
 
 function EvalExternalRightSideRef(stack, runtime) -- 0x131
-    error("Unimplemented opcode EvalExternalRightSideRef!")
+    unimplemented("EvalExternalRightSideRef")
 end
 
 function EvalExternalLeftSideRef(stack, runtime) -- 0x132
-    error("Unimplemented opcode EvalExternalLeftSideRef!")
+    unimplemented("EvalExternalLeftSideRef")
 end
 
 function dEditCheckbox(stack, runtime) -- 0x133
@@ -2492,23 +2502,23 @@ function dEditCheckbox(stack, runtime) -- 0x133
 end
 
 function gXBorder32(stack, runtime) -- 0x13B
-    error("Unimplemented opcode gXBorder32!")
+    unimplemented("gXBorder32")
 end
 
 function SetHelpUid(stack, runtime) -- 0x13A
-    error("Unimplemented opcode SetHelpUid!")
+    unimplemented("SetHelpUid")
 end
 
 function ShowHelp(stack, runtime) -- 0x139
-    error("Unimplemented opcode ShowHelp!")
+    unimplemented("ShowHelp")
 end
 
 function SetHelp(stack, runtime) -- 0x138
-    error("Unimplemented opcode SetHelp!")
+    unimplemented("SetHelp")
 end
 
 function mCardX(stack, runtime) -- 0x137
-    error("Unimplemented opcode mCardX!")
+    unimplemented("mCardX")
 end
 
 function gColorBackground(stack, runtime) -- ER5: 0x137, ER6: 0x136

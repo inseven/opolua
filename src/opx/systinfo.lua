@@ -82,119 +82,119 @@ fns = {
 }
 
 function SISystemVisible(stack, runtime) -- 1
-    error("Unimplemented systinfo.opx function SISystemVisible!")
+    unimplemented("opx.systinfo.SISystemVisible")
 end
 
 function SIHiddenVisible(stack, runtime) -- 2
-    error("Unimplemented systinfo.opx function SIHiddenVisible!")
+    unimplemented("opx.systinfo.SIHiddenVisible")
 end
 
 function SICurrencyFormat(stack, runtime) -- 3
-    error("Unimplemented systinfo.opx function SICurrencyFormat!")
+    unimplemented("opx.systinfo.SICurrencyFormat")
 end
 
 function SIDateFormat(stack, runtime) -- 4
-    error("Unimplemented systinfo.opx function SIDateFormat!")
+    unimplemented("opx.systinfo.SIDateFormat")
 end
 
 function SITimeFormat(stack, runtime) -- 5
-    error("Unimplemented systinfo.opx function SITimeFormat!")
+    unimplemented("opx.systinfo.SITimeFormat")
 end
 
 function SIUTCOffset(stack, runtime) -- 6
-    error("Unimplemented systinfo.opx function SIUTCOffset!")
+    unimplemented("opx.systinfo.SIUTCOffset")
 end
 
 function SIWorkday(stack, runtime) -- 7
-    error("Unimplemented systinfo.opx function SIWorkday!")
+    unimplemented("opx.systinfo.SIWorkday")
 end
 
 function SIDaylightSaving(stack, runtime) -- 8
-    error("Unimplemented systinfo.opx function SIDaylightSaving!")
+    unimplemented("opx.systinfo.SIDaylightSaving")
 end
 
 function SIHomeCountry(stack, runtime) -- 9
-    error("Unimplemented systinfo.opx function SIHomeCountry!")
+    unimplemented("opx.systinfo.SIHomeCountry")
 end
 
 function SIUnits(stack, runtime) -- 10
-    error("Unimplemented systinfo.opx function SIUnits!")
+    unimplemented("opx.systinfo.SIUnits")
 end
 
 function SIIsDirectory(stack, runtime) -- 11
-    error("Unimplemented systinfo.opx function SIIsDirectory!")
+    unimplemented("opx.systinfo.SIIsDirectory")
 end
 
 function SIVolumeName(stack, runtime) -- 12
-    error("Unimplemented systinfo.opx function SIVolumeName!")
+    unimplemented("opx.systinfo.SIVolumeName")
 end
 
 function SIUniqueFilename(stack, runtime) -- 13
-    error("Unimplemented systinfo.opx function SIUniqueFilename!")
+    unimplemented("opx.systinfo.SIUniqueFilename")
 end
 
 function SIBookmark(stack, runtime) -- 14
-    error("Unimplemented systinfo.opx function SIBookmark!")
+    unimplemented("opx.systinfo.SIBookmark")
 end
 
 function SIStandardFolder(stack, runtime) -- 15
-    error("Unimplemented systinfo.opx function SIStandardFolder!")
+    unimplemented("opx.systinfo.SIStandardFolder")
 end
 
 function SIDisplayContrast(stack, runtime) -- 16
-    error("Unimplemented systinfo.opx function SIDisplayContrast!")
+    unimplemented("opx.systinfo.SIDisplayContrast")
 end
 
 function SIOwner(stack, runtime) -- 17
-    error("Unimplemented systinfo.opx function SIOwner!")
+    unimplemented("opx.systinfo.SIOwner")
 end
 
 function SIBatteryVolts(stack, runtime) -- 18
-    error("Unimplemented systinfo.opx function SIBatteryVolts!")
+    unimplemented("opx.systinfo.SIBatteryVolts")
 end
 
 function SIBatteryCurrent(stack, runtime) -- 19
-    error("Unimplemented systinfo.opx function SIBatteryCurrent!")
+    unimplemented("opx.systinfo.SIBatteryCurrent")
 end
 
 function SIMemory(stack, runtime) -- 20
-    error("Unimplemented systinfo.opx function SIMemory!")
+    unimplemented("opx.systinfo.SIMemory")
 end
 
 function SIKeyClickEnabled(stack, runtime) -- 21
-    error("Unimplemented systinfo.opx function SIKeyClickEnabled!")
+    unimplemented("opx.systinfo.SIKeyClickEnabled")
 end
 
 function SIKeyClickLoud(stack, runtime) -- 22
-    error("Unimplemented systinfo.opx function SIKeyClickLoud!")
+    unimplemented("opx.systinfo.SIKeyClickLoud")
 end
 
 function SIKeyClickOverridden(stack, runtime) -- 23
-    error("Unimplemented systinfo.opx function SIKeyClickOverridden!")
+    unimplemented("opx.systinfo.SIKeyClickOverridden")
 end
 
 function SIPointerClickEnabled(stack, runtime) -- 24
-    error("Unimplemented systinfo.opx function SIPointerClickEnabled!")
+    unimplemented("opx.systinfo.SIPointerClickEnabled")
 end
 
 function SIPointerClickLoud(stack, runtime) -- 25
-    error("Unimplemented systinfo.opx function SIPointerClickLoud!")
+    unimplemented("opx.systinfo.SIPointerClickLoud")
 end
 
 function SIBeepEnabled(stack, runtime) -- 26
-    error("Unimplemented systinfo.opx function SIBeepEnabled!")
+    unimplemented("opx.systinfo.SIBeepEnabled")
 end
 
 function SIBeepLoud(stack, runtime) -- 27
-    error("Unimplemented systinfo.opx function SIBeepLoud!")
+    unimplemented("opx.systinfo.SIBeepLoud")
 end
 
 function SISoundDriverEnabled(stack, runtime) -- 28
-    error("Unimplemented systinfo.opx function SISoundDriverEnabled!")
+    unimplemented("opx.systinfo.SISoundDriverEnabled")
 end
 
 function SISoundDriverLoud(stack, runtime) -- 29
-    error("Unimplemented systinfo.opx function SISoundDriverLoud!")
+    unimplemented("opx.systinfo.SISoundDriverLoud")
 end
 
 function SISoundEnabled(stack, runtime) -- 30
@@ -202,99 +202,99 @@ function SISoundEnabled(stack, runtime) -- 30
 end
 
 function SIAutoSwitchOffBehaviour(stack, runtime) -- 31
-    error("Unimplemented systinfo.opx function SIAutoSwitchOffBehaviour!")
+    unimplemented("opx.systinfo.SIAutoSwitchOffBehaviour")
 end
 
 function SIAutoSwitchOffTime(stack, runtime) -- 32
-    error("Unimplemented systinfo.opx function SIAutoSwitchOffTime!")
+    unimplemented("opx.systinfo.SIAutoSwitchOffTime")
 end
 
 function SIBacklightBehaviour(stack, runtime) -- 33
-    error("Unimplemented systinfo.opx function SIBacklightBehaviour!")
+    unimplemented("opx.systinfo.SIBacklightBehaviour")
 end
 
 function SIBacklightOnTime(stack, runtime) -- 34
-    error("Unimplemented systinfo.opx function SIBacklightOnTime!")
+    unimplemented("opx.systinfo.SIBacklightOnTime")
 end
 
 function SIDisplaySize(stack, runtime) -- 35
-    error("Unimplemented systinfo.opx function SIDisplaySize!")
+    unimplemented("opx.systinfo.SIDisplaySize")
 end
 
 function SIKeyboardIndex(stack, runtime) -- 36
-    error("Unimplemented systinfo.opx function SIKeyboardIndex!")
+    unimplemented("opx.systinfo.SIKeyboardIndex")
 end
 
 function SILanguageIndex(stack, runtime) -- 37
-    error("Unimplemented systinfo.opx function SILanguageIndex!")
+    unimplemented("opx.systinfo.SILanguageIndex")
 end
 
 function SIXYInputPresent(stack, runtime) -- 38
-    error("Unimplemented systinfo.opx function SIXYInputPresent!")
+    unimplemented("opx.systinfo.SIXYInputPresent")
 end
 
 function SIKeyboardPresent(stack, runtime) -- 39
-    error("Unimplemented systinfo.opx function SIKeyboardPresent!")
+    unimplemented("opx.systinfo.SIKeyboardPresent")
 end
 
 function SIMaximumColors(stack, runtime) -- 40
-    error("Unimplemented systinfo.opx function SIMaximumColors!")
+    unimplemented("opx.systinfo.SIMaximumColors")
 end
 
 function SIProcessorClock(stack, runtime) -- 41
-    error("Unimplemented systinfo.opx function SIProcessorClock!")
+    unimplemented("opx.systinfo.SIProcessorClock")
 end
 
 function SISpeedFactor(stack, runtime) -- 42
-    error("Unimplemented systinfo.opx function SISpeedFactor!")
+    unimplemented("opx.systinfo.SISpeedFactor")
 end
 
 function SIMachine(stack, runtime) -- 43
-    error("Unimplemented systinfo.opx function SIMachine!")
+    unimplemented("opx.systinfo.SIMachine")
 end
 
 function SIRemoteLinkStatus(stack, runtime) -- 44
-    error("Unimplemented systinfo.opx function SIRemoteLinkStatus!")
+    unimplemented("opx.systinfo.SIRemoteLinkStatus")
 end
 
 function SIRemoteLinkDisable(stack, runtime) -- 45
-    error("Unimplemented systinfo.opx function SIRemoteLinkDisable!")
+    unimplemented("opx.systinfo.SIRemoteLinkDisable")
 end
 
 function SIIsPathVisible(stack, runtime) -- 46
-    error("Unimplemented systinfo.opx function SIIsPathVisible!")
+    unimplemented("opx.systinfo.SIIsPathVisible")
 end
 
 function SIRemoteLinkEnable(stack, runtime) -- 47
-    error("Unimplemented systinfo.opx function SIRemoteLinkEnable!")
+    unimplemented("opx.systinfo.SIRemoteLinkEnable")
 end
 
 function SIPWIsEnabled(stack, runtime) -- 48
-    error("Unimplemented systinfo.opx function SIPWIsEnabled!")
+    unimplemented("opx.systinfo.SIPWIsEnabled")
 end
 
 function SIPWSetEnabled(stack, runtime) -- 49
-    error("Unimplemented systinfo.opx function SIPWSetEnabled!")
+    unimplemented("opx.systinfo.SIPWSetEnabled")
 end
 
 function SIPWIsValid(stack, runtime) -- 50
-    error("Unimplemented systinfo.opx function SIPWIsValid!")
+    unimplemented("opx.systinfo.SIPWIsValid")
 end
 
 function SIPWSet(stack, runtime) -- 51
-    error("Unimplemented systinfo.opx function SIPWSet!")
+    unimplemented("opx.systinfo.SIPWSet")
 end
 
 function SILedSet(stack, runtime) -- 52
-    error("Unimplemented systinfo.opx function SILedSet!")
+    unimplemented("opx.systinfo.SILedSet")
 end
 
 function SIRemoteLinkEnableWithOptions(stack, runtime) -- 53
-    error("Unimplemented systinfo.opx function SIRemoteLinkEnableWithOptions!")
+    unimplemented("opx.systinfo.SIRemoteLinkEnableWithOptions")
 end
 
 function SIRemoteLinkConfig(stack, runtime) -- 54
-    error("Unimplemented systinfo.opx function SIRemoteLinkConfig!")
+    unimplemented("opx.systinfo.SIRemoteLinkConfig")
 end
 
 return _ENV

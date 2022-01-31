@@ -51,15 +51,15 @@ fns = {
 }
 
 function DBFind(stack, runtime) -- 1
-    error("Unimplemented sysram1.opx function DBFind!")
+    unimplemented("opx.sysram1.DBFind")
 end
 
 function DBFindField(stack, runtime) -- 2
-    error("Unimplemented sysram1.opx function DBFindField!")
+    unimplemented("opx.sysram1.DBFindField")
 end
 
 function GetThreadIdFromCaption(stack, runtime) -- 3
-    error("Unimplemented sysram1.opx function GetThreadIdFromCaption!")
+    unimplemented("opx.sysram1.GetThreadIdFromCaption")
 end
 
 function ExternalPower(stack, runtime) -- 4
@@ -67,7 +67,7 @@ function ExternalPower(stack, runtime) -- 4
 end
 
 function LCNearestLanguageFile(stack, runtime) -- 5
-    error("Unimplemented sysram1.opx function LCNearestLanguageFile!")
+    unimplemented("opx.sysram1.LCNearestLanguageFile")
 end
 
 function LCLanguage(stack, runtime) -- 6
@@ -75,71 +75,71 @@ function LCLanguage(stack, runtime) -- 6
 end
 
 function OSVersionMajor(stack, runtime) -- 7
-    error("Unimplemented sysram1.opx function OSVersionMajor!")
+    unimplemented("opx.sysram1.OSVersionMajor")
 end
 
 function OSVersionMinor(stack, runtime) -- 8
-    error("Unimplemented sysram1.opx function OSVersionMinor!")
+    unimplemented("opx.sysram1.OSVersionMinor")
 end
 
 function OSVersionBuild(stack, runtime) -- 9
-    error("Unimplemented sysram1.opx function OSVersionBuild!")
+    unimplemented("opx.sysram1.OSVersionBuild")
 end
 
 function ROMVersionMajor(stack, runtime) -- 10
-    error("Unimplemented sysram1.opx function ROMVersionMajor!")
+    unimplemented("opx.sysram1.ROMVersionMajor")
 end
 
 function ROMVersionMinor(stack, runtime) -- 11
-    error("Unimplemented sysram1.opx function ROMVersionMinor!")
+    unimplemented("opx.sysram1.ROMVersionMinor")
 end
 
 function ROMVersionBuild(stack, runtime) -- 12
-    error("Unimplemented sysram1.opx function ROMVersionBuild!")
+    unimplemented("opx.sysram1.ROMVersionBuild")
 end
 
 function GetFileSize(stack, runtime) -- 13
-    error("Unimplemented sysram1.opx function GetFileSize!")
+    unimplemented("opx.sysram1.GetFileSize")
 end
 
 function DTDayNameFull(stack, runtime) -- 14
-    error("Unimplemented sysram1.opx function DTDayNameFull!")
+    unimplemented("opx.sysram1.DTDayNameFull")
 end
 
 function DTMonthNameFull(stack, runtime) -- 15
-    error("Unimplemented sysram1.opx function DTMonthNameFull!")
+    unimplemented("opx.sysram1.DTMonthNameFull")
 end
 
 function DTIsLeapYear(stack, runtime) -- 16
-    error("Unimplemented sysram1.opx function DTIsLeapYear!")
+    unimplemented("opx.sysram1.DTIsLeapYear")
 end
 
 function LCDateSeparator(stack, runtime) -- 17
-    error("Unimplemented sysram1.opx function LCDateSeparator!")
+    unimplemented("opx.sysram1.LCDateSeparator")
 end
 
 function LCTimeSeparator(stack, runtime) -- 18
-    error("Unimplemented sysram1.opx function LCTimeSeparator!")
+    unimplemented("opx.sysram1.LCTimeSeparator")
 end
 
 function LCAmPmSpaceBetween(stack, runtime) -- 19
-    error("Unimplemented sysram1.opx function LCAmPmSpaceBetween!")
+    unimplemented("opx.sysram1.LCAmPmSpaceBetween")
 end
 
 function RunExeWithCmd(stack, runtime) -- 20
-    error("Unimplemented sysram1.opx function RunExeWithCmd!")
+    unimplemented("opx.sysram1.RunExeWithCmd")
 end
 
 function SendSwitchFilesMessageToApp(stack, runtime) -- 21
-    error("Unimplemented sysram1.opx function SendSwitchFilesMessageToApp!")
+    unimplemented("opx.sysram1.SendSwitchFilesMessageToApp")
 end
 
 function RunDocument(stack, runtime) -- 22
-    error("Unimplemented sysram1.opx function RunDocument!")
+    unimplemented("opx.sysram1.RunDocument")
 end
 
 function GetOPXVersion(stack, runtime) -- 23
-    error("Unimplemented sysram1.opx function GetOPXVersion!")
+    unimplemented("opx.sysram1.GetOPXVersion")
 end
 
 return _ENV

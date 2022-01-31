@@ -105,31 +105,31 @@ fns = {
 }
 
 function BackLightOn(stack, runtime) -- 1
-    error("Unimplemented system.opx function BackLightOn!")
+    unimplemented("opx.system.BackLightOn")
 end
 
 function SetBackLightOn(stack, runtime) -- 2
-    error("Unimplemented system.opx function SetBackLightOn!")
+    unimplemented("opx.system.SetBackLightOn")
 end
 
 function SetBackLightOnTime(stack, runtime) -- 3
-    error("Unimplemented system.opx function SetBackLightOnTime!")
+    unimplemented("opx.system.SetBackLightOnTime")
 end
 
 function SetBacklightBehavior(stack, runtime) -- 4
-    error("Unimplemented system.opx function SetBacklightBehavior!")
+    unimplemented("opx.system.SetBacklightBehavior")
 end
 
 function IsBacklightPresent(stack, runtime) -- 5
-    error("Unimplemented system.opx function IsBacklightPresent!")
+    unimplemented("opx.system.IsBacklightPresent")
 end
 
 function SetAutoSwitchOffBehavior(stack, runtime) -- 6
-    error("Unimplemented system.opx function SetAutoSwitchOffBehavior!")
+    unimplemented("opx.system.SetAutoSwitchOffBehavior")
 end
 
 function SetAutoSwitchOffTime(stack, runtime) -- 7
-    error("Unimplemented system.opx function SetAutoSwitchOffTime!")
+    unimplemented("opx.system.SetAutoSwitchOffTime")
 end
 
 function SetActive(stack, runtime) -- 8
@@ -138,11 +138,11 @@ function SetActive(stack, runtime) -- 8
 end
 
 function ResetAutoSwitchOffTimer(stack, runtime) -- 9
-    error("Unimplemented system.opx function ResetAutoSwitchOffTimer!")
+    unimplemented("opx.system.ResetAutoSwitchOffTimer")
 end
 
 function SwitchOff(stack, runtime) -- 10
-    error("Unimplemented system.opx function SwitchOff!")
+    unimplemented("opx.system.SwitchOff")
 end
 
 function SetSoundEnabled(stack, runtime) -- 11
@@ -152,7 +152,7 @@ function SetSoundEnabled(stack, runtime) -- 11
 end
 
 function SetSoundDriverEnabled(stack, runtime) -- 12
-    error("Unimplemented system.opx function SetSoundDriverEnabled!")
+    unimplemented("opx.system.SetSoundDriverEnabled")
 end
 
 function SetKeyClickEnabled(stack, runtime) -- 13
@@ -161,55 +161,55 @@ function SetKeyClickEnabled(stack, runtime) -- 13
 end
 
 function SetPointerClickEnabled(stack, runtime) -- 14
-    error("Unimplemented system.opx function SetPointerClickEnabled!")
+    unimplemented("opx.system.SetPointerClickEnabled")
 end
 
 function SetDisplayContrast(stack, runtime) -- 15
-    error("Unimplemented system.opx function SetDisplayContrast!")
+    unimplemented("opx.system.SetDisplayContrast")
 end
 
 function MaxDisplayContrast(stack, runtime) -- 16
-    error("Unimplemented system.opx function MaxDisplayContrast!")
+    unimplemented("opx.system.MaxDisplayContrast")
 end
 
 function IsReadOnly(stack, runtime) -- 17
-    error("Unimplemented system.opx function IsReadOnly!")
+    unimplemented("opx.system.IsReadOnly")
 end
 
 function IsHidden(stack, runtime) -- 18
-    error("Unimplemented system.opx function IsHidden!")
+    unimplemented("opx.system.IsHidden")
 end
 
 function IsSystem(stack, runtime) -- 19
-    error("Unimplemented system.opx function IsSystem!")
+    unimplemented("opx.system.IsSystem")
 end
 
 function SetReadOnly(stack, runtime) -- 20
-    error("Unimplemented system.opx function SetReadOnly!")
+    unimplemented("opx.system.SetReadOnly")
 end
 
 function SetHiddenFile(stack, runtime) -- 21
-    error("Unimplemented system.opx function SetHiddenFile!")
+    unimplemented("opx.system.SetHiddenFile")
 end
 
 function SetSystemFile(stack, runtime) -- 22
-    error("Unimplemented system.opx function SetSystemFile!")
+    unimplemented("opx.system.SetSystemFile")
 end
 
 function VolumeSize(stack, runtime) -- 23
-    error("Unimplemented system.opx function VolumeSize!")
+    unimplemented("opx.system.VolumeSize")
 end
 
 function VolumeSpaceFree(stack, runtime) -- 24
-    error("Unimplemented system.opx function VolumeSpaceFree!")
+    unimplemented("opx.system.VolumeSpaceFree")
 end
 
 function VolumeUniqueID(stack, runtime) -- 25
-    error("Unimplemented system.opx function VolumeUniqueID!")
+    unimplemented("opx.system.VolumeUniqueID")
 end
 
 function MediaType(stack, runtime) -- 26
-    error("Unimplemented system.opx function MediaType!")
+    unimplemented("opx.system.MediaType")
 end
 
 function GetFileTime(stack, runtime) -- 27
@@ -225,7 +225,7 @@ function GetFileTime(stack, runtime) -- 27
 end
 
 function SetFileTime(stack, runtime) -- 28
-    error("Unimplemented system.opx function SetFileTime!")
+    unimplemented("opx.system.SetFileTime")
 end
 
 function DisplayTaskList(stack, runtime) -- 29
@@ -240,31 +240,31 @@ function SetComputeMode(stack, runtime) -- 30
 end
 
 function RunApp(stack, runtime) -- 31
-    error("Unimplemented system.opx function RunApp!")
+    unimplemented("opx.system.RunApp")
 end
 
 function RunExe(stack, runtime) -- 32
-    error("Unimplemented system.opx function RunExe!")
+    unimplemented("opx.system.RunExe")
 end
 
 function LogonToThread(stack, runtime) -- 33
-    error("Unimplemented system.opx function LogonToThread!")
+    unimplemented("opx.system.LogonToThread")
 end
 
 function TerminateCurrentProcess(stack, runtime) -- 34
-    error("Unimplemented system.opx function TerminateCurrentProcess!")
+    unimplemented("opx.system.TerminateCurrentProcess")
 end
 
 function TerminateProcess(stack, runtime) -- 35
-    error("Unimplemented system.opx function TerminateProcess!")
+    unimplemented("opx.system.TerminateProcess")
 end
 
 function KillCurrentProcess(stack, runtime) -- 36
-    error("Unimplemented system.opx function KillCurrentProcess!")
+    unimplemented("opx.system.KillCurrentProcess")
 end
 
 function KillProcess(stack, runtime) -- 37
-    error("Unimplemented system.opx function KillProcess!")
+    unimplemented("opx.system.KillProcess")
 end
 
 function PlaySound(stack, runtime) -- 38
@@ -362,7 +362,7 @@ function CheckUid(stack, runtime) -- 47
 end
 
 function SetPointerGrabOn(stack, runtime) -- 48
-    error("Unimplemented system.opx function SetPointerGrabOn!")
+    unimplemented("opx.system.SetPointerGrabOn")
 end
 
 function MachineName(stack, runtime) -- 49
@@ -378,7 +378,6 @@ function MachineUniqueId(stack, runtime) -- 50
 end
 
 function EndTask(stack, runtime) -- 51
-    -- error("Unimplemented system.opx function EndTask!")
     local prev = stack:pop()
     local id = stack:pop()
     printf("TODO: EndTask id=%d prev=%d\n", id, prev)
@@ -386,15 +385,15 @@ function EndTask(stack, runtime) -- 51
 end
 
 function KillTask(stack, runtime) -- 52
-    error("Unimplemented system.opx function KillTask!")
+    unimplemented("opx.system.KillTask")
 end
 
 function GetThreadIdFromOpenDoc(stack, runtime) -- 53
-    error("Unimplemented system.opx function GetThreadIdFromOpenDoc!")
+    unimplemented("opx.system.GetThreadIdFromOpenDoc")
 end
 
 function GetThreadIdFromAppUid(stack, runtime) -- 54
-    error("Unimplemented system.opx function GetThreadIdFromAppUid!")
+    unimplemented("opx.system.GetThreadIdFromAppUid")
 end
 
 function SetForeground(stack, runtime) -- 55
@@ -408,51 +407,51 @@ function SetBackground(stack, runtime) -- 56
 end
 
 function SetForegroundByThread(stack, runtime) -- 57
-    error("Unimplemented system.opx function SetForegroundByThread!")
+    unimplemented("opx.system.SetForegroundByThread")
 end
 
 function SetBackgroundByThread(stack, runtime) -- 58
-    error("Unimplemented system.opx function SetBackgroundByThread!")
+    unimplemented("opx.system.SetBackgroundByThread")
 end
 
 function GetNextWindowGroupName(stack, runtime) -- 59
-    error("Unimplemented system.opx function GetNextWindowGroupName!")
+    unimplemented("opx.system.GetNextWindowGroupName")
 end
 
 function GetNextWindowId(stack, runtime) -- 60
-    error("Unimplemented system.opx function GetNextWindowId!")
+    unimplemented("opx.system.GetNextWindowId")
 end
 
 function SendKeyEventToApp(stack, runtime) -- 61
-    error("Unimplemented system.opx function SendKeyEventToApp!")
+    unimplemented("opx.system.SendKeyEventToApp")
 end
 
 function IrDAConnectToSend(stack, runtime) -- 62
-    error("Unimplemented system.opx function IrDAConnectToSend!")
+    unimplemented("opx.system.IrDAConnectToSend")
 end
 
 function IrDAConnectToReceive(stack, runtime) -- 63
-    error("Unimplemented system.opx function IrDAConnectToReceive!")
+    unimplemented("opx.system.IrDAConnectToReceive")
 end
 
 function IrDAWrite(stack, runtime) -- 64
-    error("Unimplemented system.opx function IrDAWrite!")
+    unimplemented("opx.system.IrDAWrite")
 end
 
 function IrDARead(stack, runtime) -- 65
-    error("Unimplemented system.opx function IrDARead!")
+    unimplemented("opx.system.IrDARead")
 end
 
 function IrDAReadA(stack, runtime) -- 66
-    error("Unimplemented system.opx function IrDAReadA!")
+    unimplemented("opx.system.IrDAReadA")
 end
 
 function IrDAWaitForDisconnect(stack, runtime) -- 67
-    error("Unimplemented system.opx function IrDAWaitForDisconnect!")
+    unimplemented("opx.system.IrDAWaitForDisconnect")
 end
 
 function IrDADisconnect(stack, runtime) -- 68
-    error("Unimplemented system.opx function IrDADisconnect!")
+    unimplemented("opx.system.IrDADisconnect")
 end
 
 function MainBatteryStatus(stack, runtime) -- 69
@@ -460,35 +459,35 @@ function MainBatteryStatus(stack, runtime) -- 69
 end
 
 function BackupBatteryStatus(stack, runtime) -- 70
-    error("Unimplemented system.opx function BackupBatteryStatus!")
+    unimplemented("opx.system.BackupBatteryStatus")
 end
 
 function CaptureKey(stack, runtime) -- 71
-    error("Unimplemented system.opx function CaptureKey!")
+    unimplemented("opx.system.CaptureKey")
 end
 
 function CancelCaptureKey(stack, runtime) -- 72
-    error("Unimplemented system.opx function CancelCaptureKey!")
+    unimplemented("opx.system.CancelCaptureKey")
 end
 
 function SetPointerCapture(stack, runtime) -- 73
-    error("Unimplemented system.opx function SetPointerCapture!")
+    unimplemented("opx.system.SetPointerCapture")
 end
 
 function ClaimPointerGrab(stack, runtime) -- 74
-    error("Unimplemented system.opx function ClaimPointerGrab!")
+    unimplemented("opx.system.ClaimPointerGrab")
 end
 
 function OpenFileDialog(stack, runtime) -- 75
-    error("Unimplemented system.opx function OpenFileDialog!")
+    unimplemented("opx.system.OpenFileDialog")
 end
 
 function CreateFileDialog(stack, runtime) -- 76
-    error("Unimplemented system.opx function CreateFileDialog!")
+    unimplemented("opx.system.CreateFileDialog")
 end
 
 function SaveAsFileDialog(stack, runtime) -- 77
-    error("Unimplemented system.opx function SaveAsFileDialog!")
+    unimplemented("opx.system.SaveAsFileDialog")
 end
 
 return _ENV

@@ -89,7 +89,7 @@ function parseOpo(data, verbose)
             filename, uid, version, pos = string.unpack("<s1I4I2", data, pos)
             vprintf("OPX %d: %s 0x%08X v%d\n", i - 1, filename, uid, version)
             table.insert(opxTable, {
-                filename = filename,
+                filename = filename:lower(),
                 uid = uid,
                 version = version
             })
