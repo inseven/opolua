@@ -97,6 +97,7 @@ class ProgramViewController: UIViewController {
             }
             self.program.sendKey(.menu)
         }, for: .touchUpInside)
+        button.pointerStyleProvider = buttonProvider
         return button
     }()
 
@@ -110,6 +111,7 @@ class ProgramViewController: UIViewController {
             }
             self.program.sendKey(.clipboardSoftkey)
         }, for: .touchUpInside)
+        button.pointerStyleProvider = buttonProvider
         return button
     }()
 
@@ -123,6 +125,7 @@ class ProgramViewController: UIViewController {
             }
             self.program.sendKey(.zoomInSoftkey)
         }, for: .touchUpInside)
+        button.pointerStyleProvider = buttonProvider
         return button
     }()
 
@@ -136,6 +139,7 @@ class ProgramViewController: UIViewController {
             }
             self.program.sendKey(.zoomOutSoftkey)
         }, for: .touchUpInside)
+        button.pointerStyleProvider = buttonProvider
         return button
     }()
 
@@ -293,6 +297,11 @@ class ProgramViewController: UIViewController {
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         configureToolbar(animated: true)
+    }
+
+    func buttonProvider(button: UIButton, pointerEffect: UIPointerEffect, pointerShape: UIPointerShape) -> UIPointerStyle? {
+        return UIPointerStyle(effect: .automatic(UITargetedPreview(view: button)),
+                              shape: .roundedRect(button.frame.insetBy(dx: -8, dy: -8)))
     }
 
     func observeGameControllers() {
