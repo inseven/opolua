@@ -31,6 +31,7 @@
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
 		D8535A2A277139D900DFCE29 /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A29277139D900DFCE29 /* Tone.swift */; };
 		D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8553767278F535A00ED67C0 /* SettingsView.swift */; };
+		D85699C627A9948F00E6F6DD /* OpoInterpreter+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
 		D862465727A5C69500B2BBCA /* Diligence.txt in Resources */ = {isa = PBXBuildFile; fileRef = D862465627A5C69500B2BBCA /* Diligence.txt */; };
 		D8632832279C240600B63625 /* UID.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8632831279C240600B63625 /* UID.swift */; };
@@ -234,6 +235,7 @@
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
 		D8535A29277139D900DFCE29 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		D8553767278F535A00ED67C0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+Utilities.swift"; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		D862465627A5C69500B2BBCA /* Diligence.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Diligence.txt; sourceTree = "<group>"; };
 		D8632831279C240600B63625 /* UID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UID.swift; sourceTree = "<group>"; };
@@ -487,6 +489,7 @@
 				D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */,
 				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
 				D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */,
+				D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
 				D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */,
 				D8D95505279B7B100049A3C3 /* UIColor.swift */,
@@ -982,6 +985,7 @@
 				D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */,
 				DB7900142742E6F6005E904F /* ltm.c in Sources */,
 				D8FE60092757208000711717 /* ApplicationError.swift in Sources */,
+				D85699C627A9948F00E6F6DD /* OpoInterpreter+Utilities.swift in Sources */,
 				D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */,
 				D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,

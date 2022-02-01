@@ -96,7 +96,7 @@ class DirectoryViewController : UICollectionViewController {
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
-        title = directory.name
+        title = directory.localizedName
         navigationItem.searchController = searchController
         navigationItem.largeTitleDisplayMode = .never
         update(animated: false)
@@ -109,14 +109,16 @@ class DirectoryViewController : UICollectionViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let notificationCenter = NotificationCenter.default
+        // TODO: Push this into the directory observer.
         applicationActiveObserver = notificationCenter.addObserver(forName: UIApplication.didBecomeActiveNotification,
                                                                    object: nil,
                                                                    queue: nil) { [weak self] notification in
             guard let self = self else {
                 return
             }
-            self.reload()
+            self.directory.refresh()
         }
+        directory.start()
         settingsSink = settings.objectWillChange.sink { [weak self] _ in
             guard let self = self else {
                 return
@@ -150,7 +152,7 @@ class DirectoryViewController : UICollectionViewController {
         let alertController = UIAlertController(title: "Delete '\(item.name)'?", message: nil, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "Delete", style: .destructive) { action in
             do {
-                try self.directory.delete(item)
+                try FileManager.default.removeItem(at: item.url)
             } catch {
                 self.present(error: error)
             }
@@ -159,20 +161,12 @@ class DirectoryViewController : UICollectionViewController {
         self.present(alertController, animated: true)
     }
 
-    func reload() {
-        directory.refresh()
-    }
-
     func pushDirectoryViewController(for url: URL) {
-        do {
-            let directory = try Directory(url: url)
-            let viewController = DirectoryViewController(settings: settings,
-                                                         taskManager: taskManager,
-                                                         directory: directory)
-            navigationController?.pushViewController(viewController, animated: true)
-        } catch {
-            present(error: error)
-        }
+        let directory = Directory(url: url)
+        let viewController = DirectoryViewController(settings: settings,
+                                                     taskManager: taskManager,
+                                                     directory: directory)
+        navigationController?.pushViewController(viewController, animated: true)
     }
 
     func programActions(for item: Directory.Item) -> [UIMenuElement] {
@@ -327,9 +321,14 @@ extension DirectoryViewController: UISearchResultsUpdating {
 
 extension DirectoryViewController: DirectoryDelegate {
 
-    func directoryDidChange(_ directory: Directory) {
+    func directoryDidUpdate(_ directory: Directory) {
         update(animated: true)
     }
+
+    func directory(_ directory: Directory, failedToUpdateWithError error: Error) {
+        present(error: error)
+    }
+    
 }
 
 extension DirectoryViewController: InstallerViewControllerDelegate {
@@ -337,7 +336,6 @@ extension DirectoryViewController: InstallerViewControllerDelegate {
     func installerViewControllerDidFinish(_ installerViewController: InstallerViewController) {
         dispatchPrecondition(condition: .onQueue(.main))
         installerViewController.dismiss(animated: true)
-        reload()
     }
 
 }
