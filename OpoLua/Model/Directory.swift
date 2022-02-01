@@ -116,7 +116,17 @@ class Directory {
 
     static func items(for url: URL, interpreter: OpoInterpreter) throws -> [Item] {
         let isWriteable = FileManager.default.isWritableFile(atPath: url.path)
-        let items = try url.contents
+
+        // We use the `enumerator` to ensure we can list hidden files.
+        let contentsEnumerator = FileManager.default.enumerator(at: url.resolvingSymlinksInPath(),
+                                                                includingPropertiesForKeys: [],
+                                                                options: [.skipsSubdirectoryDescendants])
+        var urls: [URL] = []
+        while let url = contentsEnumerator?.nextObject() as? URL {
+            urls.append(url)
+        }
+
+        let items = try urls
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
                 if FileManager.default.directoryExists(atPath: url.path) {

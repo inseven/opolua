@@ -30,12 +30,6 @@ extension URL {
         return (FileManager.default.displayName(atPath: path) as NSString).deletingPathExtension
     }
 
-    var contents: [URL] {
-        get throws {
-            return try FileManager.default.contentsOfDirectory(atPath: path).map { appendingPathComponent($0) }
-        }
-    }
-
     var components: URLComponents? { return URLComponents(string: absoluteString) }
 
     var isDirectory: Bool {
