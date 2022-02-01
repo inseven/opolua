@@ -262,7 +262,9 @@ class DirectoryViewController : UICollectionViewController {
             let sourceViewController = SourceViewController(url: item.url)
             navigationController?.pushViewController(sourceViewController, animated: true)
         case .unknown, .applicationInformation, .sound, .help:
-            let alert = UIAlertController(title: "Unsupported File", message: "Opening files of this type is currently unsupported.", preferredStyle: .alert)
+            let alert = UIAlertController(title: "Unsupported File",
+                                          message: "Opening files of this type is currently unsupported.",
+                                          preferredStyle: .alert)
             alert.addAction(.init(title: "OK", style: .default, handler: nil))
             self.present(alert, animated: true, completion: nil)
             break
@@ -304,7 +306,8 @@ class DirectoryViewController : UICollectionViewController {
         guard actions.count > 0 else {
             return nil
         }
-        return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber, previewProvider: nil) { suggestedActions in
+        return UIContextMenuConfiguration(identifier: indexPath.item as NSNumber,
+                                          previewProvider: nil) { suggestedActions in
             return UIMenu(children: actions)
         }
     }

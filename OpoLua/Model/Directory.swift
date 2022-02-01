@@ -183,9 +183,10 @@ class Directory {
             return
         }
         state = .running
-        monitor = DirectoryMonitor(url: url, queue: updateQueue)
+        monitor = DirectoryMonitor(url: url, recursive: true, queue: updateQueue)
         monitor?.delegate = self
         monitor?.start()
+        refresh()
     }
 
     func items(filter: String?) -> [Item] {
