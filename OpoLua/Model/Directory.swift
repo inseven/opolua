@@ -21,53 +21,17 @@
 import Foundation
 import UIKit
 
+/**
+ Called on the main queue.
+ */
 protocol DirectoryDelegate: AnyObject {
 
-    func directoryDidChange(_ directory: Directory)
-
-}
-
-extension Directory.Item.ItemType {
-
-    func icon() -> Icon {
-        switch self {
-        case .object:
-            return .opo
-        case .directory:
-            return .folder
-        case .application(let appInfo):
-            return appInfo?.icon() ?? .unknownApplication
-        case .system(_, let appInfo):
-            return appInfo?.icon() ?? .unknownApplication
-        case .installer:
-            return .installer
-        case .applicationInformation(let appInfo):
-            return appInfo?.icon() ?? .unknownApplication
-        case .image:
-            return .image
-        case .sound:
-            return .sound
-        case .help:
-            return .data
-        case .text:
-            return .opl
-        case .unknown:
-            return .unknownFile
-        }
-    }
+    func directoryDidUpdate(_ directory: Directory)
+    func directory(_ directory: Directory, failedToUpdateWithError error: Error)
 
 }
 
 class Directory {
-
-    static func appInfo(forApplicationUrl url: URL, interpreter: OpoInterpreter) -> OpoInterpreter.AppInfo? {
-        guard let applicationInfoFile = url.applicationInfoUrl,
-              FileManager.default.fileExists(atUrl: applicationInfoFile)
-        else {
-            return nil
-        }
-        return interpreter.getAppInfo(aifPath: applicationInfoFile.path)
-    }
 
     struct Item: Hashable {
 
@@ -145,74 +109,9 @@ class Directory {
 
     }
 
-    private static func asSystem(url: URL, interpreter: OpoInterpreter) throws -> Item.ItemType? {
-        guard try FileManager.default.isSystem(at: url) else {
-            return nil
-        }
-        
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(at: url,
-                                                includingPropertiesForKeys: [.isDirectoryKey],
-                                                options: [.skipsHiddenFiles], errorHandler: { _, _ in return false }) else {
-            return nil
-        }
-
-        let apps = enumerator
-            .map { $0 as! URL }
-            .filter { $0.isApplication }
-
-        guard apps.count == 1,
-              let url = apps.first else {
-            return nil
-        }
-        let appInfo = Directory.appInfo(forApplicationUrl: url, interpreter: interpreter)
-        if appInfo == nil {
-            print("Failed to find AIF for '\(url.lastPathComponent)'.")
-        }
-        return .system(url, appInfo)
-    }
-
-    let url: URL
-    var items: [Item] = []
-
-    weak var delegate: DirectoryDelegate?
-
-    private let updateQueue = DispatchQueue(label: "Directory.updateQueue")
-    private let interpreter = OpoInterpreter()
-
-    var name: String {
-        return url.localizedName
-    }
-    
-    init(url: URL) throws {
-        self.url = url
-        self.refresh()
-    }
-
-    func items(filter: String?) -> [Item] {
-        return items.filter { item in
-            guard let filter = filter,
-                  !filter.isEmpty
-            else {
-                return true
-            }
-            return item.name.localizedCaseInsensitiveContains(filter)
-        }
-    }
-
-    func refresh() {
-        updateQueue.async {
-            do {
-                let items = try Self.items(for: self.url, interpreter: self.interpreter)
-                DispatchQueue.main.async {
-                    self.items = items
-                    self.delegate?.directoryDidChange(self)
-                }
-            } catch {
-                // TODO: Report this error
-                print("Failed to get items with error \(error)")
-            }
-        }
+    enum State {
+        case idle
+        case running
     }
 
     static func items(for url: URL, interpreter: OpoInterpreter) throws -> [Item] {
@@ -222,7 +121,7 @@ class Directory {
             .compactMap { url -> Item? in
                 if FileManager.default.directoryExists(atPath: url.path) {
                     // Check for an app 'bundle'.
-                    if let type = try Self.asSystem(url: url, interpreter: interpreter) {
+                    if let type = try Item.system(url: url, interpreter: interpreter) {
                         return Item(url: url, type: type, isWriteable: isWriteable)
                     } else {
                         return Item(url: url, type: .directory, isWriteable: isWriteable)
@@ -231,7 +130,7 @@ class Directory {
                     return Item(url: url, type: .object, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "app" {
                     return Item(url: url,
-                                type: .application(Self.appInfo(forApplicationUrl: url, interpreter: interpreter)),
+                                type: .application(interpreter.appInfo(forApplicationUrl: url)),
                                 isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "sis" {
                     return Item(url: url, type: .installer, isWriteable: isWriteable)
@@ -255,9 +154,159 @@ class Directory {
         return items
     }
 
-    func delete(_ item: Item) throws {
-        try FileManager.default.removeItem(at: item.url)
-        refresh()
+    private static func dispatchSource(for url: URL, queue: DispatchQueue) throws -> DispatchSourceFileSystemObject {
+        precondition(url.isDirectory)
+        let directoryFileDescriptor = open(url.path, O_EVTONLY)
+        guard directoryFileDescriptor > 0 else {
+            throw NSError(domain: POSIXError.errorDomain, code: Int(errno), userInfo: nil)
+        }
+        let dispatchSource = DispatchSource.makeFileSystemObjectSource(fileDescriptor: directoryFileDescriptor,
+                                                                       eventMask: [.write],
+                                                                       queue: queue)
+        dispatchSource.setCancelHandler {
+            close(directoryFileDescriptor)
+        }
+        return dispatchSource
+    }
+
+    let url: URL
+    var items: [Item] = []
+    var state: State = .idle
+
+    weak var delegate: DirectoryDelegate?
+
+    private let updateQueue = DispatchQueue(label: "Directory.updateQueue")
+    private let interpreter = OpoInterpreter()
+    private var dispatchSource: DispatchSourceFileSystemObject?
+
+    var localizedName: String {
+        return url.localizedName
+    }
+
+    init(url: URL) {
+        self.url = url
+    }
+
+    func start() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard state == .idle else {
+            return
+        }
+        state = .running
+        do {
+            dispatchSource = try Self.dispatchSource(for: url, queue: updateQueue)
+            dispatchSource?.setEventHandler { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                self.refresh()
+            }
+            dispatchSource?.resume()
+            refresh()
+        } catch {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                self.delegate?.directory(self, failedToUpdateWithError: error)
+            }
+        }
+    }
+
+    func dealloc() {
+        dispatchSource?.cancel()
+    }
+
+    func items(filter: String?) -> [Item] {
+        dispatchPrecondition(condition: .onQueue(.main))
+        return items.filter { item in
+            guard let filter = filter,
+                  !filter.isEmpty
+            else {
+                return true
+            }
+            return item.name.localizedCaseInsensitiveContains(filter)
+        }
+    }
+
+    func refresh() {
+        updateQueue.async { [weak self, url, interpreter] in
+            do {
+                let items = try Self.items(for: url, interpreter: interpreter)
+                DispatchQueue.main.async {
+                    guard let self = self else {
+                        return
+                    }
+                    self.items = items
+                    self.delegate?.directoryDidUpdate(self)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    guard let self = self else {
+                        return
+                    }
+                    self.delegate?.directory(self, failedToUpdateWithError: error)
+                }
+            }
+        }
     }
     
+}
+
+extension Directory.Item {
+
+    fileprivate static func system(url: URL, interpreter: OpoInterpreter) throws -> ItemType? {
+        guard try FileManager.default.isSystem(at: url) else {
+            return nil
+        }
+
+        let fileManager = FileManager.default
+        guard let enumerator = fileManager.enumerator(at: url,
+                                                includingPropertiesForKeys: [.isDirectoryKey],
+                                                options: [.skipsHiddenFiles], errorHandler: { _, _ in return false }) else {
+            return nil
+        }
+
+        let apps = enumerator
+            .map { $0 as! URL }
+            .filter { $0.isApplication }
+
+        guard apps.count == 1,
+              let url = apps.first else {
+            return nil
+        }
+        return .system(url, interpreter.appInfo(forApplicationUrl: url))
+    }
+
+}
+
+extension Directory.Item.ItemType {
+
+    func icon() -> Icon {
+        switch self {
+        case .object:
+            return .opo
+        case .directory:
+            return .folder
+        case .application(let appInfo):
+            return appInfo?.icon() ?? .unknownApplication
+        case .system(_, let appInfo):
+            return appInfo?.icon() ?? .unknownApplication
+        case .installer:
+            return .installer
+        case .applicationInformation(let appInfo):
+            return appInfo?.icon() ?? .unknownApplication
+        case .image:
+            return .image
+        case .sound:
+            return .sound
+        case .help:
+            return .data
+        case .text:
+            return .opl
+        case .unknown:
+            return .unknownFile
+        }
+    }
+
 }

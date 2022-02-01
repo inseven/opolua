@@ -118,13 +118,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func showDirectory(url: URL, animated: Bool) {
-        do {
-            let directory = try Directory(url: url)
-            let viewController = DirectoryViewController(settings: settings, taskManager: taskManager, directory: directory)
-            setRootDetailViewController(viewController, animated: animated)
-        } catch {
-            splitViewController.present(error: error)
-        }
+        let directory = Directory(url: url)
+        let viewController = DirectoryViewController(settings: settings, taskManager: taskManager, directory: directory)
+        setRootDetailViewController(viewController, animated: animated)
     }
 
     func showSection(_ section: ApplicationSection, animated: Bool = true) {

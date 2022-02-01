@@ -122,7 +122,7 @@ class Program {
         self.url = url
         self.configuration = Configuration.load(for: url)
         self.thread = InterpreterThread(url: url)
-        let appInfo = Directory.appInfo(forApplicationUrl: url, interpreter: OpoInterpreter())
+        let appInfo = OpoInterpreter().appInfo(forApplicationUrl: url)
         self.appInfo = appInfo
         self.title = appInfo?.caption ?? url.localizedName
         self.icon = appInfo?.icon() ?? (url.pathExtension.lowercased() == "opo" ? .opo : .unknownApplication) // TODO: This should be an OPO icon if it's an OPO file.
