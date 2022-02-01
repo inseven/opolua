@@ -7,5 +7,5 @@
 </div>
 
 <div class="hero">
-    <div class="screenshot-landscape"><img src="/images/hero.png"></div>
+    <div class="screenshot-iphone-13-pro-landscape"><img src="/images/hero.png"></div>
 </div>
