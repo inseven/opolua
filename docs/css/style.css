@@ -180,14 +180,14 @@ h2 {
     left: 0;
 }
 
-.screenshot-landscape {
+.screenshot-iphone-13-pro-landscape {
     margin-bottom: var(--vertical-spacing);
     position: relative;
     line-height: 0;
     padding-bottom: 51.8518518519%;
 }
 
-.screenshot-landscape::after {
+.screenshot-iphone-13-pro-landscape::after {
     position: absolute;
     top: 0;
     left: 0;
@@ -200,7 +200,7 @@ h2 {
     background-size: 100% 100%;
 }
 
-.screenshot-landscape img {
+.screenshot-iphone-13-pro-landscape img {
     position: absolute;
     width: 93.77777778%;
     left: 3.1111111111%;
@@ -208,17 +208,48 @@ h2 {
     box-sizing: border-box;
 }
 
+.screenshot-ipad-pro-11-landscape {
+    margin-bottom: var(--vertical-spacing);
+    position: relative;
+    line-height: 0;
+    padding-bottom: 72.4137931034%;
+}
+
+.screenshot-ipad-pro-11-landscape::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-bottom: 72.4137931034%;
+    z-index: 10;
+    content: "";
+    display: block;
+    background-image: url('/images/bezel-ipad-pro-11-landscape.png');
+    background-size: 100% 100%;
+}
+
+.screenshot-ipad-pro-11-landscape img {
+    position: absolute;
+    width: 91.49425287%;
+    left: 4.252873565%;
+    top: 5.873015873%;
+    box-sizing: border-box;
+}
+
 @media only screen and (max-width: 600px) {
 
-    .screenshot-landscape {
+    .screenshot-iphone-13-pro-landscape,
+    .screenshot-ipad-pro-11-landscape {
         padding-bottom: 0;
     }
 
-    .screenshot-landscape::after {
+    .screenshot-iphone-13-pro-landscape::after,
+    .screenshot-ipad-pro-11-landscape::after {
         background: 0;
     }
 
-    .screenshot-landscape img {
+    .screenshot-iphone-13-pro-landscape img,
+    .screenshot-ipad-pro-11-landscape img {
         width: 100%;
         position: relative;
         border: 1px solid var(--icon-border-color);
