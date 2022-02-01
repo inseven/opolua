@@ -115,12 +115,13 @@ class Directory {
     }
 
     static func items(for url: URL, interpreter: OpoInterpreter) throws -> [Item] {
-        let isWriteable = FileManager.default.isWritableFile(atPath: url.path)
+        let fileManager = FileManager.default
+        let isWriteable = fileManager.isWritableFile(atPath: url.path)
 
         // We use the `enumerator` to ensure we can list hidden files.
-        let contentsEnumerator = FileManager.default.enumerator(at: url.resolvingSymlinksInPath(),
-                                                                includingPropertiesForKeys: [],
-                                                                options: [.skipsSubdirectoryDescendants])
+        let contentsEnumerator = fileManager.enumerator(at: url.resolvingSymlinksInPath(),
+                                                        includingPropertiesForKeys: [],
+                                                        options: [.skipsSubdirectoryDescendants])
         var urls: [URL] = []
         while let url = contentsEnumerator?.nextObject() as? URL {
             urls.append(url)
@@ -213,6 +214,7 @@ class Directory {
 
     private func updateQueue_refresh() {
         dispatchPrecondition(condition: .onQueue(updateQueue))
+        FileManager.default.startDownloadingUbitquitousItemsRecursive(for: url)
         do {
             let items = try Self.items(for: url, interpreter: interpreter)
             DispatchQueue.main.async { [weak self] in

@@ -244,12 +244,34 @@ class LibraryViewController: UICollectionViewController {
         present(documentPicker, animated: true)
     }
 
+
     func addUrl(_ url: URL) {
-        do {
-            try settings.addLocation(url)
-            reload(animated: true)
-        } catch {
-            present(error: error)
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        let perform: () -> Void = {
+            do {
+                try self.settings.addLocation(url)
+                self.reload(animated: true)
+            } catch {
+                self.present(error: error)
+            }
+        }
+
+        // Show a warning when adding iCloud Drive locations to ensure the user understand that we'll download all the
+        // folder contents, giving them the option to select a directory with fewer contents.
+        if FileManager.default.isUbiquitousItem(at: url) {
+
+            let alertController = UIAlertController(title: "iCloud Drive",
+                                                    message: "OPL automatically downloads files from iCloud Drive to ensure they are available to running programs.\n\nThis can cause increased disk usage when adding large folders.",
+                                                    preferredStyle: .alert)
+            alertController.addAction(UIAlertAction(title: "Continue", style: .default) { action in
+                perform()
+            })
+            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            present(alertController, animated: true)
+
+        } else {
+            perform()
         }
     }
 

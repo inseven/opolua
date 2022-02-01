@@ -34,11 +34,11 @@ class ProgramDetector {
     private var settings: Settings
     private let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
     private var settingsSink: AnyCancellable?
-    private var _items: [Directory.Item] = []
+    private var _items: Set<Directory.Item> = []
     private var interpreter = OpoInterpreter()
 
     var items: [Directory.Item] {
-        return _items
+        return Array(_items)
     }
     weak var delegate: ProgramDetectorDelegate?
 
@@ -74,7 +74,7 @@ class ProgramDetector {
                 }, interpreter: interpreter)
             }
             DispatchQueue.main.async {
-                self._items = items
+                self._items = Set(items)
                 self.delegate?.programDetectorDidUpdateItems(self)
             }
         } catch {

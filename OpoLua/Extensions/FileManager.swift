@@ -58,6 +58,46 @@ extension FileManager {
         }
     }
 
+    func startDownloadingUbitquitousItemsRecursive(for url: URL) {
+        var ubiquitousItems: [URL] = []
+
+        // There are quite a few ugly things going on here which are workarounds for `NSMetadataQuery` not seeming to
+        // work as documented. I'd like to think I'm using it incorrectly, but until I figure out exactly _how_ I'm
+        // holding it wrong, there are some things to be aware of:
+
+        // 1) Only `enumerator` will show us the hidden iCloud Drive files.
+        let contentsEnumerator = enumerator(at: url.resolvingSymlinksInPath(),
+                                            includingPropertiesForKeys: [],
+                                            options: [.skipsSubdirectoryDescendants])
+        while let url = contentsEnumerator?.nextObject() as? URL {
+
+            // 2) Unfortunately `isUbiquitousItem(at:)` doesn't report any of these files as ubiquitous items (aka.
+            //    iCloud Drive items), so we instead have to look for files ending in the .icloud extension.
+            if url.pathExtension.lowercased() == "icloud" {
+                ubiquitousItems.append(url)
+            }
+
+        }
+
+        // 3) Files with the .icloud extension seem to appear before the system has fully registered the presence of the
+        //    iCloud Drive item and calling `startDownloadingUbiquitousItem` immediately will fail. This can happen if
+        //    we're being called in response to a file system change event. We therefore introduce some artificial delay
+        //    before requesting a download (2 seconds). We make sure we request the download on the main thread because
+        //    some things in the iCloud world seem to fail silently when run elsewhere. 🤦🏻‍♂️
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            for url in ubiquitousItems {
+                guard self.fileExists(atUrl: url) else {
+                    continue
+                }
+                do {
+                    try self.startDownloadingUbiquitousItem(at: url)
+                } catch {
+                    print("Failed to start iCloud download for '\(url)' with error \(error).")
+                }
+            }
+        }
+    }
+
     func writeSecureBookmark(_ url: URL, to backingUrl: URL) throws {
         try prepareUrlForSecureAccess(url)
         let data = try url.bookmarkData(options: .suitableForBookmarkFile,
