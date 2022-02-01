@@ -86,10 +86,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ app: UIApplication,
                      open url: URL,
                      options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        do {
-            try url.prepareForSecureAccess()
-        } catch {
-            splitViewController.present(error: error)
+        guard url.startAccessingSecurityScopedResource() else {
+            splitViewController.present(error: OpoLuaError.secureAccess)
             return false
         }
         install(url: url)

@@ -28,12 +28,7 @@ protocol InstallerSummaryViewControllerDelegate: AnyObject {
 
 class InstallerSummaryViewController: UIViewController {
 
-    enum State {
-        case success
-        case failure(Error)
-    }
-
-    var state: State
+    var state: Result<Void, Error>
 
     weak var delegate: InstallerSummaryViewControllerDelegate?
 
@@ -59,7 +54,7 @@ class InstallerSummaryViewController: UIViewController {
         return label
     }()
 
-    init(state: State) {
+    init(state: Result<Void, Error>) {
         self.state = state
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground

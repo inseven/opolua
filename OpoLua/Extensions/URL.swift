@@ -107,4 +107,14 @@ extension URL {
         }
     }
 
+    func ubiquitousItemDownloadingStatus() throws -> URLUbiquitousItemDownloadingStatus {
+        dispatchPrecondition(condition: .onQueue(.main)) // Returns garbage if it's not on main. 🤦🏻‍♂️
+        var value: AnyObject? = nil
+        try (self as NSURL).getResourceValue(&value, forKey: .ubiquitousItemDownloadingStatusKey)
+        guard let status = value as? URLUbiquitousItemDownloadingStatus else {
+            return URLUbiquitousItemDownloadingStatus.notDownloaded
+        }
+        return status
+    }
+
 }

@@ -93,7 +93,6 @@ class InstallerIntroductionViewController: UICollectionViewController {
     private var dataSource: DataSource!
 
     private let settings: Settings
-    private let url: URL
     private let preferredDestinationUrl: URL?
     weak var delegate: InstallerIntroductionViewControllerDelegate?
 
@@ -150,9 +149,8 @@ class InstallerIntroductionViewController: UICollectionViewController {
         return stackView
     }()
 
-    init(settings: Settings, url: URL, preferredDestinationUrl: URL?) {
+    init(settings: Settings, preferredDestinationUrl: URL?) {
         self.settings = settings
-        self.url = url
         self.preferredDestinationUrl = preferredDestinationUrl
         self.destinationUrl = preferredDestinationUrl ?? FileManager.default.documentsUrl
         let configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)

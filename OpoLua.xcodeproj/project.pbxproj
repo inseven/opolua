@@ -54,6 +54,8 @@
 		D889134F274C181F00794D55 /* CGPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134E274C181F00794D55 /* CGPoint.swift */; };
 		D8891351274C184C00794D55 /* UIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891350274C184C00794D55 /* UIImage.swift */; };
 		D8891353274C186E00794D55 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891352274C186E00794D55 /* Canvas.swift */; };
+		D890B46727A8CA7B007A7A78 /* ManagedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D890B46627A8CA7B007A7A78 /* ManagedItem.swift */; };
+		D890B46927A8CBED007A7A78 /* InstallerProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D890B46827A8CBED007A7A78 /* InstallerProgressViewController.swift */; };
 		D893EAD32760739500E64219 /* Border.swift in Sources */ = {isa = PBXBuildFile; fileRef = D893EAD22760739500E64219 /* Border.swift */; };
 		D893EAD5276073CA00E64219 /* Borders in Resources */ = {isa = PBXBuildFile; fileRef = D893EAD4276073CA00E64219 /* Borders */; };
 		D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A60792756A2CC00C9757F /* FileManager.swift */; };
@@ -254,6 +256,8 @@
 		D889134E274C181F00794D55 /* CGPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPoint.swift; sourceTree = "<group>"; };
 		D8891350274C184C00794D55 /* UIImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImage.swift; sourceTree = "<group>"; };
 		D8891352274C186E00794D55 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
+		D890B46627A8CA7B007A7A78 /* ManagedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedItem.swift; sourceTree = "<group>"; };
+		D890B46827A8CBED007A7A78 /* InstallerProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallerProgressViewController.swift; sourceTree = "<group>"; };
 		D893EAD22760739500E64219 /* Border.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Border.swift; sourceTree = "<group>"; };
 		D893EAD4276073CA00E64219 /* Borders */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Borders; sourceTree = "<group>"; };
 		D89A60792756A2CC00C9757F /* FileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManager.swift; sourceTree = "<group>"; };
@@ -394,8 +398,9 @@
 			isa = PBXGroup;
 			children = (
 				D81B87602790ECC500E71960 /* InstallerIntroductionViewController.swift */,
-				D81B875D2790DAAD00E71960 /* InstallerViewController.swift */,
+				D890B46827A8CBED007A7A78 /* InstallerProgressViewController.swift */,
 				D81B87622790ED0300E71960 /* InstallerSummaryViewController.swift */,
+				D81B875D2790DAAD00E71960 /* InstallerViewController.swift */,
 			);
 			path = Installer;
 			sourceTree = "<group>";
@@ -531,8 +536,9 @@
 		D8D95502279B52250049A3C3 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				D8D95503279B52370049A3C3 /* Localization.swift */,
 				D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */,
+				D8D95503279B52370049A3C3 /* Localization.swift */,
+				D890B46627A8CA7B007A7A78 /* ManagedItem.swift */,
 				D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */,
 			);
 			path = Utilities;
@@ -966,9 +972,11 @@
 				DB7900112742E6F6005E904F /* lstrlib.c in Sources */,
 				D8891351274C184C00794D55 /* UIImage.swift in Sources */,
 				DB7900122742E6F6005E904F /* ltable.c in Sources */,
+				D890B46727A8CA7B007A7A78 /* ManagedItem.swift in Sources */,
 				D89A607C2756A6A300C9757F /* URL.swift in Sources */,
 				D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */,
 				DB9B7C31274A771A006B6F60 /* loslib.c in Sources */,
+				D890B46927A8CBED007A7A78 /* InstallerProgressViewController.swift in Sources */,
 				D80D65AA279DDC290020F994 /* IconCollectionViewCell.swift in Sources */,
 				DB7900132742E6F6005E904F /* ltablib.c in Sources */,
 				D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */,
