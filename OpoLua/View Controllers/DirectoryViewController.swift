@@ -322,10 +322,12 @@ extension DirectoryViewController: UISearchResultsUpdating {
 extension DirectoryViewController: DirectoryDelegate {
 
     func directoryDidUpdate(_ directory: Directory) {
+        dispatchPrecondition(condition: .onQueue(.main))
         update(animated: true)
     }
 
-    func directory(_ directory: Directory, failedToUpdateWithError error: Error) {
+    func directory(_ directory: Directory, didFailWithError error: Error) {
+        dispatchPrecondition(condition: .onQueue(.main))
         present(error: error)
     }
     

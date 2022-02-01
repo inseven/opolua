@@ -27,7 +27,7 @@ import UIKit
 protocol DirectoryDelegate: AnyObject {
 
     func directoryDidUpdate(_ directory: Directory)
-    func directory(_ directory: Directory, failedToUpdateWithError error: Error)
+    func directory(_ directory: Directory, didFailWithError error: Error)
 
 }
 
@@ -154,30 +154,15 @@ class Directory {
         return items
     }
 
-    private static func dispatchSource(for url: URL, queue: DispatchQueue) throws -> DispatchSourceFileSystemObject {
-        precondition(url.isDirectory)
-        let directoryFileDescriptor = open(url.path, O_EVTONLY)
-        guard directoryFileDescriptor > 0 else {
-            throw NSError(domain: POSIXError.errorDomain, code: Int(errno), userInfo: nil)
-        }
-        let dispatchSource = DispatchSource.makeFileSystemObjectSource(fileDescriptor: directoryFileDescriptor,
-                                                                       eventMask: [.write],
-                                                                       queue: queue)
-        dispatchSource.setCancelHandler {
-            close(directoryFileDescriptor)
-        }
-        return dispatchSource
-    }
-
     let url: URL
     var items: [Item] = []
-    var state: State = .idle
+    private var state: State = .idle
 
     weak var delegate: DirectoryDelegate?
 
     private let updateQueue = DispatchQueue(label: "Directory.updateQueue")
     private let interpreter = OpoInterpreter()
-    private var dispatchSource: DispatchSourceFileSystemObject?
+    private var monitor: DirectoryMonitor?
 
     var localizedName: String {
         return url.localizedName
@@ -187,34 +172,20 @@ class Directory {
         self.url = url
     }
 
+    deinit {
+        monitor?.cancel()
+        monitor = nil
+    }
+
     func start() {
         dispatchPrecondition(condition: .onQueue(.main))
         guard state == .idle else {
             return
         }
         state = .running
-        do {
-            dispatchSource = try Self.dispatchSource(for: url, queue: updateQueue)
-            dispatchSource?.setEventHandler { [weak self] in
-                guard let self = self else {
-                    return
-                }
-                self.refresh()
-            }
-            dispatchSource?.resume()
-            refresh()
-        } catch {
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else {
-                    return
-                }
-                self.delegate?.directory(self, failedToUpdateWithError: error)
-            }
-        }
-    }
-
-    func dealloc() {
-        dispatchSource?.cancel()
+        monitor = DirectoryMonitor(url: url, queue: updateQueue)
+        monitor?.delegate = self
+        monitor?.start()
     }
 
     func items(filter: String?) -> [Item] {
@@ -229,28 +200,49 @@ class Directory {
         }
     }
 
-    func refresh() {
-        updateQueue.async { [weak self, url, interpreter] in
-            do {
-                let items = try Self.items(for: url, interpreter: interpreter)
-                DispatchQueue.main.async {
-                    guard let self = self else {
-                        return
-                    }
-                    self.items = items
-                    self.delegate?.directoryDidUpdate(self)
+    private func updateQueue_refresh() {
+        dispatchPrecondition(condition: .onQueue(updateQueue))
+        do {
+            let items = try Self.items(for: url, interpreter: interpreter)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else {
+                    return
                 }
-            } catch {
-                DispatchQueue.main.async {
-                    guard let self = self else {
-                        return
-                    }
-                    self.delegate?.directory(self, failedToUpdateWithError: error)
-                }
+                self.items = items
+                self.delegate?.directoryDidUpdate(self)
             }
+        } catch {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                self.delegate?.directory(self, didFailWithError: error)
+            }
+        }
+
+    }
+
+    // TODO: It would be cleaner to have DirectoryMonitor handle application foreground events and re-index.
+    func refresh() {
+        updateQueue.async { [weak self] in
+            self?.updateQueue_refresh()
         }
     }
     
+}
+
+extension Directory: DirectoryMonitorDelegate {
+
+    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, contentsDidChangeForUrl url: URL) {
+        updateQueue_refresh()
+    }
+
+    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, didFailWithError error: Error) {
+        DispatchQueue.main.async {
+            self.delegate?.directory(self, didFailWithError: error)
+        }
+    }
+
 }
 
 extension Directory.Item {
