@@ -36,6 +36,8 @@ class ProgramDetector: NSObject {
     private var _items: [Directory.Item] = []
     private var interpreter = OpoInterpreter()
 
+    private var monitors: [DirectoryMonitor] = []
+
     var items: [Directory.Item] {
         return _items
     }
@@ -91,11 +93,19 @@ class ProgramDetector: NSObject {
     }
 
     func start() {
+        dispatchPrecondition(condition: .onQueue(.main))
         settings.addObserver(self)
+        for indexableUrl in settings.indexableUrls {
+            let monitor = DirectoryMonitor(url: indexableUrl, recursive: true)
+            monitor.delegate = self
+            monitors.append(monitor)
+            monitor.start()
+        }
         self.update()
     }
 
     private func update() {
+        dispatchPrecondition(condition: .onQueue(.main))
         let urls = settings.indexableUrls
         print(urls)
         print("Indexing \(urls.count) items...")
@@ -109,11 +119,35 @@ class ProgramDetector: NSObject {
 extension ProgramDetector: SettingsObserver {
 
     func settings(_ settings: Settings, didAddIndexableUrl indexableUrl: URL) {
+        let monitor = DirectoryMonitor(url: indexableUrl, recursive: true)
+        monitor.delegate = self
+        monitors.append(monitor)
+        monitor.start()
         self.update()
     }
 
     func settings(_ settings: Settings, didRemoveIndexableUrl indexableUrl: URL) {
+        for monitor in monitors {
+            guard monitor.url == indexableUrl else {
+                continue
+            }
+            monitor.cancel()
+        }
+        monitors.removeAll { $0.url == indexableUrl }
         self.update()
+    }
+
+}
+
+extension ProgramDetector: DirectoryMonitorDelegate {
+
+    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, contentsDidChangeForUrl url: URL) {
+        self.update()
+    }
+
+    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, didFailWithError error: Error) {
+        print("Directory monitoring failed with error \(error).")
+        self.monitors.removeAll { $0.url == directoryMonitor.url }
     }
 
 }

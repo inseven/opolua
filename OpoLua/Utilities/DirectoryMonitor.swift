@@ -78,7 +78,7 @@ class DirectoryMonitor {
         return dispatchSource
     }
 
-    private let url: URL
+    let url: URL
     private var recursive: Bool
     private let queue: DispatchQueue
     private var state: State = .idle
