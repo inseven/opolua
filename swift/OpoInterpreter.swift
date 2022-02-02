@@ -1024,35 +1024,50 @@ class OpoInterpreter {
     }
 
     class InterpreterError: LocalizedError {
+
         let message: String // One-line description of the error
         let description: String // Includes all of message, leave code, lua stack trace, opo stacktrace (as appropriate)
+
         init(message: String) {
             self.message = message
             self.description = message
         }
+
         init(message: String, description: String) {
             self.message = message
             self.description = description
         }
+
         var errorDescription: String? {
             return description
         }
+
     }
 
     class LeaveError: InterpreterError {
+
         let code: Int
+
         init(message: String, description: String, leaveCode: Int) {
             self.code = leaveCode
             super.init(message: message, description: description)
         }
+
     }
 
     class UnimplementedOperationError: InterpreterError {
+
         let operation: String
+
         init(message: String, description: String, operation: String) {
             self.operation = operation
             super.init(message: message, description: description)
         }
+
+        override var errorDescription: String? {
+            return "The program attempted to use the unimplemented operation '\(operation)'."
+        }
+
     }
 
     func run(devicePath: String, procedureName: String? = nil) throws {

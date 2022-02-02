@@ -67,7 +67,7 @@
 		D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */; };
 		D8BA0970275196CA00F4730D /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096F275196CA00F4730D /* String.swift */; };
 		D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA09712751BBEA00F4730D /* UIElement.swift */; };
-		D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */; };
+		D8C3BD632774BEA1003B1AD0 /* ErrorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD622774BEA1003B1AD0 /* ErrorViewController.swift */; };
 		D8C3BD652774BEC2003B1AD0 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD642774BEC2003B1AD0 /* Console.swift */; };
 		D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */; };
 		D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C3BD692774F4A2003B1AD0 /* GameController.framework */; };
@@ -271,7 +271,7 @@
 		D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldTableViewCell.swift; sourceTree = "<group>"; };
 		D8BA096F275196CA00F4730D /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		D8BA09712751BBEA00F4730D /* UIElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIElement.swift; sourceTree = "<group>"; };
-		D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleViewController.swift; sourceTree = "<group>"; };
+		D8C3BD622774BEA1003B1AD0 /* ErrorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorViewController.swift; sourceTree = "<group>"; };
 		D8C3BD642774BEC2003B1AD0 /* Console.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
 		D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoLuaError.swift; sourceTree = "<group>"; };
 		D8C3BD692774F4A2003B1AD0 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk/System/Library/Frameworks/GameController.framework; sourceTree = DEVELOPER_DIR; };
@@ -521,9 +521,10 @@
 				D86FBAB4278C74A3003DF611 /* AboutView.swift */,
 				D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */,
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
-				D8C3BD622774BEA1003B1AD0 /* ConsoleViewController.swift */,
+				D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */,
 				D8C679B927483B5600BD8720 /* DirectoryViewController.swift */,
 				D81B875B2790D52C00E71960 /* DrawableViewController.swift */,
+				D8C3BD622774BEA1003B1AD0 /* ErrorViewController.swift */,
 				D89A607F2756AE8800C9757F /* LibraryViewController.swift */,
 				DB79FFBD2742D99C005E904F /* ProgramViewController.swift */,
 				D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */,
@@ -533,7 +534,6 @@
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
 				D81B875F2790E9A600E71960 /* Installer */,
 				D8F5CAD9279D079A00A2DC3F /* Viewers */,
-				D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */,
 			);
 			path = "View Controllers";
 			sourceTree = "<group>";
@@ -944,7 +944,7 @@
 				DB7900072742E6F6005E904F /* llex.c in Sources */,
 				D884A3D7277914CF008954A0 /* Installer.swift in Sources */,
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
-				D8C3BD632774BEA1003B1AD0 /* ConsoleViewController.swift in Sources */,
+				D8C3BD632774BEA1003B1AD0 /* ErrorViewController.swift in Sources */,
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				D884A3D32778E335008954A0 /* FileSystem.swift in Sources */,
 				D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */,

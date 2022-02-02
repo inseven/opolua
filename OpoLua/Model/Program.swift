@@ -96,8 +96,6 @@ class Program {
     private var observers: [ProgramLifecycleObserver] = []
     weak var delegate: ProgramDelegate?
 
-    var console = Console()
-
     var title: String
     var icon: Icon
 
@@ -349,6 +347,19 @@ class Program {
         // (ie the softkeys) which we don't have, so we basically never need to send it
     }
 
+    func screenshot() -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+        let renderer = UIGraphicsImageRenderer(size: rootView.frame.size, format: format)
+        let uiImage = renderer.image { rendererContext in
+            let context = rendererContext.cgContext
+            context.setAllowsAntialiasing(false)
+            context.interpolationQuality = .none
+            rootView.layer.render(in: context)
+        }
+        return uiImage
+    }
+
 }
 
 extension Program: InterpreterThreadDelegate {
@@ -360,14 +371,6 @@ extension Program: InterpreterThreadDelegate {
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: Error?) {
         DispatchQueue.main.sync {
             self.windowServer.shutdown()
-            if let facerake = result as? OpoInterpreter.UnimplementedOperationError {
-                self.console.append("TODO: \(facerake.operation)")
-            } 
-            if let error = result {
-                self.console.append("\n---Error occurred:---\n\(error.localizedDescription)")
-            } else {
-                self.console.append("\n---Completed---")
-            }
             self._state = .finished
             for observer in self.observers {
                 observer.program(self, didFinishWithResult: result)
@@ -380,9 +383,7 @@ extension Program: InterpreterThreadDelegate {
 extension Program: OpoIoHandler {
 
     func printValue(_ val: String) {
-        DispatchQueue.main.sync {
-            console.append(val)
-        }
+        print(val)
     }
 
     func editValue(_ params: EditParams) -> String? {

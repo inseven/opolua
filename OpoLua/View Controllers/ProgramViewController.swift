@@ -391,13 +391,6 @@ class ProgramViewController: UIViewController {
         }
     }
 
-    func showConsole() {
-        let viewController = ConsoleViewController(program: program)
-        viewController.delegate = self
-        let navigationController = UINavigationController(rootViewController: viewController)
-        present(navigationController, animated: true)
-    }
-
     override var canBecomeFirstResponder: Bool {
         return true
     }
@@ -450,17 +443,11 @@ class ProgramViewController: UIViewController {
 
 }
 
-extension ProgramViewController: ConsoleViewControllerDelegate {
+extension ProgramViewController: ErrorViewControllerDelegate {
 
-    func consoleViewControllerDidDismiss(_ consoleViewController: ConsoleViewController) {
+    func errorViewControllerDidFinish(_ errorViewController: ErrorViewController) {
         dispatchPrecondition(condition: .onQueue(.main))
-        let shouldPopViewController = program.state == .finished
-        consoleViewController.dismiss(animated: true) {
-            guard shouldPopViewController else {
-                return
-            }
-            self.navigationController?.popViewController(animated: true)
-        }
+        errorViewController.dismiss(animated: true)
     }
 
 }
@@ -529,15 +516,32 @@ extension ProgramViewController: ProgramDelegate {
 extension ProgramViewController: ProgramLifecycleObserver {
 
     func program(_ program: Program, didFinishWithResult result: Error?) {
-        if result != nil {
-            UIView.animate(withDuration: 0.3) {
-                self.program.rootView.alpha = 0.3
-            } completion: { _ in
-                self.showConsole()
-            }
-        } else {
+
+        guard let error = result else {
             self.navigationController?.popViewController(animated: true)
+            return
         }
+
+        let showErrorDetails: () -> Void = {
+            let viewController = ErrorViewController(error: error, screenshot: program.screenshot())
+            viewController.delegate = self
+            let navigationController = UINavigationController(rootViewController: viewController)
+            self.present(navigationController, animated: true)
+        }
+
+        if settings.alwaysShowErrorDetails {
+            showErrorDetails()
+            return
+        }
+
+        let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: { action in
+            self.navigationController?.popViewController(animated: true)
+        }))
+        alert.addAction(UIAlertAction(title: "Show Details", style: .default, handler: { action in
+            showErrorDetails()
+        }))
+        present(alert, animated: true, completion: nil)
     }
 
     func program(_ program: Program, didUpdateTitle title: String) {

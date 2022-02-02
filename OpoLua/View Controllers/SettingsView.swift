@@ -66,6 +66,11 @@ struct SettingsView: View {
                     Toggle("Show Scripts", isOn: $settings.showLibraryScripts)
                     Toggle("Show Tests", isOn: $settings.showLibraryTests)
                 }
+                #if DEBUG
+                Section("Debug") {
+                    Toggle("Always Show Error Details", isOn: $settings.alwaysShowErrorDetails)
+                }
+                #endif
                 Section {
                     Button("About \(UIApplication.shared.displayName!)...") {
                         sheet = .about

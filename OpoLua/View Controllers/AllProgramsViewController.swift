@@ -43,7 +43,6 @@ class AllProgramsViewController : UICollectionViewController {
     private var detector: ProgramDetector
     private var items: [Directory.Item] = []
     private var settingsSink: AnyCancellable?
-    private var firstRun = true
 
     lazy var wallpaperPixelView: PixelView = {
         let image = settings.theme.wallpaper
@@ -121,8 +120,7 @@ class AllProgramsViewController : UICollectionViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        update(animated: firstRun ? false : animated)
-        firstRun = false
+        update(animated: animated)
     }
 
     override func viewWillDisappear(_ animated: Bool) {

@@ -37,6 +37,7 @@ class Settings: ObservableObject {
         case showLibraryFiles = "ShowLibraryFiles"
         case showLibraryScripts = "ShowLibraryScripts"
         case showLibraryTests = "ShowLibraryTests"
+        case alwaysShowErrorDetails = "AlwaysShowErrorDetails"
     }
 
     let userDefaults = UserDefaults()
@@ -189,6 +190,16 @@ class Settings: ObservableObject {
         }
         set {
             self.set(newValue, for: .showLibraryTests)
+            self.objectWillChange.send()
+        }
+    }
+
+    var alwaysShowErrorDetails: Bool {
+        get {
+            return self.bool(for: .alwaysShowErrorDetails, default: false)
+        }
+        set {
+            self.set(newValue, for: .alwaysShowErrorDetails)
             self.objectWillChange.send()
         }
     }
