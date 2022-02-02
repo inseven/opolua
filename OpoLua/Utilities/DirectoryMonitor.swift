@@ -62,7 +62,7 @@ class DirectoryMonitor {
     private var dispatchSource: DispatchSourceFileSystemObject?
     private var monitors: [DirectoryMonitor] = []
 
-    var delegate: DirectoryMonitorDelegate?
+    weak var delegate: DirectoryMonitorDelegate?
 
     init(url: URL, recursive: Bool = false, queue: DispatchQueue = .main) {
         self.url = url.resolvingSymlinksInPath()
