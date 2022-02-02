@@ -2413,12 +2413,12 @@ function gInfo32(stack, runtime) -- 0x128
         0, -- 28 drawableIsBitmap
         6, -- 29 cursor effects
         0, -- 30 color mode of current window
-        context.color[1], -- 31 fg r
-        context.color[2], -- 32 fg g
-        context.color[3], -- 33 fg b
-        context.bgcolor[1], -- 34 bg r
-        context.bgcolor[2], -- 35 bg g
-        context.bgcolor[3], -- 36 bg b
+        context.color.r, -- 31 fg r
+        context.color.g, -- 32 fg g
+        context.color.b, -- 33 fg b
+        context.bgcolor.r, -- 34 bg r
+        context.bgcolor.g, -- 35 bg g
+        context.bgcolor.b, -- 36 bg b
         0, -- 37
         0, -- 38
         0, -- 39

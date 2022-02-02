@@ -90,8 +90,7 @@ struct Graphics {
         }
     }
 
-    struct Color {
-        
+    struct Color: Equatable, Codable {
         let r: UInt8
         let g: UInt8
         let b: UInt8

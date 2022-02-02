@@ -392,15 +392,15 @@ end
 
 function gGREY(mode)
     local val = mode == 1 and 0xAA or 0
-    runtime:getGraphicsContext().color = { val, val, val }
+    runtime:getGraphicsContext().color = { r = val, g = val, b = val }
 end
 
 function gCOLOR(red, green, blue)
-    runtime:getGraphicsContext().color = { red, green, blue }
+    runtime:getGraphicsContext().color = { r = red, g = green, b = blue }
 end
 
 function gCOLORBACKGROUND(red, green, blue)
-    runtime:getGraphicsContext().bgcolor = { red, green, blue }
+    runtime:getGraphicsContext().bgcolor = { r = red, g = green, b = blue }
 end
 
 function gSETWIN(x, y, w, h)

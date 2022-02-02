@@ -423,8 +423,8 @@ function Runtime:newGraphicsContext(id, width, height, isWindow, displayMode)
         displayMode = displayMode,
         mode = 0, -- set
         tmode = 0, -- set
-        color = { 0, 0, 0 }, -- black
-        bgcolor = { 255, 255, 255 }, -- white
+        color = { r = 0, g = 0, b = 0 }, -- black
+        bgcolor = { r = 255, g = 255, b = 255 }, -- white
         width = width,
         height = height,
         pos = { x = 0, y = 0 },

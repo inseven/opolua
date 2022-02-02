@@ -23,29 +23,6 @@ import Foundation
 // ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
 private let kEnc = String.Encoding.windowsCP1252
 
-extension UnsafeMutablePointer where Pointee == lua_State {
-
-    func toColor(_ idx: Int32, key: String) -> Graphics.Color? {
-        let L = self
-        if lua_getfield(L, idx, key) == LUA_TTABLE {
-            lua_rawgeti(L, -1, 1)
-            let r = UInt8(L.toint(-1) ?? 0)
-            L.pop()
-            lua_rawgeti(L, -1, 2)
-            let g = UInt8(L.toint(-1) ?? 0)
-            L.pop()
-            lua_rawgeti(L, -1, 3)
-            let b = UInt8(L.toint(-1) ?? 0)
-            L.pop(2)
-            return Graphics.Color(r: r, g: g, b: b)
-        } else {
-            L.pop()
-            return nil
-        }
-    }
-
-}
-
 private func searcher(_ L: LuaState!) -> Int32 {
     guard let module = L.tostring(1, encoding: .utf8) else {
         L.pushnil()
@@ -135,11 +112,11 @@ private func draw(_ L: LuaState!) -> Int32 {
         let x = L.toint(-1, key: "x") ?? 0
         let y = L.toint(-1, key: "y") ?? 0
         let origin = Graphics.Point(x: x, y: y)
-        guard let color = L.toColor(-1, key: "color") else {
+        guard let color = L.getfield(-1, "color", Graphics.Color.self) else {
             print("missing color")
             continue
         }
-        guard let bgcolor = L.toColor(-1, key: "bgcolor") else {
+        guard let bgcolor = L.getfield(-1, "bgcolor", Graphics.Color.self) else {
             print("missing bgcolor")
             continue
         }
