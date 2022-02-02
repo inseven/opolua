@@ -177,11 +177,12 @@ extension FileManager {
     }
 
     func detectSystemFileSystem(for url: URL) throws -> FileSystem? {
-        print("detectSystemFileSystemFor(url: \(url))")
-        let parentUrl = url.deletingLastPathComponent()
-        guard url != parentUrl else {
+        // Helpfully `deletingLastPathComponent` starts adding `..` components to the path making it quite hard to
+        // detect that we've run out of path. We therefore explicitly check for root.
+        guard url.path != "/" else {
             return nil
         }
+        let parentUrl = url.deletingLastPathComponent()
         if try isSystem(at: parentUrl) {
             return SystemFileSystem(rootUrl: parentUrl)
         }
