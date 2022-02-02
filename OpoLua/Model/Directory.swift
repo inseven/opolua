@@ -283,6 +283,27 @@ extension Directory.Item {
         return .system(url, interpreter.appInfo(forApplicationUrl: url))
     }
 
+    func configurationActions(errorHandler: @escaping (Error) -> Void) -> [UIMenuElement] {
+        guard let programUrl = programUrl, isWriteable else {
+            return []
+        }
+        var actions: [UIMenuElement] = []
+        let runAsActions = Device.allCases.map { device -> UIAction in
+            var configuration = Configuration.load(for: programUrl)
+            return UIAction(title: device.name, state: configuration.device == device ? .on : .off) { action in
+                configuration.device = device
+                do {
+                    try configuration.save(for: programUrl)
+                } catch {
+                    errorHandler(error)
+                }
+            }
+        }
+        let runAsMenu = UIMenu(options: [.displayInline], children: runAsActions)
+        actions.append(runAsMenu)
+        return actions
+    }
+
 }
 
 extension Directory.Item.ItemType {

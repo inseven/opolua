@@ -140,7 +140,7 @@ class AllProgramsViewController : UICollectionViewController {
     func actions(for url: URL) -> [UIMenuElement] {
         var actions: [UIMenuElement] = []
 
-        let runAction = UIAction(title: "Run") { action in
+        let runAction = UIAction(title: "Run", image: UIImage(systemName: "play")) { action in
             let program = self.taskManager.program(for: url)
             let viewController = ProgramViewController(settings: self.settings,
                                                        taskManager: self.taskManager,
@@ -148,21 +148,6 @@ class AllProgramsViewController : UICollectionViewController {
             self.navigationController?.pushViewController(viewController, animated: true)
         }
         actions.append(runAction)
-
-        let runAsActions = Device.allCases.map { device -> UIAction in
-            var configuration = Configuration.load(for: url)
-            return UIAction(title: device.name, state: configuration.device == device ? .on : .off) { action in
-                configuration.device = device
-                do {
-                    try configuration.save(for: url)
-                } catch {
-                    self.present(error: error)
-                }
-            }
-        }
-        let runAsMenu = UIMenu(title: "Run As...", options: [.displayInline], children: runAsActions)
-        actions.append(runAsMenu)
-
         return actions
     }
 
@@ -231,6 +216,9 @@ class AllProgramsViewController : UICollectionViewController {
             case .object, .application, .system:
                 var actions = self.actions(for: item.programUrl!)
                 if let programUrl = item.programUrl {
+                    actions += item.configurationActions(errorHandler: { error in
+                        self.present(error: error)
+                    })
                     actions += self.taskManager.actions(for: programUrl)
                 }
                 return UIMenu(children: actions)

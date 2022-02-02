@@ -169,40 +169,51 @@ class DirectoryViewController : UICollectionViewController {
         navigationController?.pushViewController(viewController, animated: true)
     }
 
-    func programActions(for item: Directory.Item) -> [UIMenuElement] {
-        guard let url = item.programUrl else {
-            return []
-        }
+    func primaryActions(for item: Directory.Item) -> [UIMenuElement] {
         var actions: [UIMenuElement] = []
-        let runAction = UIAction(title: "Run") { action in
-            let program = self.taskManager.program(for: url)
-            let viewController = ProgramViewController(settings: self.settings,
-                                                       taskManager: self.taskManager,
-                                                       program: program)
-            self.navigationController?.pushViewController(viewController, animated: true)
-        }
-        actions.append(runAction)
 
-        if case Directory.Item.ItemType.system = item.type {
-            let contentsAction = UIAction(title: "Show Package Contents") { action in
-                self.pushDirectoryViewController(for: item.url)
+        if let url = item.programUrl {
+
+            let runAction = UIAction(title: "Run", image: UIImage(systemName: "play")) { action in
+                let program = self.taskManager.program(for: url)
+                let viewController = ProgramViewController(settings: self.settings,
+                                                           taskManager: self.taskManager,
+                                                           program: program)
+                self.navigationController?.pushViewController(viewController, animated: true)
             }
-            actions.append(contentsAction)
-        }
+            actions.append(runAction)
 
-        let runAsActions = Device.allCases.map { device -> UIAction in
-            var configuration = Configuration.load(for: url)
-            return UIAction(title: device.name, state: configuration.device == device ? .on : .off) { action in
-                configuration.device = device
-                do {
-                    try configuration.save(for: url)
-                } catch {
-                    self.present(error: error)
+            if case Directory.Item.ItemType.system = item.type {
+                let contentsAction = UIAction(title: "Show Contents", image: UIImage(systemName: "folder")) { action in
+                    self.pushDirectoryViewController(for: item.url)
                 }
+                actions.append(contentsAction)
             }
+
+        } else {
+
+            switch item.type {
+            case .object, .application, .system:
+                break
+            case .directory:
+                break
+            case .installer:
+                break
+            case .image:
+                actions.append(UIAction(title: "View", image: UIImage(systemName: "eye")) { action in
+                    let viewController = ImageViewController(url: item.url)
+                    self.navigationController?.pushViewController(viewController, animated: true)
+                })
+            case .text:
+                actions.append(UIAction(title: "View", image: UIImage(systemName: "eye")) { action in
+                    let sourceViewController = SourceViewController(url: item.url)
+                    self.navigationController?.pushViewController(sourceViewController, animated: true)
+                })
+            case .unknown, .applicationInformation, .sound, .help:
+                break
+            }
+
         }
-        let runAsMenu = UIMenu(title: "Run As...", options: [.displayInline], children: runAsActions)
-        actions.append(runAsMenu)
         return actions
     }
 
@@ -298,7 +309,10 @@ class DirectoryViewController : UICollectionViewController {
             return nil
         }
         var actions: [UIMenuElement] = []
-        actions += self.programActions(for: item)
+        actions += self.primaryActions(for: item)
+        actions += item.configurationActions(errorHandler: { error in
+            self.present(error: error)
+        })
         if let programUrl = item.programUrl {
             actions += self.taskManager.actions(for: programUrl)
         }
