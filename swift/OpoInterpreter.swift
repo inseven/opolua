@@ -23,26 +23,7 @@ import Foundation
 // ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
 private let kEnc = String.Encoding.windowsCP1252
 
-extension String: Pushable {
-    func push(state L: LuaState!) {
-        L.push(self, encoding: kEnc)
-    }
-}
-
 extension UnsafeMutablePointer where Pointee == lua_State {
-
-    func tostring(_ index: Int32, convert: Bool = false) -> String? {
-        return tostring(index, encoding: kEnc, convert: convert)
-    }
-    func tostringarray(_ index: Int32) -> [String]? {
-        return tostringarray(index, encoding: kEnc)
-    }
-    func tostring(_ index: Int32, key: String, convert: Bool = false) -> String? {
-        return tostring(index, key: key, encoding: kEnc, convert: convert)
-    }
-    func tostringarray(_ index: Int32, key: String, convert: Bool = false) -> [String]? {
-        return tostringarray(index, key: key, encoding: kEnc, convert: convert)
-    }
 
     func toColor(_ idx: Int32, key: String) -> Graphics.Color? {
         let L = self
@@ -772,6 +753,8 @@ class OpoInterpreter {
     init() {
         iohandler = DummyIoHandler() // For now...
         L = luaL_newstate()
+        L.setStringEncoding(kEnc)
+
         let libs: [(String, lua_CFunction)] = [
             ("_G", luaopen_base),
             (LUA_LOADLIBNAME, luaopen_package),

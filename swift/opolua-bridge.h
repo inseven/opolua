@@ -124,4 +124,9 @@ static inline int lua_upvalueindex(int i) {
 #undef LUA_REGISTRYINDEX
 static const int LUA_REGISTRYINDEX = -LUAI_MAXSTACK - 1000;
 
+#undef lua_getextraspace
+static inline void* lua_getextraspace(lua_State* L) {
+    return ((void *)((char *)(L) - LUA_EXTRASPACE));
+}
+
 #endif /* opolua_bridge_h */

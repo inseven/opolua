@@ -66,11 +66,38 @@ extension Double: Pushable {
     }
 }
 
+extension String: Pushable {
+    func push(state L: LuaState!) {
+        L.push(self, encoding: L.getStringEncoding())
+    }
+}
+
 extension Data: Pushable {
     func push(state L: LuaState!) {
         self.withUnsafeBytes { (buf: UnsafeRawBufferPointer) -> Void in
             let chars = buf.bindMemory(to: CChar.self)
             lua_pushlstring(L, chars.baseAddress, chars.count)
+        }
+    }
+}
+
+extension Array: Pushable where Element: Pushable {
+    func push(state L: LuaState!) {
+        lua_createtable(L, Int32(self.count), 0)
+        for (i, val) in self.enumerated() {
+            val.push(state: L)
+            lua_rawseti(L, -2, lua_Integer(i + 1))
+        }
+    }
+}
+
+extension Dictionary: Pushable where Key: Pushable, Value: Pushable {
+    func push(state L: LuaState!) {
+        lua_createtable(L, 0, Int32(self.count))
+        for (k, v) in self {
+            L.push(k)
+            L.push(v)
+            lua_settable(L, -3)
         }
     }
 }
@@ -183,7 +210,9 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     }
 
     func getfield<T>(_ index: Int32, key: String, _ accessor: (Int32) -> T?) -> T? {
-        let _ = lua_getfield(self, index, key)
+        let absidx = lua_absindex(self, index)
+        push(key, encoding: .ascii)
+        let _ = lua_gettable(self, absidx)
         let result = accessor(-1)
         pop()
         return result
@@ -339,19 +368,11 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         }
     }
 
-    func push<T>(_ array: Array<T>) where T: Pushable {
-        lua_createtable(self, Int32(array.count), 0)
-        for (i, val) in array.enumerated() {
-            val.push(state: self)
-            lua_rawseti(self, -2, lua_Integer(i + 1))
-        }
-    }
-
     func pop(_ nitems: Int32 = 1) {
         lua_pop(self, nitems)
     }
 
-    func setfield<T>(_ name: String, _ value: T) where T: Pushable {
+    func setfield<S, T>(_ name: S, _ value: T) where S: StringProtocol & Pushable, T: Pushable {
         self.push(name)
         self.push(value)
         lua_settable(self, -3)
