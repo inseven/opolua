@@ -32,8 +32,29 @@ protocol DirectoryMonitorDelegate: AnyObject {
 
 }
 
-
 class DirectoryMonitor {
+
+    static var countLock = NSLock()
+
+    static var count = 0
+
+    static func incrementCount() {
+        countLock.lock()
+        defer {
+            countLock.unlock()
+        }
+        count = count + 1
+        print("open directory count = \(count)")
+    }
+
+    static func decrementCount() {
+        countLock.lock()
+        defer {
+            countLock.unlock()
+        }
+        count = count - 1
+        print("open directory count = \(count)")
+    }
 
     enum State {
         case idle
@@ -46,11 +67,13 @@ class DirectoryMonitor {
         guard directoryFileDescriptor > 0 else {
             throw NSError(domain: POSIXError.errorDomain, code: Int(errno), userInfo: nil)
         }
+        DirectoryMonitor.incrementCount()
         let dispatchSource = DispatchSource.makeFileSystemObjectSource(fileDescriptor: directoryFileDescriptor,
                                                                        eventMask: [.write],
                                                                        queue: queue)
         dispatchSource.setCancelHandler {
             close(directoryFileDescriptor)
+            DirectoryMonitor.decrementCount()
         }
         return dispatchSource
     }
