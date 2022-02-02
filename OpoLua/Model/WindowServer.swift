@@ -21,9 +21,13 @@
 import GameController
 import UIKit
 
-protocol WindowServerDelegate: CanvasViewDelegate, RootViewDelegate {
+protocol WindowServerDelegate: CanvasViewDelegate {
 
     func windowServerClockIsDigital(_ windowServer: WindowServer) -> Bool
+
+    func windowServer(_ windowServer: WindowServer, insertCharacter character: Character)
+    func windowServerDeleteBackward(_ windowServer: WindowServer)
+    func windowServer(_ windowServer: WindowServer, sendKey key: OplKeyCode)
 
 }
 
@@ -482,15 +486,15 @@ extension WindowServer: CanvasViewDelegate {
 extension WindowServer: RootViewDelegate {
 
     func rootView(_ rootView: RootView, insertCharacter character: Character) {
-        delegate?.rootView(rootView, insertCharacter: character)
+        delegate?.windowServer(self, insertCharacter: character)
     }
 
     func rootViewDeleteBackward(_ rootView: RootView) {
-        delegate?.rootViewDeleteBackward(rootView)
+        delegate?.windowServerDeleteBackward(self)
     }
 
     func rootView(_ rootView: RootView, sendKey key: OplKeyCode) {
-        delegate?.rootView(rootView, sendKey: key)
+        delegate?.windowServer(self, sendKey: key)
     }
 
 }

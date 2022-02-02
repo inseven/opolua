@@ -527,7 +527,7 @@ extension Program: WindowServerDelegate {
         handleTouch(touch, in: canvasView, with: event, type: .up)
     }
 
-    func rootView(_ rootView: RootView, insertCharacter character: Character) {
+    func windowServer(_ windowServer: WindowServer, insertCharacter character: Character) {
         guard let keyCode = OplKeyCode.from(string: String(character)) else {
             print("Ignoring unmapped character '\(character)'...")
             return
@@ -535,11 +535,11 @@ extension Program: WindowServerDelegate {
         sendKey(keyCode)
     }
 
-    func rootViewDeleteBackward(_ rootView: RootView) {
+    func windowServerDeleteBackward(_ windowServer: WindowServer) {
         sendKey(.backspace)
     }
 
-    func rootView(_ rootview: RootView, sendKey key: OplKeyCode) {
+    func windowServer(_ windowServer: WindowServer, sendKey key: OplKeyCode) {
         sendKey(key)
     }
 
