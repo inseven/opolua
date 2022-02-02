@@ -177,6 +177,7 @@ extension FileManager {
     }
 
     func detectSystemFileSystem(for url: URL) throws -> FileSystem? {
+        print("detectSystemFileSystemFor(url: \(url))")
         let parentUrl = url.deletingLastPathComponent()
         guard url != parentUrl else {
             return nil

@@ -329,7 +329,7 @@ extension Directory.Item.ItemType {
         case .help:
             return .data
         case .text:
-            return .opl
+            return .text
         case .unknown:
             return .unknownFile
         }

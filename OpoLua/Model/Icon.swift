@@ -74,6 +74,7 @@ extension Icon {
     static var opl = Icon(grayscaleImage: .unknownFileIcon, colorImage: .oplIconC)
     static var opo = Icon(grayscaleImage: .opoIcon, colorImage: .opoIconC)
     static var sound = Icon(grayscaleImage: .recordIcon, colorImage: .recordIconC)
+    static var text = Icon(grayscaleImage: .textIcon, colorImage: .textIcon)
     static var unknownApplication = Icon(grayscaleImage: .unknownAppIcon, colorImage: .unknownAppIcon)
     static var unknownFile = Icon(grayscaleImage: .unknownAppIcon, colorImage: .unknownFileIconC)
 

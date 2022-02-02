@@ -90,6 +90,10 @@ extension UIImage {
         return UIImage(named: "RecordIconC")!
     }()
 
+    static var textIcon: UIImage = {
+        return UIImage(named: "TextIcon")!
+    }()
+
     static var unknownAppIcon: UIImage = {
         return UIImage(named: "UnknownAppIcon")!
     }()
