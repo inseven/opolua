@@ -146,12 +146,6 @@ class ProgramViewController: UIViewController {
     lazy var optionsBarButtonItem: UIBarButtonItem = {
         var actions: [UIMenuElement] = []
         actions = actions + taskManager.actions(for: program.url)
-        let consoleAction = UIAction(title: "Show Console", image: UIImage(systemName: "terminal")) { [weak self] action in
-            guard let self = self else {
-                return
-            }
-            self.showConsole()
-        }
         let drawablesAction = UIAction(title: "Show Drawables",
                                        image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
             guard let self = self else {
@@ -163,7 +157,7 @@ class ProgramViewController: UIViewController {
             self.present(navigationController, animated: true)
         }
 
-        let developerMenu = UIMenu(options: [.displayInline], children: [consoleAction, drawablesAction])
+        let developerMenu = UIMenu(options: [.displayInline], children: [drawablesAction])
         actions.append(developerMenu)
 
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: actions)
