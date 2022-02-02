@@ -334,38 +334,7 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
             break
         }
         let window = Graphics.DrawableId(value: winId)
-        if L.type(4) == .nilType {
-            return doGraphicsOp(L, iohandler, .sprite(window, spriteId, nil))
-        }
-        guard L.type(4) == .table,
-              let x = L.toint(4, key: "x"),
-              let y = L.toint(4, key: "y"),
-              lua_getfield(L, 4, "frames") == LUA_TTABLE
-            else {
-                print("Bad args to sprite")
-                break
-            }
-        var frames: [Graphics.Sprite.Frame] = []
-        for _ in L.ipairs(-1, requiredType: .table) {
-            if let dx = L.toint(-1, key: "dx"),
-               let dy = L.toint(-1, key: "dy"),
-               let bitmap = L.toint(-1, key: "bitmap"),
-               let mask = L.toint(-1, key: "mask"),
-               let time = L.toint(-1, key: "time") {
-                let invert = L.toboolean(-1, key: "invert")
-                let offset = Graphics.Point(x: dx, y: dy)
-                let bitmapId = Graphics.DrawableId(value: bitmap)
-                let maskId = Graphics.DrawableId(value: mask)
-                let frame = Graphics.Sprite.Frame(offset: offset, bitmap: bitmapId, mask: maskId, invertMask: invert, time: Double(time) / 1000000)
-                frames.append(frame)
-            } else {
-                print("Missing frame params!")
-                break
-            }
-        }
-        L.pop() // frames
-        let origin = Graphics.Point(x: x, y: y)
-        let sprite = Graphics.Sprite(origin: origin, frames: frames)
+        let sprite = L.tovalue(4, Graphics.Sprite.self)
         return doGraphicsOp(L, iohandler, .sprite(window, spriteId, sprite))
     case "clock":
         let drawableId = Graphics.DrawableId(value: L.toint(2) ?? 0)

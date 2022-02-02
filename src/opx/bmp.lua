@@ -88,8 +88,7 @@ function SPRITECREATE(runtime, winId, x, y, flags)
     assert(graphics[winId] and graphics[winId].isWindow, "id is not a window")
     local spriteId = #graphics.sprites + 1
     local sprite = {
-        x = x,
-        y = y,
+        origin = { x = x, y = y },
         win = winId,
         id = spriteId,
         frames = {},
@@ -117,12 +116,11 @@ function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
     incRefcount(runtime, bitmap)
     incRefcount(runtime, maskBitmap)
     local frame = {
-        dx = dx,
-        dy = dy,
+        offset = { x = dx, y = dy },
         bitmap = bitmap,
         mask = maskBitmap,
-        time = time,
-        invert = invertMask,
+        time = time / 1000000,
+        invertMask = invertMask,
     }
     table.insert(sprite.frames, frame)
 end
@@ -148,8 +146,7 @@ function SpriteChange(stack, runtime)
     decRefcount(runtime, oldFrame.maskBitmap)
 
     local frame = {
-        dx = dx,
-        dy = dy,
+        offset = { x = dx, y = dy },
         bitmap = bitmap,
         mask = maskBitmap,
         time = time,
@@ -183,8 +180,7 @@ function SpritePos(stack, runtime)
     -- printf("SpritePos\n")
     local sprite = getCurrentSprite(runtime)
     local x, y = stack:popXY()
-    sprite.x = x
-    sprite.y = y
+    sprite.origin = { x = x, y = y }
     if sprite.drawn then
         runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
     end

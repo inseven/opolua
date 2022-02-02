@@ -287,8 +287,8 @@ struct Graphics {
         let penWidth: Int
     }
 
-    struct Sprite {
-        struct Frame {
+    struct Sprite: Codable {
+        struct Frame: Codable {
             let offset: Point
             let bitmap: DrawableId
             let mask: DrawableId
