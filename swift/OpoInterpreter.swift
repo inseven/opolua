@@ -109,9 +109,7 @@ private func draw(_ L: LuaState!) -> Int32 {
     for _ in L.ipairs(1, requiredType: .table) {
         let id = Graphics.DrawableId(value: L.toint(-1, key: "id") ?? 1)
         let t = L.tostring(-1, key: "type") ?? ""
-        let x = L.toint(-1, key: "x") ?? 0
-        let y = L.toint(-1, key: "y") ?? 0
-        let origin = Graphics.Point(x: x, y: y)
+        let origin = L.tovalue(-1, Graphics.Point.self) ?? .zero
         guard let color = L.getfield(-1, "color", Graphics.Color.self) else {
             print("missing color")
             continue
@@ -179,12 +177,10 @@ private func draw(_ L: LuaState!) -> Int32 {
         case "scroll":
             let dx = L.toint(-1, key: "dx") ?? 0
             let dy = L.toint(-1, key: "dy") ?? 0
-            lua_getfield(L, -1, "rect")
-            let x = L.toint(-1, key: "x") ?? 0
-            let y = L.toint(-1, key: "y") ?? 0
-            let w = L.toint(-1, key: "w") ?? 0
-            let h = L.toint(-1, key: "h") ?? 0
-            let rect = Graphics.Rect(x: x, y: y, width: w, height: h)
+            guard let rect = L.getfield(-1, "rect", Graphics.Rect.self) else {
+                print("Bad rect param in scroll!")
+                continue
+            }
             optype = .scroll(dx, dy, rect)
         case "patt":
             if let srcid = L.toint(-1, key: "srcid"),

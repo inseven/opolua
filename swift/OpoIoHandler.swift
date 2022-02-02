@@ -42,7 +42,7 @@ extension Set where Element: FlagEnum, Element.RawValue: FixedWidthInteger {
 
 struct Graphics {
 
-    struct Size: Equatable, Comparable {
+    struct Size: Equatable, Comparable, Codable {
 
         static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
             lhs.width < rhs.width && lhs.height < rhs.height
@@ -51,11 +51,16 @@ struct Graphics {
         let width: Int
         let height: Int
 
+        enum CodingKeys: String, CodingKey {
+            case width = "w"
+            case height = "h"
+        }
+
         static let icon = Self(width: 48, height: 48)
         static let zero = Self(width: 0, height: 0)
     }
 
-    struct Point {
+    struct Point: Equatable, Codable {
         
         static func +(lhs: Graphics.Point, rhs: Graphics.Point) -> Graphics.Point {
             return Self(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
@@ -71,7 +76,7 @@ struct Graphics {
         static let zero = Self(x: 0, y: 0)
     }
 
-    struct Rect {
+    struct Rect: Equatable, Codable {
 
         let origin: Point
         let size: Size
@@ -87,6 +92,31 @@ struct Graphics {
 
         init(x: Int, y: Int, width: Int, height: Int) {
             self.init(origin: .init(x: x, y: y), size: .init(width: width, height: height))
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case x
+            case y
+            case width = "w"
+            case height = "h"
+        }
+
+        init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            let x = try values.decode(Int.self, forKey: .x)
+            let y = try values.decode(Int.self, forKey: .y)
+            let w = try values.decode(Int.self, forKey: .width)
+            let h = try values.decode(Int.self, forKey: .height)
+            self.origin = Point(x: x, y: y)
+            self.size = Size(width: w, height: h)
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(minX, forKey: .x)
+            try container.encode(minY, forKey: .y)
+            try container.encode(width, forKey: .width)
+            try container.encode(height, forKey: .height)
         }
     }
 
@@ -138,8 +168,21 @@ struct Graphics {
         let mask: Bitmap?
     }
 
-    struct DrawableId: Hashable {
+    struct DrawableId: Hashable, Codable {
         let value: Int
+
+        init(value: Int) {
+            self.value = value
+        }
+
+        init(from decoder: Decoder) throws {
+            self.value = try decoder.singleValueContainer().decode(Int.self)
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var cont = encoder.singleValueContainer()
+            try cont.encode(self.value)
+        }
 
         static var defaultWindow: DrawableId {
             return .init(value: 1)
