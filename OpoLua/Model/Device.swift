@@ -24,7 +24,9 @@ import UIKit
 enum Device: String, CaseIterable, Codable {
 
     case psionSeries5 = "psion-series-5"
+    #if DEBUG
     case psionRevo = "psion-revo"
+    #endif
     case psionSeries7 = "psion-series-7"
     case geofoxOne = "geofox-one"
 
@@ -36,8 +38,10 @@ extension Device {
         switch self {
         case .psionSeries5:
             return "Psion Series 5"
+        #if DEBUG
         case .psionRevo:
             return "Psion Revo"
+        #endif
         case .psionSeries7:
             return "Psion Series 7"
         case .geofoxOne:
@@ -49,8 +53,10 @@ extension Device {
         switch self {
         case .psionSeries5:
             return Graphics.Size(width:640, height: 240)
+        #if DEBUG
         case .psionRevo:
             return Graphics.Size(width: 480, height: 160)
+        #endif
         case .psionSeries7:
             return Graphics.Size(width:640, height: 480)
         case .geofoxOne:
@@ -62,8 +68,10 @@ extension Device {
         switch self {
         case .psionSeries5:
             return .gray16
+        #if DEBUG
         case .psionRevo:
             return .gray16 // Is this right?
+        #endif
         case .psionSeries7:
             return .color256 // ?
         case .geofoxOne:
@@ -75,25 +83,14 @@ extension Device {
         switch self {
         case .psionSeries5:
             return .clockMedium
+        #if DEBUG
         case .psionRevo:
             return .clockMedium
+        #endif
         case .psionSeries7:
             return .clockMediumC
         case .geofoxOne:
             return .clockMedium
-        }
-    }
-
-    var tintColor: UIColor {
-        switch self {
-        case .psionSeries5:
-            return .series5
-        case .psionRevo:
-            return .series5
-        case .psionSeries7:
-            return .series7
-        case .geofoxOne:
-            return .series5
         }
     }
 
