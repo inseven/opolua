@@ -22,11 +22,26 @@ import Foundation
 import SwiftUI
 import UIKit
 
+protocol SettingsObserver: NSObject {
+
+    func settings(_ settings: Settings, didAddIndexableUrl indexableUrl: URL)
+    func settings(_ settings: Settings, didRemoveIndexableUrl indexableUrl: URL)
+    
+}
+
 class Settings: ObservableObject {
 
     enum ClockType: String {
         case analog
         case digital
+    }
+
+    enum Theme: Int, CaseIterable, Identifiable {
+
+        var id: Self { self }
+
+        case series5 = 0
+        case series7 = 1
     }
 
     private enum Key: String {
@@ -40,18 +55,17 @@ class Settings: ObservableObject {
         case alwaysShowErrorDetails = "AlwaysShowErrorDetails"
     }
 
-    let userDefaults = UserDefaults()
+    private let userDefaults = UserDefaults()
+    private var observers: [SettingsObserver] = []
+
+    private var _theme = Theme.series7
+
+    private var _showLibraryFiles = true
+    private var _showLibraryScripts = true
+    private var _showLibraryTests = false
 
     // TODO: Should be immutable.
     var locations: [SecureLocation] = []
-
-    enum Theme: Int, CaseIterable, Identifiable {
-
-        var id: Self { self }
-
-        case series5 = 0
-        case series7 = 1
-    }
 
     init() {
         do {
@@ -59,6 +73,12 @@ class Settings: ObservableObject {
         } catch {
             print("Failed to load locations with error \(error).")
         }
+
+        _theme = Theme.init(rawValue: self.integer(for: .theme, default: _theme.rawValue)) ?? _theme
+
+        _showLibraryFiles = self.bool(for: .showLibraryFiles, default: _showLibraryFiles)
+        _showLibraryScripts = self.bool(for: .showLibraryScripts, default: _showLibraryScripts)
+        _showLibraryTests = self.bool(for: .showLibraryTests, default: _showLibraryTests)
     }
 
     private func object(for key: Key) -> Any? {
@@ -115,7 +135,18 @@ class Settings: ObservableObject {
         self.set(bookmarks, for: key)
     }
 
+    func addObserver(_ observer: SettingsObserver) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        self.observers.append(observer)
+    }
+
+    func removeObserver(_ observer: SettingsObserver) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        self.observers.removeAll { $0.isEqual(observer) }
+    }
+
     func addLocation(_ url: URL) throws {
+        dispatchPrecondition(condition: .onQueue(.main))
 
         // Ensure the location is unique.
         guard !locations.contains(where: { $0.url == url }) else {
@@ -124,22 +155,38 @@ class Settings: ObservableObject {
 
         locations.append(try SecureLocation(url: url))
         try set(secureLocations: locations, for: .locations)
+
         self.objectWillChange.send()
+        for observer in self.observers {
+            observer.settings(self, didAddIndexableUrl: url)
+        }
     }
 
     func removeLocation(_ location: SecureLocation) throws {
+        dispatchPrecondition(condition: .onQueue(.main))
+
         try location.cleanup()
         locations.removeAll { $0.url == location.url }
         try set(secureLocations: locations, for: .locations)
+
         self.objectWillChange.send()
+        for observer in self.observers {
+            observer.settings(self, didRemoveIndexableUrl: location.url)
+        }
     }
 
     var theme: Settings.Theme {
         get {
-            return Theme.init(rawValue: self.integer(for: .theme, default: Theme.series7.rawValue)) ?? .series7
+            dispatchPrecondition(condition: .onQueue(.main))
+            return _theme
         }
         set {
-            self.set(newValue.rawValue, for: .theme)
+            dispatchPrecondition(condition: .onQueue(.main))
+            guard _theme != newValue else {
+                return
+            }
+            _theme = newValue
+            self.set(_theme.rawValue, for: .theme)
             self.objectWillChange.send()
         }
     }
@@ -166,31 +213,70 @@ class Settings: ObservableObject {
 
     var showLibraryFiles: Bool {
         get {
-            return self.bool(for: .showLibraryFiles, default: true)
+            dispatchPrecondition(condition: .onQueue(.main))
+            return _showLibraryFiles
         }
         set {
-            self.set(newValue, for: .showLibraryFiles)
+            dispatchPrecondition(condition: .onQueue(.main))
+            guard _showLibraryFiles != newValue else {
+                return
+            }
+            _showLibraryFiles = newValue
+            self.set(_showLibraryFiles, for: .showLibraryFiles)
             self.objectWillChange.send()
+            for observer in observers {
+                if _showLibraryFiles {
+                    observer.settings(self, didAddIndexableUrl: Bundle.main.filesUrl)
+                } else {
+                    observer.settings(self, didRemoveIndexableUrl: Bundle.main.filesUrl)
+                }
+            }
         }
     }
 
     var showLibraryScripts: Bool {
         get {
-            return self.bool(for: .showLibraryScripts, default: true)
+            dispatchPrecondition(condition: .onQueue(.main))
+            return _showLibraryScripts
         }
         set {
-            self.set(newValue, for: .showLibraryScripts)
+            dispatchPrecondition(condition: .onQueue(.main))
+            guard _showLibraryScripts != newValue else {
+                return
+            }
+            _showLibraryScripts = newValue
+            self.set(_showLibraryScripts, for: .showLibraryScripts)
             self.objectWillChange.send()
+            for observer in observers {
+                if _showLibraryScripts {
+                    observer.settings(self, didAddIndexableUrl: Bundle.main.scriptsUrl)
+                } else {
+                    observer.settings(self, didRemoveIndexableUrl: Bundle.main.scriptsUrl)
+                }
+            }
         }
     }
 
     var showLibraryTests: Bool {
         get {
-            return self.bool(for: .showLibraryTests, default: false)
+            dispatchPrecondition(condition: .onQueue(.main))
+            return _showLibraryTests
         }
         set {
-            self.set(newValue, for: .showLibraryTests)
+            dispatchPrecondition(condition: .onQueue(.main))
+            guard _showLibraryTests != newValue else {
+                return
+            }
+            _showLibraryTests = newValue
+            self.set(_showLibraryTests, for: .showLibraryTests)
             self.objectWillChange.send()
+            for observer in observers {
+                if _showLibraryTests {
+                    observer.settings(self, didAddIndexableUrl: Bundle.main.testsUrl)
+                } else {
+                    observer.settings(self, didRemoveIndexableUrl: Bundle.main.testsUrl)
+                }
+            }
         }
     }
 

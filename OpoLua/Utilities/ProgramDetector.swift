@@ -29,7 +29,7 @@ protocol ProgramDetectorDelegate: AnyObject {
 
 }
 
-class ProgramDetector {
+class ProgramDetector: NSObject {
 
     private var settings: Settings
     private let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
@@ -44,6 +44,8 @@ class ProgramDetector {
 
     init(settings: Settings) {
         self.settings = settings
+        super.init()
+        settings.addObserver(self)
     }
 
     static func find(url: URL, filter: (Directory.Item) -> Bool, interpreter: OpoInterpreter) throws -> [Directory.Item] {
@@ -100,6 +102,18 @@ class ProgramDetector {
         updateQueue.async {
             self.updateQueue_update(urls: urls)
         }
+    }
+
+}
+
+extension ProgramDetector: SettingsObserver {
+
+    func settings(_ settings: Settings, didAddIndexableUrl indexableUrl: URL) {
+        print("didAddIndexableUrl: \(indexableUrl)")
+    }
+
+    func settings(_ settings: Settings, didRemoveIndexableUrl indexableUrl: URL) {
+        print("didRemoveIndexableUrl: \(indexableUrl)")
     }
 
 }
