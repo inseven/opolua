@@ -33,19 +33,17 @@ class ProgramDetector: NSObject {
 
     private var settings: Settings
     private let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
-    private var settingsSink: AnyCancellable?
-    private var _items: Set<Directory.Item> = []
+    private var _items: [Directory.Item] = []
     private var interpreter = OpoInterpreter()
 
     var items: [Directory.Item] {
-        return Array(_items)
+        return _items
     }
     weak var delegate: ProgramDetectorDelegate?
 
     init(settings: Settings) {
         self.settings = settings
         super.init()
-        settings.addObserver(self)
     }
 
     static func find(url: URL, filter: (Directory.Item) -> Bool, interpreter: OpoInterpreter) throws -> [Directory.Item] {
@@ -55,7 +53,11 @@ class ProgramDetector: NSObject {
                 result.append(item)
             }
             if case Directory.Item.ItemType.directory = item.type {
-                result += try find(url: item.url, filter: filter, interpreter: interpreter)
+                // Without this, the memory usage of this recursive find operation balloons and the application is
+                // killed with an OOM.
+                try autoreleasepool {
+                    result += try find(url: item.url, filter: filter, interpreter: interpreter)
+                }
             }
         }
         return result
@@ -75,8 +77,9 @@ class ProgramDetector: NSObject {
                     }
                 }, interpreter: interpreter)
             }
+            let uniqueItems = Array(Set(items))
             DispatchQueue.main.async {
-                self._items = Set(items)
+                self._items = uniqueItems
                 self.delegate?.programDetectorDidUpdateItems(self)
             }
         } catch {
@@ -88,17 +91,14 @@ class ProgramDetector: NSObject {
     }
 
     func start() {
-        settingsSink = settings.objectWillChange.sink { [weak self] _ in
-            guard let self = self else {
-                return
-            }
-            self.update()
-        }
+        settings.addObserver(self)
         self.update()
     }
 
     private func update() {
         let urls = settings.indexableUrls
+        print(urls)
+        print("Indexing \(urls.count) items...")
         updateQueue.async {
             self.updateQueue_update(urls: urls)
         }
@@ -109,11 +109,11 @@ class ProgramDetector: NSObject {
 extension ProgramDetector: SettingsObserver {
 
     func settings(_ settings: Settings, didAddIndexableUrl indexableUrl: URL) {
-        print("didAddIndexableUrl: \(indexableUrl)")
+        self.update()
     }
 
     func settings(_ settings: Settings, didRemoveIndexableUrl indexableUrl: URL) {
-        print("didRemoveIndexableUrl: \(indexableUrl)")
+        self.update()
     }
 
 }
