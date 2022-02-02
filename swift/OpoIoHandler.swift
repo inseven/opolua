@@ -299,8 +299,8 @@ struct Graphics {
         let frames: [Frame]
     }
 
-    struct ClockInfo {
-        enum Mode: Int {
+    struct ClockInfo: Codable {
+        enum Mode: Int, Codable {
             case systemSetting = 6
             case analog = 7
             case digital = 8

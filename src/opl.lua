@@ -539,7 +539,7 @@ function gCLOCK(mode)
     if mode then
         x, y = context.pos.x, context.pos.y
     end
-    runtime:iohandler().graphicsop("clock", context.id, mode, x, y)
+    runtime:iohandler().graphicsop("clock", context.id, { mode = mode, position = { x = x, y = y }})
 end
 
 -- Screen APIs

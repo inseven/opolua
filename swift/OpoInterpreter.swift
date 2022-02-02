@@ -257,7 +257,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("setwin", drawableId, x, y, [w, h])
 // graphicsop("sprite", windowId, id, [sprite])
 // graphicsop("title", appTitle)
-// graphicsop("clock", drawableId, [mode, x, y])
+// graphicsop("clock", drawableId, [{mode=, x=, y=}])
 // graphicsop("peekline", drawableId, x, y, numPixels, mode)
 private func graphicsop(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
@@ -369,16 +369,7 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         return doGraphicsOp(L, iohandler, .sprite(window, spriteId, sprite))
     case "clock":
         let drawableId = Graphics.DrawableId(value: L.toint(2) ?? 0)
-        let clockInfo: Graphics.ClockInfo?
-        if let modeVal = L.toint(3),
-           let mode = Graphics.ClockInfo.Mode(rawValue: modeVal),
-           let x = L.toint(4),
-           let y = L.toint(5) {
-            let pos = Graphics.Point(x: x, y: y)
-            clockInfo = Graphics.ClockInfo(mode: mode, position: pos)
-        } else {
-            clockInfo = nil
-        }
+        let clockInfo = L.tovalue(3, Graphics.ClockInfo.self)
         return doGraphicsOp(L, iohandler, .clock(drawableId, clockInfo))
     case "peekline":
         if let id = L.toint(2),
