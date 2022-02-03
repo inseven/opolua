@@ -25,7 +25,7 @@ enum ApplicationSection: Hashable {
     case allPrograms
     case documents
     case local(URL)
-    case external(SecureLocation)
+    case external(URL)
 }
 
 extension ApplicationSection {
@@ -41,7 +41,7 @@ extension ApplicationSection {
         case .local(let url):
             return url.localizedName
         case .external(let url):
-            return url.url.localizedName
+            return url.localizedName
         }
     }
 

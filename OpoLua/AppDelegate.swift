@@ -24,6 +24,10 @@ import UIKit
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
+    static var shared: AppDelegate {
+        return UIApplication.shared.delegate as! AppDelegate
+    }
+
     var window: UIWindow?
     var section: ApplicationSection?
     var previousSection: ApplicationSection = .allPrograms  // Represents the previously active section; always the one we expand to when entering split view.
@@ -39,10 +43,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var splitViewController: UISplitViewController!
     var libraryViewController: LibraryViewController!
     var settingsSink: AnyCancellable?
-
-    static var shared: AppDelegate {
-        return UIApplication.shared.delegate as! AppDelegate
-    }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -94,8 +94,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
-    func install(url: URL) {
-        let installerViewController = InstallerViewController(settings: settings, url: url)
+    func install(url: URL, preferredDestinationUrl: URL? = nil) {
+        let installerViewController = InstallerViewController(settings: settings,
+                                                              url: url,
+                                                              preferredDestinationUrl: preferredDestinationUrl)
         installerViewController.installerDelegate = self
         splitViewController.present(installerViewController, animated: true)
     }
@@ -151,19 +153,62 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             showDirectory(url: FileManager.default.documentsUrl, animated: animated)
         case .local(let url):
             showDirectory(url: url, animated: animated)
-        case .external(let location):
-            showDirectory(url: location.url, animated: animated)
+        case .external(let url):
+            showDirectory(url: url, animated: animated)
         }
     }
 
-    var activeViewController: UIViewController {
+    private var activeViewController: UIViewController {
+        return detailNavigationController.viewControllers.last!
+    }
+
+    private var detailNavigationController: UINavigationController {
         if splitViewController.isCollapsed {
-            let navigationController = splitViewController.viewControllers[0] as! UINavigationController
-            return navigationController.viewControllers.last!
+            return splitViewController.viewControllers[0] as! UINavigationController
         } else {
-            let navigationController = splitViewController.viewControllers[1] as! UINavigationController
-            return navigationController.viewControllers.last!
+            return splitViewController.viewControllers[1] as! UINavigationController
         }
+    }
+
+    func section(for url: URL) -> (ApplicationSection, [URL])? {
+        guard let location = settings.indexableUrls.first(where: {
+            url.path.starts(with: $0.path) || url.resolvingSymlinksInPath().path.starts(with: $0.path)
+        }) else {
+            return nil
+        }
+        let components = String(url.path.dropFirst(location.path.count)).split(separator: "/").map { String($0) }
+        var directoryUrls: [URL] = []
+        var loopUrl = location
+        for component in components {
+            loopUrl = loopUrl.appendingPathComponent(component)
+            directoryUrls.append(loopUrl)
+        }
+        switch location {
+        case Bundle.main.filesUrl, Bundle.main.scriptsUrl, Bundle.main.testsUrl:
+            return (ApplicationSection.local(location), directoryUrls)
+        case FileManager.default.documentsUrl:
+            return (ApplicationSection.documents, [])
+        default:
+            return (ApplicationSection.external(location), directoryUrls)
+        }
+    }
+
+    func showUrl(_ url: URL) {
+        if let activeDirectoryViewController = activeViewController as? DirectoryViewController,
+           activeDirectoryViewController.directory.url == url {
+            print("Nothing to do!")
+            return
+        }
+        guard let (section, urls) = section(for: url) else {
+            print("Unable to determine section for '\(url)'.")
+            return
+        }
+        self.showSection(section, animated: false)
+        libraryViewController.selectSection(section: section)
+        urls.map { DirectoryViewController(settings: settings,
+                                           taskManager: taskManager,
+                                           directory: Directory(url: $0)) }
+        .forEach { detailNavigationController.pushViewController($0, animated: false) }
     }
     
 }
@@ -173,6 +218,13 @@ extension AppDelegate: InstallerViewControllerDelegate {
     func installerViewControllerDidFinish(_ installerViewController: InstallerViewController) {
         dispatchPrecondition(condition: .onQueue(.main))
         installerViewController.dismiss(animated: true)
+    }
+
+    func installerViewController(_ installerViewController: InstallerViewController,
+                                 didInstallToDestinationUrl destinationUrl: URL) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        installerViewController.dismiss(animated: true)
+        showUrl(destinationUrl)
     }
 
 }

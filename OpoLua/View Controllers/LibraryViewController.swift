@@ -72,6 +72,7 @@ class LibraryViewController: UICollectionViewController {
         title = "Library"
         navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.leftBarButtonItem = aboutBarButtonItem
+        clearsSelectionOnViewWillAppear = false
 
         collectionView.collectionViewLayout = createLayout()
 
@@ -143,6 +144,11 @@ class LibraryViewController: UICollectionViewController {
                 return
             }
             self.reload(animated: animated)
+        }
+        if splitViewController?.isCollapsed ?? true {
+            collectionView.indexPathsForSelectedItems?.forEach { indexPath in
+                collectionView.deselectItem(at: indexPath, animated: true)
+            }
         }
     }
 
@@ -275,7 +281,7 @@ class LibraryViewController: UICollectionViewController {
         }
     }
 
-    func deleteLocation(_ location: SecureLocation) {
+    func deleteLocation(_ location: URL) {
         do {
             try settings.removeLocation(location)
             reload(animated: true)

@@ -41,7 +41,7 @@ class DirectoryViewController : UICollectionViewController {
 
     private var settings: Settings
     private var taskManager: TaskManager
-    private var directory: Directory
+    var directory: Directory
     private var installer: Installer?
     private var applicationActiveObserver: Any?
     private var settingsSink: AnyCancellable?
@@ -261,11 +261,7 @@ class DirectoryViewController : UICollectionViewController {
         case .directory:
             pushDirectoryViewController(for: item.url)
         case .installer:
-            let installerViewController = InstallerViewController(settings: settings,
-                                                                  url: item.url,
-                                                                  preferredDestinationUrl: directory.url)
-            installerViewController.installerDelegate = self
-            present(installerViewController, animated: true)
+            AppDelegate.shared.install(url: item.url, preferredDestinationUrl: directory.url)
         case .image:
             let viewController = ImageViewController(url: item.url)
             navigationController?.pushViewController(viewController, animated: true)
@@ -278,7 +274,6 @@ class DirectoryViewController : UICollectionViewController {
                                           preferredStyle: .alert)
             alert.addAction(.init(title: "OK", style: .default, handler: nil))
             self.present(alert, animated: true, completion: nil)
-            break
         }
     }
 
@@ -348,15 +343,6 @@ extension DirectoryViewController: DirectoryDelegate {
         present(error: error)
     }
     
-}
-
-extension DirectoryViewController: InstallerViewControllerDelegate {
-
-    func installerViewControllerDidFinish(_ installerViewController: InstallerViewController) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        installerViewController.dismiss(animated: true)
-    }
-
 }
 
 extension DirectoryViewController: TaskManagerObserver {

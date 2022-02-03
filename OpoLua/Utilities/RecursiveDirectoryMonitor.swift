@@ -109,7 +109,6 @@ class RecursiveDirectoryMonitor {
     }
 
     func observe(url: URL, handler: @escaping () -> Void) -> CancellableObserver {
-        dispatchPrecondition(condition: .notOnQueue(queue))
         let context = ObserverContext(url: url, handler: handler)
         queue.async {
             self.queue_addObserver(context: context)
@@ -118,8 +117,7 @@ class RecursiveDirectoryMonitor {
     }
 
     private func cancel(_ context: ObserverContext) {
-        dispatchPrecondition(condition: .notOnQueue(queue))
-        queue.sync {
+        queue.async {
             self.queue_removeObserver(context: context)
         }
     }

@@ -219,6 +219,13 @@ class AllProgramsViewController : UICollectionViewController {
                     })
                     actions += self.taskManager.actions(for: programUrl)
                 }
+
+                let fileActions: [UIMenuElement] = [UIAction(title: "Reveal in Library",
+                                                            image: UIImage(systemName: "magnifyingglass")) { action in
+                    AppDelegate.shared.showUrl(item.url.deletingLastPathComponent())
+                }]
+                actions += [UIMenu(options: [.displayInline], children: fileActions)]
+
                 return UIMenu(children: actions)
             case .directory, .installer, .unknown, .applicationInformation, .image, .sound, .help, .text:
                 return nil

@@ -64,12 +64,17 @@ class Settings: ObservableObject {
     private var _showLibraryScripts = true
     private var _showLibraryTests = false
 
-    // TODO: Should be immutable.
-    var locations: [SecureLocation] = []
+    private var _locations: [SecureLocation] = []
+
+    var locations: [URL] {
+        get {
+            return _locations.map { $0.url }
+        }
+    }
 
     init() {
         do {
-            locations = try secureLocations(for: .locations)
+            _locations = try secureLocations(for: .locations)
         } catch {
             print("Failed to load locations with error \(error).")
         }
@@ -149,12 +154,12 @@ class Settings: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
 
         // Ensure the location is unique.
-        guard !locations.contains(where: { $0.url == url }) else {
+        guard !_locations.contains(where: { $0.url == url }) else {
             throw OpoLuaError.locationExists
         }
 
-        locations.append(try SecureLocation(url: url))
-        try set(secureLocations: locations, for: .locations)
+        _locations.append(try SecureLocation(url: url))
+        try set(secureLocations: _locations, for: .locations)
 
         self.objectWillChange.send()
         for observer in self.observers {
@@ -162,12 +167,15 @@ class Settings: ObservableObject {
         }
     }
 
-    func removeLocation(_ location: SecureLocation) throws {
+    func removeLocation(_ url: URL) throws {
         dispatchPrecondition(condition: .onQueue(.main))
+        guard let location = _locations.first(where: { $0.url == url }) else {
+            return
+        }
 
         try location.cleanup()
-        locations.removeAll { $0.url == location.url }
-        try set(secureLocations: locations, for: .locations)
+        _locations.removeAll { $0.url == location.url }
+        try set(secureLocations: _locations, for: .locations)
 
         self.objectWillChange.send()
         for observer in self.observers {
@@ -303,7 +311,7 @@ class Settings: ObservableObject {
         if self.showLibraryTests {
             indexableUrls.append(Bundle.main.testsUrl)
         }
-        for location in self.locations {
+        for location in self._locations {
             indexableUrls.append(location.url)
         }
         return indexableUrls

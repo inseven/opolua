@@ -22,7 +22,10 @@ import UIKit
 
 protocol InstallerViewControllerDelegate: AnyObject {
 
-    func installerViewControllerDidFinish(_ installerViewController: InstallerViewController)
+    func installerViewControllerDidFinish(_ installerViewController: InstallerViewController)  // TODO: Report error.
+
+    func installerViewController(_ installerViewController: InstallerViewController,
+                                 didInstallToDestinationUrl destinationUrl: URL)
 
 }
 
@@ -116,8 +119,14 @@ extension InstallerViewController: InstallerDelegate {
 
 extension InstallerViewController: InstallerSummaryViewControllerDelegate {
 
-    func installerSummaryViewControllerDidFinish(_ installerSummaryViewController: InstallerSummaryViewController) {
-        installerDelegate?.installerViewControllerDidFinish(self)
+    func installerSummaryViewController(_ installerSummaryViewController: InstallerSummaryViewController,
+                                        didFinishWithResult result: Result<Void, Error>) {
+        switch result {
+        case .success:
+            installerDelegate?.installerViewController(self, didInstallToDestinationUrl: destinationUrl!)
+        case .failure:
+            installerDelegate?.installerViewControllerDidFinish(self)
+        }
     }
 
 }

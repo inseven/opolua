@@ -22,7 +22,8 @@ import UIKit
 
 protocol InstallerSummaryViewControllerDelegate: AnyObject {
 
-    func installerSummaryViewControllerDidFinish(_ installerSummaryViewController: InstallerSummaryViewController)
+    func installerSummaryViewController(_ installerSummaryViewController: InstallerSummaryViewController,
+                                        didFinishWithResult result: Result<Void, Error>)
 
 }
 
@@ -90,7 +91,7 @@ class InstallerSummaryViewController: UIViewController {
     }
 
     @objc func doneTapped(sender: UIBarButtonItem) {
-        delegate?.installerSummaryViewControllerDidFinish(self)
+        delegate?.installerSummaryViewController(self, didFinishWithResult: state)
     }
 
 }
