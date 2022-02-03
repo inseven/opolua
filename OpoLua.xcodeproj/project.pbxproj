@@ -28,6 +28,7 @@
 		D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82639352783CAE500AB4086 /* TimerRequest.swift */; };
 		D82A37B827A9B43F00D8F5F4 /* DirectoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82A37B727A9B43F00D8F5F4 /* DirectoryMonitor.swift */; };
 		D82D2FCC27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82D2FCB27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift */; };
+		D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82D2FCD27AC3E62001A4283 /* Error.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
@@ -273,6 +274,7 @@
 		D82639352783CAE500AB4086 /* TimerRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRequest.swift; sourceTree = "<group>"; };
 		D82A37B727A9B43F00D8F5F4 /* DirectoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryMonitor.swift; sourceTree = "<group>"; };
 		D82D2FCB27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecursiveDirectoryMonitor.swift; sourceTree = "<group>"; };
+		D82D2FCD27AC3E62001A4283 /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
@@ -555,6 +557,7 @@
 				D86E42892799C0CC00D5596D /* UISplitViewController.swift */,
 				D89A607B2756A6A300C9757F /* URL.swift */,
 				D89A607D2756A98200C9757F /* ViewController.swift */,
+				D82D2FCD27AC3E62001A4283 /* Error.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -1067,6 +1070,7 @@
 				D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */,
 				D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */,
 				D89A607E2756A98200C9757F /* ViewController.swift in Sources */,
+				D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */,
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
 				D8F5CADB279D07A700A2DC3F /* ImageViewController.swift in Sources */,
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,

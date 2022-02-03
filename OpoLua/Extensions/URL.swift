@@ -23,6 +23,19 @@ import UIKit
 
 extension URL {
 
+    static func gitHubIssue(title: String, description: String, labels: [String]) -> URL? {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "github.com"
+        components.path = "/inseven/opolua/issues/new"
+        components.queryItems = [
+            URLQueryItem(name: "title", value: title),
+            URLQueryItem(name: "body", value: description),
+            URLQueryItem(name: "labels", value: labels.joined(separator: ",")),
+        ]
+        return components.url
+    }
+
     var localizedName: String {
         if self == FileManager.default.documentsUrl {
             return UIDevice.current.localizedDocumentsName

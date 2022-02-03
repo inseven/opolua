@@ -541,6 +541,12 @@ extension ProgramViewController: ProgramLifecycleObserver {
         alert.addAction(UIAlertAction(title: "Show Details", style: .default, handler: { action in
             showErrorDetails()
         }))
+        if let gitHubIssueUrl = error.gitHubIssueUrl {
+            alert.addAction(UIAlertAction(title: "Raise GitHub Issue", style: .default, handler: { action in
+                UIApplication.shared.open(gitHubIssueUrl)
+                self.navigationController?.popViewController(animated: true)
+            }))
+        }
         present(alert, animated: true, completion: nil)
     }
 
