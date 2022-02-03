@@ -108,12 +108,7 @@ class ErrorViewController: UIViewController {
                                              multiplier: screenshot.size.width / screenshot.size.height),
         ])
 
-        if let facerake = error as? OpoInterpreter.UnimplementedOperationError {
-            textView.text = "TODO: \(facerake.operation)\n\(facerake.message)\n\(facerake.description)"
-        } else {
-            textView.text = "\n---Error occurred:---\n\(error.localizedDescription)"
-        }
-
+        textView.text = error.localizedDescription
         imageView.image = screenshot
     }
 

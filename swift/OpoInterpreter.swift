@@ -53,18 +53,22 @@ private func searcher(_ L: LuaState!) -> Int32 {
 }
 
 private func traceHandler(_ L: LuaState!) -> Int32 {
-    var msg = lua_tostring(L, 1)
-    if msg == nil {  /* is error object not a string? */
-        if luaL_callmeta(L, 1, "__tostring") != 0 &&  /* does it have a metamethod */
-            lua_type(L, -1) == LUA_TSTRING { /* that produces a string? */
-            return 1  /* that is the message */
-        } else {
-            let t = String(utf8String: luaL_typename(L, 1))!
-            msg = lua_pushstring(L, "(error object is a \(t) value)")
-        }
+    lua_settop(L, 1)
+    if L.type(1) != .table {
+        // Create a table
+        lua_newtable(L)
+        // We shouldn't be getting eg raw numbers-as-leave-codes being thrown here
+        let msg = L.tostring(1) ?? "(No error message)"
+        L.setfield("msg", msg)
+        lua_remove(L, 1)
     }
-    luaL_traceback(L, L, msg, 1)  /* append a standard traceback */
-    return 1  /* return the traceback */
+
+    // Position 1 is now definitely a table. See if needs a stacktrace.
+    if L.tostring(1, key: "luaStack") == nil {
+        luaL_traceback(L, L, nil, 1)
+        lua_setfield(L, -2, "luaStack")
+    }
+    return 1
 }
 
 private func getInterpreterUpval(_ L: LuaState!) -> OpoInterpreter {
@@ -722,27 +726,48 @@ class OpoInterpreter {
         lua_close(L)
     }
 
-    // Returns nil on success, otherwise err string
-    func pcall(_ narg: Int32, _ nret: Int32) -> String? {
+    // throws an InterpreterError or subclass thereof
+    func pcall(_ narg: Int32, _ nret: Int32) throws {
         let base = lua_gettop(L) - narg // Where the function is, and where the msghandler will be
         lua_pushcfunction(L, traceHandler)
         lua_insert(L, base)
         let err = lua_pcall(L, narg, nret, base);
         lua_remove(L, base)
         if err != 0 {
-            let errStr = L.tostring(-1, convert: true)!
-            L.pop()
-            return errStr
+            assert(L.type(-1) == .table) // Otherwise our traceHandler isn't doing its job
+            let msg = L.tostring(-1, key: "msg")!
+            var detail = msg
+            if let opoStack = L.tostring(-1, key: "opoStack") {
+                detail = "\(detail)\n\(opoStack)"
+            }
+            if let luaStack = L.tostring(-1, key: "luaStack") {
+                detail = "\(detail)\n\(luaStack)"
+            }
+            let error: InterpreterError
+            if let operation = L.tostring(-1, key: "unimplemented") {
+                if operation == "database.loadBinary" {
+                    // Special case as it's such a significant issue
+                    error = BinaryDatabaseError(message: msg, detail: detail, operation: operation)
+                } else {
+                    error = UnimplementedOperationError(message: msg, detail: detail, operation: operation)
+                }
+            } else if L.toboolean(-1, key: "notOpl") {
+                error = NativeBinaryError(message: msg, detail: detail)
+            } else {
+                error = InterpreterError(message: msg, detail: detail)
+            }
+            L.pop() // the error object
+            throw error
         }
-        return nil
     }
 
     func logpcall(_ narg: Int32, _ nret: Int32) -> Bool {
-        if let err = pcall(narg, nret) {
-            print("Error: \(err)")
-            return false
-        } else {
+        do {
+            try pcall(narg, nret)
             return true
+        } catch {
+            print("Error: \(error.localizedDescription)")
+            return false
         }
     }
 
@@ -937,20 +962,20 @@ class OpoInterpreter {
     class InterpreterError: LocalizedError {
 
         let message: String // One-line description of the error
-        let description: String // Includes all of message, leave code, lua stack trace, opo stacktrace (as appropriate)
+        let detail: String // Includes all of message, leave code, lua stack trace, opo stacktrace (as appropriate)
 
         init(message: String) {
             self.message = message
-            self.description = message
+            self.detail = message
         }
 
-        init(message: String, description: String) {
+        init(message: String, detail: String) {
             self.message = message
-            self.description = description
+            self.detail = detail
         }
 
         var errorDescription: String? {
-            return description
+            return detail
         }
 
     }
@@ -959,9 +984,9 @@ class OpoInterpreter {
 
         let code: Int
 
-        init(message: String, description: String, leaveCode: Int) {
+        init(message: String, detail: String, leaveCode: Int) {
             self.code = leaveCode
-            super.init(message: message, description: description)
+            super.init(message: message, detail: detail)
         }
 
     }
@@ -970,9 +995,9 @@ class OpoInterpreter {
 
         let operation: String
 
-        init(message: String, description: String, operation: String) {
+        init(message: String, detail: String, operation: String) {
             self.operation = operation
-            super.init(message: message, description: description)
+            super.init(message: message, detail: detail)
         }
 
         override var errorDescription: String? {
@@ -980,6 +1005,10 @@ class OpoInterpreter {
         }
 
     }
+
+    class BinaryDatabaseError: UnimplementedOperationError {}
+
+    class NativeBinaryError : InterpreterError {}
 
     func run(devicePath: String, procedureName: String? = nil) throws {
         lua_settop(L, 0)
@@ -995,30 +1024,7 @@ class OpoInterpreter {
             L.pushnil()
         }
         makeIoHandlerBridge()
-        let err = pcall(3, 1) // runOpo(devicePath, proc, iohandler)
-        if let err = err {
-            throw InterpreterError(message: err)
-        } else {
-            let t = L.type(-1)
-            switch(L.type(-1)) {
-            case nil, .nilType:
-                break
-            case .table:
-                // An error
-                let msg = L.tostring(-1, key: "msg") ?? "(No msg!?)"
-                let description = L.tostring(-1, convert: true)!
-                if let operation = L.tostring(-1, key: "unimplemented") {
-                    throw UnimplementedOperationError(message: msg, description: description, operation: operation)
-                } else if let code = L.toint(-1, key: "code") {
-                    throw LeaveError(message: msg, description: description, leaveCode: code)
-                } else {
-                    throw InterpreterError(message: msg, description: description)
-                }
-            default:
-                print("Unexpected return type \(t!.rawValue)")
-            }
-            L.pop()
-        }
+        try pcall(3, 0) // runOpo(devicePath, proc, iohandler)
     }
 
     // Pen events actually use TEventModifers not TOplModifiers (despite what the documentation says)
@@ -1155,9 +1161,7 @@ class OpoInterpreter {
         lua_getfield(L, -1, "installSis")
         L.push(data)
         makeIoHandlerBridge()
-        if let err = pcall(2, 0) { // installSis(data, iohandler)
-            throw InterpreterError(message: err)
-        }
+        try pcall(2, 0)
     }
 
     func syncOpTimer() {

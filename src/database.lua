@@ -150,7 +150,8 @@ function Db:load(data)
     self.currentTable = nil
     if data:sub(1, 4) == "\x50\x00\x00\x10" then
         -- It's an epoc binary db
-        return self:loadBinary(data)
+        unimplemented("database.loadBinary")
+        -- return self:loadBinary(data)
     end
     local currentTable, currentRec
     for line in data:gmatch("[^\r\n]+") do

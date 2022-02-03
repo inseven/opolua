@@ -534,7 +534,14 @@ extension ProgramViewController: ProgramLifecycleObserver {
             return
         }
 
-        let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+        let msg: String
+        if let interpreterError = error as? OpoInterpreter.InterpreterError {
+            msg = interpreterError.message
+        } else {
+            // Just go with whatever we have
+            msg = error.localizedDescription
+        }
+        let alert = UIAlertController(title: "Error", message: msg, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: { action in
             self.navigationController?.popViewController(animated: true)
         }))

@@ -24,8 +24,8 @@ extension Error {
 
     var gitHubIssueUrl: URL? {
         if let unimplementedOperation = self as? OpoInterpreter.UnimplementedOperationError {
-            return URL.gitHubIssue(title: "Unimplemneted Operation: \(unimplementedOperation.operation)",
-                                   description: unimplementedOperation.description,
+            return URL.gitHubIssue(title: "Unimplemented Operation: \(unimplementedOperation.operation)",
+                                   description: unimplementedOperation.detail,
                                    labels: ["facerake", "bug"])
         }
         return nil

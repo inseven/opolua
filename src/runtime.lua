@@ -816,12 +816,11 @@ function Runtime:setCallTrace(flag)
     self.callTrace = flag
 end
 
-ErrObj = {
+ErrObj = class {
     __tostring = function(self)
-        return fmt("%s\n%s\n%s", self.msg or self.code, self.opoStack, self.luaStack)
+        return fmt("%s\n%s\n%s", self.msg, self.opoStack, self.luaStack)
     end
 }
-ErrObj.__index = ErrObj
 
 local function findLocationOfFnOnStack(fn)
     local lvl = 2
@@ -1268,6 +1267,11 @@ function runOpo(fileName, procName, iohandler, verbose)
         error("Failed to read opo file data")
     end
 
+    -- parseOpo will bail if the UID1 is wrong, but with a less useful error
+    if string.unpack("<I4", data) == KDynamicLibraryUid then
+        error({ msg = "File is a native binary and not compiled OPL.", notOpl = true })
+    end
+
     local procTable, opxTable = require("opofile").parseOpo(data, verbose)
     rt:addModule(fileName, procTable, opxTable)
     local procToCall = procName and procName:upper() or procTable[1].name
@@ -1276,7 +1280,9 @@ function runOpo(fileName, procName, iohandler, verbose)
         -- Don't care about the distinction
         err = nil
     end
-    return err
+    if err then
+        error(err)
+    end
 end
 
 function installSis(data, iohandler)
