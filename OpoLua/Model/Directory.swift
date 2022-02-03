@@ -71,8 +71,6 @@ class Directory {
 
         var name: String {
             switch type {
-            case .object, .image, .text:
-                return url.lastPathComponent.deletingPathExtension
             case .system(_, let appInfo):
                 return appInfo?.caption ?? url.lastPathComponent
             default:
