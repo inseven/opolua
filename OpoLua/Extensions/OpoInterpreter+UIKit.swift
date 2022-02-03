@@ -46,10 +46,12 @@ extension OpoInterpreter.AppInfo {
             }
         }
         guard let bitmap = bitmap else {
+            #if DEBUG
             print("Failed to find icon for '\(self.caption)'.")
             for icon in icons {
                 print("  bitmap = \(icon.bitmap.size), mask = \(icon.mask!.size)")
             }
+            #endif
             return nil
         }
         if let cgImg = bitmap.cgImage {

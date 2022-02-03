@@ -67,30 +67,36 @@ class DirectoryMonitor {
         guard directoryFileDescriptor > 0 else {
             throw NSError(domain: POSIXError.errorDomain, code: Int(errno), userInfo: nil)
         }
+        #if DEBUG
         DirectoryMonitor.incrementCount()
+        #endif
         let dispatchSource = DispatchSource.makeFileSystemObjectSource(fileDescriptor: directoryFileDescriptor,
                                                                        eventMask: [.write],
                                                                        queue: queue)
         dispatchSource.setCancelHandler {
             close(directoryFileDescriptor)
+            #if DEBUG
             DirectoryMonitor.decrementCount()
+            #endif
         }
         return dispatchSource
     }
 
     let url: URL
-    private var recursive: Bool
     private let queue: DispatchQueue
     private var state: State = .idle
     private var dispatchSource: DispatchSourceFileSystemObject?
-    private var monitors: [DirectoryMonitor] = []
 
     weak var delegate: DirectoryMonitorDelegate?
 
-    init(url: URL, recursive: Bool = false, queue: DispatchQueue = .main) {
-        self.url = url.resolvingSymlinksInPath()
-        self.recursive = recursive
+    // N.B. This does not resolve symlinks in the URL.
+    init(url: URL, queue: DispatchQueue = .main) {
+        self.url = url
         self.queue = queue
+    }
+
+    deinit {
+        dispatchSource?.cancel()
     }
 
     func start() {
@@ -119,7 +125,6 @@ class DirectoryMonitor {
                 }
                 self.queue_update()
             }
-            queue_updateSubDirectoryMonitors()
             dispatchSource?.resume()
         } catch {
             queue_cancelWithError(error)
@@ -132,10 +137,6 @@ class DirectoryMonitor {
             return
         }
         state = .cancelled
-        for monitor in monitors {
-            monitor.cancel()
-        }
-        monitors.removeAll()
         dispatchSource?.cancel()
         dispatchSource = nil
     }
@@ -149,72 +150,12 @@ class DirectoryMonitor {
         delegate?.directoryMonitor(self, didFailWithError: error)
     }
 
-    private func queue_updateSubDirectoryMonitors() {
-        dispatchPrecondition(condition: .onQueue(queue))
-        guard recursive else {
-            return
-        }
-
-        // Get URLs of all our sub-directories.
-        // Fortunately, the FileManager enumerator will recurse on our behalf, so we don't have to build a deeply nested
-        // structure of monitors.
-        var children: Set<URL> = []
-        let files = FileManager.default.enumerator(at: url, includingPropertiesForKeys: [.isDirectoryKey])
-        while let fileUrl = files?.nextObject() as? URL {
-            let resourceValues = try! fileUrl.resourceValues(forKeys: [.isDirectoryKey])
-            guard resourceValues.isDirectory! else {
-                continue
-            }
-            children.insert(fileUrl)
-        }
-
-        // Stop and remove the monitors for deleted URLs.
-        let deletedUrlMonitors = monitors.filter { !children.contains($0.url) }
-        for monitor in deletedUrlMonitors {
-            monitor.cancel()
-            monitors.removeAll { $0.url == monitor.url }
-        }
-
-        // Filter the list of URLs to remove the we're already monitoring.
-        for monitor in monitors {
-            children.remove(monitor.url)
-        }
-
-        // Create monitors for the remaining URLs (new sub-directories)
-        for childUrl in children {
-            let monitor = DirectoryMonitor(url: childUrl, recursive: false, queue: queue)
-            monitor.delegate = self
-            monitors.append(monitor)
-            monitor.start()
-        }
-    }
-
     private func queue_update() {
         dispatchPrecondition(condition: .onQueue(queue))
         guard state == .running else {
             return
         }
-        queue_updateSubDirectoryMonitors()
         delegate?.directoryMonitor(self, contentsDidChangeForUrl: url)
-    }
-
-}
-
-extension DirectoryMonitor: DirectoryMonitorDelegate {
-
-    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, contentsDidChangeForUrl url: URL) {
-        dispatchPrecondition(condition: .onQueue(queue))
-        guard state == .running else {
-            return
-        }
-        queue_updateSubDirectoryMonitors()
-        delegate?.directoryMonitor(self, contentsDidChangeForUrl: url)
-    }
-
-    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, didFailWithError error: Error) {
-        dispatchPrecondition(condition: .onQueue(queue))
-        // One of our children failed with an error so we remove that child from the set and assume everything is good.
-        monitors.removeAll { $0.url == directoryMonitor.url }
     }
 
 }
