@@ -20,26 +20,6 @@
 
 import Foundation
 
-protocol FlagEnum: RawRepresentable, Hashable, CaseIterable {}
-
-extension Set where Element: FlagEnum, Element.RawValue: FixedWidthInteger {
-    init(flags: Element.RawValue) {
-        self.init()
-        for caseVal in Element.allCases {
-            if (flags & caseVal.rawValue) == caseVal.rawValue {
-                insert(caseVal)
-            }
-        }
-    }
-    var rawValue: Element.RawValue {
-        var ret: Element.RawValue = 0
-        for val in self {
-            ret = ret | val.rawValue
-        }
-        return ret
-    }
-}
-
 struct Graphics {
 
     struct Size: Equatable, Comparable, Codable {
@@ -216,7 +196,7 @@ struct Graphics {
         // extras we define
         case boldHint = 64 // Indicates the font is inherently bold
     }
-    typealias FontFlags = Set<FontFlag>
+    typealias FontFlags = FlagSet<FontFlag>
 
     struct FontInfo {
         let uid: UInt32
@@ -400,7 +380,7 @@ enum Modifier: Int, FlagEnum {
     case capsLock = 16
     case fn = 32
 }
-typealias Modifiers = Set<Modifier>
+typealias Modifiers = FlagSet<Modifier>
 
 struct Async {
     enum RequestType {

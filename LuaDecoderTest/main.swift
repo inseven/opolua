@@ -116,9 +116,26 @@ func testDrawable() {
     assert(decoded == expected)
 }
 
+func testFlags() {
+    defer { lua_settop(L, 0) }
+    enum Fleg: Int, FlagEnum {
+        case a = 1
+        case b = 2
+        case c = 4
+    }
+    typealias Flegs = FlagSet<Fleg>
+    let expected = Flegs(rawValue: 6)
+    assert(expected.contains(.b))
+    assert(!expected.contains(.a))
+    L.push(expected.rawValue)
+    let decoded = L.tovalue(-1, Flegs.self)!
+    assert(decoded == expected)
+}
+
 testBasic()
 testArray()
 testCond()
 testLim()
 testDict()
 testDrawable()
+testFlags()

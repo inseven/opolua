@@ -192,7 +192,7 @@ private func draw(_ L: LuaState!) -> Int32 {
             }
         case "text":
             let str = L.tostring(-1, key: "string") ?? ""
-            var flags = Graphics.FontFlags(flags: L.toint(-1, key: "style") ?? 0)
+            var flags = Graphics.FontFlags(rawValue: L.toint(-1, key: "style") ?? 0)
             mode = Graphics.Mode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
             let face = Graphics.FontFace(rawValue: L.tostring(-1, key: "fontface") ?? "arial") ?? .arial
             let uid = UInt32(L.toint(-1, key: "fontuid") ?? 0)
@@ -283,7 +283,7 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
         }
     case "textsize":
         let str = L.tostring(2) ?? ""
-        var flags = Graphics.FontFlags(flags: L.toint(4) ?? 0)
+        var flags = Graphics.FontFlags(rawValue: L.toint(4) ?? 0)
         if L.toboolean(3, key: "bold") {
             flags.insert(.boldHint)
         }
