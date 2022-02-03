@@ -173,7 +173,7 @@ class Directory {
 
     private let updateQueue = DispatchQueue(label: "Directory.updateQueue")
     private let interpreter = OpoInterpreter()
-    private var monitor: DirectoryMonitor?
+    private var observer: RecursiveDirectoryMonitor.CancellableObserver?
 
     var localizedName: String {
         return url.localizedName
@@ -183,20 +183,17 @@ class Directory {
         self.url = url
     }
 
-    deinit {
-        monitor?.cancel()
-        monitor = nil
-    }
-
     func start() {
         dispatchPrecondition(condition: .onQueue(.main))
         guard state == .idle else {
             return
         }
         state = .running
-        monitor = DirectoryMonitor(url: url, recursive: true, queue: updateQueue)
-        monitor?.delegate = self
-        monitor?.start()
+        observer = RecursiveDirectoryMonitor.shared.observe(url: url) { [weak self] in
+            self?.updateQueue.sync {
+                self?.updateQueue_refresh()
+            }
+        }
         refresh()
     }
 
@@ -235,27 +232,13 @@ class Directory {
 
     }
 
-    // TODO: It would be cleaner to have DirectoryMonitor handle application foreground events and re-index.
+    // TODO: It would be cleaner to have RecursiveDirectoryMonitor handle application foreground events and re-index.
     func refresh() {
         updateQueue.async { [weak self] in
             self?.updateQueue_refresh()
         }
     }
     
-}
-
-extension Directory: DirectoryMonitorDelegate {
-
-    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, contentsDidChangeForUrl url: URL) {
-        updateQueue_refresh()
-    }
-
-    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, didFailWithError error: Error) {
-        DispatchQueue.main.async {
-            self.delegate?.directory(self, didFailWithError: error)
-        }
-    }
-
 }
 
 extension Directory.Item {

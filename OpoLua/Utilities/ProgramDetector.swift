@@ -21,7 +21,6 @@
 import Combine
 import Foundation
 
-// TODO: This should be an observer
 protocol ProgramDetectorDelegate: AnyObject {
 
     func programDetectorDidUpdateItems(_ programDetector: ProgramDetector)
@@ -36,7 +35,9 @@ class ProgramDetector: NSObject {
     private var _items: [Directory.Item] = []
     private var interpreter = OpoInterpreter()
 
-    private var monitors: [DirectoryMonitor] = []
+    private let queue = DispatchQueue(label: "ProgramDetector.queue")
+
+    private var observers: [RecursiveDirectoryMonitor.CancellableObserver] = []
 
     var items: [Directory.Item] {
         return _items
@@ -48,7 +49,8 @@ class ProgramDetector: NSObject {
         super.init()
     }
 
-    static func find(url: URL, filter: (Directory.Item) -> Bool, interpreter: OpoInterpreter) throws -> [Directory.Item] {
+    static func find(url: URL, filter: (Directory.Item) -> Bool,
+                     interpreter: OpoInterpreter) throws -> [Directory.Item] {
         var result: [Directory.Item] = []
         for item in try Directory.items(for: url, interpreter: interpreter) {
             if filter(item) {
@@ -92,14 +94,20 @@ class ProgramDetector: NSObject {
 
     }
 
+    private func observeIndexableUrl(_ indexableUrl: URL) {
+        let observer = RecursiveDirectoryMonitor.shared.observe(url: indexableUrl) { [weak self] in
+            DispatchQueue.main.async {
+                self?.update()
+            }
+        }
+        observers.append(observer)
+    }
+
     func start() {
         dispatchPrecondition(condition: .onQueue(.main))
         settings.addObserver(self)
         for indexableUrl in settings.indexableUrls {
-            let monitor = DirectoryMonitor(url: indexableUrl, recursive: true)
-            monitor.delegate = self
-            monitors.append(monitor)
-            monitor.start()
+            observeIndexableUrl(indexableUrl)
         }
         self.update()
     }
@@ -107,8 +115,6 @@ class ProgramDetector: NSObject {
     private func update() {
         dispatchPrecondition(condition: .onQueue(.main))
         let urls = settings.indexableUrls
-        print(urls)
-        print("Indexing \(urls.count) items...")
         updateQueue.async {
             self.updateQueue_update(urls: urls)
         }
@@ -119,35 +125,15 @@ class ProgramDetector: NSObject {
 extension ProgramDetector: SettingsObserver {
 
     func settings(_ settings: Settings, didAddIndexableUrl indexableUrl: URL) {
-        let monitor = DirectoryMonitor(url: indexableUrl, recursive: true)
-        monitor.delegate = self
-        monitors.append(monitor)
-        monitor.start()
+        dispatchPrecondition(condition: .onQueue(.main))
+        observeIndexableUrl(indexableUrl)
         self.update()
     }
 
     func settings(_ settings: Settings, didRemoveIndexableUrl indexableUrl: URL) {
-        for monitor in monitors {
-            guard monitor.url == indexableUrl else {
-                continue
-            }
-            monitor.cancel()
-        }
-        monitors.removeAll { $0.url == indexableUrl }
+        dispatchPrecondition(condition: .onQueue(.main))
+        observers.removeAll { $0.url == indexableUrl }
         self.update()
-    }
-
-}
-
-extension ProgramDetector: DirectoryMonitorDelegate {
-
-    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, contentsDidChangeForUrl url: URL) {
-        self.update()
-    }
-
-    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, didFailWithError error: Error) {
-        print("Directory monitoring failed with error \(error).")
-        self.monitors.removeAll { $0.url == directoryMonitor.url }
     }
 
 }
