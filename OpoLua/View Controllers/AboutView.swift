@@ -37,6 +37,20 @@ struct AboutView: View {
                     Link("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
                     Link("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
                     Link("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
+                    Button {
+                        var components = URLComponents()
+                        components.scheme = "mailto"
+                        components.path = "support@opolua.org"
+                        components.queryItems = [URLQueryItem(name: "subject", value: "OPL Support")]
+                        UIApplication.shared.open(components.url!)
+                    } label: {
+                        HStack {
+                            Text("Support")
+                            Spacer()
+                            Image(systemName: "envelope")
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
                 .foregroundColor(.primary)
                 CreditSection("Contributors", [
