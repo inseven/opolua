@@ -487,8 +487,8 @@ enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
 }
 
-struct EditParams {
-    enum InputType: String {
+struct EditParams: Codable {
+    enum InputType: String, Codable {
         case text
         case password
         case integer
@@ -501,6 +501,8 @@ struct EditParams {
     let initialValue: String
     let prompt: String?
     let allowCancel: Bool
+    let min: Int?
+    let max: Int?
 }
 
 protocol OpoIoHandler {

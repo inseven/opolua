@@ -90,14 +90,9 @@ private func beep(_ L: LuaState!) -> Int32 {
     }
 }
 
-// editValue("text", value, prompt, true, [min, max])
 private func editValue(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    let type = EditParams.InputType(rawValue: L.tostring(1) ?? "text") ?? .text
-    let initialValue = L.tostring(2) ?? ""
-    let prompt = L.tostring(3)
-    let allowCancel = L.toboolean(4)
-    let params = EditParams(type: type, initialValue: initialValue, prompt: prompt, allowCancel: allowCancel)
+    let params = L.tovalue(1, EditParams.self)!
     let result = iohandler.editValue(params)
     L.push(result)
     return 1

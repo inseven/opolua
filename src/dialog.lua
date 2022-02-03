@@ -349,7 +349,12 @@ function DialogItemEdit:handleKeyPress(k, modifiers)
 end
 
 function DialogItemEdit:showEditor()
-    local result = runtime:iohandler().editValue("text", self.value, self.prompt, true)
+    local result = runtime:iohandler().editValue({
+        type = "text",
+        initialValue = self.value,
+        prompt = self.prompt,
+        allowCancel = true
+    })
     if result then
         self.value = result
     end
@@ -366,7 +371,14 @@ function DialogItemEditLong:contentSize()
 end
 
 function DialogItemEditLong:showEditor()
-    local result = runtime:iohandler().editValue("integer", self.value, self.prompt, true, self.min, self.max)
+    local result = runtime:iohandler().editValue({
+        type = "integer",
+        initialValue = self.value,
+        prompt = self.prompt,
+        allowCancel = true,
+        min = self.min,
+        max = self.max,
+    })
     if result then
         self.value = tostring(math.min(self.max, math.max(tonumber(result), self.min)))
     end
