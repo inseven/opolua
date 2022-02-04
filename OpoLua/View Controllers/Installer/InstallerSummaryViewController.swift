@@ -33,14 +33,6 @@ class InstallerSummaryViewController: UIViewController {
 
     weak var delegate: InstallerSummaryViewControllerDelegate?
 
-    lazy var doneBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(title: "Done",
-                                            style: .done,
-                                            target: self,
-                                            action: #selector(doneTapped(sender:)))
-        return barButtonItem
-    }()
-
     lazy var imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -55,13 +47,30 @@ class InstallerSummaryViewController: UIViewController {
         return label
     }()
 
+    lazy var continueButton: UIButton = {
+        let buttonView = UIButton(configuration: .primaryWizardButton(title: "Done"),
+                                  primaryAction: UIAction { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.delegate?.installerSummaryViewController(self, didFinishWithResult: self.state)
+        })
+        buttonView.translatesAutoresizingMaskIntoConstraints = false
+        return buttonView
+    }()
+
+    lazy var footerView: UIStackView = {
+        let footerView = WizardFooterView()
+        footerView.translatesAutoresizingMaskIntoConstraints = false
+        footerView.addArrangedSubview(continueButton)
+        return footerView
+    }()
+
     init(state: Result<Void, Error>) {
         self.state = state
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
-        title = "Summary"
         navigationItem.hidesBackButton = true
-        navigationItem.rightBarButtonItem = doneBarButtonItem
         view.addSubview(imageView)
         view.addSubview(label)
         NSLayoutConstraint.activate([
@@ -74,24 +83,27 @@ class InstallerSummaryViewController: UIViewController {
             label.topAnchor.constraint(equalTo: imageView.bottomAnchor),
         ])
 
+        view.addSubview(footerView)
+        NSLayoutConstraint.activate([
+            footerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            footerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            footerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
         switch state {
         case .success:
             imageView.image = UIImage(systemName: "checkmark.circle")
             imageView.tintColor = .systemGreen
-            label.text = "Successfully installed program."
+            label.text = "Success!"
         case .failure(let error):
             imageView.image = UIImage(systemName: "xmark.circle")
             imageView.tintColor = .systemRed
-            label.text = "Failed to install program with error '\(error.localizedDescription)'."
+            label.text = error.localizedDescription
         }
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    @objc func doneTapped(sender: UIBarButtonItem) {
-        delegate?.installerSummaryViewController(self, didFinishWithResult: state)
     }
 
 }

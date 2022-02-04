@@ -35,6 +35,8 @@
 		D8535A2A277139D900DFCE29 /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A29277139D900DFCE29 /* Tone.swift */; };
 		D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8553767278F535A00ED67C0 /* SettingsView.swift */; };
 		D85699C627A9948F00E6F6DD /* OpoInterpreter+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */; };
+		D85F596F27ACB64E006AAF3B /* UIButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85F596E27ACB64E006AAF3B /* UIButton.swift */; };
+		D85F597127ACB682006AAF3B /* WizardFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85F597027ACB682006AAF3B /* WizardFooterView.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
 		D862465727A5C69500B2BBCA /* Diligence.txt in Resources */ = {isa = PBXBuildFile; fileRef = D862465627A5C69500B2BBCA /* Diligence.txt */; };
 		D8632832279C240600B63625 /* UID.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8632831279C240600B63625 /* UID.swift */; };
@@ -283,6 +285,8 @@
 		D8535A29277139D900DFCE29 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		D8553767278F535A00ED67C0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+Utilities.swift"; sourceTree = "<group>"; };
+		D85F596E27ACB64E006AAF3B /* UIButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIButton.swift; sourceTree = "<group>"; };
+		D85F597027ACB682006AAF3B /* WizardFooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WizardFooterView.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		D862465627A5C69500B2BBCA /* Diligence.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Diligence.txt; sourceTree = "<group>"; };
 		D8632831279C240600B63625 /* UID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UID.swift; sourceTree = "<group>"; };
@@ -531,6 +535,7 @@
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
 				D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */,
 				DB6B438327A55D1200625788 /* RootView.swift */,
+				D85F597027ACB682006AAF3B /* WizardFooterView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -561,6 +566,7 @@
 				D89A607B2756A6A300C9757F /* URL.swift */,
 				D89A607D2756A98200C9757F /* ViewController.swift */,
 				D82D2FCD27AC3E62001A4283 /* Error.swift */,
+				D85F596E27ACB64E006AAF3B /* UIButton.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -1071,6 +1077,7 @@
 				D86E428A2799C0CC00D5596D /* UISplitViewController.swift in Sources */,
 				D889134D274C17FF00794D55 /* CGContext.swift in Sources */,
 				DB5AC9762757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift in Sources */,
+				D85F596F27ACB64E006AAF3B /* UIButton.swift in Sources */,
 				DB7900022742E6F6005E904F /* ldump.c in Sources */,
 				D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */,
 				D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */,
@@ -1134,6 +1141,7 @@
 				D85699C627A9948F00E6F6DD /* OpoInterpreter+Utilities.swift in Sources */,
 				D8092563277293DD00121E12 /* OpoInterpreter+UIKit.swift in Sources */,
 				D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */,
+				D85F597127ACB682006AAF3B /* WizardFooterView.swift in Sources */,
 				DB7900152742E6F6005E904F /* lundump.c in Sources */,
 				D8D6701527A72B2100D12E96 /* DestinationPickerViewController.swift in Sources */,
 				D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */,

@@ -71,7 +71,8 @@ class IntroductionHeader: UICollectionReusableView {
 
 protocol InstallerIntroductionViewControllerDelegate: AnyObject {
 
-    func installerIntroductionViewController(_ installerIntroductionViewController: InstallerIntroductionViewController, continueWithDestinationUrl destinationUrl: URL)
+    func installerIntroductionViewController(_ installerIntroductionViewController: InstallerIntroductionViewController,
+                                             continueWithDestinationUrl destinationUrl: URL)
     func installerIntroductionViewControllerDidCancel(_ installerIntroductionViewController: InstallerIntroductionViewController)
 
 }
@@ -107,46 +108,22 @@ class InstallerIntroductionViewController: UICollectionViewController {
     }()
 
     lazy var continueButton: UIButton = {
-        var configuration: UIButton.Configuration = .borderedProminent()
-        configuration.buttonSize = .large
-        configuration.title = "Next"
-        configuration.cornerStyle = .large
-        let buttonView = UIButton(configuration: configuration, primaryAction: UIAction { [weak self] action in
+        let buttonView = UIButton(configuration: .primaryWizardButton(title: "Next"),
+                                  primaryAction: UIAction { [weak self] action in
             guard let self = self else {
                 return
             }
             self.delegate?.installerIntroductionViewController(self, continueWithDestinationUrl: self.destinationUrl)
         })
         buttonView.translatesAutoresizingMaskIntoConstraints = false
-        buttonView.preservesSuperviewLayoutMargins = true
         return buttonView
     }()
 
-    lazy var footer: UIStackView = {
-
-        let stackView = UIStackView()
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.preservesSuperviewLayoutMargins = true
-        stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.axis = .vertical
-        stackView.distribution = .fill
-        stackView.spacing = UIStackView.spacingUseSystem
-        stackView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 16.0, leading: 0, bottom: 32.0, trailing: 0)
-
-        let effectView = UIVisualEffectView(effect: UIBlurEffect(style: .regular))
-        effectView.translatesAutoresizingMaskIntoConstraints = false
-
-        stackView.addSubview(effectView)
-        NSLayoutConstraint.activate([
-            effectView.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
-            effectView.trailingAnchor.constraint(equalTo: stackView.trailingAnchor),
-            effectView.topAnchor.constraint(equalTo: stackView.topAnchor),
-            effectView.bottomAnchor.constraint(equalTo: stackView.bottomAnchor),
-        ])
-
-        stackView.addArrangedSubview(continueButton)
-
-        return stackView
+    lazy var footerView: UIStackView = {
+        let footerView = WizardFooterView()
+        footerView.translatesAutoresizingMaskIntoConstraints = false
+        footerView.addArrangedSubview(continueButton)
+        return footerView
     }()
 
     init(settings: Settings, preferredDestinationUrl: URL?) {
@@ -158,11 +135,11 @@ class InstallerIntroductionViewController: UICollectionViewController {
         navigationItem.rightBarButtonItem = cancelBarButtonItem
         navigationItem.hidesBackButton = true
 
-        view.addSubview(footer)
+        view.addSubview(footerView)
         NSLayoutConstraint.activate([
-            footer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            footer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            footer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            footerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            footerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            footerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
         collectionView.collectionViewLayout = createLayout()
@@ -195,8 +172,6 @@ class InstallerIntroductionViewController: UICollectionViewController {
                 supplementaryView.titleLabel.text = nil
                 supplementaryView.descriptionLabel.text = nil
             }
-
-
         }
 
         dataSource = DataSource(collectionView: collectionView) { collectionView, indexPath, item in
@@ -225,7 +200,7 @@ class InstallerIntroductionViewController: UICollectionViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: footer.frame.size.height, right: 0)
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: footerView.frame.size.height, right: 0)
     }
 
     private func createLayout() -> UICollectionViewLayout {
