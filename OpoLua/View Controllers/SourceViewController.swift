@@ -31,6 +31,7 @@ class SourceViewController: UIViewController {
         textView.font = .monospacedSystemFont(ofSize: 14.0, weight: .regular)
         textView.isEditable = false
         textView.isSelectable = true
+        textView.alwaysBounceVertical = true
         return textView
     }()
 
