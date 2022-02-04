@@ -522,6 +522,9 @@ extension ProgramViewController: ProgramLifecycleObserver {
             return
         }
 
+        // Capture a screenshot before fading out the view.
+        let screenshot = program.screenshot()
+
         // Disable and fade out the view to indicate that the program has terminated.
         UIView.animate(withDuration: 0.3) {
             self.program.rootView.alpha = 0.3
@@ -535,7 +538,7 @@ extension ProgramViewController: ProgramLifecycleObserver {
         zoomOutButton.isEnabled = false
 
         let showErrorDetails: () -> Void = {
-            let viewController = ErrorViewController(error: error, screenshot: program.screenshot())
+            let viewController = ErrorViewController(error: error, screenshot: screenshot)
             viewController.delegate = self
             let navigationController = UINavigationController(rootViewController: viewController)
             self.present(navigationController, animated: true)

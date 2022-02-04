@@ -1013,7 +1013,7 @@ class OpoInterpreter {
     class BinaryDatabaseError: UnimplementedOperationError {
 
         override var errorDescription: String? {
-            return "The program attempted to use unsupported database operations."
+            return "Database operations are currently unsupported."
         }
 
     }
