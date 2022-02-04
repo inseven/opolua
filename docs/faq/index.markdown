@@ -18,7 +18,7 @@ title: Frequently Asked Questions
 
    _Fortunately, most OPL software was shareware and many authors have made license codes freely available after-the-fact, but please remember that downloading copies of commercial software you have not purchased is illegal. We do not encourage or condone the use of illegally obtained software._
 
-2. **Why aren't database operations supported?**
+2. **Why aren't databases supported?**
 
    The Psion database format is complex and unfriendly so we've decided not to try adding support for it just yet--there are a lot of programs that don't require database support and we'd like to improve our support for those before tacking this mammoth task.
 
