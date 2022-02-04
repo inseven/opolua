@@ -823,7 +823,7 @@ function Usub(stack, runtime) -- 0x51
 end
 
 function IoCancel(stack, runtime) -- 0x52
-    unimplemented("fns.IoCancel")
+    stack:push(runtime:IOCANCEL(stack:pop()))
 end
 
 function FindField(stack, runtime) -- 0x54

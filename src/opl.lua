@@ -1013,10 +1013,8 @@ function IOCLOSE(h)
         if f.pos and f.mode & KIoOpenAccessUpdate > 0 then
             err = runtime:iohandler().fsop("write", f.path, f.data)
         end
-        if f.timer and f.stat and f.stat:isPending() then
-            runtime:iohandler().cancelRequest(f.stat)
-            -- OPL doesn't worry about consuming the signal here, so we won't either
-        end
+        IOCANCEL(h)
+        -- OPL doesn't worry about consuming any potential signal here, so we won't either
         runtime:closeFile(h)
     else
         err = KErrInvalidArgs
@@ -1059,6 +1057,18 @@ function IOC(h, fn, stat, a, b)
     if err ~= 0 then
         stat(err)
     end
+end
+
+function IOCANCEL(h)
+    local f = runtime:getFile(h)
+    if not f or not f.timer then
+        return KErrInvalidArgs
+    end
+
+    if f.timer and f.stat and f.stat:isPending() then
+        runtime:iohandler().cancelRequest(f.stat)
+    end
+    return KErrNone
 end
 
 -- system OPX stuff
