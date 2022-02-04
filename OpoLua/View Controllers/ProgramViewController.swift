@@ -278,6 +278,7 @@ class ProgramViewController: UIViewController {
         super.viewDidAppear(animated)
         program.resume()
         configureControllers()
+        becomeFirstResponder()
     }
 
     override func viewWillDisappear(_ animated: Bool) {

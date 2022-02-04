@@ -46,6 +46,10 @@ class DirectoryViewController : UICollectionViewController {
     private var applicationActiveObserver: Any?
     private var settingsSink: AnyCancellable?
 
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
+
     private lazy var wallpaperPixelView: PixelView = {
         let image = settings.theme.wallpaper
         let pixelView = PixelView(image: image)
@@ -136,6 +140,7 @@ class DirectoryViewController : UICollectionViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         update(animated: animated)
+        becomeFirstResponder()
     }
 
     override func viewWillDisappear(_ animated: Bool) {

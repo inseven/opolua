@@ -44,6 +44,10 @@ class AllProgramsViewController : UICollectionViewController {
     private var items: [Directory.Item] = []
     private var settingsSink: AnyCancellable?
 
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
+
     lazy var wallpaperPixelView: PixelView = {
         let image = settings.theme.wallpaper
         let pixelView = PixelView(image: image)
@@ -121,6 +125,7 @@ class AllProgramsViewController : UICollectionViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         update(animated: animated)
+        becomeFirstResponder()
     }
 
     override func viewWillDisappear(_ animated: Bool) {

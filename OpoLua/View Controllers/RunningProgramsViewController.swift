@@ -73,6 +73,10 @@ class RunningProgramsViewController : UICollectionViewController {
     var installer: Installer?
     var settingsSink: AnyCancellable?
 
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
+
     lazy var dataSource: DataSource = {
         let cellRegistration = UICollectionView.CellRegistration<Cell, Item> { [weak self] cell, _, item in
             guard let self = self else {
@@ -143,6 +147,7 @@ class RunningProgramsViewController : UICollectionViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         update(animated: animated)
+        becomeFirstResponder()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
