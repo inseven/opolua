@@ -110,7 +110,6 @@ class ErrorViewController: UIViewController {
 
         textView.text = error.localizedDescription
         if let interpreterError = error as? OpoInterpreter.InterpreterError {
-            textView.text += "\n" + interpreterError.message
             textView.text += "\n" + interpreterError.detail
         }
         imageView.image = screenshot

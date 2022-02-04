@@ -86,7 +86,7 @@ private func beep(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     if let err = iohandler.beep(frequency: lua_tonumber(L, 1), duration: lua_tonumber(L, 2)) {
         L.pushnil()
-        L.push(err.localizedDescription)
+        L.push(err.detailIfPresent)
         return 2
     } else {
         L.push(true)
@@ -674,6 +674,16 @@ private func stop(_ L: LuaState!, _: UnsafeMutablePointer<lua_Debug>!) {
     lua_error(L)
 }
 
+private extension Error {
+    var detailIfPresent: String {
+        if let err = self as? OpoInterpreter.InterpreterError {
+            return err.detail
+        } else {
+            return self.localizedDescription
+        }
+    }
+}
+
 class OpoInterpreter {
 
     static let kOpTime: TimeInterval = 3.5 / 1000000 // Make this bigger to slow the interpreter down
@@ -766,7 +776,7 @@ class OpoInterpreter {
             try pcall(narg, nret)
             return true
         } catch {
-            print("Error: \(error.localizedDescription)")
+            print("Error: \(error.detailIfPresent)")
             return false
         }
     }
@@ -1014,7 +1024,13 @@ class OpoInterpreter {
 
     }
 
-    class NativeBinaryError : InterpreterError {}
+    class NativeBinaryError : InterpreterError {
+
+        override var errorDescription: String? {
+            return "This is not an OPL program, and cannot be run."
+        }
+
+    }
 
     func run(devicePath: String, procedureName: String? = nil) throws {
         lua_settop(L, 0)
