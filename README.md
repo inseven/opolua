@@ -67,7 +67,7 @@ This interpreter is not 100% behaviour compatible with the original Psion. The m
 
 ```
 $ cd src
-$ ./runopo.lua ../examples/simple.opo 
+$ ./runopo.lua ../examples/simple.opo
 Hello world!
 Waaaat
 
@@ -78,19 +78,19 @@ procTableIdx: 0x0000006B
     Subproc "WAT" offset=0x0012 nargs=0
     iTotalTableSize: 5 (0x00000005)
 00000036: 2B [ConstantString] "Hello world!"
-00000044: 8B [PrintString] 
-00000045: 92 [PrintCarriageReturn] 
+00000044: 8B [PrintString]
+00000045: 92 [PrintCarriageReturn]
 00000046: 53 [RunProcedure] 0x0012 (name="WAT" nargs=0)
-00000049: 82 [DropFloat] 
+00000049: 82 [DropFloat]
 0000004A: 57 [CallFunction] 0x0A (Get)
-0000004C: 80 [DropInt] 
-0000004D: 76 [ZeroReturnFloat] 
+0000004C: 80 [DropInt]
+0000004D: 76 [ZeroReturnFloat]
 2: WAT @ 0x0000004E code=0x00000060 line=6
     iTotalTableSize: 0 (0x00000000)
 00000060: 2B [ConstantString] "Waaaat"
-00000068: 8B [PrintString] 
-00000069: 92 [PrintCarriageReturn] 
-0000006A: 76 [ZeroReturnFloat] 
+00000068: 8B [PrintString]
+00000069: 92 [PrintCarriageReturn]
+0000006A: 76 [ZeroReturnFloat]
 $
 ```
 
@@ -105,3 +105,13 @@ Various useful resources which aided greatly in reverse-engineering the OPL and 
 * http://www.koeniglich.de/epoc32_fileformats.txt
 * https://frodo.looijaard.name/psifiles/MBM_File
 * http://www.davros.org/psion/psionics/
+
+## Contributing
+
+We invite and welcome contributions! There's a pretty comprehensive list of [issues](https://github.com/inseven/opolua/issues) to get you started, and our documentation is always in need of some care and attention.
+
+Please recognise opolua is a labour of love, and be respectful of others in your communications. We will not accept racism, sexism, or any form of discrimination in our community.
+
+## Licensing
+
+opolua is licensed under the MIT License (see [LICENSE](LICENSE)).
