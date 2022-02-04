@@ -40,7 +40,7 @@ class TaskManagerViewController: UITableViewController {
         self.taskManager = taskManager
         super.init(style: .plain)
         title = "Open Programs"
-        navigationItem.leftBarButtonItem = doneBarButtonItem
+        navigationItem.rightBarButtonItem = doneBarButtonItem
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: Self.cell)
     }
 
