@@ -16,7 +16,7 @@ title: Screenshots
 
 <div class="screenshot-iphone-13-pro-landscape"><img src="/images/tile-fall.png"></div>
 
-<p class="caption">Tile Fall</p>
+<p class="caption">Tile Fall by Adam Dawes and NEUON</p>
 
 <div class="screenshot-ipad-pro-11-landscape"><img src="/images/smuggers.png"></div>
 
