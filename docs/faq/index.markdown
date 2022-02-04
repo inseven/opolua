@@ -17,3 +17,9 @@ title: Frequently Asked Questions
    Needless to say, this isn't a comprehensive list and we would love to hear about sites we've missed.
 
    _Fortunately, most OPL software was shareware and many authors have made license codes freely available after-the-fact, but please remember that downloading copies of commercial software you have not purchased is illegal. We do not encourage or condone the use of illegally obtained software._
+
+2. **Why aren't database operations supported?**
+
+   The Psion database format is complex and unfriendly so we've decided not to try adding support for it just yet--there are a lot of programs that don't require database support and we'd like to improve our support for those before tacking this mammoth task.
+
+   If you're a developer interested in taking on the challenge, please feel free to get in touch; we [welcome contributions and pull requests](https://github.com/inseven/opolua#contributing).
