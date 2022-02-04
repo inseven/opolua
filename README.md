@@ -57,10 +57,9 @@ This interpreter is not 100% behaviour compatible with the original Psion. The m
 
 * Ability to load psion-format database files
 * Various other less-common opcodes, functions and OPXes
-* Psion-style menus and dialogs
+* Some dialog features like dTIME, dFILE
 * Invert drawing mode
-* Proper sprite animation timing
-* Ability to exit and reenter apps in the iOS UI (and/or suspend/resume app execution)
+* Ability to suspend/resume app execution in the iOS UI
 
 ## Example
 
