@@ -214,6 +214,7 @@ struct Graphics {
 
     enum BorderType: Int {
         // gBORDER
+        case singlePixel = 0x0
         case singlePixelShadow = 0x1
         case singlePixelShadowRounded = 0x201
         case clearSinglePixelShadow = 0x2

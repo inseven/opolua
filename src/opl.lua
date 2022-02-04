@@ -234,20 +234,33 @@ function gFILL(width, height, mode)
 end
 
 function gBORDER(flags, w, h)
+    local context = runtime:getGraphicsContext()
+    local x = context.pos.x
+    local y = context.pos.y
+    if not w then
+        x = 0
+        y = 0
+        w = context.width
+        h = context.height
+    end
     if flags & KBordGapAllRound > 0 then
         flags = flags & ~KBordGapAllRound
-        local pos = runtime:getGraphicsContext().pos
         -- No I don't understand the reason for this flag either
-        runtime:drawCmd("border", { x = pos.x + 1, y = pos.y + 1, width = w - 2, height = h - 2, btype = flags })
+        runtime:drawCmd("border", { x = x + 1, y = y + 1, width = w - 2, height = h - 2, btype = flags })
     else
-        runtime:drawCmd("border", { width = w, height = h, btype = flags })
+        runtime:drawCmd("border", { x = x, y = y, width = w, height = h, btype = flags })
     end
 end
 
 function gXBORDER(type, flags, w, h)
+    local context = runtime:getGraphicsContext()
+    local x = context.pos.x
+    local y = context.pos.y
     if not w then
-        w = gWIDTH()
-        h = gHEIGHT()
+        x = 0
+        y = 0
+        w = context.width
+        h = context.height
     end
 
     if flags == 0 then
@@ -264,7 +277,7 @@ function gXBORDER(type, flags, w, h)
         if flags & KBordLosePixel > 0 then
             flags = flags & ~KBordLosePixel
         end
-        runtime:drawCmd("border", { width = w, height = h, btype = (type << 16) | flags })
+        runtime:drawCmd("border", { x = x, y = y, width = w, height = h, btype = (type << 16) | flags })
     end
 end
 

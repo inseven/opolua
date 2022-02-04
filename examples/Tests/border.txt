@@ -19,6 +19,7 @@ PROC draw:
 	gCOLOR 0,0,0
 	gAT 10, 10
 
+	brd:(0)
 	brd:(1)
 	brd:(2)
 	brd:(3)
