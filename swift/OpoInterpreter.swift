@@ -975,7 +975,7 @@ class OpoInterpreter {
         }
 
         var errorDescription: String? {
-            return "The program encoutered an internal error."
+            return "The program encountered an internal error."
         }
 
     }
