@@ -1,8 +1,8 @@
 :root {
     --tint-color: #57C2C0;
-    --body-color: #000000;
-    --secondary-color: #ddd;
-    --secondary-link-color: #aaa;
+    --body-color: #000;
+    --secondary-color: #000;
+    --secondary-link-color: #000;
     --icon-border-color: rgba(0, 0, 0, 0.2);
     --icon-size: 120px;
     --navigation-padding: 1em;
@@ -115,10 +115,13 @@ ul.navigation > li {
 .footer p {
     color: var(--secondary-color);
     text-align: center;
+    font-size: 0.8em;
+    margin: 0;
 }
 
 .footer a {
     color: var(--secondary-link-color);
+    text-decoration: underline;
     font-weight: 200;
 }
 
