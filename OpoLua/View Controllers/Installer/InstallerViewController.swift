@@ -62,7 +62,7 @@ class InstallerViewController: UINavigationController {
     func install(destinationUrl: URL) {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        let systemUrl = destinationUrl.appendingPathComponent(item.url.basename.deletingPathExtension)
+        let systemUrl = destinationUrl.appendingPathComponent(item.url.basename.deletingPathExtension + ".system")
         guard !FileManager.default.fileExists(atUrl: systemUrl) else {
             // Since we don't provide a mechanism to explicitly pick existing systems, we explicitly fail if a system
             // already exists with the auto-generated name. In the future, when we have a better picker, we can relax

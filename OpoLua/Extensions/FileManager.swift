@@ -156,6 +156,10 @@ extension FileManager {
     }
 
     func isSystem(at url: URL) throws -> Bool {
+        guard url.lastPathComponent.hasSuffix(".system") else {
+            return false
+        }
+
         let contents = try contentsOfDirectory(atPath: url.path).map { url.appendingPathComponent($0) }
         let drives: Set<String> = ["c", "C", "d", "D"]
 
