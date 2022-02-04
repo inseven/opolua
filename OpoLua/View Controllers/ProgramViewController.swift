@@ -146,6 +146,17 @@ class ProgramViewController: UIViewController {
     lazy var optionsBarButtonItem: UIBarButtonItem = {
         var actions: [UIMenuElement] = []
         actions = actions + taskManager.actions(for: program.url)
+
+        let shareScreenshotAction = UIAction(title: "Share Screenshot",
+                                             image: UIImage(systemName: "square.and.arrow.up")) { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.shareScreenshot()
+        }
+        let shareMenu = UIMenu(options: [.displayInline], children: [shareScreenshotAction])
+        actions.append(shareMenu)
+
         let drawablesAction = UIAction(title: "Show Drawables",
                                        image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
             guard let self = self else {
@@ -297,6 +308,13 @@ class ProgramViewController: UIViewController {
     func buttonProvider(button: UIButton, pointerEffect: UIPointerEffect, pointerShape: UIPointerShape) -> UIPointerStyle? {
         return UIPointerStyle(effect: .automatic(UITargetedPreview(view: button)),
                               shape: .roundedRect(button.frame.insetBy(dx: -8, dy: -8)))
+    }
+
+    private func shareScreenshot() {
+        let screenshot = self.program.screenshot()
+        let activityViewController = UIActivityViewController(activityItems: [screenshot], applicationActivities: nil)
+        activityViewController.popoverPresentationController?.sourceView = program.rootView
+        self.present(activityViewController, animated: true)
     }
 
     func observeGameControllers() {
