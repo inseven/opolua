@@ -151,7 +151,7 @@ class AllProgramsViewController : UICollectionViewController {
 
     func update(animated: Bool) {
         dispatchPrecondition(condition: .onQueue(.main))
-        items = detector.items.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        items = detector.items.sorted(by: Directory.defaultSort())
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
         let filter = searchController.searchBar.text ?? ""

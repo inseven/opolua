@@ -112,6 +112,16 @@ class Directory {
         case running
     }
 
+    static func defaultSort() -> (Directory.Item, Directory.Item) -> Bool {
+        return { (item1: Directory.Item, item2: Directory.Item) -> Bool in
+            let nameOrder = item1.name.localizedStandardCompare(item2.name)
+            if nameOrder != .orderedSame {
+                return nameOrder == .orderedAscending
+            }
+            return item1.url.absoluteString.compare(item2.url.absoluteString) == .orderedAscending
+        }
+    }
+
     static func items(for url: URL, interpreter: OpoInterpreter) throws -> [Item] {
         let fileManager = FileManager.default
         let isWriteable = fileManager.isWritableFile(atPath: url.path)
@@ -159,7 +169,7 @@ class Directory {
                     return Item(url: url, type: .unknown, isWriteable: isWriteable)
                 }
             }
-            .sorted { $0.name.localizedStandardCompare($1.name) != .orderedDescending }
+            .sorted(by: Directory.defaultSort())
         return items
     }
 

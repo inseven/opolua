@@ -81,7 +81,7 @@ class ProgramDetector: NSObject {
                     }
                 }, interpreter: interpreter)
             }
-            let uniqueItems = Array(Set(items))
+            let uniqueItems = Array(Set(items)).sorted(by: Directory.defaultSort())
             DispatchQueue.main.async {
                 self._items = uniqueItems
                 self.delegate?.programDetectorDidUpdateItems(self)
