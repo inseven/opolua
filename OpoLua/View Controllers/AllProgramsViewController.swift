@@ -220,7 +220,7 @@ class AllProgramsViewController : UICollectionViewController {
                     actions += self.taskManager.actions(for: programUrl)
                 }
 
-                let fileActions: [UIMenuElement] = [UIAction(title: "Reveal in Library",
+                let fileActions: [UIMenuElement] = [UIAction(title: "Show in Library",
                                                             image: UIImage(systemName: "magnifyingglass")) { action in
                     AppDelegate.shared.showUrl(item.url.deletingLastPathComponent())
                 }]
