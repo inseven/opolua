@@ -203,7 +203,9 @@ class DirectoryViewController : UICollectionViewController {
             case .directory:
                 break
             case .installer:
-                break
+                actions.append(UIAction(title: "Install", image: UIImage(systemName: "square.and.arrow.down")) { action in
+                    AppDelegate.shared.install(url: item.url, preferredDestinationUrl: self.directory.url)
+                })
             case .image:
                 actions.append(UIAction(title: "View", image: UIImage(systemName: "eye")) { action in
                     let viewController = ImageViewController(url: item.url)

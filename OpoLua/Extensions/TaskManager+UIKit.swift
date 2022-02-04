@@ -32,7 +32,7 @@ extension TaskManager {
             }
             self.quit(url)
         }
-        let killAction = UIAction(title: "Force Close Program", image: UIImage(systemName: "exclamationmark")) { [weak self] action in
+        let killAction = UIAction(title: "Force Close Program", image: UIImage(systemName: "nosign")) { [weak self] action in
             guard let self = self else {
                 return
             }
