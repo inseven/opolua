@@ -109,6 +109,10 @@ class ErrorViewController: UIViewController {
         ])
 
         textView.text = error.localizedDescription
+        if let unimplementedOperation = error as? OpoInterpreter.UnimplementedOperationError {
+            textView.text += "\n" + unimplementedOperation.message
+            textView.text += "\n" + unimplementedOperation.detail
+        }
         imageView.image = screenshot
     }
 

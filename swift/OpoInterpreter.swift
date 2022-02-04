@@ -989,6 +989,10 @@ class OpoInterpreter {
             super.init(message: message, detail: detail)
         }
 
+        override var errorDescription: String? {
+            return message
+        }
+
     }
 
     class UnimplementedOperationError: InterpreterError {
@@ -1006,7 +1010,13 @@ class OpoInterpreter {
 
     }
 
-    class BinaryDatabaseError: UnimplementedOperationError {}
+    class BinaryDatabaseError: UnimplementedOperationError {
+
+        override var errorDescription: String? {
+            return "The program attempted to use unsupported database operations."
+        }
+
+    }
 
     class NativeBinaryError : InterpreterError {}
 

@@ -522,6 +522,18 @@ extension ProgramViewController: ProgramLifecycleObserver {
             return
         }
 
+        // Disable and fade out the view to indicate that the program has terminated.
+        UIView.animate(withDuration: 0.3) {
+            self.program.rootView.alpha = 0.3
+        }
+        controllerBarButtonItem.isEnabled = false
+        keyboardBarButtonItem.isEnabled = false
+        optionsBarButtonItem.isEnabled = false
+        menuButton.isEnabled = false
+        clipboardButton.isEnabled = false
+        zoomInButton.isEnabled = false
+        zoomOutButton.isEnabled = false
+
         let showErrorDetails: () -> Void = {
             let viewController = ErrorViewController(error: error, screenshot: program.screenshot())
             viewController.delegate = self
@@ -534,14 +546,7 @@ extension ProgramViewController: ProgramLifecycleObserver {
             return
         }
 
-        let msg: String
-        if let interpreterError = error as? OpoInterpreter.InterpreterError {
-            msg = interpreterError.message
-        } else {
-            // Just go with whatever we have
-            msg = error.localizedDescription
-        }
-        let alert = UIAlertController(title: "Error", message: msg, preferredStyle: .alert)
+        let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: { action in
             self.navigationController?.popViewController(animated: true)
         }))
