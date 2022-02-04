@@ -58,8 +58,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let navigationController = UINavigationController(rootViewController: libraryViewController)
         navigationController.navigationBar.prefersLargeTitles = true
         navigationController.delegate = self
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(titleBarTapped(sender:)))
-        navigationController.navigationBar.addGestureRecognizer(tapGestureRecognizer)
 
         splitViewController = UISplitViewController(style: .doubleColumn)
         splitViewController.delegate = self
@@ -102,10 +100,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         splitViewController.present(installerViewController, animated: true)
     }
 
-    @objc func titleBarTapped(sender: UITapGestureRecognizer) {
-        taskManager.showTaskList()
-    }
-
     func setRootDetailViewController(_ viewController: UIViewController, animated: Bool = true) {
         if splitViewController.isCollapsed {
             let navigationController = splitViewController.viewControllers[0] as! UINavigationController
@@ -113,8 +107,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                     animated: animated)
         } else {
             let navigationController = UINavigationController(rootViewController: viewController)
-            let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(titleBarTapped(sender:)))
-            navigationController.navigationBar.addGestureRecognizer(tapGestureRecognizer)
             splitViewController.setViewController(navigationController, for: .secondary)
         }
     }
