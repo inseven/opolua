@@ -40,7 +40,7 @@ extension URL {
         if self == FileManager.default.documentsUrl {
             return UIDevice.current.localizedDocumentsName
         }
-        return (FileManager.default.displayName(atPath: path) as NSString).deletingPathExtension
+        return FileManager.default.displayName(atPath: path)
     }
 
     var components: URLComponents? { return URLComponents(string: absoluteString) }
