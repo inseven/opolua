@@ -975,7 +975,7 @@ class OpoInterpreter {
         }
 
         var errorDescription: String? {
-            return detail
+            return "The program encoutered an internal error."
         }
 
     }
@@ -987,10 +987,6 @@ class OpoInterpreter {
         init(message: String, detail: String, leaveCode: Int) {
             self.code = leaveCode
             super.init(message: message, detail: detail)
-        }
-
-        override var errorDescription: String? {
-            return message
         }
 
     }
