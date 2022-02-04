@@ -49,6 +49,8 @@ class RecursiveDirectoryMonitor {
             cancel()
         }
 
+        // TODO: Cancelling a RecursiveDirectoryMonitor observer doesn't guarantee it never receives callbacks #151
+        //       https://github.com/inseven/opolua/issues/151
         func cancel() {
             monitor?.cancel(context)
             monitor = nil
