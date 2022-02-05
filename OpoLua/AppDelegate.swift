@@ -260,6 +260,9 @@ extension AppDelegate: UISplitViewControllerDelegate {
             }
             self.splitViewController.setViewController(navigationController, for: .secondary)
         }
+        if let section = section {
+            libraryViewController.selectSection(section: section)
+        }
     }
 
 }

@@ -45,6 +45,7 @@ class LibraryViewController: UICollectionViewController {
     private var detector: ProgramDetector
     private var dataSource: DataSource!
     private var settingsSink: AnyCancellable?
+    private var section: ApplicationSection? = .allPrograms
 
     weak var delegate: LibraryViewControllerDelegate?
 
@@ -94,7 +95,7 @@ class LibraryViewController: UICollectionViewController {
                 let badgeAccessory = UICellAccessory.customView(configuration: viewConfig)
                 accessories.append(badgeAccessory)
             }
-            if self.splitViewController?.isCollapsed ?? true {
+            if self.isCollapsedInSplitView {
                 accessories.append(UICellAccessory.disclosureIndicator())
             }
             cell.accessories = accessories
@@ -145,9 +146,13 @@ class LibraryViewController: UICollectionViewController {
             }
             self.reload(animated: animated)
         }
-        if splitViewController?.isCollapsed ?? true {
-            collectionView.indexPathsForSelectedItems?.forEach { indexPath in
-                collectionView.deselectItem(at: indexPath, animated: true)
+        if let section = section {
+            selectSection(section: section, animated: false)
+            if isCollapsedInSplitView {
+                collectionView.indexPathsForSelectedItems?.forEach { indexPath in
+                    collectionView.deselectItem(at: indexPath, animated: true)
+                }
+                self.section = nil
             }
         }
     }
@@ -172,11 +177,11 @@ class LibraryViewController: UICollectionViewController {
         self.present(viewController, animated: true)
     }
 
-    func selectSection(section: ApplicationSection) {
+    func selectSection(section: ApplicationSection, animated: Bool = true) {
         guard let indexPath = dataSource.indexPath(for: section) else {
             return
         }
-        collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .top)
+        collectionView.selectItem(at: indexPath, animated: animated, scrollPosition: .top)
     }
 
     func reload(animated: Bool) {
@@ -222,7 +227,7 @@ class LibraryViewController: UICollectionViewController {
     }
 
     func createLayout() -> UICollectionViewLayout {
-        let appearance: UICollectionLayoutListConfiguration.Appearance = (splitViewController?.isCollapsed ?? true) ? .insetGrouped : .sidebar
+        let appearance: UICollectionLayoutListConfiguration.Appearance = isCollapsedInSplitView ? .insetGrouped : .sidebar
         var configuration = UICollectionLayoutListConfiguration(appearance: appearance)
         configuration.headerMode = .supplementary
         configuration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
@@ -323,6 +328,7 @@ class LibraryViewController: UICollectionViewController {
             collectionView.deselectItem(at: indexPath, animated: true)
             return
         }
+        section = item
         delegate?.libraryViewController(self, showSection: item)
     }
 
