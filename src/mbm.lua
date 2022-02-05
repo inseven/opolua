@@ -415,7 +415,7 @@ local function parseSEpocBitmapHeader(data, offset)
         height = y,
         bpp = bpp,
         isColor = col == 1,
-        drawableMode = bppColorToMode(bpp, col == 1),
+        mode = bppColorToMode(bpp, col == 1),
         stride = stride,
         -- not worrying about palettes yet
         paletteSz = paletteSz,

@@ -137,14 +137,8 @@ private func draw(_ L: LuaState!) -> Int32 {
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             optype = .box(size)
         case "bitblt":
-            if let width = L.toint(-1, key: "bmpWidth"),
-               let height = L.toint(-1, key: "bmpHeight"),
-               let mode = Graphics.Bitmap.Mode(rawValue: L.toint(-1, key: "bmpMode") ?? 0),
-               let stride = L.toint(-1, key: "bmpStride"),
-               let data = L.todata(-1, key: "bmpData") {
-                let size = Graphics.Size(width: width, height: height)
-                let info = Graphics.Bitmap(mode: mode, size: size, stride: stride, data: data)
-                optype = .bitblt(info)
+            if let bitmap = L.getfield(-1, "bitmap", Graphics.Bitmap.self) {
+                optype = .bitblt(bitmap)
             } else {
                 print("Missing params in bitblt!")
                 continue
@@ -908,23 +902,12 @@ class OpoInterpreter {
 
         lua_getfield(L, -1, "icons")
         var icons: [Graphics.MaskedBitmap] = []
-        func getBitmap() -> Graphics.Bitmap? {
-            if let width = L.toint(-1, key: "width"),
-               let height = L.toint(-1, key: "height"),
-               let modeVal = L.toint(-1, key: "drawableMode"),
-               let mode = Graphics.Bitmap.Mode(rawValue: modeVal),
-               let stride = L.toint(-1, key: "stride"),
-               let data = L.todata(-1, key: "imgData") {
-                let size = Graphics.Size(width: width, height: height)
-                return Graphics.Bitmap(mode: mode, size: size, stride: stride, data: data)
-            }
-            return nil
-        }
+        // Need to refactor the Lua data structure before we can make MaskedBitmap decodable
         for _ in L.ipairs(-1, requiredType: .table) {
-            if let bmp = getBitmap() {
+            if let bmp = L.tovalue(-1, Graphics.Bitmap.self) {
                 var mask: Graphics.Bitmap? = nil
                 if lua_getfield(L, -1, "mask") == LUA_TTABLE {
-                    mask = getBitmap()
+                    mask = L.tovalue(-1, Graphics.Bitmap.self)
                 }
                 L.pop()
                 icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
@@ -949,23 +932,7 @@ class OpoInterpreter {
         L.push(data)
         guard logpcall(1, 1) else { return nil }
         // top of stack should now be bitmap array
-        var result: [Graphics.Bitmap] = []
-        for _ in L.ipairs(-1, requiredType: .table) {
-            if luaL_callmeta(L, -1, "getImageData") == 0 {
-                continue
-            }
-            let data = L.todata(-1)
-            L.pop()
-            if let width = L.toint(-1, key: "width"),
-               let height = L.toint(-1, key: "height"),
-               let mode = Graphics.Bitmap.Mode(rawValue: L.toint(-1, key: "drawableMode") ?? 0),
-               let stride = L.toint(-1, key: "stride"),
-               let data = data {
-                let size = Graphics.Size(width: width, height: height)
-                let bmp = Graphics.Bitmap(mode: mode, size: size, stride: stride, data: data)
-                result.append(bmp)
-            }
-        }
+        let result = L.tovalue(-1, [Graphics.Bitmap].self)
         return result
     }
 

@@ -109,8 +109,8 @@ struct Graphics {
         static let white = Self(r: 255, g: 255, b: 255)
     }
 
-    struct Bitmap {
-        enum Mode: Int {
+    struct Bitmap: Codable {
+        enum Mode: Int, Codable {
             case gray2 = 0 // ie 1bpp
             case gray4 = 1 // ie 2bpp
             case gray16 = 2 // ie 4bpp grayscale
@@ -121,13 +121,15 @@ struct Graphics {
             case color16M = 7 // 24bpp color
         }
         let mode: Mode
-        let size: Size
+        let width: Int
+        let height: Int
         let stride: Int
-        let data: Data
+        let imgData: Data
         // TODO palette info also needed, in due course
 
-        var width: Int { return size.width }
-        var height: Int { return size.height }
+        var size: Size {
+            return Size(width: width, height: height)
+        }
         var bpp: Int {
             switch mode {
             case .gray2: return 1
@@ -139,7 +141,7 @@ struct Graphics {
             }
         }
         var isColor: Bool {
-            mode.isColor
+            return mode.isColor
         }
     }
 
