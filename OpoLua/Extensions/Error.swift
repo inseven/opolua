@@ -23,7 +23,9 @@ import Foundation
 extension Error {
 
     var gitHubIssueUrl: URL? {
-        if let unimplementedOperation = self as? OpoInterpreter.UnimplementedOperationError {
+        if let _ = self as? OpoInterpreter.BinaryDatabaseError {
+            return nil
+        } else if let unimplementedOperation = self as? OpoInterpreter.UnimplementedOperationError {
             return URL.gitHubIssue(title: "Unimplemented Operation: \(unimplementedOperation.operation)",
                                    description: unimplementedOperation.detail,
                                    labels: ["facerake", "bug"])
