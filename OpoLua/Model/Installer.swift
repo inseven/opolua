@@ -22,22 +22,25 @@ import Foundation
 
 protocol InstallerDelegate: AnyObject {
 
-    func installerDidComplete(_ installer: Installer)
-    func installer(_ installer: Installer, didFailWithError error: Error)
+    func installer(_ installer: Installer, didFinishWithResult result: Installer.Result)
 
 }
 
 class Installer {
 
+    typealias Result = Swift.Result<Directory.Item?, Error>
+
     let url: URL
+    let destinationUrl: URL
     let fileSystem: FileSystem
     let interpreter = OpoInterpreter()
 
     weak var delegate: InstallerDelegate?
 
-    init(url: URL, fileSystem: FileSystem) {
+    init(url: URL, destinationUrl: URL) {
         self.url = url
-        self.fileSystem = fileSystem
+        self.destinationUrl = destinationUrl
+        self.fileSystem = SystemFileSystem(rootUrl: destinationUrl)
         self.interpreter.iohandler = self
     }
 
@@ -46,10 +49,16 @@ class Installer {
             do {
                 try self.fileSystem.prepare()
                 try self.interpreter.installSisFile(path: self.url.path)
-                self.delegate?.installerDidComplete(self)
+                let item: Directory.Item?
+                if let systemType = try Directory.Item.system(url: self.destinationUrl, interpreter: self.interpreter) {
+                    item = Directory.Item(url: self.url, type: systemType, isWriteable: true)
+                } else {
+                    item = nil
+                }
+                self.delegate?.installer(self, didFinishWithResult: .success(item))
             } catch {
                 // TODO: Clean up if we've failed to install the file.
-                self.delegate?.installer(self, didFailWithError: error)
+                self.delegate?.installer(self, didFinishWithResult: .failure(error))
             }
         }
     }

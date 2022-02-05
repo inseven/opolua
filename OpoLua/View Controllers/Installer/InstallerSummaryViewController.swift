@@ -23,13 +23,14 @@ import UIKit
 protocol InstallerSummaryViewControllerDelegate: AnyObject {
 
     func installerSummaryViewController(_ installerSummaryViewController: InstallerSummaryViewController,
-                                        didFinishWithResult result: Result<Void, Error>)
+                                        didFinishWithResult result: Installer.Result)
 
 }
 
 class InstallerSummaryViewController: UIViewController {
 
-    var state: Result<Void, Error>
+    var settings: Settings
+    var state: Installer.Result
 
     weak var delegate: InstallerSummaryViewControllerDelegate?
 
@@ -39,9 +40,19 @@ class InstallerSummaryViewController: UIViewController {
         return imageView
     }()
 
-    lazy var label: UILabel = {
+    lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .preferredFont(forTextStyle: .largeTitle)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+
+    lazy var descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .preferredFont(forTextStyle: .body)
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -66,21 +77,27 @@ class InstallerSummaryViewController: UIViewController {
         return footerView
     }()
 
-    init(state: Result<Void, Error>) {
+    init(settings: Settings, state: Installer.Result) {
+        self.settings = settings
         self.state = state
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
         navigationItem.hidesBackButton = true
         view.addSubview(imageView)
-        view.addSubview(label)
+        view.addSubview(titleLabel)
+        view.addSubview(descriptionLabel)
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: view.layoutMarginsGuide.centerXAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: 48),
+            imageView.heightAnchor.constraint(equalToConstant: 48),
+            titleLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            descriptionLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            descriptionLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+
             imageView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            imageView.widthAnchor.constraint(equalToConstant: 100),
-            imageView.heightAnchor.constraint(equalToConstant: 100),
-            label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            label.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            label.topAnchor.constraint(equalTo: imageView.bottomAnchor),
+            titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor),
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
         ])
 
         view.addSubview(footerView)
@@ -91,14 +108,18 @@ class InstallerSummaryViewController: UIViewController {
         ])
 
         switch state {
-        case .success:
-            imageView.image = UIImage(systemName: "checkmark.circle")
+        case .success(let item):
+            imageView.image = item?.icon.image(for: settings.theme) ?? UIImage(systemName: "checkmark.circle")
             imageView.tintColor = .systemGreen
-            label.text = "Success!"
+            titleLabel.text = "Finished"
+            if let item = item {
+                descriptionLabel.text = "Successfully installed '\(item.name)'."
+            }
         case .failure(let error):
             imageView.image = UIImage(systemName: "xmark.circle")
             imageView.tintColor = .systemRed
-            label.text = error.localizedDescription
+            titleLabel.text = "Failed"
+            descriptionLabel.text = error.localizedDescription
         }
     }
 

@@ -53,8 +53,8 @@ class InstallerViewController: UINavigationController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func showSummary(state: Result<Void, Error>) {
-        let viewController = InstallerSummaryViewController(state: state)
+    func showSummary(state: Installer.Result) {
+        let viewController = InstallerSummaryViewController(settings: settings, state: state)
         viewController.delegate = self
         pushViewController(viewController, animated: true)
     }
@@ -71,7 +71,7 @@ class InstallerViewController: UINavigationController {
             return
         }
 
-        let installer = Installer(url: item.url, fileSystem: SystemFileSystem(rootUrl: systemUrl))
+        let installer = Installer(url: item.url, destinationUrl: systemUrl)
         self.installer = installer
         installer.delegate = self
         installer.run()
@@ -103,16 +103,11 @@ extension InstallerViewController: InstallerIntroductionViewControllerDelegate {
 
 extension InstallerViewController: InstallerDelegate {
 
-    func installerDidComplete(_ installer: Installer) {
+    func installer(_ installer: Installer, didFinishWithResult result: Installer.Result) {
         DispatchQueue.main.async {
-            self.showSummary(state: .success(()))
+            self.showSummary(state: result)
         }
-    }
 
-    func installer(_ installer: Installer, didFailWithError error: Error) {
-        DispatchQueue.main.async {
-            self.showSummary(state: .failure(error))
-        }
     }
 
 }
@@ -120,7 +115,7 @@ extension InstallerViewController: InstallerDelegate {
 extension InstallerViewController: InstallerSummaryViewControllerDelegate {
 
     func installerSummaryViewController(_ installerSummaryViewController: InstallerSummaryViewController,
-                                        didFinishWithResult result: Result<Void, Error>) {
+                                        didFinishWithResult result: Installer.Result) {
         switch result {
         case .success:
             installerDelegate?.installerViewController(self, didInstallToDestinationUrl: destinationUrl!)

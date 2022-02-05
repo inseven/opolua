@@ -251,7 +251,7 @@ class Directory {
 
 extension Directory.Item {
 
-    fileprivate static func system(url: URL, interpreter: OpoInterpreter) throws -> ItemType? {
+    static func system(url: URL, interpreter: OpoInterpreter) throws -> ItemType? {
         guard try FileManager.default.isSystem(at: url) else {
             return nil
         }
