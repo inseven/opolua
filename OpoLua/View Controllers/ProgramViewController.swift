@@ -250,7 +250,7 @@ class ProgramViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = UIColor(named: "ProgramBackground")
 
         title = program.title
         view.clipsToBounds = true

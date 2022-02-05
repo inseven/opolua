@@ -43,8 +43,6 @@ class RootView : UIView {
         self.screenSize = screenSize
         super.init(frame: CGRect(origin: .zero, size: screenSize))
         self.translatesAutoresizingMaskIntoConstraints = false
-        self.layer.borderWidth = 1.0
-        self.layer.borderColor = UIColor.lightGray.cgColor
         self.clipsToBounds = true
     }
 
