@@ -237,7 +237,7 @@ function LCCountryCode(stack, runtime) -- 31
 end
 
 function LCDecimalSeparator(stack, runtime) -- 32
-    unimplemented("opx.date.LCDecimalSeparator")
+    stack:push(".")
 end
 
 function LCSetClockFormat(stack, runtime) -- 33
@@ -256,7 +256,7 @@ function LCStartOfWeek(stack, runtime) -- 35
 end
 
 function LCThousandsSeparator(stack, runtime) -- 36
-    unimplemented("opx.date.LCThousandsSeparator")
+    stack:push("")
 end
 
 return _ENV

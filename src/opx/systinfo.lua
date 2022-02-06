@@ -162,7 +162,7 @@ function SIMemory(stack, runtime) -- 20
 end
 
 function SIKeyClickEnabled(stack, runtime) -- 21
-    unimplemented("opx.systinfo.SIKeyClickEnabled")
+    stack:push(false)
 end
 
 function SIKeyClickLoud(stack, runtime) -- 22
