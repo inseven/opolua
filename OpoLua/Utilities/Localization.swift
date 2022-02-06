@@ -25,21 +25,23 @@ extension Graphics.Bitmap.Mode {
     var localizedDescription: String {
         switch self {
         case .gray2:
-            return "Gray, 2BPP"
+            return "Gray, 1BPP"
         case .gray4:
-            return "Gray, 4BPP"
+            return "Gray, 2BPP"
         case .gray16:
-            return "Gray, 16BPP"
+            return "Gray, 4BPP"
         case .gray256:
-            return "Gray, 256BPP"
+            return "Gray, 8BPP"
         case .color16:
-            return "Color, 16BPP"
+            return "Color, 4BPP"
         case .color256:
-            return "Color, 256BPP"
+            return "Color, 8BPP"
         case .color64K:
-            return "Color, 64K"
+            return "Color, 16BPP"
         case .color16M:
-            return "Color, 16M"
+            return "Color, 32BPP"
+        case .color4K:
+            return "Color, 12BPP"
         }
     }
 
