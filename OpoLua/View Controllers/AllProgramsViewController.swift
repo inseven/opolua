@@ -112,13 +112,12 @@ class AllProgramsViewController : UICollectionViewController {
             guard let self = self else {
                 return
             }
-            self.wallpaperPixelView.image = self.settings.theme.wallpaper
-            self.wallpaperPixelView.isHidden = !self.settings.showWallpaper
+            self.updateWallpaper()
+            self.update(animated: true)
         }
         taskManager.addObserver(self)
         detector.delegate = self
-        self.wallpaperPixelView.image = self.settings.theme.wallpaper
-        wallpaperPixelView.isHidden = !settings.showWallpaper
+        updateWallpaper()
         navigationController?.setToolbarHidden(true, animated: animated)
     }
 
@@ -138,6 +137,16 @@ class AllProgramsViewController : UICollectionViewController {
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateWallpaper()
+    }
+
+    func updateWallpaper() {
+        wallpaperPixelView.image = self.settings.theme.wallpaper
+        wallpaperPixelView.isHidden = !settings.showWallpaper(in: traitCollection.userInterfaceStyle)
     }
 
     func actions(for url: URL) -> [UIMenuElement] {

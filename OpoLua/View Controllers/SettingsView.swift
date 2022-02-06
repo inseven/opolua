@@ -37,16 +37,6 @@ struct SettingsView: View {
 
     @State var sheet: SheetType?
 
-    func themeBinding(value: Settings.Theme) -> Binding<Bool> {
-        return Binding {
-            return settings.theme == value
-        } set: { newState in
-            if newState {
-                settings.theme = value
-            }
-        }
-    }
-
     var body: some View {
         NavigationView {
             Form {
@@ -59,7 +49,12 @@ struct SettingsView: View {
                         Text("Analog").tag(Settings.ClockType.analog)
                         Text("Digital").tag(Settings.ClockType.digital)
                     }
+                }
+                Section("Wallpaper") {
                     Toggle("Show Wallpaper", isOn: $settings.showWallpaper)
+                    if settings.showWallpaper {
+                        Toggle("Show in Dark Mode", isOn: $settings.showWallpaperInDarkMode)
+                    }
                 }
                 Section("Examples") {
                     Toggle("Show Files", isOn: $settings.showLibraryFiles)

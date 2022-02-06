@@ -47,6 +47,7 @@ class Settings: ObservableObject {
     private enum Key: String {
         case theme = "Theme"
         case showWallpaper = "ShowWallpaper"
+        case showWallpaperInDarkMode = "ShowWallpaperInDarkMode"
         case locations = "Locations"
         case clockType = "Clock"
         case showLibraryFiles = "ShowLibraryFiles"
@@ -59,6 +60,9 @@ class Settings: ObservableObject {
     private var observers: [SettingsObserver] = []
 
     private var _theme = Theme.series7
+
+    private var _showWallpaper = true
+    private var _showWallpaperInDarkMode = false
 
     private var _showLibraryFiles = true
     private var _showLibraryScripts = true
@@ -80,6 +84,9 @@ class Settings: ObservableObject {
         }
 
         _theme = Theme.init(rawValue: self.integer(for: .theme, default: _theme.rawValue)) ?? _theme
+
+        _showWallpaper = self.bool(for: .showWallpaper, default: _showWallpaper)
+        _showWallpaperInDarkMode = self.bool(for: .showWallpaperInDarkMode, default: _showWallpaperInDarkMode)
 
         _showLibraryFiles = self.bool(for: .showLibraryFiles, default: _showLibraryFiles)
         _showLibraryScripts = self.bool(for: .showLibraryScripts, default: _showLibraryScripts)
@@ -201,11 +208,44 @@ class Settings: ObservableObject {
 
     var showWallpaper: Bool {
         get {
-            return self.bool(for: .showWallpaper, default: true)
+            dispatchPrecondition(condition: .onQueue(.main))
+            return _showWallpaper
         }
         set {
-            self.set(newValue, for: .showWallpaper)
+            dispatchPrecondition(condition: .onQueue(.main))
+            guard _showWallpaper != newValue else {
+                return
+            }
+            _showWallpaper = newValue
+            self.set(_showWallpaper, for: .showWallpaper)
             self.objectWillChange.send()
+        }
+    }
+
+    var showWallpaperInDarkMode: Bool {
+        get {
+            dispatchPrecondition(condition: .onQueue(.main))
+            return _showWallpaperInDarkMode
+        }
+        set {
+            dispatchPrecondition(condition: .onQueue(.main))
+            guard _showWallpaperInDarkMode != newValue else {
+                return
+            }
+            _showWallpaperInDarkMode = newValue
+            self.set(_showWallpaperInDarkMode, for: .showWallpaperInDarkMode)
+            self.objectWillChange.send()
+        }
+    }
+
+    func showWallpaper(in userInterfaceStyle: UIUserInterfaceStyle) -> Bool {
+        switch userInterfaceStyle {
+        case .light:
+            return showWallpaper
+        case .dark:
+            return showWallpaper && showWallpaperInDarkMode
+        default:
+            return false
         }
     }
 

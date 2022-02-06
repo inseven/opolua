@@ -127,13 +127,11 @@ class DirectoryViewController : UICollectionViewController {
             guard let self = self else {
                 return
             }
-            self.wallpaperPixelView.image = self.settings.theme.wallpaper
-            self.wallpaperPixelView.isHidden = !self.settings.showWallpaper
+            self.updateWallpaper()
             self.update(animated: true)
         }
         taskManager.addObserver(self)
-        self.wallpaperPixelView.image = self.settings.theme.wallpaper
-        wallpaperPixelView.isHidden = !settings.showWallpaper
+        updateWallpaper()
         navigationController?.setToolbarHidden(true, animated: animated)
     }
 
@@ -151,6 +149,16 @@ class DirectoryViewController : UICollectionViewController {
         settingsSink?.cancel()
         settingsSink = nil
         taskManager.removeObserver(self)
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateWallpaper()
+    }
+
+    func updateWallpaper() {
+        wallpaperPixelView.image = self.settings.theme.wallpaper
+        wallpaperPixelView.isHidden = !settings.showWallpaper(in: traitCollection.userInterfaceStyle)
     }
 
     func delete(item: Directory.Item) {
