@@ -26,6 +26,7 @@ enum OpoLuaError: Error {
     case fileExists
     case locationExists
     case secureAccess
+    case unsupportedFile
 
 }
 
@@ -39,6 +40,8 @@ extension OpoLuaError: LocalizedError {
             return "Location already exists."
         case .secureAccess:
             return "Failed to prepare file for secure access."
+        case .unsupportedFile:
+            return "Unsupported file."
         }
     }
 

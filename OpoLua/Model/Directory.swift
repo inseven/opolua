@@ -109,6 +109,45 @@ class Directory {
         }
     }
 
+    static func item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
+        if FileManager.default.directoryExists(atPath: url.path) {
+            // Check for an app 'bundle'.
+            if let type = try Item.system(url: url, interpreter: interpreter) {
+                return Item(url: url, type: type, isWriteable: isWriteable)
+            } else {
+                return Item(url: url, type: .directory, isWriteable: isWriteable)
+            }
+        } else if url.pathExtension.lowercased() == "opo" {
+            return Item(url: url, type: .object, isWriteable: isWriteable)
+        } else if url.pathExtension.lowercased() == "app" {
+            return Item(url: url,
+                        type: .application(interpreter.appInfo(forApplicationUrl: url)),
+                        isWriteable: isWriteable)
+        } else if url.pathExtension.lowercased() == "sis" {
+            return Item(url: url, type: .installer, isWriteable: isWriteable)
+        } else if url.pathExtension.lowercased() == "hlp" {
+            return Item(url: url, type: .help, isWriteable: isWriteable)
+        } else if url.pathExtension.lowercased() == "txt" {
+            return Item(url: url, type: .text, isWriteable: isWriteable)
+        } else {
+            switch interpreter.recognize(path: url.path) {
+            case .aif:
+                if let info = interpreter.getAppInfo(aifPath: url.path) {
+                    return Item(url: url, type: .applicationInformation(info), isWriteable: isWriteable)
+                }
+            case .mbm:
+                return Item(url: url, type: .image, isWriteable: isWriteable)
+            case .opl:
+                return Item(url: url, type: .opl, isWriteable: isWriteable)
+            case .sound:
+                return Item(url: url, type: .sound, isWriteable: isWriteable)
+            default:
+                break
+            }
+            return Item(url: url, type: .unknown, isWriteable: isWriteable)
+        }
+    }
+
     static func items(for url: URL, interpreter: OpoInterpreter) throws -> [Item] {
         let fileManager = FileManager.default
         let isWriteable = fileManager.isWritableFile(atPath: url.path)
@@ -125,43 +164,7 @@ class Directory {
         let items = try urls
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
-                if FileManager.default.directoryExists(atPath: url.path) {
-                    // Check for an app 'bundle'.
-                    if let type = try Item.system(url: url, interpreter: interpreter) {
-                        return Item(url: url, type: type, isWriteable: isWriteable)
-                    } else {
-                        return Item(url: url, type: .directory, isWriteable: isWriteable)
-                    }
-                } else if url.pathExtension.lowercased() == "opo" {
-                    return Item(url: url, type: .object, isWriteable: isWriteable)
-                } else if url.pathExtension.lowercased() == "app" {
-                    return Item(url: url,
-                                type: .application(interpreter.appInfo(forApplicationUrl: url)),
-                                isWriteable: isWriteable)
-                } else if url.pathExtension.lowercased() == "sis" {
-                    return Item(url: url, type: .installer, isWriteable: isWriteable)
-                } else if url.pathExtension.lowercased() == "hlp" {
-                    return Item(url: url, type: .help, isWriteable: isWriteable)
-                } else if url.pathExtension.lowercased() == "txt" {
-                    return Item(url: url, type: .text, isWriteable: isWriteable)
-                } else {
-                    switch interpreter.recognize(path: url.path) {
-                    case .aif:
-                        if let info = interpreter.getAppInfo(aifPath: url.path) {
-                            return Item(url: url, type: .applicationInformation(info), isWriteable: isWriteable)
-                        }
-                    case .mbm:
-                        return Item(url: url, type: .image, isWriteable: isWriteable)
-                    case .opl:
-                        return Item(url: url, type: .opl, isWriteable: isWriteable)
-                    case .sound:
-                        return Item(url: url, type: .sound, isWriteable: isWriteable)
-                    default:
-                        break
-                    }
-
-                    return Item(url: url, type: .unknown, isWriteable: isWriteable)
-                }
+                return try item(for: url, isWriteable: isWriteable, interpreter: interpreter)
             }
             .sorted(by: Directory.defaultSort())
         return items

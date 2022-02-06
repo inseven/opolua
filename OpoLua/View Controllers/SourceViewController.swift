@@ -23,6 +23,7 @@ import UIKit
 class SourceViewController: UIViewController {
 
     var url: URL
+    var isLoaded = false
 
     lazy var textView: UITextView = {
         let textView = UITextView()
@@ -46,7 +47,38 @@ class SourceViewController: UIViewController {
             textView.topAnchor.constraint(equalTo: view.topAnchor),
             textView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
-        textView.text = (try? String(contentsOf: url)) ?? ""
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        do {
+            try load()
+        } catch {
+            present(error: error)
+        }
+    }
+
+    func load() throws {
+        guard !isLoaded else {
+            return
+        }
+        isLoaded = true
+        let interpreter = OpoInterpreter()
+        let item = try Directory.item(for: url, interpreter: interpreter)
+        var contents: String
+        switch item.type {
+        case .text:
+            contents = try String(contentsOf: url)
+        case .opl:
+            let fileInfo = interpreter.getFileInfo(path: url.path)
+            guard case OpoInterpreter.FileInfo.opl(let opoFile) = fileInfo else {
+                throw OpoLuaError.unsupportedFile
+            }
+            contents = opoFile.text
+        default:
+            throw OpoLuaError.unsupportedFile
+        }
+        textView.text = contents
     }
 
     required init?(coder: NSCoder) {
