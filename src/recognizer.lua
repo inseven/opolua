@@ -50,7 +50,7 @@ function recognize(data, allData)
     end
 
     if not allData and uid1 == KUidDirectFileStore then
-        if uid3 == KUidTextEd then
+        if uid3 == KUidTextEdApp then
             return "opl"
         elseif uid3 == KUidRecordApp then
             return "sound"
