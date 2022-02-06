@@ -240,7 +240,27 @@ function SetComputeMode(stack, runtime) -- 30
 end
 
 function RunApp(stack, runtime) -- 31
-    unimplemented("opx.system.RunApp")
+    local cmd = stack:pop()
+    local tail = stack:pop()
+    local doc = stack:pop()
+    local prog = stack:pop()
+    if cmd == 0 then
+        local ret = runtime:iohandler().runApp(prog, doc)
+        -- Although a non-existent prog _would_ cause an error dialog to appear
+        -- on screen, that was posted the system and you'd get a seemingly-valid
+        -- but useless thread id returned to the program. We're not going to do
+        -- that, and will just error instead.
+        assert(ret, KErrGenFail)
+        stack:push(ret)
+    elseif cmd == 1 then
+        unimplemented("opx.system.RunApp.create")
+    elseif cmd == 2 then
+        unimplemented("opx.system.RunApp.run")
+    elseif cmd == 3 then
+        unimplemented("opx.system.RunApp.background")
+    else
+        error(KErrInvalidArgs)
+    end
 end
 
 function RunExe(stack, runtime) -- 32

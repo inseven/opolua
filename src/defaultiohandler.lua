@@ -273,4 +273,8 @@ end
 function setBackground()
 end
 
+function runApp(prog, doc)
+    return nil
+end
+
 return _ENV

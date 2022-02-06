@@ -90,4 +90,5 @@ extension Installer: OpoIoHandler {
     func displayTaskList() {}
     func setForeground() {}
     func setBackground() {}
+    func runApp(name: String, document: String) -> Int32? { return nil }
 }

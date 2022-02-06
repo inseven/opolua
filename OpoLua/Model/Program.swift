@@ -507,6 +507,15 @@ extension Program: OpoIoHandler {
         // And this unblocks the interpreter thread if it was blocked in waitForAnyRequest()
         scheduler.interrupt()
     }
+
+    func runApp(name: String, document: String) -> Int32? {
+        // TODO
+        // name=TextEd means document is probably path to an OPL file
+        // Return nil to mean "app not found"
+        // Return anything non-nil to indicate success (technically the thread id of the launched app)
+        return nil
+    }
+
 }
 
 extension Program: WindowServerDelegate {

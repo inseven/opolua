@@ -520,6 +520,7 @@ protocol OpoIoHandler {
     func displayTaskList()
     func setForeground()
     func setBackground()
+    func runApp(name: String, document: String) -> Int32?
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -601,6 +602,8 @@ class DummyIoHandler : OpoIoHandler {
     func setBackground() {
     }
 
-
+    func runApp(name: String, document: String) -> Int32? {
+        return nil
+    }
 
 }

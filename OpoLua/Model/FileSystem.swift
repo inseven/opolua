@@ -111,7 +111,7 @@ extension FileSystem {
                 return .err(.notReady)
             }
         case .write(let data):
-            print("IOWRITE '\(operation.path)'")
+            print("fsop write '\(operation.path)'")
             // OPL seems to ensure the directory exists on our behalf?
             // TODO: Ensure this is contained within our root.
             // TODO: We need to handle case coersion when creating our directories.

@@ -955,6 +955,7 @@ function IOREAD(h, maxLen)
                 -- Yes returning both data and an error is a weird way to do things, it's what the API requires...
                 return data:sub(1, maxLen), KErrRecord
             end
+            -- printf("text IOREAD len=%d data=%s\n", #data, hexEscape(data))
             return data
         else
             f.pos = #f.data + 1
@@ -962,6 +963,7 @@ function IOREAD(h, maxLen)
         end
     else
         local data = f.data:sub(f.pos, f.pos + maxLen - 1)
+        -- printf("IOREAD pos=%d len=%d data=%s\n", f.pos, #data, hexEscape(data))
         f.pos = f.pos + #data
         return data
     end
@@ -975,6 +977,7 @@ function IOWRITE(h, data)
     -- What's the right actual error code for this? KErrWrite? KOplErrReadOnly? KErrAccess?
     assert(f.mode & KIoOpenAccessUpdate > 0, "Cannot write to a readonly file handle!")
     assert(f.pos, "Cannot IOWRITE a non-file handle!")
+    -- printf("IOWRITE pos=%d len=%d data=%s\n", f.pos, #data, hexEscape(data))
     -- Not the most efficient operation, oh well
     f.data = f.data:sub(1, f.pos - 1)..data..f.data:sub(f.pos + #data)
 

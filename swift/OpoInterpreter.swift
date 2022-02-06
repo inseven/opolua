@@ -705,6 +705,16 @@ private func stop(_ L: LuaState!, _: UnsafeMutablePointer<lua_Debug>!) {
     lua_error(L)
 }
 
+private func runApp(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    guard let prog = L.tostring(1), let doc = L.tostring(2) else {
+        return 0
+    }
+    let result = iohandler.runApp(name: prog, document: doc)
+    L.push(result)
+    return 1
+}
+
 private extension Error {
     var detailIfPresent: String {
         if let err = self as? OpoInterpreter.InterpreterError {
@@ -840,6 +850,7 @@ class OpoInterpreter {
             ("displayTaskList", displayTaskList),
             ("setForeground", setForeground),
             ("setBackground", setBackground),
+            ("runApp", runApp),
         ]
         L.setfuncs(fns, nup: 1)
     }
