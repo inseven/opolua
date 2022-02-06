@@ -1004,7 +1004,8 @@ function DatimStr(stack, runtime) -- 0xC1
 end
 
 function DayNameStr(stack, runtime) -- 0xC2
-    unimplemented("fns.DayNameStr")
+    -- 1st Jan 1970 was a Thursday, and dayname=1 means Monday, so
+    stack:push(os.date("!%a", 86400 * (3 + stack:pop())))
 end
 
 function DirStr(stack, runtime) -- 0xC3
