@@ -25,9 +25,10 @@ SOFTWARE.
 _ENV = module()
 
 function parseWveFile(data)
-    local toc = require("directfilestore").parse(data)
+    local dfs = require("directfilestore")
+    local toc = dfs.parse(data)
 
-    local sndDataOffset = toc[KUidSoundData]
+    local sndDataOffset = toc[dfs.SectionUids.KUidSoundData]
     assert(sndDataOffset, "No sound data found in directfilestore TOC!")
     local uncompressedLen, compression, repeatCount, vol, wat, gap, compressedLen, pos = string.unpack("<I4I4I2BBI4I4", data, 1 + sndDataOffset)
     assert(compression == 0, "No support for compressed sound data!")

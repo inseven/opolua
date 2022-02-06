@@ -182,7 +182,7 @@ class AllProgramsViewController : UICollectionViewController {
             let program = taskManager.program(for: item.programUrl!)
             let viewController = ProgramViewController(settings: settings, taskManager: taskManager, program: program)
             navigationController?.pushViewController(viewController, animated: true)
-        case .unknown, .applicationInformation, .sound, .help, .directory, .installer, .image, .text:
+        case .unknown, .applicationInformation, .sound, .help, .directory, .installer, .image, .text, .opl:
             break
         }
     }
@@ -232,7 +232,7 @@ class AllProgramsViewController : UICollectionViewController {
                 actions += [UIMenu(options: [.displayInline], children: fileActions)]
 
                 return UIMenu(children: actions)
-            case .directory, .installer, .unknown, .applicationInformation, .image, .sound, .help, .text:
+            case .directory, .installer, .unknown, .applicationInformation, .image, .sound, .help, .text, .opl:
                 return nil
             }
         }

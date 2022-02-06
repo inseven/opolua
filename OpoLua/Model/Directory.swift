@@ -54,6 +54,7 @@ class Directory {
             case sound
             case help
             case text
+            case opl
             case unknown
         }
 
@@ -82,25 +83,11 @@ class Directory {
             switch type {
             case .object:
                 return url
-            case .directory:
-                return nil
             case .application:
                 return url
             case .system(let url, _):
                 return url
-            case .installer:
-                return nil
-            case .applicationInformation:
-                return nil
-            case .image:
-                return nil
-            case .sound:
-                return nil
-            case .help:
-                return nil
-            case .text:
-                return nil
-            case .unknown:
+            default:
                 return nil
             }
         }
@@ -153,19 +140,26 @@ class Directory {
                                 isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "sis" {
                     return Item(url: url, type: .installer, isWriteable: isWriteable)
-                } else if url.pathExtension.lowercased() == "aif" {
-                    return Item(url: url,
-                                type: .applicationInformation(interpreter.getAppInfo(aifPath: url.path)),
-                                isWriteable: isWriteable)
-                } else if url.pathExtension.lowercased() == "mbm" {
-                    return Item(url: url, type: .image, isWriteable: isWriteable)
-                } else if url.pathExtension.lowercased() == "snd" {
-                    return Item(url: url, type: .sound, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "hlp" {
                     return Item(url: url, type: .help, isWriteable: isWriteable)
                 } else if url.pathExtension.lowercased() == "txt" {
                     return Item(url: url, type: .text, isWriteable: isWriteable)
                 } else {
+                    switch interpreter.recognize(path: url.path) {
+                    case .aif:
+                        if let info = interpreter.getAppInfo(aifPath: url.path) {
+                            return Item(url: url, type: .applicationInformation(info), isWriteable: isWriteable)
+                        }
+                    case .mbm:
+                        return Item(url: url, type: .image, isWriteable: isWriteable)
+                    case .opl:
+                        return Item(url: url, type: .opl, isWriteable: isWriteable)
+                    case .sound:
+                        return Item(url: url, type: .sound, isWriteable: isWriteable)
+                    default:
+                        break
+                    }
+
                     return Item(url: url, type: .unknown, isWriteable: isWriteable)
                 }
             }
@@ -321,6 +315,8 @@ extension Directory.Item.ItemType {
             return .data
         case .text:
             return .text
+        case .opl:
+            return .opl
         case .unknown:
             return .unknownFile
         }

@@ -24,14 +24,6 @@ SOFTWARE.
 
 ]]
 
-local KTextEdSectionMarker = 0x1000005C
-local KTextSectionMarker = 0x10000064
-
-local specialChars = {
-    ["\x06"] = "\n",
-    ["\x10"] = " ", -- Not going to distinguish nonbreaking space, not important for OPL
-}
-
 function main()
     dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
     local args = getopt({
@@ -39,27 +31,8 @@ function main()
     })
 
     local data = readFile(args.filename)
-    local toc = require("directfilestore").parse(data)
-    local texted = toc[KUidTextEdSection]
-    assert(texted, "No text found in file!")
-    
-    local textEdSectionMarker, pos = string.unpack("<I4", data, texted + 1)
-    assert(textEdSectionMarker == KTextEdSectionMarker)
-    while true do
-        local id
-        id, pos = string.unpack("<I4", data, pos)
-        if id == KTextSectionMarker then
-            -- Finally, the text section
-            local len, pos = readCardinality(data, pos)
-            -- 06 means "new paragraph" in TextEd land... everything else likely
-            -- to appear in an OPL script is ASCII
-            local text = data:sub(pos, pos + len - 1):gsub("[\x06\x10]", specialChars)
-            print(text)
-            break
-        else
-            pos = pos + 4 -- Skip over offset of section we don't care about
-        end
-    end
+    local text = require("recognizer").getOplText(data)
+    print(text)
 end
 
 main()

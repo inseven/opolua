@@ -24,6 +24,12 @@ SOFTWARE.
 
 _ENV = module()
 
+SectionUids = enum {
+    KUidPrintSetupStream = 0x10000105,
+    KUidSoundData = 0x10000052, -- Not sure what this uid is officially called, can't find a reference...
+    KUidTextEdSection = KUidTextEdApp, -- It's called TextEd but it's basically the OPL editor
+}
+
 function parse(data)
     local uid1, uid2, uid3, checksum, tocOffset = string.unpack("<I4I4I4I4I4", data)
     assert(uid1 == KUidDirectFileStore)

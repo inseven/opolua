@@ -41,7 +41,13 @@ function main()
     end
     table.sort(offsets)
     for _, offset in ipairs(offsets) do
-        printf("%08X: 0x%08X\n", offset, offsetToUid[offset])
+        local uid = offsetToUid[offset]
+        printf("%08X: 0x%08X", offset, uid)
+        local uidName = directfilestore.SectionUids[uid]
+        if uidName then
+            printf(" %s", uidName)
+        end
+        printf("\n")
     end
 end
 

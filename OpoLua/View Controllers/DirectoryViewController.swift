@@ -216,6 +216,8 @@ class DirectoryViewController : UICollectionViewController {
                     let sourceViewController = SourceViewController(url: item.url)
                     self.navigationController?.pushViewController(sourceViewController, animated: true)
                 })
+            case .opl:
+                break // TODO
             case .unknown, .applicationInformation, .sound, .help:
                 break
             }
@@ -275,7 +277,7 @@ class DirectoryViewController : UICollectionViewController {
         case .text:
             let sourceViewController = SourceViewController(url: item.url)
             navigationController?.pushViewController(sourceViewController, animated: true)
-        case .unknown, .applicationInformation, .sound, .help:
+        case .unknown, .applicationInformation, .sound, .help, .opl:
             let alert = UIAlertController(title: "Unsupported File",
                                           message: "Opening files of this type is currently unsupported.",
                                           preferredStyle: .alert)

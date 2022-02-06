@@ -23,6 +23,43 @@ import Foundation
 // ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
 private let kEnc = String.Encoding.windowsCP1252
 
+private extension LuaState {
+    func toAppInfo(_ index: Int32) -> OpoInterpreter.AppInfo? {
+        let L = self
+        lua_getfield(L, index, "captions")
+        var captions: [OpoInterpreter.LocalizedString] = []
+        for (languageIndex, captionIndex) in L.pairs(-1) {
+            guard let language = L.tostring(languageIndex),
+                  let caption = L.tostring(captionIndex)
+            else {
+                return nil
+            }
+            captions.append(.init(caption, locale: Locale(identifier: language)))
+        }
+        L.pop()
+
+        guard let uid3 = L.toint(index, key: "uid3") else {
+            return nil
+        }
+
+        lua_getfield(L, index, "icons")
+        var icons: [Graphics.MaskedBitmap] = []
+        // Need to refactor the Lua data structure before we can make MaskedBitmap decodable
+        for _ in L.ipairs(-1, requiredType: .table) {
+            if let bmp = L.tovalue(-1, Graphics.Bitmap.self) {
+                var mask: Graphics.Bitmap? = nil
+                if lua_getfield(L, -1, "mask") == LUA_TTABLE {
+                    mask = L.tovalue(-1, Graphics.Bitmap.self)
+                }
+                L.pop()
+                icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
+            }
+        }
+        L.pop() // icons
+        return OpoInterpreter.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons)
+    }
+}
+
 private func searcher(_ L: LuaState!) -> Int32 {
     guard let module = L.tostring(1, encoding: .utf8) else {
         L.pushnil()
@@ -864,7 +901,6 @@ class OpoInterpreter {
     }
 
     struct AppInfo {
-
         let captions: [LocalizedString]
         let uid3: UInt32
         let icons: [Graphics.MaskedBitmap]
@@ -886,34 +922,7 @@ class OpoInterpreter {
         L.push(data)
         guard logpcall(1, 1) else { return nil }
 
-        lua_getfield(L, -1, "captions")
-        var captions: [LocalizedString] = []
-        for (languageIndex, captionIndex) in L.pairs(-1) {
-            guard let language = L.tostring(languageIndex),
-                  let caption = L.tostring(captionIndex)
-            else {
-                return nil
-            }
-            captions.append(LocalizedString(caption, locale: Locale(identifier: language)))
-        }
-        L.pop()
-
-        guard let uid3 = L.toint(-1, key: "uid3") else { return nil }
-
-        lua_getfield(L, -1, "icons")
-        var icons: [Graphics.MaskedBitmap] = []
-        // Need to refactor the Lua data structure before we can make MaskedBitmap decodable
-        for _ in L.ipairs(-1, requiredType: .table) {
-            if let bmp = L.tovalue(-1, Graphics.Bitmap.self) {
-                var mask: Graphics.Bitmap? = nil
-                if lua_getfield(L, -1, "mask") == LUA_TTABLE {
-                    mask = L.tovalue(-1, Graphics.Bitmap.self)
-                }
-                L.pop()
-                icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
-            }
-        }
-        return AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons)
+        return L.toAppInfo(-1)
     }
 
     func getMbmBitmaps(path: String) -> [Graphics.Bitmap]? {
@@ -925,10 +934,10 @@ class OpoInterpreter {
             return nil
         }
         lua_getglobal(L, "require")
-        L.push("mbm")
+        L.push("recognizer")
         guard logpcall(1, 1) else { return nil }
-        lua_getfield(L, -1, "parseMbmHeader")
-        lua_remove(L, -2) // mbm module
+        lua_getfield(L, -1, "getMbmBitmaps")
+        lua_remove(L, -2) // recognizer module
         L.push(data)
         guard logpcall(1, 1) else { return nil }
         // top of stack should now be bitmap array
@@ -1161,5 +1170,118 @@ class OpoInterpreter {
     // Safe to call from any thread
     func interrupt() {
         lua_sethook(L, stop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT, 1)
+    }
+
+    struct UnknownEpocFile: Codable {
+        let uid1: UInt32
+        let uid2: UInt32
+        let uid3: UInt32
+    }
+
+    struct MbmFile: Codable {
+        let bitmaps: [Graphics.Bitmap]
+    }
+
+    struct OplFile: Codable {
+        let text: String
+    }
+
+    struct SoundFile: Codable {
+        let data: Data
+    }
+
+    enum FileType: String, Codable {
+        case unknown
+        case aif
+        case mbm
+        case opl
+        case sound
+    }
+
+    enum FileInfo {
+        case unknown
+        case unknownEpoc(UnknownEpocFile)
+        case aif(AppInfo)
+        case mbm(MbmFile)
+        case opl(OplFile)
+        case sound(SoundFile)
+    }
+
+    func recognize(path: String) -> FileType {
+        let top = lua_gettop(L)
+        defer {
+            lua_settop(L, top)
+        }
+        // We don't actually need the whole file data here, oh well
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        lua_getglobal(L, "require")
+        L.push("recognizer")
+        guard logpcall(1, 1) else {
+            return .unknown
+        }
+        lua_getfield(L, -1, "recognize")
+        lua_remove(L, -2) // recognizer module
+        L.push(data)
+        L.push(false) // allData
+        guard logpcall(2, 1) else {
+            return .unknown
+        }
+        guard let type = L.tostring(-1) else {
+            return .unknown
+        }
+        return FileType(rawValue: type) ?? .unknown
+    }
+
+    func getFileInfo(path: String) -> FileInfo {
+        let top = lua_gettop(L)
+        defer {
+            lua_settop(L, top)
+        }
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        lua_getglobal(L, "require")
+        L.push("recognizer")
+        guard logpcall(1, 1) else {
+            return .unknown
+        }
+        lua_getfield(L, -1, "recognize")
+        lua_remove(L, -2) // recognizer module
+        L.push(data)
+        L.push(true) // allData
+        guard logpcall(2, 2) else {
+            return .unknown
+        }
+        guard let type = L.tostring(-2) else {
+            return .unknown
+        }
+
+        switch type {
+        case "aif":
+            if let info = L.toAppInfo(-1) {
+                return .aif(info)
+            }
+        case "mbm":
+            if let info = L.tovalue(-1, MbmFile.self) {
+                return .mbm(info)
+            }
+        case "opl":
+            if let info = L.tovalue(-1, OplFile.self) {
+                return .opl(info)
+            }
+        case "sound":
+            if let info = L.tovalue(-1, SoundFile.self) {
+                return .sound(info)
+            }
+        case "unknown":
+            if let info = L.tovalue(-1, UnknownEpocFile.self) {
+                return .unknownEpoc(info)
+            }
+        default:
+            break
+        }
+        return .unknown
     }
 }
