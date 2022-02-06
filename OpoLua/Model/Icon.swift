@@ -71,7 +71,7 @@ extension Icon {
     static var folder = Icon(grayscaleImage: .folderIcon, colorImage: .folderIconC)
     static var image = Icon(grayscaleImage: .paintIcon, colorImage: .paintIconC)
     static var installer = Icon(grayscaleImage: .installerIcon, colorImage: .installerIconC)
-    static var opl = Icon(grayscaleImage: .unknownFileIcon, colorImage: .oplIconC)
+    static var opl = Icon(grayscaleImage: .oplIcon, colorImage: .oplIconC)
     static var opo = Icon(grayscaleImage: .opoIcon, colorImage: .opoIconC)
     static var sound = Icon(grayscaleImage: .recordIcon, colorImage: .recordIconC)
     static var text = Icon(grayscaleImage: .textIcon, colorImage: .textIcon)

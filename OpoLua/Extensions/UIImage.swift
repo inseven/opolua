@@ -62,6 +62,10 @@ extension UIImage {
         return UIImage(named: "InstallerIconC")!
     }()
 
+    static var oplIcon: UIImage = {
+        return UIImage(named: "OplIcon")!
+    }()
+
     static var oplIconC: UIImage = {
         return UIImage(named: "OplIconC")!
     }()
