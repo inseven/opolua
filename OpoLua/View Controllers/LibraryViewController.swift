@@ -91,7 +91,8 @@ class LibraryViewController: UICollectionViewController {
                 let badgeLabel = UILabel()
                 badgeLabel.text = String(taskManager.programs.count)
                 badgeLabel.textColor = UIColor.secondaryLabel
-                let viewConfig = UICellAccessory.CustomViewConfiguration(customView: badgeLabel, placement: .trailing(displayed: .always))
+                let viewConfig = UICellAccessory.CustomViewConfiguration(customView: badgeLabel,
+                                                                         placement: .trailing(displayed: .always))
                 let badgeAccessory = UICellAccessory.customView(configuration: viewConfig)
                 accessories.append(badgeAccessory)
             }
@@ -301,26 +302,6 @@ class LibraryViewController: UICollectionViewController {
         var snapshot = dataSource.snapshot()
         snapshot.reloadSections(snapshot.sectionIdentifiers)
         dataSource.apply(snapshot, animatingDifferences: false)
-    }
-
-    override func collectionView(_ collectionView: UICollectionView,
-                        contextMenuConfigurationForItemAt indexPath: IndexPath,
-                        point: CGPoint) -> UIContextMenuConfiguration? {
-        guard let item = dataSource.itemIdentifier(for: indexPath), !item.isReadOnly else {
-            return nil
-        }
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
-            var actions: [UIMenuElement] = []
-            let deleteAction = UIAction(title: "Delete",
-                                        image: UIImage(systemName: "trash"),
-                                        attributes: [.destructive]) { action in
-                if case .external(let location) = item {
-                    self.deleteLocation(location)
-                }
-            }
-            actions.append(deleteAction)
-            return UIMenu(children: suggestedActions + actions)
-        }
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
