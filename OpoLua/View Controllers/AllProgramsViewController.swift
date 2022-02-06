@@ -92,7 +92,7 @@ class AllProgramsViewController : UICollectionViewController {
         self.taskManager = taskManager
         self.detector = detector
         super.init(collectionViewLayout: IconCollectionViewLayout())
-        view.backgroundColor = .systemBackground
+        collectionView.backgroundColor = UIColor(named: "DirectoryBackground")
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView

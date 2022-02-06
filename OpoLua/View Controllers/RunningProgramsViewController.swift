@@ -118,7 +118,7 @@ class RunningProgramsViewController : UICollectionViewController {
         self.settings = settings
         self.taskManager = taskManager
         super.init(collectionViewLayout: IconCollectionViewLayout())
-        view.backgroundColor = .systemBackground
+        collectionView.backgroundColor = UIColor(named: "DirectoryBackground")
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.dataSource = dataSource
