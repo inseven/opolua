@@ -307,6 +307,10 @@ local kEpoc8bitPalette = {
 local string_byte, string_char, string_rep, string_sub = string.byte, string.char, string.rep, string.sub
 local string_pack, string_packsize, string_unpack = string.pack, string.packsize, string.unpack
 
+local ENoBitmapCompression = 0
+local EByteRLECompression = 1
+local ETwelveBitRLECompression = 2
+
 Bitmap = class {
     -- See parseSEpocBitmapHeader for members
 }
@@ -318,10 +322,31 @@ local function roundUp(val, alignment)
     return (val + (alignment - 1)) & ~(alignment - 1)
 end
 
+local function byteWidth(pixelWidth, bpp)
+    if bpp == 1 then
+        return 4 * ((pixelWidth + 31) // 32)
+    elseif bpp == 2 then
+        return 4 * ((pixelWidth + 15) // 16)
+    elseif bpp == 4 then
+        return 4 * ((pixelWidth + 7) // 8)
+    elseif bpp == 8 then
+        return 4 * ((pixelWidth + 3) // 4)
+    elseif bpp == 12 or bpp == 16 then
+        return 4 * ((pixelWidth + 1) // 2)
+    elseif bpp == 24 then
+        return 4 * ((((pixelWidth * 3) + 11) / 12) * 3)
+    elseif bpp == 32 then
+        return 4 * ((pixelWidth + 15) // 16)
+    else
+        error("Bad bit depth!")
+    end
+end
+
 function Bitmap:getImageData(expandToBitDepth, resultStride)
     local imgData = decodeBitmap(self, self.data)
     if expandToBitDepth == 8 then
         local stride = self.stride
+        assert(self.bpp <= 8, "Cannot expand to a smaller bit depth")
         if self.bpp < 8 then
             -- Widening the data also widens the stride
             stride = (stride * 8) // self.bpp
@@ -336,11 +361,26 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
         end
         imgData = table.concat(trimmed)
     elseif expandToBitDepth == 24 then
-        -- First expand to 8bpp with no padding
-        local bytes = self:getImageData(8, nil)
+        local bytes
+        if self.bpp == 12 then
+            bytes = imgData
+        else
+            -- First expand to 8bpp with no padding
+            bytes = self:getImageData(8, nil)
+        end
+
         local rowPad = string.rep("\0", (resultStride or 0) - (self.width * 3))
         local color = self.isColor
-        local function getPixel(pos)
+        local function getPixel(x, y) --pos)
+            if self.bpp == 12 then
+                local pos = 1 + (y * self.width * 2 + x * 2)
+                local value = string.unpack(">I2", bytes, pos)
+                local b = ((value >> 8) & 0xF) * 17
+                local g = ((value >> 4) & 0xF) * 17
+                local r = (value & 0xF) * 17
+                return string_char(r & 0xFF, g & 0xFF, b & 0xFF)
+            end
+            local pos = 1 + (y * self.width + x)
             local b = string_byte(bytes, pos, pos)
             if color then
                 if self.bpp == 8 then
@@ -358,8 +398,7 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
         for y = 0, self.height - 1 do
             local row = {}
             for x = 0, self.width - 1 do
-                local pos = 1 + (y * self.width + x)
-                row[1 + x] = getPixel(pos)
+                row[1 + x] = getPixel(x, y)
             end
             row[1 + self.width] = rowPad
             result[1 + y] = table.concat(row)
@@ -404,9 +443,6 @@ end
 local function parseSEpocBitmapHeader(data, offset)
     local len, headerLen, x, y, twipsx, twipsy, bpp, col, paletteSz, compression, pos =
         string_unpack("<I4I4I4I4I4I4I4I4I4I4", data, 1 + offset)
-    local bytesPerPixel = bpp / 8
-    local bytesPerWidth = math.ceil(x * bytesPerPixel)
-    local stride = (bytesPerWidth + 3) & ~3
     return Bitmap {
         data = data,
         len = len,
@@ -416,7 +452,7 @@ local function parseSEpocBitmapHeader(data, offset)
         bpp = bpp,
         isColor = col == 1,
         mode = bppColorToMode(bpp, col == 1),
-        stride = stride,
+        stride = byteWidth(x, bpp),
         -- not worrying about palettes yet
         paletteSz = paletteSz,
         compression = compression,
@@ -445,12 +481,14 @@ function decodeBitmap(bitmap, data)
     local imgData
     local pos = 1 + bitmap.imgStart
     local len = bitmap.imgLen
-    if bitmap.compression == 0 then
+    if bitmap.compression == ENoBitmapCompression then
         return data:sub(pos, pos + len)
-    elseif bitmap.compression == 1 then
+    elseif bitmap.compression == EByteRLECompression then
         imgData = rle8decode(data, pos, len)
+    elseif bitmap.compression == ETwelveBitRLECompression then
+        imgData = rle12decode(data, pos, len)
     else
-        error("Unknown compression scheme!")
+        error("Unknown compression scheme "..tostring(bitmap.compression))
     end
     return imgData
 end
@@ -471,6 +509,22 @@ function rle8decode(data, pos, len)
             bytes[i] = string_sub(data, pos + 1, pos + n)
             pos = pos + 1 + n
         end
+        i = i + 1
+    end
+    local result = table.concat(bytes)
+    return result
+end
+
+function rle12decode(data, pos, len)
+    local bytes = {}
+    local i = 1
+    local endPos = pos + len
+    while pos+1 <= endPos do
+        local value = string_unpack("<I2", data, pos)
+        pos = pos + 2
+        local runLength = (value >> 12) + 1
+        -- I'm too tired to figure out why this only works if bytes is written out big-endian here...
+        bytes[i] = string_rep(string_pack(">I2", value & 0xFFF), runLength)
         i = i + 1
     end
     local result = table.concat(bytes)

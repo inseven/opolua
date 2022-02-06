@@ -391,16 +391,18 @@ extension CGImage {
                 bitmapInfo: inf,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
-        case .color64K:
+        case .color4K:
             let provider = CGDataProvider(data: bitmap.imgData as CFData)!
             let sp = CGColorSpaceCreateDeviceRGB()
-            let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
+            let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipFirst.rawValue)
             return CGImage(width: bitmap.width, height: bitmap.height,
-                bitsPerComponent: 16, bitsPerPixel: 16, // bitsPerComponent is probably wrong here
+                bitsPerComponent: 4, bitsPerPixel: 16,
                 bytesPerRow: bitmap.stride, space: sp,
                 bitmapInfo: inf,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
+        case .color64K:
+            fatalError("Don't know how to CGImage 16bpp!")
         case .color16M:
             let provider = CGDataProvider(data: bitmap.imgData as CFData)!
             let sp = CGColorSpaceCreateDeviceRGB()

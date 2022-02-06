@@ -296,6 +296,8 @@ local GrayBppToMode = {
 local ColorBppToMode = {
     [4] = KgCreate16ColorMode,
     [8] = KgCreate256ColorMode,
+    [12] = KgCreate4KColorMode,
+    [16] = KgCreate64KColorMode,
 }    
 
 function bppColorToMode(bpp, color)

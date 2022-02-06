@@ -119,6 +119,7 @@ struct Graphics {
             case color256 = 5 // ie 8bpp color
             case color64K = 6 // 16bpp color
             case color16M = 7 // 24bpp color
+            case color4K = 9 // ie 12bpp color
         }
         let mode: Mode
         let width: Int
@@ -129,16 +130,6 @@ struct Graphics {
 
         var size: Size {
             return Size(width: width, height: height)
-        }
-        var bpp: Int {
-            switch mode {
-            case .gray2: return 1
-            case .gray4: return 2
-            case .gray16, .color16: return 4
-            case .gray256, .color256: return 8
-            case .color64K: return 16
-            case .color16M: return 24
-            }
         }
         var isColor: Bool {
             return mode.isColor
