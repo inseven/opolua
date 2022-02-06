@@ -268,6 +268,10 @@ function parseTableSpec(spec)
     if quoted then
         spec = quoted
     end
+    local query = spec:match("^[%S]+%s+(SELECT .*)")
+    if query then
+        unimplemented("database.parseTableSpec")
+    end
     return spec, "Table1", nil
 end
 
