@@ -999,7 +999,8 @@ function ChrStr(stack) -- 0xC0
 end
 
 function DatimStr(stack, runtime) -- 0xC1
-    unimplemented("fns.DatimStr")
+    -- system time -> Fri 16 Oct 1992 16:25:30
+    stack:push(os.date("%a %d %b %Y %T"))
 end
 
 function DayNameStr(stack, runtime) -- 0xC2
