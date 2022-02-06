@@ -76,7 +76,7 @@ extension ApplicationSection {
         case .allPrograms:
             return true
         case .documents:
-            return false
+            return true
         case .local(_):
             return true
         case .external(_):
