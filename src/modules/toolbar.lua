@@ -160,12 +160,17 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
                 buttons[pressedButtonId].isPushedDown = false
                 drawButton(pressedButtonId)
             end
-            -- Note, already latched buttons don't get called
-            if butId == pressedButtonId and (buttons[butId].flags & KTbFlgLatched) == 0 then
-                -- Call the shortcut
-                local shortcut = buttons[butId].shortcut
-                local shifted = shortcut:match("^[A-Z]")
-                procToCall = string.upper("cmd" .. (shifted and "S" or "")..shortcut.."%")
+            -- Note, already latched buttons don't get called (IF they actually are latchable)
+            if butId == pressedButtonId then 
+                local button = buttons[butId]
+                local latched = button.flags & KTbFlgLatched ~= 0
+                local latchable = button.flags & KTbFlgLatchable ~= 0
+                if not latchable or not latched then
+                    -- Call the shortcut
+                    local shortcut = button.shortcut
+                    local shifted = shortcut:match("^[A-Z]")
+                    procToCall = string.upper("cmd" .. (shifted and "S" or "")..shortcut.."%")
+                end
             end
             pressedButtonId = nil
         elseif ptrType == KEvPtrDrag then
@@ -212,7 +217,8 @@ end
 
 function TBarLatch(butId)
     local button = buttons[butId]
-    assert(button and button.flags & KTbFlgLatchable > 0, "No latchable button found!")
+    -- Apparently there's nothing to say you can't latch a button that doesn't have KTbFlgLatchable set...
+    assert(button, "No button found!")
     -- Unlatch everything above that's in the same latch group
     local buttonLatchGroup = button.flags & 0x30
     for id = butId - 1, 1, -1 do
