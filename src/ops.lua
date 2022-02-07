@@ -1873,7 +1873,22 @@ function gUpdate_dump(runtime)
 end
 
 function GetEvent(stack, runtime) -- 0xE4
-    unimplemented("GetEvent")
+    local resultAddr = stack:pop()
+
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
+    runtime:GETEVENTA32(stat, ev:addressOf())
+    runtime:waitForRequest(stat)
+
+    local result = {}
+    local k = ev()[KEvAType]()
+    if k & KEvNotKeyMask == 0 then
+        result[1] = keycodeToCharacterCode(k)
+        result[2] = ev()[KEvAKMod]() | ((ev()[KEvAKRep]()) << 8)
+    else
+        result[1] = k
+    end
+    resultAddr:writeArray(result, DataTypes.EWord)
 end
 
 function gLineTo(stack, runtime) -- 0xE5

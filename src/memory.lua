@@ -159,6 +159,12 @@ function Variable:addressOf()
             len = parentArrayVar():arrayLen() * valSz,
             var = parentArrayVar,
         }
+    elseif isArrayType(self._type) then
+        return AddrSlice {
+            offset = 0,
+            len = self():arrayLen() * self:stride(),
+            var = self,
+        }
     else
         return AddrSlice {
             offset = 0,

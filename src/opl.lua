@@ -797,7 +797,7 @@ end
 function GET()
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
     local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
-    local evAddr = ev()[1]:addressOf()
+    local evAddr = ev:addressOf()
     repeat
         GETEVENTA32(stat, evAddr)
         runtime:waitForRequest(stat)
