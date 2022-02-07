@@ -74,28 +74,31 @@ function LCLanguage(stack, runtime) -- 6
     stack:push(require("sis").Locales["en_GB"])
 end
 
+local osversion = { 1, 2, 166 } -- according to my Psion 5, this is a sane version
+local romversion = { 1, 5, 254 } -- according to my Psion 5, this is a sane version
+
 function OSVersionMajor(stack, runtime) -- 7
-    unimplemented("opx.sysram1.OSVersionMajor")
+    stack:push(osversion[1])
 end
 
 function OSVersionMinor(stack, runtime) -- 8
-    unimplemented("opx.sysram1.OSVersionMinor")
+    stack:push(osversion[2])
 end
 
 function OSVersionBuild(stack, runtime) -- 9
-    unimplemented("opx.sysram1.OSVersionBuild")
+    stack:push(osversion[3])
 end
 
 function ROMVersionMajor(stack, runtime) -- 10
-    unimplemented("opx.sysram1.ROMVersionMajor")
+    stack:push(romversion[1])
 end
 
 function ROMVersionMinor(stack, runtime) -- 11
-    unimplemented("opx.sysram1.ROMVersionMinor")
+    stack:push(romversion[2])
 end
 
 function ROMVersionBuild(stack, runtime) -- 12
-    unimplemented("opx.sysram1.ROMVersionBuild")
+    stack:push(romversion[3])
 end
 
 function GetFileSize(stack, runtime) -- 13
