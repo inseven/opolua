@@ -995,7 +995,9 @@ function Eval(stack, runtime) -- 0x99
 end
 
 function ChrStr(stack) -- 0xC0
-    return stack:push(string.char(stack:pop()))
+    -- Some apps try passing raw keycodes like 4104 (cursor key) to this fn,
+    -- hence masking them with 0xFF which seems to do the expected thing...
+    return stack:push(string.char(stack:pop() & 0xFF))
 end
 
 function DatimStr(stack, runtime) -- 0xC1
