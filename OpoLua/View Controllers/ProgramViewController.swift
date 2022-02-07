@@ -88,57 +88,57 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var menuButton: UIButton = {
-        let button = UIButton(type: .roundedRect)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setBackgroundImage(UIImage(systemName: "filemenu.and.selection"), for: .normal)
-        button.addAction(UIAction() { [weak self] action in
+        var configuration = UIButton.Configuration.plain()
+        configuration.image = UIImage(systemName: "filemenu.and.selection")
+        let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
             }
             self.program.sendKey(.menu)
-        }, for: .touchUpInside)
+        })
+        button.translatesAutoresizingMaskIntoConstraints = false
         button.pointerStyleProvider = buttonProvider
         return button
     }()
 
     lazy var clipboardButton: UIButton = {
-        let button = UIButton(type: .roundedRect)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setBackgroundImage(UIImage(systemName: "doc.on.clipboard"), for: .normal)
-        button.addAction(UIAction() { [weak self] action in
+        var configuration = UIButton.Configuration.plain()
+        configuration.image = UIImage(systemName: "doc.on.clipboard")
+        let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
             }
             self.program.sendKey(.clipboardSoftkey)
-        }, for: .touchUpInside)
+        })
+        button.translatesAutoresizingMaskIntoConstraints = false
         button.pointerStyleProvider = buttonProvider
         return button
     }()
 
     lazy var zoomInButton: UIButton = {
-        let button = UIButton(type: .roundedRect)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setBackgroundImage(UIImage(systemName: "plus.magnifyingglass"), for: .normal)
-        button.addAction(UIAction() { [weak self] action in
+        var configuration = UIButton.Configuration.plain()
+        configuration.image = UIImage(systemName: "plus.magnifyingglass")
+        let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
             }
             self.program.sendKey(.zoomInSoftkey)
-        }, for: .touchUpInside)
+        })
+        button.translatesAutoresizingMaskIntoConstraints = false
         button.pointerStyleProvider = buttonProvider
         return button
     }()
 
     lazy var zoomOutButton: UIButton = {
-        let button = UIButton(type: .roundedRect)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setBackgroundImage(UIImage(systemName: "minus.magnifyingglass"), for: .normal)
-        button.addAction(UIAction() { [weak self] action in
+        var configuration = UIButton.Configuration.plain()
+        configuration.image = UIImage(systemName: "minus.magnifyingglass")
+        let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
             }
             self.program.sendKey(.zoomOutSoftkey)
-        }, for: .touchUpInside)
+        })
+        button.translatesAutoresizingMaskIntoConstraints = false
         button.pointerStyleProvider = buttonProvider
         return button
     }()
