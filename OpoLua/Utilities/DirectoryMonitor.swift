@@ -20,7 +20,6 @@
 
 import Foundation
 import UIKit
-import GameController
 
 /**
  Updates on the queue provided.
@@ -28,7 +27,6 @@ import GameController
 protocol DirectoryMonitorDelegate: AnyObject {
 
     func directoryMonitor(_ directoryMonitor: DirectoryMonitor, contentsDidChangeForUrl url: URL)
-    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, didFailWithError error: Error)
 
 }
 
@@ -39,21 +37,18 @@ class DirectoryMonitor {
     static var count = 0
 
     static func incrementCount() {
-        countLock.lock()
-        defer {
-            countLock.unlock()
+        countLock.perform {
+            count = count + 1
+            print("open directory count = \(count)")
         }
-        count = count + 1
-        print("open directory count = \(count)")
     }
 
     static func decrementCount() {
-        countLock.lock()
-        defer {
-            countLock.unlock()
+        countLock.perform {
+            count = count - 1
+            print("open directory count = \(count)")
+
         }
-        count = count - 1
-        print("open directory count = \(count)")
     }
 
     enum State {
@@ -84,78 +79,74 @@ class DirectoryMonitor {
 
     let url: URL
     private let queue: DispatchQueue
-    private var state: State = .idle
-    private var dispatchSource: DispatchSourceFileSystemObject?
+    private var dispatchSource: DispatchSourceFileSystemObject
 
-    weak var delegate: DirectoryMonitorDelegate?
+    // We use a recursive lock here to allow clients to call `cancel` from within a delegate callback without causing
+    // deadlock. Needless to say this means that we need to be careful about how we call delegates with the lock held,
+    // but this is currently only done from one place (`queue_update`) which explicitly only calls the delegate at the
+    // end of the method so there should be no state synchronization risk following that call.
+    private var lock = NSRecursiveLock()
+    private var _state: State = .idle  // Synchronized by lock.
 
-    // N.B. This does not resolve symlinks in the URL.
-    init(url: URL, queue: DispatchQueue = .main) {
+    private var _delegate: DirectoryMonitorDelegate?  // Synchronized by lock.
+
+    var delegate: DirectoryMonitorDelegate? {
+        get {
+            lock.perform {
+                return _delegate
+            }
+        }
+        set {
+            lock.perform {
+                _delegate = newValue
+            }
+        }
+    }
+
+    init(url: URL, queue: DispatchQueue = .main) throws {
         self.url = url
         self.queue = queue
+        dispatchSource = try Self.dispatchSource(for: url, queue: queue)
+        dispatchSource.setEventHandler { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.queue_update()
+        }
     }
 
     deinit {
-        dispatchSource?.cancel()
+        cancel()
     }
 
     func start() {
-        queue.async { [weak self] in
-            self?.queue_start()
+        lock.perform {
+            guard _state == .idle else {
+                return
+            }
+            _state = .running
         }
+        dispatchSource.resume()
     }
 
     func cancel() {
-        queue.async {
-            self.queue_cancel()
-        }
-    }
-
-    private func queue_start() {
-        dispatchPrecondition(condition: .onQueue(queue))
-        guard state == .idle else {
-            return
-        }
-        state = .running
-        do {
-            dispatchSource = try Self.dispatchSource(for: url, queue: queue)
-            dispatchSource?.setEventHandler { [weak self] in
-                guard let self = self else {
-                    return
-                }
-                self.queue_update()
+        lock.perform {
+            guard _state == .running else {
+                return
             }
-            dispatchSource?.resume()
-        } catch {
-            queue_cancelWithError(error)
+            _state = .cancelled
         }
-    }
-
-    private func queue_cancel() {
-        dispatchPrecondition(condition: .onQueue(queue))
-        guard state == .running else {
-            return
-        }
-        state = .cancelled
-        dispatchSource?.cancel()
-        dispatchSource = nil
-    }
-
-    private func queue_cancelWithError(_ error: Error) {
-        dispatchPrecondition(condition: .onQueue(queue))
-        guard state == .running else {
-            return
-        }
-        queue_cancel()
-        delegate?.directoryMonitor(self, didFailWithError: error)
+        dispatchSource.cancel()
     }
 
     private func queue_update() {
         dispatchPrecondition(condition: .onQueue(queue))
-        guard state == .running else {
-            return
+        lock.perform {
+            guard _state == .running else {
+                return
+            }
+            _delegate?.directoryMonitor(self, contentsDidChangeForUrl: url)
         }
-        delegate?.directoryMonitor(self, contentsDidChangeForUrl: url)
     }
 
 }

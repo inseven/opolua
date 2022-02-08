@@ -79,6 +79,8 @@
 		D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* DirectoryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
+		D8CCACAE27B2FE3D008C8122 /* NSLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CCACAD27B2FE3D008C8122 /* NSLock.swift */; };
+		D8CCACB027B2FE59008C8122 /* NSRecursiveLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */; };
 		D8D44C49279A0B87007340B5 /* TaskManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
 		D8D6701527A72B2100D12E96 /* DestinationPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */; };
@@ -330,6 +332,8 @@
 		D8C679B927483B5600BD8720 /* DirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
+		D8CCACAD27B2FE3D008C8122 /* NSLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSLock.swift; sourceTree = "<group>"; };
+		D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRecursiveLock.swift; sourceTree = "<group>"; };
 		D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerViewController.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationPickerViewController.swift; sourceTree = "<group>"; };
@@ -556,7 +560,9 @@
 				D82D2FCD27AC3E62001A4283 /* Error.swift */,
 				D89A60792756A2CC00C9757F /* FileManager.swift */,
 				D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */,
+				D8CCACAD27B2FE3D008C8122 /* NSLock.swift */,
 				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
+				D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */,
 				D8092562277293DD00121E12 /* OpoInterpreter+UIKit.swift */,
 				D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
@@ -1099,6 +1105,7 @@
 				D884A3D7277914CF008954A0 /* Installer.swift in Sources */,
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
 				D8C3BD632774BEA1003B1AD0 /* ErrorViewController.swift in Sources */,
+				D8CCACAE27B2FE3D008C8122 /* NSLock.swift in Sources */,
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				D884A3D32778E335008954A0 /* FileSystem.swift in Sources */,
 				D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */,
@@ -1127,6 +1134,7 @@
 				D84ADB162771D937001ABFB4 /* Device.swift in Sources */,
 				D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */,
 				DB79000E2742E6F6005E904F /* lparser.c in Sources */,
+				D8CCACB027B2FE59008C8122 /* NSRecursiveLock.swift in Sources */,
 				D80D65B0279E31220020F994 /* Configuration.swift in Sources */,
 				DB9533FA27AB0D72001CF58D /* LuaStateStringEncoding.swift in Sources */,
 				DB79000F2742E6F6005E904F /* lstate.c in Sources */,

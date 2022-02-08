@@ -167,11 +167,19 @@ class RecursiveDirectoryMonitor {
         }
 
         // Create monitors for the new URLs.
+        // Perhaps counterintuitively, we ignore errors here as it's quite possible for the directory we wish to monitor
+        // to have disappeared in the time it takes us to set up and start the monitor. We may wish to ignore only
+        // specific errors in the future.
         for url in urls {
-            let monitor = DirectoryMonitor(url: url, queue: queue)
-            monitor.delegate = self
-            monitors.append(monitor)
-            monitor.start()
+            do {
+                print("Creating monitor for '\(url)'...")
+                let monitor = try DirectoryMonitor(url: url, queue: queue)
+                monitor.delegate = self
+                monitors.append(monitor)
+                monitor.start()
+            } catch {
+                print("Failed to monitor directory with error '\(error)'.")
+            }
         }
     }
 
@@ -180,7 +188,6 @@ class RecursiveDirectoryMonitor {
 extension RecursiveDirectoryMonitor: DirectoryMonitorDelegate {
 
     func directoryMonitor(_ directoryMonitor: DirectoryMonitor, contentsDidChangeForUrl url: URL) {
-        dispatchPrecondition(condition: .onQueue(queue))
         guard state == .running else {
             return
         }
@@ -188,11 +195,6 @@ extension RecursiveDirectoryMonitor: DirectoryMonitorDelegate {
         for observer in observers {
             observer.handler()
         }
-    }
-
-    func directoryMonitor(_ directoryMonitor: DirectoryMonitor, didFailWithError error: Error) {
-        dispatchPrecondition(condition: .onQueue(queue))
-        monitors.removeAll { $0.url == directoryMonitor.url }
     }
 
 }
