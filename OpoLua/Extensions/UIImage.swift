@@ -22,93 +22,93 @@ import UIKit
 
 extension UIImage {
 
-    static var clockMedium: UIImage = {
+    static func clockMedium() -> UIImage {
         return UIImage(named: "ClockMedium")!
-    }()
+    }
 
-    static var clockMediumC: UIImage = {
+    static func clockMediumC() -> UIImage {
         return UIImage(named: "ClockMediumC")!
-    }()
+    }
 
-    static var dataIcon: UIImage = {
+    static func dataIcon() -> UIImage {
         return UIImage(named: "DataIcon")!
-    }()
+    }
 
-    static var dataIconC: UIImage = {
+    static func dataIconC() -> UIImage {
         return UIImage(named: "DataIconC")!
-    }()
+    }
 
-    static var epocLogo: UIImage = {
+    static func epocLogo() -> UIImage {
         return UIImage(named: "EpocLogo")!
-    }()
+    }
 
-    static var epocLogoC: UIImage = {
+    static func epocLogoC() -> UIImage {
         return UIImage(named: "EpocLogoC")!
-    }()
+    }
 
-    static var folderIcon: UIImage = {
+    static func folderIcon() -> UIImage {
         return UIImage(named: "FolderIcon")!
-    }()
+    }
 
-    static var folderIconC: UIImage = {
+    static func folderIconC() -> UIImage {
         return UIImage(named: "FolderIconC")!
-    }()
+    }
 
-    static var installerIcon: UIImage = {
+    static func installerIcon() -> UIImage {
         return UIImage(named: "InstallerIcon")!
-    }()
+    }
 
-    static var installerIconC: UIImage = {
+    static func installerIconC() -> UIImage {
         return UIImage(named: "InstallerIconC")!
-    }()
+    }
 
-    static var oplIcon: UIImage = {
+    static func oplIcon() -> UIImage {
         return UIImage(named: "OplIcon")!
-    }()
+    }
 
-    static var oplIconC: UIImage = {
+    static func oplIconC() -> UIImage {
         return UIImage(named: "OplIconC")!
-    }()
+    }
 
-    static var opoIcon: UIImage = {
+    static func opoIcon() -> UIImage {
         return UIImage(named: "OpoIcon")!
-    }()
+    }
 
-    static var opoIconC: UIImage = {
+    static func opoIconC() -> UIImage {
         return UIImage(named: "OpoIconC")!
-    }()
+    }
 
-    static var paintIcon: UIImage = {
+    static func paintIcon() -> UIImage {
         return UIImage(named: "PaintIcon")!
-    }()
+    }
 
-    static var paintIconC: UIImage = {
+    static func paintIconC() -> UIImage {
         return UIImage(named: "PaintIconC")!
-    }()
+    }
 
-    static var recordIcon: UIImage = {
+    static func recordIcon() -> UIImage {
         return UIImage(named: "RecordIcon")!
-    }()
+    }
 
-    static var recordIconC: UIImage = {
+    static func recordIconC() -> UIImage {
         return UIImage(named: "RecordIconC")!
-    }()
+    }
 
-    static var textIcon: UIImage = {
+    static func textIcon() -> UIImage {
         return UIImage(named: "TextIcon")!
-    }()
+    }
 
-    static var unknownAppIcon: UIImage = {
+    static func unknownAppIcon() -> UIImage {
         return UIImage(named: "UnknownAppIcon")!
-    }()
+    }
 
-    static var unknownFileIcon: UIImage = {
+    static func unknownFileIcon() -> UIImage {
         return UIImage(named: "UnknownFileIcon")!
-    }()
+    }
 
-    static var unknownFileIconC: UIImage = {
+    static func unknownFileIconC() -> UIImage {
         return UIImage(named: "UnknownFileIconC")!
-    }()
+    }
 
     static func emptyImage(with size: CGSize) -> UIImage? {
         UIGraphicsBeginImageContext(size)

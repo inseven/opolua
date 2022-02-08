@@ -67,16 +67,45 @@ extension Icon {
 
 extension Icon {
 
-    static var data = Icon(grayscaleImage: .dataIcon, colorImage: .dataIconC)
-    static var folder = Icon(grayscaleImage: .folderIcon, colorImage: .folderIconC)
-    static var image = Icon(grayscaleImage: .paintIcon, colorImage: .paintIconC)
-    static var installer = Icon(grayscaleImage: .installerIcon, colorImage: .installerIconC)
-    static var opl = Icon(grayscaleImage: .oplIcon, colorImage: .oplIconC)
-    static var opo = Icon(grayscaleImage: .opoIcon, colorImage: .opoIconC)
-    static var sound = Icon(grayscaleImage: .recordIcon, colorImage: .recordIconC)
-    static var text = Icon(grayscaleImage: .textIcon, colorImage: .textIcon)
-    static var unknownApplication = Icon(grayscaleImage: .unknownAppIcon, colorImage: .unknownAppIcon)
-    static var unknownFile = Icon(grayscaleImage: .unknownAppIcon, colorImage: .unknownFileIconC)
+    static func data() -> Icon {
+        return Icon(grayscaleImage: .dataIcon(), colorImage: .dataIconC())
+    }
+
+    static func folder() -> Icon {
+        return Icon(grayscaleImage: .folderIcon(), colorImage: .folderIconC())
+    }
+
+    static func image() -> Icon {
+        return Icon(grayscaleImage: .paintIcon(), colorImage: .paintIconC())
+    }
+
+    static func installer() -> Icon {
+        return Icon(grayscaleImage: .installerIcon(), colorImage: .installerIconC())
+    }
+
+    static func opl() -> Icon {
+        return Icon(grayscaleImage: .oplIcon(), colorImage: .oplIconC())
+    }
+
+    static func opo() -> Icon {
+        return Icon(grayscaleImage: .opoIcon(), colorImage: .opoIconC())
+    }
+    
+    static func sound() -> Icon {
+        return Icon(grayscaleImage: .recordIcon(), colorImage: .recordIconC())
+    }
+
+    static func text() -> Icon {
+        return Icon(grayscaleImage: .textIcon(), colorImage: .textIcon())
+    }
+
+    static func unknownApplication() -> Icon {
+        return Icon(grayscaleImage: .unknownAppIcon(), colorImage: .unknownAppIcon())
+    }
+
+    static func unknownFile() -> Icon {
+        return Icon(grayscaleImage: .unknownAppIcon(), colorImage: .unknownFileIconC())
+    }
 
 }
 

@@ -373,9 +373,9 @@ extension Settings.Theme {
     var wallpaper: UIImage {
         switch self {
         case .series5:
-            return .epocLogo
+            return .epocLogo()
         case .series7:
-            return .epocLogoC
+            return .epocLogoC()
         }
     }
 

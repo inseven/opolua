@@ -299,29 +299,29 @@ extension Directory.Item.ItemType {
     func icon() -> Icon {
         switch self {
         case .object:
-            return .opo
+            return .opo()
         case .directory:
-            return .folder
+            return .folder()
         case .application(let appInfo):
-            return appInfo?.icon() ?? .unknownApplication
+            return appInfo?.icon() ?? .unknownApplication()
         case .system(_, let appInfo):
-            return appInfo?.icon() ?? .unknownApplication
+            return appInfo?.icon() ?? .unknownApplication()
         case .installer:
-            return .installer
+            return .installer()
         case .applicationInformation(let appInfo):
-            return appInfo?.icon() ?? .unknownApplication
+            return appInfo?.icon() ?? .unknownApplication()
         case .image:
-            return .image
+            return .image()
         case .sound:
-            return .sound
+            return .sound()
         case .help:
-            return .data
+            return .data()
         case .text:
-            return .text
+            return .text()
         case .opl:
-            return .opl
+            return .opl()
         case .unknown:
-            return .unknownFile
+            return .unknownFile()
         }
     }
 

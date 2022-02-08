@@ -164,7 +164,7 @@ class InstallerIntroductionViewController: UICollectionViewController {
             }
             switch section {
             case .header:
-                supplementaryView.imageView.image = Icon.installer.image(for: settings.theme)
+                supplementaryView.imageView.image = Icon.installer().image(for: settings.theme)
                 supplementaryView.titleLabel.text = "Install"
                 supplementaryView.descriptionLabel.text = "Clicking 'Continue' will install the package into the selected destination.\n\nInstalled scripts and programs are sandboxed and cannot access files outisde of their own directory."
             case .body:

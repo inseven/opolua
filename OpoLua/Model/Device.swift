@@ -82,15 +82,15 @@ extension Device {
     var analogClockImage: UIImage {
         switch self {
         case .psionSeries5:
-            return .clockMedium
+            return .clockMedium()
         #if DEBUG
         case .psionRevo:
-            return .clockMedium
+            return .clockMedium()
         #endif
         case .psionSeries7:
-            return .clockMediumC
+            return .clockMediumC()
         case .geofoxOne:
-            return .clockMedium
+            return .clockMedium()
         }
     }
 
