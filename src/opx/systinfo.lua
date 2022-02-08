@@ -150,7 +150,16 @@ function SIOwner(stack, runtime) -- 17
 end
 
 function SIBatteryVolts(stack, runtime) -- 18
-    unimplemented("opx.systinfo.SIBatteryVolts")
+    local backupMax = stack:pop():dereference()
+    local backupCur = stack:pop():dereference()
+    local mainMax = stack:pop():dereference()
+    local mainCur = stack:pop():dereference()
+
+    mainCur(3300)
+    mainMax(3300)
+    backupCur(3100)
+    backupMax(3100)
+    stack:push(0)
 end
 
 function SIBatteryCurrent(stack, runtime) -- 19
@@ -218,7 +227,23 @@ function SIBacklightOnTime(stack, runtime) -- 34
 end
 
 function SIDisplaySize(stack, runtime) -- 35
-    unimplemented("opx.systinfo.SIDisplaySize")
+    local physicalHeight = stack:pop()
+    local physicalWidth = stack:pop()
+    local digitizerHeight = stack:pop()
+    local digitizerWidth = stack:pop()
+    local displayHeight = stack:pop()
+    local displayWidth = stack:pop()
+
+    local w, h = runtime:getScreenInfo()
+    digitizerWidth:dereference()(w)
+    digitizerHeight:dereference()(h)
+    displayWidth:dereference()(w)
+    displayHeight:dereference()(h)
+    -- I have no idea about these...
+    physicalWidth:dereference()(w)
+    physicalHeight:dereference()(h)
+
+    stack:push(0)
 end
 
 function SIKeyboardIndex(stack, runtime) -- 36
