@@ -215,7 +215,7 @@ class RecursiveDirectoryMonitor {
         for url in urls {
             updateQueue.append(url)
         }
-        syncQueue.async { [weak self] in
+        syncQueue.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             guard let self = self else {
                 return
             }
