@@ -248,7 +248,7 @@ class Program {
     func checkGetEventCompletion() {
         scheduler.withLockHeld {
             if let request = self.geteventRequest,
-               let event = eventQueue.first() {
+               let event = eventQueue.tryTakeFirst() {
                 self.geteventRequest = nil
                 scheduler.completeLocked(request: request, response: event)
             }
@@ -451,7 +451,7 @@ extension Program: OpoIoHandler {
     }
 
     func key() -> Async.KeyPressEvent? {
-        let responseValue = eventQueue.first { responseValue in
+        let responseValue = eventQueue.tryTakeFirst { responseValue in
             if case .keypressevent(_) = responseValue {
                 return true
             }

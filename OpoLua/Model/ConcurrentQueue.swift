@@ -48,7 +48,7 @@ class ConcurrentQueue<T> {
         } while true
     }
 
-    func first() -> T? {
+    func tryTakeFirst() -> T? {
         condition.lock()
         defer {
             condition.unlock()
@@ -61,7 +61,7 @@ class ConcurrentQueue<T> {
         }
     }
 
-    func first(where predicate: (T) -> Bool) -> T? {
+    func tryTakeFirst(where predicate: (T) -> Bool) -> T? {
         condition.lock()
         defer {
             condition.unlock()

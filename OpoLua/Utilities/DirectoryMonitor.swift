@@ -87,7 +87,6 @@ class DirectoryMonitor {
     // end of the method so there should be no state synchronization risk following that call.
     private var lock = NSRecursiveLock()
     private var _state: State = .idle  // Synchronized by lock.
-
     private var _delegate: DirectoryMonitorDelegate?  // Synchronized by lock.
 
     var delegate: DirectoryMonitorDelegate? {

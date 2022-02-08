@@ -64,7 +64,7 @@ class RecursiveDirectoryMonitor {
     }
 
     static var shared: RecursiveDirectoryMonitor = {
-        let monitor = RecursiveDirectoryMonitor(queue: DispatchQueue(label: "RecursiveDirectoryMonitor.shared.queue"))
+        let monitor = RecursiveDirectoryMonitor()
         monitor.start()
         return monitor
     }()
@@ -94,60 +94,83 @@ class RecursiveDirectoryMonitor {
         return children
     }
 
-    private let queue: DispatchQueue
-    private var state: State = .idle
+    private let syncQueue = DispatchQueue(label: "RecursiveDirectoryMonitor.syncQueue")
+    private let monitorQueue = DispatchQueue(label: "RecursiveDirectoryMonitor.monitorQueue")
+    private var state: State = .idle  // Synchronized on syncQueue
+    private let updateQueue = ConcurrentQueue<URL>()
 
     private var monitors: [DirectoryMonitor] = []
     private var observers: [ObserverContext] = []
 
-    init(queue: DispatchQueue) {
-        self.queue = queue
+    init() {
     }
 
     func start() {
-        queue.async { [weak self] in
+        syncQueue.async { [weak self] in
             self?.queue_start()
         }
     }
 
     func observe(url: URL, handler: @escaping () -> Void) -> CancellableObserver {
         let context = ObserverContext(url: url, handler: handler)
-        queue.async {
+        syncQueue.async {
             self.queue_addObserver(context: context)
         }
         return CancellableObserver(monitor: self, context: context)
     }
 
     private func cancel(_ context: ObserverContext) {
-        queue.async {
+        syncQueue.async {
             self.queue_removeObserver(context: context)
         }
     }
 
     private func queue_addObserver(context: ObserverContext) {
-        dispatchPrecondition(condition: .onQueue(queue))
+        dispatchPrecondition(condition: .onQueue(syncQueue))
         observers.append(context)
         print("observers = \(observers.count)")
-        queue_updateSubDirectoryMonitors()
+        scheduleUpdate(for: [context.url])
     }
 
     private func queue_removeObserver(context: ObserverContext) {
-        dispatchPrecondition(condition: .onQueue(queue))
+        dispatchPrecondition(condition: .onQueue(syncQueue))
         observers.removeAll { $0.id == context.id }
         print("observers = \(observers.count)")
-        queue_updateSubDirectoryMonitors()
+        scheduleUpdate(for: [context.url])
     }
 
     private func queue_start() {
-        dispatchPrecondition(condition: .onQueue(queue))
+        dispatchPrecondition(condition: .onQueue(syncQueue))
         guard state == .idle else {
             return
         }
         state = .running
+        scheduleUpdate(for: observers.map({ $0.url }))
     }
 
     private func queue_updateSubDirectoryMonitors() {
-        dispatchPrecondition(condition: .onQueue(queue))
+        dispatchPrecondition(condition: .onQueue(syncQueue))
+
+        // Don't do any work if we've been cancelled.
+        guard state == .running else {
+            return
+        }
+
+        // Get the list of items to process.
+        // We actually throw this list of URLs away at the moment as we rescan all the directories, but it's
+        // a good way to indicate that updates need to be performed and having the fine-grained list at this point is
+        // helpful and aspirational for the future.
+        var changedUrls: [URL] = []
+        while let url = updateQueue.tryTakeFirst() {
+            changedUrls.append(url)
+        }
+
+        // If there are no URLs to process, they must have been handled by the previous update run.
+        guard changedUrls.count > 0 else {
+            return
+        }
+
+        NSLog("Updating sub-directory monitors...")
 
         // Get URLs of all our sub-directories.
         var urls = Set<URL>()
@@ -173,13 +196,30 @@ class RecursiveDirectoryMonitor {
         for url in urls {
             do {
                 print("Creating monitor for '\(url)'...")
-                let monitor = try DirectoryMonitor(url: url, queue: queue)
+                let monitor = try DirectoryMonitor(url: url, queue: monitorQueue)
                 monitor.delegate = self
                 monitors.append(monitor)
                 monitor.start()
             } catch {
                 print("Failed to monitor directory with error '\(error)'.")
             }
+        }
+
+        // Once we can guarantee that we're listening for subsequent changes, we can safely notify our listeners.
+        for observer in observers {
+            observer.handler()
+        }
+    }
+
+    private func scheduleUpdate(for urls: [URL]) {
+        for url in urls {
+            updateQueue.append(url)
+        }
+        syncQueue.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.queue_updateSubDirectoryMonitors()
         }
     }
 
@@ -188,13 +228,8 @@ class RecursiveDirectoryMonitor {
 extension RecursiveDirectoryMonitor: DirectoryMonitorDelegate {
 
     func directoryMonitor(_ directoryMonitor: DirectoryMonitor, contentsDidChangeForUrl url: URL) {
-        guard state == .running else {
-            return
-        }
-        queue_updateSubDirectoryMonitors()
-        for observer in observers {
-            observer.handler()
-        }
+        dispatchPrecondition(condition: .onQueue(monitorQueue))
+        scheduleUpdate(for: [url])
     }
 
 }
