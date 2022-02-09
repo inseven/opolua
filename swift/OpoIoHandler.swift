@@ -448,8 +448,9 @@ extension Async.KeyPressEvent {
             // OPL likes to send 1-26 for Ctrl-[Shift-]A thru Ctrl-[Shift-]Z
             return keycode.rawValue - (OplKeyCode.a.rawValue - 1)
         } else if modifiers.contains(.control) && keycode.rawValue >= OplKeyCode.num0.rawValue && keycode.rawValue <= OplKeyCode.num9.rawValue {
-            // And for some reason Ctrl-0 thru Ctrl-9 don't send keypress events
-            // at all!? But eg Ctrl-Fn-1 (for underscore) does, go figure...
+            // Ctrl-0 thru Ctrl-9 don't send keypress events at all because CTRL-x,y,z... is used
+            // for inputting a key with code xyz.
+            // But eg Ctrl-Fn-1 (for underscore) does.
             return nil
         } else {
             return keycode.rawValue

@@ -80,6 +80,7 @@ class ProgramViewController: UIViewController {
 
     private var virtualController: GCVirtualController?
     private var settingsSink: AnyCancellable?
+    private var keyRepeatTimer: Timer?
 
     lazy var controllerState: [ControllerButton: Bool] = {
         return ControllerButton.allCases.reduce(into: [ControllerButton: Bool]()) { partialResult, button in
@@ -432,12 +433,29 @@ class ProgramViewController: UIViewController {
                 }
 
                 if let code = keypressCode, code.toCharcode() != nil {
+                    keyRepeatTimer?.invalidate()
                     let event = Async.KeyPressEvent(timestamp: press.timestamp,
                                                     keycode: code,
                                                     modifiers: modifiers,
                                                     isRepeat: false)
                     if event.modifiedKeycode() != nil {
                         program.sendEvent(.keypressevent(event))
+                        func sendRepeat() {
+                            let timestamp = ProcessInfo.processInfo.systemUptime
+                            let event = Async.KeyPressEvent(timestamp: timestamp,
+                                                            keycode: code,
+                                                            modifiers: modifiers,
+                                                            isRepeat: true)
+                            program.sendEvent(.keypressevent(event))
+                        }
+                        keyRepeatTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false, block: { _ in
+                            sendRepeat()
+                            self.keyRepeatTimer?.invalidate()
+                            self.keyRepeatTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true, block: { _ in
+                                sendRepeat()
+                            })
+                        })
+
                     }
                 } else {
                     print("No keypress code for \(key)")
@@ -447,6 +465,7 @@ class ProgramViewController: UIViewController {
     }
 
     override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        keyRepeatTimer?.invalidate()
         for press in presses {
             if let key = press.key {
                 let (oplKey, _) = key.toOplCodes()
