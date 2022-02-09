@@ -23,11 +23,45 @@ import Foundation
 
 class RecursiveDirectoryMonitor {
 
-    fileprivate struct ObserverContext {
+    fileprivate class ObserverContext {
 
         let id = UUID()
         let url: URL
-        let handler: () -> Void
+        private let handler: (() -> Void)!
+        private let errorHandler: (Error) -> Void
+        private let stateLock = NSRecursiveLock()
+        private var isCancelled = false  // Synchronized with stateLock
+
+        init(url: URL, handler: @escaping () -> Void, errorHandler: @escaping (Error) -> Void) {
+            self.url = url
+            self.handler = handler
+            self.errorHandler = errorHandler
+        }
+
+        func notify() {
+            stateLock.perform {
+                guard !self.isCancelled else {
+                    return
+                }
+                handler()
+            }
+        }
+
+        func cancelWithError(_ error: Error) {
+            stateLock.perform {
+                guard !self.isCancelled else {
+                    return
+                }
+                isCancelled = true
+                errorHandler(error)
+            }
+        }
+
+        func cancel() {
+            stateLock.perform {
+                isCancelled = true
+            }
+        }
 
     }
 
@@ -49,8 +83,6 @@ class RecursiveDirectoryMonitor {
             cancel()
         }
 
-        // TODO: Cancelling a RecursiveDirectoryMonitor observer doesn't guarantee it never receives callbacks #151
-        //       https://github.com/inseven/opolua/issues/151
         func cancel() {
             monitor?.cancel(context)
             monitor = nil
@@ -61,7 +93,10 @@ class RecursiveDirectoryMonitor {
     enum State {
         case idle
         case running
+        case cancelled
     }
+
+    static let maximumDirectoryCount = 1000
 
     static var shared: RecursiveDirectoryMonitor = {
         let monitor = RecursiveDirectoryMonitor()
@@ -111,8 +146,10 @@ class RecursiveDirectoryMonitor {
         }
     }
 
-    func observe(url: URL, handler: @escaping () -> Void) -> CancellableObserver {
-        let context = ObserverContext(url: url, handler: handler)
+    func observe(url: URL,
+                 handler: @escaping () -> Void,
+                 errorHandler: @escaping (Error) -> Void = { _ in }) -> CancellableObserver {
+        let context = ObserverContext(url: url, handler: handler, errorHandler: errorHandler)
         syncQueue.async {
             self.queue_addObserver(context: context)
         }
@@ -120,6 +157,7 @@ class RecursiveDirectoryMonitor {
     }
 
     private func cancel(_ context: ObserverContext) {
+        context.cancel()  // Guarantees the observer will never receive subsequent updates on return.
         syncQueue.async {
             self.queue_removeObserver(context: context)
         }
@@ -127,6 +165,10 @@ class RecursiveDirectoryMonitor {
 
     private func queue_addObserver(context: ObserverContext) {
         dispatchPrecondition(condition: .onQueue(syncQueue))
+        guard state != .cancelled else {
+            context.cancelWithError(OpoLuaError.cancelled)
+            return
+        }
         observers.append(context)
         print("observers = \(observers.count)")
         scheduleUpdate(for: [context.url])
@@ -189,6 +231,20 @@ class RecursiveDirectoryMonitor {
             urls.remove(monitor.url)
         }
 
+        // Ensure that we've not reached our (self-imposed) directory maximum; if we have, then we shut down and stop.
+        guard urls.count + monitors.count <= Self.maximumDirectoryCount else {
+            for observer in observers {
+                observer.cancelWithError(OpoLuaError.exceededMaximumDirectoryCount)
+            }
+            observers.removeAll()
+            for monitor in monitors {
+                monitor.cancel()
+            }
+            monitors.removeAll()
+            state = .cancelled
+            return
+        }
+
         // Create monitors for the new URLs.
         // Perhaps counterintuitively, we ignore errors here as it's quite possible for the directory we wish to monitor
         // to have disappeared in the time it takes us to set up and start the monitor. We may wish to ignore only
@@ -207,7 +263,7 @@ class RecursiveDirectoryMonitor {
 
         // Once we can guarantee that we're listening for subsequent changes, we can safely notify our listeners.
         for observer in observers {
-            observer.handler()
+            observer.notify()
         }
     }
 

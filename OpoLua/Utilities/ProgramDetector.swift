@@ -99,6 +99,8 @@ class ProgramDetector: NSObject {
             DispatchQueue.main.async {
                 self?.update()
             }
+        } errorHandler: { error in
+            print("Directory monitor failed with error \(error).")
         }
         observers.append(observer)
     }

@@ -27,6 +27,8 @@ enum OpoLuaError: Error {
     case locationExists
     case secureAccess
     case unsupportedFile
+    case exceededMaximumDirectoryCount
+    case cancelled
 
 }
 
@@ -42,6 +44,10 @@ extension OpoLuaError: LocalizedError {
             return "Failed to prepare file for secure access."
         case .unsupportedFile:
             return "Unsupported file."
+        case .exceededMaximumDirectoryCount:
+            return "Exceeded the maximum number of directories; disabling monitoring."
+        case .cancelled:
+            return "Cancelled."
         }
     }
 
