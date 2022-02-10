@@ -30,8 +30,7 @@ _ENV = module()
 -- given most stack items are 2-byte aligned).
 kMaxStackSize = 2048
 
-Stack = {}
-Stack.__index = Stack
+Stack = class {}
 
 function Stack:push(val)
     if type(val) == "boolean" then
@@ -89,7 +88,7 @@ function Stack:remove(idx)
 end
 
 function newStack()
-    return setmetatable({ n = 0 }, Stack)
+    return Stack { n = 0 }
 end
 
 return _ENV
