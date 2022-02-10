@@ -114,7 +114,7 @@ class ProgramDetector: NSObject {
         self.update()
     }
 
-    private func update() {
+    func update() {
         dispatchPrecondition(condition: .onQueue(.main))
         let urls = settings.indexableUrls
         updateQueue.async {

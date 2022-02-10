@@ -100,10 +100,17 @@ class AllProgramsViewController : UICollectionViewController {
         title = "All Programs"
         navigationItem.searchController = searchController
         navigationItem.largeTitleDisplayMode = .never
+        configureRefreshControl()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private func configureRefreshControl() {
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshControlDidChange(_:)), for: .valueChanged)
+        collectionView.refreshControl = refreshControl
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -142,6 +149,10 @@ class AllProgramsViewController : UICollectionViewController {
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         updateWallpaper()
+    }
+
+    @objc func refreshControlDidChange(_ sender: UIRefreshControl) {
+        detector.update()
     }
 
     func updateWallpaper() {
@@ -268,10 +279,14 @@ extension AllProgramsViewController: TaskManagerObserver {
 extension AllProgramsViewController: ProgramDetectorDelegate {
 
     func programDetectorDidUpdateItems(_ programDetector: ProgramDetector) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        collectionView.refreshControl?.endRefreshing()
         update(animated: true)
     }
 
     func programDetector(_ programDetector: ProgramDetector, didFailWithError error: Error) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        collectionView.refreshControl?.endRefreshing()
         present(error: error)
     }
 

@@ -103,13 +103,20 @@ class DirectoryViewController : UICollectionViewController {
         title = directory.localizedName
         navigationItem.searchController = searchController
         navigationItem.largeTitleDisplayMode = .never
+        configureRefreshControl()
         update(animated: false)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    private func configureRefreshControl() {
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshControlDidChange(_:)), for: .valueChanged)
+        collectionView.refreshControl = refreshControl
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let notificationCenter = NotificationCenter.default
@@ -154,6 +161,10 @@ class DirectoryViewController : UICollectionViewController {
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         updateWallpaper()
+    }
+
+    @objc func refreshControlDidChange(_ sender: UIRefreshControl) {
+        directory.refresh()
     }
 
     func updateWallpaper() {
@@ -219,13 +230,11 @@ class DirectoryViewController : UICollectionViewController {
                     let viewController = ImageViewController(url: item.url)
                     self.navigationController?.pushViewController(viewController, animated: true)
                 })
-            case .text:
+            case .text, .opl:
                 actions.append(UIAction(title: "View", image: UIImage(systemName: "eye")) { action in
                     let sourceViewController = SourceViewController(url: item.url)
                     self.navigationController?.pushViewController(sourceViewController, animated: true)
                 })
-            case .opl:
-                break // TODO
             case .unknown, .applicationInformation, .sound, .help:
                 break
             }
@@ -352,11 +361,13 @@ extension DirectoryViewController: DirectoryDelegate {
 
     func directoryDidUpdate(_ directory: Directory) {
         dispatchPrecondition(condition: .onQueue(.main))
+        collectionView.refreshControl?.endRefreshing()
         update(animated: true)
     }
 
     func directory(_ directory: Directory, didFailWithError error: Error) {
         dispatchPrecondition(condition: .onQueue(.main))
+        collectionView.refreshControl?.endRefreshing()
         present(error: error)
     }
     

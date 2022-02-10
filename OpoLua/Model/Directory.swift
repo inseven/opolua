@@ -237,7 +237,6 @@ class Directory {
 
     }
 
-    // TODO: It would be cleaner to have RecursiveDirectoryMonitor handle application foreground events and re-index.
     func refresh() {
         updateQueue.async { [weak self] in
             self?.updateQueue_refresh()
