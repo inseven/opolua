@@ -24,8 +24,9 @@ SOFTWARE.
 
 ]]
 
+dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+
 function main()
-    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
     local args = getopt({
         "filename",
         "fnName",
@@ -90,4 +91,4 @@ function printProc(proc)
     printf("    iTotalTableSize: %d (0x%08X)\n", proc.iTotalTableSize, proc.iTotalTableSize)
 end
 
-main()
+pcallMain()

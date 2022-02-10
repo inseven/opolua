@@ -239,3 +239,13 @@ function writeFile(filename, data)
     f:write(data)
     f:close()
 end
+
+function pcallMain()
+    local runtime = require("runtime")
+    local ok, err = xpcall(main, runtime.traceback)
+    if not ok then
+        print(err.msg)
+        print(err.luaStack)
+        os.exit(false)
+    end
+end

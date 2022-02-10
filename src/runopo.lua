@@ -24,8 +24,9 @@ SOFTWARE.
 
 ]]
 
+dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+
 function main()
-    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
     local args = getopt({
         "path",
         "procName",
@@ -63,4 +64,4 @@ function main()
     return err and 1 or 0
 end
 
-main()
+pcallMain()

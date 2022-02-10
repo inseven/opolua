@@ -24,8 +24,9 @@ SOFTWARE.
 
 ]]
 
+dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+
 function main()
-    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
     local args = getopt({
         "filename",
         "dest"
@@ -87,4 +88,4 @@ function extractFile(file, langIdx, dest)
     writeFile(outName, data)
 end
 
-main()
+pcallMain()

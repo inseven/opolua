@@ -24,8 +24,9 @@ SOFTWARE.
 
 ]]
 
+dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+
 function main()
-    dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
     local args = getopt({
         "filename",
         extract = true, e = "extract"
@@ -57,4 +58,4 @@ function main()
     end
 end
 
-main()
+pcallMain()

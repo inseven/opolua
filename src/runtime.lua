@@ -879,7 +879,7 @@ function Runtime:getOpoStacktrace()
     return "    "..err.opoStack:gsub("\n", "\n    ")
 end
 
-local function traceback(msgOrCode)
+function traceback(msgOrCode)
     local t = type(msgOrCode)
     local err = t == "table" and msgOrCode or {}
     setmetatable(err, ErrObj)
