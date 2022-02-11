@@ -50,6 +50,7 @@ local visibleVar
 local tbWinId
 local KTitleButtonId = 0
 local KClockButtonId = 1000 -- Not an index into buttons
+local title
 local buttons = {}
 local pressedButtonId
 local toolbarHeight
@@ -79,6 +80,31 @@ local function drawButton(pos)
     gBUTTON(button.text, 2, KTbWidth, KTbBtH + 1, state, button.bmp, button.mask)
 end
 
+local function drawTitleAndClock()
+    local prevId = gIDENTITY()
+    gUSE(tbWinId)
+
+    gCOLOR(table.unpack(fgColour))
+    gCOLORBACKGROUND(table.unpack(bgColour))
+    gSTYLE(1) -- bold everything
+    gAT(0, 0)
+    gFILL(KTbWidth, toolbarHeight, KgModeClear)
+    gBOX(KTbWidth, toolbarHeight)
+
+    gAT(1, KTbBtTop - 8)
+    gFONT(KTbTitleFont)
+    local align = KgPrintBCentredAligned
+    if gTWIDTH(title) > KTbWidth - 2 then
+        align = KgPrintBLeftAligned
+    end
+    gPRINTB(title, KTbWidth - 2, align, 6, 6)
+
+    gAT(KTbClockPosX, toolbarHeight - KTbClockHeight)
+    gCLOCK(KgClockS5System)
+
+    gUSE(prevId)
+end
+
 function TBarInit(title, screenWidth, screenHeight)
     local displayMode = runtime:getGraphicsContext().displayMode
     TBarInitC(title, screenWidth, screenHeight, displayMode)
@@ -89,30 +115,13 @@ function TBarInitC(title, screenWidth, screenHeight, winMode)
     local w = KTbWidth
     toolbarHeight = screenHeight
     tbWinId = gCREATE(screenWidth - w, 0, w, toolbarHeight, false, winMode)
-    gCOLOR(table.unpack(fgColour))
-    gCOLORBACKGROUND(table.unpack(bgColour))
-    gSTYLE(1) -- bold everything
-    gFILL(w, toolbarHeight, KgModeClear)
-    gBOX(w, toolbarHeight)
     TBarSetTitle(title)
-    gAT(KTbClockPosX, toolbarHeight - KTbClockHeight)
-    gCLOCK(6)
     gUSE(prevId)
 end
 
 function TBarSetTitle(name)
-    local prevId = gIDENTITY()
-    gUSE(tbWinId)
-    gAT(1, KTbBtTop - 8)
-    gFONT(KTbTitleFont)
-    gCOLOR(table.unpack(fgColour))
-    gCOLORBACKGROUND(table.unpack(bgColour))
-    local align = KgPrintBCentredAligned
-    if gTWIDTH(name) > KTbWidth - 2 then
-        align = KgPrintBLeftAligned
-    end
-    gPRINTB(name, KTbWidth - 2, align, 6, 6)
-    gUSE(prevId)
+    title = name
+    drawTitleAndClock()
     runtime:iohandler().setAppTitle(name)
 end
 
@@ -262,6 +271,7 @@ end
 function TBarColor(fgR, fgG, fgB, bgR, bgG, bgB)
     fgColour = { fgR, fgG, fgB }
     bgColour = { bgR, bgG, bgB }
+    drawTitleAndClock()
 end
 
 return _ENV

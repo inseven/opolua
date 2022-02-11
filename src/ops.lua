@@ -2209,11 +2209,14 @@ function gGrey(stack, runtime) -- 0x100
 end
 
 function DefaultWin(stack, runtime) -- 0x101
-    -- Since we don't care about the specific bit depth of the backing buffer,
-    -- we just implement the side effect of clearing the default window (but
-    -- without resetting the draw position, unlike gCLS)
+    -- The default window is always internally a colour Canvas, but we pretend
+    -- its display mode is whatever the default for the hardware is, as per
+    -- getScreenInfo. So all we need to do here is update the Lua-side
+    -- displayMode and clear the window (but without resetting the draw
+    -- position, unlike gCLS).
     local context = runtime:getGraphicsContext(1)
-    runtime:drawCmd("fill", { x = 0, y = 0, width = context.width, height = context.height, mode = 1 })
+    context.displayMode = stack:pop()
+    runtime:drawCmd("fill", { x = 0, y = 0, width = context.width, height = context.height, mode = KgModeClear })
 end
 
 function Font(stack, runtime) -- 0x104
