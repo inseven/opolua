@@ -66,18 +66,37 @@ extension FileManager {
         // holding it wrong, there are some things to be aware of:
 
         // 1) Only `enumerator` will show us the hidden iCloud Drive files.
-        let contentsEnumerator = enumerator(at: url.resolvingSymlinksInPath(),
-                                            includingPropertiesForKeys: [],
-                                            options: [.skipsSubdirectoryDescendants])
-        while let url = contentsEnumerator?.nextObject() as? URL {
+        var urls = [url]
+        while let url = urls.popLast() {
+            let contentsEnumerator = enumerator(at: url.resolvingSymlinksInPath(),
+                                                includingPropertiesForKeys: [],
+                                                options: [])
+            while let url = contentsEnumerator?.nextObject() as? URL {
 
-            // 2) Unfortunately `isUbiquitousItem(at:)` doesn't report any of these files as ubiquitous items (aka.
-            //    iCloud Drive items), so we instead have to look for files ending in the .icloud extension.
-            if url.pathExtension.lowercased() == "icloud" {
-                ubiquitousItems.append(url)
+                // 1a) Unfortunately the enumerator won't actually resovle symlinks on our behalf, so we detect and
+                //     resolve them, then add then add any directories to the queue of URLs to explore.
+                let resourceValues = try! url.resourceValues(forKeys: [.isSymbolicLinkKey])
+                if resourceValues.isSymbolicLink! {
+                    let resolvedUrl = url.resolvingSymlinksInPath()
+                    if resolvedUrl.isDirectory {
+                        urls.insert(resolvedUrl, at: 0)
+                    }
+                    continue
+                }
+
+                // 2) Unfortunately `isUbiquitousItem(at:)` doesn't report any of these files as ubiquitous items (aka.
+                //    iCloud Drive items), so we instead have to look for files ending in the .icloud extension.
+                if url.pathExtension.lowercased() == "icloud" {
+                    ubiquitousItems.append(url)
+                }
             }
-
         }
+
+        // 2a) Don't bother doing anything else if there are no new items to download.
+        guard ubiquitousItems.count > 0 else {
+            return
+        }
+        print("Scheduling download for \(ubiquitousItems.count) ubiquitous items...")
 
         // 3) Files with the .icloud extension seem to appear before the system has fully registered the presence of the
         //    iCloud Drive item and calling `startDownloadingUbiquitousItem` immediately will fail. This can happen if

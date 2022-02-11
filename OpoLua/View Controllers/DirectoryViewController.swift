@@ -44,6 +44,7 @@ class DirectoryViewController : UICollectionViewController {
     var directory: Directory
     private var installer: Installer?
     private var applicationActiveObserver: Any?
+    private var installerObserver: Any?
     private var settingsSink: AnyCancellable?
 
     override var canBecomeFirstResponder: Bool {
@@ -129,6 +130,14 @@ class DirectoryViewController : UICollectionViewController {
             }
             self.directory.refresh()
         }
+        installerObserver = notificationCenter.addObserver(forName: Installer.didCompleteInstall,
+                                                           object: nil,
+                                                           queue: nil) { [weak self] notification in
+            guard let self = self else {
+                return
+            }
+            self.directory.refresh()
+        }
         directory.start()
         settingsSink = settings.objectWillChange.sink { [weak self] _ in
             guard let self = self else {
@@ -165,6 +174,7 @@ class DirectoryViewController : UICollectionViewController {
 
     @objc func refreshControlDidChange(_ sender: UIRefreshControl) {
         directory.refresh()
+        AppDelegate.shared.downloader.update()
     }
 
     func updateWallpaper() {
