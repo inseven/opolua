@@ -107,24 +107,22 @@ class RecursiveDirectoryMonitor {
     // Returns resolved symlinks.
     private static func directories(for url: URL) -> [URL] {
         var children: [URL] = []
-        var paths: [URL] = [url]
-        while let url = paths.popLast() {
-            let files = FileManager.default.enumerator(at: url.resolvingSymlinksInPath(),
-                                                       includingPropertiesForKeys: [.isDirectoryKey])
-            while let fileUrl = files?.nextObject() as? URL {
-                let resourceValues = try! fileUrl.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-                if resourceValues.isSymbolicLink! {
-                    let resolvedUrl = fileUrl.resolvingSymlinksInPath()
-                    if resolvedUrl.isDirectory {
-                        paths.insert(resolvedUrl, at: 0)
-                    }
-                    continue
+        let files = FileManager.default.enumerator(at: url.resolvingSymlinksInPath(),
+                                                   includingPropertiesForKeys: [.isDirectoryKey],
+                                                   options: [.skipsSubdirectoryDescendants])
+        while let fileUrl = files?.nextObject() as? URL {
+            let resourceValues = try! fileUrl.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+            if resourceValues.isSymbolicLink! {
+                let resolvedUrl = fileUrl.resolvingSymlinksInPath()
+                if resolvedUrl.isDirectory {
+                    children.insert(resolvedUrl, at: 0)
                 }
-                guard resourceValues.isDirectory! else {
-                    continue
-                }
-                children.append(fileUrl)
+                continue
             }
+            guard resourceValues.isDirectory! else {
+                continue
+            }
+            children.append(fileUrl)
         }
         return children
     }
@@ -190,6 +188,52 @@ class RecursiveDirectoryMonitor {
         scheduleUpdate(for: observers.map({ $0.url }))
     }
 
+    // Checks to see if there's an existing `DirectoryMonitor` for the requested URL and, if not, creates, adds, and
+    // starts a new instance for the specified URL.
+    // Throws if creating a new monitor would cause the number of open directories to exceed the specified maximum.
+    private func queue_createMonitorIfNecessary(url: URL) throws {
+        dispatchPrecondition(condition: .onQueue(syncQueue))
+
+        guard !monitors.contains(where: { $0.url == url }) else {
+            // There's already a monitor; nothing to do.
+            return
+        }
+
+        // Ensure that we've not reached our (self-imposed) directory maximum.
+        guard monitors.count < Self.maximumDirectoryCount else {
+            throw OpoLuaError.exceededMaximumDirectoryCount
+        }
+
+        // Create monitors for the new URLs.
+        // Perhaps counterintuitively, we ignore errors here as it's quite possible for the directory we wish to monitor
+        // to have disappeared in the time it takes us to set up and start the monitor. We may wish to ignore only
+        // specific errors in the future.
+        do {
+            print("Creating monitor for '\(url)'...")
+            let monitor = try DirectoryMonitor(url: url, queue: monitorQueue)
+            monitor.delegate = self
+            monitors.append(monitor)
+            monitor.start()
+        } catch {
+            print("Failed to monitor directory with error '\(error)'.")
+        }
+
+    }
+
+    private func queue_cancelWithError(_ error: Error) {
+        dispatchPrecondition(condition: .onQueue(syncQueue))
+
+        for observer in observers {
+            observer.cancelWithError(error)
+        }
+        observers.removeAll()
+        for monitor in monitors {
+            monitor.cancel()
+        }
+        monitors.removeAll()
+        state = .cancelled
+    }
+
     private func queue_updateSubDirectoryMonitors() {
         dispatchPrecondition(condition: .onQueue(syncQueue))
 
@@ -214,52 +258,36 @@ class RecursiveDirectoryMonitor {
 
         NSLog("Updating sub-directory monitors...")
 
-        // Get URLs of all our sub-directories.
-        var urls = Set<URL>()
-        for observer in observers {
-            urls.insert(observer.url.resolvingSymlinksInPath())
-            for url in Self.directories(for: observer.url) {
-                urls.insert(url)
-            }
-        }
+        // Walk the directory structure setting up new directory monitors for each directory we find.
+        // We perform a breadth-first walk, creating and starting directory monitors for parent directory before
+        // recursing into its sub-directories to ensure we don't miss any changes as we go.
+        var directoryUrlsToExplore = Array(Set(observers.map { $0.url.resolvingSymlinksInPath() }))
+        var discoveredDirectoryUrls = Set<URL>()
+        while let directoryUrl = directoryUrlsToExplore.popLast() {
 
-        // Remove the monitors for the existing URLs causing them to cancel.
-        monitors.removeAll { !urls.contains($0.url) }
-
-        // Filter the list of URLs to remove the ones we're already monitoring.
-        for monitor in monitors {
-            urls.remove(monitor.url)
-        }
-
-        // Ensure that we've not reached our (self-imposed) directory maximum; if we have, then we shut down and stop.
-        guard urls.count + monitors.count <= Self.maximumDirectoryCount else {
-            for observer in observers {
-                observer.cancelWithError(OpoLuaError.exceededMaximumDirectoryCount)
-            }
-            observers.removeAll()
-            for monitor in monitors {
-                monitor.cancel()
-            }
-            monitors.removeAll()
-            state = .cancelled
-            return
-        }
-
-        // Create monitors for the new URLs.
-        // Perhaps counterintuitively, we ignore errors here as it's quite possible for the directory we wish to monitor
-        // to have disappeared in the time it takes us to set up and start the monitor. We may wish to ignore only
-        // specific errors in the future.
-        for url in urls {
             do {
-                print("Creating monitor for '\(url)'...")
-                let monitor = try DirectoryMonitor(url: url, queue: monitorQueue)
-                monitor.delegate = self
-                monitors.append(monitor)
-                monitor.start()
+
+                // Maintain a set of the URLs we've seen during this process to allow us to clean up observers for
+                // deleted directories at the end.
+                discoveredDirectoryUrls.insert(directoryUrl)
+
+                // Check to see if there's already a monitor for the URL; if not, set one up.
+                try queue_createMonitorIfNecessary(url: directoryUrl)
+
+                // Get all the immediate sub-directories of the current directory and add them to the queue to explore.
+                for url in Self.directories(for: directoryUrl) {
+                    directoryUrlsToExplore.insert(url, at: 0)
+                }
+
             } catch {
-                print("Failed to monitor directory with error '\(error)'.")
+                queue_cancelWithError(error)
+                return
             }
+
         }
+
+        // Remove the monitors for the missing URLs causing them to cancel.
+        monitors.removeAll { !discoveredDirectoryUrls.contains($0.url) }
 
         // Once we can guarantee that we're listening for subsequent changes, we can safely notify our listeners.
         for observer in observers {
