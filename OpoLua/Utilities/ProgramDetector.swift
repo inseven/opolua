@@ -28,16 +28,14 @@ protocol ProgramDetectorDelegate: AnyObject {
 
 }
 
-class ProgramDetector: NSObject {
+class ProgramDetector {
 
-    private var settings: Settings
+    private let settings: Settings
+    private let indexableLocationObserver: IndexableLocationObserver
     private let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
     private var _items: [Directory.Item] = []
     private var interpreter = OpoInterpreter()
-
-    private let queue = DispatchQueue(label: "ProgramDetector.queue")
-
-    private var observers: [RecursiveDirectoryMonitor.CancellableObserver] = []
+    private var installerObserver: Any?
 
     var items: [Directory.Item] {
         return _items
@@ -46,7 +44,8 @@ class ProgramDetector: NSObject {
 
     init(settings: Settings) {
         self.settings = settings
-        super.init()
+        indexableLocationObserver = IndexableLocationObserver(settings: settings, targetQueue: updateQueue)
+        indexableLocationObserver.delegate = self
     }
 
     static func find(url: URL, filter: (Directory.Item) -> Bool,
@@ -94,24 +93,20 @@ class ProgramDetector: NSObject {
 
     }
 
-    private func observeIndexableUrl(_ indexableUrl: URL) {
-        let observer = RecursiveDirectoryMonitor.shared.observe(url: indexableUrl) { [weak self] in
-            DispatchQueue.main.async {
-                self?.update()
-            }
-        } errorHandler: { error in
-            print("Directory monitor failed with error \(error).")
-        }
-        observers.append(observer)
-    }
-
     func start() {
         dispatchPrecondition(condition: .onQueue(.main))
-        settings.addObserver(self)
-        for indexableUrl in settings.indexableUrls {
-            observeIndexableUrl(indexableUrl)
+        indexableLocationObserver.start()
+        update()
+        let notificationCenter = NotificationCenter.default
+        installerObserver = notificationCenter.addObserver(forName: Installer.didCompleteInstall,
+                                                           object: nil,
+                                                           queue: nil) { [weak self] notification in
+            guard let self = self else {
+                return
+            }
+            self.update()
         }
-        self.update()
+
     }
 
     func update() {
@@ -124,18 +119,16 @@ class ProgramDetector: NSObject {
 
 }
 
-extension ProgramDetector: SettingsObserver {
+extension ProgramDetector: IndexableLocationObserverDelegate {
 
-    func settings(_ settings: Settings, didAddIndexableUrl indexableUrl: URL) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        observeIndexableUrl(indexableUrl)
-        self.update()
+    func indexableLocationObserver(_ indexableLocationObserver: IndexableLocationObserver,
+                                   didUpdateIndexableContents indexableContents: [URL]) {
+        dispatchPrecondition(condition: .onQueue(updateQueue))
+        self.updateQueue_update(urls: indexableContents)
     }
 
-    func settings(_ settings: Settings, didRemoveIndexableUrl indexableUrl: URL) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        observers.removeAll { $0.url == indexableUrl }
-        self.update()
+    func indexableLocationObserver(_ indexableLocationObserver: IndexableLocationObserver,
+                                   didFailWithError error: Error) {
     }
 
 }

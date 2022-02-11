@@ -216,7 +216,6 @@ class Directory {
 
     private func updateQueue_refresh() {
         dispatchPrecondition(condition: .onQueue(updateQueue))
-        FileManager.default.startDownloadingUbitquitousItemsRecursive(for: url)
         do {
             let items = try Self.items(for: url, interpreter: interpreter)
             DispatchQueue.main.async { [weak self] in

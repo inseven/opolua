@@ -34,12 +34,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // N.B. We only ever store previous section for state restoration as we always want to restore to at least the top-level of the section.
 
     private var settings = Settings()
+
     private lazy var taskManager: TaskManager = {
         return TaskManager(settings: settings)
     }()
+
     private lazy var detector: ProgramDetector = {
         return ProgramDetector(settings: settings)
     }()
+
+    lazy var downloader: UbiquitousDownloader = {
+        return UbiquitousDownloader(settings: settings)
+    }()
+
     var splitViewController: UISplitViewController!
     var libraryViewController: LibraryViewController!
     var settingsSink: AnyCancellable?
@@ -77,6 +84,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         taskManager.delegate = self
 
         detector.start()
+        downloader.start()
 
         return true
     }

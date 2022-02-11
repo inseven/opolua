@@ -153,6 +153,7 @@ class AllProgramsViewController : UICollectionViewController {
 
     @objc func refreshControlDidChange(_ sender: UIRefreshControl) {
         detector.update()
+        AppDelegate.shared.downloader.update()
     }
 
     func updateWallpaper() {
