@@ -180,7 +180,7 @@ extension FileManager {
         }
 
         let contents = try contentsOfDirectory(atPath: url.path).map { url.appendingPathComponent($0) }
-        let drives: Set<String> = ["c", "C", "d", "D"]
+        let drives: Set<String> = ["c", "C"]
 
         // Ensure there only folders named for valid drive letters present.
         // N.B. This implementation is intetnionally strict. We can relax it as and when we find we need to.

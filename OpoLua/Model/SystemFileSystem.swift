@@ -32,7 +32,6 @@ class SystemFileSystem: FileSystem {
         let fileManager = FileManager.default
         try fileManager.createDirectory(at: rootUrl, withIntermediateDirectories: true)
         try fileManager.createDirectory(at: rootUrl.appendingPathComponent("c"), withIntermediateDirectories: true)
-        try fileManager.createDirectory(at: rootUrl.appendingPathComponent("d"), withIntermediateDirectories: true)
     }
 
     func hostUrl(for path: String) -> URL? {
