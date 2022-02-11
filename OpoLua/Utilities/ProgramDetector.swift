@@ -32,7 +32,7 @@ class ProgramDetector {
 
     private let settings: Settings
     private let indexableLocationObserver: IndexableLocationObserver
-    private let updateQueue = DispatchQueue(label: "ProgramDetector.updateQueue")
+    private let rateLimiter = RateLimiter(delay: .microseconds(200))
     private var _items: [Directory.Item] = []
     private var interpreter = OpoInterpreter()
     private var installerObserver: Any?
@@ -40,11 +40,12 @@ class ProgramDetector {
     var items: [Directory.Item] {
         return _items
     }
+
     weak var delegate: ProgramDetectorDelegate?
 
     init(settings: Settings) {
         self.settings = settings
-        indexableLocationObserver = IndexableLocationObserver(settings: settings, targetQueue: updateQueue)
+        indexableLocationObserver = IndexableLocationObserver(settings: settings)
         indexableLocationObserver.delegate = self
     }
 
@@ -66,8 +67,9 @@ class ProgramDetector {
         return result
     }
 
-    func updateQueue_update(urls: [URL]) {
-        dispatchPrecondition(condition: .onQueue(updateQueue))
+    private func rateLimiter_update(urls: [URL]) {
+        print("Scanning for new programs...")
+        let startDate = Date()
         do {
             var items: [Directory.Item] = []
             for url in urls {
@@ -90,6 +92,8 @@ class ProgramDetector {
                 self.delegate?.programDetector(self, didFailWithError: error)
             }
         }
+        let elapsedTime = Date().timeIntervalSince(startDate)
+        print("Completed scan for new programs in \(String(format: "%.2f", elapsedTime)) seconds.")
 
     }
 
@@ -112,8 +116,8 @@ class ProgramDetector {
     func update() {
         dispatchPrecondition(condition: .onQueue(.main))
         let urls = settings.indexableUrls
-        updateQueue.async {
-            self.updateQueue_update(urls: urls)
+        rateLimiter.perform {
+            self.rateLimiter_update(urls: urls)
         }
     }
 
@@ -123,12 +127,14 @@ extension ProgramDetector: IndexableLocationObserverDelegate {
 
     func indexableLocationObserver(_ indexableLocationObserver: IndexableLocationObserver,
                                    didUpdateIndexableContents indexableContents: [URL]) {
-        dispatchPrecondition(condition: .onQueue(updateQueue))
-        self.updateQueue_update(urls: indexableContents)
+        DispatchQueue.main.async {
+            self.update()
+        }
     }
 
     func indexableLocationObserver(_ indexableLocationObserver: IndexableLocationObserver,
                                    didFailWithError error: Error) {
+        print("Location observing failed with error \(error).")
     }
 
 }

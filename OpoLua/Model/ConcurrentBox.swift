@@ -57,6 +57,17 @@ class ConcurrentBox<T> {
         return true
     }
 
+    func trySwap(with value: T) -> T? {
+        condition.lock()
+        defer {
+            condition.unlock()
+        }
+        let oldValue = self.value
+        self.value = value
+        condition.broadcast()
+        return oldValue
+    }
+
     func take() -> T {
         return tryTake(until: .distantFuture)!
     }

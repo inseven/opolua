@@ -71,6 +71,7 @@
 		D89A607E2756A98200C9757F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607D2756A98200C9757F /* ViewController.swift */; };
 		D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607F2756AE8800C9757F /* LibraryViewController.swift */; };
 		D89F8CEA27AEC48B009F25E5 /* UIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89F8CE927AEC48B009F25E5 /* UIViewController.swift */; };
+		D8B2757527B6840D00DAAFC0 /* RateLimiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B2757427B6840D00DAAFC0 /* RateLimiter.swift */; };
 		D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */; };
 		D8BA0970275196CA00F4730D /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096F275196CA00F4730D /* String.swift */; };
 		D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA09712751BBEA00F4730D /* UIElement.swift */; };
@@ -326,6 +327,7 @@
 		D89A607D2756A98200C9757F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		D89A607F2756AE8800C9757F /* LibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewController.swift; sourceTree = "<group>"; };
 		D89F8CE927AEC48B009F25E5 /* UIViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewController.swift; sourceTree = "<group>"; };
+		D8B2757427B6840D00DAAFC0 /* RateLimiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateLimiter.swift; sourceTree = "<group>"; };
 		D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldTableViewCell.swift; sourceTree = "<group>"; };
 		D8BA096F275196CA00F4730D /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		D8BA09712751BBEA00F4730D /* UIElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIElement.swift; sourceTree = "<group>"; };
@@ -622,10 +624,11 @@
 			children = (
 				D82A37B727A9B43F00D8F5F4 /* DirectoryMonitor.swift */,
 				D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */,
-				D8D95503279B52370049A3C3 /* Localization.swift */,
 				D81B4A4827B5AA650051B092 /* IndexableLocationObserver.swift */,
+				D8D95503279B52370049A3C3 /* Localization.swift */,
 				D890B46627A8CA7B007A7A78 /* ManagedItem.swift */,
 				D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */,
+				D8B2757427B6840D00DAAFC0 /* RateLimiter.swift */,
 				D82D2FCB27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift */,
 				D81B4A4C27B5CF650051B092 /* UbiquitousDownloader.swift */,
 			);
@@ -1110,6 +1113,7 @@
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
 				DB7900072742E6F6005E904F /* llex.c in Sources */,
 				D884A3D7277914CF008954A0 /* Installer.swift in Sources */,
+				D8B2757527B6840D00DAAFC0 /* RateLimiter.swift in Sources */,
 				DB7900082742E6F6005E904F /* lmathlib.c in Sources */,
 				D8C3BD632774BEA1003B1AD0 /* ErrorViewController.swift in Sources */,
 				D8CCACAE27B2FE3D008C8122 /* NSLock.swift in Sources */,

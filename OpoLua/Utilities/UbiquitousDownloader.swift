@@ -24,6 +24,7 @@ class UbiquitousDownloader {
 
     private let settings: Settings
     private let indexableLocationObserver: IndexableLocationObserver
+    private let rateLimiter = RateLimiter(delay: .microseconds(400))
 
     init(settings: Settings) {
         self.settings = settings
@@ -38,8 +39,15 @@ class UbiquitousDownloader {
 
     func update() {
         dispatchPrecondition(condition: .onQueue(.main))
-        for url in settings.indexableUrls {
-            FileManager.default.startDownloadingUbitquitousItemsRecursive(for: url)
+        let indexableUrls = settings.indexableUrls
+        rateLimiter.perform {
+            print("Scanning for new ubiquitous files...")
+            let startDate = Date()
+            for url in indexableUrls {
+                FileManager.default.startDownloadingUbitquitousItemsRecursive(for: url)
+            }
+            let elapsedTime = Date().timeIntervalSince(startDate)
+            print("Completed scan for new ubiquitous files in \(String(format: "%.2f", elapsedTime)) seconds.")
         }
     }
 

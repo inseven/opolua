@@ -167,16 +167,32 @@ class RecursiveDirectoryMonitor {
             context.cancelWithError(OpoLuaError.cancelled)
             return
         }
+
+        // Only schedule a full update if the URL is one we're not already monitoring.
+        let isNewUrl = !monitors.contains { $0.url == context.url.resolvingSymlinksInPath() }
+
         observers.append(context)
         print("observers = \(observers.count)")
-        scheduleUpdate(for: [context.url])
+
+        if isNewUrl {
+            scheduleUpdate(for: [context.url])
+        } else {
+            context.notify()
+        }
     }
 
     private func queue_removeObserver(context: ObserverContext) {
         dispatchPrecondition(condition: .onQueue(syncQueue))
+
         observers.removeAll { $0.id == context.id }
         print("observers = \(observers.count)")
-        scheduleUpdate(for: [context.url])
+
+        // Only schedule a full update if the URL isn't still being monitored by an existing observer.
+        let isStillMonitoringUrl = observers.contains { $0.url == context.url }
+
+        if !isStillMonitoringUrl {
+            scheduleUpdate(for: observers.map { $0.url })
+        }
     }
 
     private func queue_start() {
