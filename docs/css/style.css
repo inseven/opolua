@@ -8,6 +8,7 @@
     --navigation-padding: 1em;
     --content-width: 800px;
     --content-padding: 2em;
+    --details-width: 600px;
     --vertical-spacing: 20px;
     --line-height: 1.7em;
     --h1-size: 3em;
@@ -91,6 +92,13 @@ ul.navigation > li {
     max-width: var(--content-width);
     padding: 0 var(--content-padding);
     margin: auto;
+    margin-bottom: 6em;
+}
+
+.details {
+    max-width: var(--details-width);
+    margin: auto;
+    text-align: center;
 }
 
 .banner {

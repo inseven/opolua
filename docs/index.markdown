@@ -46,3 +46,7 @@
         <img src="/images/vexed.png">
     </div>
 </div>
+
+<p class="details">
+    View MBM image files, OPL scripts, and AIF resources, and run OPL scripts and programs from Psion and Psion-compatible computers running the EPOC operating system on iOS and iPadOS.
+</p>
