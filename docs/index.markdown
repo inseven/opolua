@@ -31,6 +31,7 @@
         <img src="/images/jumpy.png">
         <img src="/images/tile-fall.png">
         <img src="/images/vexed.png">
+        <img src="/images/char-map.png">
     </div>
 </div>
 
