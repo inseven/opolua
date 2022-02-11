@@ -6,19 +6,6 @@
     <p class="tagline">{{ site.tagline }}</p>
 </div>
 
-<style>
-
-    #carousel img {
-        transition: opacity 2s ease-in-out;
-        opacity: 0;
-    }
-
-    #carousel img.show {
-        opacity: 1;
-    }
-
-</style>
-
 <script>
 
     var index = 0;

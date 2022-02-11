@@ -191,6 +191,15 @@ h2 {
     left: 0;
 }
 
+#carousel img {
+    transition: opacity 2s ease-in-out;
+    opacity: 0;
+}
+
+#carousel img.show {
+    opacity: 1;
+}
+
 .screenshot-iphone-13-pro-landscape {
     margin-bottom: var(--vertical-spacing);
     position: relative;
