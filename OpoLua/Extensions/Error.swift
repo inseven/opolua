@@ -22,13 +22,25 @@ import Foundation
 
 extension Error {
 
+    private static func description(details: String) -> String {
+        return "## Description\n\n_Please provide details of the program you were running, and what you were doing when you encountered the error._\n\n## Details\n\n```\n\(details)\n```"
+    }
+
     var gitHubIssueUrl: URL? {
         if let _ = self as? OpoInterpreter.BinaryDatabaseError {
             return nil
+        } else if let _ = self as? OpoInterpreter.LeaveError {
+            return nil
+        } else if let _ = self as? OpoInterpreter.NativeBinaryError {
+            return nil
         } else if let unimplementedOperation = self as? OpoInterpreter.UnimplementedOperationError {
             return URL.gitHubIssue(title: "Unimplemented Operation: \(unimplementedOperation.operation)",
-                                   description: unimplementedOperation.detail,
+                                   description: Self.description(details: unimplementedOperation.detail),
                                    labels: ["facerake", "bug"])
+        } else if let interpreterError = self as? OpoInterpreter.InterpreterError {
+            return URL.gitHubIssue(title: "Internal Error: \(interpreterError.message)",
+                                   description: Self.description(details: interpreterError.detail),
+                                   labels: ["internal-error", "bug"])
         }
         return nil
     }
