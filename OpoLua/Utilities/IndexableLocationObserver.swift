@@ -28,8 +28,6 @@ protocol IndexableLocationObserverDelegate: AnyObject {
     func indexableLocationObserver(_ indexableLocationObserver: IndexableLocationObserver,
                                    didFailWithError error: Error)
 
-    // TODO: Cancel handler.
-
 }
 
 class IndexableLocationObserver: NSObject {
