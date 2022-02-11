@@ -195,7 +195,7 @@ class Directory {
         }
         state = .running
         observer = RecursiveDirectoryMonitor.shared.observe(url: url) { [weak self] in
-            self?.updateQueue.sync {
+            self?.updateQueue.async {
                 self?.updateQueue_refresh()
             }
         }
