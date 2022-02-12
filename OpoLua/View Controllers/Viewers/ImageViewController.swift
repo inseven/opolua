@@ -30,17 +30,38 @@ class ImageViewController: UITableViewController {
             let imageView = UIImageView(frame: .zero)
             imageView.translatesAutoresizingMaskIntoConstraints = false
             imageView.contentMode = .scaleAspectFit
+            imageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+            imageView.setContentHuggingPriority(.defaultHigh, for: .vertical)
             return imageView
         }()
 
         override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
             super.init(style: style, reuseIdentifier: reuseIdentifier)
             contentView.addSubview(bitmapView)
+
+            let leadingGuide = UILayoutGuide()
+            let trailingGuide = UILayoutGuide()
+            let topGuide = UILayoutGuide()
+            let bottomGuide = UILayoutGuide()
+
+            contentView.addLayoutGuide(leadingGuide)
+            contentView.addLayoutGuide(trailingGuide)
+            contentView.addLayoutGuide(topGuide)
+            contentView.addLayoutGuide(bottomGuide)
+
             NSLayoutConstraint.activate([
-                bitmapView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-                bitmapView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-                bitmapView.topAnchor.constraint(equalTo: contentView.topAnchor),
-                bitmapView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+
+                leadingGuide.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                trailingGuide.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                topGuide.topAnchor.constraint(equalTo: contentView.topAnchor),
+                bottomGuide.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+
+                bitmapView.leadingAnchor.constraint(equalTo: leadingGuide.trailingAnchor),
+                bitmapView.trailingAnchor.constraint(equalTo: trailingGuide.leadingAnchor),
+                bitmapView.topAnchor.constraint(equalTo: topGuide.bottomAnchor),
+                bitmapView.bottomAnchor.constraint(equalTo: bottomGuide.topAnchor),
+                bitmapView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                bitmapView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             ])
         }
 
