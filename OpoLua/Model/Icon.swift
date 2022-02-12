@@ -100,7 +100,7 @@ extension Icon {
     }
 
     static func unknownApplication() -> Icon {
-        return Icon(grayscaleImage: .unknownAppIcon(), colorImage: .unknownAppIcon())
+        return Icon(grayscaleImage: .unknownAppIcon(), colorImage: .unknownAppIconC())
     }
 
     static func unknownFile() -> Icon {

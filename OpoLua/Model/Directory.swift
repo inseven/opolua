@@ -129,6 +129,9 @@ class Directory {
             return Item(url: url, type: .help, isWriteable: isWriteable)
         } else if url.pathExtension.lowercased() == "txt" {
             return Item(url: url, type: .text, isWriteable: isWriteable)
+        } else if url.pathExtension.lowercased() == "mbm" {
+            // Image files aren't always guaranteed to have the correct UIDs, so we also match on the file extension.
+            return Item(url: url, type: .image, isWriteable: isWriteable)
         } else {
             switch interpreter.recognize(path: url.path) {
             case .aif:

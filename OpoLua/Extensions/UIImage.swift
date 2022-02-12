@@ -102,6 +102,10 @@ extension UIImage {
         return UIImage(named: "UnknownAppIcon")!
     }
 
+    static func unknownAppIconC() -> UIImage {
+        return UIImage(named: "UnknownAppIconC")!
+    }
+
     static func unknownFileIcon() -> UIImage {
         return UIImage(named: "UnknownFileIcon")!
     }
