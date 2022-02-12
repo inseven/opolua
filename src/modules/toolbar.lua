@@ -56,6 +56,7 @@ local pressedButtonId
 local toolbarHeight
 local fgColour = { 0, 0, 0 } -- black
 local bgColour = { 0xFF, 0xFF, 0xFF } -- white
+local defaultIcon
 
 function TBarLink(appLink)
     local tbWidthVar = runtime:declareGlobal("TbWidth%")
@@ -135,6 +136,15 @@ end
 
 function TBarButt(shortcut, pos, text, state, bmp, mask, flags)
     local prevId = gIDENTITY()
+    if bmp == 0 then
+        if defaultIcon == nil then
+            defaultIcon = gCREATEBIT(24, 24, 0)
+            gCLS()
+            gBORDER(0)
+        end
+        bmp = defaultIcon
+        mask = defaultIcon
+    end
     buttons[pos] = {
         id = pos,
         text = text,
