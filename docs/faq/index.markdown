@@ -36,12 +36,12 @@ title: Frequently Asked Questions
    - specific instructions that might help us reproduce the issue
    - help on how to find the program you were running to let us test changes
 
-4. **What OPXes are supported?**
+4. **What OPX libraries are supported?**
 
-   OPXes are native C/C++ libraries that OPL programs can use. The following built-in and commonly used OPXes are supported:
+   OPX libraries are native C/C++ libraries that OPL programs can use. The following built-in and commonly used OPX libraries are supported:
 
-   - bmp.opx _fully supported_
-   - date.opx _a few unimplemented functions_
-   - sysram1.opx _common functions supported_
-   - system.opx _common functions supported_
-   - systinfo.opx _partial support_
+   - **bmp.opx** -- fully supported
+   - **date.opx** -- a few unimplemented functions
+   - **sysram1.opx** -- common functions supported
+   - **system.opx** -- common functions supported
+   - **systinfo.opx** -- partial support
