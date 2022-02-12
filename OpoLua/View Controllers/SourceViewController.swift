@@ -20,10 +20,18 @@
 
 import UIKit
 
+protocol SourceViewControllerDelelgate: AnyObject {
+
+    func sourceViewControllerDidFinish(_ sourceViewController: SourceViewController)
+
+}
+
 class SourceViewController: UIViewController {
 
-    var url: URL
-    var isLoaded = false
+    private var url: URL
+    private var isLoaded = false
+
+    weak var delegate: SourceViewControllerDelelgate?
 
     lazy var textView: UITextView = {
         let textView = UITextView()
@@ -36,7 +44,7 @@ class SourceViewController: UIViewController {
         return textView
     }()
 
-    init(url: URL) {
+    init(url: URL, showsDoneButton: Bool = false) {
         self.url = url
         super.init(nibName: nil, bundle: nil)
         title = url.localizedName
@@ -47,6 +55,11 @@ class SourceViewController: UIViewController {
             textView.topAnchor.constraint(equalTo: view.topAnchor),
             textView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+        if showsDoneButton {
+            navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done,
+                                                                target: self,
+                                                                action: #selector(doneTapped(sender:)))
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -56,6 +69,10 @@ class SourceViewController: UIViewController {
         } catch {
             present(error: error)
         }
+    }
+
+    @objc func doneTapped(sender: UIBarButtonItem) {
+        delegate?.sourceViewControllerDidFinish(self)
     }
 
     func load() throws {

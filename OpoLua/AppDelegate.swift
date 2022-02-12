@@ -210,7 +210,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                            directory: Directory(url: $0)) }
         .forEach { detailNavigationController.pushViewController($0, animated: false) }
     }
+
+    func runApplication(_ applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32 {
+        dispatchPrecondition(condition: .onQueue(.main))
+        switch applicationIdentifier {
+        case .textEditor:
+            let viewController = SourceViewController(url: url, showsDoneButton: true)
+            viewController.delegate = self
+            let navigationController = UINavigationController(rootViewController: viewController)
+            splitViewController.present(navigationController, animated: true)
+            return 1
+        }
+    }
     
+}
+
+extension AppDelegate: SourceViewControllerDelelgate {
+
+    func sourceViewControllerDidFinish(_ sourceViewController: SourceViewController) {
+        sourceViewController.dismiss(animated: true)
+    }
+
 }
 
 extension AppDelegate: InstallerViewControllerDelegate {

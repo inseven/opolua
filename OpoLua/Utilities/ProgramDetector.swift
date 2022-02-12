@@ -94,7 +94,6 @@ class ProgramDetector {
         }
         let elapsedTime = Date().timeIntervalSince(startDate)
         print("Completed scan for new programs in \(String(format: "%.2f", elapsedTime)) seconds.")
-
     }
 
     func start() {

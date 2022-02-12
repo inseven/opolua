@@ -40,6 +40,7 @@ protocol ProgramDelegate: AnyObject {
     func program(_ program: Program, editText params: EditParams) -> String?
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
+    func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32?
 
 }
 
@@ -509,11 +510,12 @@ extension Program: OpoIoHandler {
     }
 
     func runApp(name: String, document: String) -> Int32? {
-        // TODO
-        // name=TextEd means document is probably path to an OPL file
-        // Return nil to mean "app not found"
-        // Return anything non-nil to indicate success (technically the thread id of the launched app)
-        return nil
+        guard let applicationIdentifier = ApplicationIdentifier(rawValue: name),
+              let url = fileSystem.hostUrl(for: document)
+        else {
+            return nil
+        }
+        return delegate?.program(self, runApplication: applicationIdentifier, url: url)
     }
 
 }

@@ -62,6 +62,7 @@
 		D889134F274C181F00794D55 /* CGPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134E274C181F00794D55 /* CGPoint.swift */; };
 		D8891351274C184C00794D55 /* UIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891350274C184C00794D55 /* UIImage.swift */; };
 		D8891353274C186E00794D55 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891352274C186E00794D55 /* Canvas.swift */; };
+		D88A472227B82C720094A438 /* ApplicationIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88A472127B82C720094A438 /* ApplicationIdentifier.swift */; };
 		D890B46727A8CA7B007A7A78 /* ManagedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D890B46627A8CA7B007A7A78 /* ManagedItem.swift */; };
 		D890B46927A8CBED007A7A78 /* InstallerProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D890B46827A8CBED007A7A78 /* InstallerProgressViewController.swift */; };
 		D893EAD32760739500E64219 /* Border.swift in Sources */ = {isa = PBXBuildFile; fileRef = D893EAD22760739500E64219 /* Border.swift */; };
@@ -318,6 +319,7 @@
 		D889134E274C181F00794D55 /* CGPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPoint.swift; sourceTree = "<group>"; };
 		D8891350274C184C00794D55 /* UIImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImage.swift; sourceTree = "<group>"; };
 		D8891352274C186E00794D55 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
+		D88A472127B82C720094A438 /* ApplicationIdentifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationIdentifier.swift; sourceTree = "<group>"; };
 		D890B46627A8CA7B007A7A78 /* ManagedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedItem.swift; sourceTree = "<group>"; };
 		D890B46827A8CBED007A7A78 /* InstallerProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallerProgressViewController.swift; sourceTree = "<group>"; };
 		D893EAD22760739500E64219 /* Border.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Border.swift; sourceTree = "<group>"; };
@@ -488,8 +490,11 @@
 			isa = PBXGroup;
 			children = (
 				D8FE60082757208000711717 /* ApplicationError.swift */,
+				D88A472127B82C720094A438 /* ApplicationIdentifier.swift */,
+				D80A9CBB27A48BED00E49AD8 /* ApplicationSection.swift */,
 				DB0B9190278369A4006F5CD0 /* BitmapFont.swift */,
 				D893EAD22760739500E64219 /* Border.swift */,
+				D8DCD03F277ACD7800760302 /* CanvasSprite.swift */,
 				D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */,
 				D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */,
 				D80D65AF279E31220020F994 /* Configuration.swift */,
@@ -507,14 +512,12 @@
 				D8FE60022757106300711717 /* SecureLocation.swift */,
 				D8FE60042757177200711717 /* Settings.swift */,
 				D8535A27277139AB00DFCE29 /* Sound.swift */,
-				D8DCD03F277ACD7800760302 /* CanvasSprite.swift */,
 				D884A3D42779025A008954A0 /* SystemFileSystem.swift */,
 				D8647C6F2793540500DCC261 /* TaskManager.swift */,
 				D82639352783CAE500AB4086 /* TimerRequest.swift */,
 				D8535A29277139D900DFCE29 /* Tone.swift */,
 				D8632831279C240600B63625 /* UID.swift */,
 				D8DCD03D277AC9B300760302 /* WindowServer.swift */,
-				D80A9CBB27A48BED00E49AD8 /* ApplicationSection.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1107,6 +1110,7 @@
 				DB9533FE27AC06A1001CF58D /* FlagSet.swift in Sources */,
 				D89A607E2756A98200C9757F /* ViewController.swift in Sources */,
 				D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */,
+				D88A472227B82C720094A438 /* ApplicationIdentifier.swift in Sources */,
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
 				D8F5CADB279D07A700A2DC3F /* ImageViewController.swift in Sources */,
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,

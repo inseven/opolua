@@ -551,6 +551,12 @@ extension ProgramViewController: ProgramDelegate {
         return text
     }
 
+    func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32? {
+        return DispatchQueue.main.sync {
+            return AppDelegate.shared.runApplication(applicationIdentifier, url: url)
+        }
+    }
+
 }
 
 extension ProgramViewController: ProgramLifecycleObserver {
