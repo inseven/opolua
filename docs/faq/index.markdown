@@ -25,7 +25,7 @@ title: Frequently Asked Questions
 
    If you're a developer interested in taking on the challenge, please feel free to get in touch; we [welcome contributions and pull requests](https://github.com/inseven/opolua#contributing).
 
-3. **How should I go about raising GitHub issues?**
+3. **How should I go about reporting problems?**
 
    [GitHub Issues](https://github.com/inseven/opolua/issues) are the best way for us to track and triage problems and feature requests. Please check for any existing issues before raising a new one--if you don't find one, we'd love to hear your thoughts.
 
@@ -35,3 +35,13 @@ title: Frequently Asked Questions
    - as much information as possible about what you were doing when you encountered the issue
    - specific instructions that might help us reproduce the issue
    - help on how to find the program you were running to let us test changes
+
+4. **What OPXes are supported?**
+
+   OPXes are native C/C++ libraries that OPL programs can use. The following built-in and commonly used OPXes are supported:
+
+   - bmp.opx _fully supported_
+   - date.opx _a few unimplemented functions_
+   - sysram1.opx _common functions supported_
+   - system.opx _common functions supported_
+   - systinfo.opx _partial support_
