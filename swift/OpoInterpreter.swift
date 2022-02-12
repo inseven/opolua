@@ -783,7 +783,7 @@ class OpoInterpreter {
         lua_pushcfunction(L, traceHandler)
         lua_insert(L, base)
         let err = lua_pcall(L, narg, nret, base);
-        lua_remove(L, base)
+        lua_remove(L, base) // remove msghandler
         if err != 0 {
             assert(L.type(-1) == .table) // Otherwise our traceHandler isn't doing its job
             let msg = L.tostring(-1, key: "msg")!
@@ -1129,7 +1129,7 @@ class OpoInterpreter {
             lua_insert(L, -2) // put writeArray below eventArray
             L.push(ev) // ev as a table
             L.push(1) // DataTypes.ELong
-            lua_call(L, 3, 0)
+            let _ = logpcall(3, 0)
         default:
             break // No data for these
         }
