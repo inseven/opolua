@@ -30,7 +30,10 @@ extension CGContext {
             return
         }
         let image = UIImage(contentsOfFile: url.path)!
-        let button = image.resizableImage(withCapInsets: UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10), resizingMode: .stretch)
+        // I don't really understand why we have to limit the inset size so agressively here, but
+        // limiting to half the frame size is not sufficient to avoid some weird artifacts
+        let inset = min(min(frame.width, frame.height) / 3, 10)
+        let button = image.resizableImage(withCapInsets: UIEdgeInsets(top: inset, left: inset, bottom: inset, right: inset), resizingMode: .stretch)
         let view = UIImageView(image: button)
         saveGState()
         self.translateBy(x: frame.origin.x, y: frame.origin.y)
