@@ -148,7 +148,7 @@ class Directory {
         } else {
             switch interpreter.recognize(path: url.path) {
             case .aif:
-                if let info = interpreter.getAppInfo(aifPath: url.path) {
+                if let info = interpreter.appInfo(for: url.path) {
                     return Item(url: url, type: .applicationInformation(info), isWriteable: isWriteable)
                 }
             case .mbm:

@@ -28,7 +28,7 @@ extension OpoInterpreter {
         else {
             return nil
         }
-        return getAppInfo(aifPath: applicationInfoFile.path)
+        return appInfo(for: applicationInfoFile.path)
     }
 
 }

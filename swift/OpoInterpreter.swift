@@ -917,12 +917,12 @@ class OpoInterpreter {
         let icons: [Graphics.MaskedBitmap]
     }
 
-    func getAppInfo(aifPath: String) -> AppInfo? {
+    func appInfo(for path: String) -> AppInfo? {
         let top = lua_gettop(L)
         defer {
             lua_settop(L, top)
         }
-        guard let data = FileManager.default.contents(atPath: aifPath) else {
+        guard let data = FileManager.default.contents(atPath: path) else {
             return nil
         }
         lua_getglobal(L, "require")
