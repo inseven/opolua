@@ -51,10 +51,10 @@ class MultipleImageViewController: UITableViewController {
 
             NSLayoutConstraint.activate([
 
-                leadingGuide.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-                trailingGuide.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-                topGuide.topAnchor.constraint(equalTo: contentView.topAnchor),
-                bottomGuide.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+                leadingGuide.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+                trailingGuide.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                topGuide.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+                bottomGuide.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
 
                 bitmapView.leadingAnchor.constraint(equalTo: leadingGuide.trailingAnchor),
                 bitmapView.trailingAnchor.constraint(equalTo: trailingGuide.leadingAnchor),
