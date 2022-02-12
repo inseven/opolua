@@ -46,10 +46,10 @@ class Directory {
         enum ItemType {
             case object
             case directory
-            case application(OpoInterpreter.AppInfo?)
-            case system(URL, OpoInterpreter.AppInfo?)
+            case application(ApplicationMetadata?)
+            case system(URL, ApplicationMetadata?)
             case installer
-            case applicationInformation(OpoInterpreter.AppInfo?)
+            case applicationInformation(ApplicationMetadata?)
             case image
             case sound
             case help
@@ -305,13 +305,13 @@ extension Directory.Item.ItemType {
         case .directory:
             return .folder()
         case .application(let appInfo):
-            return appInfo?.icon() ?? .unknownApplication()
+            return appInfo?.cachedIcon() ?? .unknownApplication()
         case .system(_, let appInfo):
-            return appInfo?.icon() ?? .unknownApplication()
+            return appInfo?.cachedIcon() ?? .unknownApplication()
         case .installer:
             return .installer()
         case .applicationInformation(let appInfo):
-            return appInfo?.icon() ?? .unknownApplication()
+            return appInfo?.cachedIcon() ?? .unknownApplication()
         case .image:
             return .image()
         case .sound:

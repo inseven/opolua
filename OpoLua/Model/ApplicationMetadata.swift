@@ -20,7 +20,17 @@
 
 import UIKit
 
-extension OpoInterpreter.AppInfo {
+fileprivate let appInfoCache = FileMetadataCache<ApplicationMetadata>()
+fileprivate let fileTypeCache = FileMetadataCache<OpoInterpreter.FileType>()
+
+struct ApplicationMetadata {
+
+    let appInfoUrl: URL  // On-disk location of the app info (useful for keying caches)
+    let appInfo: OpoInterpreter.AppInfo  // Contents of the app info
+
+    var captions: [OpoInterpreter.LocalizedString] {
+        return appInfo.captions
+    }
 
     var caption: String {
         for language in Locale.preferredLanguages {
@@ -31,7 +41,22 @@ extension OpoInterpreter.AppInfo {
         return captions.first?.value ?? "Unknown"
     }
 
-    func image(for size: Graphics.Size) -> UIImage? {
+    var uid3: UInt32 {
+        return appInfo.uid3
+    }
+
+    var icons: [Graphics.MaskedBitmap] {
+        return appInfo.icons
+    }
+
+    func icon() -> Icon? {
+        guard let appIcon = image(for: .icon) else {
+            return nil
+        }
+        return Icon(grayscaleImage: appIcon, colorImage: appIcon)
+    }
+
+    private func image(for size: Graphics.Size) -> UIImage? {
         var bitmap: Graphics.MaskedBitmap? = nil
         for icon in icons {
             guard icon.bitmap.size <= size && icon.bitmap.size == icon.mask?.size else {
@@ -52,6 +77,23 @@ extension OpoInterpreter.AppInfo {
             return UIImage(cgImage: cgImg)
         }
         return nil
+    }
+
+}
+
+fileprivate let applicationMetadataIconCache = FileMetadataCache<Icon>()
+
+extension ApplicationMetadata {
+
+    func cachedIcon() -> Icon? {
+        if let icon = applicationMetadataIconCache.metadata(for: appInfoUrl) {
+            return icon
+        }
+        guard let icon = icon() else {
+            return nil
+        }
+        applicationMetadataIconCache.setMetadata(icon, for: appInfoUrl)
+        return icon
     }
 
 }

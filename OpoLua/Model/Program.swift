@@ -79,7 +79,7 @@ class Program {
     let url: URL
     private let configuration: Configuration
     private let thread: InterpreterThread
-    private let appInfo: OpoInterpreter.AppInfo?
+    private let applicationMetadata: ApplicationMetadata?
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     let windowServer: WindowServer
     private let scheduler = Scheduler()
@@ -105,7 +105,7 @@ class Program {
     }
 
     var uid3: UID? {
-        return appInfo?.uid3
+        return applicationMetadata?.uid3
     }
 
     lazy private var fileSystem: FileSystem = {
@@ -121,10 +121,10 @@ class Program {
         self.url = url
         self.configuration = Configuration.load(for: url)
         self.thread = InterpreterThread(url: url)
-        let appInfo = OpoInterpreter().cachedAppInfo(forApplicationUrl: url)
-        self.appInfo = appInfo
-        self.title = appInfo?.caption ?? url.localizedName
-        self.icon = appInfo?.icon() ?? (url.pathExtension.lowercased() == "opo" ? .opo() : .unknownApplication())
+        let applicationMetadata = OpoInterpreter().cachedAppInfo(forApplicationUrl: url)
+        self.applicationMetadata = applicationMetadata
+        self.title = applicationMetadata?.caption ?? url.localizedName
+        self.icon = applicationMetadata?.cachedIcon() ?? (url.pathExtension.lowercased() == "opo" ? .opo() : .unknownApplication())
         self.windowServer = WindowServer(device: configuration.device, screenSize: configuration.device.screenSize)
         self.thread.delegate = self
         self.thread.handler = self
