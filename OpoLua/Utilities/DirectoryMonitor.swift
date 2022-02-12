@@ -102,10 +102,12 @@ class DirectoryMonitor {
         }
     }
 
-    init(url: URL, queue: DispatchQueue = .main) throws {
+    init(url: URL, queue: DispatchQueue) throws {
         self.url = url
-        self.queue = queue
-        dispatchSource = try Self.dispatchSource(for: url, queue: queue)
+        self.queue = DispatchQueue(label: "DirectoryMonitor.queue", attributes: .initiallyInactive)
+        self.queue.setTarget(queue: queue)
+        self.queue.activate()
+        dispatchSource = try Self.dispatchSource(for: url, queue: self.queue)
         dispatchSource.setEventHandler { [weak self] in
             guard let self = self else {
                 return
