@@ -80,15 +80,11 @@ local function drawButton(pos)
     gBUTTON(button.text, 2, KTbWidth, KTbBtH + 1, state, button.bmp, button.mask)
 end
 
-local function drawTitleAndClock()
-    local prevId = gIDENTITY()
+local function drawTitle()
     gUSE(tbWinId)
-
-    gCOLOR(table.unpack(fgColour))
-    gCOLORBACKGROUND(table.unpack(bgColour))
     gSTYLE(1) -- bold everything
     gAT(0, 0)
-    gFILL(KTbWidth, toolbarHeight, KgModeClear)
+    gFILL(KTbWidth, KTbBtTop, KgModeClear)
     gBOX(KTbWidth, toolbarHeight)
 
     gAT(1, KTbBtTop - 8)
@@ -98,11 +94,16 @@ local function drawTitleAndClock()
         align = KgPrintBLeftAligned
     end
     gPRINTB(title, KTbWidth - 2, align, 6, 6)
+end    
 
+local function drawTitleAndClock()
+    gUSE(tbWinId)
+    gAT(0, 0)
+    gFILL(KTbWidth, toolbarHeight, KgModeClear)
+    gBOX(KTbWidth, toolbarHeight)
+    drawTitle()
     gAT(KTbClockPosX, toolbarHeight - KTbClockHeight)
     gCLOCK(KgClockS5System)
-
-    gUSE(prevId)
 end
 
 function TBarInit(title, screenWidth, screenHeight)
@@ -110,19 +111,26 @@ function TBarInit(title, screenWidth, screenHeight)
     TBarInitC(title, screenWidth, screenHeight, displayMode)
 end
 
-function TBarInitC(title, screenWidth, screenHeight, winMode)
+function TBarInitC(aTitle, screenWidth, screenHeight, winMode)
     local prevId = gIDENTITY()
     local w = KTbWidth
     toolbarHeight = screenHeight
     tbWinId = gCREATE(screenWidth - w, 0, w, toolbarHeight, false, winMode)
-    TBarSetTitle(title)
+    gCOLOR(table.unpack(fgColour))
+    gCOLORBACKGROUND(table.unpack(bgColour))
+    title = aTitle
+    drawTitleAndClock()
+    runtime:iohandler().setAppTitle(name)
     gUSE(prevId)
 end
 
 function TBarSetTitle(name)
     title = name
-    drawTitleAndClock()
+    local prevId = gIDENTITY()
+    gUSE(tbWinId)
+    drawTitle()
     runtime:iohandler().setAppTitle(name)
+    gUSE(prevId)
 end
 
 function TBarButt(shortcut, pos, text, state, bmp, mask, flags)
@@ -271,7 +279,18 @@ end
 function TBarColor(fgR, fgG, fgB, bgR, bgG, bgB)
     fgColour = { fgR, fgG, fgB }
     bgColour = { bgR, bgG, bgB }
-    drawTitleAndClock()
+    if tbWinId then
+        local s = runtime:saveGraphicsState()
+        gUPDATE(false)
+        gUSE(tbWinId)
+        gCOLOR(table.unpack(fgColour))
+        gCOLORBACKGROUND(table.unpack(bgColour))
+        drawTitleAndClock()
+        for i in pairs(buttons) do
+            drawButton(i)
+        end
+        runtime:restoreGraphicsState(s)
+    end
 end
 
 return _ENV
