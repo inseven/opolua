@@ -63,7 +63,7 @@
 		D8891351274C184C00794D55 /* UIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891350274C184C00794D55 /* UIImage.swift */; };
 		D8891353274C186E00794D55 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891352274C186E00794D55 /* Canvas.swift */; };
 		D88A472227B82C720094A438 /* ApplicationIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88A472127B82C720094A438 /* ApplicationIdentifier.swift */; };
-		D88A472427B83D6E0094A438 /* ItemCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88A472327B83D6D0094A438 /* ItemCache.swift */; };
+		D88A472427B83D6E0094A438 /* FileMetadataCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88A472327B83D6D0094A438 /* FileMetadataCache.swift */; };
 		D890B46727A8CA7B007A7A78 /* ManagedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D890B46627A8CA7B007A7A78 /* ManagedItem.swift */; };
 		D890B46927A8CBED007A7A78 /* InstallerProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D890B46827A8CBED007A7A78 /* InstallerProgressViewController.swift */; };
 		D893EAD32760739500E64219 /* Border.swift in Sources */ = {isa = PBXBuildFile; fileRef = D893EAD22760739500E64219 /* Border.swift */; };
@@ -321,7 +321,7 @@
 		D8891350274C184C00794D55 /* UIImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImage.swift; sourceTree = "<group>"; };
 		D8891352274C186E00794D55 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
 		D88A472127B82C720094A438 /* ApplicationIdentifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationIdentifier.swift; sourceTree = "<group>"; };
-		D88A472327B83D6D0094A438 /* ItemCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCache.swift; sourceTree = "<group>"; };
+		D88A472327B83D6D0094A438 /* FileMetadataCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileMetadataCache.swift; sourceTree = "<group>"; };
 		D890B46627A8CA7B007A7A78 /* ManagedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedItem.swift; sourceTree = "<group>"; };
 		D890B46827A8CBED007A7A78 /* InstallerProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallerProgressViewController.swift; sourceTree = "<group>"; };
 		D893EAD22760739500E64219 /* Border.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Border.swift; sourceTree = "<group>"; };
@@ -627,9 +627,9 @@
 			isa = PBXGroup;
 			children = (
 				D82A37B727A9B43F00D8F5F4 /* DirectoryMonitor.swift */,
+				D88A472327B83D6D0094A438 /* FileMetadataCache.swift */,
 				D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */,
 				D81B4A4827B5AA650051B092 /* IndexableLocationObserver.swift */,
-				D88A472327B83D6D0094A438 /* ItemCache.swift */,
 				D8D95503279B52370049A3C3 /* Localization.swift */,
 				D890B46627A8CA7B007A7A78 /* ManagedItem.swift */,
 				D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */,
@@ -1186,7 +1186,7 @@
 				DB7900162742E6F6005E904F /* lutf8lib.c in Sources */,
 				D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */,
 				DB7900172742E6F6005E904F /* lvm.c in Sources */,
-				D88A472427B83D6E0094A438 /* ItemCache.swift in Sources */,
+				D88A472427B83D6E0094A438 /* FileMetadataCache.swift in Sources */,
 				D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */,
 				D8647C702793540500DCC261 /* TaskManager.swift in Sources */,
 				DB5AC974275681510043FE5C /* CanvasView.swift in Sources */,

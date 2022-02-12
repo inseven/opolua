@@ -20,9 +20,9 @@
 
 import Foundation
 
-class ItemCache {
+class FileMetadataCache<T> {
 
-    fileprivate class CacheKey: NSObject {
+    private class CacheKey: NSObject {
 
         let url: URL
         let modificationDate: Date
@@ -45,41 +45,37 @@ class ItemCache {
 
     }
 
-    fileprivate class CacheItem {
+    private class CacheItem<T> {
 
-        let item: Directory.Item
+        let item: T
 
-        init(item: Directory.Item) {
+        init(item: T) {
             self.item = item
         }
 
     }
 
-    private let cache = NSCache<CacheKey, CacheItem>()
+    static private func cacheKey(for url: URL) -> FileMetadataCache.CacheKey? {
+        guard let modificationDate = url.modificationDate() else {
+            return nil
+        }
+        return FileMetadataCache.CacheKey(url: url, modificationDate: modificationDate)
+    }
 
-    func item(for url: URL) -> Directory.Item? {
-        guard let key = url.cacheKey() else {
+    private let cache = NSCache<CacheKey, CacheItem<T>>()
+
+    func metadata(for url: URL) -> T? {
+        guard let key = Self.cacheKey(for: url) else {
             return nil
         }
         return cache.object(forKey: key)?.item
     }
 
-    func setItem(_ item: Directory.Item, for url: URL) {
-        guard let key = url.cacheKey() else {
+    func setMetadata(_ metadata: T, for url: URL) {
+        guard let key = Self.cacheKey(for: url) else {
             return
         }
-        cache.setObject(CacheItem(item: item), forKey: key)
-    }
-
-}
-
-extension URL {
-
-    fileprivate func cacheKey() -> ItemCache.CacheKey? {
-        guard let modificationDate = modificationDate() else {
-            return nil
-        }
-        return ItemCache.CacheKey(url: self, modificationDate: modificationDate)
+        cache.setObject(CacheItem<T>(item: metadata), forKey: key)
     }
 
 }

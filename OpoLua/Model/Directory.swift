@@ -99,7 +99,8 @@ class Directory {
         case running
     }
 
-    static let cache = ItemCache()
+    static let cache = FileMetadataCache<Directory.Item>()
+    static let appInfoCache = FileMetadataCache<OpoInterpreter.AppInfo>()
 
     static func defaultSort() -> (Directory.Item, Directory.Item) -> Bool {
         return { (item1: Directory.Item, item2: Directory.Item) -> Bool in
@@ -112,11 +113,11 @@ class Directory {
     }
 
     static func item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
-        if let item = cache.item(for: url) {
+        if let item = cache.metadata(for: url) {
             return item
         }
         let item = try _item(for: url, isWriteable: isWriteable, interpreter: interpreter)
-        cache.setItem(item, for: url)
+        cache.setMetadata(item, for: url)
         return item
     }
 
