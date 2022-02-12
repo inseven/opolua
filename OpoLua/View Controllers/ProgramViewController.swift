@@ -448,14 +448,16 @@ class ProgramViewController: UIViewController {
                                                             isRepeat: true)
                             program.sendEvent(.keypressevent(event))
                         }
-                        keyRepeatTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false, block: { _ in
-                            sendRepeat()
-                            self.keyRepeatTimer?.invalidate()
-                            self.keyRepeatTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true, block: { _ in
+                        let shouldRepeat = code != .menu // menu is extra special and doesn't repeat
+                        if shouldRepeat {
+                            keyRepeatTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false, block: { _ in
                                 sendRepeat()
+                                self.keyRepeatTimer?.invalidate()
+                                self.keyRepeatTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true, block: { _ in
+                                    sendRepeat()
+                                })
                             })
-                        })
-
+                        }
                     }
                 } else {
                     print("No keypress code for \(key)")
