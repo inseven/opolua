@@ -20,15 +20,38 @@
 
 import Foundation
 
+fileprivate let appInfoCache = FileMetadataCache<OpoInterpreter.AppInfo>()
+fileprivate let fileTypeCache = FileMetadataCache<OpoInterpreter.FileType>()
+
 extension OpoInterpreter {
 
-    func appInfo(forApplicationUrl url: URL) -> OpoInterpreter.AppInfo? {
+    func cachedAppInfo(forApplicationUrl url: URL) -> AppInfo? {
         guard let applicationInfoFile = url.applicationInfoUrl,
               FileManager.default.fileExists(atUrl: applicationInfoFile)
         else {
             return nil
         }
-        return appInfo(for: applicationInfoFile.path)
+        return cachedAppInfo(for: applicationInfoFile)
+    }
+
+    func cachedAppInfo(for url: URL) -> AppInfo? {
+        if let appInfo = appInfoCache.metadata(for: url) {
+            return appInfo
+        }
+        guard let appInfo = appInfo(for: url.path) else {
+            return nil
+        }
+        appInfoCache.setMetadata(appInfo, for: url)
+        return appInfo
+    }
+
+    func cachedRecognize(url: URL) -> FileType {
+        if let fileType = fileTypeCache.metadata(for: url) {
+            return fileType
+        }
+        let fileType = recognize(path: url.path)
+        fileTypeCache.setMetadata(fileType, for: url)
+        return fileType
     }
 
 }

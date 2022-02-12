@@ -121,7 +121,7 @@ class Program {
         self.url = url
         self.configuration = Configuration.load(for: url)
         self.thread = InterpreterThread(url: url)
-        let appInfo = OpoInterpreter().appInfo(forApplicationUrl: url)
+        let appInfo = OpoInterpreter().cachedAppInfo(forApplicationUrl: url)
         self.appInfo = appInfo
         self.title = appInfo?.caption ?? url.localizedName
         self.icon = appInfo?.icon() ?? (url.pathExtension.lowercased() == "opo" ? .opo() : .unknownApplication())

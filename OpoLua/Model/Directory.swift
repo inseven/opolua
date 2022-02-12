@@ -99,9 +99,6 @@ class Directory {
         case running
     }
 
-    static let cache = FileMetadataCache<Directory.Item>()
-    static let appInfoCache = FileMetadataCache<OpoInterpreter.AppInfo>()
-
     static func defaultSort() -> (Directory.Item, Directory.Item) -> Bool {
         return { (item1: Directory.Item, item2: Directory.Item) -> Bool in
             let nameOrder = item1.name.localizedStandardCompare(item2.name)
@@ -113,15 +110,6 @@ class Directory {
     }
 
     static func item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
-        if let item = cache.metadata(for: url) {
-            return item
-        }
-        let item = try _item(for: url, isWriteable: isWriteable, interpreter: interpreter)
-        cache.setMetadata(item, for: url)
-        return item
-    }
-
-    private static func _item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
 
         if FileManager.default.directoryExists(atPath: url.path) {
             // Check for an app 'bundle'.
@@ -134,7 +122,7 @@ class Directory {
             return Item(url: url, type: .object, isWriteable: isWriteable)
         } else if url.pathExtension.lowercased() == "app" {
             return Item(url: url,
-                        type: .application(interpreter.appInfo(forApplicationUrl: url)),
+                        type: .application(interpreter.cachedAppInfo(forApplicationUrl: url)),
                         isWriteable: isWriteable)
         } else if url.pathExtension.lowercased() == "sis" {
             return Item(url: url, type: .installer, isWriteable: isWriteable)
@@ -146,9 +134,9 @@ class Directory {
             // Image files aren't always guaranteed to have the correct UIDs, so we also match on the file extension.
             return Item(url: url, type: .image, isWriteable: isWriteable)
         } else {
-            switch interpreter.recognize(path: url.path) {
+            switch interpreter.cachedRecognize(url: url) {
             case .aif:
-                if let info = interpreter.appInfo(for: url.path) {
+                if let info = interpreter.cachedAppInfo(for: url) {
                     return Item(url: url, type: .applicationInformation(info), isWriteable: isWriteable)
                 }
             case .mbm:
@@ -269,8 +257,8 @@ extension Directory.Item {
 
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(at: url,
-                                                includingPropertiesForKeys: [.isDirectoryKey],
-                                                options: [.skipsHiddenFiles], errorHandler: { _, _ in return false }) else {
+                                                      includingPropertiesForKeys: [.isDirectoryKey],
+                                                      options: [.skipsHiddenFiles], errorHandler: { _, _ in return false }) else {
             return nil
         }
 
@@ -282,7 +270,7 @@ extension Directory.Item {
               let url = apps.first else {
             return nil
         }
-        return .system(url, interpreter.appInfo(forApplicationUrl: url))
+        return .system(url, interpreter.cachedAppInfo(forApplicationUrl: url))
     }
 
     func configurationActions(errorHandler: @escaping (Error) -> Void) -> [UIMenuElement] {
