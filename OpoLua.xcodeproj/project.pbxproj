@@ -99,7 +99,7 @@
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */; };
 		D8F4835D278D3D31008AF80C /* PixelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F4835C278D3D31008AF80C /* PixelView.swift */; };
-		D8F5CADB279D07A700A2DC3F /* ImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F5CADA279D07A700A2DC3F /* ImageViewController.swift */; };
+		D8F5CADB279D07A700A2DC3F /* MultipleImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F5CADA279D07A700A2DC3F /* MultipleImageViewController.swift */; };
 		D8FE60032757106300711717 /* SecureLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* SecureLocation.swift */; };
 		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
 		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
@@ -356,7 +356,7 @@
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramDetector.swift; sourceTree = "<group>"; };
 		D8F4835C278D3D31008AF80C /* PixelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelView.swift; sourceTree = "<group>"; };
-		D8F5CADA279D07A700A2DC3F /* ImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageViewController.swift; sourceTree = "<group>"; };
+		D8F5CADA279D07A700A2DC3F /* MultipleImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleImageViewController.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* SecureLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureLocation.swift; sourceTree = "<group>"; };
 		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
@@ -613,7 +613,6 @@
 				DB79FFBD2742D99C005E904F /* ProgramViewController.swift */,
 				D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */,
 				D8553767278F535A00ED67C0 /* SettingsView.swift */,
-				D80A9CC127A4B66400E49AD8 /* SourceViewController.swift */,
 				D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */,
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
 				D81B875F2790E9A600E71960 /* Installer */,
@@ -641,7 +640,8 @@
 		D8F5CAD9279D079A00A2DC3F /* Viewers */ = {
 			isa = PBXGroup;
 			children = (
-				D8F5CADA279D07A700A2DC3F /* ImageViewController.swift */,
+				D8F5CADA279D07A700A2DC3F /* MultipleImageViewController.swift */,
+				D80A9CC127A4B66400E49AD8 /* SourceViewController.swift */,
 			);
 			path = Viewers;
 			sourceTree = "<group>";
@@ -1112,7 +1112,7 @@
 				D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */,
 				D88A472227B82C720094A438 /* ApplicationIdentifier.swift in Sources */,
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
-				D8F5CADB279D07A700A2DC3F /* ImageViewController.swift in Sources */,
+				D8F5CADB279D07A700A2DC3F /* MultipleImageViewController.swift in Sources */,
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
 				DB7900072742E6F6005E904F /* llex.c in Sources */,

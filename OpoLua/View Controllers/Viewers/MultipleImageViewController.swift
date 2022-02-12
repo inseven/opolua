@@ -20,7 +20,7 @@
 
 import UIKit
 
-class ImageViewController: UITableViewController {
+class MultipleImageViewController: UITableViewController {
 
     class Cell: UITableViewCell {
 

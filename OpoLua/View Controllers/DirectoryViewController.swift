@@ -237,7 +237,7 @@ class DirectoryViewController : UICollectionViewController {
                 })
             case .image:
                 actions.append(UIAction(title: "View", image: UIImage(systemName: "eye")) { action in
-                    let viewController = ImageViewController(url: item.url)
+                    let viewController = MultipleImageViewController(url: item.url)
                     self.navigationController?.pushViewController(viewController, animated: true)
                 })
             case .text, .opl:
@@ -299,7 +299,7 @@ class DirectoryViewController : UICollectionViewController {
         case .installer:
             AppDelegate.shared.install(url: item.url, preferredDestinationUrl: directory.url)
         case .image:
-            let viewController = ImageViewController(url: item.url)
+            let viewController = MultipleImageViewController(url: item.url)
             navigationController?.pushViewController(viewController, animated: true)
         case .text, .opl:
             let sourceViewController = SourceViewController(url: item.url)
