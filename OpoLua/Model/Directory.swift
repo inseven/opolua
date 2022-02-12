@@ -99,6 +99,8 @@ class Directory {
         case running
     }
 
+    static let cache = ItemCache()
+
     static func defaultSort() -> (Directory.Item, Directory.Item) -> Bool {
         return { (item1: Directory.Item, item2: Directory.Item) -> Bool in
             let nameOrder = item1.name.localizedStandardCompare(item2.name)
@@ -110,6 +112,16 @@ class Directory {
     }
 
     static func item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
+        if let item = cache.item(for: url) {
+            return item
+        }
+        let item = try _item(for: url, isWriteable: isWriteable, interpreter: interpreter)
+        cache.setItem(item, for: url)
+        return item
+    }
+
+    private static func _item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
+
         if FileManager.default.directoryExists(atPath: url.path) {
             // Check for an app 'bundle'.
             if let type = try Item.system(url: url, interpreter: interpreter) {
