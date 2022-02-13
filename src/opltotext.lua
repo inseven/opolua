@@ -29,11 +29,16 @@ dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
 function main()
     local args = getopt({
         "filename",
+        "output",
     })
 
     local data = readFile(args.filename)
     local text = require("recognizer").getOplText(data)
-    print(text)
+    if args.output then
+        writeFile(args.output, text)
+    else
+        print(text)
+    end
 end
 
 pcallMain()
