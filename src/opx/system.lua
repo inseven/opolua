@@ -338,7 +338,11 @@ end
 function Mod(stack, runtime) -- 41
     local right = stack:pop()
     local left = stack:pop()
-    stack:push(left % right)
+    -- Oh joy, Lua and C (and by extension, OPL) don't have the same definition of modulus for negative operands
+    -- See https://torstencurdt.com/tech/posts/modulo-of-negative-numbers/
+    -- So we can't just do left % right
+    local sign = left < 0 and -1 or 1
+    stack:push(sign * (math.abs(left) % math.abs(right)))
 end
 
 function XOR(stack, runtime) -- 42

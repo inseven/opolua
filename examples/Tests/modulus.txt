@@ -1,0 +1,6 @@
+INCLUDE "SYSTEM.OXH"
+
+PROC main:
+	PRINT Mod&:(13, 3), Mod&:(-13, 3), Mod&:(13, -3), Mod&:(-13, -3)
+	GET
+ENDP
