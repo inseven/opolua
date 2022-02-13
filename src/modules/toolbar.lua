@@ -229,6 +229,9 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
             gUSE(prevId)
         end
         return -1
+    elseif butId or winId == tbWinId then
+        -- Make sure we consume pen up events on the clock, for eg
+        return -1
     else
         return 0
     end
