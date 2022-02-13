@@ -60,7 +60,8 @@ class ClockView: UIView {
 
         let digital = clockInfo.mode == .digital || (clockInfo.mode == .systemSetting && systemClockDigital)
         if digital {
-            let text = String(format: "%d:%02d", hours % 12, minutes) // TODO: we should honour the iOS 24hr format preference
+            let displayHours = (hours == 12 ? 12 : hours % 12)
+            let text = String(format: "%d:%02d", displayHours, minutes) // TODO: we should honour the iOS 24hr format preference
             drawCenteredText(text, context: context, font: BitmapFontInfo.digit, y: 4)
             let df = DateFormatter()
             df.dateFormat = "EEE d"
