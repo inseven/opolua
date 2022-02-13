@@ -337,6 +337,10 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         textX = textX + bmpWidth + 1
     end
 
+    if bmpId == nil then
+        layout = KButtTextTop
+    end
+
     local pos = (layout or 0) & 0xF
     if pos == KButtTextTop or pos == KButtTextBottom then
         -- We need to center the text (note, we don't actually support layout when there actually is an image, yet)
