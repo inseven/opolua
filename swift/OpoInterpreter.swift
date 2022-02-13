@@ -643,8 +643,8 @@ private func key(_ L: LuaState!) -> Int32 {
 }
 
 private func opsync(_ L: LuaState!) -> Int32 {
-    let interpreter = getInterpreterUpval(L)
-    interpreter.syncOpTimer()
+    let iohandler = getInterpreterUpval(L).iohandler
+    iohandler.opsync()
     return 0
 }
 
@@ -727,11 +727,8 @@ private extension Error {
 
 class OpoInterpreter {
 
-    static let kOpTime: TimeInterval = 3.5 / 1000000 // Make this bigger to slow the interpreter down
-
     private let L: LuaState
     var iohandler: OpoIoHandler
-    var lastOpTime = Date()
 
     init() {
         iohandler = DummyIoHandler() // For now...
@@ -1171,11 +1168,6 @@ class OpoInterpreter {
         L.push(data)
         makeIoHandlerBridge()
         try pcall(2, 0)
-    }
-
-    func syncOpTimer() {
-        Thread.sleep(until: lastOpTime.addingTimeInterval(Self.kOpTime))
-        lastOpTime = Date()
     }
 
     // Safe to call from any thread

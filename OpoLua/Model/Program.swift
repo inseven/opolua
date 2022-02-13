@@ -87,6 +87,8 @@ class Program {
     private var settingsSink: AnyCancellable?
 
     private var _state: State = .idle
+    private static let kOpTime: TimeInterval = 3.5 / 1000000 // Make this bigger to slow the interpreter down
+    private var lastOpTime = Date()
 
     private var oplConfig: [ConfigName: String] = [:]
 
@@ -516,6 +518,11 @@ extension Program: OpoIoHandler {
             return nil
         }
         return delegate?.program(self, runApplication: applicationIdentifier, url: url)
+    }
+
+    func opsync() {
+        Thread.sleep(until: lastOpTime.addingTimeInterval(Self.kOpTime))
+        lastOpTime = Date()
     }
 
 }

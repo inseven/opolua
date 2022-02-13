@@ -513,6 +513,8 @@ protocol OpoIoHandler {
     func setForeground()
     func setBackground()
     func runApp(name: String, document: String) -> Int32?
+
+    func opsync()
 }
 
 class DummyIoHandler : OpoIoHandler {
@@ -598,4 +600,6 @@ class DummyIoHandler : OpoIoHandler {
         return nil
     }
 
+    func opsync() {
+    }
 }
