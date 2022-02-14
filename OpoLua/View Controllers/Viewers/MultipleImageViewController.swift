@@ -74,6 +74,13 @@ class MultipleImageViewController: UITableViewController {
     private let url: URL
     private let images: [UIImage]
 
+    lazy var shareBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(barButtonSystemItem: .action,
+                                            target: self,
+                                            action: #selector(shareTapped(sender:)))
+        return barButtonItem
+    }()
+
     init(url: URL) {
         self.url = url
         let bitmaps = OpoInterpreter().getMbmBitmaps(path: url.path) ?? []
@@ -83,10 +90,16 @@ class MultipleImageViewController: UITableViewController {
         super.init(nibName: nil, bundle: nil)
         title = url.localizedName
         tableView.register(Cell.self, forCellReuseIdentifier: Cell.reuseIdentifier)
+        navigationItem.rightBarButtonItem = shareBarButtonItem
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    @objc func shareTapped(sender: UIBarButtonItem) {
+        let activityViewController = UIActivityViewController(activityItems: self.images, applicationActivities: nil)
+        self.present(activityViewController, animated: true)
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
