@@ -298,7 +298,7 @@ class DirectoryViewController : UICollectionViewController {
             pushDirectoryViewController(for: item.url)
         case .installer:
             AppDelegate.shared.install(url: item.url, preferredDestinationUrl: directory.url)
-        case .image:
+        case .image, .applicationInformation:
             let viewController = MultipleImageViewController(url: item.url)
             navigationController?.pushViewController(viewController, animated: true)
         case .text, .opl:
@@ -307,7 +307,7 @@ class DirectoryViewController : UICollectionViewController {
         case .sound:
             let soundViewController = SoundViewController(url: item.url)
             navigationController?.pushViewController(soundViewController, animated: true)
-        case .unknown, .applicationInformation, .help:
+        case .unknown, .help:
             let alert = UIAlertController(title: "Unsupported File",
                                           message: "Opening files of this type is currently unsupported.",
                                           preferredStyle: .alert)

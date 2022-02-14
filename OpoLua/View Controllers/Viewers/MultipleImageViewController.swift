@@ -72,7 +72,8 @@ class MultipleImageViewController: UITableViewController {
     }
 
     private let url: URL
-    private let images: [UIImage]
+    private var isLoaded = false
+    private var images: [UIImage] = []
 
     lazy var shareBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(barButtonSystemItem: .action,
@@ -83,10 +84,6 @@ class MultipleImageViewController: UITableViewController {
 
     init(url: URL) {
         self.url = url
-        let bitmaps = OpoInterpreter().getMbmBitmaps(path: url.path) ?? []
-        self.images = bitmaps
-            .compactMap { CGImage.from(bitmap: $0) }
-            .compactMap { UIImage(cgImage: $0) }
         super.init(nibName: nil, bundle: nil)
         title = url.localizedName
         tableView.register(Cell.self, forCellReuseIdentifier: Cell.reuseIdentifier)
@@ -95,6 +92,43 @@ class MultipleImageViewController: UITableViewController {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        do {
+            try load()
+        } catch {
+            present(error: error)
+        }
+    }
+
+    func load() throws {
+        guard !isLoaded else {
+            return
+        }
+        isLoaded = true
+        let interpreter = OpoInterpreter()
+        let item = try Directory.item(for: url, interpreter: interpreter)
+        switch item.type {
+        case .applicationInformation(let applicationMetadata):
+            guard let applicationMetadata = applicationMetadata else {
+                throw OpoLuaError.unsupportedFile
+            }
+            let bitmaps = applicationMetadata.icons
+            self.images = bitmaps
+                .compactMap { $0.cgImage }
+                .compactMap { UIImage(cgImage: $0) }
+            tableView.reloadData()
+        case .image:
+            let bitmaps = OpoInterpreter().getMbmBitmaps(path: url.path) ?? []
+            self.images = bitmaps
+                .compactMap { CGImage.from(bitmap: $0) }
+                .compactMap { UIImage(cgImage: $0) }
+            tableView.reloadData()
+        default:
+            throw OpoLuaError.unsupportedFile
+        }
     }
 
     @objc func shareTapped(sender: UIBarButtonItem) {
