@@ -22,9 +22,23 @@ import UIKit
 
 class ResourceViewController: UITableViewController {
 
-    class Cell: UITableViewCell {
+    class StringCell: UITableViewCell {
 
-        static var reuseIdentifier = "Cell"
+        static var reuseIdentifier = "StringCell"
+
+        override init(style: CellStyle, reuseIdentifier: String?) {
+            super.init(style: .value1, reuseIdentifier: reuseIdentifier)
+        }
+
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+    }
+
+    class ImageCell: UITableViewCell {
+
+        static var reuseIdentifier = "ImageCell"
 
         lazy var bitmapView: UIImageView = {
             let imageView = UIImageView(frame: .zero)
@@ -71,8 +85,16 @@ class ResourceViewController: UITableViewController {
 
     }
 
+    struct NamedString {
+
+        let name: String
+        let value: String
+
+    }
+
     private let url: URL
     private var isLoaded = false
+    private var strings: [NamedString] = []
     private var images: [UIImage] = []
 
     lazy var shareBarButtonItem: UIBarButtonItem = {
@@ -86,7 +108,8 @@ class ResourceViewController: UITableViewController {
         self.url = url
         super.init(nibName: nil, bundle: nil)
         title = url.localizedName
-        tableView.register(Cell.self, forCellReuseIdentifier: Cell.reuseIdentifier)
+        tableView.register(ImageCell.self, forCellReuseIdentifier: ImageCell.reuseIdentifier)
+        tableView.register(StringCell.self, forCellReuseIdentifier: StringCell.reuseIdentifier)
         navigationItem.rightBarButtonItem = shareBarButtonItem
     }
 
@@ -115,6 +138,9 @@ class ResourceViewController: UITableViewController {
             guard let applicationMetadata = applicationMetadata else {
                 throw OpoLuaError.unsupportedFile
             }
+            self.strings = applicationMetadata.captions.map({ localizedString in
+                return NamedString(name: "Caption (\(localizedString.locale.identifier))", value: localizedString.value)
+            })
             let bitmaps = applicationMetadata.icons
             self.images = bitmaps
                 .compactMap { $0.cgImage }
@@ -137,17 +163,31 @@ class ResourceViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return images.count
+        return strings.count + images.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.reuseIdentifier, for: indexPath) as! Cell
-        cell.bitmapView.image = images[indexPath.row]
-        return cell
+
+        if indexPath.row < strings.count {
+            let cell = tableView.dequeueReusableCell(withIdentifier: StringCell.reuseIdentifier, for: indexPath)
+            let string = strings[indexPath.row]
+            cell.textLabel?.text = string.name
+            cell.detailTextLabel?.text = string.value
+            return cell
+        } else {
+            let cell = tableView.dequeueReusableCell(withIdentifier: ImageCell.reuseIdentifier,
+                                                     for: indexPath) as! ImageCell
+            cell.bitmapView.image = images[indexPath.row - strings.count]
+            return cell
+        }
     }
 
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 200.0
+        if indexPath.row < strings.count {
+            return 44.0
+        } else {
+            return 200.0
+        }
     }
 
 }

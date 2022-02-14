@@ -74,7 +74,6 @@
 		D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A607F2756AE8800C9757F /* LibraryViewController.swift */; };
 		D89F8CEA27AEC48B009F25E5 /* UIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89F8CE927AEC48B009F25E5 /* UIViewController.swift */; };
 		D8B2757527B6840D00DAAFC0 /* RateLimiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B2757427B6840D00DAAFC0 /* RateLimiter.swift */; };
-		D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */; };
 		D8BA0970275196CA00F4730D /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA096F275196CA00F4730D /* String.swift */; };
 		D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BA09712751BBEA00F4730D /* UIElement.swift */; };
 		D8C3BD632774BEA1003B1AD0 /* ErrorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD622774BEA1003B1AD0 /* ErrorViewController.swift */; };
@@ -333,7 +332,6 @@
 		D89A607F2756AE8800C9757F /* LibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewController.swift; sourceTree = "<group>"; };
 		D89F8CE927AEC48B009F25E5 /* UIViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewController.swift; sourceTree = "<group>"; };
 		D8B2757427B6840D00DAAFC0 /* RateLimiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateLimiter.swift; sourceTree = "<group>"; };
-		D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldTableViewCell.swift; sourceTree = "<group>"; };
 		D8BA096F275196CA00F4730D /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		D8BA09712751BBEA00F4730D /* UIElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIElement.swift; sourceTree = "<group>"; };
 		D8C3BD622774BEA1003B1AD0 /* ErrorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorViewController.swift; sourceTree = "<group>"; };
@@ -555,7 +553,6 @@
 				D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */,
 				D8F4835C278D3D31008AF80C /* PixelView.swift */,
 				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
-				D8BA096D2751960F00F4730D /* TextFieldTableViewCell.swift */,
 				DB6B438327A55D1200625788 /* RootView.swift */,
 				D85F597027ACB682006AAF3B /* WizardFooterView.swift */,
 			);
@@ -1064,7 +1061,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D8BA096E2751960F00F4730D /* TextFieldTableViewCell.swift in Sources */,
 				D893EAD32760739500E64219 /* Border.swift in Sources */,
 				DB7900232746C771005E904F /* LuaState.swift in Sources */,
 				D81B4A4D27B5CF650051B092 /* UbiquitousDownloader.swift in Sources */,
