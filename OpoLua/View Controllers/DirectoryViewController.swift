@@ -218,7 +218,7 @@ class DirectoryViewController : UICollectionViewController {
             actions.append(runAction)
 
             if case Directory.Item.ItemType.system = item.type {
-                let contentsAction = UIAction(title: "Show System Contents", image: UIImage(systemName: "folder")) { action in
+                let contentsAction = UIAction(title: "Show Contents", image: UIImage(systemName: "folder")) { action in
                     self.pushDirectoryViewController(for: item.url)
                 }
                 actions.append(contentsAction)
