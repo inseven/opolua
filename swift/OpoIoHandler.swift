@@ -335,7 +335,7 @@ struct Fs {
             case isdir // as per exists
             case delete // return none, notFound, notReady
             case mkdir // return none, alreadyExists, notReady
-            case rmdir // return none, notFound, inUse if it isn't empty, notReady
+            case rmdir // return none, notFound, inUse if it isn't empty, pathNotFound if it's not a dir, notReady
             case write(Data) // return none, notReady
             case read // return none, notFound, notReady
             case dir // return .strings(paths)
@@ -356,6 +356,7 @@ struct Fs {
         case inUse = -9
         case notFound = -33
         case alreadyExists = -32
+        case pathNotFound = -42
         case notReady = -62 // For any op outside our sandbox
         //case accessDenied = -39
     }

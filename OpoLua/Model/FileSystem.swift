@@ -99,13 +99,17 @@ extension FileSystem {
              Usage: RMDIR str$
              Removes the directory given by str$. You can only remove empty directories.
              */
-            // TODO: Double check whether non-directory deletion is permitted.
-            // TODO: Return the correct errors.
             var isDirectory: ObjCBool = false
-            if fileManager.fileExists(atPath: path, isDirectory: &isDirectory) && !isDirectory.boolValue {
-                return .err(.alreadyExists)
+            if !fileManager.fileExists(atPath: path, isDirectory: &isDirectory) {
+                return .err(.notFound)
+            }
+            if !isDirectory.boolValue {
+                return .err(.pathNotFound)
             }
             do {
+                if try fileManager.contentsOfDirectory(atPath: path).count > 0 {
+                    return .err(.inUse)
+                }
                 try fileManager.removeItem(atPath: path)
             } catch {
                 return .err(.notReady)

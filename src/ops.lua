@@ -2161,7 +2161,8 @@ function MkDir(stack, runtime) -- 0xF8
 end
 
 function RmDir(stack, runtime) -- 0xF9
-    unimplemented("RmDir")
+    local path = stack:pop()
+    runtime:RMDIR(path)
     runtime:setTrap(false)
 end
 

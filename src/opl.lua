@@ -897,6 +897,14 @@ function MKDIR(path)
     end
 end
 
+function RMDIR(path)
+    path = assertPathValid(runtime:abs(path))
+    local err = runtime:iohandler().fsop("rmdir", path)
+    if err ~= KErrNone then
+        error(err)
+    end
+end
+
 function IOOPEN(path, mode)
     if path == "TIM:" then
         local f = runtime:newFileHandle()
