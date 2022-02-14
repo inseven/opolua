@@ -23,13 +23,31 @@ import UIKit
 class SoundViewController: UIViewController {
 
     private let url: URL
-    private var isLoaded = false
+
+    lazy var playButton: UIButton = {
+        var configuration = UIButton.Configuration.borderedTinted()
+        configuration.image = UIImage(systemName: "play.fill")
+        let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.play()
+        })
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
 
     init(url: URL) {
         self.url = url
         super.init(nibName: nil, bundle: nil)
         title = url.localizedName
         view.backgroundColor = .systemBackground
+
+        view.addSubview(playButton)
+        NSLayoutConstraint.activate([
+            playButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            playButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
     }
 
     required init?(coder: NSCoder) {
@@ -38,24 +56,20 @@ class SoundViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+
+    }
+
+    func play() {
         do {
-            try load()
+            let interpreter = OpoInterpreter()
+            let fileInfo = interpreter.getFileInfo(path: url.path)
+            guard case OpoInterpreter.FileInfo.sound(let soundFile) = fileInfo else {
+                throw OpoLuaError.unsupportedFile
+            }
+            try Sound.play(data: soundFile.data)
         } catch {
             present(error: error)
         }
-    }
-
-    func load() throws {
-        guard !isLoaded else {
-            return
-        }
-        isLoaded = true
-        let interpreter = OpoInterpreter()
-        let fileInfo = interpreter.getFileInfo(path: url.path)
-        guard case OpoInterpreter.FileInfo.sound(let soundFile) = fileInfo else {
-            throw OpoLuaError.unsupportedFile
-        }
-        try Sound.play(data: soundFile.data)
     }
 
 }
