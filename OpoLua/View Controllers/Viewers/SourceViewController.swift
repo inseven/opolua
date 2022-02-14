@@ -44,6 +44,13 @@ class SourceViewController: UIViewController {
         return textView
     }()
 
+    lazy var shareBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(barButtonSystemItem: .action,
+                                            target: self,
+                                            action: #selector(shareTapped(sender:)))
+        return barButtonItem
+    }()
+
     init(url: URL, showsDoneButton: Bool = false) {
         self.url = url
         super.init(nibName: nil, bundle: nil)
@@ -59,6 +66,9 @@ class SourceViewController: UIViewController {
             navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done,
                                                                 target: self,
                                                                 action: #selector(doneTapped(sender:)))
+            navigationItem.leftBarButtonItem = shareBarButtonItem
+        } else {
+            navigationItem.rightBarButtonItem = shareBarButtonItem
         }
     }
 
@@ -73,6 +83,14 @@ class SourceViewController: UIViewController {
 
     @objc func doneTapped(sender: UIBarButtonItem) {
         delegate?.sourceViewControllerDidFinish(self)
+    }
+
+    @objc func shareTapped(sender: UIBarButtonItem) {
+        guard let text = textView.text else {
+            return
+        }
+        let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        self.present(activityViewController, animated: true)
     }
 
     func load() throws {
