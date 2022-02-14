@@ -98,7 +98,7 @@ class ProgramViewController: UIViewController {
             self.program.sendKey(.menu)
         })
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.pointerStyleProvider = buttonProvider
+        button.pointerStyleProvider = buttonProvider()
         return button
     }()
 
@@ -112,7 +112,7 @@ class ProgramViewController: UIViewController {
             self.program.sendKey(.clipboardSoftkey)
         })
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.pointerStyleProvider = buttonProvider
+        button.pointerStyleProvider = buttonProvider()
         return button
     }()
 
@@ -126,7 +126,7 @@ class ProgramViewController: UIViewController {
             self.program.sendKey(.zoomInSoftkey)
         })
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.pointerStyleProvider = buttonProvider
+        button.pointerStyleProvider = buttonProvider()
         return button
     }()
 
@@ -140,7 +140,7 @@ class ProgramViewController: UIViewController {
             self.program.sendKey(.zoomOutSoftkey)
         })
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.pointerStyleProvider = buttonProvider
+        button.pointerStyleProvider = buttonProvider()
         return button
     }()
 
@@ -306,9 +306,11 @@ class ProgramViewController: UIViewController {
         configureToolbar(animated: true)
     }
 
-    func buttonProvider(button: UIButton, pointerEffect: UIPointerEffect, pointerShape: UIPointerShape) -> UIPointerStyle? {
-        return UIPointerStyle(effect: .automatic(UITargetedPreview(view: button)),
-                              shape: .roundedRect(button.frame.insetBy(dx: -8, dy: -8)))
+    func buttonProvider() -> UIButton.PointerStyleProvider {
+        return { button, pointerEffect, pointerShape in
+            return UIPointerStyle(effect: .automatic(UITargetedPreview(view: button)),
+                                  shape: .roundedRect(button.frame.insetBy(dx: -8, dy: -8)))
+        }
     }
 
     private func shareScreenshot() {
@@ -323,7 +325,10 @@ class ProgramViewController: UIViewController {
         let notificationCenter = NotificationCenter.default
         notificationCenter.addObserver(forName: NSNotification.Name.GCControllerDidConnect,
                                        object: nil,
-                                       queue: .main) { notification in
+                                       queue: .main) { [weak self] notification in
+            guard let self = self else {
+                return
+            }
             self.configureControllers()
         }
     }
@@ -383,7 +388,10 @@ class ProgramViewController: UIViewController {
     }
 
     func pressedChangeHandler(for controllerButton: ControllerButton) -> GCControllerButtonValueChangedHandler {
-        return { button, value, pressed in
+        return { [weak self] button, value, pressed in
+            guard let self = self else {
+                return
+            }
             self.updateControllerButton(controllerButton, pressed: pressed)
         }
     }
@@ -468,6 +476,7 @@ class ProgramViewController: UIViewController {
 
     override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         keyRepeatTimer?.invalidate()
+        keyRepeatTimer = nil
         for press in presses {
             if let key = press.key {
                 let (oplKey, _) = key.toOplCodes()
@@ -562,6 +571,8 @@ extension ProgramViewController: ProgramDelegate {
 extension ProgramViewController: ProgramLifecycleObserver {
 
     func program(_ program: Program, didFinishWithResult result: Error?) {
+
+        program.removeObserver(self)
 
         guard let error = result else {
             self.navigationController?.popViewController(animated: true)

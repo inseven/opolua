@@ -373,6 +373,7 @@ extension Program: InterpreterThreadDelegate {
 
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: Error?) {
         DispatchQueue.main.sync {
+            interpreter.handler = nil
             self.windowServer.shutdown()
             self._state = .finished
             for observer in self.observers {

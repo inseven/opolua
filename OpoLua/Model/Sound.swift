@@ -34,13 +34,19 @@ class PlaySoundRequest: Scheduler.Request {
     }
 
     override func start() {
-        cancellable = Sound.play(data: data) { error in
+        cancellable = Sound.play(data: data) { [weak self] error in
             if let error = error {
                 DispatchQueue.main.async {
+                    guard let self = self else {
+                        return
+                    }
                     print("Play sound failed with error \(error).")
                     self.scheduler?.complete(request: self, response: .completed)
                 }
             } else {
+                guard let self = self else {
+                    return
+                }
                 self.scheduler?.complete(request: self, response: .completed)
             }
         }
@@ -49,6 +55,10 @@ class PlaySoundRequest: Scheduler.Request {
     override func cancel() {
         cancellable?.cancel()
         cancellable = nil
+    }
+
+    deinit {
+        cancel()
     }
 
 }
