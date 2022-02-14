@@ -61,7 +61,7 @@ class ErrorViewController: UIViewController {
     lazy var shareBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(barButtonSystemItem: .action,
                                             target: self,
-                                            action: #selector(actionTapped(sender:)))
+                                            action: #selector(shareTapped(sender:)))
         return barButtonItem
     }()
 
@@ -123,7 +123,7 @@ class ErrorViewController: UIViewController {
         delegate?.errorViewControllerDidFinish(self)
     }
 
-    @objc func actionTapped(sender: UIBarButtonItem) {
+    @objc func shareTapped(sender: UIBarButtonItem) {
         guard let text = textView.text else {
             return
         }
