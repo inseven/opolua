@@ -86,6 +86,7 @@
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
 		D8CCACAE27B2FE3D008C8122 /* NSLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CCACAD27B2FE3D008C8122 /* NSLock.swift */; };
 		D8CCACB027B2FE59008C8122 /* NSRecursiveLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */; };
+		D8D184F527BACAB5004DDFFD /* SoundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D184F427BACAB5004DDFFD /* SoundViewController.swift */; };
 		D8D44C49279A0B87007340B5 /* TaskManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */; };
 		D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D50116275928CF008C1BC9 /* Scheduler.swift */; };
 		D8D6701527A72B2100D12E96 /* DestinationPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */; };
@@ -344,6 +345,7 @@
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
 		D8CCACAD27B2FE3D008C8122 /* NSLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSLock.swift; sourceTree = "<group>"; };
 		D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRecursiveLock.swift; sourceTree = "<group>"; };
+		D8D184F427BACAB5004DDFFD /* SoundViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundViewController.swift; sourceTree = "<group>"; };
 		D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerViewController.swift; sourceTree = "<group>"; };
 		D8D50116275928CF008C1BC9 /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationPickerViewController.swift; sourceTree = "<group>"; };
@@ -644,6 +646,7 @@
 			isa = PBXGroup;
 			children = (
 				D8F5CADA279D07A700A2DC3F /* MultipleImageViewController.swift */,
+				D8D184F427BACAB5004DDFFD /* SoundViewController.swift */,
 				D80A9CC127A4B66400E49AD8 /* SourceViewController.swift */,
 			);
 			path = Viewers;
@@ -1189,6 +1192,7 @@
 				D88A472427B83D6E0094A438 /* FileMetadataCache.swift in Sources */,
 				D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */,
 				D8647C702793540500DCC261 /* TaskManager.swift in Sources */,
+				D8D184F527BACAB5004DDFFD /* SoundViewController.swift in Sources */,
 				DB5AC974275681510043FE5C /* CanvasView.swift in Sources */,
 				DB7900182742E6F6005E904F /* lzio.c in Sources */,
 				DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */,
