@@ -26,7 +26,10 @@ class SoundViewController: UIViewController {
 
     lazy var playButton: UIButton = {
         var configuration = UIButton.Configuration.borderedTinted()
-        configuration.image = UIImage(systemName: "play.fill")
+        configuration.image = UIImage(systemName: "play.fill",
+                                      withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+        configuration.cornerStyle = .capsule
+        configuration.buttonSize = .large
         let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
