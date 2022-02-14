@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import UIKit
 
 class SoundViewController: UIViewController {
@@ -28,6 +29,8 @@ class SoundViewController: UIViewController {
     }
 
     private let url: URL
+    private var cancellable: Cancellable?
+
     private var state = State.idle {
         didSet {
             dispatchPrecondition(condition: .onQueue(.main))
@@ -102,34 +105,30 @@ class SoundViewController: UIViewController {
 
     func play() {
         state = .playing
-        DispatchQueue.global().async { [weak self, url] in
-            do {
-                let interpreter = OpoInterpreter()
-                let fileInfo = interpreter.getFileInfo(path: url.path)
-                guard case OpoInterpreter.FileInfo.sound(let soundFile) = fileInfo else {
-                    throw OpoLuaError.unsupportedFile
-                }
-                try Sound.play(data: soundFile.data)
-                DispatchQueue.main.async {
+        do {
+            let interpreter = OpoInterpreter()
+            let fileInfo = interpreter.getFileInfo(path: url.path)
+            guard case OpoInterpreter.FileInfo.sound(let soundFile) = fileInfo else {
+                throw OpoLuaError.unsupportedFile
+            }
+            cancellable = Sound.play(data: soundFile.data) { error in
+                DispatchQueue.main.async { [weak self] in
                     guard let self = self else {
                         return
                     }
                     self.state = .idle
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    guard let self = self else {
-                        return
+                    if let error = error {
+                        self.present(error: error)
                     }
-                    self.state = .idle
-                    self.present(error: error)
                 }
             }
+        } catch {
+            self.present(error: error)
         }
     }
 
     func pause() {
-        print("PAUSE")
+        cancellable?.cancel()
     }
 
 }

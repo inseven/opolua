@@ -18,13 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import Foundation
 import AudioUnit
 import AVFoundation
+import Combine
+import Foundation
 
 class PlaySoundRequest: Scheduler.Request {
 
     private let data: Data
+    private var cancellable: Cancellable?
 
     init(handle: Async.RequestHandle, data: Data) {
         self.data = data
@@ -32,7 +34,7 @@ class PlaySoundRequest: Scheduler.Request {
     }
 
     override func start() {
-        Sound.playAsync(data: data) { error in
+        cancellable = Sound.play(data: data) { error in
             if let error = error {
                 DispatchQueue.main.async {
                     print("Play sound failed with error \(error).")
@@ -45,12 +47,36 @@ class PlaySoundRequest: Scheduler.Request {
     }
 
     override func cancel() {
-        // TODO: Cancel
+        cancellable?.cancel()
+        cancellable = nil
     }
 
 }
 
 class Sound {
+
+    class CancelToken: Cancellable {
+
+        private let lock = NSLock()
+        private var _isCancelled = false
+
+        var isCancelled: Bool {
+            return lock.perform {
+                return _isCancelled
+            }
+        }
+
+        func cancel() {
+            lock.perform {
+                _isCancelled = true
+            }
+        }
+
+        deinit {
+            cancel()
+        }
+
+    }
 
     static func beep(frequency: Double, duration: Double, sampleRate: Double = 44100.0) throws {
         let tone = Tone(sampleRate: sampleRate, frequency: frequency, duration: duration)
@@ -127,7 +153,7 @@ class Sound {
         return audioFormat
     }()
 
-    static func play(data: Data) throws {
+    private static func _play(data: Data, cancelToken: CancelToken) throws {
         var iterator = data.makeIterator()
         let semaphore = DispatchSemaphore(value: 0)
         let audioComponentDescription = AudioComponentDescription(componentType: kAudioUnitType_Output,
@@ -139,6 +165,11 @@ class Sound {
         let bus0 = audioUnit.inputBusses[0]
         try bus0.setFormat(self.audioFormat)
         audioUnit.outputProvider = { actionFlags, timestamp, frameCount, inputBusNumber, inputDataList -> AUAudioUnitStatus in
+
+            guard !cancelToken.isCancelled else {
+                semaphore.signal()
+                return kAudioServicesNoError
+            }
 
             let inputDataPtr = UnsafeMutableAudioBufferListPointer(inputDataList)
             guard inputDataPtr.count > 0 else {
@@ -176,15 +207,17 @@ class Sound {
         audioUnit.stopHardware()
     }
 
-    static func playAsync(data: Data, completion: @escaping (Error?) -> Void) {
+    static func play(data: Data, completion: @escaping (Error?) -> Void) -> Cancellable {
+        let cancelToken = CancelToken()
         DispatchQueue.global(qos: .userInteractive).async {
             do {
-                try self.play(data: data)
+                try self._play(data: data, cancelToken: cancelToken)
                 completion(nil)
             } catch {
                 completion(error)
             }
         }
+        return cancelToken
     }
 
 }
