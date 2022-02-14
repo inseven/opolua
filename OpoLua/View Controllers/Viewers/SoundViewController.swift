@@ -103,6 +103,11 @@ class SoundViewController: UIViewController {
         super.viewDidAppear(animated)
     }
 
+    override func viewDidDisappear(_ animated: Bool) {
+        cancellable?.cancel()
+        cancellable = nil
+    }
+
     func play() {
         state = .playing
         do {
@@ -111,8 +116,8 @@ class SoundViewController: UIViewController {
             guard case OpoInterpreter.FileInfo.sound(let soundFile) = fileInfo else {
                 throw OpoLuaError.unsupportedFile
             }
-            cancellable = Sound.play(data: soundFile.data) { error in
-                DispatchQueue.main.async { [weak self] in
+            cancellable = Sound.play(data: soundFile.data) { [weak self] error in
+                DispatchQueue.main.async {
                     guard let self = self else {
                         return
                     }
