@@ -22,7 +22,25 @@ import UIKit
 
 class SoundViewController: UIViewController {
 
+    enum State {
+        case idle
+        case playing
+    }
+
     private let url: URL
+    private var state = State.idle {
+        didSet {
+            dispatchPrecondition(condition: .onQueue(.main))
+            switch state {
+            case .idle:
+                playButton.isHidden = false
+                pauseButton.isHidden = true
+            case .playing:
+                pauseButton.isHidden = false
+                playButton.isHidden = true
+            }
+        }
+    }
 
     lazy var playButton: UIButton = {
         var configuration = UIButton.Configuration.borderedTinted()
@@ -40,16 +58,37 @@ class SoundViewController: UIViewController {
         return button
     }()
 
+    lazy var pauseButton: UIButton = {
+        var configuration = UIButton.Configuration.borderedTinted()
+        configuration.image = UIImage(systemName: "pause.fill",
+                                      withConfiguration: UIImage.SymbolConfiguration(pointSize: 48))
+        configuration.cornerStyle = .capsule
+        configuration.buttonSize = .large
+        let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
+            guard let self = self else {
+                return
+            }
+            self.pause()
+        })
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
     init(url: URL) {
         self.url = url
         super.init(nibName: nil, bundle: nil)
         title = url.localizedName
         view.backgroundColor = .systemBackground
 
+        pauseButton.isHidden = true
+
         view.addSubview(playButton)
+        view.addSubview(pauseButton)
         NSLayoutConstraint.activate([
             playButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             playButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            pauseButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            pauseButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
     }
 
@@ -59,20 +98,38 @@ class SoundViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-
     }
 
     func play() {
-        do {
-            let interpreter = OpoInterpreter()
-            let fileInfo = interpreter.getFileInfo(path: url.path)
-            guard case OpoInterpreter.FileInfo.sound(let soundFile) = fileInfo else {
-                throw OpoLuaError.unsupportedFile
+        state = .playing
+        DispatchQueue.global().async { [weak self, url] in
+            do {
+                let interpreter = OpoInterpreter()
+                let fileInfo = interpreter.getFileInfo(path: url.path)
+                guard case OpoInterpreter.FileInfo.sound(let soundFile) = fileInfo else {
+                    throw OpoLuaError.unsupportedFile
+                }
+                try Sound.play(data: soundFile.data)
+                DispatchQueue.main.async {
+                    guard let self = self else {
+                        return
+                    }
+                    self.state = .idle
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    guard let self = self else {
+                        return
+                    }
+                    self.state = .idle
+                    self.present(error: error)
+                }
             }
-            try Sound.play(data: soundFile.data)
-        } catch {
-            present(error: error)
         }
+    }
+
+    func pause() {
+        print("PAUSE")
     }
 
 }
