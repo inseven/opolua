@@ -96,8 +96,8 @@ class InstallerSummaryViewController: UIViewController {
             descriptionLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
 
             imageView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor),
-            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            titleLabel.topAnchor.constraint(equalToSystemSpacingBelow: imageView.bottomAnchor, multiplier: 1),
+            descriptionLabel.topAnchor.constraint(equalToSystemSpacingBelow: titleLabel.bottomAnchor, multiplier: 1),
         ])
 
         view.addSubview(footerView)
