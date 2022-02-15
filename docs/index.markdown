@@ -27,7 +27,7 @@
 
 <div class="hero">
     <div id="carousel" class="screenshot-iphone-13-pro-landscape">
-        <img class="show" src="/images/hero.png">
+        <img class="show" src="/images/files.png">
         <img src="/images/jumpy.png">
         <img src="/images/tile-fall.png">
         <img src="/images/vexed.png">
