@@ -989,7 +989,7 @@ function IOWRITE(h, data)
     -- What's the right actual error code for this? KErrWrite? KOplErrReadOnly? KErrAccess?
     assert(f.mode & KIoOpenAccessUpdate > 0, "Cannot write to a readonly file handle!")
     assert(f.pos, "Cannot IOWRITE a non-file handle!")
-    -- printf("IOWRITE pos=%d len=%d data=%s\n", f.pos, #data, hexEscape(data))
+    -- printf("IOWRITE h=%d pos=%d len=%d data='%s'\n", h, f.pos, #data, hexEscape(data))
     -- Not the most efficient operation, oh well
     f.data = f.data:sub(1, f.pos - 1)..data..f.data:sub(f.pos + #data)
 
@@ -1009,6 +1009,7 @@ function IOSEEK(h, mode, offset)
     assert(f.mode & KIoOpenAccessRandom > 0, KErrInvalidArgs)
     assert(f.pos, "Cannot IOSEEK a non-file handle!")
     local newPos
+    -- printf("IOSEEK(%d, %d, %d)\n", h, mode, offset)
     if mode == KIoSeekFromStart then
         newPos = 1 + offset
     elseif mode == KIoSeekFromEnd then

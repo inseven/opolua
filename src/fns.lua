@@ -938,7 +938,9 @@ function Tan(stack, runtime) -- 0x91
 end
 
 function Val(stack, runtime) -- 0x92
-    local result = tonumber(stack:pop())
+    local str = stack:pop()
+    -- printf("Val('%s')\n", hexEscape(str))
+    local result = tonumber(str)
     assert(result, KErrInvalidArgs)
     stack:push(result)
 end
@@ -1102,18 +1104,21 @@ end
 
 function NumStr(stack, runtime) -- 0xCE
     local width = stack:pop()
-    local intVal = roundToNearest(stack:pop())
+    local val = stack:pop()
+    local intVal = roundToNearest(val)
+    -- printf("NumStr(%s, %d) intval=%d", val, width, intVal)
     local result
     if width < 0 then
-        result = fmt("%"..tostring(-width).."d", intVal)
+        width = -width
+        result = fmt("%"..tostring(width).."d", intVal)
     else
         result = tostring(intVal)
     end
     if #result > width then
-        stack:push(string.rep("*", width))
-    else
-        stack:push(result)
+        result = string.rep("*", width)
     end
+    -- printf(" -> '%s'\n", result)
+    stack:push(result)
 end
 
 function PeekStr(stack, runtime) -- 0xCF
