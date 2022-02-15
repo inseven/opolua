@@ -417,7 +417,12 @@ extension CGImage {
     }
 
     func masking(epocMask: CGImage) -> CGImage? {
-        precondition(self.width == epocMask.width && self.height == epocMask.height, "Bad mask size!")
+        guard self.width == epocMask.width,
+              self.height == epocMask.height
+        else {
+            return nil
+
+        }
         // CoreGraphics masks have the opposite semantics to epoc ones...
         let invertedCi = CIImage(cgImage: epocMask).applyingFilter("CIColorInvert")
         let invertedCg = CIContext().createCGImage(invertedCi, from: invertedCi.extent)!
