@@ -138,7 +138,9 @@ class ResourceViewController: UITableViewController {
             guard let applicationMetadata = applicationMetadata else {
                 throw OpoLuaError.unsupportedFile
             }
-            self.strings = applicationMetadata.captions.map({ localizedString in
+            self.strings = [NamedString(name: "UID3",
+                                        value: String(applicationMetadata.uid3, radix: 16))]
+            self.strings += applicationMetadata.captions.map({ localizedString in
                 return NamedString(name: "Caption (\(localizedString.locale.identifier))", value: localizedString.value)
             })
             let bitmaps = applicationMetadata.icons
