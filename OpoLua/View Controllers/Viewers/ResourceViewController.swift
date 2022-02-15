@@ -110,6 +110,10 @@ class ResourceViewController: UITableViewController {
         title = url.localizedName
         tableView.register(ImageCell.self, forCellReuseIdentifier: ImageCell.reuseIdentifier)
         tableView.register(StringCell.self, forCellReuseIdentifier: StringCell.reuseIdentifier)
+        tableView.cellLayoutMarginsFollowReadableWidth = true
+        tableView.separatorStyle = .none
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 44
         navigationItem.rightBarButtonItem = shareBarButtonItem
     }
 
@@ -175,20 +179,14 @@ class ResourceViewController: UITableViewController {
             let string = strings[indexPath.row]
             cell.textLabel?.text = string.name
             cell.detailTextLabel?.text = string.value
+            cell.selectionStyle = .none
             return cell
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: ImageCell.reuseIdentifier,
                                                      for: indexPath) as! ImageCell
             cell.bitmapView.image = images[indexPath.row - strings.count]
+            cell.selectionStyle = .none
             return cell
-        }
-    }
-
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        if indexPath.row < strings.count {
-            return 44.0
-        } else {
-            return 200.0
         }
     }
 
