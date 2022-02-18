@@ -88,6 +88,23 @@ ul.navigation > li {
     padding: 0.4em;
 }
 
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+}
+
+tr:nth-child(even) {
+    background: #eee;
+}
+
+th, td {
+    padding: 0.4em;
+}
+
 .content {
     max-width: var(--content-width);
     padding: 0 var(--content-padding);
