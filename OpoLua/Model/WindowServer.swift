@@ -56,7 +56,6 @@ class WindowServer {
 
     private var device: Device
     private var screenSize: Graphics.Size
-    private var drawableHandle = (1...).makeIterator()
     private var drawablesById: [Graphics.DrawableId: Drawable] = [:]
     private var windows: [Graphics.DrawableId: CanvasView] = [:] // convenience
     private var infoDrawableHandle: Graphics.DrawableId?
@@ -80,8 +79,8 @@ class WindowServer {
     lazy var rootView: RootView = {
         let view = RootView(screenSize: screenSize.cgSize())
         let screenRect = Graphics.Rect(origin: .zero, size: screenSize)
-        let id = createWindow(rect: screenRect, mode: .color256, shadowSize: 0)
-        assert(id == .defaultWindow)
+        let id = Graphics.DrawableId.defaultWindow
+        createWindow(id: id, rect: screenRect, mode: .color256, shadowSize: 0)
         let defaultWindow = self.windows[id]!
         view.addSubview(defaultWindow)
         defaultWindow.isHidden = false
@@ -104,19 +103,12 @@ class WindowServer {
         return windows[drawableId]
     }
 
-    private func newCanvas(size: CGSize, mode: Graphics.Bitmap.Mode) -> Canvas {
-        dispatchPrecondition(condition: .onQueue(.main))
-        let id = Graphics.DrawableId(value: drawableHandle.next()!)
-        let canvas = Canvas(id: id, size: size, mode: mode)
-        return canvas
-    }
-
     /**
      N.B. Windows are hidden by default.
      */
-    func createWindow(rect: Graphics.Rect, mode: Graphics.Bitmap.Mode, shadowSize: Int) -> Graphics.DrawableId {
+    func createWindow(id: Graphics.DrawableId, rect: Graphics.Rect, mode: Graphics.Bitmap.Mode, shadowSize: Int) {
         dispatchPrecondition(condition: .onQueue(.main))
-        let canvas = self.newCanvas(size: rect.size.cgSize(), mode: mode)
+        let canvas = Canvas(id: id, size: rect.size.cgSize(), mode: mode)
         let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
         newView.isHidden = true
         newView.frame = rect.cgRect()
@@ -129,14 +121,12 @@ class WindowServer {
         self.drawablesById[canvas.id] = newView
         self.windows[canvas.id] = newView
         bringInfoWindowToFront()
-        return canvas.id
     }
 
-    func createBitmap(size: Graphics.Size, mode: Graphics.Bitmap.Mode) -> Graphics.DrawableId {
+    func createBitmap(id: Graphics.DrawableId, size: Graphics.Size, mode: Graphics.Bitmap.Mode) {
         dispatchPrecondition(condition: .onQueue(.main))
-        let canvas = newCanvas(size: size.cgSize(), mode: mode)
+        let canvas = Canvas(id: id, size: size.cgSize(), mode: mode)
         drawablesById[canvas.id] = canvas
-        return canvas.id
     }
 
     func setVisiblity(handle: Graphics.DrawableId, visible: Bool) {

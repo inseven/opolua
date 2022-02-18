@@ -262,9 +262,6 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
     switch result {
     case .nothing:
         return 0
-    case .handle(let h):
-        L.push(h.value)
-        return 1
     case .textMetrics(let metrics):
         L.push(metrics.size.width)
         L.push(metrics.size.height)
@@ -596,22 +593,25 @@ private func testEvent(_ L: LuaState!) -> Int32 {
 
 private func createBitmap(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    guard let width = L.toint(1),
-          let height = L.toint(2),
-          let modeVal = L.toint(3),
+    guard let id = L.toint(1),
+          let width = L.toint(2),
+          let height = L.toint(3),
+          let modeVal = L.toint(4),
           let mode = Graphics.Bitmap.Mode(rawValue: modeVal) else {
         print("Bad parameters to createBitmap")
         return 0
     }
+    let drawableId = Graphics.DrawableId(value: id)
     let size = Graphics.Size(width: width, height: height)
-    return doGraphicsOp(L, iohandler, .createBitmap(size, mode))
+    return doGraphicsOp(L, iohandler, .createBitmap(drawableId, size, mode))
 }
 
 private func createWindow(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    guard let x = L.toint(1), let y = L.toint(2),
-          let width = L.toint(3), let height = L.toint(4),
-          let flags = L.toint(5),
+    guard let id = L.toint(1),
+          let x = L.toint(2), let y = L.toint(3),
+          let width = L.toint(4), let height = L.toint(5),
+          let flags = L.toint(6),
           let mode = Graphics.Bitmap.Mode(rawValue: flags & 0xF) else {
         return 0
     }
@@ -620,8 +620,9 @@ private func createWindow(_ L: LuaState!) -> Int32 {
     if flags & 0xF0 != 0 {
         shadow = 2 * ((flags & 0xF00) >> 8)
     }
+    let drawableId = Graphics.DrawableId(value: id)
     let rect = Graphics.Rect(x: x, y: y, width: width, height: height)
-    return doGraphicsOp(L, iohandler, .createWindow(rect, mode, shadow))
+    return doGraphicsOp(L, iohandler, .createWindow(drawableId, rect, mode, shadow))
 }
 
 private func getTime(_ L: LuaState!) -> Int32 {

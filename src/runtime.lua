@@ -415,9 +415,11 @@ function Runtime:getMenu()
     return self.menu
 end
 
-function Runtime:newGraphicsContext(id, width, height, isWindow, displayMode)
+function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
     local graphics = self:getGraphics()
-    assert(graphics[id] == nil, "Graphics context already exists!")
+    -- #graphics+1 will always be the first free id, which is the same
+    -- strategy as the Series 5 appears to use.
+    local id = #graphics + 1
     local newCtx = {
         id = id,
         displayMode = displayMode,
@@ -448,7 +450,8 @@ function Runtime:getGraphics()
             screenMode = mode,
             sprites = {},
         }
-        self:newGraphicsContext(KDefaultWin, w, h, true, mode)
+        local ctx = self:newGraphicsContext(w, h, true, mode)
+        assert(ctx.id == KDefaultWin)
         self:FONT(KFontCourierNormal11, 0)
     end
     return self.graphics

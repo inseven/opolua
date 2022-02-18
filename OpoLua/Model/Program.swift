@@ -262,13 +262,13 @@ class Program {
         dispatchPrecondition(condition: .onQueue(.main))
         switch (operation) {
 
-        case .createBitmap(let size, let mode):
-            let id = windowServer.createBitmap(size: size, mode: mode)
-            return .handle(id)
+        case .createBitmap(let id, let size, let mode):
+            windowServer.createBitmap(id: id, size: size, mode: mode)
+            return .nothing
 
-        case .createWindow(let rect, let mode, let shadowSize):
-            let id = windowServer.createWindow(rect: rect, mode: mode, shadowSize: shadowSize)
-            return .handle(id)
+        case .createWindow(let id, let rect, let mode, let shadowSize):
+            windowServer.createWindow(id: id, rect: rect, mode: mode, shadowSize: shadowSize)
+            return .nothing
 
         case .close(let drawableId):
             windowServer.close(drawableId: drawableId)

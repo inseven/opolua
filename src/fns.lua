@@ -667,8 +667,9 @@ function gCreateEnhanced(stack, runtime) -- 0x39
     local flags = stack:pop()
     local visible = stack:pop()
     local x, y, w, h = stack:popRect()
-    -- printf("gCreate x=%d y=%d w=%d h=%d flags=%d\n", x, y, w, h, flags)
+    -- printf("gCreate x=%d y=%d w=%d h=%d flags=%d", x, y, w, h, flags)
     local id = runtime:gCREATE(x, y, w, h, visible ~= 0, flags)
+    -- printf(" -> %d\n", id)
     stack:push(id)
 end
 
@@ -1151,7 +1152,7 @@ function UpperStr(stack, runtime) -- 0xD3
 end
 
 function WCmd(stack, runtime) -- 0xD5
-    -- This is the onld cmd event we ever send, so...
+    -- This is the only cmd event we ever send, so...
     stack:push("X")
 end
 

@@ -435,10 +435,10 @@ end
 
 function gCREATE(x, y, w, h, visible, flags)
     -- printf("gCREATE w=%d h=%d flags=%X", w, h, flags or 0)
-    local id = runtime:iohandler().createWindow(x, y, w, h, flags or KgCreate2GrayMode)
-    assert(id, "Failed to createWindow!")
+    local ctx = runtime:newGraphicsContext(w, h, true, (flags or 0) & 0xF)
+    local id = ctx.id
+    runtime:iohandler().createWindow(id, x, y, w, h, flags or KgCreate2GrayMode)
     -- printf(" id=%d\n", id)
-    local ctx = runtime:newGraphicsContext(id, w, h, true, (flags or 0) & 0xF)
     ctx.winX = x
     ctx.winY = y
     if visible then
@@ -449,10 +449,10 @@ end
 
 function gCREATEBIT(w, h, mode)
     -- printf("gCREATEBIT w=%d h=%d mode=%X", w, h, mode or 0)
-    local id = runtime:iohandler().createBitmap(w, h, mode)
-    assert(id, "Failed to createBitmap!") -- Shouldn't ever fail...
+    local ctx = runtime:newGraphicsContext(w, h, false, mode)
+    local id = ctx.id
+    runtime:iohandler().createBitmap(id, w, h, mode)
     -- printf(" id=%d\n", id)
-    runtime:newGraphicsContext(id, w, h, false, mode)
     return id
 end
 
