@@ -83,7 +83,9 @@ This page lists the status of programs we've tested, and any known issues we are
         <td>
             <div class="status issues">Issues</div>
         </td>
-        <td>Working, except for Help menu item.</td>
+        <td>
+            Help menu item doesn't work (<a href="https://github.com/inseven/opolua/issues/202">#202</a>).
+        </td>
     </tr>
 
     <tr>
