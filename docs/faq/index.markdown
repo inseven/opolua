@@ -97,4 +97,4 @@ We don't currently fully support invert draw mode, meaning that programs that ma
 
 You can see this issue clearly in Asteroids by Phil Gooch & Neuon, which uses this mode to draw the asteroids:
 
-![](/images/asteroids.png)
+<img class="program-screenshot" alt="Screenshot of Asteroids running in OPL for iOS" src="/images/asteroids.png">
