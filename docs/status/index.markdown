@@ -17,9 +17,20 @@ This page lists the status of programs we've tested, and any known issues we are
     </tr>
 
     <tr>
+        <td>CharMap</td>
+        <td>Pelican Software</td>
+        <td>Working</td>
+    </tr>
+
+    <tr>
         <td>Jumpy! Plus</td>
         <td>Jon Read</td>
         <td>Working</td>
+    </tr>
+
+    <tr>Tile Fall</td>
+        <td>Adam Dawes and Neuon</td>
+        <td>Working, except for Help menu item</td>
     </tr>
 
     <tr>
