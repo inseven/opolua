@@ -466,6 +466,10 @@ function AddrSlice:write(data)
     -- printf("-WRITE: val=%s\n", self.var())
 end
 
+function AddrSlice:writeValue(value, valueType)
+    local data = string.pack(FmtForType[valueType], value)
+    self:write(data)
+end
 
 function AddrSlice:writeArray(array, valueType)
     -- Most of the time the underlying var will probably be of the same type so

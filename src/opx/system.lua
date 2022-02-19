@@ -397,10 +397,10 @@ function MachineName(stack, runtime) -- 49
 end
 
 function MachineUniqueId(stack, runtime) -- 50
-    local loWord = stack:pop():dereference()
-    local hiWord = stack:pop():dereference()
-    hiWord(0x090700A)
-    loWord(0xFACE4ACE)
+    local loWord = stack:pop()
+    local hiWord = stack:pop()
+    hiWord:writeValue(0x090700A, DataTypes.ELong)
+    loWord:writeValue(toint32(0xFACE4ACE), DataTypes.ELong)
     stack:push(0)
 end
 
