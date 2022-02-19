@@ -275,9 +275,12 @@ h2 {
 
 @media only screen and (max-width: 600px) {
 
-    .screenshot-iphone-13-pro-landscape,
+    .screenshot-iphone-13-pro-landscape {
+        padding-bottom: 46.20853081%;
+    }
+
     .screenshot-ipad-pro-11-landscape {
-        padding-bottom: 0;
+        padding-bottom: 69.84924623%;
     }
 
     .screenshot-iphone-13-pro-landscape::after,
@@ -288,7 +291,6 @@ h2 {
     .screenshot-iphone-13-pro-landscape img,
     .screenshot-ipad-pro-11-landscape img {
         width: 100%;
-        position: relative;
         border: 1px solid var(--icon-border-color);
         top: 0;
         left: 0;
