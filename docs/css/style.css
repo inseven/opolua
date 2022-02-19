@@ -295,3 +295,23 @@ h2 {
     }
 
 }
+
+.status {
+    background-color: #ccc;
+    color: #fff;
+    display: inline-block;
+    padding: 0.1em 0.8em;
+    border-radius: 100px;
+}
+
+.status.working {
+    background-color: rgb(52, 199, 89);
+}
+
+.status.issues {
+    background-color: rgb(255, 149, 0);
+}
+
+.status.broken {
+    background-color: rgb(255, 59, 48);
+}

@@ -14,6 +14,16 @@ This page lists the status of programs we've tested, and any known issues we are
         <th>Program</th>
         <th>Author</th>
         <th>Status</th>
+        <th>Comments / Issues</th>
+    </tr>
+
+    <tr>
+        <td>GemTile</td>
+        <td>beelogic</td>
+        <td>
+            <div class="status working">Working</div>
+        </td>
+        <td></td>
     </tr>
 
     <tr>
@@ -25,7 +35,39 @@ This page lists the status of programs we've tested, and any known issues we are
     <tr>
         <td>Jumpy! Plus</td>
         <td>Jon Read</td>
-        <td>Working</td>
+        <td>
+            <div class="status working">Working</div>
+        </td>
+        <td></td>
+    </tr>
+
+    <tr>
+        <td>LogJam</td>
+        <td>Adam's Software</td>
+        <td>
+            <div class="status broken">Uses Database</div>
+        </td>
+        <td>
+            <a href="https://github.com/inseven/opolua/issues/203">#203</a>
+        </td>
+    </tr>
+
+    <tr>
+        <td>Mancala</td>
+        <td>Neil Sands</td>
+        <td>
+            <div class="status working">Working</div>
+        </td>
+        <td></td>
+    </tr>
+
+    <tr>
+        <td>Tile Fall</td>
+        <td>Adam Dawes & Neuon</td>
+        <td>
+            <div class="status working">Working</div>
+        </td>
+        <td></td>
     </tr>
 
     <tr>Tile Fall</td>
@@ -36,7 +78,10 @@ This page lists the status of programs we've tested, and any known issues we are
     <tr>
         <td>Vexed</td>
         <td>Ewan Spence</td>
-        <td>Working</td>
+        <td>
+            <div class="status working">Working</div>
+        </td>
+        <td></td>
     </tr>
 
 </table>
