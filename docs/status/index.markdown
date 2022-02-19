@@ -29,7 +29,12 @@ This page lists the status of programs we've tested, and any known issues we are
     <tr>
         <td>CharMap</td>
         <td>Pelican Software</td>
-        <td>Working</td>
+        <td>
+            <div class="status issues">Issues</div>
+        </td>
+        <td>
+            No native iOS clipboard integration (<a href="https://github.com/inseven/opolua/issues/205">#205</a>).
+        </td>
     </tr>
 
     <tr>
@@ -45,10 +50,10 @@ This page lists the status of programs we've tested, and any known issues we are
         <td>LogJam</td>
         <td>Adam's Software</td>
         <td>
-            <div class="status broken">Uses Database</div>
+            <div class="status broken">Not Working</div>
         </td>
         <td>
-            <a href="https://github.com/inseven/opolua/issues/203">#203</a>
+            Requires database support (<a href="https://github.com/inseven/opolua/issues/203">#203</a>).
         </td>
     </tr>
 
@@ -65,10 +70,10 @@ This page lists the status of programs we've tested, and any known issues we are
         <td>Super Breakout</td>
         <td>Bill Walker</td>
         <td>
-            <div class="status broken">Missing Operation</div>
+            <div class="status broken">Not Working</div>
         </td>
         <td>
-            <a href="https://github.com/inseven/opolua/issues/204">#204</a>
+            Missing operation (<a href="https://github.com/inseven/opolua/issues/204">#204</a>).
         </td>
     </tr>
 
@@ -76,7 +81,7 @@ This page lists the status of programs we've tested, and any known issues we are
         <td>Tile Fall</td>
         <td>Adam Dawes & Neuon</td>
         <td>
-            <div class="status issues">Working with Issues</div>
+            <div class="status issues">Issues</div>
         </td>
         <td>Working, except for Help menu item.</td>
     </tr>
