@@ -62,6 +62,17 @@ This page lists the status of programs we've tested, and any known issues we are
     </tr>
 
     <tr>
+        <td>Super Breakout</td>
+        <td>Bill Walker</td>
+        <td>
+            <div class="status broken">Missing Operation</div>
+        </td>
+        <td>
+            <a href="https://github.com/inseven/opolua/issues/204">#204</a>
+        </td>
+    </tr>
+
+    <tr>
         <td>Tile Fall</td>
         <td>Adam Dawes & Neuon</td>
         <td>
