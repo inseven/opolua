@@ -301,7 +301,7 @@ h2 {
     color: #fff;
     display: inline-block;
     padding: 0.1em 0.8em;
-    border-radius: 100px;
+    border-radius: 1em;
 }
 
 .status.working {
