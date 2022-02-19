@@ -76,14 +76,9 @@ This page lists the status of programs we've tested, and any known issues we are
         <td>Tile Fall</td>
         <td>Adam Dawes & Neuon</td>
         <td>
-            <div class="status working">Working</div>
+            <div class="status issues">Working with Issues</div>
         </td>
-        <td></td>
-    </tr>
-
-    <tr>Tile Fall</td>
-        <td>Adam Dawes and Neuon</td>
-        <td>Working, except for Help menu item</td>
+        <td>Working, except for Help menu item.</td>
     </tr>
 
     <tr>
