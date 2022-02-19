@@ -951,9 +951,10 @@ local function valList(stack, runtime)
     local vals = {}
     if numParams == 0 then
         -- It's an array
-        local var = stack:pop():dereference():getParent()
+        local numVals = stack:pop()
+        local var = stack:pop():getParent()
         local val = var()
-        for i = 1, val:arrayLen() do
+        for i = 1, numVals do
             vals[i] = val[i]()
         end
     else
