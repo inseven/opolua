@@ -4,7 +4,16 @@ title: Frequently Asked Questions
 
 # FAQ
 
-1. **Where can I find OPL programs to try out?**
+1. [Where can I find OPL programs to try out?](#finding-programs)
+2. [Why aren't databases supported?](#database-support)
+3. [How should I go about reporting problems?](#reporting-issues)
+4. [What OPX libraries are supported?](#opx-support)
+
+---
+
+<a id="finding-programs"></a>
+
+## Where can I find OPL programs to try out?
 
    There are a number of sites with links and downloads that might be useful, and the [Internet Archive](https://archive.org) hosts copies of a number of publishers' sites that are no longer available anywhere else online.
 
@@ -19,13 +28,17 @@ title: Frequently Asked Questions
 
    _Fortunately, most OPL software was shareware and many authors have made license codes freely available after-the-fact, but please remember that downloading copies of commercial software you have not purchased is illegal. We do not encourage or condone the use of illegally obtained software._
 
-2. **Why aren't databases supported?**
+<a id="database-support"></a>
 
-   The Psion database format is complex and unfriendly so we've decided not to try adding support for it just yet--there are a lot of programs that don't require database support and we'd like to improve our support for those before tackling this mammoth task.
+## Why aren't databases supported?
+
+   The Psion database format is complex and unfriendly so we've decided not to try adding support for it just yet--there are a lot of programs that don't require database support and we'd like to improve our support for those before tackling this mammoth task. We're tracking this as issue [#203](https://github.com/inseven/opolua/issues/203).
 
    If you're a developer interested in taking on the challenge, please feel free to get in touch; we [welcome contributions and pull requests](https://github.com/inseven/opolua#contributing).
 
-3. **How should I go about reporting problems?**
+<a id="reporting-issues"></a>
+
+## How should I go about reporting problems?
 
    [GitHub Issues](https://github.com/inseven/opolua/issues) are the best way for us to track and triage problems and feature requests. Please check for any existing issues before raising a new one--if you don't find one, we'd love to hear your thoughts.
 
@@ -36,7 +49,9 @@ title: Frequently Asked Questions
    - specific instructions that might help us reproduce the issue
    - help on how to find the program you were running to let us test changes
 
-4. **What OPX libraries are supported?**
+<a id="opx-support"></a>
+
+## What OPX libraries are supported?
 
    OPX libraries are native C/C++ libraries that OPL programs can use. The following built-in and commonly used OPX libraries are supported:
 
