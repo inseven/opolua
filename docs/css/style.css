@@ -118,6 +118,12 @@ th, td {
     text-align: center;
 }
 
+.app-store-link {
+    max-width: var(--details-width);
+    margin: 2em auto;
+    text-align: center;
+}
+
 .banner {
     text-align: center;
     margin-bottom: 2em;
@@ -222,8 +228,6 @@ img {
 }
 
 img.inline-screenshot {
-/*     width: 60px;
-    max-width: 100%; */
     border: 1px solid var(--icon-border-color);
 }
 
