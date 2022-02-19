@@ -4,6 +4,7 @@ title: Frequently Asked Questions
 
 # FAQ
 
+1. [How do I install OPL programs?](#installing-programs)
 1. [Where can I find OPL programs to try out?](#finding-programs)
 2. [Why aren't databases supported?](#database-support)
 3. [How should I go about reporting problems?](#reporting-issues)
@@ -11,6 +12,32 @@ title: Frequently Asked Questions
 5. [Why do the graphics sometimes look wrong?](#invert-draw-mode)
 
 ---
+
+<a id="installing-programs"></a>
+
+## How do I install programs?
+
+OPL supports open-in-place for Psion installers (SIS files), meaning you can install programs directly from iCloud Drive using the Files app on your iPhone or iPad.
+
+1. Add the installer to iCloud Drive, or download it directly to your iPhone.
+
+2. Navigate to the installer in the iOS Files app, and tap on the installer (`JUMPY!.SIS` in the example):
+
+   <img class="inline-screenshot" srcset="/images/install-1.png 3x">
+
+3. Select the destination you'd like to install your program to and tap 'Next':
+
+   <img class="inline-screenshot" srcset="/images/install-2.png 3x">
+
+4. If everything has gone to plan 🤞🏻, you should see a summary screen displaying the icon of your newly installed program:
+
+   <img class="inline-screenshot" srcset="/images/install-3.png 3x">
+
+   Tap 'Done' to reveal the program in OPL.
+
+5. Tap the program icon to run it:
+
+   <img class="inline-screenshot" srcset="/images/install-4.png 3x">
 
 <a id="finding-programs"></a>
 
