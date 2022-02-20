@@ -145,6 +145,7 @@
 		DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9190278369A4006F5CD0 /* BitmapFont.swift */; };
 		DB0B919327836E70006F5CD0 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = DB0B919227836E70006F5CD0 /* fonts */; };
 		DB0B91952789C561006F5CD0 /* directfilestore.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB0B91942789C561006F5CD0 /* directfilestore.lua */; };
+		DB3FAC2E27C2CA4A004155C1 /* CGRect.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3FAC2D27C2CA49004155C1 /* CGRect.swift */; };
 		DB5AC970275198A20043FE5C /* database.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC96F275198A20043FE5C /* database.lua */; };
 		DB5AC972275577990043FE5C /* mbm.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC971275577980043FE5C /* mbm.lua */; };
 		DB5AC974275681510043FE5C /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC973275681510043FE5C /* CanvasView.swift */; };
@@ -372,6 +373,7 @@
 		DB0B9190278369A4006F5CD0 /* BitmapFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitmapFont.swift; sourceTree = "<group>"; };
 		DB0B919227836E70006F5CD0 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		DB0B91942789C561006F5CD0 /* directfilestore.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = directfilestore.lua; sourceTree = "<group>"; };
+		DB3FAC2D27C2CA49004155C1 /* CGRect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGRect.swift; sourceTree = "<group>"; };
 		DB5AC96F275198A20043FE5C /* database.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = database.lua; sourceTree = "<group>"; };
 		DB5AC971275577980043FE5C /* mbm.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mbm.lua; sourceTree = "<group>"; };
 		DB5AC973275681510043FE5C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
@@ -562,6 +564,7 @@
 		D889134B274C17F300794D55 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				DB3FAC2D27C2CA49004155C1 /* CGRect.swift */,
 				D8FE60062757201600711717 /* Bundle.swift */,
 				D889134C274C17FF00794D55 /* CGContext.swift */,
 				DB0B918127710120006F5CD0 /* CGImage.swift */,
@@ -1133,6 +1136,7 @@
 				D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */,
 				DB79000B2742E6F6005E904F /* lobject.c in Sources */,
 				D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */,
+				DB3FAC2E27C2CA4A004155C1 /* CGRect.swift in Sources */,
 				D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */,
 				D81B4A4927B5AA650051B092 /* IndexableLocationObserver.swift in Sources */,
 				DB6B438427A55D1200625788 /* RootView.swift in Sources */,

@@ -1,0 +1,5 @@
+PROC main:
+	PRINT "Hello world!"
+	gINVERT 30, 50
+	GET
+ENDP

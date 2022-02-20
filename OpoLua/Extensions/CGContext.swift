@@ -231,9 +231,13 @@ extension CGContext {
             gXBorder(type: type, frame: rect.cgRect())
         case .invert(let size):
             let rect = Graphics.Rect(origin: operation.origin, size: size).cgRect()
-            let img = CIImage(cgImage: makeImage()!).cropped(to: rect).applyingFilter("CIColorInvert")
+            let flippedRect = rect.flipped(forHeight: CGFloat(self.height))
+            let img = CIImage(cgImage: makeImage()!).cropped(to: flippedRect).applyingFilter("CIColorInvert")
             let cgImg = CIContext().createCGImage(img, from: img.extent)!
-            drawUnflippedImage(cgImg, in: rect) // TODO mask out the corner pixels
+            self.saveGState()
+            self.clipToCornerlessBox(rect)
+            drawUnflippedImage(cgImg, in: rect)
+            self.restoreGState()
         }
     }
 
@@ -245,7 +249,7 @@ extension CGContext {
             restoreGState()
         }
         self.concatenate(self.coordinateFlipTransform.inverted())
-        let unflippedRect = CGRect(x: rect.minX, y: CGFloat(self.height) - rect.minY - rect.height, width: rect.width, height: rect.height)
+        let unflippedRect = rect.flipped(forHeight: CGFloat(self.height))
         if let mask = mask {
             // Annoyingly, clip() expects the mask to be the inverse of how epoc
             // expects it (ie 0xFF meaning opaque whereas epoc uses 0x00 for
