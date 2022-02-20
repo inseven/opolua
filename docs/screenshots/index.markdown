@@ -4,7 +4,7 @@ title: Screenshots
 
 # Screenshots
 
-## Running OPL Programs
+## Programs
 
 <div class="screenshot-iphone-13-pro-landscape"><img src="/images/jumpy.png"></div>
 
