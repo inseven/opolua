@@ -168,7 +168,7 @@ struct Graphics {
         let extra: AnyObject? // a CGImage, in the ProgramViewController impl
     }
 
-    enum FontFace: String {
+    enum FontFace: String, Codable {
         case arial
         case times
         case courier
@@ -191,7 +191,7 @@ struct Graphics {
     }
     typealias FontFlags = FlagSet<FontFlag>
 
-    struct FontInfo {
+    struct FontInfo: Codable {
         let uid: UInt32
         let face: FontFace
         let size: Int

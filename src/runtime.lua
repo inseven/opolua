@@ -534,13 +534,20 @@ function Runtime:drawCmd(type, op)
     if not op.y then
         op.y = context.pos.y
     end
-    op.style = context.style
     op.penwidth = context.penwidth
-    op.tmode = context.tmode
-    op.fontuid = context.font.uid
-    op.fontface = context.font.face
-    op.fontsize = context.font.size
-    op.fontbold = context.font.bold
+
+    if type == "text" then
+        op.tmode = context.tmode
+        op.fontinfo = {
+            uid = context.font.uid,
+            face = context.font.face,
+            size = context.font.size,
+            flags = context.style,
+        }
+        if context.font.bold then
+            op.fontinfo.flags = op.fontinfo.flags | 64 -- boldHint
+        end
+    end
 
     if graphics.buffer then
         table.insert(graphics.buffer, op)

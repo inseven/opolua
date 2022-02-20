@@ -227,16 +227,13 @@ private func draw(_ L: LuaState!) -> Int32 {
             }
         case "text":
             let str = L.tostring(-1, key: "string") ?? ""
-            var flags = Graphics.FontFlags(rawValue: L.toint(-1, key: "style") ?? 0)
             mode = Graphics.Mode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
-            let face = Graphics.FontFace(rawValue: L.tostring(-1, key: "fontface") ?? "arial") ?? .arial
-            let uid = UInt32(L.toint(-1, key: "fontuid") ?? 0)
-            if L.toboolean(-1, key: "fontbold") {
-                flags.insert(.boldHint)
+            if let fontInfo = L.getfield(-1, "fontinfo", Graphics.FontInfo.self) {
+                optype = .text(str, fontInfo)
+            } else {
+                print("Bad text params!")
+                continue
             }
-            let sz = L.toint(-1, key: "fontsize") ?? 15
-            let fontInfo = Graphics.FontInfo(uid: uid, face: face, size: sz, flags: flags)
-            optype = .text(str, fontInfo)
         case "border":
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             let rect = Graphics.Rect(origin: origin, size: size)
