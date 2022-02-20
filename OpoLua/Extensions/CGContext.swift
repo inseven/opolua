@@ -134,13 +134,8 @@ extension CGContext {
                 let bold = fontInfo.flags.contains(.bold)
                 let renderer = BitmapFontCache.shared.getRenderer(font: font, embolden: bold)
                 var x = operation.origin.x
-                var y = operation.origin.y
+                let y = operation.origin.y
                 for ch in str {
-                    if ch == "\n" {
-                        y = y + font.charh
-                        x = operation.origin.x
-                        continue
-                    }
                     if let img = renderer.getImageForChar(ch) {
                         let rect = CGRect(x: x, y: y, width: img.width, height: img.height)
                         self.saveGState()

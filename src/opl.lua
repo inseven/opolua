@@ -288,7 +288,16 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     -- The Series 5 appears to ignore type and treat 1 as 2 the same
     -- printf("gBUTTON %s type=%d state=%d\n", text, type, state)
 
-    local textw, texth, _, descent = gTWIDTH(text)
+    local textw = 0
+    local texth = 0
+    local _, descent, lineh
+    for line in text:gmatch("[^\n]*") do
+        local w, h, _, d = gTWIDTH(line)
+        textw = math.max(textw, w)
+        texth = texth + h
+        descent = d
+        lineh = h
+    end
 
     lightGrey()
     if state == 0 then
@@ -348,7 +357,10 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     end
     local textY = s.pos.y + ((height - texth + descent) // 2) + state
     black()
-    runtime:drawCmd("text", { string = text, x = textX, y = textY })
+    for line in text:gmatch("[^\n]*") do
+        runtime:drawCmd("text", { string = line, x = textX, y = textY })
+        textY = textY + lineh
+    end
 
     runtime:restoreGraphicsState(s) -- also restores gUPDATE state
 end
