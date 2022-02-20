@@ -747,6 +747,7 @@ function PRINT(str)
     gCOLOR(0, 0, 0)
     gFONT(screen.fontid)
     gSTYLE(screen.style)
+    gTMODE(KtModeReplace)
     local strPos = 1
     local strLen = #str
     local charX = screen.cursorx
