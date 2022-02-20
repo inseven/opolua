@@ -33,6 +33,8 @@
         <img src="/images/tile-fall.png">
         <img src="/images/vexed.png">
         <img src="/images/char-map.png">
+        <img src="/images/screenshot-image.png">
+        <img src="/images/screenshot-sound.png">
     </div>
 </div>
 
