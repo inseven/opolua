@@ -79,7 +79,7 @@ This page lists the status of programs we've tested, and any known issues we are
 
     <tr>
         <td>Super Breakout</td>
-        <td>Bill Walker</td>
+        <td>Tim Rohrer</td>
         <td>
             <div class="status broken">Not Working</div>
         </td>
