@@ -1,0 +1,29 @@
+INCLUDE "const.oph"
+
+PROC main:
+	DEFAULTWIN 2
+	gCOLOR 128,128,128
+	gFILL gWidth, gHEIGHT, 0
+	gCOLOR 0, 0, 0
+
+	gAT 0,40
+	drawLine:
+
+	gSAVEBIT "D:\gstyle.mbm"
+	GET
+ENDP
+
+PROC drawLine:
+	gSTYLE 0
+	gPRINT "Quick ly "
+	gSTYLE KgStyleBold%
+	gPRINT "Quick ly "
+	gSTYLE KgStyleUnder%
+	gPRINT "Quick ly "
+	gSTYLE KgStyleInverse%
+	gPRINT "Quick ly "
+	gSTYLE KgStyleDoubleHeight%
+	gPRINT "Quick ly "
+	gSTYLE KgStyleItalic%
+	gPRINT "Quick ly "
+ENDP

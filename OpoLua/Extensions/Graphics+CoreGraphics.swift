@@ -20,7 +20,6 @@
 
 import Foundation
 import CoreGraphics
-import CoreImage
 
 extension Graphics.MaskedBitmap {
 
@@ -38,11 +37,3 @@ extension Graphics.MaskedBitmap {
 
 }
 
-extension Graphics.Size {
-
-    init(_ cgSize: CGSize) {
-        width = Int(cgSize.width)
-        height = Int(cgSize.height)
-    }
-
-}

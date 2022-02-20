@@ -201,6 +201,13 @@ function gPRINTCLIP(text, width)
     return #text
 end
 
+function gXPRINT(text, flags)
+    local context = runtime:getGraphicsContext()
+    local w, h, ascent = gTWIDTH(text)
+    runtime:drawCmd("text", { string = text, y = context.pos.y - ascent, xflags = flags })
+    -- Note, doesn't increment context.pos.x
+end
+
 function gTWIDTH(text)
     local context = runtime:getGraphicsContext()
     local width, height, ascent, descent = runtime:iohandler().graphicsop("textsize", text, context.font, context.style)

@@ -66,11 +66,7 @@ extension CGContext {
                 strokePath()
             }
         case .line(let endPoint):
-            let path = CGMutablePath()
-            path.move(to: operation.origin.cgPoint().move(x: 0.5, y: 0.5))
-            path.addLine(to: endPoint.cgPoint().move(x: 0.5, y: 0.5))
-            addPath(path)
-            strokePath()
+            drawPixelLine(from: operation.origin.cgPoint(), to: endPoint.cgPoint())
         case .box(let size):
             let rect = CGRect(origin: operation.origin.cgPoint().move(x: 0.5, y: 0.5),
                               size: size.cgSize().adding(dx: -1, dy: -1))
@@ -128,29 +124,98 @@ extension CGContext {
                 fill(clearRect)
                 drawUnflippedImage(img, in: newRect)
             }
-        case .text(let str, let fontInfo):
+        case .text(let str, let fontInfo, let xstyle):
             let pt = operation.origin.cgPoint()
+            var bgcolor = operation.bgcolor.cgColor()
+            var fgcolor = operation.color.cgColor()
+            var inverse = fontInfo.flags.contains(.inverse)
+            let xstyleInverse = xstyle == .inverse || xstyle == .inverseNoCorner || xstyle == .thinInverse || xstyle == .thinInverseNoCorner
+            if  xstyleInverse {
+                // Yes, gSTYLE inverse and gXPRINT inverse stack
+                inverse = !inverse
+            }
+            if xstyle == .thinUnderlined {
+                // This smells like a bug, but gSTYLE inverse doesn't apply on
+                // thinUnderlined, despite the fact that it does with underlined
+                // and normal...
+                inverse = false
+            }
+            if inverse {
+                swap(&bgcolor, &fgcolor)
+            }
+            self.setStrokeColor(fgcolor)
+            self.setFillColor(fgcolor)
             if let font = fontInfo.toBitmapFont() {
                 let bold = fontInfo.flags.contains(.bold)
                 let renderer = BitmapFontCache.shared.getRenderer(font: font, embolden: bold)
                 var x = operation.origin.x
                 let y = operation.origin.y
+                let (textWidth, textHeight) = renderer.getTextSize(str)
+                if operation.mode == .replace || inverse || xstyle != nil {
+                    // gXPRINT always draws background, despite what the docs
+                    // say about how it interacts with gTMODE. Likewise gSTYLE
+                    // inverse always behaves like gTMODE is replace.
+                    var bgRect = CGRect(x: x, y: y, width: textWidth, height: textHeight)
+                    // From the point of view of the background size, underlined counts as "thin"
+                    // even though that's really not obvious
+                    let thin = xstyle == .thinInverse || xstyle == .thinInverseNoCorner || xstyle == .underlined || xstyle == .thinUnderlined
+                    if xstyle != nil && !thin {
+                        // Non-thin gXPRINT styles draw an extra pixel all round
+                        bgRect = bgRect.insetBy(dx: -1, dy: -1)
+                    }
+                    self.saveGState()
+                    self.setFillColor(bgcolor)
+                    if xstyle == .normal || xstyle == .inverseNoCorner || xstyle == .thinInverseNoCorner {
+                        self.clipToCornerlessBox(bgRect)
+                    }
+                    self.fill(bgRect)
+                    restoreGState()
+                }
                 for ch in str {
                     if let img = renderer.getImageForChar(ch) {
                         let rect = CGRect(x: x, y: y, width: img.width, height: img.height)
                         self.saveGState()
                         self.concatenate(self.coordinateFlipTransform.inverted())
                         let unflippedRect = CGRect(x: rect.minX, y: CGFloat(self.height) - rect.minY - rect.height, width: rect.width, height: rect.height)
-                        if operation.mode == .replace {
-                            self.setFillColor(operation.bgcolor.cgColor())
-                            self.fill(unflippedRect)
-                            self.setFillColor(operation.color.cgColor())
-                        }
                         self.clip(to: unflippedRect, mask: img)
                         self.fill(unflippedRect)
                         self.restoreGState()
                         x = x + img.width
                     }
+                }
+
+                if xstyle == nil {
+                    // gPRINT doesn't draw underlines in trailing space, but gXPRINT does (!)
+                    var s = str
+                    var numSpace = 0
+                    var ch = s.popLast()
+                    while ch == " " {
+                        numSpace = numSpace + 1
+                        ch = s.popLast()
+                    }
+                    x = x - numSpace * renderer.getTextSize(" ").0
+                }
+
+                if x <= operation.origin.x {
+                    // There's nothing to underline (either text was empty or all spaces)
+                    return
+                }
+
+                if fontInfo.flags.contains(.underlined) {
+                    let lineStart = CGPoint(x: operation.origin.x, y: y + font.ascent + 1)
+                    let lineEnd = CGPoint(x: CGFloat(x), y: lineStart.y)
+                    drawPixelLine(from: lineStart, to: lineEnd)
+                }
+
+                if xstyle == .underlined {
+                    // Yes this stacks with fontInfo underlined, and is drawn in a slightly different y offset
+                    let lineStart = CGPoint(x: operation.origin.x, y: y + font.charh)
+                    let lineEnd = CGPoint(x: CGFloat(x), y: lineStart.y)
+                    drawPixelLine(from: lineStart, to: lineEnd)
+                } else if xstyle == .thinUnderlined {
+                    let lineStart = CGPoint(x: operation.origin.x, y: y + font.charh - 1)
+                    let lineEnd = CGPoint(x: CGFloat(x), y: lineStart.y)
+                    drawPixelLine(from: lineStart, to: lineEnd)
                 }
             } else {
                 let uifont = fontInfo.toUiFont()!
@@ -215,5 +280,49 @@ extension CGContext {
         } else {
             self.draw(imgToDraw, in: unflippedRect)
         }
+    }
+
+    func drawPixelLine(from: CGPoint, to: CGPoint) {
+        beginPath()
+        var lineStart = from
+        var lineEnd = to
+        if lineStart.y == lineEnd.y && lineStart.x != lineEnd.x {
+            // This is suprising, but seems to be needed to get clean ends
+            lineStart = lineStart.move(x: 0, y: 0.5)
+            lineEnd = lineEnd.move(x: 0, y: 0.5)
+        } else if lineStart.x < lineEnd.x {
+            lineStart = lineStart.move(x: 0.5, y: 0.5)
+            lineEnd = lineEnd.move(x: -0.5, y: 0.5)
+        } else if lineStart.x > lineEnd.x {
+            lineStart = lineStart.move(x: -0.5, y: 0.5)
+            lineEnd = lineEnd.move(x: 0.5, y: 0.5)
+        } else {
+            // Vertical line
+            lineStart = lineStart.move(x: 0.5, y: 0.5)
+            lineEnd = lineEnd.move(x: 0.5, y: 0.5)
+        }
+        move(to: lineStart)
+        addLine(to: lineEnd)
+        strokePath()
+    }
+
+    func clipToCornerlessBox(_ rect: CGRect) {
+        self.beginPath()
+        self.addLines(between: [
+            CGPoint(x: rect.minX + 1, y: rect.minY),
+            CGPoint(x: rect.maxX - 1, y: rect.minY),
+            CGPoint(x: rect.maxX - 1, y: rect.minY + 1),
+            CGPoint(x: rect.maxX, y: rect.minY + 1),
+            CGPoint(x: rect.maxX, y: rect.maxY - 1),
+            CGPoint(x: rect.maxX - 1, y: rect.maxY - 1),
+            CGPoint(x: rect.maxX - 1, y: rect.maxY),
+            CGPoint(x: rect.minX + 1, y: rect.maxY),
+            CGPoint(x: rect.minX + 1, y: rect.maxY - 1),
+            CGPoint(x: rect.minX, y: rect.maxY - 1),
+            CGPoint(x: rect.minX, y: rect.minY + 1),
+            CGPoint(x: rect.minX + 1, y: rect.minY + 1),
+            CGPoint(x: rect.minX + 1, y: rect.minY)
+        ])
+        self.clip()
     }
 }

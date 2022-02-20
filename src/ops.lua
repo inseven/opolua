@@ -2115,7 +2115,9 @@ function gInvert(stack, runtime) -- 0xF2
 end
 
 function gXPrint(stack, runtime) -- 0xF3
-    unimplemented("gXPrint")
+    local flags = stack:pop()
+    local str = stack:pop()
+    runtime:gXPRINT(str, flags)
 end
 
 function gBorder(stack, runtime) -- 0xF4

@@ -1,0 +1,46 @@
+INCLUDE "const.oph"
+
+PROC main:
+	DEFAULTWIN 2
+	gCOLOR 128, 128, 128
+	gFILL gWIDTH, gHEIGHT, 0
+	gCOLOR 0, 0, 0
+
+	gAT 5,15
+	drawLine:("Normal")
+
+	gSTYLE KgStyleBold%
+	gAT 5,40
+	drawLine:("Bold")
+
+	gSTYLE KgStyleUnder%
+	gAT 5,65
+	drawLine:("Under")
+
+	gSTYLE KgStyleInverse%
+	gTMODE 0
+	gAT 5,90
+	drawLine:("Inverse")
+
+	gSAVEBIT "D:\gxprint.mbm"
+	GET
+ENDP
+
+PROC drawLine:(desc$)
+	LOCAL w%
+	gPRINT desc$; " "
+	w% = gTWIDTH("Hel lo0  ")
+	gXPRINT "Hel lo0 ", 0
+	gAT gX + w%, gY
+	gXPRINT "Hel lo1 ", 1
+	gAT gX + w%, gY
+	gXPRINT "Hel lo2 ", 2
+	gAT gX + w%, gY
+	gXPRINT "Hel lo3 ", 3
+	gAT gX + w%, gY
+	gXPRINT "Hel lo4 ", 4
+	gAT gX + w%, gY
+	gXPRINT "Hel lo5 ", 5
+	gAT gX + w%, gY
+	gXPRINT "Hel lo6 ", 6
+ENDP

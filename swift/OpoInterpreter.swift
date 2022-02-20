@@ -228,8 +228,9 @@ private func draw(_ L: LuaState!) -> Int32 {
         case "text":
             let str = L.tostring(-1, key: "string") ?? ""
             mode = Graphics.Mode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
+            let xstyle = L.getfield(-1, "xflags", Graphics.XStyle.self)
             if let fontInfo = L.getfield(-1, "fontinfo", Graphics.FontInfo.self) {
-                optype = .text(str, fontInfo)
+                optype = .text(str, fontInfo, xstyle)
             } else {
                 print("Bad text params!")
                 continue

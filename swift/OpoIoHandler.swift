@@ -237,6 +237,17 @@ struct Graphics {
         case horizontalBar = 0x2002A
     }
 
+    // Specific to gXPRINT, stacks (mostly) with FontFlag except when it doesn't
+    enum XStyle: Int, Codable {
+        case normal = 0
+        case inverse = 1
+        case inverseNoCorner = 2
+        case thinInverse = 3
+        case thinInverseNoCorner = 4
+        case underlined = 5
+        case thinUnderlined = 6
+    }
+
     struct DrawCommand {
         enum OpType {
             case fill(Size)
@@ -248,7 +259,7 @@ struct Graphics {
             case copy(CopySource, CopySource?) // second arg is optional mask
             case pattern(CopySource)
             case scroll(Int, Int, Rect) // dx, dy, rect
-            case text(String, FontInfo)
+            case text(String, FontInfo, XStyle?)
             case border(Rect, BorderType)
             case invert(Size)
         }
