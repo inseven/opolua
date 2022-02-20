@@ -681,8 +681,18 @@ function FONT(id, style)
         charh = charh,
         charw = charw,
         fontid = font.uid,
-        style = style,
+        style = 0,
     }
+    STYLE(style)
+end
+
+function STYLE(style)
+    -- Only underline or inverse are supported (but not both)
+    style = style & (KgStyleUnder|KgStyleInverse)
+    if style == (KgStyleUnder|KgStyleInverse) then
+        style = KgStyleInverse
+    end
+    runtime:getGraphics().screen.style = style
 end
 
 function SCREEN(widthInChars, heightInChars, xInChars, yInChars)

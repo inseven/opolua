@@ -1,0 +1,17 @@
+PROC main:
+	PRINT "Hello world"
+	PRINT ""
+	STYLE 1
+	PRINT "Hello boldworld?"
+	PRINT ""
+	STYLE 2
+	PRINT "Hello underworld"
+	PRINT ""
+	STYLE 4
+	PRINT "Hello invworld"
+	PRINT ""
+	STYLE 6
+	PRINT "Hello underinvworld?"
+	PRINT ""
+	GET
+ENDP

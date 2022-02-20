@@ -2227,7 +2227,8 @@ function Font(stack, runtime) -- 0x104
 end
 
 function Style(stack, runtime) -- 0x105
-    unimplemented("Style")
+    local style = stack:pop()
+    runtime:STYLE(style)
 end
 
 function FreeAlloc(stack, runtime) -- 0x10C
