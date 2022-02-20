@@ -34,6 +34,7 @@ local kButtonYOffset = 9
 local kButtonMinWidth = 50
 local kButtonSpacing = 10
 local kDialogLineHeight = 22 -- ?
+local kDialogTightLineHeight = 18
 local kDialogLineGap = 1
 local kDialogLineTextYOffset = 4
 local kChoiceLeftArrow = "3" -- in KFontEiksym15
@@ -51,6 +52,10 @@ end
 -- Returns nil if the view doesn't layout with a prompt area (ie if it spans the entire dialog width)
 function View:getPromptWidth()
     return self.prompt and gTWIDTH(self.prompt) or nil
+end
+
+function View:setHeightHint(hint)
+    self.heightHint = hint
 end
 
 -- This shouldn't include prompt width, if getPromptWidth returns non-nil
@@ -214,7 +219,7 @@ end
 PlaceholderView = class { _super = View }
 
 function PlaceholderView:contentSize()
-    return gTWIDTH("TODO dItem type 0"), kDialogLineHeight
+    return gTWIDTH("TODO dItem type 0"), self.heightHint
 end
 
 function PlaceholderView:draw()
@@ -228,7 +233,7 @@ end
 DialogTitleBar = class { _super = View }
 
 function DialogTitleBar:contentSize()
-    local h = kDialogLineHeight
+    local h = self.heightHint
     if self.lineBelow then
         h = h + 2
     end
@@ -268,9 +273,13 @@ end
 DialogItemText = class { _super = View }
 
 function DialogItemText:contentSize()
-    local h = kDialogLineHeight
+    local h = self.heightHint
     if self.lineBelow then
-        h = h + 1
+        if h == kDialogTightLineHeight then
+            h = h + 2
+        else
+            h = h + 1
+        end
     end
     return gTWIDTH(self.value), h
 end
@@ -290,7 +299,13 @@ function DialogItemText:draw()
     end
     drawText(self.value, x, texty)
     if self.lineBelow then
-        gAT(self.x, self.y + kDialogLineHeight + 1)
+        local y
+        if self.heightHint == kDialogTightLineHeight then
+            y = self.y + self.heightHint + 2
+        else
+            y = self.y + self.heightHint + 1
+        end
+        gAT(self.x, y)
         gLINEBY(self.w, 0)
     end
     View.draw(self)
@@ -307,7 +322,7 @@ local kEditTextSpace = 2
 function DialogItemEdit:contentSize()
     -- The @ sign is an example of the widest character in the dialog font (we
     -- should really have an easy API for getting max font width...)
-    return gTWIDTH(string.rep("@", self.len)) + 2 * kEditTextSpace, kDialogLineHeight
+    return gTWIDTH(string.rep("@", self.len)) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEdit:draw()
@@ -367,7 +382,7 @@ function DialogItemEditLong:contentSize()
     -- The @ sign is an example of the widest character in the dialog font (we
     -- should really have an easy API for getting max font width...)
     local maxChars = math.max(#tostring(self.min), #tostring(self.max))
-    return gTWIDTH(string.rep("@", maxChars)) + 2 * kEditTextSpace, kDialogLineHeight
+    return gTWIDTH(string.rep("@", maxChars)) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEditLong:showEditor()
@@ -404,7 +419,7 @@ end
 
 function DialogChoiceList:contentSize()
     local maxWidth = self:getChoicesWidth()
-    return maxWidth + kChoiceArrowSize, kDialogLineHeight
+    return maxWidth + kChoiceArrowSize, self.heightHint
 end
 
 function DialogChoiceList:focussable()
@@ -822,6 +837,7 @@ function DIALOG(dialog)
     local maxWidth = 0 -- For anything that doesn't split into prompt and content
     local maxButtonWidth = 30 -- ?
     local promptGap = 22 -- Must be at least as big as kChoiceArrowSize because the lefthand arrow goes in the prompt gap
+    local lineHeight = (dialog.flags & KDlgDensePack) == 0 and kDialogLineHeight or kDialogTightLineHeight
 
     gFONT(kDialogFont)
     local _, charh = gTWIDTH("0")
@@ -834,6 +850,7 @@ function DIALOG(dialog)
             value = dialog.title,
             draggable = (dialog.flags & KDlgNoDrag) == 0,
         }
+        titleBar:setHeightHint(lineHeight)
         local cw, ch = titleBar:contentSize()
         maxWidth = math.max(cw, maxWidth)
         h = h + ch
@@ -848,6 +865,7 @@ function DIALOG(dialog)
             item.choices = { "", kTickMark }
             item.index = item.value == "true" and 2 or 1
         end
+        item:setHeightHint(lineHeight)
         local cw, ch = item:contentSize()
         local promptWidth = item:getPromptWidth()
         if promptWidth then
@@ -881,6 +899,10 @@ function DIALOG(dialog)
     local w = maxWidth + (borderWidth + hMargin) * 2
     w = math.min(w, screenWidth)
     h = math.min(h, screenHeight)
+    if dialog.flags & KDlgFillScreen ~= 0 then
+        w = screenWidth
+        h = screenHeight
+    end
     local winX, winY
     if dialog.xpos < 0 then
         winX = 0
