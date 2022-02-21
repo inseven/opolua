@@ -102,7 +102,13 @@ function ROMVersionBuild(stack, runtime) -- 12
 end
 
 function GetFileSize(stack, runtime) -- 13
-    unimplemented("opx.sysram1.GetFileSize")
+    local path = stack:pop()
+    local stat, err = runtime:iohandler().fsop("stat", path)
+    if stat then
+        stack:push(stat.size)
+    else
+        error(err)
+    end
 end
 
 function DTDayNameFull(stack, runtime) -- 14
