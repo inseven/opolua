@@ -23,22 +23,15 @@ This page lists the status of programs we've tested, and any known issues we are
 
     <tr>
         <th>Program</th>
+        <th>Version</th>
         <th>Author</th>
         <th>Status</th>
         <th>Comments / Issues</th>
     </tr>
 
     <tr>
-        <td>GemTile</td>
-        <td>beelogic</td>
-        <td>
-            <div class="status working">Working</div>
-        </td>
-        <td></td>
-    </tr>
-
-    <tr>
         <td>CharMap</td>
+        <td></td>
         <td>Pelican Software</td>
         <td>
             <div class="status issues">Issues</div>
@@ -49,7 +42,31 @@ This page lists the status of programs we've tested, and any known issues we are
     </tr>
 
     <tr>
+        <td>Dark Horizon</td>
+        <td>1.21</td>
+        <td>JS Greenwood & Pocket IQ</td>
+        <td>
+            <div class="status broken">Broken</div>
+        </td>
+        <td>
+            Redraw issues (<a href="https://github.com/inseven/opolua/issues/121">#121</a>).<br />
+            Fails to open after first run (<a href="https://github.com/inseven/opolua/issues/213">#213</a>).
+        </td>
+    </tr>
+
+    <tr>
+        <td>GemTile</td>
+        <td></td>
+        <td>beelogic</td>
+        <td>
+            <div class="status working">Working</div>
+        </td>
+        <td></td>
+    </tr>
+
+    <tr>
         <td>Jumpy! Plus</td>
+        <td></td>
         <td>Jon Read</td>
         <td>
             <div class="status working">Working</div>
@@ -59,9 +76,10 @@ This page lists the status of programs we've tested, and any known issues we are
 
     <tr>
         <td>LogJam</td>
+        <td></td>
         <td>Adam's Software</td>
         <td>
-            <div class="status broken">Not Working</div>
+            <div class="status broken">Broken</div>
         </td>
         <td>
             Requires database support (<a href="https://github.com/inseven/opolua/issues/203">#203</a>).
@@ -70,6 +88,7 @@ This page lists the status of programs we've tested, and any known issues we are
 
     <tr>
         <td>Mancala</td>
+        <td></td>
         <td>Neil Sands</td>
         <td>
             <div class="status working">Working</div>
@@ -79,17 +98,19 @@ This page lists the status of programs we've tested, and any known issues we are
 
     <tr>
         <td>Super Breakout</td>
+        <td></td>
         <td>Tim Rohrer</td>
         <td>
-            <div class="status broken">Not Working</div>
+            <div class="status broken">Broken</div>
         </td>
         <td>
-            Missing operation (<a href="https://github.com/inseven/opolua/issues/204">#204</a>).
+            Redraw issues (<a href="https://github.com/inseven/opolua/issues/121">#121</a>).
         </td>
     </tr>
 
     <tr>
         <td>Tile Fall</td>
+        <td></td>
         <td>Adam Dawes & Neuon</td>
         <td>
             <div class="status issues">Issues</div>
@@ -101,6 +122,7 @@ This page lists the status of programs we've tested, and any known issues we are
 
     <tr>
         <td>Vexed</td>
+        <td></td>
         <td>Ewan Spence</td>
         <td>
             <div class="status working">Working</div>

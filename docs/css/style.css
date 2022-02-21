@@ -103,6 +103,7 @@ tr:nth-child(even) {
 
 th, td {
     padding: 0.4em;
+    vertical-align: top;
 }
 
 .content {
