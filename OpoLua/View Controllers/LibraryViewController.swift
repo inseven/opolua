@@ -182,7 +182,8 @@ class LibraryViewController: UICollectionViewController {
         guard let indexPath = dataSource.indexPath(for: section) else {
             return
         }
-        collectionView.selectItem(at: indexPath, animated: animated, scrollPosition: .top)
+        self.section = section
+        collectionView.selectItem(at: indexPath, animated: animated, scrollPosition: .centeredVertically)
     }
 
     func reload(animated: Bool) {
