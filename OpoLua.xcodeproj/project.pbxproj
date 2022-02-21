@@ -81,6 +81,7 @@
 		D8C3BD652774BEC2003B1AD0 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD642774BEC2003B1AD0 /* Console.swift */; };
 		D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */; };
 		D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C3BD692774F4A2003B1AD0 /* GameController.framework */; };
+		D8C43DF527C3EFEF00944A11 /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C43DF427C3EFEF00944A11 /* RootViewController.swift */; };
 		D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* DirectoryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
@@ -341,6 +342,7 @@
 		D8C3BD642774BEC2003B1AD0 /* Console.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
 		D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoLuaError.swift; sourceTree = "<group>"; };
 		D8C3BD692774F4A2003B1AD0 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk/System/Library/Frameworks/GameController.framework; sourceTree = DEVELOPER_DIR; };
+		D8C43DF427C3EFEF00944A11 /* RootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* DirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
@@ -617,6 +619,7 @@
 				D8C3BD622774BEA1003B1AD0 /* ErrorViewController.swift */,
 				D89A607F2756AE8800C9757F /* LibraryViewController.swift */,
 				DB79FFBD2742D99C005E904F /* ProgramViewController.swift */,
+				D8C43DF427C3EFEF00944A11 /* RootViewController.swift */,
 				D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */,
 				D8553767278F535A00ED67C0 /* SettingsView.swift */,
 				D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */,
@@ -1120,6 +1123,7 @@
 				D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */,
 				D88A472227B82C720094A438 /* ApplicationIdentifier.swift in Sources */,
 				DB7900032742E6F6005E904F /* lfunc.c in Sources */,
+				D8C43DF527C3EFEF00944A11 /* RootViewController.swift in Sources */,
 				D8F5CADB279D07A700A2DC3F /* ResourceViewController.swift in Sources */,
 				DB7900042742E6F6005E904F /* lgc.c in Sources */,
 				DB7900062742E6F6005E904F /* liolib.c in Sources */,
