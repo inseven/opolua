@@ -36,11 +36,13 @@ class SourceViewController: UIViewController {
     lazy var textView: UITextView = {
         let textView = UITextView()
         textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.preservesSuperviewLayoutMargins = true
+        textView.preservesSuperviewLayoutMargins = false
         textView.font = .monospacedSystemFont(ofSize: 14.0, weight: .regular)
         textView.isEditable = false
         textView.isSelectable = true
         textView.alwaysBounceVertical = true
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0.0
         return textView
     }()
 
@@ -55,6 +57,7 @@ class SourceViewController: UIViewController {
         self.url = url
         super.init(nibName: nil, bundle: nil)
         title = url.localizedName
+        view.backgroundColor = .systemBackground
         view.addSubview(textView)
         NSLayoutConstraint.activate([
             textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -72,6 +75,10 @@ class SourceViewController: UIViewController {
         }
     }
 
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         do {
@@ -79,6 +86,16 @@ class SourceViewController: UIViewController {
         } catch {
             present(error: error)
         }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateTextContainerInsets()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateTextContainerInsets()
     }
 
     @objc func doneTapped(sender: UIBarButtonItem) {
@@ -116,8 +133,15 @@ class SourceViewController: UIViewController {
         textView.text = contents
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func updateTextContainerInsets() {
+        // Unfortunately this doesn't seem to be automatic (probably holding it wrong), so we update the text container
+        // insets manually to have them match our view's layout margins / safe areas. Even more unpleasant is the fact
+        // that the UITextView seems to be honouring the vertical safe areas, but not the horizontal safe areas so we
+        // actually have to account for that when we create the insets.
+        textView.textContainerInset = UIEdgeInsets(top: view.layoutMargins.top - view.safeAreaInsets.top,
+                                                   left: view.layoutMargins.left,
+                                                   bottom: view.layoutMargins.bottom - view.safeAreaInsets.bottom,
+                                                   right: view.layoutMargins.right)
     }
 
 }
