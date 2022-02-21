@@ -206,18 +206,6 @@ class Directory {
         refresh()
     }
 
-    func items(filter: String?) -> [Item] {
-        dispatchPrecondition(condition: .onQueue(.main))
-        return items.filter { item in
-            guard let filter = filter,
-                  !filter.isEmpty
-            else {
-                return true
-            }
-            return item.name.localizedCaseInsensitiveContains(filter)
-        }
-    }
-
     private func updateQueue_refresh() {
         dispatchPrecondition(condition: .onQueue(updateQueue))
         do {

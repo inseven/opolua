@@ -81,12 +81,6 @@ class AllProgramsViewController : UICollectionViewController {
         return dataSource
     }()
 
-    lazy var searchController: UISearchController = {
-        let searchController = UISearchController()
-        searchController.searchResultsUpdater = self
-        return searchController
-    }()
-
     init(settings: Settings, taskManager: TaskManager, detector: ProgramDetector) {
         self.settings = settings
         self.taskManager = taskManager
@@ -98,7 +92,6 @@ class AllProgramsViewController : UICollectionViewController {
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
         title = "All Programs"
-        navigationItem.searchController = searchController
         navigationItem.largeTitleDisplayMode = .never
         configureRefreshControl()
     }
@@ -180,9 +173,7 @@ class AllProgramsViewController : UICollectionViewController {
         items = detector.items.sorted(by: Directory.defaultSort())
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
-        let filter = searchController.searchBar.text ?? ""
-        let items = items.filter { filter.isEmpty || $0.name.localizedCaseInsensitiveContains(filter) }
-            .map { item -> Item in
+        let items = items.map { item -> Item in
                 var isRunning = false
                 if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
                     isRunning = true
@@ -257,14 +248,6 @@ class AllProgramsViewController : UICollectionViewController {
                 return nil
             }
         }
-    }
-
-}
-
-extension AllProgramsViewController: UISearchResultsUpdating {
-
-    func updateSearchResults(for searchController: UISearchController) {
-        update(animated: true)
     }
 
 }

@@ -84,12 +84,6 @@ class DirectoryViewController : UICollectionViewController {
         return dataSource
     }()
 
-    private lazy var searchController: UISearchController = {
-        let searchController = UISearchController()
-        searchController.searchResultsUpdater = self
-        return searchController
-    }()
-
     init(settings: Settings, taskManager: TaskManager, directory: Directory) {
         self.settings = settings
         self.taskManager = taskManager
@@ -102,7 +96,6 @@ class DirectoryViewController : UICollectionViewController {
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
         title = directory.localizedName
-        navigationItem.searchController = searchController
         navigationItem.largeTitleDisplayMode = .never
         configureRefreshControl()
         update(animated: false)
@@ -268,14 +261,13 @@ class DirectoryViewController : UICollectionViewController {
     private func update(animated: Bool) {
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
-        let items = directory.items(filter: searchController.searchBar.text)
-            .map { item -> Item in
-                var isRunning = false
-                if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
-                    isRunning = true
-                }
-                return Item(directoryItem: item, icon: item.icon, isRunning: isRunning, theme: settings.theme)
+        let items = directory.items.map { item -> Item in
+            var isRunning = false
+            if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
+                isRunning = true
             }
+            return Item(directoryItem: item, icon: item.icon, isRunning: isRunning, theme: settings.theme)
+        }
         snapshot.appendItems(items, toSection: Section.none)
         dataSource.apply(snapshot, animatingDifferences: animated)
     }
@@ -358,14 +350,6 @@ class DirectoryViewController : UICollectionViewController {
                                           previewProvider: nil) { suggestedActions in
             return UIMenu(children: actions)
         }
-    }
-
-}
-
-extension DirectoryViewController: UISearchResultsUpdating {
-
-    func updateSearchResults(for searchController: UISearchController) {
-        update(animated: true)
     }
 
 }
