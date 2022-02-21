@@ -127,7 +127,14 @@ class ErrorViewController: UIViewController {
         guard let text = textView.text else {
             return
         }
-        let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        var activities: [UIActivity] = []
+        if error.gitHubIssueUrl != nil {
+            // TODO: Support raising issues for all errors shown in the error view controller #210
+            //       https://github.com/inseven/opolua/issues/210
+            activities.append(RaiseGitHubIssueActivity(error: error))
+        }
+        let activityViewController = UIActivityViewController(activityItems: [text],
+                                                              applicationActivities: activities)
         self.present(activityViewController, animated: true)
     }
 
