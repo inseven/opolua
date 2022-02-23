@@ -116,6 +116,7 @@ function TBarInitC(aTitle, screenWidth, screenHeight, winMode)
     local prevId = gIDENTITY()
     local w = KTbWidth
     toolbarHeight = screenHeight
+    gUPDATE(false)
     tbWinId = gCREATE(screenWidth - w, 0, w, toolbarHeight, false, winMode)
     gCOLOR(table.unpack(fgColour))
     gCOLORBACKGROUND(table.unpack(bgColour))
