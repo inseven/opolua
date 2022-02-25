@@ -435,7 +435,7 @@ function MENU(menubar)
     end
     
     local barWidth = textx + borderWidth
-    local barWin = gCREATE(1, 1, barWidth, barHeight, false, KgCreate4GrayMode | KgCreateHasShadow | 0x200)
+    local barWin = gCREATE(2, 2, barWidth, barHeight, false, KgCreate4GrayMode | KgCreateHasShadow | 0x200)
     lightGrey()
     gFILL(barWidth, barHeight)
     black()
