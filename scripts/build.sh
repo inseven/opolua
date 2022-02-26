@@ -160,12 +160,18 @@ if $ARCHIVE || $TESTFLIGHT_UPLOAD ; then
 
 fi
 
-IPA_BASENAME="OpoLua.ipa"
-IPA_PATH="$BUILD_DIRECTORY/$IPA_BASENAME"
-
-zip -r --symlinks "build.zip" "$BUILD_DIRECTORY"
 
 if $RELEASE ; then
+
+    IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
+
+    # Archive the build directory.
+    ZIP_BASENAME="build-${VERSION_NUMBER}-${BUILD_NUMBER}.zip"
+    ZIP_PATH="${BUILD_DIRECTORY}/${ZIP_BASENAME}"
+    pushd "${BUILD_DIRECTORY}"
+    zip -r "${ZIP_BASENAME}" .
+    popd
+
     export API_KEY_PATH="${TEMPORARY_DIRECTORY}/AuthKey.p8"
     echo -n "$APPLE_API_KEY" | base64 --decode --output "$API_KEY_PATH"
     changes \
@@ -174,6 +180,7 @@ if $RELEASE ; then
         --pre-release \
         --push \
         --exec "${RELEASE_SCRIPT_PATH}" \
-        "${IPA_PATH}" "build.zip"
+        "${IPA_PATH}" "${ZIP_PATH}"
     unlink "$API_KEY_PATH"
+
 fi
