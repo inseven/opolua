@@ -1044,11 +1044,16 @@ end
 
 function GenStr(stack, runtime) -- 0xC6
     local width = stack:pop()
-    local val = fmt("%g", stack:pop())
-    if #val > width then
-        val = string.rep("*", width)
+    local val = stack:pop()
+    local result = fmt("%g", val)
+    if width < 0 then
+        width = -width
+        result = string.rep(" ", width - #result)..result
     end
-    stack:push(val)
+    if #result > width then
+        result = string.rep("*", width)
+    end
+    stack:push(result)
 end
 
 function GetStr(stack, runtime) -- 0xC7
