@@ -482,9 +482,14 @@ function gLOADBIT(path, writable, index)
     -- (3) Tell iohandler to blit the decoded MBM data into it
 
     -- (1)
-    -- printf("gLOADBIT %s mbmid=%d", path, 1+index)
+    -- printf("gLOADBIT %s mbmid=%d", path, 1 + index)
     local iohandler = runtime:iohandler()
-    local data, err = iohandler.fsop("read", runtime:abs(path))
+    local absPath = runtime:abs(path)
+    local data, err = iohandler.fsop("read", absPath)
+    if data == nil and err == KErrNotExists then
+        -- It's allowed to omit the .pic
+        data, err = iohandler.fsop("read", absPath..".PIC")
+    end
     assert(data, err)
     local bitmaps = mbm.parseMbmHeader(data)
     assert(bitmaps, KErrGenFail)

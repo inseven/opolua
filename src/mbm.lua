@@ -371,7 +371,7 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
 
         local rowPad = string.rep("\0", (resultStride or 0) - (self.width * 3))
         local color = self.isColor
-        local function getPixel(x, y) --pos)
+        local function getPixel(x, y)
             if self.bpp == 12 then
                 local pos = 1 + (y * self.width * 2 + x * 2)
                 local value = string.unpack(">I2", bytes, pos)
@@ -411,6 +411,35 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
 end
 
 function parseMbmHeader(data)
+    if data:sub(1, 4) == "PIC\xDC" then
+        -- Series 3 .PIC file
+        local formatVer, runtimeVer, numBitmaps, pos = string_unpack("<BBI2", data, 5)
+        assert(formatVer == 0x30 and runtimeVer == 0x30, "Unexpected PIC version!")
+        local bitmaps = {}
+        for i = 1, numBitmaps do
+            local crc, width, height, numBytes, offset, nextPos = string_unpack("<I2I2I2I2I4", data, pos)
+            local dataOffset = (nextPos - 1) + offset
+            -- Note, PICs round to 16-bit not 32 like 1bpp MBMs
+            local stride = 2 * ((width + 15) // 16)
+            local bmp = Bitmap {
+                data = data,
+                width = width,
+                height = height,
+                bpp = 1,
+                isColor = false,
+                mode = KgCreate2GrayMode,
+                stride = stride,
+                paletteSz = 0,
+                compression = ENoBitmapCompression,
+                imgStart = dataOffset,
+                imgLen = stride * height,
+            }
+            bitmaps[i] = bmp
+            pos = nextPos
+        end
+        return bitmaps
+    end
+
     local uid1, pos = string_unpack("<I4", data)
     if uid1 == KMultiBitmapRomImageUid then
         local numBitmaps, tocPos = string_unpack("<I4", data, pos)
@@ -535,6 +564,10 @@ local function scale2bpp(val)
     return val | (val << 2) | (val << 4) | (val << 6)
 end
 
+local function bitToByte(byte, bitIdx)
+    return (byte & (1 << bitIdx)) > 0 and 0x0 or 0xFF
+end
+
 function widenTo8bpp(data, bpp, color)
     local pos = 1
     local len = #data
@@ -565,7 +598,24 @@ function widenTo8bpp(data, bpp, color)
             pos = pos + 1
         end
         return table.concat(bytes)
+    elseif bpp == 1 then
+        while pos <= len do
+            local b = string_unpack("B", data, pos)
+            bytes[pos] = string_pack("BBBBBBBB",
+                bitToByte(b, 0),
+                bitToByte(b, 1),
+                bitToByte(b, 2),
+                bitToByte(b, 3),
+                bitToByte(b, 4),
+                bitToByte(b, 5),
+                bitToByte(b, 6),
+                bitToByte(b, 7)
+            )
+            pos = pos + 1
+        end
+        return table.concat(bytes)
     else
+        assert(bpp == 8, "Logic fail!")
         return data
     end
 end

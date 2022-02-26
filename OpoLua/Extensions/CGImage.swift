@@ -326,7 +326,7 @@ extension CGImage {
                 wdat.reserveCapacity(bitmap.imgData.count * 8)
                 for b in bitmap.imgData {
                     for i in 0 ..< 8 {
-                        wdat.append(((b >> i) & 1) == 1 ? 0xFF : 0)
+                        wdat.append(((b >> i) & 1) == 1 ? 0 : 0xFF)
                     }
                 }
                 stride = bitmap.stride * 8
