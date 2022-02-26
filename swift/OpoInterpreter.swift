@@ -56,7 +56,8 @@ private extension LuaState {
             }
         }
         L.pop() // icons
-        return OpoInterpreter.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons)
+        let era = L.getfield(index, "era", OpoInterpreter.AppEra.self) ?? .er5
+        return OpoInterpreter.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons, era: era)
     }
 }
 
@@ -907,10 +908,16 @@ class OpoInterpreter {
         }
     }
 
+    enum AppEra: String, Codable {
+        case sibo
+        case er5
+    }
+
     struct AppInfo {
         let captions: [LocalizedString]
         let uid3: UInt32
         let icons: [Graphics.MaskedBitmap]
+        let era: AppEra
     }
 
     func appInfo(for path: String) -> AppInfo? {

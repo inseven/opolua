@@ -121,9 +121,10 @@ class Program {
     init(settings: Settings, url: URL) {
         self.settings = settings
         self.url = url
-        self.configuration = Configuration.load(for: url)
-        self.thread = InterpreterThread(url: url)
         let applicationMetadata = OpoInterpreter().cachedAppInfo(forApplicationUrl: url)
+        let defaultDevice = Device.getDefault(forEra: applicationMetadata?.appInfo.era)
+        self.configuration = Configuration.load(for: url, defaultDevice: defaultDevice)
+        self.thread = InterpreterThread(url: url)
         self.applicationMetadata = applicationMetadata
         self.title = applicationMetadata?.caption ?? url.localizedName
         self.icon = applicationMetadata?.cachedIcon() ?? (url.pathExtension.lowercased() == "opo" ? .opo() : .unknownApplication())

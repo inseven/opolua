@@ -37,7 +37,7 @@ local fmt = string.format
 function Runtime:nextOp()
     local ip = self.ip
     local opCode = sbyte(self.data, ip+1)
-    local op = ops.codes[opCode]
+    local op = self.opcodes[opCode]
     if not op then
         printf("No op for code 0x%02X at 0x%08X\n", opCode, ip)
     end
@@ -702,6 +702,7 @@ end
 
 function newRuntime(handler)
     local rt = Runtime {
+        opcodes = ops.codes_er5, -- by default
         allocs = {},
         dbs = {},
         modules = {},
@@ -726,6 +727,12 @@ function newRuntime(handler)
     return rt
 end
 
+function Runtime:setEra(era)
+    local codes = ops["codes_"..era]
+    assert(codes, "Unrecognised era ".. era)
+    self.opcodes = codes
+end
+
 function printInstruction(currentOpIdx, opCode, op, extra)
     printf("%08X: %02X [%s] %s\n", currentOpIdx, opCode, op, extra or "")
 end
@@ -736,7 +743,7 @@ function Runtime:decodeNextInstruction()
     if not opCode then
         return fmt("%08X: ???", currentIp)
     end
-    local op = ops.codes[opCode]
+    local op = self.opcodes[opCode]
     self.ip = currentIp + 1
     local opDump = op and op.."_dump"
     local extra = ops[opDump] and ops[opDump](self)
@@ -1282,7 +1289,8 @@ function runOpo(fileName, procName, iohandler, verbose)
         error({ msg = "File is a native binary and not compiled OPL.", notOpl = true })
     end
 
-    local procTable, opxTable = require("opofile").parseOpo(data, verbose)
+    local procTable, opxTable, era = require("opofile").parseOpo(data, verbose)
+    rt:setEra(era)
     rt:addModule(fileName, procTable, opxTable)
     local procToCall = procName and procName:upper() or procTable[1].name
     local err = rt:pcallProc(procToCall)

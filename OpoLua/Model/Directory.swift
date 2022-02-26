@@ -111,6 +111,7 @@ class Directory {
 
     static func item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
 
+        let ext = url.pathExtension.lowercased()
         if FileManager.default.directoryExists(atPath: url.path) {
             // Check for an app 'bundle'.
             if let type = try Item.system(url: url, interpreter: interpreter) {
@@ -118,19 +119,19 @@ class Directory {
             } else {
                 return Item(url: url, type: .directory, isWriteable: isWriteable)
             }
-        } else if url.pathExtension.lowercased() == "opo" {
+        } else if ext == "opo" {
             return Item(url: url, type: .object, isWriteable: isWriteable)
-        } else if url.pathExtension.lowercased() == "app" {
+        } else if url.isApplication {
             return Item(url: url,
                         type: .application(interpreter.cachedAppInfo(forApplicationUrl: url)),
                         isWriteable: isWriteable)
-        } else if url.pathExtension.lowercased() == "sis" {
+        } else if ext == "sis" {
             return Item(url: url, type: .installer, isWriteable: isWriteable)
-        } else if url.pathExtension.lowercased() == "hlp" {
+        } else if ext == "hlp" {
             return Item(url: url, type: .help, isWriteable: isWriteable)
-        } else if url.pathExtension.lowercased() == "txt" {
+        } else if ext == "txt" {
             return Item(url: url, type: .text, isWriteable: isWriteable)
-        } else if url.pathExtension.lowercased() == "mbm" {
+        } else if ext == "mbm" || ext == "pic" {
             // Image files aren't always guaranteed to have the correct UIDs, so we also match on the file extension.
             return Item(url: url, type: .image, isWriteable: isWriteable)
         } else {
@@ -265,9 +266,11 @@ extension Directory.Item {
         guard let programUrl = programUrl, isWriteable else {
             return []
         }
+        let appInfo = OpoInterpreter().cachedAppInfo(for: programUrl)
+        let defaultDevice = Device.getDefault(forEra: appInfo?.appInfo.era)
+        var configuration = Configuration.load(for: programUrl, defaultDevice: defaultDevice)
         var actions: [UIMenuElement] = []
         let runAsActions = Device.allCases.map { device -> UIAction in
-            var configuration = Configuration.load(for: programUrl)
             return UIAction(title: device.name, state: configuration.device == device ? .on : .off) { action in
                 configuration.device = device
                 do {

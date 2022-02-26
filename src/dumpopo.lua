@@ -46,8 +46,9 @@ function main()
     local verbose = all or fnName == nil
     opofile = require("opofile")
     runtime = require("runtime")
-    local procTable, opxTable = opofile.parseOpo(data, verbose)
+    local procTable, opxTable, era = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime()
+    rt:setEra(era)
     rt:addModule("C:\\module", procTable, opxTable)
     if fnName then
         printProc(rt:findProc(fnName:upper()))

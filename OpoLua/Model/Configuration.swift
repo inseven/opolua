@@ -22,15 +22,11 @@ import Foundation
 
 struct Configuration: Codable {
 
-    static var defaultConfiguration = {
-        return Configuration(device: .psionSeries5)
-    }()
-
     var device: Device
 
-    static func load(for url: URL) -> Configuration {
+    static func load(for url: URL, defaultDevice: Device) -> Configuration {
         guard FileManager.default.fileExists(atPath: url.programConfigurationUrl.path) else {
-            return Self.defaultConfiguration
+            return Configuration(device: defaultDevice)
         }
         do {
             let data = try Data(contentsOf: url.programConfigurationUrl)
@@ -40,7 +36,7 @@ struct Configuration: Codable {
         } catch {
             print("Failed to load configuration with error \(error).")
         }
-        return Self.defaultConfiguration
+        return Configuration(device: defaultDevice)
     }
 
     func save(for url: URL) throws {

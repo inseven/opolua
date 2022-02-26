@@ -26,6 +26,9 @@ _ENV = module()
 
 -- POS MEANS 1-BASED LUA STRING POSITION. OFFSET OR INDEX MEANS ZERO BASED
 
+EOplTranVersionOpl1993 = 0x111F
+EOplTranVersionOpler1 = 0x200A
+
 function parseOpo(data, verbose)
     local function vprintf(...)
         if verbose then
@@ -33,24 +36,54 @@ function parseOpo(data, verbose)
         end
     end
 
-    -- TOpoStoreHeader
-    local uid1, uid2, uid3, checksum, rootStreamIdx, pos = string.unpack("<I4I4I4I4I4", data)
-    assert(uid1 == KUidDirectFileStore, "Bad header uid1!")
-    assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
-    -- assert(uid2 == KUidOPO, string.format("Bad header uid2 0x%08X", uid2))
-    -- assert(uid3 == KUidOplInterpreter, "Bad header uid3!")
-    vprintf("UID3: 0x%08X\n", uid3)
+    local procTableIdx, opxTableIdx, srcNameIdx, era
+    if data:sub(1, 16) == "OPLObjectFile**\0" then
+        -- SIBO format
+        -- TOpoFileHeader16
+        local sig, fileVersion, offset = string.unpack("<c16I2I2", data)
+        -- It appears nothing cares about fileVersion (seems to always be 1?)
+        vprintf("OPL1993 version=%d offset=0x%08X\n", fileVersion, offset)
+        -- TOpoModuleHeader16
+        local totalSize, translatorVersion, minRunVersion, pti = string.unpack("<i4I2I2i4", data, 1 + offset)
+        vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
+        assert(translatorVersion == EOplTranVersionOpl1993)
+        assert(minRunVersion == EOplTranVersionOpl1993)
+        procTableIdx = pti
+        opxTableIdx = 0 -- not supported in this version
+        srcNameIdx = 0x14
+        era = "sibo"
+    else
+        -- TOpoStoreHeader
+        local uid1, uid2, uid3, checksum, rootStreamIdx, pos = string.unpack("<I4I4I4I4I4", data)
+        assert(uid1 == KUidDirectFileStore, "Bad header uid1!")
+        assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
+        -- assert(uid2 == KUidOPO, string.format("Bad header uid2 0x%08X", uid2))
+        -- assert(uid3 == KUidOplInterpreter, "Bad header uid3!")
+        vprintf("UID3: 0x%08X\n", uid3)
 
-    -- TOpoRootStream
-    local interpreterUid, translatorVersion, minRunVersion, srcNameIdx, procTableIdx, opxTableIdx, debugFlag =
-        string.unpack("<I4I2I2I4I4I4I2", data, rootStreamIdx+1)
+        -- TOpoRootStream
+        local interpreterUid, translatorVersion, minRunVersion, sni, pti, oti, debugFlag =
+            string.unpack("<I4I2I2I4I4I4I2", data, rootStreamIdx+1)
 
-    -- printf("Interpreter UID: 0x%08X\n", interpreterUid)
-    -- assert(interpreterUid == KUidOplInterpreter, "Bad interpreterUid!")
+        -- printf("Interpreter UID: 0x%08X\n", interpreterUid)
+        -- assert(interpreterUid == KUidOplInterpreter, "Bad interpreterUid!")
+        vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
+        assert(translatorVersion == EOplTranVersionOpler1, "Unexpected translatorVersion!")
+        assert(minRunVersion == EOplTranVersionOpler1, "Unexpected minRunVersion!")
+        srcNameIdx = sni
+        procTableIdx = pti
+        opxTableIdx = oti
+        era = "er5"
+    end
 
     local sourceName
     if srcNameIdx > 0 then
         sourceName = string.unpack("<s1", data, srcNameIdx + 1)
+        local unNullTerminated = sourceName:match("^(.*)\0$")
+        if unNullTerminated then
+            -- SIBO format can include a null terminator here
+            sourceName = unNullTerminated
+        end
         vprintf("Source name: %s\n", sourceName)
     end
 
@@ -97,7 +130,7 @@ function parseOpo(data, verbose)
 
     end
 
-    return procTable, opxTable
+    return procTable, opxTable, era
 end
 
 function parseProc(proc)

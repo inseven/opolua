@@ -59,7 +59,7 @@ struct ApplicationMetadata {
     private func image(for size: Graphics.Size) -> UIImage? {
         var bitmap: Graphics.MaskedBitmap? = nil
         for icon in icons {
-            guard icon.bitmap.size <= size && icon.bitmap.size == icon.mask?.size else {
+            guard icon.bitmap.size <= size && (icon.mask == nil || icon.bitmap.size == icon.mask?.size) else {
                 continue
             }
             guard let currentBitmap = bitmap else {

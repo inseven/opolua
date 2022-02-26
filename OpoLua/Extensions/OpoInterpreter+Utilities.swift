@@ -26,12 +26,17 @@ fileprivate let fileTypeCache = FileMetadataCache<OpoInterpreter.FileType>()
 extension OpoInterpreter {
 
     func cachedAppInfo(forApplicationUrl url: URL) -> ApplicationMetadata? {
-        guard let applicationInfoFile = url.applicationInfoUrl,
-              FileManager.default.fileExists(atUrl: applicationInfoFile)
-        else {
-            return nil
+        if let applicationInfoFile = url.applicationInfoUrl,
+              FileManager.default.fileExists(atUrl: applicationInfoFile) {
+            return cachedAppInfo(for: applicationInfoFile)
         }
-        return cachedAppInfo(for: applicationInfoFile)
+
+        // OPL1993 apps don't use AIF files, but still should be considered for app-iness
+        if url.pathExtension.lowercased() == "opa" {
+            return cachedAppInfo(for: url)
+        }
+
+        return nil
     }
 
     func cachedAppInfo(for url: URL) -> ApplicationMetadata? {

@@ -27,6 +27,43 @@ _ENV = module()
 function parseAif(data)
     local sis = require("sis")
     local mbm = require("mbm")
+
+    if data:sub(1, 16) == "OPLObjectFile**\0" then
+        -- Series 3 OPA files have their AIF metadata built in - for simplicity, treat them like a special kind of AIF
+        -- Not entirely clear how to establish if this is an OPA with metadata or just an OPO without - we will peek
+        -- for a PIC header and assume that means we're an OPA
+
+        local _, _, era = require("opofile").parseOpo(data)
+
+        local sourceName, pos = string.unpack("<s1", data, 21)
+        local len, hdr = string.unpack("<I2c4", data, pos)
+        if hdr == "PIC\xDC" then
+            local picDataPos = pos + 2
+            local picData = data:sub(picDataPos, picDataPos + len - 1)
+            local icons = mbm.parseMbmHeader(picData)
+            for _, bitmap in ipairs(icons) do
+                bitmap.imgData = bitmap:getImageData()
+            end
+
+            local infoPos = picDataPos + len
+            local infoLen, name, path, type = string.unpack("<I2c14c20I2", data, infoPos)
+            -- name is actually the default filename but that seems to be constructed from the APP <name> plus EXT <ext>
+            name = oplpath.splitext(name)
+
+            return {
+                uid3 = 0,
+                captions = {
+                    en_GB = name,
+                },
+                icons = icons,
+                era = era,
+            }
+        else
+            return nil
+        end
+    end
+
+
     local uid1, uid2, uid3, checksum, trailerOffset = string.unpack("<I4I4I4I4I4", data)
     assert(uid1 == KUidDirectFileStore and uid2 == KUidAppInfoFile8, "Not an AIF file!")
     assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")

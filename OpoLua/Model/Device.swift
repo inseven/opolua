@@ -23,6 +23,7 @@ import UIKit
 
 enum Device: String, CaseIterable, Codable {
 
+    case psionSeries3c = "psion-series-3c"
     case psionSeries5 = "psion-series-5"
     #if DEBUG
     case psionRevo = "psion-revo"
@@ -36,6 +37,8 @@ extension Device {
 
     var name: String {
         switch self {
+        case .psionSeries3c:
+            return "Psion Series 3C"
         case .psionSeries5:
             return "Psion Series 5"
         #if DEBUG
@@ -51,6 +54,8 @@ extension Device {
 
     var screenSize: Graphics.Size {
         switch self {
+        case .psionSeries3c:
+            return Graphics.Size(width:480, height: 160)
         case .psionSeries5:
             return Graphics.Size(width:640, height: 240)
         #if DEBUG
@@ -66,6 +71,8 @@ extension Device {
 
     var screenMode: Graphics.Bitmap.Mode {
         switch self {
+        case .psionSeries3c:
+            return .gray4
         case .psionSeries5:
             return .gray16
         #if DEBUG
@@ -81,6 +88,8 @@ extension Device {
 
     var analogClockImage: UIImage {
         switch self {
+        case .psionSeries3c:
+            return .clockMedium()
         case .psionSeries5:
             return .clockMedium()
         #if DEBUG
@@ -91,6 +100,17 @@ extension Device {
             return .clockMediumC()
         case .geofoxOne:
             return .clockMedium()
+        }
+    }
+
+    static func getDefault(forEra era: OpoInterpreter.AppEra?) -> Device {
+        switch era {
+        case .sibo:
+            return .psionSeries3c
+        case .er5:
+            return .psionSeries5
+        case .none:
+            return .psionSeries5
         }
     }
 

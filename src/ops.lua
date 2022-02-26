@@ -29,7 +29,7 @@ local fmt = string.format
 local Word, Long, Real, String = DataTypes.EWord, DataTypes.ELong, DataTypes.EReal, DataTypes.EString
 local WordArray, LongArray, RealArray, StringArray = DataTypes.EWordArray, DataTypes.ELongArray, DataTypes.ERealArray, DataTypes.EStringArray
 
-codes = {
+codes_er5 = {
     [0x00] = "SimpleDirectRightSideInt",
     [0x01] = "SimpleDirectRightSideLong",
     [0x02] = "SimpleDirectRightSideFloat",
@@ -544,7 +544,24 @@ codes = {
     [0x1FF] = "IllegalOpCode",
 }
 
-function IllegalOpCode(stack)
+codes_sibo = setmetatable({
+    [0x57] = "CallFunction_sibo",
+    [0xA3] = "Compress",
+    [0xD0] = "gInfo",
+    [0x118] = "IllegalOpCode",
+    [0x122] = "IllegalOpCode",
+    [0x123] = "IllegalOpCode",
+    [0x124] = "IllegalOpCode",
+    [0x126] = "IllegalOpCode",
+    [0x128] = "IllegalOpCode",
+    [0x129] = "IllegalOpCode",
+    [0x130] = "IllegalOpCode",
+    [0x133] = "IllegalOpCode",
+    [0x137] = "IllegalOpCode",
+}, { __index = codes_er5 })
+
+function IllegalOpCode(stack, runtime)
+    printf("Illegal opcode at:\n%s\n", runtime:getOpoStacktrace())
     error(KErrIllegal)
 end
 
@@ -1001,14 +1018,28 @@ end
 
 function CallFunction(stack, runtime) -- 0x57
     local fnIdx = runtime:IP8()
-    local fnName = fns.codes[fnIdx]
+    local fnName = fns.codes_er5[fnIdx]
     local fn = assert(fns[fnName], "Function "..fnName.. " not implemented!")
     fn(stack, runtime)
 end
 
 function CallFunction_dump(runtime)
     local fnIdx = runtime:IP8()
-    local fnName = fns.codes[fnIdx]
+    local fnName = fns.codes_er5[fnIdx]
+    local dumpFn = fns[fnName.."_dump"]
+    return fmt("0x%02X (%s)%s", fnIdx, fnName or "?", dumpFn and dumpFn(runtime) or "")
+end
+
+function CallFunction_sibo(stack, runtime) -- 0x57
+    local fnIdx = runtime:IP8()
+    local fnName = fns.codes_sibo[fnIdx]
+    local fn = assert(fns[fnName], "Function "..fnName.. " not implemented!")
+    fn(stack, runtime)
+end
+
+function CallFunction_sibo_dump(runtime)
+    local fnIdx = runtime:IP8()
+    local fnName = fns.codes_sibo[fnIdx]
     local dumpFn = fns[fnName.."_dump"]
     return fmt("0x%02X (%s)%s", fnIdx, fnName or "?", dumpFn and dumpFn(runtime) or "")
 end
@@ -1729,6 +1760,49 @@ function gOrder(stack, runtime) -- 0xCF
     runtime:gORDER(id, pos)
 end
 
+function gInfo(stack, runtime) -- 0xD0 (SIBO only)
+    local addr = runtime:addrFromInt(stack:pop())
+
+    local context = runtime:getGraphicsContext()
+    local w, h, ascent = runtime:gTWIDTH("0")
+
+    local data = {
+        0, -- 1 lowest character code (??)
+        255, -- 2 highest character code (??)
+        h, -- 3 font height
+        h - ascent, -- 4 font descent
+        ascent, -- 5 font ascent
+        w, -- 6 width of '0' (really?)
+        17, -- 7 max character width
+        17, -- 8 font flags TODO CHECK
+        0, -- 9-11 font name TODO
+        0, -- 10
+        0, -- 11
+        0, -- 12
+        0, -- 13
+        0, -- 14
+        0, -- 15
+        0, -- 16
+        0, -- 17
+        context.mode, -- 18 gMode
+        context.tmode, -- 19 gTMode
+        context.style, -- 20 gStyle
+        0, -- 21 cursor state
+        -1, -- 22 ID of window containing cursor
+        0, -- 23 cursor width
+        0, -- 24 cursor height
+        0, -- 25 cursor ascent
+        0, -- 26 cursor x
+        0, -- 27 cursor y
+        context.isWindow and 0 or 1, -- 28 drawableIsBitmap
+        6, -- 29 cursor effects
+        0, -- 30 gGREY setting (TODO...)
+        0, -- 31 reserved
+        0, -- 32 reserved
+    }
+    addr:writeArray(data, DataTypes.EWord)
+end
+
 function gCls(stack, runtime) -- 0xD1
     runtime:gCLS()
 end
@@ -2203,7 +2277,7 @@ gIPrint_dump = numParams_dump
 
 function NextOpcodeTable(stack, runtime) -- 0xFF
     local realOpcode = 256 + runtime:IP8()
-    local fnName = codes[realOpcode]
+    local fnName = runtime.opcodes[realOpcode]
     local realFn = _ENV[fnName]
     assert(realFn, "No function for "..fnName)
     realFn(stack, runtime)
@@ -2212,7 +2286,7 @@ end
 function NextOpcodeTable_dump(runtime)
     local extendedCode = runtime:IP8()
     local realOpcode = 256 + extendedCode
-    local fnName = codes[realOpcode]
+    local fnName = runtime.opcodes[realOpcode]
     local dumpFn = _ENV[fnName.."_dump"]
     return fmt("%02X %s %s", extendedCode, fnName, dumpFn and dumpFn(runtime) or "")
 end

@@ -26,7 +26,7 @@ _ENV = module()
 
 local fmt = string.format
 
-codes = {
+codes_er5 = {
     [0x00] = "Addr",
     [0x01] = "Asc",
     [0x02] = "IllegalFuncOpCode",
@@ -253,6 +253,15 @@ codes = {
     [0xDF] = "IllegalFuncOpCode",
 }
 
+codes_sibo = setmetatable({
+    [0x02] = "Call",
+    [0x35] = "Os",
+    [0xD9] = "IllegalFuncOpCode",
+    [0xDA] = "IllegalFuncOpCode",
+    [0xDB] = "IllegalFuncOpCode",
+    [0xDC] = "IllegalFuncOpCode",
+}, { __index = codes_er5 })
+
 local function numParams_dump(runtime)
     local numParams = runtime:IP8()
     return fmt(" numParams=%d", numParams)
@@ -269,6 +278,7 @@ function Addr(stack, runtime) -- 0x00
 end
 
 function IllegalFuncOpCode(stack, runtime)
+    printf("Illegal func opcode at:\n%s\n", runtime:getOpoStacktrace())
     error(KErrIllegal)
 end
 
@@ -280,6 +290,32 @@ function Asc(stack, runtime) -- 0x01
         stack:push(string.byte(str))
     end
 end
+
+function Call(stack, runtime) -- 0x02 (SIBO only)
+    local numParams = runtime:IP8()
+    local s, bx, cx, dx, si, di
+    assert(numParams >= 1 and numParams <= 6, "Unexpected numParams in call!")
+    if numParams == 6 then
+        di = stack:pop()
+    end
+    if numParams >= 5 then
+        si = stack:pop()
+    end
+    if numParams >= 4 then
+        dx = stack:pop()
+    end
+    if numParams >= 3 then
+        cx = stack:pop()
+    end
+    if numParams >= 2 then
+        bx = stack:pop()
+    end
+    s = stack:pop()
+    printf("CALL(0x%04X, %s, %s, %s, %s, %s)\n", s, bx, cx, dx, si, di)
+    stack:push(0)
+end
+
+Call_dump = numParams_dump
 
 function Count(stack, runtime) -- 0x03
     local db = runtime:getDb()
@@ -569,6 +605,23 @@ end
 function TestEvent(stack, runtime) -- 0x34
     stack:push(runtime:iohandler().testEvent())
 end
+
+function Os(stack, runtime) -- 0x35 (SIBO only)
+    local numParams = runtime:IP8()
+    local addr2
+    if numParams == 3 then
+        addr2 = stack:pop()
+    end
+    local addr1 = stack:pop()
+    if not addr2 then
+        addr2 = addr1
+    end
+    local i = stack:pop()
+    printf("OS(i=0x%04X)\n", i)--s=%d, bx=%d, cx=%d, dx=%d, si=%d, di=%d)\n", s, bx, cx, dx, si, di)
+    stack:push(0)
+end
+
+Os_dump = numParams_dump
 
 function Menu(stack, runtime) -- 0x36
     local menu = runtime:getMenu()

@@ -78,7 +78,8 @@ extension URL {
     }
 
     var isApplication: Bool {
-        return path.pathExtension.lowercased() == "app"
+        let ext = path.pathExtension.lowercased()
+        return ext == "app" || ext == "opa"
     }
 
     var basename: String {
