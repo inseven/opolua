@@ -35,6 +35,7 @@ APP_DIRECTORY="${ROOT_DIRECTORY}"
 KEYCHAIN_PATH="${TEMPORARY_DIRECTORY}/temporary.keychain"
 ARCHIVE_PATH="${BUILD_DIRECTORY}/Bookmarks.xcarchive"
 FASTLANE_ENV_PATH="${APP_DIRECTORY}/fastlane/.env"
+RELEASE_SCRIPT_PATH="${SCRIPTS_DIRECTORY}/release.sh"
 
 source "${SCRIPTS_DIRECTORY}/environment.sh"
 
@@ -161,15 +162,15 @@ fi
 IPA_BASENAME="OpoLua.ipa"
 IPA_PATH="$BUILD_DIRECTORY/$IPA_BASENAME"
 
-# Upload the build to TestFlight
-if $TESTFLIGHT_UPLOAD ; then
-    API_KEY_PATH="${TEMPORARY_DIRECTORY}/AuthKey.p8"
-    echo -n "$APPLE_API_KEY" | base64 --decode --output "$API_KEY_PATH"
-    bundle exec fastlane upload \
-        api_key:"$API_KEY_PATH" \
-        api_key_id:"$APPLE_API_KEY_ID" \
-        api_key_issuer_id:"$APPLE_API_KEY_ISSUER_ID" \
-        ipa:"$IPA_PATH" \
-        changelog:"$( changes notes )"
-    unlink "$API_KEY_PATH"
-fi
+export API_KEY_PATH="${TEMPORARY_DIRECTORY}/AuthKey.p8"
+echo -n "$APPLE_API_KEY" | base64 --decode --output "$API_KEY_PATH"
+
+changes \
+    release \
+    --skip-if-empty \
+    --pre-release \
+    --push \
+    --exec "${RELEASE_SCRIPT_PATH}" \
+    "${IPA_PATH}"
+
+unlink "$API_KEY_PATH"
