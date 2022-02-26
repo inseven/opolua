@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2021 InSeven Limited
+# Copyright (c) 2021-2022 Jason Morley, Tom Sutcliffe
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,10 @@ set -e
 set -o pipefail
 set -x
 
-# Upload the build to TestFlight
+# This script expects the iOS IPA to be passed as the first argument, and any additional files to be attached to the
+# GitHub release to be passed as subsequent arguments.
+
+# Upload the build to TestFlight.
 bundle exec fastlane upload \
     api_key:"$API_KEY_PATH" \
     api_key_id:"$APPLE_API_KEY_ID" \
