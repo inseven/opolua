@@ -45,6 +45,7 @@ which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
 # Process the command line arguments.
 POSITIONAL=()
 ARCHIVE=${ARCHIVE:-false}
+RELEASE=${RELEASE:-false}
 TESTFLIGHT_UPLOAD=${TESTFLIGHT_UPLOAD:-false}
 while [[ $# -gt 0 ]]
 do
@@ -54,8 +55,8 @@ do
         ARCHIVE=true
         shift
         ;;
-        -t|--testflight-upload)
-        TESTFLIGHT_UPLOAD=true
+        -r|--release)
+        RELEASE=true
         shift
         ;;
         *)
@@ -162,15 +163,17 @@ fi
 IPA_BASENAME="OpoLua.ipa"
 IPA_PATH="$BUILD_DIRECTORY/$IPA_BASENAME"
 
-export API_KEY_PATH="${TEMPORARY_DIRECTORY}/AuthKey.p8"
-echo -n "$APPLE_API_KEY" | base64 --decode --output "$API_KEY_PATH"
+zip -r --symlinks "build.zip" "$BUILD_DIRECTORY"
 
-changes \
-    release \
-    --skip-if-empty \
-    --pre-release \
-    --push \
-    --exec "${RELEASE_SCRIPT_PATH}" \
-    "${IPA_PATH}"
-
-unlink "$API_KEY_PATH"
+if $RELEASE ; then
+    export API_KEY_PATH="${TEMPORARY_DIRECTORY}/AuthKey.p8"
+    echo -n "$APPLE_API_KEY" | base64 --decode --output "$API_KEY_PATH"
+    changes \
+        release \
+        --skip-if-empty \
+        --pre-release \
+        --push \
+        --exec "${RELEASE_SCRIPT_PATH}" \
+        "${IPA_PATH}" "build.zip"
+    unlink "$API_KEY_PATH"
+fi
