@@ -29,7 +29,7 @@ bundle exec fastlane upload \
     api_key:"$API_KEY_PATH" \
     api_key_id:"$APPLE_API_KEY_ID" \
     api_key_issuer_id:"$APPLE_API_KEY_ISSUER_ID" \
-    ipa:"$0" \
+    ipa:"$1" \
     changelog:"${CHANGES_NOTES}"
 
 # Actually make the release.
