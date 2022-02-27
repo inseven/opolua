@@ -1,4 +1,4 @@
-# opolua
+# OpoLua
 
 [![Build](https://github.com/inseven/opolua/actions/workflows/build.yaml/badge.svg)](https://github.com/inseven/opolua/actions/workflows/build.yaml)
 
