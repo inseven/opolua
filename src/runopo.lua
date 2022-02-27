@@ -48,9 +48,12 @@ function main()
     if #args.map == 0 or args.defaultmap then
         -- Setup the default one
         local dir, filename = oplpath.split(path)
+        if dir == "" then
+            dir = "./"
+        end
         local appName = oplpath.splitext(filename)
         local appDir = string.format([[C:\SYSTEM\APPS\%s\]], appName)
-        iohandler.fsmap(appDir, dir.."/")
+        iohandler.fsmap(appDir, dir)
         devicePath = appDir..filename
     else
         -- If any maps are supplied on the commandline, the cmdline path is assumed to be a devicePath
