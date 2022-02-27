@@ -255,6 +255,7 @@ codes_er5 = {
 
 codes_sibo = setmetatable({
     [0x02] = "Call",
+    [0x1D] = "Usr",
     [0x35] = "Os",
     [0xD9] = "IllegalFuncOpCode",
     [0xDA] = "IllegalFuncOpCode",
@@ -462,6 +463,10 @@ end
 
 function Second(stack, runtime) -- 0x1C
     stack:push(os.date("*t").sec)
+end
+
+function Usr(stack, runtime) -- 0x1D
+    unimplemented("fns.Usr")
 end
 
 function Year(stack, runtime) -- 0x1E
