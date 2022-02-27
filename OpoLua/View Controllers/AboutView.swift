@@ -65,7 +65,7 @@ struct AboutView: View {
                 LicenseSection("Licenses", [
                     License(name: "Diligence", author: "InSeven Limited", filename: "Diligence.txt"),
                     License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "Lua.txt"),
-                    License(name: "opolua", author: "Jason Morley, Tom Sutcliffe", filename: "License.txt"),
+                    License(name: "OpoLua", author: "Jason Morley, Tom Sutcliffe", filename: "License.txt"),
                 ])
             }
             .navigationBarTitleDisplayMode(.inline)
