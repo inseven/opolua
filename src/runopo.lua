@@ -33,6 +33,7 @@ function main()
         verbose = true, v = "verbose",
         map = table, m = "map",
         defaultmap = true, d = "defaultmap",
+        noget = true,
     })
 
     local path = args.path
@@ -58,6 +59,13 @@ function main()
     else
         -- If any maps are supplied on the commandline, the cmdline path is assumed to be a devicePath
         devicePath = path
+    end
+
+    if args.noget then
+        iohandler.getch = function()
+            print("Skipping get")
+            return 13 -- ie enter
+        end
     end
 
     local err = runtime.runOpo(devicePath, procName, iohandler, verbose)
