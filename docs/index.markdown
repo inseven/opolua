@@ -43,5 +43,5 @@
 </p>
 
 <p class="app-store-link">
-    <a href="/public-beta">Public Beta</a>
+    <a href="https://apps.apple.com/gb/app/opolua/id1604029880"><img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" /></a>
 </p>
