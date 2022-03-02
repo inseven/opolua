@@ -513,18 +513,20 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
         fatalError("Unhandled asyncRequest type \(name)")
     }
 
-    // Use registry ref to map swift int to statusVar
-    // Then set registry[statusVar] = requestTable
+    // Use registry ref to map swift int to requestTable
+    // Then set registry[statusVar:uniqueKey()] = requestTable
     // That way both Lua and swift sides can look up the request
 
-    lua_pushvalue(L, 2) // dup statusVar
-    let requestHandle = luaL_ref(L, LUA_REGISTRYINDEX) // pop dup, registry[requestHandle] = statusVar
+    lua_pushvalue(L, 1) // dup requestTable
+    let requestHandle = luaL_ref(L, LUA_REGISTRYINDEX) // pop dup, registry[requestHandle] = requestTable
     lua_pushinteger(L, lua_Integer(requestHandle))
     lua_setfield(L, 1, "ref") // requestTable.ref = requestHandle
 
     lua_pushvalue(L, 2) // dup statusVar
+    luaL_callmeta(L, -1, "uniqueKey")
+    lua_remove(L, -2) // remove the dup statusVar
     lua_pushvalue(L, 1) // dup requestTable
-    lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = requestTable
+    lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = requestTable
 
     let req = Async.Request(type: type, handle: requestHandle)
 
@@ -568,14 +570,15 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
 private func cancelRequest(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     lua_settop(L, 1)
-    let t = lua_gettable(L, LUA_REGISTRYINDEX) // 1: registry[statusVar] -> requestTable
+    luaL_callmeta(L, -1, "uniqueKey")
+    let t = lua_gettable(L, LUA_REGISTRYINDEX) // 2: registry[statusVar:uniqueKey()] -> requestTable
     if t == LUA_TNIL {
         // Request must've already been completed in waitForAnyRequest
         return 0
     } else {
         assert(t == LUA_TTABLE, "Unexpected type for registry requestTable!")
     }
-    lua_getfield(L, 1, "ref")
+    lua_getfield(L, 2, "ref")
     if let requestHandle = L.toint(-1) {
         iohandler.cancelRequest(Int32(requestHandle))
     } else {
@@ -1059,15 +1062,12 @@ class OpoInterpreter {
 
     func completeRequest(_ L: LuaState!, _ response: Async.Response) {
         lua_settop(L, 0)
-        var t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.handle)) // 1: registry[requestHandle] -> statusVar
-        assert(t == LUA_TTABLE, "Failed to locate statusVar for requestHandle \(response.handle)!")
-        lua_pushvalue(L, 1) // 2: statusVar
-        t = lua_gettable(L, LUA_REGISTRYINDEX) // 2: registry[statusVar] -> requestTable
+        let t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.handle)) // 1: registry[requestHandle] -> requestTable
         assert(t == LUA_TTABLE, "Failed to locate requestTable for requestHandle \(response.handle)!")
 
         // Deal with writing any result data
 
-        let type = L.tostring(2, key: "type") ?? ""
+        let type = L.tostring(1, key: "type") ?? ""
         func timestampToInt32(_ timestamp: TimeInterval) -> Int {
             let microsecs = Int(timestamp * 1000000)
             let us32 = UInt32(microsecs % Int(UInt32.max))
@@ -1127,8 +1127,8 @@ class OpoInterpreter {
             case .cancelled, .completed, .interrupt:
                 break // No completion data for these
             }
-            lua_getfield(L, 2, "ev") // Pushes eventArray (AddrSlice)
-            luaL_getmetafield(L, -1, "writeArray") // AddrSlice:writeArray
+            lua_getfield(L, 1, "ev") // Pushes eventArray (as an Addr)
+            luaL_getmetafield(L, -1, "writeArray") // Addr:writeArray
             lua_insert(L, -2) // put writeArray below eventArray
             L.push(ev) // ev as a table
             L.push(1) // DataTypes.ELong
@@ -1148,15 +1148,25 @@ class OpoInterpreter {
 
         // print("Completing \(type) with value \(val)")
 
-        lua_pushvalue(L, 1) // statusVar
+        lua_getfield(L, 1, "var") // statusVar
         L.push(val)
-        lua_call(L, 1, 0) 
+        lua_call(L, 1, 0)
 
         // Finally, free up requestHandle
-        lua_settop(L, 1) // 1: statusVar
+        lua_getfield(L, 1, "var")
+        luaL_callmeta(L, -1, "uniqueKey")
         lua_pushnil(L)
-        lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar] = nil
+        lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = nil
         luaL_unref(L, LUA_REGISTRYINDEX, response.handle) // registry[requestHandle] = nil
+
+        // And if the caller specified a custom completion fn, call that once everything else has been done
+        if lua_getfield(L, 1, "completion") == LUA_TFUNCTION {
+            lua_call(L, 0, 0)
+        } else {
+            lua_pop(L, 1)
+        }
+
+        lua_settop(L, 0)
     }
 
     func installSisFile(path: String) throws {

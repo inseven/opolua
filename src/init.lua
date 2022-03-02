@@ -393,7 +393,8 @@ end
 -- ambiguity) backslash.
 function hexEscape(str)
     local pattern = "[\x00-\x1F\x7F-\xFF\\]"
-    return str:gsub(pattern, function(ch) return string.format("\\x%02X", ch:byte()) end)
+    local result = str:gsub(pattern, function(ch) return string.format("\\x%02X", ch:byte()) end)
+    return result
 end
 
 function hexUnescape(str)

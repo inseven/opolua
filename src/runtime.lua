@@ -83,9 +83,13 @@ function Runtime:IPReal()
     return self:ipUnpack("<d")
 end
 
-local makeVar = memory.makeVar
-database.makeVar = makeVar
-local newArrayVal = memory.newArrayVal
+local Chunk = memory.Chunk
+local Addr = memory.Addr
+
+database.makeVar = function(type)
+    -- All database strings have max len 255
+    return Chunk():makeNewVariable(0, type, 255)
+end
 
 function Runtime:getLocalVar(index, type, frame)
     -- ie things where index is just an offset from iFrameCell
@@ -96,44 +100,22 @@ function Runtime:getLocalVar(index, type, frame)
     local vars = frame.vars
     local var = vars[index]
     if not var then
-        local maxLen = nil
-        if type == DataTypes.EString then
+        local stringMaxLen = nil
+        if type & 0xF == DataTypes.EString then
             local stringFixupIndex = index - 1
-            maxLen = assert(frame.proc.strings[stringFixupIndex], "Failed to find string fixup!")
+            stringMaxLen = assert(frame.proc.strings[stringFixupIndex], "Failed to find string fixup!")
         end
-        var = makeVar(type, maxLen)
-        var:setOrigin(frame.proc, index)
-        vars[index] = var
-    end
-    if var() == nil then
-        assert(frame.proc.fn == nil, "Cannot have an uninitialized local var in a Lua frame!")
-        -- Even though the caller might be a LeftSide op and thus is about to
-        -- assign to the var, so initialising the var might not actually be
-        -- necessary, we'll do it anyway just to simplify the interface
+        local arrayLen = nil
         if isArrayType(type) then
             -- Have to apply array fixup (ie find array length from proc definition)
             local arrayFixupIndex = (type == DataTypes.EStringArray) and index - 3 or index - 2
-            local len = assert(frame.proc.arrays[arrayFixupIndex], "Failed to find array fixup!")
-            local stringMaxLen = nil
-            if type == DataTypes.EStringArray then
-                local stringFixupIndex = index - 1
-                stringMaxLen = assert(frame.proc.strings[stringFixupIndex], "Failed to find string fixup for array!")
-            end
-            var(newArrayVal(type & 0xF, len, stringMaxLen))
-        else
-            var(DefaultSimpleTypes[type])
+            arrayLen = assert(frame.proc.arrays[arrayFixupIndex], "Failed to find array fixup!")
         end
-    end
-    return var
-end
 
-function Runtime:popParameter(stack)
-    local type = stack:pop()
-    assert(DataTypes[type], "Expected parameter type on stack")
-    assert(not isArrayType(type), "Can't pass arrays on the stack?")
-    local var = makeVar(type)
-    local val = stack:pop()
-    var(val)
+        var = self.chunk:getVariableAtOffset(frame.chunkOffset + index, type)
+        var:fixup(stringMaxLen, arrayLen)
+        vars[index] = var
+    end
     return var
 end
 
@@ -147,7 +129,6 @@ function Runtime:getIndirectVar(index)
         -- end
         error(string.format("Failed to resolve indirect index 0x%04x", index))
     end
-    assert(result(), "Indirect has not yet been initialised?")
     return result
 end
 
@@ -161,11 +142,7 @@ end
 
 -- Only for things that need to simulate a var (such as for making sync versions of async requests)
 function Runtime:makeTemporaryVar(type, len, stringMaxLen)
-    local result = makeVar(type)
-    if isArrayType(type) then
-        local val = newArrayVal(type & 0xF, len, stringMaxLen)
-        result(val)
-    end
+    local result = Chunk():makeNewVariable(0, type, stringMaxLen, len)
     return result
 end
 
@@ -244,7 +221,14 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         prevFrame = self.frame,
         vars = {},
         indirects = {},
+        dataSize = proc.iDataSize or 0,
     }
+    if frame.prevFrame then
+        frame.chunkOffset = (frame.prevFrame.chunkOffset + frame.prevFrame.dataSize + 3) & ~3
+    else
+        frame.chunkOffset = self.frameBase
+    end
+    self.chunk:clear(frame.chunkOffset, (frame.dataSize + 3) & ~3)
     self:setFrame(frame, proc.codeOffset)
 
     if not stack then
@@ -262,10 +246,18 @@ function Runtime:pushNewFrame(stack, proc, numParams)
     -- pop them here. We're ignoring the type-checking extra values that
     -- were pushed onto the stack prior to the RunProcedure call.
 
+    local paramOffset = frame.chunkOffset + frame.dataSize
     for i = 1, numParams do
-        local var = self:popParameter(stack)
+        local type = stack:pop()
+        local val = stack:pop()
+        assert(DataTypes[type], "Expected parameter type on stack")
+        assert(not isArrayType(type), "Can't pass arrays on the stack?")
+        local var = self.chunk:makeNewVariable(paramOffset, type, type == DataTypes.EString and #val)
+        paramOffset = var:endOffset()
+        var(val)
         table.insert(frame.indirects, 1, var)
     end
+    frame.dataSize = paramOffset - frame.chunkOffset
     frame.returnStackSize = stack:getSize()
     if self.callTrace then
         local args = {}
@@ -703,7 +695,8 @@ end
 function newRuntime(handler)
     local rt = Runtime {
         opcodes = ops.codes_er5, -- by default
-        allocs = {},
+        frameBase = 0, -- Where in the chunk we start the stack frames' memory
+        chunk = Chunk { address = 32 },
         dbs = {},
         modules = {},
         files = {},
@@ -731,6 +724,16 @@ function Runtime:setEra(era)
     local codes = ops["codes_"..era]
     assert(codes, "Unrecognised era ".. era)
     self.opcodes = codes
+end
+
+-- Returns the datatype for parameters to opcodes that deal with addresses
+-- eg IoSeek's addr parameter is an int on SIBO and a long on ER5
+function Runtime:addressType()
+    if self.opcodes == ops.codes_sibo then
+        return DataTypes.EWord
+    else
+        return DataTypes.ELong
+    end
 end
 
 function printInstruction(currentOpIdx, opCode, op, extra)
@@ -973,6 +976,7 @@ function Runtime:pcallProc(procName, ...)
         end
     end
     assert(self.frame == callingFrame, "Frame was not restored on pcallProc exit!")
+    -- memory.printStats()
     return nil -- no error
 end
 
@@ -1045,6 +1049,10 @@ function Runtime:declareGlobal(name, arrayLen)
     else -- no suffix means float
         valType = DataTypes.EReal
     end
+    local type = valType
+    if arrayLen then
+        type = valType | 0x80
+    end
 
     -- We define our indexes (which are how externals map to locals) as simply
     -- being the position of the item in the frame vars table. We can skip
@@ -1052,15 +1060,12 @@ function Runtime:declareGlobal(name, arrayLen)
     -- know it.
     local index = #frame.vars + 1
 
-    local var = makeVar(valType)
+    -- For simplicity we'll assume any strings should be 255 max len
+    local var = self.chunk:makeNewVariable(frame.chunkOffset + frame.dataSize, type, 255, arrayLen)
+    frame.dataSize = var:endOffset() - frame.chunkOffset
     frame.globals[name] = { offset = index, type = valType }
     frame.vars[index] = var
 
-    if arrayLen then
-        var(newArrayVal(valType, arrayLen))
-    else
-        var(DefaultSimpleTypes[valType])
-    end
     return var
 end
 
@@ -1151,129 +1156,24 @@ function Runtime:dir(path)
     return self:dir("")
 end
 
---[[
-Cell address encoding scheme:
-
-Allocs < 64KB get the format 0000xxxx to 7FFFxxxx (where xxxx is the offset
-within the cell) meaning we can track up to 32k individual small allocations.
-
-Allocs >= 64KB get the format 80xxxxxx to FFxxxxxx allowing for 128 huge
-allocations (up to 16MB which seems like a reasonable upper limit).
-
-allocations are indexed by their top 4 (for small allocs) or 2 (for big allocs)
-bytes into runtime.allocs which is also reverse-indexed too. ie for the first
-small alloc:
-
-runtime.allocs[0x00010000] = AddrSlice {...}
-runtime.allocs[addrSlice] = 0x00010000
-]]
-
-local kLargeAllocMask = 0xFF000000
-local kSmallAllocMask = 0xFFFF0000
-local kMaxSmallAlloc = 0xFFFF
-
-local function baseAddress(addr)
-    if addr & 0x80000000 > 0 then
-        -- Large alloc
-        return addr & kLargeAllocMask
-    else
-        return addr & kSmallAllocMask
-    end
-end
 
 function Runtime:addrFromInt(addr)
-    if type(addr) == "table" then
-        -- It's already an AddrSlice
-        return addr
+    -- if type(addr) == "number" then
+    if ~addr then
+        assert(addr >= self.chunk.address and addr <= self.chunk:maxAddress(), "Bad address!")
+        addr = Addr { chunk = self.chunk, offset = addr - self.chunk.address }
     end
-    addr = addr % (1<<32)
-    local base = baseAddress(addr)
-    local offset = addr - base
-    result = self.allocs[base]
-    if not result then
-        error(string.format("Failed to find allocation for address 0x%08X", addr))
-    end
-    return result + offset
-end
-
-function Runtime:nextSmallAlloc()
-    local addr = 0x00010000
-    while self.allocs[addr] do
-        addr = addr + 0x00010000
-    end
-    assert(addr < 0x80000000, "OOM!")
     return addr
 end
 
-function Runtime:nextLargeAlloc()
-    local addr = 0x80000000
-    while self.allocs[addr] do
-        addr = addr + 0x01000000
-    end
-    assert(addr < 0xFFFFFFFF, "OOM!")
-    return addr
-end
-
-function Runtime:addrToInt(addr)
-    if type(addr) == "number" then
-        return addr
-    else
-        -- Do we already have one?
-        local key = addr.mem or addr.var -- track based on var or mem since AddrSlice objects are ephemeral
-        local baseAddr = self.allocs[key]
-        if not baseAddr then
-            if addr.len > kMaxSmallAlloc then
-                baseAddr = self:nextLargeAlloc()
-            else
-                baseAddr = self:nextSmallAlloc()
-            end
-            self.allocs[baseAddr] = addr:baseAddr()
-            self.allocs[key] = baseAddr
-            -- printf("%s -> 0x%08X\n", key, baseAddr)
-        end
-        return toint32(baseAddr + addr.offset)
-    end
+function Runtime:addrAsVariable(addr, type)
+    return self:addrFromInt(addr):asVariable(type)
 end
 
 function Runtime:realloc(addr, sz)
     -- printf("Runtime:realloc(%s, %d)\n", addr, sz) --, self:getOpoStacktrace())
     local sz = (sz + 3) & ~3
-    if addr == nil then
-        local addr
-        if self.ioh.realloc then
-            local mem = self.ioh.realloc(nil, sz)
-            addr = memory.AddrSlice {
-                offset = 0,
-                len = sz,
-                mem = mem
-            }
-        else
-            local var = self:makeTemporaryVar(DataTypes.ELongArray, sz // 4)
-            addr = var()[1]:addressOf()
-        end
-        return self:addrToInt(addr)
-    end
-
-    assert(addr.offset == 0, "Cannot realloc a non-alloc'd address!")
-    local k = addr.mem or addr.var
-    local baseAddr = self.allocs[k]
-    assert(baseAddr, "Can't find allocation in allocs table!")
-    if sz == 0 then
-        if addr.mem then
-            self.ioh.realloc(addr.mem, 0)
-        end
-        self.allocs[k] = nil
-        self.allocs[baseAddr] = nil
-        return 0
-    elseif sz < addr.len then
-        addr.len = sz
-    elseif sz > addr.len then
-        local newAddr = self:realloc(nil, sz)
-        newAddr:write(addr:read(addr.len))
-        self:realloc(addr, 0)
-        addr = newAddr
-    end
-    return self:addrToInt(addr)
+    error("TODO")
 end
 
 function runOpo(fileName, procName, iohandler, verbose)

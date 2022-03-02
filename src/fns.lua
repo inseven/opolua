@@ -354,9 +354,9 @@ function Get(stack, runtime) -- 0x0A
 end
 
 function Ioa(stack, runtime) -- 0x0B
-    local b = stack:pop() -- TODO this should be a dereference? Or both should be AddrSlice reads?
-    local a = stack:pop():dereference()
-    local stat = stack:pop():dereference()
+    local b = runtime:addrFromInt(stack:pop())
+    local a = runtime:addrFromInt(stack:pop())
+    local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     local fn = stack:pop()
     local h = stack:pop()
     local err = runtime:IOA(h, fn, stat, a, b)
@@ -370,7 +370,7 @@ end
 function IoOpen(stack, runtime) -- 0x0D
     local mode = stack:pop()
     local name = stack:pop()
-    local handleVar = stack:pop():dereference()
+    local handleVar = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
 
     local handle, err = runtime:IOOPEN(name, mode)
     if handle then
@@ -395,9 +395,11 @@ function IoRead(stack, runtime) -- 0x0F
     local maxLen = stack:pop()
     local addr = runtime:addrFromInt(stack:pop())
     local h = stack:pop()
+    -- printf("IoRead maxLen=%d\n", maxLen)
     local data, err = runtime:IOREAD(h, maxLen)
 
     if data then
+        -- printf("IoRead got %d bytes\n", #data)
         addr:write(data)
     end
 
@@ -484,7 +486,7 @@ function Week(stack, runtime) -- 0x20
 end
 
 function IoSeek(stack, runtime) -- 0x21
-    local offsetVar = stack:pop():dereference()
+    local offsetVar = runtime:addrAsVariable(stack:pop(), runtime:addressType())
     local mode = stack:pop()
     local handle = stack:pop()
     local err, result = runtime:IOSEEK(handle, mode, offsetVar())
@@ -509,8 +511,8 @@ end
 
 function IoOpenUnique(stack, runtime) -- 0x25
     local mode = stack:pop()
-    local nameVar = stack:pop():dereference()
-    local handleVar = stack:pop():dereference()
+    local nameVar = runtime:addrAsVariable(stack:pop(), DataTypes.EString)
+    local handleVar = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
 
     local handle, err, name = runtime:IOOPEN(nameVar(), mode)
     if handle then
@@ -732,7 +734,7 @@ function gCreateEnhanced(stack, runtime) -- 0x39
 end
 
 function MenuWithMemory(stack, runtime) -- 0x3A
-    local var = stack:pop():dereference()
+    local var = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     local menu = runtime:getMenu()
     runtime:setMenu(nil)
     menu.highlight = var()
@@ -846,12 +848,12 @@ function Ioc(stack, runtime) -- 0x4F
     local numParams = runtime:IP8()
     local a, b
     if numParams >= 5 then
-        b = stack:pop() -- TODO: See comment in Ioa
+        b = runtime:addrFromInt(stack:pop())
     end
     if numParams >= 4 then
-        a = stack:pop():dereference()
+        a = runtime:addrFromInt(stack:pop())
     end
-    local stat = stack:pop():dereference()
+    local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     local fn = stack:pop()
     local h = stack:pop()
     runtime:IOC(h, fn, stat, a, b)
@@ -894,7 +896,7 @@ function Bookmark(stack, runtime) -- 0x55
 end
 
 function GetEventC(stack, runtime) -- 0x56
-    local stat = stack:pop():dereference()
+    local stat = stack:pop():asVariable(DataTypes.EWord)
     runtime:iohandler().cancelRequest(stat)
     -- Unlike IoCancel, GetEventC should do its own waitForRequest.
     runtime:waitForRequest(stat)
@@ -1008,12 +1010,13 @@ local function valList(stack, runtime)
     local numParams = runtime:IP8()
     local vals = {}
     if numParams == 0 then
-        -- It's an array
+        -- It's an array, represented as ArrayDirectLeftSideFloat(1)
+        -- so we can safely turn back to an array variable
         local numVals = stack:pop()
-        local var = stack:pop():getParent()
-        local val = var()
+        local var = stack:pop()
+        local array = var:addressOf():asVariable(var:type() | 0x80)
         for i = 1, numVals do
-            vals[i] = val[i]()
+            vals[i] = array[i]()
         end
     else
         while numParams > 0 do

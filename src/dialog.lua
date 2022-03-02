@@ -184,9 +184,8 @@ function View:capturePointer()
     -- print("begin capture")
     self.capturing = true
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
-    local evVar = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
-    local ev = evVar()
-    local evAddr = ev[1]:addressOf()
+    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
+    local evAddr = ev:addressOf()
     while true do
         GETEVENTA32(stat, evAddr)
         runtime:waitForRequest(stat)
@@ -961,9 +960,8 @@ function DIALOG(dialog)
 
     -- event loop
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
-    local evVar = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
-    local ev = evVar()
-    local evAddr = ev[1]:addressOf()
+    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
+    local evAddr = ev:addressOf()
 
     local result = nil
     -- local highlight = nil

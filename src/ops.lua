@@ -619,7 +619,7 @@ local function leftSide(stack, runtime, type, indirect)
     local var = runtime:getVar(index, type, indirect)
     if isArrayType(type) then
         local pos = stack:pop()
-        var = var()[pos]
+        var = var[pos]
     end
     stack:push(var)
 end
@@ -1966,10 +1966,10 @@ function GetEvent(stack, runtime) -- 0xE4
     runtime:waitForRequest(stat)
 
     local result = {}
-    local k = ev()[KEvAType]()
+    local k = ev[KEvAType]()
     if k & KEvNotKeyMask == 0 then
         result[1] = keycodeToCharacterCode(k)
-        result[2] = ev()[KEvAKMod]() | ((ev()[KEvAKRep]()) << 8)
+        result[2] = ev[KEvAKMod]() | ((ev[KEvAKRep]()) << 8)
     else
         result[1] = k
     end
@@ -1989,7 +1989,6 @@ function gPeekLine(stack, runtime) -- 0xE6
     local numWords = (numBits + 15) // 16
     local numBytes = numWords * 2
     local d = stack:pop()
-    assert(d:getValidLength() >= numBytes, "gPeekLine data array too small!")
     local x, y = stack:popXY()
     local drawable = stack:pop()
     -- printf("gPeekLine %d,%d id=%d numPixels=%d mode=%d\n", x, y, drawable, numPixels, mode)
@@ -2005,7 +2004,7 @@ function Screen4(stack, runtime) -- 0xE7
 end
 
 function IoWaitStat(stack, runtime) -- 0xE8
-    local stat = stack:pop():dereference()
+    local stat = stack:pop():asVariable(DataTypes.EWord)
     runtime:waitForRequest(stat)
 end
 
@@ -2459,15 +2458,14 @@ end
 
 function GetEvent32(stack, runtime) -- 0x122
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
-    local ev = stack:pop()
+    local ev = runtime:addrFromInt(stack:pop())
     runtime:GETEVENTA32(stat, ev)
     runtime:waitForRequest(stat)
-    -- printf("Got event stat=%s, %s\n", stat, ev:dereference():getParent())
 end
 
 function GetEventA32(stack, runtime) -- 0x123
-    local ev = stack:pop()
-    local stat = stack:pop():dereference()
+    local ev = runtime:addrFromInt(stack:pop())
+    local stat = stack:pop():asVariable(DataTypes.EWord)
     runtime:GETEVENTA32(stat, ev)
 end
 
@@ -2493,8 +2491,6 @@ end
 
 function gInfo32(stack, runtime) -- 0x128
     local addr = runtime:addrFromInt(stack:pop())
-    -- Heh, ER5 doesn't have this bounds check but we can
-    assert(addr:getValidLength() >= 48*4, "Too small an array passed to gInfo32!")
 
     local context = runtime:getGraphicsContext()
     local w, h, ascent = runtime:gTWIDTH("0")
@@ -2553,7 +2549,7 @@ function gInfo32(stack, runtime) -- 0x128
 end
 
 function IoWaitStat32(stack, runtime) -- 0x129
-    local stat = stack:pop():dereference()
+    local stat = stack:pop():asVariable(DataTypes.ELong)
     -- printf("IoWaitStat32 %s", stat)
     runtime:waitForRequest(stat)
     -- printf(" -> %s\n", stat)

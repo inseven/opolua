@@ -24,235 +24,379 @@ SOFTWARE.
 
 _ENV = module()
 
--- To get the var at the given (1-based) pos, do arrayVar()[pos]. This will do
--- the bounds check and create a var if necessary. It is an error to assign
--- directly to the array, do arrayVar()[pos](newVal) instead - ie get the val,
--- then assign to it using the function syntax.
-ArrayValue = class {
-    _type = nil,
-    _len = nil,
-    _stringMaxLen = nil,
-    _var = nil,
+local chunkstride = 4
+local strideshift = 2
+
+local EWord = DataTypes.EWord
+local ELong = DataTypes.ELong
+local EReal = DataTypes.EReal
+local EString = DataTypes.EString
+local EWordArray = DataTypes.EWordArray
+local ELongArray = DataTypes.ELongArray
+local ERealArray = DataTypes.ERealArray
+local EStringArray = DataTypes.EStringArray
+local math_max = math.max
+local string_pack = string.pack
+local string_unpack = string.unpack
+local string_sub = string.sub
+local fmt = string.format
+local isArrayType = isArrayType
+local type = type
+
+local ValSize = {
+    [EWord] = 2,
+    [ELong] = 4,
+    [EReal] = 8,
+}
+local FmtForType = {
+    [EWord] = "<i2",
+    [ELong] = "<i4",
+    [EReal] = "<d",
 }
 
-function ArrayValue:__index(k)
-    if ArrayValue[k] then
-        return ArrayValue[k]
-    end
-    local len = rawget(self, "_len")
-    assert(len, "Array length has not been set!")
-    assert(type(k) == "number", "Attempt to access "..tostring(k).." in ArrayValue")
-    if not (k > 0 and k <= len) then
-        error(string.format("Out of bounds: %d len=%d for %s\n", k, len, ArrayValue.__tostring(self)))
-    end
-    assert(k > 0 and k <= len, KErrSubs)
-    local valType = rawget(self, "_type")
-    local maxLen = rawget(self, "_stringMaxLen")
-    local result = makeVar(valType, maxLen)
-    result:setParent(self._var, k)
-    rawset(self, k, result)
-    -- And default initialize the array value
-    result(DefaultSimpleTypes[valType])
+Chunk = class {
+    -- data is stored as 32-bit ints from self[0] to self[maxIdx-1]
+    address = 0, -- Note, chunk must start on a chunkstride boundary
+    maxIdx = 0,
+}
+
+function Chunk:maxAddress()
+    return self.address + self.maxIdx << strideshift
+end
+
+local function word(self, idx)
+    local result = string_pack("<I4", self[idx] or 0)
     return result
 end
 
-function ArrayValue:__newindex(k, v)
-    error("Runtime should never be assigning to a array var index!")
+local function setword(self, idx, data, dataPos)
+    self[idx] = string_unpack("<I4", data, dataPos)
 end
 
-function ArrayValue:arrayLen()
-    return rawget(self, "_len")
+local function hexdump(word)
+    return string.format("%02X%02X%02X%02X", string.byte(word, 1, 4))
 end
 
-function ArrayValue:valueType()
-    return rawget(self, "_type")
-end
-
-function ArrayValue:__tostring()
-    local result = {}
-    local len = self:arrayLen()
-    for i = 1, len do
-        result[i] = tostring(self[i])
+function Chunk:read(offset, len)
+    assert(offset >= 0, "Attempt read before start of chunk!")
+    local rem = offset % chunkstride
+    local idx = offset >> strideshift
+    local words = {}
+    local i = 1
+    if rem ~= 0 then
+        local w = word(self, idx)
+        w = string_sub(w, 1 + rem, rem + len)
+        words[i] = w
+        i = i + 1
+        len = len - #w
+        idx = idx + 1
     end
-    return string.format("[t=%d, %s]", self:valueType(), table.concat(result, ", "))
+    while len > 0 do
+        local w = word(self, idx)
+        if len >= chunkstride then
+            words[i] = w
+            len = len - chunkstride
+        else
+            words[i] = string_sub(w, 1, len)
+            len = 0
+        end
+        idx = idx + 1
+        i = i + 1
+    end
+    return table.concat(words)
 end
 
-function ArrayValue:setVar(var)
-    assert(rawget(self, "_var") == nil, "Cannot re-assign an array value's variable!")
-    rawset(self, "_var", var)
+function Chunk:dump()
+    printf("Dumping chunk...\n")
+    for i = 0, (self.maxIdx - 1), 4 do
+        local str = word(self, i) .. word(self, i + 1) .. word(self, i + 2) .. word(self, i + 3)
+        str = str:gsub("[\x00-\x1F\x7F-\xFF]", ".")
+        printf("%08X: %s %s %s %s  %s\n", self.address + i * chunkstride,
+            hexdump(word(self, i)),
+            hexdump(word(self, i + 1)),
+            hexdump(word(self, i + 2)),
+            hexdump(word(self, i + 3)),
+            str)
+    end
 end
 
-function newArrayVal(valueType, len, stringMaxLen)
-    return ArrayValue {
-        _type = valueType,
-        _len = len,
-        _stringMaxLen = stringMaxLen
+function Chunk:write(offset, data)
+    assert(offset >= 0, "Attempt write before start of chunk!")
+    local rem = offset % chunkstride
+    local idx = offset >> strideshift
+    local dataIdx = 0
+
+    if rem ~= 0 then
+        local w = word(self, idx)
+        local firstPiece = string_sub(data, 1, chunkstride - rem)
+        local newVal = string_sub(w, 1, rem) .. firstPiece
+        if #newVal < chunkstride then
+            -- data does not reach to the end of the word, have to add the original tail
+            -- ie must be oNoo oNNo or ooNo (o=orig byte, N = new byte from data)
+            newVal = newVal .. string_sub(w, -(chunkstride - #newVal))
+        end
+        -- print(rem, hexEscape(firstPiece))
+        assert(#newVal == chunkstride)
+        setword(self, idx, newVal)
+        idx = idx + 1
+        dataIdx = #firstPiece
+    end
+
+    local dataLen = #data
+    while dataIdx < dataLen do
+        if dataIdx + chunkstride <= dataLen then
+            setword(self, idx, data, 1 + dataIdx)
+            dataIdx = dataIdx + chunkstride
+        else
+            local lastPiece = string_sub(data, 1 + dataIdx)
+            assert(#lastPiece < chunkstride)
+            local newVal = lastPiece .. string_sub(word(self, idx), -(chunkstride - #lastPiece))
+            assert(#newVal == chunkstride)
+            setword(self, idx, newVal)
+            dataIdx = dataLen
+        end
+        idx = idx + 1
+    end
+
+    self.maxIdx = math_max(self.maxIdx, idx)
+end
+
+-- Optimised version of Chunk:write(offset, string.rep("\0", length))
+function Chunk:clear(offset, length)
+    assert(offset % chunkstride == 0, "Cannot zero from a non-aligned address!")
+    assert(length % chunkstride == 0, "Cannot zero from a aligned length!")
+    for i = offset >> strideshift, (offset + length - 1) >> strideshift do
+        self[i] = 0
+    end
+end
+
+function Chunk:getVariableAtOffset(offset, type)
+    local var = Variable {
+        _type = type,
+        _chunk = self,
+        _offset = offset,
     }
+
+    return var
 end
 
---
+function Chunk:makeNewVariable(startOffset, type, stringMaxLen, arrayLen)
+    local offset = startOffset
+    if type & 0xF == EString then
+        offset = offset + 1 -- For string max len
+    end
+    if isArrayType(type) then
+        offset = offset + 2 -- For array size
+    end
+    local result = self:getVariableAtOffset(offset, type)
+    result:fixup(stringMaxLen, arrayLen)
+    return result
+end
 
 Variable = class {
     _type = nil,
-    _parent = nil,
-    _idx = nil,
-    _maxLen = nil,
-    _val = nil,
-    _onAssign = nil,
-    _originProc = nil,
-    _originIndex = nil,
+    _chunk = nil,
+    _offset = nil, -- relative to start of _chunk
+    _arrayLen = nil,
+    _stringMaxLen = nil,
 }
 
-function Variable:__call(val)
-    if val ~= nil then
-        if isArrayType(self._type) then
-            assert(self._val == nil, "Cannot reassign the value of an array variable!")
-            val:setVar(self)
+function Variable:__index(k)
+    local v = Variable[k]
+    if v then
+        return v
+    end
+
+    -- Support array indexing, for array vars (do away with intermediary
+    -- ArrayValue object since that isn't really an OPL concept).
+    if type(k) == "number" then
+        local t = self:type()
+        assert(isArrayType(t), "Cannot array index a non-array Variable!")
+        local len = self:arrayLen()
+        if not (k > 0 and k <= len) then
+            -- error(KErrSubs)
+            error(string.format("Out of bounds: %d len=%d", k, len)) -- for %s\n", k, len, self))
         end
-        -- TODO should probably assert that val's type is correct for our type
-        if self._len then
-            self:updateStringData(0, val)
-            self._len = #val
-        else
-            self._val = val
+        local result = self._chunk:getVariableAtOffset(self._offset + (k - 1) * self:stride(), t & 0xF)
+        if t == EStringArray then
+            -- It's important to set _stringMaxLen because strings inside arrays
+            -- don't have the max len field in the same place and there's no way
+            -- for result to know where the correct location is (given how we're
+            -- currently structuring the Variable object).
+            result._stringMaxLen = self:stringMaxLen()
         end
-        if self._onAssign then
-            self._onAssign(self)
-        end
+        rawset(self, k, result) -- Cache for future
+        return result
+    end
+
+    -- Fallback for accessing a non-existent member
+    return nil
+end
+
+-- Convenience syntax to allow `foo[3] = bar` as well as `foo[3](bar)`
+function Variable:__newindex(k, v)
+    if type(k) == "number" then
+        local t = self:type()
+        assert(isArrayType(t), "Cannot array index assign to a non-array Variable!")
+        self[k](v)
     else
-        if self._len then
-            return self._val:sub(1, self._len)
+        rawset(self, k, v)
+    end
+end
+
+-- local sets = 0
+-- local gets = 0
+function Variable:__call(val)
+    local t = self._type
+    local chunk = self._chunk
+    local offsetAlign = self._offset & 0x3
+    local idx = self._offset >> strideshift
+    if val ~= nil then
+        -- Set value
+        -- sets = sets + 1
+        -- See comment on Addr._bnot() for how this works.
+        -- The logic is "if type is EWord or ELong and val is an Addr rather than a number"
+        if t < 2 and not ~val then
+            -- Assigning an Addr to an integer variable...
+            val = val:intValue()
+        end
+
+        -- Optmised cases
+        if t == EWord and offsetAlign == 0 then
+            chunk[idx] = ((chunk[idx] or 0) & 0xFFFF0000) | (val & 0xFFFF)
+            return
+        elseif t == EWord and offsetAlign == 2 then
+            chunk[idx] = ((chunk[idx] or 0) & 0xFFFF) | ((val << 16) & 0xFFFF0000)
+            return
+        elseif t == ELong and offsetAlign == 0 then
+            chunk[idx] = val & 0xFFFFFFFF
+        elseif isArrayType(t) then
+            error("Cannot assign to an array variable")
+        end
+        
+        -- Slow path
+        local data
+        if t == EString then
+            assert(#val <= self:stringMaxLen(), KErrStrTooLong)
+            data = string_pack("<B", #val)..val
         else
-            return self._val
+            data = string_pack(FmtForType[t], val)
+        end
+        chunk:write(self._offset, data)
+    else
+        -- gets = gets + 1
+        -- Get value
+        if t == EWord and offsetAlign == 0 then
+            -- Optimisation
+            local ret = (chunk[idx] or 0) & 0xFFFF
+            if ret & 0x8000 ~= 0 then
+                -- Have to sign extend it
+                ret = ret | ~0xFFFF
+            end
+            return ret
+        elseif t == EWord and offsetAlign == 2 then
+            local ret = ((chunk[idx] or 0) & 0xFFFF0000) >> 16
+            if ret & 0x8000 ~= 0 then
+                -- Have to sign extend it
+                ret = ret | ~0xFFFF
+            end
+            return ret
+        elseif t == ELong and offsetAlign == 0 then
+            local ret = chunk[idx] or 0
+            if ret & 0x80000000 ~= 0 then
+                -- Have to sign extend it
+                ret = ret | ~0xFFFFFFFF
+            end
+            return ret
+        elseif t == EString then
+            local len = string_unpack("B", chunk:read(self._offset, 1))
+            return chunk:read(self._offset + 1, len)
+        elseif isArrayType(t) then
+            error("Cannot get the value of an array variable")
+        else
+            -- Fall back to the slow path
+            local bytes = chunk:read(self._offset, ValSize[t])
+            local result = string_unpack(assert(FmtForType[t]), bytes)
+            return result
         end
     end
 end
 
-function Variable:__tostring()
-    local val
-    if self._type == DataTypes.EString then
-        val = string.format('"%s"', hexEscape(self()))
-    else
-        val = tostring(self())
+function Variable:fixup(stringMaxLen, arrayLen)
+    if self._type & 0xF == EString then
+        assert(stringMaxLen, "Initializing a string variable requires max length to be specified")
+        self._chunk:write(self._offset - 1, string_pack("B", stringMaxLen))
+        self._stringMaxLen = stringMaxLen -- might as well set this while we're here
     end
-    if self._originProc then
-        return string.format("%s+0x%04X (%s)", self._originProc.name, self._originIndex, val)
-    else
-        return string.format("Temporary (%s)", val)
+    if isArrayType(self._type) then
+        assert(arrayLen, "Initializing an array variable requires the array length to be specified")
+        local arrayFixupIndex = (self._type == DataTypes.EStringArray) and self._offset - 3 or self._offset - 2
+        self._chunk:write(arrayFixupIndex, string_pack("<I2", arrayLen))
+        self._arrayLen = arrayLen -- might as well set this while we're here
     end
 end
 
 function Variable:type()
-    return self._type
+    return rawget(self, "_type")
 end
 
 function Variable:addressOf()
-    -- For array items, addressOf yields an AddrSlice that is allows access to
-    -- all the values in the array, kinda like how & operator in C technically
-    -- doesn't allow you to index that pointer beyond the array bounds (even
-    -- though most people ignore that, undefined behaviour oh well).
-    local parentArrayVar = self:getParent()
-    if parentArrayVar then
-        local valSz = self:stride()
-        return AddrSlice {
-            offset = (self:getIndexInArray() - 1) * valSz,
-            len = parentArrayVar():arrayLen() * valSz,
-            var = parentArrayVar,
-        }
-    elseif isArrayType(self._type) then
-        return AddrSlice {
-            offset = 0,
-            len = self():arrayLen() * self:stride(),
-            var = self,
-        }
-    else
-        return AddrSlice {
-            offset = 0,
-            len = self:stride(),
-            var = self,
-        }
-    end
-end
-
-function Variable:setParent(parentArrayVar, parentIdx)
-    self._parent = parentArrayVar
-    self._idx = parentIdx
-end
-
-function Variable:getParent()
-    return self._parent
-end
-
-function Variable:getIndexInArray()
-    assert(self._idx, "Cannot call getIndexInArray on a variable not in an array!")
-    return self._idx
-end
-
-function Variable:setMaxLen(maxLen)
-    assert(self:type() == DataTypes.EString, "Can't set maxLen for non-string variables!")
-    self._maxLen = maxLen or 255
-end
-
-function Variable:getMaxLen()
-    assert(self:type() == DataTypes.EString, "Can't get maxLen for non-string variables!")
-    assert(self._maxLen, "Missing maxLen!")
-    return self._maxLen
+    return Addr {
+        chunk = self._chunk,
+        offset = self._offset,
+    }
 end
 
 function Variable:stride()
+    local valType = self:type() & 0xF
+    if valType == EString then
+        return 1 + self:stringMaxLen()
+    else
+        return assert(ValSize[valType])
+    end
+end
+
+-- We don't have a size API because that would be ambiguous as to whether it
+-- should include any array length or string max length bytes that come before
+-- Variable._offset.
+function Variable:endOffset()
+    local valSize = self:stride()
     if isArrayType(self._type) then
-        return self._val[1]:stride()
-    elseif self._type == DataTypes.EString then
-        return 1 + self:getMaxLen()
+        return self._offset + valSize * self:arrayLen()
     else
-        return assert(SizeofType[self._type], "Bad type in stride!")
+        return self._offset + valSize
     end
 end
 
-function Variable:getBytes()
-    local t = self._type
-    if t == DataTypes.EWord then
-        return string.pack("<i2", self._val)
-    elseif t == DataTypes.ELong then
-        return string.pack("<i4", self._val)
-    elseif t == DataTypes.EReal then
-        return string.pack("<d", self._val)
-    elseif t == DataTypes.EString then
-        local len = self._len or #self._val
-        return string.pack("B", len)..self:getAllStringData()
-    else
-        error("Bad type in getBytes!")
+-- Note, this definition works fine for both strings and string arrays because
+-- they both put the max len byte at the same place relative to self._offset
+-- (but not for strings _in_ arrays, see comment below).
+function Variable:stringMaxLen()
+    assert(self._type & 0xF == EString, "Bad variable type in stringMaxLen!")
+    if not self._stringMaxLen then
+        -- We ensure _stringMaxLen is always set for array members, so we don't have to worry about that case.
+        -- Equally a variable's max length can't change so it's safe to cache this.
+        self._stringMaxLen = string_unpack("B", self._chunk:read(self._offset - 1, 1))
     end
+    return self._stringMaxLen
 end
 
-function Variable:getAllStringData()
-    if self._len then
-        -- Already expanded
-        return self._val, self._len
-    else
-        local realLen = #self._val
-        return self._val .. string.rep("\0", self:getMaxLen() - realLen), realLen
+function Variable:arrayLen()
+    assert(isArrayType(self._type), "Bad variable type in arrayLen!")
+    if not self._arrayLen then
+        local arrayLenIndex = (self._type == DataTypes.EStringArray) and self._offset - 3 or self._offset - 2
+        self._arrayLen = string_unpack("<I2", self._chunk:read(arrayLenIndex, 2))
     end
+    return self._arrayLen
 end
 
-function Variable:ensureStringExpanded()
-    if not self._len then
-        self._val, self._len = self:getAllStringData()
-    end
+-- Providing Chunk.__tostring isn't defined, this defines a unique string for any chunk and offset combination.
+local function uniqueKey(chunk, offset)
+    return fmt("%s_%x", tostring(chunk):match("^table: (.*)"), offset)
 end
 
-function Variable:updateStringData(idx, data)
-    assert(self:type() == DataTypes.EString, "Can't updateStringData for non-string variables!")
-    assert(idx + #data <= self:getMaxLen(), "Attempt to updateStringData beyond max length!")
-    self:ensureStringExpanded()
-    self._val = self._val:sub(1, idx)..data..self._val:sub(idx + 1 + #data)
-    assert(#self._val == self:getMaxLen(), "Oh dear I've messed up the maths")
-end
-
-function Variable:setStringLength(len)
-    assert(len <= self:getMaxLen(), "Attempt to setStringLength beyond maxLen")
-    self:ensureStringExpanded()
-   self._len = len
+function Variable:uniqueKey()
+    return uniqueKey(self._chunk, self._offset)
 end
 
 function Variable:isPending()
@@ -266,41 +410,15 @@ function Variable:isPending()
     end
 end
 
-function Variable:setOnAssignCallback(fn)
-    self._onAssign = fn
-end
-
-function Variable:setOrigin(proc, index)
-    self._originProc = proc
-    self._originIndex = index
-end
-
-function Variable:sameOrigin(otherVar)
-    return self._originProc and otherVar._originProc
-        and self._originProc == otherVar._originProc
-        and self._originIndex == otherVar._originIndex
-end
-
-function makeVar(type, maxLen)
-    local result = Variable { _type = type }
-    if type == DataTypes.EString then
-        result:setMaxLen(maxLen)
-    end
-    return result
-end
-
 --
 
-AddrSlice = class {
+Addr = class {
+    chunk = nil,
     offset = 0,
-    len = 0,
-    -- Only one of var and mem will be set
-    var = nil,
-    mem = nil,
 }
 
 local function getAddrAndOffset(lhs, rhs)
-    -- Either of lhs or rhs could be the AddrSlice, but it's an error if somehow
+    -- Either of lhs or rhs could be the Addr, but it's an error if somehow
     -- both are (that would indicate the program has added 2 addresses together,
     -- which never makes sense to do)
     local lt = type(lhs)
@@ -309,12 +427,12 @@ local function getAddrAndOffset(lhs, rhs)
         return lhs, rhs
     else
         assert(lt == "number", "Bad lhs to getAddrAndOffset!")
-        -- Don't need to check rhs in this case, we wouldn't be here if it wasn't a table with a AddrSlice metatable
+        -- Don't need to check rhs in this case, we wouldn't be here if it wasn't a table with a Addr metatable
         return rhs, lhs
     end
 end
 
-function AddrSlice.__add(lhs, rhs)
+function Addr.__add(lhs, rhs)
     local addr, offset = getAddrAndOffset(lhs, rhs)
     if offset == 0 then
         -- No change
@@ -322,183 +440,68 @@ function AddrSlice.__add(lhs, rhs)
     end
 
     local newOffset = addr.offset + offset
-    if newOffset < 0 or newOffset > addr.len then
-        -- printf("Warning: 0x%08X + %d outside of 0-%08X for var %s\n", addr.offset, offset, addr.len, addr.var)
-        -- error("Address calculation out of bounds!")
-        -- Strictly speaking it's not an error until you try and dereference it
-    end
-    return AddrSlice {
+    return Addr {
+        chunk = addr.chunk,
         offset = newOffset,
-        len = addr.len,
-        var = addr.var,
-        mem = addr.mem,
     }
 end
 
-function AddrSlice.__sub(lhs, rhs)
+function Addr.__sub(lhs, rhs)
     local addr, offset = getAddrAndOffset(lhs, rhs)
-    return AddrSlice.__add(addr, -offset)
+    return Addr.__add(addr, -offset)
 end
 
-function AddrSlice:dereference()
-    assert(self.offset == 0, "Addr not pointing to start of value!")
-    assert(self.var, "Cannot dereference a non-variable AddrSlice!")
-    if isArrayType(self.var:type()) then
-        return self.var()[1]
-    else
-        return self.var
-    end
+-- Fast path optimisation hack for when a value is probably an integer in which
+-- case no further action is needed, but might be an Addr in which case a slow
+-- path is needed. Code can use `not ~val` to test if it's an Addr, because
+-- ~val on any number value will always return a truthy value.
+--
+-- This is measurably faster in microbenchmarks, see:
+--     time lua tbench_typenumber.lua
+-- versus
+--     time lua tbench_bnot.lua
+function Addr.__bnot()
+    return false
 end
 
-function AddrSlice:baseAddr()
-    if self.offset == 0 then
-        return self
-    else
-        return AddrSlice {
-            offset = 0,
-            len = self.len,
-            var = self.var,
-            mem = self.mem,
-        }
-    end
+-- This is a defense against code accidentally using an Addr as if it were a Variable
+function Addr.__newindex()
+    error("Cannot declare values in Addr!")
 end
 
-function AddrSlice:getVarForOffset(offset)
-    local offset = self.offset + offset
-    local stride = self.var:stride()
-    if isArrayType(self.var:type()) then
-        local idx = offset // stride
-        local remainder = offset - (idx * stride)
-        local pos = idx + 1
-        assert(pos > 0 and pos <= self.var():arrayLen(), "Out of bounds!")
-        return self.var()[pos], remainder
-    else
-        assert(offset < stride, "Out of bounds!")
-        return self.var, offset
-    end
+-- replacement for dereference
+function Addr:asVariable(type)
+    return self.chunk:getVariableAtOffset(self.offset, type)
 end
 
-function AddrSlice:getValidLength()
-    return self.len - self.offset
+function Addr:intValue()
+    return self.chunk.address + self.offset
 end
 
-function AddrSlice:read(len)
-    if self.mem then
-        return self.mem:read(self.offset, len)
-    end
-
-    local varData
-    if isArrayType(self.var:type()) then
-        -- Have to potentially span data from across multiple vars, fun....
-        -- For simplicity just flatten everything then sub it. Super inefficient, but easy to code
-        local arrayVal = self.var()
-        local allData = {}
-        for i = 1, arrayVal:arrayLen() do
-            allData[i] = arrayVal[i]:getBytes()
-        end
-        varData = table.concat(allData)
-    else
-        varData = self.var:getBytes()
-    end
-    assert(#varData == self.len, "getBytes didn't return the expected len!")
-    local result = varData:sub(1 + self.offset, self.offset + len)
-    assert(#result == len, "Not enough data in var to satisfy read!")
-    return result
+function Addr:read(len)
+    return self.chunk:read(self.offset, len)
 end
 
-local FmtForType = {
-    [DataTypes.EWord] = "<i2",
-    [DataTypes.ELong] = "<i4",
-    [DataTypes.EReal] = "<d",
-}
-
-local function applyDataToSimpleVar(data, var, offset)
-    assert(offset + #data <= var:stride(), "Too much data for this var!")
-    local vart = var:type()
-    -- printf("applyDataToSimpleVar datalen=%d offset=%d vartype=%d stride=%d\n", #data, offset, vart, var:stride())
-    if vart == DataTypes.EString then
-        local newLen
-        if offset == 0 then
-            -- Updating the length
-            newLen = string.unpack("B", data)
-            offset = 1
-            data = data:sub(2)
-        end
-        if #data > 0 then
-            var:updateStringData(offset - 1, data)
-        end
-        if newLen then
-            var:setStringLength(newLen)
-        end
-    elseif offset == 0 and #data == SizeofType[vart] then
-        -- We can simply assign
-        local fmt = FmtForType[vart]
-        var(string.unpack(fmt, data))
-    else
-        local fmt = FmtForType[vart]
-        local stringVar = makeVar(DataTypes.EString, string.packsize(fmt))
-        stringVar(string.pack(fmt, var()))
-        applyDataToSimpleVar(data, stringVar, offset + 1)
-        var(string.unpack(fmt, stringVar()))
-    end
+function Addr:write(data)
+    return self.chunk:write(self.offset, data)
 end
 
-function AddrSlice:write(data)
-    if #data == 0 then
-        return
-    end
-    if self.mem then
-        self.mem:write(self.offset, data)
-        return
-    end
-
-    -- printf("+WRITE: offset %d len=%d stride=%d to '%s': \"%s\"\n", self.offset, #data, self.var:stride(), self.var(), hexEscape(data))
-
-    local dataIdx = 0
-    local stride = self.var:stride()
-    while dataIdx < #data do
-        local var, varOffset = self:getVarForOffset(dataIdx)
-        local dataPiece = data:sub(1 + dataIdx, dataIdx + stride - varOffset)
-        -- printf("write: dataIdx=%d len=%d varOffset=%d\n", dataIdx, #dataPiece, varOffset)
-        applyDataToSimpleVar(dataPiece, var, varOffset)
-        dataIdx = dataIdx + #dataPiece
-    end
-    -- printf("-WRITE: val=%s\n", self.var())
-end
-
-function AddrSlice:writeValue(value, valueType)
-    local data = string.pack(FmtForType[valueType], value)
-    self:write(data)
-end
-
-function AddrSlice:writeArray(array, valueType)
-    -- Most of the time the underlying var will probably be of the same type so
-    -- we could save some complexity here and just set the underlying var's
-    -- array values directly, but this way handles all the corner cases
-    local valSz = assert(SizeofType[valueType], "Bad type to writeArray")
+function Addr:writeArray(array, valueType)
+    local valSz = assert(ValSize[valueType], "Bad type to writeArray")
     local fmt = FmtForType[valueType]
-    local offset = self.offset
+    local parts = {}
     for i, val in ipairs(array) do
-        local data = string.pack(fmt, val)
-        self:write(data)
-        self.offset = self.offset + valSz
+        parts[i] = string_pack(fmt, val)
     end
-    -- Restore offset
-    self.offset = offset
+    self.chunk:write(self.offset, table.concat(parts))
 end
 
-function AddrSlice:sameOrigin(otherAddr)
-    if (self.mem == nil) == (otherAddr.mem == nil) then
-        if self.mem then
-            return self.mem == otherAddr.mem
-        else
-            return self.var:sameOrigin(otherAddr.var)
-        end
-    else
-        -- A variable-based AddrSlice is definitely does not have the same
-        -- origin as a mem-based one
-        return false
-    end
+function Addr:uniqueKey()
+    return uniqueKey(self.chunk, self.offset)
+end
+
+function printStats()
+    -- printf("gets = %d, sets = %d\n", gets, sets)
 end
 
 return _ENV

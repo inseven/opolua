@@ -150,10 +150,10 @@ function SIOwner(stack, runtime) -- 17
 end
 
 function SIBatteryVolts(stack, runtime) -- 18
-    local backupMax = stack:pop():dereference()
-    local backupCur = stack:pop():dereference()
-    local mainMax = stack:pop():dereference()
-    local mainCur = stack:pop():dereference()
+    local backupMax = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local backupCur = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local mainMax = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local mainCur = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
 
     mainCur(3300)
     mainMax(3300)
@@ -227,21 +227,21 @@ function SIBacklightOnTime(stack, runtime) -- 34
 end
 
 function SIDisplaySize(stack, runtime) -- 35
-    local physicalHeight = stack:pop()
-    local physicalWidth = stack:pop()
-    local digitizerHeight = stack:pop()
-    local digitizerWidth = stack:pop()
-    local displayHeight = stack:pop()
-    local displayWidth = stack:pop()
+    local physicalHeight = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local physicalWidth = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local digitizerHeight = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local digitizerWidth = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local displayHeight = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local displayWidth = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
 
     local w, h = runtime:getScreenInfo()
-    digitizerWidth:dereference()(w)
-    digitizerHeight:dereference()(h)
-    displayWidth:dereference()(w)
-    displayHeight:dereference()(h)
+    digitizerWidth(w)
+    digitizerHeight(h)
+    displayWidth(w)
+    displayHeight(h)
     -- I have no idea about these...
-    physicalWidth:dereference()(w)
-    physicalHeight:dereference()(h)
+    physicalWidth(w)
+    physicalHeight(h)
 
     stack:push(0)
 end

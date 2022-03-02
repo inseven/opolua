@@ -89,6 +89,7 @@ function printProc(proc)
         local len = proc.arrays[offset]
         printf("    Array offset=0x%04X len=%d\n", offset, len)
     end
+    printf("    iDataSize: %d (0x%08X)\n", proc.iDataSize, proc.iDataSize)
     printf("    iTotalTableSize: %d (0x%08X)\n", proc.iTotalTableSize, proc.iTotalTableSize)
 end
 

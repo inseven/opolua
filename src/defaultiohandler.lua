@@ -231,6 +231,9 @@ function waitForAnyRequest()
     eventRequest.ev:writeArray({ch}, DataTypes.ELong)
     eventRequest.var(0)
     statusRequests["getevent"] = nil
+    if eventRequest.completion then
+        eventRequest.completion()
+    end
     return true
 end
 

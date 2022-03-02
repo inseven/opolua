@@ -196,6 +196,7 @@ function parseProc(proc)
     -- CProcedure defines iTotalTableSize weirdly, this is an easier to understand definition
     assert(iTotalTableSize == globalsTableSize + subProcTableSize, "Bad table size calculation!")
     proc.iTotalTableSize = iTotalTableSize
+    proc.iDataSize = dataSize
     if subProcTableSize > 0 then
         local endPos = dataPos + subProcTableSize
         while dataPos < endPos do

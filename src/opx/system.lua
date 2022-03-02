@@ -303,7 +303,7 @@ end
 
 function PlaySoundA(stack, runtime) -- 39
     assert(runtime:getResource("sound") == nil, KErrInUse)
-    local var = stack:pop():dereference()
+    local var = stack:pop():asVariable(DataTypes.ELong)
     local volume = stack:pop()
     local file = runtime:abs(stack:pop())
     var(KRequestPending)
@@ -318,11 +318,10 @@ function PlaySoundA(stack, runtime) -- 39
 
     local sndData = require("sound").parseWveFile(data)
     runtime:setResource("sound", var)
-    var:setOnAssignCallback(function(var)
+    local function completion()
         runtime:setResource("sound", nil)
-        var:setOnAssignCallback(nil)
-    end)
-    runtime:iohandler().asyncRequest("playsound", { var = var, data = sndData })
+    end
+    runtime:iohandler().asyncRequest("playsound", { var = var, data = sndData, completion = completion })
     stack:push(0)
 end
 
@@ -397,10 +396,10 @@ function MachineName(stack, runtime) -- 49
 end
 
 function MachineUniqueId(stack, runtime) -- 50
-    local loWord = stack:pop()
-    local hiWord = stack:pop()
-    hiWord:writeValue(0x090700A, DataTypes.ELong)
-    loWord:writeValue(toint32(0xFACE4ACE), DataTypes.ELong)
+    local loWord = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local hiWord = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    hiWord(0x090700A)
+    loWord(toint32(0xFACE4ACE))
     stack:push(0)
 end
 
