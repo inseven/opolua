@@ -441,7 +441,7 @@ end
 
 function gSETWIN(x, y, w, h)
     -- printf("gSETWIN id=%d %d,%d %sx%s\n", gIDENTITY(), x, y, w, h)
-    runtime:flushGraphicsOps()
+    -- runtime:flushGraphicsOps()
     local ctx = runtime:getGraphicsContext()
     runtime:iohandler().graphicsop("setwin", ctx.id, x, y, w, h)
     ctx.winX = x
@@ -496,7 +496,7 @@ function gLOADBIT(path, writable, index)
     -- (3)
     bitmap.imgData = bitmap:getImageData()
     runtime:drawCmd("bitblt", { bitmap = bitmap })
-    runtime:flushGraphicsOps()
+    -- runtime:flushGraphicsOps()
     return id
 end
 
