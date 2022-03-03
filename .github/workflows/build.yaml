@@ -1,4 +1,4 @@
-name: Build
+name: build
 
 on:
   pull_request:
@@ -35,8 +35,6 @@ jobs:
         APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
         APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-
-        APP_CONFIGURATION: ${{ secrets.APP_CONFIGURATION }}
 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
