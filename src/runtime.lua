@@ -692,9 +692,11 @@ function newModuleInstance(moduleName)
     return instance
 end
 
-function newRuntime(handler)
+function newRuntime(handler, era)
+    local codes = ops["codes_"..(era or "er5")]
+    assert(codes, "Unrecognised era ".. era)
     local rt = Runtime {
-        opcodes = ops.codes_er5, -- by default
+        opcodes = codes,
         frameBase = 0, -- Where in the chunk we start the stack frames' memory
         chunk = Chunk { address = 32 },
         dbs = {},
@@ -718,12 +720,6 @@ function newRuntime(handler)
         end
     end
     return rt
-end
-
-function Runtime:setEra(era)
-    local codes = ops["codes_"..era]
-    assert(codes, "Unrecognised era ".. era)
-    self.opcodes = codes
 end
 
 -- Returns the datatype for parameters to opcodes that deal with addresses
@@ -1177,9 +1173,7 @@ function Runtime:realloc(addr, sz)
 end
 
 function runOpo(fileName, procName, iohandler, verbose)
-    local rt = newRuntime(iohandler)
-    rt:setInstructionDebug(verbose)
-    local data, err = rt:iohandler().fsop("read", fileName)
+    local data, err = iohandler.fsop("read", fileName)
     if not data then
         error("Failed to read opo file data")
     end
@@ -1190,7 +1184,8 @@ function runOpo(fileName, procName, iohandler, verbose)
     end
 
     local procTable, opxTable, era = require("opofile").parseOpo(data, verbose)
-    rt:setEra(era)
+    local rt = newRuntime(iohandler, era)
+    rt:setInstructionDebug(verbose)
     rt:addModule(fileName, procTable, opxTable)
     local procToCall = procName and procName:upper() or procTable[1].name
     local err = rt:pcallProc(procToCall)
