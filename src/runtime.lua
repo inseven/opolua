@@ -112,7 +112,7 @@ function Runtime:getLocalVar(index, type, frame)
             arrayLen = assert(frame.proc.arrays[arrayFixupIndex], "Failed to find array fixup!")
         end
 
-        var = self.chunk:getVariableAtOffset(frame.chunkOffset + index, type)
+        var = self.chunk:getVariableAtOffset(frame.framePtr + index, type)
         var:fixup(stringMaxLen, arrayLen)
         vars[index] = var
     end
@@ -216,19 +216,16 @@ function Runtime:pushNewFrame(stack, proc, numParams)
     end
 
     local frame = {
+        frameAllocs = {}, -- used for params and declareGlobal()
         returnIP = self.ip,
         proc = proc,
         prevFrame = self.frame,
         vars = {},
         indirects = {},
+        globals = proc.globals or {}, -- Lua procs don't have a 'globals'
         dataSize = proc.iDataSize or 0,
     }
-    if frame.prevFrame then
-        frame.chunkOffset = (frame.prevFrame.chunkOffset + frame.prevFrame.dataSize + 3) & ~3
-    else
-        frame.chunkOffset = self.frameBase
-    end
-    self.chunk:clear(frame.chunkOffset, (frame.dataSize + 3) & ~3)
+    frame.framePtr = assert(self.chunk:allocz(math.max(4, frame.dataSize)), "Failed to allocate stack frame memory!")
     self:setFrame(frame, proc.codeOffset)
 
     if not stack then
@@ -246,18 +243,16 @@ function Runtime:pushNewFrame(stack, proc, numParams)
     -- pop them here. We're ignoring the type-checking extra values that
     -- were pushed onto the stack prior to the RunProcedure call.
 
-    local paramOffset = frame.chunkOffset + frame.dataSize
     for i = 1, numParams do
         local type = stack:pop()
         local val = stack:pop()
         assert(DataTypes[type], "Expected parameter type on stack")
         assert(not isArrayType(type), "Can't pass arrays on the stack?")
-        local var = self.chunk:makeNewVariable(paramOffset, type, type == DataTypes.EString and #val)
-        paramOffset = var:endOffset()
+        local var = self.chunk:allocVariable(type, type == DataTypes.EString and #val)
         var(val)
         table.insert(frame.indirects, 1, var)
+        table.insert(frame.frameAllocs, var)
     end
-    frame.dataSize = paramOffset - frame.chunkOffset
     frame.returnStackSize = stack:getSize()
     if self.callTrace then
         local args = {}
@@ -280,15 +275,7 @@ function Runtime:pushNewFrame(stack, proc, numParams)
             parentFrame = parentFrame.prevFrame
             assert(parentFrame, "Failed to resolve external "..external.name)
             local parentProc = parentFrame.proc
-            local globals
-            if parentProc.fn then
-                -- In Lua fns, globals are declared at runtime on a per-frame
-                -- basis, rather than being a property of the proc
-                globals = parentFrame.globals
-            else
-                globals = parentProc.globals
-            end
-            found = globals[nameForLookup]
+            found = parentFrame.globals[nameForLookup]
         end
         assert(found.type == external.type, "Mismatching types on resolved external!")
         table.insert(frame.indirects, self:getLocalVar(found.offset, found.type, parentFrame))
@@ -303,7 +290,6 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         -- It's a Lua-implemented proc meaning we don't just set ip and return
         -- to the event loop, we have to invoke it here. Conveniently
         -- frame.indirects contains exactly the proc args, in the right format.
-        frame.globals = {}
         local args = {}
         for i, var in ipairs(frame.indirects) do
             args[i] = var()
@@ -313,13 +299,30 @@ function Runtime:pushNewFrame(stack, proc, numParams)
     end
 end
 
+function Runtime:popFrame(stack)
+    -- print("Popping frame:", self.frame.proc.name)
+    local frame = self.frame
+    local prevFrame = frame.prevFrame
+    if frame.returnStackSize then
+        -- This will only be null if there was an error setting up the stack
+        -- frame, in which case not popping anything is the right thing to do
+        stack:popTo(frame.returnStackSize)
+    end
+    if frame.framePtr then
+        self.chunk:free(frame.framePtr)
+    end
+    for _, var in ipairs(frame.frameAllocs) do
+        var:free()
+    end
+    self:setFrame(prevFrame, frame.returnIP)
+    return prevFrame
+end
+
 function Runtime:returnFromFrame(stack, val)
     if self.callTrace then
         printf("-%s() -> %s\n", self.frame.proc.name, quoteVal(val))
     end
-    local prevFrame = self.frame.prevFrame
-    stack:popTo(self.frame.returnStackSize)
-    self:setFrame(prevFrame, self.frame.returnIP)
+    local prevFrame = self:popFrame(stack)
     if prevFrame then
         stack:push(val)
     end
@@ -698,7 +701,7 @@ function newRuntime(handler, era)
     local rt = Runtime {
         opcodes = codes,
         frameBase = 0, -- Where in the chunk we start the stack frames' memory
-        chunk = Chunk { address = 32 },
+        chunk = Chunk { address = 0 },
         dbs = {},
         modules = {},
         files = {},
@@ -708,6 +711,11 @@ function newRuntime(handler, era)
         trap = false,
         -- callTrace = true,
     }
+    if era == "sibo" then
+        rt.chunk:setSize(65536)
+    else
+        rt.chunk:setSize(16 * 1024 * 1024)
+    end
 
     local opl = newModuleInstance("opl")
     rt.opl = opl
@@ -954,9 +962,7 @@ function Runtime:pcallProc(procName, ...)
                             self.ip = self.frame.errIp
                             break
                         else
-                            stack:popTo(self.frame.returnStackSize)
-                            local prevFrame = self.frame.prevFrame
-                            self:setFrame(prevFrame)
+                            local prevFrame = self:popFrame(stack)
                             if prevFrame ~= callingFrame then
                                 -- And loop again
                             else
@@ -966,7 +972,9 @@ function Runtime:pcallProc(procName, ...)
                     end
                 end
             else
-                self:setFrame(callingFrame)
+                repeat
+                    local prevFrame = self:popFrame(stack)
+                until prevFrame == callingFrame
                 return err
             end
         end
@@ -1033,7 +1041,7 @@ end
 function Runtime:declareGlobal(name, arrayLen)
     local frame = self.frame
     name = name:upper()
-    assert(self.ip == nil and frame.proc.fn and frame.globals, "Can only declareGlobal from within a Lua module!")
+    assert(self.ip == nil and frame.proc.fn, "Can only declareGlobal from within a Lua module!")
 
     local valType
     if name:match("%%$") then
@@ -1057,10 +1065,10 @@ function Runtime:declareGlobal(name, arrayLen)
     local index = #frame.vars + 1
 
     -- For simplicity we'll assume any strings should be 255 max len
-    local var = self.chunk:makeNewVariable(frame.chunkOffset + frame.dataSize, type, 255, arrayLen)
-    frame.dataSize = var:endOffset() - frame.chunkOffset
+    local var = self.chunk:allocVariable(type, 255, arrayLen)
     frame.globals[name] = { offset = index, type = valType }
     frame.vars[index] = var
+    table.insert(frame.frameAllocs, var)
 
     return var
 end
@@ -1156,7 +1164,7 @@ end
 function Runtime:addrFromInt(addr)
     -- if type(addr) == "number" then
     if ~addr then
-        assert(addr >= self.chunk.address and addr <= self.chunk:maxAddress(), "Bad address!")
+        self.chunk:checkRange(addr)
         addr = Addr { chunk = self.chunk, offset = addr - self.chunk.address }
     end
     return addr
@@ -1168,8 +1176,19 @@ end
 
 function Runtime:realloc(addr, sz)
     -- printf("Runtime:realloc(%s, %d)\n", addr, sz) --, self:getOpoStacktrace())
-    local sz = (sz + 3) & ~3
-    error("TODO")
+    if addr ~= 0 then
+        self.chunk:checkRange(addr)
+        local offset = addr - self.chunk.address
+        if sz ~= 0 then
+            error("TODO REALLOC")
+        else
+            self.chunk:free(offset)
+        end
+    else
+        local offset = self.chunk:alloc(sz)
+        assert(offset, KErrNoMemory)
+        return self.chunk.address + offset
+    end
 end
 
 function runOpo(fileName, procName, iohandler, verbose)

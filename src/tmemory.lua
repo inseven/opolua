@@ -41,6 +41,19 @@ function asserteq(a, b)
     end
 end
 
+function freeCellListStr(chunk)
+    local list = chunk:freeCellList()
+    local parts = {}
+    for i, idx in ipairs(chunk:freeCellList()) do
+        parts[i] = string.format("%d+%d", idx * 4, chunk:getCellLen(idx))
+    end
+    return table.concat(parts, ",")
+end
+
+function checkFreeList(chunk, expected)
+    asserteq(freeCellListStr(chunk), expected)
+end
+
 function main()
     memory = require("memory")
     Chunk = memory.Chunk
@@ -131,6 +144,49 @@ function main()
     strarr[2] = "Previo"
     -- chunk:dump()
     asserteq(stringArrayVar(), "Howdy!")
+
+    -- alloc tests
+
+    chunk = Chunk()
+    chunk:setSize(100)
+    chunk.maxIdx = 16
+    checkFreeList(chunk, "4+100")
+
+    local function checkAlloc(sz)
+        local result = chunk:alloc(sz)
+        asserteq(chunk[result//4 - 1], ((sz+3)&~3)+4) -- Heap cell size must always be 4 bigger than we requested
+        return result
+    end
+
+    local alloc = checkAlloc(16)
+    -- printf("%X\n", alloc)
+    asserteq(alloc, 8)
+    checkFreeList(chunk, "24+80")
+    chunk:write(alloc, "\x0FHello world!!!!")
+
+    local al2 = checkAlloc(4)
+    asserteq(al2, 8+16+4)
+    chunk:write(al2, "zzzz")
+
+    chunk:free(al2)
+    -- chunk:dump()
+    checkFreeList(chunk, "24+80")
+
+    asserteq(checkAlloc(4), al2)
+    local al3 = checkAlloc(4)
+    asserteq(al3, 36)
+    local al4 = checkAlloc(4)
+    checkFreeList(chunk, "48+56")
+    chunk:free(al3)
+    -- chunk:dump()
+    checkFreeList(chunk, "32+8,48+56")
+    chunk:free(al2)
+    checkFreeList(chunk, "24+16,48+56")
+    chunk:free(al4)
+    checkFreeList(chunk, "24+80")
+    chunk:free(alloc)
+    checkFreeList(chunk, "4+100")
+    chunk:dump()
 end
 
 main()

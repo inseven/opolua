@@ -825,14 +825,14 @@ end
 function Alloc(stack, runtime) -- 0x4B
     local sz = stack:pop()
     assert(sz > 0, "Allocation size must be positive")
-    local result = runtime:realloc(nil, sz)
+    local result = runtime:realloc(0, sz)
     stack:push(result)
 end
 
 function ReAlloc(stack, runtime) -- 0x4C
     local sz = stack:pop()
     local addr = runtime:addrFromInt(stack:pop())
-    local result = runtime:realloc(addr, sz)
+    local result = runtime:realloc(addr:intValue(), sz)
     stack:push(result)
 end
 

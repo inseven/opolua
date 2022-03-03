@@ -2319,7 +2319,7 @@ end
 
 function FreeAlloc(stack, runtime) -- 0x10C
     local addr = runtime:addrFromInt(stack:pop())
-    runtime:realloc(addr, 0)
+    runtime:realloc(addr:intValue(), 0)
 end
 
 function gButton(stack, runtime) -- 0x10F

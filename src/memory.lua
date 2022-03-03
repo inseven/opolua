@@ -27,6 +27,7 @@ _ENV = module()
 local chunkstride = 4
 local strideshift = 2
 
+-- Redeclare a bunch of things local for the (probably minute) performance gain that gives
 local EWord = DataTypes.EWord
 local ELong = DataTypes.ELong
 local EReal = DataTypes.EReal
@@ -55,13 +56,17 @@ local FmtForType = {
 }
 
 Chunk = class {
-    -- data is stored as 32-bit ints from self[0] to self[maxIdx-1]
+    -- data is stored as 32-bit ints from self[0] to self[size//4 -1]
     address = 0, -- Note, chunk must start on a chunkstride boundary
-    maxIdx = 0,
+    maxIdx = 0, -- A convenience for dump() when using unsized Chunks
+    size = nil, -- Must be set to use alloc
 }
 
-function Chunk:maxAddress()
-    return self.address + self.maxIdx << strideshift
+function Chunk:checkRange(addr)
+    local max = self.address + self.size
+    if addr < self.address or addr >= max then
+        error(fmt("Address 0x%08X out of bounds %08X-%08X", addr, self.address, max), 2)
+    end
 end
 
 local function word(self, idx)
@@ -108,7 +113,8 @@ end
 
 function Chunk:dump()
     printf("Dumping chunk...\n")
-    for i = 0, (self.maxIdx - 1), 4 do
+    local maxIdx = self.size and (self.size >> strideshift) or self.maxIdx
+    for i = 0, maxIdx - 1, 4 do
         local str = word(self, i) .. word(self, i + 1) .. word(self, i + 2) .. word(self, i + 3)
         str = str:gsub("[\x00-\x1F\x7F-\xFF]", ".")
         printf("%08X: %s %s %s %s  %s\n", self.address + i * chunkstride,
@@ -164,11 +170,22 @@ end
 -- Optimised version of Chunk:write(offset, string.rep("\0", length))
 function Chunk:clear(offset, length)
     assert(offset % chunkstride == 0, "Cannot zero from a non-aligned address!")
-    assert(length % chunkstride == 0, "Cannot zero from a aligned length!")
+    assert(length % chunkstride == 0, "Cannot zero a non-aligned length!")
     for i = offset >> strideshift, (offset + length - 1) >> strideshift do
         self[i] = 0
     end
 end
+
+local prefixSize = {
+    [EWord] = 0,
+    [ELong] = 0,
+    [EReal] = 0,
+    [EString] = 1,
+    [EWordArray] = 2,
+    [ELongArray] = 2,
+    [ERealArray] = 2,
+    [EStringArray] = 3,
+}
 
 function Chunk:getVariableAtOffset(offset, type)
     local var = Variable {
@@ -180,17 +197,142 @@ function Chunk:getVariableAtOffset(offset, type)
     return var
 end
 
-function Chunk:makeNewVariable(startOffset, type, stringMaxLen, arrayLen)
-    local offset = startOffset
-    if type & 0xF == EString then
-        offset = offset + 1 -- For string max len
+function Chunk:allocVariable(type, stringMaxLen, arrayLen)
+    local valType = type & 0xF
+    local prefix = prefixSize[type]
+    local sz
+    if valType == EString then
+        sz = 1 + stringMaxLen
+    else
+        sz = ValSize[valType]
     end
     if isArrayType(type) then
-        offset = offset + 2 -- For array size
+        sz = sz * arrayLen
     end
+    local allocOffset = self:alloc(sz + prefix)
+    local result = self:makeNewVariable(allocOffset, type, stringMaxLen, arrayLen)
+    result._allocOffset = allocOffset
+    return result
+end
+
+-- In-place constructs a variable at startOffset
+function Chunk:makeNewVariable(startOffset, type, stringMaxLen, arrayLen)
+    local offset = startOffset + prefixSize[type]
     local result = self:getVariableAtOffset(offset, type)
     result:fixup(stringMaxLen, arrayLen)
     return result
+end
+
+function Chunk:setSize(len)
+    assert(self.size == nil and self[0] == nil and self.maxIdx == 0, "Cannot resize chunks!")
+    assert(len & 0x3 == 0, "Chunk size must be aligned!")
+    self.size = len
+    self[0] = 1 -- 0 always points to the first free cell
+    self[1] = len -- Cell size of the first (and only) free cell)
+    self[2] = 0 -- Next free cell index (ie, no more)
+end
+
+function Chunk:alloc(len)
+    len = (len + 3) & ~3
+    local freeCellPtrIdx = 0
+    local idx, cellLen
+    while true do
+        idx = self[freeCellPtrIdx] or 0
+        if idx == 0 then
+            -- No more free cells
+            print("OOM!")
+            return nil
+        end
+        cellLen = self[idx] or 0
+        if cellLen >= len + 4 then
+            -- Found a big enough cell
+            break
+        end
+        freeCellPtrIdx = idx + 1
+    end
+    -- print("idx", idx)
+    local nextFreeCellIdx = self[idx + 1]
+    -- print("nextFreeCellIdx", nextFreeCellIdx)
+    local remaining = cellLen - (len + 4)
+    -- print("remaining", remaining)
+    if remaining >= 8 then
+        -- There's room to split the cell
+        self[idx] = len + 4
+        local newCellIdx = idx + 1 + (len >> strideshift)
+        -- print("newCellIdx", newCellIdx)
+        self[newCellIdx] = remaining
+        self[newCellIdx + 1] = nextFreeCellIdx
+        nextFreeCellIdx = newCellIdx
+    end
+    self[freeCellPtrIdx] = nextFreeCellIdx
+    return (idx + 1) << strideshift
+end
+
+function Chunk:allocz(len)
+    -- printf("Chunk:allocz(%d)", len)
+    local result = self:alloc(len)
+    if result then
+        self:clear(result, self:getAllocLen(result))
+    end
+    -- printf(" -> 0x%X alloclen=%d\n", result, result or 0 and self:getAllocLen(result) or 0)
+    return result
+end
+
+function Chunk:freeCellList()
+    local result = {}
+    local i = 1
+    local fc = self[0]
+    while fc ~= 0 do
+        result[i] = fc
+        i = i + 1
+        fc = self[fc + 1]
+    end
+    return result
+end
+
+-- This isn't a complicated calculation, it's more for clarity
+function Chunk:getCellLen(cellIdx)
+    return self[cellIdx]
+end
+
+function Chunk:getAllocLen(offset)
+    return self:getCellLen((offset - 4) >> strideshift) - 4
+end
+
+function Chunk:free(offset)
+    assert(offset & 3 == 0, "Bad offset to free!")
+    local cellIdx = (offset >> strideshift) - 1
+
+    -- Find the freeCell immediately before where this should go
+    local cellLen = self:getCellLen(cellIdx)
+    local prev = -1
+    local fc = self[prev + 1]
+    while fc ~= 0 do
+        if fc > cellIdx then
+            break
+        end
+        prev = fc
+        fc = self[prev + 1]
+    end
+
+    local nextCell = self[prev + 1]
+    -- printf("free(%X): prev=%X next=%X\n", cellIdx << strideshift, prev << strideshift, nextCell << strideshift)
+    self[prev + 1] = cellIdx -- prev->next = cellIdx
+    self[cellIdx + 1] = nextCell -- cell->next = nextCell
+
+    -- Now check if we can coelsce cell with either its prev or its next
+    if nextCell > 0 and cellIdx + (cellLen >> strideshift) == nextCell then
+        -- printf("Merging cell %X len %d with next %X\n", cellIdx << strideshift, cellLen, nextCell << strideshift)
+        cellLen = cellLen + self:getCellLen(nextCell)
+        nextCell = self[nextCell + 1]
+        self[cellIdx] = cellLen
+        self[cellIdx + 1] = nextCell
+    end
+    if prev > 0 and prev + (self:getCellLen(prev) >> strideshift) == cellIdx then
+        -- printf("Merging cell %X with prev %X len %d\n", cellIdx << strideshift, prev << strideshift, self:getCellLen(prev))
+        self[prev] = self:getCellLen(prev) + cellLen -- set prev cellLen
+        self[prev + 1] = nextCell
+    end
 end
 
 Variable = class {
@@ -325,7 +467,7 @@ end
 function Variable:fixup(stringMaxLen, arrayLen)
     if self._type & 0xF == EString then
         assert(stringMaxLen, "Initializing a string variable requires max length to be specified")
-        self._chunk:write(self._offset - 1, string_pack("B", stringMaxLen))
+        self._chunk:write(self._offset - 1, string_pack("BB", stringMaxLen, 0))
         self._stringMaxLen = stringMaxLen -- might as well set this while we're here
     end
     if isArrayType(self._type) then
@@ -354,6 +496,13 @@ function Variable:stride()
     else
         return assert(ValSize[valType])
     end
+end
+
+function Variable:free()
+    assert(self._allocOffset, "Cannot free a non-alloced variable!")
+    self._chunk:free(self._allocOffset)
+    self._allocOffset = nil
+    self._offset = nil
 end
 
 -- We don't have a size API because that would be ambiguous as to whether it
