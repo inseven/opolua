@@ -2129,9 +2129,9 @@ function dItem(stack, runtime) -- 0xED
         item.prompt = stack:pop()
         item.variable = stack:pop()
         item.value = tostring(item.variable())
-        -- printf("dEdit len=%s string maxlen=%d\n", item.len, item.variable:getMaxLen())
+        -- printf("dEdit len=%s string maxlen=%d\n", item.len, item.variable:stringMaxLen())
         if not item.len then
-            item.len = item.variable:getMaxLen()
+            item.len = item.variable:stringMaxLen()
         end
         item.type = dItemTypes.dEDIT -- No need to distinguish in higher layers
     elseif itemType == dItemTypes.dXINPUT then
