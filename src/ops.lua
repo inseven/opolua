@@ -1205,7 +1205,18 @@ end
 
 PrintInt = PrintUntyped -- 0x88
 PrintLong = PrintUntyped -- 0x89
-PrintFloat = PrintUntyped -- 0x8A
+
+function PrintFloat(stack, runtime) -- 0x8A
+    local val = stack:pop()
+    local int = math.tointeger(val)
+    if int then
+        -- Whole number floats print without the .0 in OPL
+        runtime:PRINT(tostring(int))
+    else
+        runtime:PRINT(tostring(val))
+    end
+end
+
 PrintString = PrintUntyped -- 0x8B
 
 function LPrintInt(stack, runtime) -- 0x8C
