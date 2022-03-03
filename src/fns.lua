@@ -1061,7 +1061,7 @@ function GetStr(stack, runtime) -- 0xC7
 end
 
 function HexStr(stack, runtime) -- 0xC8
-    stack:push(fmt("%X", stack:pop()))
+    stack:push(fmt("%X", stack:pop() & 0xFFFFFFFF))
 end
 
 function KeyStr(stack, runtime) -- 0xC9
