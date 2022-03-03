@@ -794,7 +794,6 @@ class OpoInterpreter {
             if let luaStack = L.tostring(-1, key: "luaStack") {
                 detail = "\(detail)\n\(luaStack)"
             }
-            print(msg)
             print(detail)
             let error: InterpreterError
             if let operation = L.tostring(-1, key: "unimplemented") {

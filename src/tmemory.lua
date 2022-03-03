@@ -41,17 +41,8 @@ function asserteq(a, b)
     end
 end
 
-function freeCellListStr(chunk)
-    local list = chunk:freeCellList()
-    local parts = {}
-    for i, idx in ipairs(chunk:freeCellList()) do
-        parts[i] = string.format("%d+%d", idx * 4, chunk:getCellLen(idx))
-    end
-    return table.concat(parts, ",")
-end
-
 function checkFreeList(chunk, expected)
-    asserteq(freeCellListStr(chunk), expected)
+    asserteq(chunk:freeCellListStr(), expected)
 end
 
 function main()
@@ -186,7 +177,7 @@ function main()
     checkFreeList(chunk, "24+80")
     chunk:free(alloc)
     checkFreeList(chunk, "4+100")
-    chunk:dump()
+    -- chunk:dump()
 end
 
 main()

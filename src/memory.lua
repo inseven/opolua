@@ -111,9 +111,9 @@ function Chunk:read(offset, len)
     return table.concat(words)
 end
 
-function Chunk:dump()
+function Chunk:dump(maxLen)
     printf("Dumping chunk...\n")
-    local maxIdx = self.size and (self.size >> strideshift) or self.maxIdx
+    local maxIdx = (maxLen and maxLen >> strideshift) or self.size and (self.size >> strideshift) or self.maxIdx
     for i = 0, maxIdx - 1, 4 do
         local str = word(self, i) .. word(self, i + 1) .. word(self, i + 2) .. word(self, i + 3)
         str = str:gsub("[\x00-\x1F\x7F-\xFF]", ".")
@@ -233,6 +233,9 @@ function Chunk:setSize(len)
 end
 
 function Chunk:alloc(len)
+    -- printf("alloc(%d) ", len)
+    -- printf("freeCellList before: %s ", self:freeCellListStr())
+
     len = (len + 3) & ~3
     local freeCellPtrIdx = 0
     local idx, cellLen
@@ -241,6 +244,9 @@ function Chunk:alloc(len)
         if idx == 0 then
             -- No more free cells
             print("OOM!")
+            -- printf("Free cells: %s\n", self:freeCellListStr())
+            -- self:dump(0x700)
+            -- error("OOM DOOM")
             return nil
         end
         cellLen = self[idx] or 0
@@ -265,15 +271,19 @@ function Chunk:alloc(len)
         nextFreeCellIdx = newCellIdx
     end
     self[freeCellPtrIdx] = nextFreeCellIdx
-    return (idx + 1) << strideshift
+    local result = (idx + 1) << strideshift
+    -- printf("--> 0x%X freeCellList after: %s\n", result, self:freeCellListStr())
+    -- self:write(result, string.rep("\xAA", len))
+    return result
 end
 
 function Chunk:allocz(len)
-    -- printf("Chunk:allocz(%d)", len)
+    -- printf("Chunk:allocz(%d)\n", len)
     local result = self:alloc(len)
     if result then
         self:clear(result, self:getAllocLen(result))
     end
+    -- printf("freeCellList after allocz: %s\n", self:freeCellListStr())
     -- printf(" -> 0x%X alloclen=%d\n", result, result or 0 and self:getAllocLen(result) or 0)
     return result
 end
@@ -290,6 +300,15 @@ function Chunk:freeCellList()
     return result
 end
 
+function Chunk:freeCellListStr()
+    local list = self:freeCellList()
+    local parts = {}
+    for i, idx in ipairs(self:freeCellList()) do
+        parts[i] = string.format("%d+%d", idx * 4, self:getCellLen(idx))
+    end
+    return table.concat(parts, ",")
+end
+
 -- This isn't a complicated calculation, it's more for clarity
 function Chunk:getCellLen(cellIdx)
     return self[cellIdx]
@@ -300,7 +319,10 @@ function Chunk:getAllocLen(offset)
 end
 
 function Chunk:free(offset)
+    -- printf("free(0x%X)\n", offset)
+    -- printf("freeCellList before: %s\n", self:freeCellListStr())
     assert(offset & 3 == 0, "Bad offset to free!")
+    -- self:write(offset, string.rep("\xDD", self:getAllocLen(offset)))
     local cellIdx = (offset >> strideshift) - 1
 
     -- Find the freeCell immediately before where this should go
@@ -333,6 +355,7 @@ function Chunk:free(offset)
         self[prev] = self:getCellLen(prev) + cellLen -- set prev cellLen
         self[prev + 1] = nextCell
     end
+    -- printf("freeCellList after: %s\n", self:freeCellListStr())
 end
 
 Variable = class {
