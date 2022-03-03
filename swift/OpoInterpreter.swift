@@ -1069,7 +1069,7 @@ class OpoInterpreter {
         }
         switch type {
         case "getevent":
-            var ev = Array<Int>(repeating: 0, count: 16)
+            var ev = Array<Int>(repeating: 0, count: 9)
             switch (response.value) {
             case .keypressevent(let event):
                 // print("keypress \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
