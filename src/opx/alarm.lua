@@ -53,12 +53,17 @@ fns = {
     [26] = "WldDataFileRevert",
 }
 
+local KAlarmNotSet = 0
+local KAlarmSet = 1
+local KAlarmDisabled = 2
+
 function AlmSetClockAlarm(stack, runtime) -- 1
     unimplemented("opx.alarm.AlmSetClockAlarm")
 end
 
 function AlmAlarmState(stack, runtime) -- 2
-    unimplemented("opx.alarm.AlmAlarmState")
+    local alarmNumber = stack:pop()
+    stack:push(KAlarmNotSet)
 end
 
 function AlmAlarmEnable(stack, runtime) -- 3
