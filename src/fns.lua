@@ -904,7 +904,8 @@ function GetEventC(stack, runtime) -- 0x56
 end
 
 function InTrans(stack, runtime) -- 0x57
-    unimplemented("fns.InTrans")
+    local db = self:getDb()
+    stack:push(db:inTransaction())
 end
 
 function mPopup(stack, runtime) -- 0x58

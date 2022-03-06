@@ -32,6 +32,10 @@ local Db = {
     currentVars = nil,
     tables = nil,
     currentTable = nil,
+    pos = nil,
+    preTransactionTable = nil, -- Clone of currentTable taken by beginTransaction()
+    inAppendUpdate = false, -- Prevents Insert/Modify
+    inInsertModify = false, -- Prevents Append/Update
 }
 Db.__index = Db
 
@@ -90,15 +94,97 @@ function Db:setPos(pos)
     if self.pos == 0 then
         self.pos = 1
     end
+    self:resetInsertState()
     self.currentVars = self:newView()
     local rec = self.currentTable[pos]
-    -- for k,v in pairs(rec) do print("TOMSCI: %s=%s\n", k, v) end
     if rec then
         for varName, field in pairs(self.viewMap) do
             -- printf("varname %s -> fieldname %s = %s\n", varName, field.name, rec[field.name])
             self.currentVars[varName](rec[field.name])
         end
     end
+end
+
+function Db:getCurrentVar(name)
+    if not self.inInsertModify then
+        self.inAppendUpdate = true
+    end
+    local var = assert(self.currentVars[name], KErrNoFld)
+    return var
+end
+
+-- Note, does not set inAppendUpdate, unlike when doing assignment via getCurrentVar
+function Db:getCurrentVal(name)
+    local var = assert(self.currentVars[name], KErrNoFld)
+    return var()
+end
+
+function Db:inTransaction()
+    return self.preTransactionTable ~= nil
+end
+
+function Db:beginTransaction()
+    assert(not self:inTransaction(), "In transaction")
+    self.preTransactionTable = {
+        name = self.currentTable.name,
+        fields = self.currentTable.fields,
+        fieldMap = self.currentTable.fieldMap,
+    }
+    for i, record in ipairs(self.currentTable) do
+        local recCopy = {}
+        for k, v in pairs(record) do
+            recCopy[k] = v
+        end
+        self.preTransactionTable[i] = recCopy
+    end
+end
+
+function Db:endTransaction(commit)
+    -- You can't commit or rollback a transaction if you're in the middle of
+    -- editing a record; you can only commit/rollback complete records.
+    assert(self:inTransaction() and not self.inInsertModify and not self.inAppendUpdate, "Not in transaction")
+    if not commit then
+        self.currentTable = self.preTransactionTable
+        self.tables[self.currentTable.name] = self.currentTable
+    end
+    self.preTransactionTable = nil
+end
+
+function Db:resetInsertState()
+    self.inAppendUpdate = false
+    self.inInsertModify = false
+    self.inInsert = false
+end
+
+function Db:modify()
+    assert(not self.inAppendUpdate and not self.inInsertModify, "Incompatible update mode")
+    self.inInsertModify = true
+    -- There's nothing else modify actually needs to do...?
+end
+
+function Db:insert()
+    assert(not self.inAppendUpdate and not self.inInsertModify, "Incompatible update mode")
+    self.inInsertModify = true
+    self.inInsert = true
+    self.currentVars = self:newView()
+end
+
+function Db:cancel()
+    assert(self.inInsertModify, "Incompatible update mode")
+    self:resetInsertState()
+    self:setPos(self.pos) -- Will reset any assignments
+end
+
+function Db:put()
+    assert(self.inInsertModify, "Incompatible update mode")
+    self:setModified()
+    if self.inInsert then
+        table.insert(self.currentTable, self.pos, self:currentVarsToRecord())
+        self:setPos(self.pos + 1)
+    else
+        self.currentTable[self.pos] = self:currentVarsToRecord()
+    end
+    self.inInsertModify = false
 end
 
 function Db:isWriteable()
@@ -127,6 +213,7 @@ function Db:isModified()
 end
 
 function Db:appendRecord()
+    assert(self.inAppendUpdate, "Incompatible update mode")
     self:setModified()
     table.insert(self.currentTable, self:currentVarsToRecord())
     self:setPos(self:getCount())
@@ -139,6 +226,7 @@ function Db:deleteRecord()
 end
 
 function Db:updateRecord()
+    assert(self.inAppendUpdate, "Incompatible update mode")
     local pos = self.pos
     self:appendRecord()
     table.remove(self.currentTable, pos)

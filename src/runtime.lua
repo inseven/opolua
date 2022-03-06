@@ -639,14 +639,18 @@ function Runtime:useDb(logName)
 end
 
 function Runtime:closeDb()
+    self:saveDbIfModified()
+    self.dbs[self.dbs.current] = nil
+    self.dbs.current = nil
+end
+
+function Runtime:saveDbIfModified()
     local db = self:getDb()
-    if db:isModified() then
+    if db:isModified() and not db:inTransaction() then
         local data = db:save()
         local err = self.ioh.fsop("write", db:getPath(), data)
         assert(err == KErrNone, err)
     end
-    self.dbs[self.dbs.current] = nil
-    self.dbs.current = nil
 end
 
 function Runtime:newFileHandle()

@@ -794,13 +794,17 @@ local function fieldLeftSide(stack, runtime)
     local varName = stack:pop()
     local db = runtime:getDb(logName)
     -- printf("fieldLeftSide %s\n", varName)
-    local var = assert(db.currentVars[varName], KErrNoFld)
+    local var = db:getCurrentVar(varName)
     stack:push(var)
 end
 
 local function fieldRightSide(stack, runtime)
-    fieldLeftSide(stack, runtime)
-    stack:push(stack:pop()())
+    local logName = runtime:IP8()
+    local varName = stack:pop()
+    local db = runtime:getDb(logName)
+    -- printf("fieldRightSide %s\n", varName)
+    local val = db:getCurrentVal(varName)
+    stack:push(val)
 end
 
 FieldRightSideInt = fieldRightSide -- 0x20
@@ -1370,6 +1374,7 @@ end
 function Append(stack, runtime) -- 0x9D
     local db = runtime:getDb()
     db:appendRecord()
+    runtime:saveDbIfModified()
     runtime:setTrap(false)
 end
 
@@ -1636,6 +1641,7 @@ end
 function Update(stack, runtime) -- 0xBD
     local db = runtime:getDb()
     db:updateRecord()
+    runtime:saveDbIfModified()
     runtime:setTrap(false)
 end
 
@@ -2420,22 +2426,24 @@ function Statement32(stack, runtime) -- 0x119
 end
 
 function Modify(stack, runtime) -- 0x11A
-    unimplemented("Modify")
+    runtime:getDb():modify()
     runtime:setTrap(false)
 end
 
 function Insert(stack, runtime) -- 0x11B
-    unimplemented("Insert")
+    runtime:getDb():insert()
     runtime:setTrap(false)
 end
 
 function Cancel(stack, runtime) -- 0x11C
-    unimplemented("Cancel")
+    runtime:getDb():cancel()
     runtime:setTrap(false)
 end
 
 function Put(stack, runtime) -- 0x11D
-    unimplemented("Put")
+    local db = runtime:getDb()
+    db:put()
+    runtime:saveDbIfModified()
     runtime:setTrap(false)
 end
 
@@ -2560,15 +2568,16 @@ function Compact(stack, runtime) -- 0x12A
 end
 
 function BeginTrans(stack, runtime) -- 0x12B
-    unimplemented("BeginTrans")
+    runtime:getDb():beginTransaction()
 end
 
 function CommitTrans(stack, runtime) -- 0x12C
-    unimplemented("CommitTrans")
+    runtime:getDb():endTransaction(true)
+    runtime:saveDbIfModified()
 end
 
 function Rollback(stack, runtime) -- 0x12D
-    unimplemented("Rollback")
+    runtime:getDb():endTransaction(false)
 end
 
 function ClearFlags(stack, runtime) -- 0x12E
