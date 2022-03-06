@@ -175,7 +175,7 @@ function SIKeyClickEnabled(stack, runtime) -- 21
 end
 
 function SIKeyClickLoud(stack, runtime) -- 22
-    unimplemented("opx.systinfo.SIKeyClickLoud")
+    stack:push(false)
 end
 
 function SIKeyClickOverridden(stack, runtime) -- 23
@@ -183,11 +183,11 @@ function SIKeyClickOverridden(stack, runtime) -- 23
 end
 
 function SIPointerClickEnabled(stack, runtime) -- 24
-    unimplemented("opx.systinfo.SIPointerClickEnabled")
+    stack:push(false)
 end
 
 function SIPointerClickLoud(stack, runtime) -- 25
-    unimplemented("opx.systinfo.SIPointerClickLoud")
+    stack:push(false)
 end
 
 function SIBeepEnabled(stack, runtime) -- 26
@@ -199,11 +199,11 @@ function SIBeepLoud(stack, runtime) -- 27
 end
 
 function SISoundDriverEnabled(stack, runtime) -- 28
-    unimplemented("opx.systinfo.SISoundDriverEnabled")
+    stack:push(true)
 end
 
 function SISoundDriverLoud(stack, runtime) -- 29
-    unimplemented("opx.systinfo.SISoundDriverLoud")
+    stack:push(true) -- or false? Who knows?
 end
 
 function SISoundEnabled(stack, runtime) -- 30
@@ -295,7 +295,7 @@ function SIRemoteLinkEnable(stack, runtime) -- 47
 end
 
 function SIPWIsEnabled(stack, runtime) -- 48
-    unimplemented("opx.systinfo.SIPWIsEnabled")
+    stack:push(false)
 end
 
 function SIPWSetEnabled(stack, runtime) -- 49
