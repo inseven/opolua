@@ -40,12 +40,16 @@ class ObjectFileSystem: FileSystem {
     func prepare() throws {
     }
 
-    func hostUrl(for path: String) -> URL? {
+    func set(sharedDrive: String, url: URL, readonly: Bool) {
+        // Don't care, we'll just return notReady for anything on a shared drive
+    }
+
+    func hostUrl(for path: String) -> (URL, Bool)? {
         if path.uppercased().starts(with: guestPrefix) {
             let pathComponents = path
                 .split(separator: "\\")[4...]
                 .map { String($0) }
-            return baseUrl.appendingCaseInsensitivePathComponents(pathComponents)
+            return (baseUrl.appendingCaseInsensitivePathComponents(pathComponents), true)
         } else {
             return nil
         }

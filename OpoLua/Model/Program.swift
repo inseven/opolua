@@ -515,7 +515,7 @@ extension Program: OpoIoHandler {
 
     func runApp(name: String, document: String) -> Int32? {
         guard let applicationIdentifier = ApplicationIdentifier(rawValue: name),
-              let url = fileSystem.hostUrl(for: document)
+              let (url, _) = fileSystem.hostUrl(for: document)
         else {
             return nil
         }

@@ -23,7 +23,8 @@ import Foundation
 protocol FileSystem {
 
     func prepare() throws
-    func hostUrl(for path: String) -> URL?
+    func set(sharedDrive: String, url: URL, readonly: Bool)
+    func hostUrl(for path: String) -> (URL, Bool)? // The bool is whether this is a readonly location
     func guestPath(for url: URL) -> String?
 
 }
@@ -31,8 +32,11 @@ protocol FileSystem {
 extension FileSystem {
 
     func perform(_ operation: Fs.Operation) -> Fs.Result {
-        guard let nativePath = hostUrl(for: operation.path) else {
+        guard let (nativePath, readonly) = hostUrl(for: operation.path) else {
             return .err(.notReady)
+        }
+        if readonly && !operation.isReadonlyOperation() {
+            return .err(.accessDenied)
         }
         let path = nativePath.path
         let fileManager = FileManager.default
@@ -53,20 +57,15 @@ extension FileSystem {
             return .err(exists ? .alreadyExists : .notFound)
         case .delete:
             print("DELETE '\(operation.path)'")
-            /*
-             Usage: DELETE filename$ Deletes any type of file.
-               Series 5: You can use wildcards for example,to delete all the files in D:\OPL
-                         DELETE “D:\OPL\*”
-               Series 3: You can use wildcards for example, to delete all the OPL files in B:\OPL
-                         DELETE “B:\OPL\*.OPL”
-             The file type extensions are listed in the User Guide. See also RMDIR.
-             */
-            // TODO: Support wildcard deletion.
-            // TODO: Check to see whether directory deletion is permitted.
-            // TODO: Return the correct errors.
+            // Note, should not support wildcards or deleting directories
             var isDirectory: ObjCBool = false
-            if fileManager.fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue {
-                return .err(.alreadyExists)
+            if fileManager.fileExists(atPath: path, isDirectory: &isDirectory) {
+                if isDirectory.boolValue {
+                    // The logic here seems to be "there isn't a *file* with this name"
+                    return .err(.notFound)
+                }
+            } else {
+                return .err(.notFound)
             }
             do {
                 try fileManager.removeItem(atPath: path)
@@ -149,8 +148,11 @@ extension FileSystem {
                 return .strings(paths)
             }
         case .rename(let dest):
-            guard let nativeDestUrl = hostUrl(for: dest) else {
+            guard let (nativeDestUrl, destReadonly) = hostUrl(for: dest) else {
                 return .err(.notReady)
+            }
+            if destReadonly {
+                return .err(.accessDenied)
             }
             let nativeDest = nativeDestUrl.path
             if fileManager.fileExists(atPath: nativeDest) {

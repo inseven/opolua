@@ -23,6 +23,7 @@ import Foundation
 class SystemFileSystem: FileSystem {
 
     var rootUrl: URL
+    var sharedDrives: [String: (URL, Bool)] = [:]
 
     init(rootUrl: URL) {
         self.rootUrl = rootUrl
@@ -34,16 +35,24 @@ class SystemFileSystem: FileSystem {
         try fileManager.createDirectory(at: rootUrl.appendingPathComponent("c"), withIntermediateDirectories: true)
     }
 
-    func hostUrl(for path: String) -> URL? {
+    func set(sharedDrive: String, url: URL, readonly: Bool) {
+        sharedDrives[sharedDrive] = (url, readonly)
+    }
+
+    func hostUrl(for path: String) -> (URL, Bool)? {
         let components = path.split(separator: "\\")
             .map { String($0) }
         guard let drive = components.first else {
             return nil
         }
         let driveLetter = String(drive.prefix(1))
-        let normalizedComponents = [driveLetter] + Array(components[1...])
+        if let (sharedDriveUrl, readonly) = sharedDrives[driveLetter.uppercased()] {
+            let hostUrl = sharedDriveUrl.appendingCaseInsensitivePathComponents(Array(components[1...]))
+            return (hostUrl, readonly)
+        }
+        let normalizedComponents = [driveLetter.lowercased()] + Array(components[1...])
         let hostUrl = rootUrl.appendingCaseInsensitivePathComponents(normalizedComponents)
-        return hostUrl
+        return (hostUrl, false)
     }
 
     func guestPath(for url: URL) -> String? {

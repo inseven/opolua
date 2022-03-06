@@ -343,14 +343,14 @@ struct Fs {
         enum OpType {
             case exists // return notFound or alreadyExists (any access issue should result in notFound)
             case isdir // as per exists
-            case delete // return none, notFound, notReady
-            case mkdir // return none, alreadyExists, notReady
-            case rmdir // return none, notFound, inUse if it isn't empty, pathNotFound if it's not a dir, notReady
-            case write(Data) // return none, notReady
+            case delete // return none, notFound, accessDenied if readonly, notReady
+            case mkdir // return none, alreadyExists, accessDenied if readonly, notReady
+            case rmdir // return none, notFound, inUse if it isn't empty, pathNotFound if it's not a dir, accessDenied if readonly, notReady
+            case write(Data) // return none, accessDenied if readonly, notReady
             case read // return none, notFound, notReady
             case dir // return .strings(paths)
-            case rename(String) // return none, notFound, notReady, alreadyExists
-            case stat
+            case rename(String) // return none, notFound, accessDenied if readonly, notReady, alreadyExists
+            case stat // return stat, or notFound or notReady
         }
         let path: String
         let type: OpType
@@ -366,9 +366,9 @@ struct Fs {
         case inUse = -9
         case notFound = -33
         case alreadyExists = -32
+        case accessDenied = -39
         case pathNotFound = -42
         case notReady = -62 // For any op outside our sandbox
-        //case accessDenied = -39
     }
 
     enum Result {
@@ -376,6 +376,19 @@ struct Fs {
         case data(Data)
         case stat(Stat)
         case strings([String])
+    }
+}
+
+extension Fs.Operation {
+    func isReadonlyOperation() -> Bool {
+        switch type {
+        case .exists: return true
+        case .isdir: return true
+        case .read: return true
+        case .dir: return true
+        case .stat: return true
+        default: return false
+        }
     }
 }
 
