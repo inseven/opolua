@@ -1124,6 +1124,7 @@ end
 
 function LoadRsc(path)
     -- printf("LoadRsc(%s)\n", path)
+    path = runtime:abs(path)
     local data, err = runtime:iohandler().fsop("read", path)
     assert(data, err)
     local resourceFile = require("rsc").parseRsc(data)
