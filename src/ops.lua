@@ -2490,7 +2490,7 @@ function SetFlags(stack, runtime) -- 0x125
 end
 
 function SetDoc(stack, runtime) -- 0x126
-    unimplemented("SetDoc")
+    printf("SetDoc(%s)\n", stack:pop())
 end
 
 function DaysToDate(stack, runtime) -- 0x127
