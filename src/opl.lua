@@ -873,6 +873,14 @@ function GETEVENTA32(stat, evAddr)
     local function completion()
         -- printf("GetEvent stat set to %s\n", stat())
         runtime:setResource("getevent", nil)
+        -- The GETCMD$ API is so stupid...
+        if stat() == KErrNone then
+            local ev = evAddr:asVariable(DataTypes.ELongArray)
+            if ev[KEvAType] == KEvCommand then
+                -- We never use KEvCommand for anything except quitCommand, so we can assume that here
+                runtime:setResource("GETCMD", "X")
+            end
+        end
     end
     local requestTable = {
         var = stat,

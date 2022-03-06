@@ -1219,8 +1219,9 @@ function UpperStr(stack, runtime) -- 0xD3
 end
 
 function WCmd(stack, runtime) -- 0xD5
-    -- This is the only cmd event we ever send, so...
-    stack:push("X")
+    local result = runtime:getResource("GETCMD")
+    runtime:setResource("GETCMD", nil)
+    stack:push(result or "")
 end
 
 function CmdStr(stack, runtime) -- 0xD6
