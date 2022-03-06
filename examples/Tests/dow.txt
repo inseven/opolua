@@ -1,0 +1,8 @@
+PROC main:
+	PRINT "Today is", DAYNAME$(DOW(DAY, MONTH, YEAR))
+	REM these won't be expected to work at start/end of month
+	REM but good enough for testing
+	PRINT "Yesterday was", DAYNAME$(DOW(DAY-1, MONTH, YEAR))
+	PRINT "Tomorrow will be", DAYNAME$(DOW(DAY + 1, MONTH, YEAR))
+	GET
+ENDP

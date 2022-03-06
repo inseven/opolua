@@ -328,7 +328,16 @@ function Day(stack, runtime) -- 0x04
 end
 
 function Dow(stack, runtime) -- 0x05
-    unimplemented("fns.Dow")
+    local year = stack:pop()
+    local month = stack:pop()
+    local day = stack:pop()
+    local t = os.time({year = year, month = month, day = day, isdst = false})
+    -- Lua (and C) use 1 to mean Sunday, OPL 1 is Monday...
+    local result = os.date("!*t", t).wday - 1
+    if result == 0 then
+        result = 7
+    end
+    stack:push(result)
 end
 
 function Eof(stack, runtime) -- 0x06
