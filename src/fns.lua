@@ -331,7 +331,7 @@ function Dow(stack, runtime) -- 0x05
     local year = stack:pop()
     local month = stack:pop()
     local day = stack:pop()
-    local t = os.time({year = year, month = month, day = day, isdst = false})
+    local t = runtime:iohandler().utctime({year = year, month = month, day = day})
     -- Lua (and C) use 1 to mean Sunday, OPL 1 is Monday...
     local result = os.date("!*t", t).wday - 1
     if result == 0 then
@@ -759,21 +759,15 @@ function MenuWithMemory(stack, runtime) -- 0x3A
     stack:push(selected)
 end
 
-local epoch
-local function getEpoch()
-    if not epoch then
-        epoch = os.time({ year = 1900, month = 1, day = 1 })
-    end
-    return epoch
-end
-
 function Days(stack, runtime) -- 0x37
     local year = stack:pop()
     local month = stack:pop()
     local day = stack:pop()
-    local t = os.time({ year = year, month = month, day = day })
-    -- Result needs to be days since 1900
-    t = (t - getEpoch()) // (24 * 60 * 60)
+    local t = runtime:iohandler().utctime({ year = year, month = month, day = day })
+    -- Result needs to be days since 1900. Who knows why since nothing else uses
+    -- 1900 as its epoch.
+    local epoch = runtime:iohandler().utctime({ year = 1900, month = 1, day = 1 })
+    t = (t - epoch) // (24 * 60 * 60)
     stack:push(t)
 end
 
@@ -820,7 +814,7 @@ function DateToSecs(stack, runtime) -- 0x45
     local day = stack:pop()
     local month = stack:pop()
     local year = stack:pop()
-    local t = os.time({
+    local t, err = runtime:iohandler().utctime({
         year = year,
         month = month,
         day = day,
@@ -828,6 +822,8 @@ function DateToSecs(stack, runtime) -- 0x45
         min = minutes,
         sec = seconds
     })
+    -- printf("DATETOSECS(year=%d, month=%d, day=%d, h=%d, m=%d, s=%d) = %s\n", year, month, day, hours, minutes, seconds, t)
+    assert(t, err)
     stack:push(toint32(t))
 end
 

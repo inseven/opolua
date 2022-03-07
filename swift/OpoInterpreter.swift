@@ -718,6 +718,45 @@ private func runApp(_ L: LuaState!) -> Int32 {
     return 1
 }
 
+private func getTimeField(_ L: LuaState!, _ key: String) -> Int32? {
+    guard let result = L.toint(-1, key: key) else {
+        return nil
+    }
+    if result < -Int32.max/2 || result > Int32.max/2 {
+        return nil // Should really error here...
+    }
+    return Int32(result)
+}
+
+private func utctime(_ L: LuaState!) -> Int32 {
+    // Really annoying Lua can't/won't use timegm...
+    var ts = tm()
+    luaL_checktype(L, 1, LUA_TTABLE)
+    lua_settop(L, 1)  /* make sure table is at the top */
+    ts.tm_sec = getTimeField(L, "sec") ?? 0
+    ts.tm_min = getTimeField(L, "min") ?? 0
+    ts.tm_hour = getTimeField(L, "hour") ?? 12
+    guard let day = getTimeField(L, "day"),
+          let mon = getTimeField(L, "month"),
+          let year = getTimeField(L, "year")
+    else {
+        L.pushnil()
+        L.push("missing field!")
+        return 2
+    }
+    ts.tm_mday = day
+    ts.tm_mon = mon - 1
+    ts.tm_year = year - 1900
+    let t = timegm(&ts)
+    if t == -1 {
+        L.pushnil()
+        L.push("time result cannot be represented")
+        return 2
+    }
+    L.push(t)
+    return 1
+}
+
 private extension Error {
     var detailIfPresent: String {
         if let err = self as? OpoInterpreter.InterpreterError {
@@ -852,6 +891,7 @@ class OpoInterpreter {
             ("setForeground", setForeground),
             ("setBackground", setBackground),
             ("runApp", runApp),
+            ("utctime", utctime),
         ]
         L.setfuncs(fns, nup: 1)
     }

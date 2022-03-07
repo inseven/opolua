@@ -1,0 +1,23 @@
+INCLUDE "DATE.OXH"
+
+PROC main:
+	LOCAL d&, dh&, epoch&
+	d& = DATETOSECS(1970, 1, 1, 0, 0, 0)
+	PRINT "DATETOSECS(1970, 1, 1, 0, 0, 0) = "; d&
+	IF d& <> 0: RAISE -1: ENDIF 
+	
+	epoch& = DTNewDateTime&:(1970, 1, 1, 0, 0, 0, 0)
+
+	d& = DATETOSECS(2004, 9, 16, 0, 0, 0)
+	PRINT "DATETOSECS(2004, 9, 16, 0, 0, 0) = "; d&
+	IF d& <> 1095292800: RAISE -1: ENDIF
+
+	dh& = DTNewDateTime&:(2004, 9, 16, 0, 0, 0, 0)
+	d& = DTSecsDiff&:(epoch&, dh&)
+	IF d& <> 1095292800: RAISE -1: ENDIF
+
+	d& = DATETOSECS(2021, 7, 1, 0, 0, 0)
+	PRINT "DATETOSECS(2021, 7, 1, 0, 0, 0) = "; d&
+	IF d& <> 1625097600: RAISE -1: ENDIF
+	GET
+ENDP

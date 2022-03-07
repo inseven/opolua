@@ -89,11 +89,11 @@ function DTNewDateTime(stack, runtime) -- 1
         day = day,
         hour = hour,
         min = min,
-        sec = sec
+        sec = sec,
+        micro = micro,
     }
-    local t = os.time(tt) + (micro / 1000000)
     local h = #handles + 1
-    handles[h] = t
+    handles[h] = tt
     stack:push(h)
 end
 
@@ -104,72 +104,94 @@ end
 
 function DTYear(stack, runtime) -- 3
     local t = popTimeFromStack(stack)
-    stack:push(os.date("*t", math.floor(t)).year)
+    stack:push(t.year)
 end
 
 function DTMonth(stack, runtime) -- 4
     local t = popTimeFromStack(stack)
-    stack:push(os.date("*t", math.floor(t)).month)
+    stack:push(t.month)
 end
 
 function DTDay(stack, runtime) -- 5
     local t = popTimeFromStack(stack)
-    stack:push(os.date("*t", math.floor(t)).day)
+    stack:push(t.day)
 end
 
 function DTHour(stack, runtime) -- 6
     local t = popTimeFromStack(stack)
-    stack:push(os.date("*t", math.floor(t)).hour)
+    stack:push(t.hour)
 end
 
 function DTMinute(stack, runtime) -- 7
     local t = popTimeFromStack(stack)
-    stack:push(os.date("*t", math.floor(t)).min)
+    stack:push(t.min)
 end
 
 function DTSecond(stack, runtime) -- 8
     local t = popTimeFromStack(stack)
-    stack:push(os.date("*t", math.floor(t)).sec)
+    stack:push(t.sec)
 end
 
 function DTMicro(stack, runtime) -- 9
     local t = popTimeFromStack(stack)
-    local _, micro = math.modf(t)
-    micro = math.floor(micro * 1000000)
-    stack:push(micro)
+    stack:push(t.micro)
 end
 
 function DTSetYear(stack, runtime) -- 10
-    unimplemented("opx.date.DTSetYear")
+    local year = stack:pop()
+    local t = popTimeFromStack(stack)
+    t.year = year
 end
 
 function DTSetMonth(stack, runtime) -- 11
-    unimplemented("opx.date.DTSetMonth")
+    local month = stack:pop()
+    local t = popTimeFromStack(stack)
+    t.month = month
 end
 
 function DTSetDay(stack, runtime) -- 12
-    unimplemented("opx.date.DTSetDay")
+    local day = stack:pop()
+    local t = popTimeFromStack(stack)
+    t.day = day
 end
 
 function DTSetHour(stack, runtime) -- 13
-    unimplemented("opx.date.DTSetHour")
+    local hour = stack:pop()
+    local t = popTimeFromStack(stack)
+    t.hour = hour
 end
 
 function DTSetMinute(stack, runtime) -- 14
-    unimplemented("opx.date.DTSetMinute")
+    local min = stack:pop()
+    local t = popTimeFromStack(stack)
+    t.min = min
 end
 
 function DTSetSecond(stack, runtime) -- 15
-    unimplemented("opx.date.DTSetSecond")
+    local sec = stack:pop()
+    local t = popTimeFromStack(stack)
+    t.sec = sec
 end
 
 function DTSetMicro(stack, runtime) -- 16
-    unimplemented("opx.date.DTSetMicro")
+    local micro = stack:pop()
+    local t = popTimeFromStack(stack)
+    t.micro = micro
 end
 
 function DTNow(stack, runtime) -- 17
     local h = #handles + 1
     local t = runtime:iohandler().getTime()
+    -- Psions do everything as if local time were UTC - so if you're in France
+    -- with a Series 5, you'll have your clock set to 9:00, and calling DTNow()
+    -- would give you an epoch-relative number of seconds corresponding to 9:00
+    -- UTC. ie the wrong answer, strictly speaking, because the Psion's concept
+    -- of "now" is wrong to start with. To maintain consistency with other Psion
+    -- APIs, we deliberately convert the time into its local time components
+    -- here but then treat this time here on in as if were a UTC time.
+    local tt = os.date("*t", math.floor(t))
+    local _, micro = math.modf(t)
+    tt.micro = math.floor(micro * 1000000)
     handles[h] = t
     stack:push(h)
 end
@@ -201,14 +223,16 @@ end
 function DTSecsDiff(stack, runtime) -- 24
     local endt = popTimeFromStack(stack)
     local startt = popTimeFromStack(stack)
-    local diff = endt - startt
-    stack:push(toint32(math.floor(diff)))
+    local diff = runtime:iohandler().utctime(endt) - runtime:iohandler().utctime(startt)
+    stack:push(toint32(diff))
 end
 
 function DTMicrosDiff(stack, runtime) -- 25
     local endt = popTimeFromStack(stack)
     local startt = popTimeFromStack(stack)
-    local diff = endt - startt
+    local endValue = runtime:iohandler().utctime(endt) + (endt.micro / 1000000)
+    local startValue = runtime:iohandler().utctime(startt) + (startt.micro / 1000000)
+    local diff = endValue - startValue
     stack:push(toint32(math.floor(diff * 1000000)))
 end
 
@@ -225,7 +249,19 @@ function DTDayNoInWeek(stack, runtime) -- 28
 end
 
 function DTDaysInMonth(stack, runtime) -- 29
-    unimplemented("opx.date.DTDaysInMonth")
+    local t = popTimeFromStack(stack)
+    local day = t.day
+    t.day = 31
+    -- If today is eg 4th April ie a month with 30 days, day will have wrapped
+    -- to 1 May, so we can measure the amount of wrapping to work out how many
+    -- days there were. If not for leap year calculations, we could just use a
+    -- 12-element lookup table here.
+    local days = 31 - os.date("!*t", runtime:iohandler().utctime(t)).day
+    if days == 0 then
+        days = 31
+    end
+    t.day = day
+    stack:push(days)
 end
 
 function DTSetHomeTime(stack, runtime) -- 30
@@ -252,7 +288,8 @@ function LCClockFormat(stack, runtime) -- 34
 end
 
 function LCStartOfWeek(stack, runtime) -- 35
-    unimplemented("opx.date.LCStartOfWeek")
+    -- For now, let's just always say Monday
+    stack:push(1)
 end
 
 function LCThousandsSeparator(stack, runtime) -- 36

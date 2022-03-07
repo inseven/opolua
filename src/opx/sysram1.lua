@@ -112,11 +112,12 @@ function GetFileSize(stack, runtime) -- 13
 end
 
 function DTDayNameFull(stack, runtime) -- 14
-    unimplemented("opx.sysram1.DTDayNameFull")
+    -- See DayNameStr for explanation of logic
+    stack:push(os.date("!%A", 86400 * (3 + stack:pop())))
 end
 
 function DTMonthNameFull(stack, runtime) -- 15
-    unimplemented("opx.sysram1.DTMonthNameFull")
+    stack:push(os.date("!%B", 86400 * 31 * (stack:pop() - 1)))
 end
 
 function DTIsLeapYear(stack, runtime) -- 16
