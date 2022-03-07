@@ -29,7 +29,7 @@ OPL supports open-in-place for Psion installers (SIS files), allowing you to ins
 
    <img class="inline-screenshot" srcset="/images/install-2.png 3x">
 
-4. If everything has gone to plan 🤞🏻, you should see a summary screen displaying the icon of your newly installed program:
+4. If everything has gone to plan 🤞, you should see a summary screen displaying the icon of your newly installed program:
 
    <img class="inline-screenshot" srcset="/images/install-3.png 3x">
 
@@ -38,6 +38,19 @@ OPL supports open-in-place for Psion installers (SIS files), allowing you to ins
 5. Tap the program icon to run it:
 
    <img class="inline-screenshot" srcset="/images/install-4.png 3x">
+
+If you don't have an installer for the program and only have eg a ZIP of the app directory, you will have to manually construct the correct filesystem layout to be recognized as an program bundle, copy that bundle to eg an iCloud Drive location, then add that location to OpoLua using the "+" toolbar item on the Library screen. The correct layout for an OPL program bundle is:
+
+```
+<appname>.system
+|- c
+   |- System
+      |- Apps
+         |- <appname>
+            | files for the app go here, such as <appname>.app, <appname>.aif etc
+```
+
+You must make a separate bundle for each program; installing multiple programs in a single bundle is not currently supported.
 
 <a id="finding-programs"></a>
 
