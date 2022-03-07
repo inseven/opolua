@@ -17,7 +17,7 @@ title: Frequently Asked Questions
 
 ## How do I install programs?
 
-OPL supports open-in-place for Psion installers (SIS files), meaning you can install programs directly from iCloud Drive using the Files app on your iPhone or iPad.
+OPL supports open-in-place for Psion installers (SIS files), allowing you to install programs directly from iCloud Drive using the Files app on your iPhone or iPad.
 
 1. Add the installer to iCloud Drive, or download it directly to your iPhone.
 
