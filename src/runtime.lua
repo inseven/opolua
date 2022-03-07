@@ -700,8 +700,11 @@ function newModuleInstance(moduleName)
 end
 
 function newRuntime(handler, era)
-    local codes = ops["codes_"..(era or "er5")]
-    assert(codes, "Unrecognised era ".. era)
+    if not era then
+        era = "er5"
+    end
+    local codes = ops["codes_"..era]
+    assert(codes, "Unrecognised era " .. era)
     local rt = Runtime {
         opcodes = codes,
         frameBase = 0, -- Where in the chunk we start the stack frames' memory

@@ -138,6 +138,10 @@ class Program {
                 oplConfig[key] = "0" // analog
             }
         }
+        if applicationMetadata?.appInfo.era == .er5 {
+            let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s5", isDirectory: true)
+            self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
+        }
     }
 
     func addObserver(_ observer: ProgramLifecycleObserver) {
