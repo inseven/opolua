@@ -442,7 +442,10 @@ function Variable:__call(val)
         -- Slow path
         local data
         if t == EString then
-            assert(#val <= self:stringMaxLen(), KErrStrTooLong)
+            if #val > self:stringMaxLen() then
+                printf("String too long: maxlen=%d val='%s'\n", self:stringMaxLen(), hexEscape(val))
+                error(KErrStrTooLong)
+            end
             data = string_pack("<B", #val)..val
         else
             data = string_pack(FmtForType[t], val)

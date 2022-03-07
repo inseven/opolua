@@ -1008,7 +1008,10 @@ function Val(stack, runtime) -- 0x92
     local str = stack:pop()
     -- printf("Val('%s')\n", hexEscape(str))
     local result = tonumber(str)
-    assert(result, KErrInvalidArgs)
+    if not result then
+        printf("Bad Val('%s')\n", hexEscape(str))
+        error(KErrInvalidArgs)
+    end
     stack:push(result)
 end
 
