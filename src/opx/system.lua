@@ -489,7 +489,11 @@ function BackupBatteryStatus(stack, runtime) -- 70
 end
 
 function CaptureKey(stack, runtime) -- 71
-    unimplemented("opx.system.CaptureKey")
+    local mod = stack:pop()
+    local mask = stack:pop()
+    local key = stack:pop()
+    printf("system.CaptureKey(%d, %d, %d)\n", key, mask, mod)
+    stack:push(0)
 end
 
 function CancelCaptureKey(stack, runtime) -- 72
