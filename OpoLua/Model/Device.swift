@@ -38,7 +38,7 @@ extension Device {
     var name: String {
         switch self {
         case .psionSeries3c:
-            return "Psion Series 3C"
+            return "Psion Series 3c"
         case .psionSeries5:
             return "Psion Series 5"
         #if DEBUG
