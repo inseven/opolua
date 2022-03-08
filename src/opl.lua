@@ -903,7 +903,7 @@ end
 
 function EXIST(path)
     local ret = runtime:iohandler().fsop("exists", runtime:abs(path))
-    return ret == KErrExists
+    return ret == KErrNone
 end
 
 function MKDIR(path)

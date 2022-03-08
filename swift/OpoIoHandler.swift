@@ -341,7 +341,7 @@ extension Graphics.Bitmap.Mode {
 struct Fs {
     struct Operation {
         enum OpType {
-            case exists // return notFound or alreadyExists (any access issue should result in notFound)
+            case exists // return notFound or none (any access issue should result in notFound)
             case isdir // as per exists
             case delete // return none, notFound, accessDenied if readonly, notReady
             case mkdir // return none, alreadyExists, accessDenied if readonly, notReady

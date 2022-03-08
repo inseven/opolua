@@ -43,7 +43,7 @@ extension FileSystem {
         switch operation.type {
         case .exists:
             let exists = fileManager.fileExists(atPath: path)
-            return .err(exists ? .alreadyExists : .notFound)
+            return .err(exists ? .none : .notFound)
         case .stat:
             if let attribs = try? fileManager.attributesOfItem(atPath: path) as NSDictionary {
                 let mod = attribs.fileModificationDate() ?? Date(timeIntervalSince1970: 0)
@@ -54,7 +54,7 @@ extension FileSystem {
             }
         case .isdir:
             let exists = fileManager.directoryExists(atPath: path)
-            return .err(exists ? .alreadyExists : .notFound)
+            return .err(exists ? .none : .notFound)
         case .delete:
             print("DELETE '\(operation.path)'")
             // Note, should not support wildcards or deleting directories
