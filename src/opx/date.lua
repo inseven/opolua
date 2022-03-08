@@ -70,11 +70,6 @@ local function popTimeFromStack(stack)
     return t
 end
 
-function setDate(handle, val)
-    assert(handles[handle], "Bad date/time handle!")
-    handles[handle] = val
-end
-
 function DTNewDateTime(stack, runtime) -- 1
     local micro = stack:pop()
     local sec = stack:pop()
@@ -192,7 +187,7 @@ function DTNow(stack, runtime) -- 17
     local tt = os.date("*t", math.floor(t))
     local _, micro = math.modf(t)
     tt.micro = math.floor(micro * 1000000)
-    handles[h] = t
+    handles[h] = tt
     stack:push(h)
 end
 
