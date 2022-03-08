@@ -248,6 +248,32 @@ function RunApp(stack, runtime) -- 31
     local doc = stack:pop()
     local prog = stack:pop()
     if cmd == 0 then
+        if doc:lower():match("%.hlp$") then
+            local dlg = {
+                title = "Not supported",
+                flags = 0,
+                xpos = 0,
+                ypos = 0,
+                items = {
+                    {
+                    type = dItemTypes.dTEXT,
+                    align = "center",
+                    value = "Viewing help files (*.hlp) is not yet supported by",
+                    },
+                    {
+                    type = dItemTypes.dTEXT,
+                    align = "center",
+                    value = "OpoLua. See GitHub issue #202 for more details."
+                    }
+                },
+                buttons = {
+                    { key = KKeyEsc | KDButtonNoLabel, text = "OK" },
+                },
+            }
+            runtime:DIALOG(dlg)
+            stack:push(0)
+            return
+        end
         local ret = runtime:iohandler().runApp(prog, doc)
         -- Although a non-existent prog _would_ cause an error dialog to appear
         -- on screen, that was posted the system and you'd get a seemingly-valid
