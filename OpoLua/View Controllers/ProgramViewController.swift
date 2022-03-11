@@ -315,9 +315,38 @@ class ProgramViewController: UIViewController {
 
     private func shareScreenshot() {
         let screenshot = self.program.screenshot()
-        let activityViewController = UIActivityViewController(activityItems: [screenshot], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = program.rootView
-        self.present(activityViewController, animated: true)
+
+        // We write the screenshot to a file to allow us to set a filename.
+        let fileManager = FileManager.default
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd' at 'HH.mm.ss"
+        let date = dateFormatter.string(from: Date())
+        let basename = "\(program.title) Screenshot \(date)"
+
+        guard let data = screenshot.pngData(),
+              let filename = (basename as NSString).appendingPathExtension("png")
+        else {
+            let alert = UIAlertController(title: "Error",
+                                          message: "Failed to create screenshot.",
+                                          preferredStyle: .alert)
+            alert.addAction(.init(title: "OK", style: .default, handler: nil))
+            present(alert, animated: true, completion: nil)
+            return
+        }
+
+        let screenshotUrl = fileManager.temporaryDirectory.appendingPathComponent(filename)
+        do {
+            if fileManager.fileExists(atPath: screenshotUrl.path) {
+                try fileManager.removeItem(at: screenshotUrl)
+            }
+            try data.write(to: screenshotUrl)
+            let activityViewController = UIActivityViewController(activityItems: [screenshotUrl],
+                                                                  applicationActivities: nil)
+            activityViewController.popoverPresentationController?.sourceView = program.rootView
+            self.present(activityViewController, animated: true)
+        } catch {
+            present(error: error)
+        }
     }
 
     func observeGameControllers() {
