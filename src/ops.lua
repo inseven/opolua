@@ -286,7 +286,7 @@ codes_er5 = {
     [0xFD] = "IllegalOpCode",
     [0xFE] = "IllegalOpCode",
     [0xFF] = "NextOpcodeTable",
-    [0x100] = "gGrey",
+    [0x100] = "gGrey_epoc",
     [0x101] = "DefaultWin",
     [0x102] = "IllegalOpCode",
     [0x103] = "IllegalOpCode",
@@ -548,6 +548,7 @@ codes_sibo = setmetatable({
     [0x57] = "CallFunction_sibo",
     [0xA3] = "Compress",
     [0xD0] = "gInfo",
+    [0x100] = "gGrey_sibo",
     [0x118] = "IllegalOpCode",
     [0x122] = "IllegalOpCode",
     [0x123] = "IllegalOpCode",
@@ -2296,9 +2297,15 @@ function NextOpcodeTable_dump(runtime)
     return fmt("%02X %s %s", extendedCode, fnName, dumpFn and dumpFn(runtime) or "")
 end
 
-function gGrey(stack, runtime) -- 0x100
+function gGrey_epoc(stack, runtime) -- 0x100
     local mode = stack:pop()
-    runtime:gGREY(mode)
+    local val = mode == 1 and 0xAA or 0
+    runtime:gCOLOR(val, val, val)
+end
+
+function gGrey_sibo(stack, runtime) -- 0x100
+    local mode = stack:pop()
+    runtime:getGraphicsContext().greyMode = mode
 end
 
 function DefaultWin(stack, runtime) -- 0x101

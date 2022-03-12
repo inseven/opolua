@@ -530,6 +530,7 @@ function Runtime:drawCmd(type, op)
         op.y = context.pos.y
     end
     op.penwidth = context.penwidth
+    op.greyMode = context.greyMode
 
     if type == "text" then
         op.tmode = context.tmode

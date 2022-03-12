@@ -247,6 +247,12 @@ struct Graphics {
         case thinUnderlined = 6
     }
 
+    enum GreyMode: Int, Codable {
+        case normal = 0
+        case greyPlaneOnly = 1
+        case bothPlanes = 2
+    }
+
     struct DrawCommand {
         enum OpType {
             case fill(Size)
@@ -269,6 +275,7 @@ struct Graphics {
         let color: Color
         let bgcolor: Color
         let penWidth: Int
+        let greyMode: GreyMode
     }
 
     struct Sprite: Codable {
@@ -335,6 +342,15 @@ extension Graphics.Bitmap.Mode {
         return rawValue >= Self.color16.rawValue
     }
 
+}
+
+extension Graphics.GreyMode {
+    var drawGreyPlane: Bool {
+        return self == .greyPlaneOnly || self == .bothPlanes
+    }
+    var drawNormalPlane: Bool {
+        return self == .normal || self == .bothPlanes
+    }
 }
 
 struct Fs {

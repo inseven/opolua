@@ -157,6 +157,7 @@ private func draw(_ L: LuaState!) -> Int32 {
         }
         var mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
         let penWidth = L.toint(-1, key: "penwidth") ?? 1
+        let greyMode = L.getfield(-1, "greyMode", Graphics.GreyMode.self) ?? .normal
         let optype: Graphics.DrawCommand.OpType
         switch (t) {
         case "fill":
@@ -250,7 +251,8 @@ private func draw(_ L: LuaState!) -> Int32 {
             print("Unknown Graphics.DrawCommand.OpType \(t)")
             continue
         }
-        ops.append(Graphics.DrawCommand(drawableId: id, type: optype, mode: mode, origin: origin, color: color, bgcolor: bgcolor, penWidth: penWidth))
+        ops.append(Graphics.DrawCommand(drawableId: id, type: optype, mode: mode, origin: origin, color: color,
+                                        bgcolor: bgcolor, penWidth: penWidth, greyMode: greyMode))
     }
     iohandler.draw(operations: ops)
     return 0

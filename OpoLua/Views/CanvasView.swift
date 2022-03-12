@@ -39,6 +39,7 @@ class CanvasView : UIView, Drawable {
     }
 
     private var canvas: Canvas
+    private var greyPlane: Canvas?
     var clockView: ClockView?
     weak var delegate: CanvasViewDelegate?
     private var sprites: [Int: CanvasSprite] = [:]
@@ -60,7 +61,17 @@ class CanvasView : UIView, Drawable {
     }
 
     func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
-        canvas.draw(operation, provider: provider)
+        if operation.greyMode.drawGreyPlane {
+            precondition(self.mode == .gray4, "Bad window mode for a grey plane operation!")
+            if self.greyPlane == nil {
+                // The grey plan canvas's mode doesn't really matter here so long as it translates to 8bpp greyscale
+                self.greyPlane = Canvas(id: self.canvas.id, size: self.canvas.size, mode: .gray2)
+            }
+            self.greyPlane?.draw(operation, provider: provider)
+        }
+        if operation.greyMode.drawNormalPlane {
+            canvas.draw(operation, provider: provider)
+        }
         setNeedsDisplay()
     }
 
@@ -98,11 +109,11 @@ class CanvasView : UIView, Drawable {
             return nil
         }
         // Check to see if we have any active sprites; if not, then we can stop here.
-        if sprites.isEmpty {
+        if sprites.isEmpty && self.greyPlane == nil {
             return canvasImage
         }
 
-        // If our window contains any sprites, we composite these into a secondary context.
+        // If our window contains any sprites or a grey plane, we composite these into a secondary context.
         guard let context = CGContext(data: nil,
                                       width: canvasImage.width,
                                       height: canvasImage.height,
@@ -112,7 +123,23 @@ class CanvasView : UIView, Drawable {
                                       bitmapInfo: canvasImage.bitmapInfo.rawValue) else {
             return nil
         }
-        context.draw(canvasImage, in: CGRect(origin: .zero, size: canvasImage.cgSize))
+        let rect = CGRect(origin: .zero, size: canvasImage.cgSize)
+        context.draw(canvasImage, in: rect)
+
+        if let greyPlaneImg = self.greyPlane?.getImage() {
+            context.saveGState()
+            // First, clip so we only draw the grey plane into white (ie unset) pixels in canvasImage
+            context.clip(to: rect, mask: canvasImage.inverted()!.masking(componentRange: 1, to: 255)!)
+            // Now clip again to only the drawn parts of the grey plane
+            context.clip(to: rect, mask: greyPlaneImg.inverted()!.masking(componentRange: 0, to: 0)!)
+            // At which point the clip rect is the union of what was white in
+            // the main canvas, and set in the grey plane, so we can just fill
+            // that.
+            context.setFillColor(CGColor(gray: CGFloat(0xAA)/256, alpha: 1.0))
+            context.fill(rect)
+            context.restoreGState()
+        }
+
         for sprite in self.sprites.values {
             let frame = sprite.currentFrame
             guard let image = frame.bitmap.getImage(),
