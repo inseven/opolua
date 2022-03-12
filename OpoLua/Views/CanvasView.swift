@@ -190,7 +190,7 @@ class CanvasView : UIView, Drawable {
 
     func resize(to newSize: CGSize) {
         let oldCanvas = self.canvas
-        self.canvas = Canvas(id: id, size: newSize, mode: .color256)
+        self.canvas = Canvas(id: id, size: newSize, mode: oldCanvas.mode)
         if let img = oldCanvas.getImage() {
             self.canvas.draw(image: img)
         }
