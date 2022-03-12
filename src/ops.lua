@@ -2302,14 +2302,13 @@ function gGrey(stack, runtime) -- 0x100
 end
 
 function DefaultWin(stack, runtime) -- 0x101
-    -- The default window is always internally a colour Canvas, but we pretend
-    -- its display mode is whatever the default for the hardware is, as per
-    -- getScreenInfo. So all we need to do here is update the Lua-side
-    -- displayMode and clear the window (but without resetting the draw
-    -- position, unlike gCLS).
-    local context = runtime:getGraphicsContext(1)
-    context.displayMode = stack:pop()
-    runtime:drawCmd("fill", { x = 0, y = 0, width = context.width, height = context.height, mode = KgModeClear })
+    local id = 1
+    local newMode = stack:pop()
+    local context = runtime:getGraphicsContext(id)
+    context.displayMode = newMode
+    runtime:iohandler().graphicsop("close", id)
+    runtime:iohandler().createWindow(id, 0, 0, context.width, context.height, newMode)
+    runtime:iohandler().graphicsop("show", id, true)
 end
 
 function Font(stack, runtime) -- 0x104

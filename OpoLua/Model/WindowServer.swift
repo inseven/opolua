@@ -78,12 +78,6 @@ class WindowServer {
 
     lazy var rootView: RootView = {
         let view = RootView(screenSize: screenSize.cgSize())
-        let screenRect = Graphics.Rect(origin: .zero, size: screenSize)
-        let id = Graphics.DrawableId.defaultWindow
-        createWindow(id: id, rect: screenRect, mode: .color256, shadowSize: 0)
-        let defaultWindow = self.windows[id]!
-        view.addSubview(defaultWindow)
-        defaultWindow.isHidden = false
         return view
     }()
 
@@ -113,11 +107,7 @@ class WindowServer {
         newView.isHidden = true
         newView.frame = rect.cgRect()
         newView.delegate = self
-        // Bit messy this, but it makes the code reuse better if we special case this (we can't add the default
-        // window because this fn is called from within self.rootView's lazy construction).
-        if canvas.id != .defaultWindow {
-            self.rootView.addSubview(newView)
-        }
+        self.rootView.addSubview(newView)
         self.drawablesById[canvas.id] = newView
         self.windows[canvas.id] = newView
         bringInfoWindowToFront()

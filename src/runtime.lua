@@ -445,8 +445,8 @@ function Runtime:getGraphics()
             screenMode = mode,
             sprites = {},
         }
-        local ctx = self:newGraphicsContext(w, h, true, mode)
-        assert(ctx.id == KDefaultWin)
+        local id = self:gCREATE(0, 0, w, h, true, mode)
+        assert(id == KDefaultWin)
         self:FONT(KFontCourierNormal11, 0)
     end
     return self.graphics
