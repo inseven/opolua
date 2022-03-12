@@ -416,21 +416,6 @@ extension CGImage {
         }
     }
 
-    func masking(epocMask: CGImage) -> CGImage? {
-        guard self.width == epocMask.width,
-              self.height == epocMask.height
-        else {
-            return nil
-
-        }
-        // CoreGraphics masks have the opposite semantics to epoc ones...
-        let invertedCi = CIImage(cgImage: epocMask).applyingFilter("CIColorInvert")
-        let invertedCg = CIContext().createCGImage(invertedCi, from: invertedCi.extent)!
-        // invertedCg has an alpha channel (I think) which means masking() doesn't work.
-        // There must be a more efficient way to do this...
-        return self.masking(invertedCg.stripAlpha(grayscale: true))
-    }
-
     func masking(componentRange from: Int, to: Int) -> CGImage? {
         let fromf = CGFloat(from)
         let tof = CGFloat(to)

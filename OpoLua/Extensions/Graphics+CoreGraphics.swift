@@ -27,11 +27,25 @@ extension Graphics.MaskedBitmap {
         get {
             let img = CGImage.from(bitmap: self.bitmap)
             if let maskBmp = self.mask {
-                let maskImg = CGImage.from(bitmap: maskBmp)
-                return img.masking(epocMask: maskImg)
-            } else {
-                return img
+                var maskImg: CGImage?
+                if maskBmp.size != self.bitmap.size {
+                    // We don't (yet) deal with masks of a mismatching size,
+                    // something that EPOC apps seem to do all too frequently
+                    return img
+                } else if maskBmp.mode == .gray2 {
+                    // 1BPP image masks are inverted relative to other bit
+                    // depths which actually makes them aligned with how
+                    // CoreGraphics expects them!
+                    maskImg  = CGImage.from(bitmap: maskBmp)
+                } else {
+                    maskImg = CGImage.from(bitmap: maskBmp).inverted()?.stripAlpha(grayscale: true)
+                }
+                if let maskImg = maskImg {
+                    return img.masking(maskImg)
+                }
             }
+            // Fallback for no mask or failed mask
+            return img
         }
     }
 
