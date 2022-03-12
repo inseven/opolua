@@ -191,12 +191,12 @@ private func draw(_ L: LuaState!) -> Int32 {
                 let size = Graphics.Size(width: width, height: height)
                 let rect = Graphics.Rect(origin: Graphics.Point(x: srcx, y: srcy), size: size)
                 let drawable = Graphics.DrawableId(value: srcid)
-                let info = Graphics.CopySource(drawableId: drawable, rect: rect, extra: nil)
+                let info = Graphics.CopySource(drawableId: drawable, rect: rect)
                 let maskInfo: Graphics.CopySource?
                 let maskId = L.toint(-1, key: "mask") ?? 0
                 if maskId > 0 {
                     let maskDrawable = Graphics.DrawableId(value: maskId)
-                    maskInfo = Graphics.CopySource(drawableId: maskDrawable, rect: rect, extra: nil)
+                    maskInfo = Graphics.CopySource(drawableId: maskDrawable, rect: rect)
                 } else {
                     maskInfo = nil
                 }
@@ -220,7 +220,7 @@ private func draw(_ L: LuaState!) -> Int32 {
                 let size = Graphics.Size(width: w, height: h)
                 let rect = Graphics.Rect(origin: origin, size: size)
                 let drawable = Graphics.DrawableId(value: srcid)
-                let info = Graphics.CopySource(drawableId: drawable, rect: rect, extra: nil)
+                let info = Graphics.CopySource(drawableId: drawable, rect: rect)
                 optype = .pattern(info)
             } else {
                 print("Missing params in patt!")

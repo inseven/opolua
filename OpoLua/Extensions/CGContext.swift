@@ -28,7 +28,7 @@ extension CGContext {
         return CGAffineTransform(scaleX: 1.0, y: -1.0).translatedBy(x: 0.0, y: -CGFloat(self.height))
     }
 
-    func draw(_ operation: Graphics.DrawCommand) {
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
         // TODO: Scale for the iOS screensize
         let col: CGColor
         if operation.mode == .clear {
@@ -76,11 +76,10 @@ extension CGContext {
             let cgImg = CGImage.from(bitmap: pxInfo)
             drawUnflippedImage(cgImg, in: CGRect(origin: operation.origin.cgPoint(), size: pxInfo.size.cgSize()))
         case .copy(let src, let mask):
-            guard let obj = src.extra else {
-                print("Unexpected nil extra!")
+            guard let srcImage = provider.getImageFor(drawable: src.drawableId) else {
+                print("Failed to get image for .copy operation!")
                 return
             }
-            let srcImage = obj as! CGImage // CF types are weird...
 
             // Clip the rect to the source size to make sure we don't inadvertently stretch it
             let rect = src.rect.cgRect().intersection(CGRect(x: 0, y: 0, width: srcImage.width, height: srcImage.height))
@@ -96,17 +95,22 @@ extension CGContext {
                 destY = destY + CGFloat(-src.rect.minY)
             }
 
-            let maskImg = (mask?.extra as? Drawable)?.getImage()
+            let maskImg: CGImage?
+            if let mask = mask {
+                maskImg = provider.getImageFor(drawable: mask.drawableId)
+            } else {
+                maskImg = nil
+            }
+
             if let img = srcImage.cropping(to: rect) {
                 let imgRect = CGRect(origin: CGPoint(x: destX, y: destY), size: rect.size)
                 drawUnflippedImage(img, in: imgRect, mode: operation.mode, mask: maskImg)
             }
         case .pattern(let info):
-            guard let obj = info.extra else {
-                print("Unexpected nil extra!")
+            guard let srcImage = provider.getImageFor(drawable: info.drawableId) else {
+                print("Failed to get image for .pattern operation!")
                 return
             }
-            let srcImage = obj as! CGImage // CF types are weird...
             drawUnflippedImage(srcImage, in: info.rect.cgRect(), mode: operation.mode, tile: true)
         case .scroll(let dx, let dy, let rect):
             // Make sure we don't inadvertently stretch or try to scroll beyond image limits
@@ -241,7 +245,12 @@ extension CGContext {
         }
     }
 
-    func drawUnflippedImage(_ img: CGImage, in rect: CGRect, mode: Graphics.Mode = .replace, mask: CGImage? = nil, tile: Bool = false) {
+    func draw(image: CGImage) {
+        let imgRect = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+        drawUnflippedImage(image, in: imgRect)
+    }
+
+    private func drawUnflippedImage(_ img: CGImage, in rect: CGRect, mode: Graphics.Mode = .replace, mask: CGImage? = nil, tile: Bool = false) {
         // Need to make sure the image draws the right way up so we have to flip back to normal coords, and
         // apply the y coordinate conversion ourselves
         saveGState()
@@ -286,7 +295,7 @@ extension CGContext {
         }
     }
 
-    func drawPixelLine(from: CGPoint, to: CGPoint) {
+    private func drawPixelLine(from: CGPoint, to: CGPoint) {
         beginPath()
         var lineStart = from
         var lineEnd = to
@@ -310,7 +319,7 @@ extension CGContext {
         strokePath()
     }
 
-    func clipToCornerlessBox(_ rect: CGRect) {
+    private func clipToCornerlessBox(_ rect: CGRect) {
         self.beginPath()
         self.addLines(between: [
             CGPoint(x: rect.minX + 1, y: rect.minY),

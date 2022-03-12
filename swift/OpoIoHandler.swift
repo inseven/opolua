@@ -165,7 +165,6 @@ struct Graphics {
     struct CopySource {
         let drawableId: DrawableId
         let rect: Rect
-        let extra: AnyObject? // a CGImage, in the ProgramViewController impl
     }
 
     enum FontFace: String, Codable {

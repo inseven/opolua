@@ -22,12 +22,18 @@ import CoreGraphics
 import Foundation
 import UIKit
 
+protocol DrawableImageProvider {
+
+    func getImageFor(drawable: Graphics.DrawableId) -> CGImage?
+
+}
+
 protocol Drawable: AnyObject {
 
     var id: Graphics.DrawableId { get }
     var mode: Graphics.Bitmap.Mode { get }
 
-    func draw(_ operation: Graphics.DrawCommand)
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider)
     func getImage() -> CGImage?
 
 }
@@ -72,8 +78,13 @@ class Canvas: Drawable {
         context.fill(CGRect(x: 0, y: 0, width: context.width, height: context.height))
     }
 
-    func draw(_ operation: Graphics.DrawCommand) {
-        context.draw(operation)
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
+        context.draw(operation, provider: provider)
+        self.image = nil
+    }
+
+    func draw(image: CGImage) {
+        context.draw(image: image)
         self.image = nil
     }
 

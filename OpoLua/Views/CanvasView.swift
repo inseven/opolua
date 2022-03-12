@@ -38,10 +38,10 @@ class CanvasView : UIView, Drawable {
         return canvas.mode
     }
 
-    var canvas: Canvas
+    private var canvas: Canvas
     var clockView: ClockView?
     weak var delegate: CanvasViewDelegate?
-    var sprites: [Int: CanvasSprite] = [:]
+    private var sprites: [Int: CanvasSprite] = [:]
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -59,8 +59,8 @@ class CanvasView : UIView, Drawable {
         }
     }
 
-    func draw(_ operation: Graphics.DrawCommand) {
-        canvas.draw(operation)
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
+        canvas.draw(operation, provider: provider)
         setNeedsDisplay()
     }
 
@@ -192,11 +192,7 @@ class CanvasView : UIView, Drawable {
         let oldCanvas = self.canvas
         self.canvas = Canvas(id: id, size: newSize, mode: .color256)
         if let img = oldCanvas.getImage() {
-            let dummyId = Graphics.DrawableId(value: 0)
-            let src = Graphics.CopySource(drawableId: dummyId, rect: Graphics.Rect(x: 0, y: 0, width: img.width, height: img.height), extra: img)
-            let dontCare = Graphics.Color(r: 0, g: 0, b: 0)
-            let zero = Graphics.Point(x: 0, y: 0)
-            self.canvas.draw(Graphics.DrawCommand(drawableId: dummyId, type: .copy(src, nil), mode: .set, origin: zero, color: dontCare, bgcolor: dontCare, penWidth: 1))
+            self.canvas.draw(image: img)
         }
         self.bounds = CGRect(origin: .zero, size: newSize)
     }

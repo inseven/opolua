@@ -289,48 +289,7 @@ class WindowServer {
                 print("No drawable for drawableId \(op.drawableId)!")
                 continue
             }
-            switch (op.type) {
-            case .copy(let src, let mask):
-                // These need some massaging to shoehorn in the src Drawable pointer
-                guard let srcCanvas = self.drawable(for: src.drawableId) else {
-                    print("Copy operation with unknown source \(src.drawableId)!")
-                    continue
-                }
-                let newSrc = Graphics.CopySource(drawableId: src.drawableId, rect: src.rect, extra: srcCanvas.getImage())
-                let newMaskSrc: Graphics.CopySource?
-                if let mask = mask, let maskCanvas = self.drawable(for: mask.drawableId) {
-                    newMaskSrc = Graphics.CopySource(drawableId: mask.drawableId, rect: mask.rect, extra: maskCanvas)
-                } else {
-                    newMaskSrc = nil
-                }
-                let newOp = Graphics.DrawCommand(drawableId: op.drawableId, type: .copy(newSrc, newMaskSrc),
-                                                 mode: op.mode, origin: op.origin,
-                                                 color: op.color, bgcolor: op.bgcolor, penWidth: op.penWidth)
-                drawable.draw(newOp)
-            case .pattern(let info):
-                let extra: AnyObject?
-                if info.drawableId.value == -1 {
-                    guard let img = UIImage(named: "DitherPattern")?.cgImage else {
-                        print("Failed to load DitherPattern!")
-                        return
-                    }
-                    extra = img
-                } else {
-                    guard let srcCanvas = self.drawable(for: op.drawableId) else {
-                        print("Pattern operation with unknown source \(info.drawableId)!")
-                        continue
-                    }
-                    extra = srcCanvas.getImage()
-                }
-                // TODO: This is some special kind of garbage.
-                let newInfo = Graphics.CopySource(drawableId: info.drawableId, rect: info.rect, extra: extra)
-                let newOp = Graphics.DrawCommand(drawableId: op.drawableId, type: .pattern(newInfo),
-                                                 mode: op.mode, origin: op.origin,
-                                                 color: op.color, bgcolor: op.bgcolor, penWidth: op.penWidth)
-                drawable.draw(newOp)
-            default:
-                drawable.draw(op)
-            }
+            drawable.draw(op, provider: self)
         }
     }
 
@@ -485,6 +444,17 @@ extension WindowServer: RootViewDelegate {
 
     func rootView(_ rootView: RootView, sendKey key: OplKeyCode) {
         delegate?.windowServer(self, sendKey: key)
+    }
+
+}
+
+extension WindowServer: DrawableImageProvider {
+
+    func getImageFor(drawable: Graphics.DrawableId) -> CGImage? {
+        guard let canvas = self.drawable(for: drawable) else {
+            return nil
+        }
+        return canvas.getImage()
     }
 
 }
