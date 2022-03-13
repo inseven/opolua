@@ -236,6 +236,7 @@
 		DB79FFFD2742E6F6005E904F /* lcorolib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF662742D5BC005E904F /* lcorolib.c */; };
 		DB79FFFE2742E6F6005E904F /* lctype.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF6B2742D5BC005E904F /* lctype.c */; };
 		DB79FFFF2742E6F6005E904F /* ldblib.c in Sources */ = {isa = PBXBuildFile; fileRef = DB79FF692742D5BC005E904F /* ldblib.c */; };
+		DB93498A27DD2F1000DB8723 /* sibosyscalls.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB93498927DD2F1000DB8723 /* sibosyscalls.lua */; };
 		DB9533F927AB0D72001CF58D /* LuaDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9533F727AB0D72001CF58D /* LuaDecoder.swift */; };
 		DB9533FA27AB0D72001CF58D /* LuaStateStringEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9533F827AB0D72001CF58D /* LuaStateStringEncoding.swift */; };
 		DB9533FB27AB0D98001CF58D /* LuaStateStringEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9533F827AB0D72001CF58D /* LuaStateStringEncoding.swift */; };
@@ -439,6 +440,7 @@
 		DB79FFED2742E631005E904F /* dumpopo.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dumpopo.lua; sourceTree = "<group>"; };
 		DB79FFEE2742E631005E904F /* stack.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = stack.lua; sourceTree = "<group>"; };
 		DB79FFEF2742E631005E904F /* ops.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ops.lua; sourceTree = "<group>"; };
+		DB93498927DD2F1000DB8723 /* sibosyscalls.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sibosyscalls.lua; sourceTree = "<group>"; };
 		DB9533F727AB0D72001CF58D /* LuaDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LuaDecoder.swift; sourceTree = "<group>"; };
 		DB9533F827AB0D72001CF58D /* LuaStateStringEncoding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LuaStateStringEncoding.swift; sourceTree = "<group>"; };
 		DB9533FD27AC06A1001CF58D /* FlagSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagSet.swift; sourceTree = "<group>"; };
@@ -807,6 +809,7 @@
 				DBE2917B278CCB0B00EE824B /* crc.lua */,
 				DBE2917F2794813D00EE824B /* rsc.lua */,
 				DB95340027AE91B6001CF58D /* recognizer.lua */,
+				DB93498927DD2F1000DB8723 /* sibosyscalls.lua */,
 				DBACE9C2274F895D002612DF /* modules */,
 				DB5AC97727583DC70043FE5C /* opx */,
 			);
@@ -948,6 +951,7 @@
 				DB79FFF42742E631005E904F /* runopo.lua in Resources */,
 				DB79FFF12742E631005E904F /* init.lua in Resources */,
 				DB79FFF02742E631005E904F /* runtime.lua in Resources */,
+				DB93498A27DD2F1000DB8723 /* sibosyscalls.lua in Resources */,
 				DB5AC972275577990043FE5C /* mbm.lua in Resources */,
 				DB0B91862771031F006F5CD0 /* sis.lua in Resources */,
 				D862465727A5C69500B2BBCA /* Diligence.txt in Resources */,

@@ -26,6 +26,8 @@ _ENV = module()
 
 local fmt = string.format
 
+local sibosyscalls
+
 codes_er5 = {
     [0x00] = "Addr",
     [0x01] = "Asc",
@@ -312,8 +314,24 @@ function Call(stack, runtime) -- 0x02 (SIBO only)
         bx = stack:pop()
     end
     s = stack:pop()
-    printf("CALL(0x%04X, %s, %s, %s, %s, %s)\n", s, bx, cx, dx, si, di)
-    stack:push(0)
+
+    -- printf("CALL(0x%04X, %s, %s, %s, %s, %s)\n", s, bx, cx, dx, si, di)
+    if sibosyscalls == nil then
+        sibosyscalls = require("sibosyscalls")
+    end
+    local fn = s & 0x00FF
+    local ax = s & 0xFF00
+    local params = {
+        ax = ax,
+        bx = bx or 0,
+        cx = cx or 0,
+        dx = dx or 0,
+        si = si or 0,
+        di = di or 0,
+    }
+    sibosyscalls.syscall(runtime, fn, params, params)
+    -- printf("Call result = %x\n", params.ax)
+    stack:push(params.ax)
 end
 
 Call_dump = numParams_dump
@@ -622,19 +640,29 @@ function TestEvent(stack, runtime) -- 0x34
     stack:push(runtime:iohandler().testEvent())
 end
 
+local syscallPackFmt = "<I2I2I2I2I2I2"
+
 function Os(stack, runtime) -- 0x35 (SIBO only)
     local numParams = runtime:IP8()
     local addr2
     if numParams == 3 then
-        addr2 = stack:pop()
+        addr2 = runtime:addrFromInt(stack:pop())
     end
-    local addr1 = stack:pop()
+    local addr1 = runtime:addrFromInt(stack:pop())
     if not addr2 then
         addr2 = addr1
     end
-    local i = stack:pop()
-    printf("OS(i=0x%04X)\n", i)--s=%d, bx=%d, cx=%d, dx=%d, si=%d, di=%d)\n", s, bx, cx, dx, si, di)
-    stack:push(0)
+    local fn = stack:pop()
+    if sibosyscalls == nil then
+        sibosyscalls = require("sibosyscalls")
+    end
+    local params = {}
+    params.ax, params.bx, params.cx, params.dx, params.si, params.di = string.unpack(syscallPackFmt, addr1:read(12))
+    local results = {}
+    results.ax, results.bx, results.cx, results.dx, results.si, results.di = string.unpack(syscallPackFmt, addr2:read(12))
+    local flags = sibosyscalls.syscall(runtime, fn, params, results)
+    addr2:write(string.pack(syscallPackFmt, results.ax, results.bx, results.cx, results.dx, results.si, results.di))
+    stack:push(flags)
 end
 
 Os_dump = numParams_dump
