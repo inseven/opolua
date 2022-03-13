@@ -146,7 +146,9 @@ class CanvasView : UIView, Drawable {
         }
 
         for sprite in self.sprites.values {
-            let frame = sprite.currentFrame
+            guard let frame = sprite.currentFrame else {
+                continue
+            }
             guard let image = frame.bitmap.getImage(),
                   let mask = frame.mask.getImage()
             else {

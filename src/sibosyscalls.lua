@@ -30,6 +30,8 @@ fns = {
     [0x8620] = "IoPlaySoundCancel",
     [0x8B1B] = "GenGetLanguageCode",
     [0x8D0E] = "wInquireWindow",
+    [0x8DF5] = "wSetSprite",
+    [0x8DF6] = "wCreateSprite",
 }
 
 function dumpRegisters(registers)
@@ -62,6 +64,56 @@ end
 
 function GenGetLanguageCode(runtime, params, results)
     results.ax = require("sis").Locales["en_GB"]
+    return 0
+end
+
+local function getSpriteFrame(runtime, addr)
+    local bmpBlackSet, bmpBlackClear, bmpBlackInvert, bmpGreySet, bmpGreyClear, bmpGreyInvert, relx, rely, delay =
+        string.unpack("<I2I2I2I2I2I2I2I2I4", runtime:addrFromInt(addr):read(24))
+    print("Sprite params", bmpBlackSet, bmpBlackClear, bmpBlackInvert, bmpGreySet, bmpGreyClear, bmpGreyInvert, relx, rely, delay)
+    -- These are returned in the same order as accepted by SPRITECHANGE and SPRITEAPPEND
+    return delay * 0.1, bmpBlackSet, bmpBlackSet, true, relx, rely
+end
+
+function wSetSprite(runtime, params, results)
+    -- print("wSetSprite", dumpRegisters(params))
+    local spriteId = params.bx
+    local bmp = require("opx.bmp")
+    if params.cx ~= 0 then
+        local x = runtime:addrAsVariable(params.cx, DataTypes.EWord)()
+        local y = runtime:addrAsVariable(params.cx + 2, DataTypes.EWord)()
+        bmp.SPRITEPOS(runtime, spriteId, x, y)        
+    end
+    if params.di ~= 0 then
+        local frameId = params.dx + 1 -- Or si...?
+        bmp.SPRITECHANGE(runtime, spriteId, frameId, getSpriteFrame(runtime, params.di))
+    end
+    results.ax = 0
+    return 0
+end
+
+function wCreateSprite(runtime, params, results)
+    print("wCreateSprite", dumpRegisters(params))
+    local winId = params.bx
+    if winId == 0 then
+        -- Apparently 0 can mean default win?
+        winId = 1
+    end
+    local x = runtime:addrAsVariable(params.cx, DataTypes.EWord)()
+    local y = runtime:addrAsVariable(params.cx + 2, DataTypes.EWord)()
+
+    local bmp = require("opx.bmp")
+    local id = bmp.SPRITECREATE(runtime, winId, x, y, 0)
+
+    local numSprites = params.di
+    local spriteInfoAddr = params.si
+    for i = 1, numSprites do
+        bmp.SPRITEAPPEND(runtime, getSpriteFrame(runtime, spriteInfoAddr))
+        spriteInfoAddr = spriteInfoAddr + 24
+    end
+    bmp.SPRITEDRAW(runtime)
+
+    results.ax = id
     return 0
 end
 

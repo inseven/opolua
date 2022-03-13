@@ -48,12 +48,20 @@ function BitmapLoad(stack, runtime)
 end
 
 local function incRefcount(runtime, bitmapId)
+    if bitmapId == 0 then
+        -- SIBO allows initially invalid bitmap IDs (updated by a subsequent SPRITECHANGE)
+        return
+    end
     local bitmap = runtime:getGraphicsContext(bitmapId)
     assert(bitmap, "incRefcount on invalid bitmapId!")
     bitmap.bmpRefCount = (bitmap.bmpRefCount or 1) + 1
 end
 
 local function decRefcount(runtime, bitmapId)
+    if bitmapId == 0 then
+        -- SIBO allows initially invalid bitmap IDs (updated by a subsequent SPRITECHANGE)
+        return
+    end
     local bitmap = runtime:getGraphicsContext(bitmapId)
     assert(bitmap, "decRefcount on invalid bitmapId!")
     bitmap.bmpRefCount = bitmap.bmpRefCount - 1

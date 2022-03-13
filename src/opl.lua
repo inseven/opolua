@@ -480,11 +480,11 @@ function gLOADBIT(path, writable, index)
     -- printf("gLOADBIT %s mbmid=%d", path, 1 + index)
     local iohandler = runtime:iohandler()
     local absPath = runtime:abs(path)
-    local data, err = iohandler.fsop("read", absPath)
-    if data == nil and err == KErrNotExists then
+    if not EXIST(absPath) then
         -- It's allowed to omit the .pic
-        data, err = iohandler.fsop("read", absPath..".PIC")
+        absPath = absPath .. ".PIC"
     end
+    local data, err = iohandler.fsop("read", absPath)
     assert(data, err)
     local bitmaps = mbm.parseMbmHeader(data)
     assert(bitmaps, KErrGenFail)

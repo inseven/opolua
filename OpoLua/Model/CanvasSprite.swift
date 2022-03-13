@@ -36,22 +36,33 @@ class CanvasSprite {
     private var currentFrameIndex: Int = 0
     private var currentFrameRemaingTime: TimeInterval
 
-    var currentFrame: Frame {
-        return frames[currentFrameIndex]
+    var currentFrame: Frame? {
+        // There can be a lack of a current frame if the sprite has not yet got any frames with valid bitmaps set
+        if currentFrameIndex < frames.count {
+            return frames[currentFrameIndex]
+        } else {
+            return nil
+        }
     }
 
     init(origin: Graphics.Point, frames: [Frame]) {
-        precondition(frames.count > 0, "Cannot create a sprite with no frames!")
         self.origin = origin
         self.frames = frames
-        currentFrameRemaingTime = frames[0].time
+        if frames.count > 0 {
+            currentFrameRemaingTime = frames[0].time
+        } else {
+            currentFrameRemaingTime = 0
+        }
     }
 
     func update(elapsedTime: TimeInterval) -> Bool {
+        if self.currentFrame == nil {
+            return false
+        }
         currentFrameRemaingTime = currentFrameRemaingTime - elapsedTime
         if currentFrameRemaingTime <= 0 {
             currentFrameIndex = (currentFrameIndex + 1) % frames.count
-            currentFrameRemaingTime = currentFrame.time
+            currentFrameRemaingTime = self.currentFrame!.time
             return true
         } else {
             return false

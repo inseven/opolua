@@ -253,6 +253,10 @@ class WindowServer {
         if let sprite = sprite {
             var frames: [CanvasSprite.Frame] = []
             for frame in sprite.frames {
+                if frame.bitmap.value == 0 || frame.mask.value == 0 {
+                    // This is allowed, to make the SIBO sprite API work
+                    continue
+                }
                 guard let bitmap = drawablesById[frame.bitmap],
                       let mask = drawablesById[frame.mask]
                 else {
