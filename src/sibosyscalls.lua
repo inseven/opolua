@@ -30,8 +30,11 @@ fns = {
     [0x8620] = "IoPlaySoundCancel",
     [0x8B1B] = "GenGetLanguageCode",
     [0x8D0E] = "wInquireWindow",
+    [0x8D11] = "wFree",
+    [0x8D7E] = "wserv8D7E",
     [0x8DF5] = "wSetSprite",
     [0x8DF6] = "wCreateSprite",
+    [0x8E28] = "HwGetScanCodes",
 }
 
 function dumpRegisters(registers)
@@ -65,6 +68,32 @@ end
 function GenGetLanguageCode(runtime, params, results)
     results.ax = require("sis").Locales["en_GB"]
     return 0
+end
+
+function wInquireWindow(runtime, params, results)
+    local winId = params.bx
+    local ctx = runtime:getGraphicsContext(winId)
+    assert(ctx and ctx.isWindow, KErrInvalidWindow)
+    local resultAddr = runtime:addrFromInt(results.si)
+    resultAddr:write(string.pack("<I2I2I2I2I2xxxx", 0, ctx.winX, ctx.winY, ctx.width, ctx.height))
+    return 0
+end
+
+function wFree(runtime, params, results)
+    -- We're going to ignore this one for now because we don't have separate
+    -- namespaces for all the types of identifier that wFree apparently
+    -- accepts...
+    return 0
+end
+
+function wserv8D7E(runtime, params, results)
+    local al = params.ax & 0xFF
+    if al == 2 then
+        printf("wDisableKeyClick disable=%s\n", params.bx ~= 0)
+        return 0
+    else
+        unimplemented("syscall.8D.7E."..tostring(al))
+    end
 end
 
 local function getSpriteFrame(runtime, addr)
@@ -148,6 +177,11 @@ function IoPlaySoundCancel(runtime, params, results)
     print("IoPlaySoundCancel")
     runtime:StopSound()
     results.ax = 0
+    return 0
+end
+
+function HwGetScanCodes(runtime, params, results)
+    print("HwGetScanCodes", dumpRegisters(params), dumpRegisters(results))
     return 0
 end
 
