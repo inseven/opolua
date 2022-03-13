@@ -26,7 +26,7 @@ extension LuaState {
         return tovalue(index, type, stringEncoding: getStringEncoding())
     }
 
-    func tovalue<T: Decodable>(_ index: Int32, _ type: T.Type, stringEncoding: String.Encoding) -> T? {
+    func tovalue<T: Decodable>(_ index: Int32, _ type: T.Type, stringEncoding: ExtendedStringEncoding) -> T? {
         let top = lua_gettop(self)
         defer {
             lua_settop(self, top)
@@ -41,7 +41,7 @@ extension LuaState {
         }
     }
 
-    func getfield<T: Decodable>(_ index: Int32, _ key: String, _ type: T.Type, stringEncoding: String.Encoding) -> T? {
+    func getfield<T: Decodable>(_ index: Int32, _ key: String, _ type: T.Type, stringEncoding: ExtendedStringEncoding) -> T? {
         getfield(index, key: key) { index in
             tovalue(index, T.self, stringEncoding: stringEncoding)
         }
@@ -52,9 +52,9 @@ extension LuaState {
 struct LuaDecoder: Decoder, SingleValueDecodingContainer {
     private let L: LuaState!
     private let index: Int32
-    private let stringEncoding: String.Encoding
+    private let stringEncoding: ExtendedStringEncoding
 
-    init(state: LuaState!, stringEncoding: String.Encoding, index: Int32, codingPath: [CodingKey] = []) {
+    init(state: LuaState!, stringEncoding: ExtendedStringEncoding, index: Int32, codingPath: [CodingKey] = []) {
         self.L = state
         self.index = lua_absindex(L, index)
         self.stringEncoding = stringEncoding

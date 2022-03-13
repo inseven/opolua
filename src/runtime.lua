@@ -1211,6 +1211,7 @@ function runOpo(fileName, procName, iohandler, verbose)
     end
 
     local procTable, opxTable, era = require("opofile").parseOpo(data, verbose)
+    iohandler.setEra(era) -- Needed to set the default string encoding
     local rt = newRuntime(iohandler, era)
     rt:setInstructionDebug(verbose)
     rt:addModule(fileName, procTable, opxTable)

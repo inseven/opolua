@@ -66,12 +66,6 @@ extension Double: Pushable {
     }
 }
 
-extension String: Pushable {
-    func push(state L: LuaState!) {
-        L.push(self, encoding: L.getStringEncoding())
-    }
-}
-
 extension Data: Pushable {
     func push(state L: LuaState!) {
         self.withUnsafeBytes { (buf: UnsafeRawBufferPointer) -> Void in
@@ -98,6 +92,39 @@ extension Dictionary: Pushable where Key: Pushable, Value: Pushable {
             L.push(k)
             L.push(v)
             lua_settable(L, -3)
+        }
+    }
+}
+
+// That this should be necessary is a sad commentary on how string encodings are handled in Swift...
+enum ExtendedStringEncoding {
+    case stringEncoding(String.Encoding)
+    case cfStringEncoding(CFStringEncodings)
+}
+
+extension String {
+    init?(data: Data, encoding: ExtendedStringEncoding) {
+        switch encoding {
+        case .stringEncoding(let enc):
+            self.init(data: data, encoding: enc)
+        case .cfStringEncoding(let enc):
+            let nsenc =  CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(enc.rawValue))
+            if let nsstring = NSString(data: data, encoding: nsenc) {
+                self.init(nsstring)
+            } else {
+                return nil
+            }
+        }
+    }
+
+    func data(using encoding: ExtendedStringEncoding) -> Data? {
+        switch encoding {
+        case .stringEncoding(let enc):
+            return self.data(using: enc)
+        case .cfStringEncoding(let enc):
+            let nsstring = self as NSString
+            let nsenc = CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(enc.rawValue))
+            return nsstring.data(using: nsenc)
         }
     }
 }
@@ -152,7 +179,7 @@ extension UnsafeMutablePointer where Pointee == lua_State {
 
     // If convert is true, any value that is not a string will be converted to
     // one (invoking __tostring metamethods if necessary)
-    func tostring(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> String? {
+    func tostring(_ index: Int32, encoding: ExtendedStringEncoding, convert: Bool = false) -> String? {
         if let data = todata(index) {
            return String(data: data, encoding: encoding)
         } else if convert {
@@ -165,6 +192,10 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         } else {
             return nil
         }
+    }
+
+    func tostring(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> String? {
+        return tostring(index, encoding: .stringEncoding(encoding), convert: convert)
     }
 
     func toint(_ index: Int32) -> Int? {
@@ -194,7 +225,7 @@ extension UnsafeMutablePointer where Pointee == lua_State {
         return b != 0
     }
 
-    func tostringarray(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> [String]? {
+    func tostringarray(_ index: Int32, encoding: ExtendedStringEncoding, convert: Bool = false) -> [String]? {
         guard type(index) == .table else {
             return nil
         }
@@ -207,6 +238,10 @@ extension UnsafeMutablePointer where Pointee == lua_State {
             }
         }
         return result
+    }
+
+    func tostringarray(_ index: Int32, encoding: String.Encoding, convert: Bool = false) -> [String]? {
+        return tostringarray(index, encoding: .stringEncoding(encoding), convert: convert)
     }
 
     func getfield<T>(_ index: Int32, key: String, _ accessor: (Int32) -> T?) -> T? {
@@ -251,11 +286,19 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     }
 
     func tostring(_ index: Int32, key: String, encoding: String.Encoding, convert: Bool = false) -> String? {
+        return tostring(index, key: key, encoding: .stringEncoding(encoding), convert: convert)
+    }
+
+    func tostring(_ index: Int32, key: String, encoding: ExtendedStringEncoding, convert: Bool = false) -> String? {
         return getfield(index, key: key, { tostring($0, encoding: encoding, convert: convert) })
     }
 
-    func tostringarray(_ index: Int32, key: String, encoding: String.Encoding, convert: Bool = false) -> [String]? {
+    func tostringarray(_ index: Int32, key: String, encoding: ExtendedStringEncoding, convert: Bool = false) -> [String]? {
         return getfield(index, key: key, { tostringarray($0, encoding: encoding, convert: convert) })
+    }
+
+    func tostringarray(_ index: Int32, key: String, encoding: String.Encoding, convert: Bool = false) -> [String]? {
+        return tostringarray(index, key: key, encoding: .stringEncoding(encoding), convert: convert)
     }
 
     // iterators
@@ -348,6 +391,10 @@ extension UnsafeMutablePointer where Pointee == lua_State {
     }
 
     func push(_ string: String, encoding: String.Encoding) {
+        push(string, encoding: .stringEncoding(encoding))
+    }
+
+    func push(_ string: String, encoding: ExtendedStringEncoding) {
         guard let data = string.data(using: encoding) else {
             assertionFailure("Cannot represent string in the given encoding?!")
             pushnil()

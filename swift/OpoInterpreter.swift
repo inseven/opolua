@@ -21,16 +21,20 @@
 import Foundation
 
 // ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
-private let kEnc = String.Encoding.windowsCP1252
+private let kDefaultEpocEncoding: ExtendedStringEncoding = .stringEncoding(.windowsCP1252)
+// And SIBO uses CP850 (which is handled completely differently and has an inconsistent name to boot)
+private let kSiboEncoding: ExtendedStringEncoding = .cfStringEncoding(.dosLatin1)
 
 private extension LuaState {
     func toAppInfo(_ index: Int32) -> OpoInterpreter.AppInfo? {
         let L = self
+        let era = L.getfield(index, "era", OpoInterpreter.AppEra.self) ?? .er5
+        let encoding = era == .er5 ? kDefaultEpocEncoding : kSiboEncoding
         lua_getfield(L, index, "captions")
         var captions: [OpoInterpreter.LocalizedString] = []
         for (languageIndex, captionIndex) in L.pairs(-1) {
             guard let language = L.tostring(languageIndex),
-                  let caption = L.tostring(captionIndex)
+                  let caption = L.tostring(captionIndex, encoding: encoding)
             else {
                 return nil
             }
@@ -56,7 +60,6 @@ private extension LuaState {
             }
         }
         L.pop() // icons
-        let era = L.getfield(index, "era", OpoInterpreter.AppEra.self) ?? .er5
         return OpoInterpreter.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons, era: era)
     }
 }
@@ -759,6 +762,18 @@ private func utctime(_ L: LuaState!) -> Int32 {
     return 1
 }
 
+private func setEra(_ L: LuaState!) -> Int32 {
+    if let era = L.tovalue(1, OpoInterpreter.AppEra.self) {
+        switch era {
+        case .sibo:
+            L.setStringEncoding(kSiboEncoding)
+        case .er5:
+            L.setStringEncoding(kDefaultEpocEncoding)
+        }
+    }
+    return 0
+}
+
 private extension Error {
     var detailIfPresent: String {
         if let err = self as? OpoInterpreter.InterpreterError {
@@ -777,7 +792,7 @@ class OpoInterpreter {
     init() {
         iohandler = DummyIoHandler() // For now...
         L = luaL_newstate()
-        L.setStringEncoding(kEnc)
+        L.setStringEncoding(kDefaultEpocEncoding)
 
         let libs: [(String, lua_CFunction)] = [
             ("_G", luaopen_base),
@@ -894,6 +909,7 @@ class OpoInterpreter {
             ("setBackground", setBackground),
             ("runApp", runApp),
             ("utctime", utctime),
+            ("setEra", setEra),
         ]
         L.setfuncs(fns, nup: 1)
     }

@@ -18,16 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
+
 extension LuaState {
 
     // MUST call this before calling any func that assumes a string encoding
-    func setStringEncoding(_ encoding: String.Encoding) {
-        let val = Int64(encoding.rawValue)
+    func setStringEncoding(_ encoding: ExtendedStringEncoding) {
+        let val: Int64
+        // Hopefully none of String.Encoding or CFStringEncoding set the top
+        // bit, so use sign bit to distinguish the two.
+        switch encoding {
+        case .stringEncoding(let enc):
+            val = Int64(enc.rawValue)
+        case .cfStringEncoding(let enc):
+            val = -Int64(enc.rawValue)
+        }
         lua_getextraspace(self).storeBytes(of: val, as: Int64.self)
     }
 
-    func getStringEncoding() -> String.Encoding {
-        return String.Encoding(rawValue: UInt(lua_getextraspace(self).load(as: Int64.self)))
+    func setStringEncoding(_ encoding: String.Encoding) {
+        setStringEncoding(.stringEncoding(encoding))
+    }
+
+    func setStringEncoding(_ encoding: CFStringEncodings) {
+        setStringEncoding(.cfStringEncoding(encoding))
+    }
+
+    func getStringEncoding() -> ExtendedStringEncoding {
+        let val = lua_getextraspace(self).load(as: Int64.self)
+        if val < 0 {
+            return .cfStringEncoding(CFStringEncodings(rawValue: Int(-val))!)
+        } else {
+            return .stringEncoding(String.Encoding(rawValue: UInt(val)))
+        }
     }
 
     func tostring(_ index: Int32, convert: Bool = false) -> String? {
@@ -46,4 +69,10 @@ extension LuaState {
         return tostringarray(index, key: key, encoding: getStringEncoding(), convert: convert)
     }
 
+}
+
+extension String: Pushable {
+    func push(state L: LuaState!) {
+        L.push(self, encoding: L.getStringEncoding())
+    }
 }
