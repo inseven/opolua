@@ -655,8 +655,8 @@ function BUSY(text, corner, delay)
     gFILL(gWIDTH(), gHEIGHT())
     gUSE(busyWinId)
     runtime:flushGraphicsOps()
-    bmp.SPRITEAPPEND(runtime, 500000, blackBmp, blackBmp, true, 0, 0)
-    bmp.SPRITEAPPEND(runtime, 500000, blackBmp, blackBmp, false, 0, 0)
+    bmp.SPRITEAPPEND(runtime, 0.5, blackBmp, blackBmp, true, 0, 0)
+    bmp.SPRITEAPPEND(runtime, 0.5, blackBmp, blackBmp, false, 0, 0)
     bmp.SPRITEDRAW(runtime)
 
     if delay and delay > 0 then
@@ -1184,6 +1184,40 @@ end
 
 function LCSetClockFormat(fmt)
     runtime:iohandler().setConfig("clockFormat", tostring(fmt))
+end
+
+-- Sound
+
+function PlaySoundA(var, path)
+    assert(runtime:getResource("sound") == nil, KErrInUse)
+    var:setPending()
+    local path = runtime:abs(path)
+
+    local data, err = runtime:iohandler().fsop("read", path)
+    if not data then
+        var(err)
+        runtime:requestSignal()
+        return
+    end
+
+    local sndData = require("sound").parseWveFile(data)
+    runtime:setResource("sound", var)
+    local function completion()
+        runtime:setResource("sound", nil)
+    end
+    runtime:iohandler().asyncRequest("playsound", { var = var, data = sndData, completion = completion })
+end
+
+function StopSound()
+    local var = runtime:getResource("sound")
+    local didStop = false
+    if var then
+        runtime:iohandler().cancelRequest(var)
+        runtime:waitForRequest(var)
+        assert(runtime:getResource("sound") == nil, "cancelRequest did not release sound resource!")
+        didStop = true
+    end
+    return didStop
 end
 
 -- misc

@@ -103,7 +103,7 @@ function SpriteAppend(stack, runtime)
     local invertMask = stack:pop() ~= 0
     local maskBitmap = stack:pop()
     local bitmap = stack:pop()
-    local time = stack:pop()
+    local time = stack:pop() / 1000000
     SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
     stack:push(0)
 end
@@ -119,7 +119,7 @@ function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
         offset = { x = dx, y = dy },
         bitmap = bitmap,
         mask = maskBitmap,
-        time = time / 1000000,
+        time = time,
         invertMask = invertMask,
     }
     table.insert(sprite.frames, frame)
@@ -132,18 +132,27 @@ function SpriteChange(stack, runtime)
     local invertMask = stack:pop() == 1
     local maskBitmap = stack:pop()
     local bitmap = stack:pop()
-    local time = stack:pop()
+    local time = stack:pop() / 1000000
     local frameId = stack:pop() + 1
 
     local sprite = graphics.currentSprite
     assert(sprite, "No current sprite!")
+    SPRITECHANGE(runtime, sprite.id, frameId, time, bitmap, maskBitmap, invertMask, dx, dy)
+    stack:push(0)
+end
+
+function SPRITECHANGE(runtime, spriteId, frameId, time, bitmap, maskBitmap, invertMask, dx, dy)
+    local graphics = runtime:getGraphics()
+    local sprite = graphics.sprites[spriteId]
+    assert(sprite, "Bad sprite id to SPRITECHANGE")
+
     local oldFrame = sprite.frames[frameId]
     assert(oldFrame, "No frame for id!")
 
     incRefcount(runtime, bitmap)
     incRefcount(runtime, maskBitmap)
     decRefcount(runtime, oldFrame.bitmap)
-    decRefcount(runtime, oldFrame.maskBitmap)
+    decRefcount(runtime, oldFrame.mask)
 
     local frame = {
         offset = { x = dx, y = dy },
@@ -154,7 +163,6 @@ function SpriteChange(stack, runtime)
     }
     sprite.frames[frameId] = frame
     runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
-    stack:push(0)
 end
 
 function getCurrentSprite(runtime)
@@ -180,11 +188,18 @@ function SpritePos(stack, runtime)
     -- printf("SpritePos\n")
     local sprite = getCurrentSprite(runtime)
     local x, y = stack:popXY()
+    SPRITEPOS(runtime, sprite.id, x, y)
+    stack:push(0)
+end
+
+function SPRITEPOS(runtime, spriteId, x, y)
+    local graphics = runtime:getGraphics()
+    local sprite = graphics.sprites[spriteId]
+    assert(sprite, "Bad sprite id to SPRITEPOS")
     sprite.origin = { x = x, y = y }
     if sprite.drawn then
         runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
     end
-    stack:push(0)
 end
 
 function SpriteDelete(stack, runtime)

@@ -43,6 +43,7 @@ local string_sub = string.sub
 local fmt = string.format
 local isArrayType = isArrayType
 local type = type
+local assert = assert
 
 local ValSize = {
     [EWord] = 2,
@@ -414,8 +415,9 @@ end
 function Variable:__call(val)
     local t = self._type
     local chunk = self._chunk
-    local offsetAlign = self._offset & 0x3
-    local idx = self._offset >> strideshift
+    local offset = self._offset
+    local offsetAlign = offset & 0x3
+    local idx = offset >> strideshift
     if val ~= nil then
         -- Set value
         -- sets = sets + 1
@@ -450,7 +452,7 @@ function Variable:__call(val)
         else
             data = string_pack(FmtForType[t], val)
         end
-        chunk:write(self._offset, data)
+        chunk:write(offset, data)
     else
         -- gets = gets + 1
         -- Get value
@@ -477,13 +479,13 @@ function Variable:__call(val)
             end
             return ret
         elseif t == EString then
-            local len = string_unpack("B", chunk:read(self._offset, 1))
-            return chunk:read(self._offset + 1, len)
+            local len = string_unpack("B", chunk:read(offset, 1))
+            return chunk:read(offset + 1, len)
         elseif isArrayType(t) then
             error("Cannot get the value of an array variable")
         else
             -- Fall back to the slow path
-            local bytes = chunk:read(self._offset, ValSize[t])
+            local bytes = chunk:read(offset, ValSize[t])
             local result = string_unpack(assert(FmtForType[t]), bytes)
             return result
         end
@@ -585,6 +587,17 @@ function Variable:isPending()
     end
 end
 
+function Variable:setPending()
+    local t = self:type()
+    if t == DataTypes.EWord then
+        self(KErrFilePending)
+    elseif t == DataTypes.ELong then
+        self(KRequestPending)
+    else
+        error("Bad type for isPending")
+    end
+end
+
 --
 
 Addr = class {
@@ -637,6 +650,10 @@ end
 --     time lua tbench_bnot.lua
 function Addr.__bnot()
     return false
+end
+
+function Addr:__tostring()
+    return fmt("0x%08X", self.chunk.address + self.offset)
 end
 
 -- This is a defense against code accidentally using an Addr as if it were a Variable

@@ -328,39 +328,16 @@ function PlaySound(stack, runtime) -- 38
 end
 
 function PlaySoundA(stack, runtime) -- 39
-    assert(runtime:getResource("sound") == nil, KErrInUse)
     local var = stack:pop():asVariable(DataTypes.ELong)
-    local volume = stack:pop()
-    local file = runtime:abs(stack:pop())
-    var(KRequestPending)
-
-    local data, err = runtime:iohandler().fsop("read", file)
-    if not data then
-        var(err)
-        runtime:requestSignal()
-        stack:push(0) -- Should this be the error?
-        return
-    end
-
-    local sndData = require("sound").parseWveFile(data)
-    runtime:setResource("sound", var)
-    local function completion()
-        runtime:setResource("sound", nil)
-    end
-    runtime:iohandler().asyncRequest("playsound", { var = var, data = sndData, completion = completion })
+    local volume = stack:pop() -- not used atm...
+    local path = stack:pop()
+    runtime:PlaySoundA(var, path)
     stack:push(0)
 end
 
 function StopSound(stack, runtime) -- 40
-    local var = runtime:getResource("sound")
-    if var then
-        runtime:iohandler().cancelRequest(var)
-        runtime:waitForRequest(var)
-        assert(runtime:getResource("sound") == nil, "cancelRequest did not release sound resource!")
-        stack:push(1)
-    else
-        stack:push(0)
-    end
+    local didStop = runtime:StopSound()
+    stack:push(didStop and 1 or 0)
 end
 
 function Mod(stack, runtime) -- 41
