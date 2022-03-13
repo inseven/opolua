@@ -40,6 +40,7 @@ class CanvasView : UIView, Drawable {
 
     private var canvas: Canvas
     private var greyPlane: Canvas?
+    private var image: CGImage?
     var clockView: ClockView?
     weak var delegate: CanvasViewDelegate?
     private var sprites: [Int: CanvasSprite] = [:]
@@ -72,6 +73,7 @@ class CanvasView : UIView, Drawable {
         if operation.greyMode.drawNormalPlane {
             canvas.draw(operation, provider: provider)
         }
+        self.image = nil
         setNeedsDisplay()
     }
 
@@ -82,7 +84,7 @@ class CanvasView : UIView, Drawable {
             self.sprites.removeValue(forKey: id)
         }
         // print(self.sprites)
-        // self.image = nil
+        self.image = nil
         setNeedsDisplay()
     }
 
@@ -98,13 +100,16 @@ class CanvasView : UIView, Drawable {
             }
         }
         if anythingChanged {
-            // self.image = nil
+            self.image = nil
             setNeedsDisplay()
         }
         return true
     }
 
     func getImage() -> CGImage? {
+        if let image = self.image {
+            return image
+        }
         guard let canvasImage = canvas.getImage() else {
             return nil
         }
@@ -169,7 +174,7 @@ class CanvasView : UIView, Drawable {
             context.draw(maskedImage, in: destRect.cgRect())
         }
         let image = context.makeImage()
-        // should we try to cache the en-sprite-ified image?
+        self.image = image
         return image
 
     }
