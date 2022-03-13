@@ -25,6 +25,11 @@ SOFTWARE.
 _ENV = module()
 
 function parseWveFile(data)
+    if data:sub(1, 16) == "ALawSoundFile**\0" then
+        local version, numSamples, silenceSuffix, repeatCount, pos = string.unpack("<I2I4I2I2", data, 1 + 16)
+        return data:sub(pos)
+    end
+
     local dfs = require("directfilestore")
     local toc = dfs.parse(data)
 

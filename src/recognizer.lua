@@ -25,6 +25,13 @@ SOFTWARE.
 _ENV = module()
 
 function recognize(data, allData)
+    local siboHeader = data:sub(1, 16)
+    if siboHeader == "ALawSoundFile**\0" then
+        return "sound", allData and { data = require("sound").parseWveFile(data) }
+    elseif data:sub(1, 4) == "PIC\xDC" then
+        return "mbm", allData and { bitmaps = getMbmBitmaps(data) }
+    end
+
     local uid1, uid2, uid3, checksum = string.unpack("<I4I4I4I4", data)
 
     -- This has to come before the checksum check because ROM MBMs don't have a checksum...
