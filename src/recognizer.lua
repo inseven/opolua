@@ -32,6 +32,10 @@ function recognize(data, allData)
         return "mbm", allData and { bitmaps = getMbmBitmaps(data) }
     end
 
+    if #data < 16 then
+        return nil, nil
+    end
+
     local uid1, uid2, uid3, checksum = string.unpack("<I4I4I4I4", data)
 
     -- This has to come before the checksum check because ROM MBMs don't have a checksum...

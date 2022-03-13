@@ -33,6 +33,11 @@ struct lua_State {};
 
 // Reimplement some things that are macros, so the bridge can see them
 
+#undef lua_isnoneornil
+static inline _Bool lua_isnoneornil(lua_State* L, int n) {
+    return lua_type(L, n) <= 0;
+}
+
 #undef lua_pop
 static inline void lua_pop(lua_State* L, int n) {
     lua_settop(L, -(n) - 1);

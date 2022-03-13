@@ -246,6 +246,10 @@ extension UnsafeMutablePointer where Pointee == lua_State {
 
     func getfield<T>(_ index: Int32, key: String, _ accessor: (Int32) -> T?) -> T? {
         let absidx = lua_absindex(self, index)
+        let t = self.type(absidx)
+        if t != .table && t != .userdata {
+            return nil // Prevent lua_gettable erroring
+        }
         push(key, encoding: .ascii)
         let _ = lua_gettable(self, absidx)
         let result = accessor(-1)

@@ -28,6 +28,9 @@ private let kSiboEncoding: ExtendedStringEncoding = .cfStringEncoding(.dosLatin1
 private extension LuaState {
     func toAppInfo(_ index: Int32) -> OpoInterpreter.AppInfo? {
         let L = self
+        if lua_isnoneornil(L, index) {
+            return nil
+        }
         let era = L.getfield(index, "era", OpoInterpreter.AppEra.self) ?? .er5
         let encoding = era == .er5 ? kDefaultEpocEncoding : kSiboEncoding
         lua_getfield(L, index, "captions")
