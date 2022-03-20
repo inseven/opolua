@@ -32,8 +32,8 @@ extension UIKey {
         case .keyboardLeftShift: return .leftShift
         case .keyboardRightShift: return .rightShift
         case .keyboardLeftControl: return .control
-        case .keyboardHome: return .home
-        case .keyboardEnd: return .end
+        case .keyboardHome: return .homeKey
+        case .keyboardEnd: return .endKey
         case .keyboardPageUp: return .pgUp
         case .keyboardPageDown: return .pgDn
         case .keyboardDeleteOrBackspace: return .backspace

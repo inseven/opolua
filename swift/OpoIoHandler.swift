@@ -543,6 +543,7 @@ protocol OpoIoHandler {
     func testEvent() -> Bool
 
     func key() -> Async.KeyPressEvent?
+    func keysDown() -> Set<OplKeyCode>
 
     func setConfig(key: ConfigName, value: String)
     func getConfig(key: ConfigName) -> String
@@ -614,6 +615,10 @@ class DummyIoHandler : OpoIoHandler {
 
     func key() -> Async.KeyPressEvent? {
         return nil
+    }
+
+    func keysDown() -> Set<OplKeyCode> {
+        return []
     }
 
     func setConfig(key: ConfigName, value: String) {

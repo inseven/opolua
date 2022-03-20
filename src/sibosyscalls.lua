@@ -99,7 +99,7 @@ end
 local function getSpriteFrame(runtime, addr)
     local bmpBlackSet, bmpBlackClear, bmpBlackInvert, bmpGreySet, bmpGreyClear, bmpGreyInvert, relx, rely, delay =
         string.unpack("<I2I2I2I2I2I2I2I2I4", runtime:addrFromInt(addr):read(24))
-    print("Sprite params", bmpBlackSet, bmpBlackClear, bmpBlackInvert, bmpGreySet, bmpGreyClear, bmpGreyInvert, relx, rely, delay)
+    -- print("Sprite params", bmpBlackSet, bmpBlackClear, bmpBlackInvert, bmpGreySet, bmpGreyClear, bmpGreyInvert, relx, rely, delay)
     -- These are returned in the same order as accepted by SPRITECHANGE and SPRITEAPPEND
     return delay * 0.1, bmpBlackSet, bmpBlackSet, true, relx, rely
 end
@@ -180,8 +180,38 @@ function IoPlaySoundCancel(runtime, params, results)
     return 0
 end
 
+local function byte(bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7)
+    return
+        (bit0 and 1 or 0) |
+        (bit1 and 0x2 or 0) |
+        (bit2 and 0x4 or 0) |
+        (bit3 and 0x8 or 0) |
+        (bit4 and 0x10 or 0) |
+        (bit5 and 0x20 or 0) |
+        (bit6 and 0x40 or 0) |
+        (bit7 and 0x80 or 0)
+end
+
 function HwGetScanCodes(runtime, params, results)
-    print("HwGetScanCodes", dumpRegisters(params), dumpRegisters(results))
+    -- print("HwGetScanCodes", dumpRegisters(params), dumpRegisters(results))
+    local keys = runtime:iohandler().keysDown()
+    local scanCodes = require("oplkeycode").series3aScanCodes
+    local bytes = {}
+    for i = 0, 19 do
+        local base = 1 + (8 * i)
+        bytes[i + 1] = byte(
+            keys[scanCodes[base]],
+            keys[scanCodes[base + 1]],
+            keys[scanCodes[base + 2]],
+            keys[scanCodes[base + 3]],
+            keys[scanCodes[base + 4]],
+            keys[scanCodes[base + 5]],
+            keys[scanCodes[base + 6]],
+            keys[scanCodes[base + 7]]
+        )
+    end
+    local buf = string.pack("BBBBBBBBBBBBBBBBBBBB", table.unpack(bytes))
+    runtime:addrFromInt(results.bx):write(buf)
     return 0
 end
 

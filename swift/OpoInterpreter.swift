@@ -653,6 +653,18 @@ private func key(_ L: LuaState!) -> Int32 {
     return 2
 }
 
+private func keysDown(_ L: LuaState!) -> Int32 {
+    let iohandler = getInterpreterUpval(L).iohandler
+    let keys = iohandler.keysDown()
+    lua_createtable(L, 0, Int32(keys.count))
+    for key in keys {
+        L.push(key.rawValue)
+        L.push(true)
+        lua_settable(L, -3)
+    }
+    return 1
+}
+
 private func opsync(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.opsync()
@@ -903,6 +915,7 @@ class OpoInterpreter {
             ("createWindow", createWindow),
             ("getTime", getTime),
             ("key", key),
+            ("keysDown", keysDown),
             ("opsync", opsync),
             ("getConfig", getConfig),
             ("setConfig", setConfig),

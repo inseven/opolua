@@ -10,7 +10,7 @@ import Foundation
 // Some of these these aren't strictly keycodes in that they don't generate
 // keypress events, in particular the modifiers, but for the sake of convenience let's
 // pretend they are.
-enum OplKeyCode : Int, CaseIterable {
+enum OplKeyCode: Int, CaseIterable {
     case capsLock = 2
     case backspace = 8
     case tab = 9
@@ -116,8 +116,8 @@ enum OplKeyCode : Int, CaseIterable {
     case pound = 163
     case multiply = 215
     case divide = 247
-    case home = 4098
-    case end = 4099
+    case homeKey = 4098
+    case endKey = 4099
     case pgUp = 4100
     case pgDn = 4101
     case leftArrow = 4103
@@ -280,9 +280,9 @@ extension OplKeyCode {
             return 121
         case .fullStop, .questionMark:
             return 122
-        case .leftArrow, .home:
+        case .leftArrow, .homeKey:
             return 14
-        case .rightArrow, .end:
+        case .rightArrow, .endKey:
             return 15
         case .upArrow, .pgUp:
             return 16
@@ -314,9 +314,9 @@ extension OplKeyCode {
             return nil
         case .menu, .menuSoftkey:
             return 290
-        case .home:
+        case .homeKey:
             return 262
-        case .end:
+        case .endKey:
             return 263
         case .pgUp:
             return 260
