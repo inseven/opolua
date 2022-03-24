@@ -1,4 +1,3 @@
-Loading .env environment variables...
 ---
 title: Release Notes
 ---
