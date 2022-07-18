@@ -1,6 +1,6 @@
 # OpoLua
 
-[![Build](https://github.com/inseven/opolua/actions/workflows/build.yaml/badge.svg)](https://github.com/inseven/opolua/actions/workflows/build.yaml)
+[![Build](https://github.com/inseven/opolua/actions/workflows/build.yaml/badge.svg)](https://github.com/inseven/opolua/actions/workflows/build.yaml) [![update-release-notes](https://github.com/inseven/opolua/actions/workflows/update-release-notes.yaml/badge.svg)](https://github.com/inseven/opolua/actions/workflows/update-release-notes.yaml)
 
 An OPO (compiled OPL) interpreter written in Lua and Swift, based on the Psion Series 5 era format (ie ER5, prior to the Quartz 6.x changes). It lets you run Psion 5 programs written in OPL on any iOS device, subject to the limitations described below.
 
