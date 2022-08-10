@@ -1206,7 +1206,7 @@ function runOpo(fileName, procName, iohandler, verbose)
     end
 
     -- parseOpo will bail if the UID1 is wrong, but with a less useful error
-    if string.unpack("<I4", data) == KDynamicLibraryUid then
+    if string.unpack("<I4", data) == KDynamicLibraryUid or data:sub(1, 16) == "ImageFileType**\0" then
         error({ msg = "File is a native binary and not compiled OPL.", notOpl = true })
     end
 

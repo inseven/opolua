@@ -107,8 +107,14 @@ extension CGContext {
                 drawUnflippedImage(img, in: imgRect, mode: operation.mode, mask: maskImg)
             }
         case .pattern(let info):
-            guard let srcImage = provider.getImageFor(drawable: info.drawableId) else {
-                print("Failed to get image for .pattern operation!")
+            let srcImage: CGImage?
+            if info.drawableId.value == -1 {
+                srcImage = UIImage.ditherPattern().cgImage
+            } else {
+                srcImage = provider.getImageFor(drawable: info.drawableId)
+            }
+            guard let srcImage = srcImage else {
+                print("Failed to get image for .pattern operation id=\(info.drawableId.value))!")
                 return
             }
             drawUnflippedImage(srcImage, in: info.rect.cgRect(), mode: operation.mode, tile: true)

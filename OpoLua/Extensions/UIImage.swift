@@ -114,6 +114,10 @@ extension UIImage {
         return UIImage(named: "UnknownFileIconC")!
     }
 
+    static func ditherPattern() -> UIImage {
+        return UIImage(named: "DitherPattern")!
+    }
+
     static func emptyImage(with size: CGSize) -> UIImage? {
         UIGraphicsBeginImageContext(size)
         let image = UIGraphicsGetImageFromCurrentImageContext()

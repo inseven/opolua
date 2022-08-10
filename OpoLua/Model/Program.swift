@@ -81,6 +81,7 @@ class Program {
     private let thread: InterpreterThread
     private let applicationMetadata: ApplicationMetadata?
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
+    private var currentKeys = Set<OplKeyCode>()
     let windowServer: WindowServer
     private let scheduler = Scheduler()
     private var geteventRequest: GetEventRequest?
@@ -234,6 +235,14 @@ class Program {
 
     func sendEvent(_ event: Async.ResponseValue) {
         eventQueue.append(event)
+        switch event {
+        case .keydownevent(let keydown):
+            currentKeys.insert(keydown.keycode)
+        case .keyupevent(let keyup):
+            currentKeys.remove(keyup.keycode)
+        default:
+            break
+        }
         checkGetEventCompletion()
     }
 
@@ -470,6 +479,13 @@ extension Program: OpoIoHandler {
             return nil
         }
         return event
+    }
+
+    func keysDown() -> Set<OplKeyCode> {
+        let result = DispatchQueue.main.sync {
+            return currentKeys
+        }
+        return result
     }
 
     func setConfig(key: ConfigName, value: String) {
