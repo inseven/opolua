@@ -12,7 +12,7 @@ on:
 jobs:
   build:
 
-    name: Build
+    name: build
     runs-on: macos-monterey
 
     steps:
