@@ -30,30 +30,17 @@ struct AboutView: View {
         NavigationView {
             Form {
                 HeaderSection {
-                    IconView(uiImage: UIImage(named: "Icon")!)
+                    Diligence.Icon("Icon")
+                    ApplicationNameTitle()
                 }
                 BuildSection("inseven/opolua")
                 Section {
                     Link("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
                     Link("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
                     Link("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
-                    Button {
-                        var components = URLComponents()
-                        components.scheme = "mailto"
-                        components.path = "support@opolua.org"
-                        components.queryItems = [URLQueryItem(name: "subject", value: "OPL Support")]
-                        UIApplication.shared.open(components.url!)
-                    } label: {
-                        HStack {
-                            Text("Support")
-                            Spacer()
-                            Image(systemName: "envelope")
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                    Link("Support", url: URL(address: "support@opolua.org", subject: "OpoLua Support")!)
                 }
-                .foregroundColor(.primary)
-                CreditSection("Contributors", [
+                CreditSection("Developers", [
                     Credit("Jason Morley", url: URL(string: "https://jbmorley.co.uk")),
                     Credit("Tom Sutcliffe", url: URL(string: "https://github.com/tomsci")),
                 ])

@@ -67,7 +67,7 @@ struct SettingsView: View {
                 }
                 #endif
                 Section {
-                    Button("About \(UIApplication.shared.displayName!)...") {
+                    Button("About \(Bundle.main.displayName!)...") {
                         sheet = .about
                     }
                     .foregroundColor(.primary)
