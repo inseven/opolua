@@ -46,13 +46,3 @@ PIPENV_PIPFILE="$BUILD_TOOLS_DIRECTORY/Pipfile" pipenv install
 cd "$ROOT_DIRECTORY"
 gem install bundler
 bundle install
-
-# Install the GitHub CLI
-github_cli_url="https://github.com"`curl -s -L https://github.com/cli/cli/releases/latest | grep -o -e "/.*macOS.*tar.gz"`
-if [ -d "$GITHUB_CLI_PATH" ] ; then
-    rm -r "$GITHUB_CLI_PATH"
-fi
-mkdir -p "$GITHUB_CLI_PATH"
-curl --location "$github_cli_url" --output "cli.tar.gz"
-tar --strip-components 1 -zxv -f "cli.tar.gz" -C "$GITHUB_CLI_PATH"
-unlink "cli.tar.gz"
