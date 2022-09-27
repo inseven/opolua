@@ -44,17 +44,11 @@ which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
 
 # Process the command line arguments.
 POSITIONAL=()
-ARCHIVE=${ARCHIVE:-false}
 RELEASE=${RELEASE:-false}
-TESTFLIGHT_UPLOAD=${TESTFLIGHT_UPLOAD:-false}
 while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        -a|--archive)
-        ARCHIVE=true
-        shift
-        ;;
         -r|--release)
         RELEASE=true
         shift
@@ -141,25 +135,20 @@ echo "$IOS_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --passw
 # Install the provisioning profiles.
 build-tools install-provisioning-profile "${APP_DIRECTORY}/OpoLua_App_Store_Profile.mobileprovision"
 
-if $ARCHIVE || $TESTFLIGHT_UPLOAD ; then
-
-    # Build and archive the iOS project.
-    xcode_project \
-        -scheme "OpoLua" \
-        -config Release \
-        -archivePath "$ARCHIVE_PATH" \
-        OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
-        BUILD_NUMBER=$BUILD_NUMBER \
-        MARKETING_VERSION=$VERSION_NUMBER \
-        clean archive
-    xcodebuild \
-        -archivePath "$ARCHIVE_PATH" \
-        -exportArchive \
-        -exportPath "$BUILD_DIRECTORY" \
-        -exportOptionsPlist "${APP_DIRECTORY}/ExportOptions.plist"
-
-fi
-
+# Build and archive the iOS project.
+xcode_project \
+    -scheme "OpoLua" \
+    -config Release \
+    -archivePath "$ARCHIVE_PATH" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    BUILD_NUMBER=$BUILD_NUMBER \
+    MARKETING_VERSION=$VERSION_NUMBER \
+    clean archive
+xcodebuild \
+    -archivePath "$ARCHIVE_PATH" \
+    -exportArchive \
+    -exportPath "$BUILD_DIRECTORY" \
+    -exportOptionsPlist "${APP_DIRECTORY}/ExportOptions.plist"
 
 if $RELEASE ; then
 
