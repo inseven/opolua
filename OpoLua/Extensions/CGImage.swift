@@ -353,7 +353,7 @@ extension CGImage {
             return CGImage(width: bitmap.width, height: bitmap.height,
                 bitsPerComponent: 8, bitsPerPixel: 8,
                 bytesPerRow: stride, space: sp,
-                bitmapInfo: CGBitmapInfo.byteOrder32Little,
+                bitmapInfo: CGBitmapInfo.byteOrderDefault,
                 provider: provider, decode: nil, shouldInterpolate: false,
                 intent: .defaultIntent)!
         case .gray256:
