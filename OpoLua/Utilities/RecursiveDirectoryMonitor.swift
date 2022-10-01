@@ -96,7 +96,7 @@ class RecursiveDirectoryMonitor {
         case cancelled
     }
 
-    static let maximumDirectoryCount = 1000
+    static let maximumDirectoryCount = 20
 
     static var shared: RecursiveDirectoryMonitor = {
         let monitor = RecursiveDirectoryMonitor()
