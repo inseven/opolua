@@ -31,9 +31,5 @@ export GEM_HOME="${ROOT_DIRECTORY}/.local/ruby"
 mkdir -p "$GEM_HOME"
 export PATH="${GEM_HOME}/bin":$PATH
 
-export GITHUB_CLI_PATH="${ROOT_DIRECTORY}/.local/gh"
-mkdir -p "$GITHUB_CLI_PATH"
-export PATH="${GITHUB_CLI_PATH}/bin":$PATH
-
 export PATH=$PATH:"${SCRIPTS_DIRECTORY}/changes"
 export PATH=$PATH:"${SCRIPTS_DIRECTORY}/build-tools"
