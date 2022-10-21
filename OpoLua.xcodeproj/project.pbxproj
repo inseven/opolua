@@ -45,7 +45,6 @@
 		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
 		D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724F12771672A009C7246 /* InterpreterThread.swift */; };
 		D86E428A2799C0CC00D5596D /* UISplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86E42892799C0CC00D5596D /* UISplitViewController.swift */; };
-		D86FBAB5278C74A3003DF611 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86FBAB4278C74A3003DF611 /* AboutView.swift */; };
 		D86FBAB7278C75E1003DF611 /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D86FBAB6278C75E1003DF611 /* Diligence */; };
 		D86FBABA278C76FB003DF611 /* Lua.txt in Resources */ = {isa = PBXBuildFile; fileRef = D86FBAB9278C76FB003DF611 /* Lua.txt */; };
 		D87A62742752A67500075CB8 /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62732752A67500075CB8 /* CGSize.swift */; };
@@ -311,7 +310,6 @@
 		D86724F12771672A009C7246 /* InterpreterThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterThread.swift; sourceTree = "<group>"; };
 		D86E42892799C0CC00D5596D /* UISplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISplitViewController.swift; sourceTree = "<group>"; };
 		D86FBAB3278C730B003DF611 /* diligence */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = diligence; sourceTree = "<group>"; };
-		D86FBAB4278C74A3003DF611 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		D86FBAB9278C76FB003DF611 /* Lua.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Lua.txt; sourceTree = "<group>"; };
 		D87A62732752A67500075CB8 /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
 		D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFileSystem.swift; sourceTree = "<group>"; };
@@ -616,7 +614,6 @@
 		D8C679BB27484BB800BD8720 /* View Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				D86FBAB4278C74A3003DF611 /* AboutView.swift */,
 				D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */,
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
 				D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */,
@@ -1110,7 +1107,6 @@
 				DB7900012742E6F6005E904F /* ldo.c in Sources */,
 				DBE291822795F86200EE824B /* UIKeyModifierFlags.swift in Sources */,
 				D8D95504279B52370049A3C3 /* Localization.swift in Sources */,
-				D86FBAB5278C74A3003DF611 /* AboutView.swift in Sources */,
 				D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */,
 				D81B87632790ED0300E71960 /* InstallerSummaryViewController.swift in Sources */,
 				DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */,

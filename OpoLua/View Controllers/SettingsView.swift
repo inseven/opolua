@@ -84,7 +84,27 @@ struct SettingsView: View {
             .sheet(item: $sheet) { sheet in
                 switch sheet {
                 case .about:
-                    AboutView()
+
+                    AboutView(repository: "inseven/opolua", copyright: "Copyright © 2021-2022\nJason Morley, Tom Sutcliffe") {
+                        Action("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
+                        Action("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
+                        Action("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
+                        Action("Support", url: URL(address: "support@opolua.org", subject: "OpoLua Support")!)
+                    } acknowledgements: {
+                        Acknowledgements("Developers") {
+                            Credit("Jason Morley", url: URL(string: "https://jbmorley.co.uk"))
+                            Credit("Tom Sutcliffe", url: URL(string: "https://github.com/tomsci"))
+                        }
+                        Acknowledgements("Thanks") {
+                            Credit("Sara Frederixon")
+                            Credit("Sarah Barbour")
+                            Credit("Shawn Leedy")
+                        }
+                    } licenses: {
+                        License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "Lua.txt")
+                        License(name: "OpoLua", author: "Jason Morley, Tom Sutcliffe", filename: "License.txt")
+                    }
+
                 }
             }
         }
