@@ -4,6 +4,51 @@ title: Release Notes
 
 # Release Notes
 
+## 1.1.0
+
+**Changes**
+
+- Rudimentary series 3 (SIBO) support
+- New memory model
+- Support alloc on new memory model
+- Add support to FileSystem for adding shared drives
+- Support gGREY on Series 3
+- Support Series 3 .WVE files
+- Support correct SIBO default string encoding (CP850)
+- Start supporting OS() and CALL() syscalls properly (SIBO only)
+- (partially) support SIBO sprite syscalls
+
+**Fixes**
+
+- Support for reading Series 3 format .PIC files and some 1BPP fixes
+- Support --noget arg in runopo.lua
+- dEdit dialog items in new memory model
+- Implement opx.alarm.AlmAlarmState()
+- Implement some systinfo.opx fns
+- LoadResource should abs its path
+- Don't return "X" from GETCMD$ unless there's really been a quit event
+- Implement MODIFY, INSERT, PUT, CANCEL, BEGINTRANS, COMMITTRANS, ROLLBACK, INTRANS
+- stub SETDOC()
+- Implement DOW()
+- Stub CaptureKey
+- Add some Z: drive resources
+- Broken DTNow
+- Correct the capitalisation in 'Psion Series 3c'
+- Save screenshots as PNG files and include the timestamp in the filename
+- Nicer failure mode when launching help files
+- 1BPP masks
+- Preserve bitmap mode when resizing CanvasView
+- Cache composited CanvasView image, for performance
+- misc SIBO syscalls wFree, wInquireWindow, wDisableKeyClick, HwGetScanCodes (stubbed)
+- crash when recognizing awkward files
+- Support for gPATT -1
+- Make SIBO non-OPL apps error the same way as ER5 ones
+- Support SIBO HwGetScanCodes syscall
+- Show the application name in the about screen (#231)
+- crash in iOS 16 (#238)
+- Crash when adding large directories (#239)
+- Correct the color of the about view commit link (#240)
+
 ## 1.0.1
 
 **Fixes**
