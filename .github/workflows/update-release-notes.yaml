@@ -32,5 +32,7 @@ jobs:
       uses: stefanzweifel/git-auto-commit-action@v4
       id: auto-commit
       with:
-        token: ${{ secrets.DOCUMENTATION_UPDATE_GITHUB_PAT }}
+        branch: documentation
+        create_branch: true
+        push_options: --force
         commit_message: "docs: Update release notes"
