@@ -13,7 +13,7 @@ jobs:
   build:
 
     name: build
-    runs-on: macos-monterey
+    runs-on: macos-ventura
 
     steps:
 
