@@ -41,8 +41,3 @@ source "${ENVIRONMENT_PATH}"
 pip3 install --user pipenv
 PIPENV_PIPFILE="$CHANGES_DIRECTORY/Pipfile" pipenv install
 PIPENV_PIPFILE="$BUILD_TOOLS_DIRECTORY/Pipfile" pipenv install
-
-# Install the Ruby dependencies
-cd "$ROOT_DIRECTORY"
-gem install bundler
-bundle install
