@@ -27,9 +27,5 @@ export PYTHONUSERBASE="${ROOT_DIRECTORY}/.local/python"
 mkdir -p "$PYTHONUSERBASE"
 export PATH="${PYTHONUSERBASE}/bin":$PATH
 
-export GEM_HOME="${ROOT_DIRECTORY}/.local/ruby"
-mkdir -p "$GEM_HOME"
-export PATH="${GEM_HOME}/bin":$PATH
-
 export PATH=$PATH:"${SCRIPTS_DIRECTORY}/changes"
 export PATH=$PATH:"${SCRIPTS_DIRECTORY}/build-tools"

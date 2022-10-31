@@ -34,7 +34,7 @@ APP_DIRECTORY="${ROOT_DIRECTORY}"
 
 KEYCHAIN_PATH="${TEMPORARY_DIRECTORY}/temporary.keychain"
 ARCHIVE_PATH="${BUILD_DIRECTORY}/OpoLua.xcarchive"
-FASTLANE_ENV_PATH="${APP_DIRECTORY}/fastlane/.env"
+ENV_PATH="${APP_DIRECTORY}/.env"
 RELEASE_SCRIPT_PATH="${SCRIPTS_DIRECTORY}/release.sh"
 
 source "${SCRIPTS_DIRECTORY}/environment.sh"
@@ -67,10 +67,10 @@ IPHONE_DESTINATION="platform=iOS Simulator,name=iPhone 14 Pro"
 # Generate a random string to secure the local keychain.
 export TEMPORARY_KEYCHAIN_PASSWORD=`openssl rand -base64 14`
 
-# Source the Fastlane .env file if it exists to make local development easier.
-if [ -f "$FASTLANE_ENV_PATH" ] ; then
+# Source the .env file if it exists to make local development easier.
+if [ -f "$ENV_PATH" ] ; then
     echo "Sourcing .env..."
-    source "$FASTLANE_ENV_PATH"
+    source "$ENV_PATH"
 fi
 
 function xcode_project {
@@ -117,10 +117,17 @@ mkdir -p "$TEMPORARY_DIRECTORY"
 echo "$TEMPORARY_KEYCHAIN_PASSWORD" | build-tools create-keychain "$KEYCHAIN_PATH" --password
 
 function cleanup {
+
     # Cleanup the temporary files and keychain.
     cd "$ROOT_DIRECTORY"
     build-tools delete-keychain "$KEYCHAIN_PATH"
     rm -rf "$TEMPORARY_DIRECTORY"
+
+    # Clean up any private keys.
+    if [ -f ~/.appstoreconnect/private_keys ]; then
+        rm -r ~/.appstoreconnect/private_keys
+    fi
+
 }
 
 trap cleanup EXIT
@@ -161,8 +168,9 @@ if $RELEASE ; then
     zip -r "${ZIP_BASENAME}" .
     popd
 
-    export API_KEY_PATH="${TEMPORARY_DIRECTORY}/AuthKey.p8"
-    echo -n "$APPLE_API_KEY" | base64 --decode --output "$API_KEY_PATH"
+    mkdir -p ~/.appstoreconnect/private_keys/
+    echo -n "$APPLE_API_KEY" | base64 --decode -o ~/".appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
+    ls ~/.appstoreconnect/private_keys/
     changes \
         release \
         --skip-if-empty \
@@ -170,6 +178,6 @@ if $RELEASE ; then
         --push \
         --exec "${RELEASE_SCRIPT_PATH}" \
         "${IPA_PATH}" "${ZIP_PATH}"
-    unlink "$API_KEY_PATH"
+
 
 fi
