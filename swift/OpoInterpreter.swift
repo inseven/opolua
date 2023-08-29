@@ -28,14 +28,14 @@ private let kDefaultEpocEncoding: ExtendedStringEncoding = .stringEncoding(.wind
 private let kSiboEncoding: ExtendedStringEncoding = .cfStringEncoding(.dosLatin1)
 
 private extension LuaState {
-    func toAppInfo(_ index: Int32) -> OpoInterpreter.AppInfo? {
+    func toAppInfo(_ index: CInt) -> OpoInterpreter.AppInfo? {
         let L = self
         if lua_isnoneornil(L, index) {
             return nil
         }
         let era: OpoInterpreter.AppEra = L.getdecodable(index, key: "era") ?? .er5
         let encoding = era == .er5 ? kDefaultEpocEncoding : kSiboEncoding
-        lua_getfield(L, index, "captions")
+        L.rawget(index, key: "captions")
         var captions: [OpoInterpreter.LocalizedString] = []
         for (languageIndex, captionIndex) in L.pairs(-1) {
             guard let language = L.tostring(languageIndex),
@@ -51,13 +51,13 @@ private extension LuaState {
             return nil
         }
 
-        lua_getfield(L, index, "icons")
+        L.rawget(index, key: "icons")
         var icons: [Graphics.MaskedBitmap] = []
         // Need to refactor the Lua data structure before we can make MaskedBitmap decodable
         for _ in L.ipairs(-1) {
             if let bmp = L.todecodable(-1, Graphics.Bitmap.self) {
                 var mask: Graphics.Bitmap? = nil
-                if lua_getfield(L, -1, "mask") == LUA_TTABLE {
+                if L.rawget(-1, key: "mask") == .table {
                     mask = L.todecodable(-1)
                 }
                 L.pop()
@@ -69,37 +69,8 @@ private extension LuaState {
     }
 }
 
-private func searcher(_ L: LuaState!) -> Int32 {
-    guard let module = L.tostring(1, encoding: .utf8) else {
-        L.pushnil()
-        return 1
-    }
-
-    let parts = module.split(separator: ".", omittingEmptySubsequences: false)
-    let subdir = parts.count > 1 ? parts[0...parts.count-2].joined(separator: "/") : nil
-    let name = String(parts.last!)
-
-    if let url = Bundle.main.url(forResource: name, withExtension: "lua", subdirectory: subdir),
-       let data = FileManager.default.contents(atPath: url.path) {
-        let shortPath = "@" + url.lastPathComponent
-        var err: Int32 = 0
-        data.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) -> Void in
-            let chars = ptr.bindMemory(to: CChar.self)
-            err = luaL_loadbufferx(L, chars.baseAddress, chars.count, shortPath, "t")
-        }
-        if err == 0 {
-            return 1
-        } else {
-            return lua_error(L) // errors with the string error pushed by luaL_loadbufferx
-        }
-    } else {
-        L.push("\n\tno resource '\(module)'")
-        return 1
-    }
-}
-
-private func traceHandler(_ L: LuaState!) -> Int32 {
-    lua_settop(L, 1)
+private func traceHandler(_ L: LuaState!) -> CInt {
+    L.settop(1)
     if L.type(1) != .table {
         // Create a table
         lua_newtable(L)
@@ -112,7 +83,7 @@ private func traceHandler(_ L: LuaState!) -> Int32 {
     // Position 1 is now definitely a table. See if needs a stacktrace.
     if L.tostring(1, key: "luaStack") == nil {
         luaL_traceback(L, L, nil, 1)
-        lua_setfield(L, -2, "luaStack")
+        L.rawset(-2, key: "luaStack")
     }
     return 1
 }
@@ -122,13 +93,13 @@ private func getInterpreterUpval(_ L: LuaState!) -> OpoInterpreter {
     return Unmanaged<OpoInterpreter>.fromOpaque(rawPtr).takeUnretainedValue()
 }
 
-// private func print_lua(_ L: LuaState!) -> Int32 {
+// private func print_lua(_ L: LuaState!) -> CInt {
 //     let iohandler = getInterpreterUpval(L).iohandler
 //     iohandler.printValue(L.tostring(1, convert: true) ?? "<<STRING DECODE ERR>>")
 //     return 0
 // }
 
-private func beep(_ L: LuaState!) -> Int32 {
+private func beep(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     if let err = iohandler.beep(frequency: lua_tonumber(L, 1), duration: lua_tonumber(L, 2)) {
         L.pushnil()
@@ -140,7 +111,7 @@ private func beep(_ L: LuaState!) -> Int32 {
     }
 }
 
-private func editValue(_ L: LuaState!) -> Int32 {
+private func editValue(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let params = L.todecodable(1, EditParams.self)!
     let result = iohandler.editValue(params)
@@ -148,7 +119,7 @@ private func editValue(_ L: LuaState!) -> Int32 {
     return 1
 }
 
-private func draw(_ L: LuaState!) -> Int32 {
+private func draw(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     var ops: [Graphics.DrawCommand] = []
     for _ in L.ipairs(1) {
@@ -266,7 +237,7 @@ private func draw(_ L: LuaState!) -> Int32 {
     return 0
 }
 
-func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Operation) -> Int32 {
+func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Operation) -> CInt {
     let result = iohandler.graphicsop(op)
     switch result {
     case .nothing:
@@ -295,7 +266,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("title", appTitle)
 // graphicsop("clock", drawableId, [{mode=, x=, y=}])
 // graphicsop("peekline", drawableId, x, y, numPixels, mode)
-private func graphicsop(_ L: LuaState!) -> Int32 {
+private func graphicsop(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""
     switch cmd {
@@ -396,7 +367,7 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
     return 0
 }
 
-private func getScreenInfo(_ L: LuaState!) -> Int32 {
+private func getScreenInfo(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let (sz, mode) = iohandler.getScreenInfo()
     L.push(sz.width)
@@ -405,7 +376,7 @@ private func getScreenInfo(_ L: LuaState!) -> Int32 {
     return 3
 }
 
-private func fsop(_ L: LuaState!) -> Int32 {
+private func fsop(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let cmd = L.tostring(1) else {
         return 0
@@ -468,10 +439,9 @@ private func fsop(_ L: LuaState!) -> Int32 {
         L.push(data)
         return 1
     case .strings(let strings):
-        lua_createtable(L, Int32(strings.count), 0)
+        lua_createtable(L, CInt(strings.count), 0)
         for (i, string) in strings.enumerated() {
-            L.push(string)
-            lua_rawseti(L, -2, lua_Integer(i + 1))
+            L.rawset(-1, key: i + 1, value: string)
         }
         return 1
     case .stat(let stat):
@@ -487,10 +457,10 @@ private func fsop(_ L: LuaState!) -> Int32 {
 // asyncRequest("after", { var = ..., period = ... })
 // asyncRequest("at", { var = ..., time = ...})
 // asyncRequest("playsound", { var = ..., data = ... })
-private func asyncRequest(_ L: LuaState!) -> Int32 {
+private func asyncRequest(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let name = L.tostring(1) else { return 0 }
-    lua_settop(L, 2)
+    L.settop(2)
     lua_remove(L, 1) // Removes name, so requestTable is now at position 1
     L.rawset(-1, key: "type", value: name) // requestTable.type = name
     L.rawget(1, key: "var") // Put var at 2 for compat with code below
@@ -529,14 +499,13 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
 
     lua_pushvalue(L, 1) // dup requestTable
     let requestHandle = luaL_ref(L, LUA_REGISTRYINDEX) // pop dup, registry[requestHandle] = requestTable
-    lua_pushinteger(L, lua_Integer(requestHandle))
-    lua_setfield(L, 1, "ref") // requestTable.ref = requestHandle
+    L.rawset(1, key: "ref", value: requestHandle) // requestTable.ref = requestHandle
 
     lua_pushvalue(L, 2) // dup statusVar
     luaL_callmeta(L, -1, "uniqueKey")
     lua_remove(L, -2) // remove the dup statusVar
     lua_pushvalue(L, 1) // dup requestTable
-    lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = requestTable
+    L.rawset(LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = requestTable
 
     let req = Async.Request(type: type, handle: requestHandle)
 
@@ -548,7 +517,7 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
 private let KOplErrIOCancelled = -48
 private let KStopErr = -999
 
-private func checkCompletions(_ L: LuaState!) -> Int32 {
+private func checkCompletions(_ L: LuaState!) -> CInt {
     let interpreter = getInterpreterUpval(L)
     let iohandler = interpreter.iohandler
     var count = 0
@@ -564,7 +533,7 @@ private func checkCompletions(_ L: LuaState!) -> Int32 {
     return 1
 }
 
-private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
+private func waitForAnyRequest(_ L: LuaState!) -> CInt {
     let interpreter = getInterpreterUpval(L)
     let iohandler = interpreter.iohandler
     let response = iohandler.waitForAnyRequest()
@@ -577,9 +546,9 @@ private func waitForAnyRequest(_ L: LuaState!) -> Int32 {
     return 1
 }
 
-private func cancelRequest(_ L: LuaState!) -> Int32 {
+private func cancelRequest(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
-    lua_settop(L, 1)
+    L.settop(1)
     luaL_callmeta(L, -1, "uniqueKey")
     let t = lua_gettable(L, LUA_REGISTRYINDEX) // 2: registry[statusVar:uniqueKey()] -> requestTable
     if t == LUA_TNIL {
@@ -588,7 +557,7 @@ private func cancelRequest(_ L: LuaState!) -> Int32 {
     } else {
         assert(t == LUA_TTABLE, "Unexpected type for registry requestTable!")
     }
-    lua_getfield(L, 2, "ref")
+    L.rawget(2, key: "ref")
     if let requestHandle = L.toint(-1) {
         iohandler.cancelRequest(Int32(requestHandle))
     } else {
@@ -597,13 +566,13 @@ private func cancelRequest(_ L: LuaState!) -> Int32 {
     return 0
 }
 
-private func testEvent(_ L: LuaState!) -> Int32 {
+private func testEvent(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     L.push(iohandler.testEvent())
     return 1
 }
 
-private func createBitmap(_ L: LuaState!) -> Int32 {
+private func createBitmap(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let id = L.toint(1),
           let width = L.toint(2),
@@ -618,7 +587,7 @@ private func createBitmap(_ L: LuaState!) -> Int32 {
     return doGraphicsOp(L, iohandler, .createBitmap(drawableId, size, mode))
 }
 
-private func createWindow(_ L: LuaState!) -> Int32 {
+private func createWindow(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let id = L.toint(1),
           let x = L.toint(2), let y = L.toint(3),
@@ -637,13 +606,13 @@ private func createWindow(_ L: LuaState!) -> Int32 {
     return doGraphicsOp(L, iohandler, .createWindow(drawableId, rect, mode, shadow))
 }
 
-private func getTime(_ L: LuaState!) -> Int32 {
+private func getTime(_ L: LuaState!) -> CInt {
     let dt = Date()
     L.push(dt.timeIntervalSince1970)
     return 1
 }
 
-private func key(_ L: LuaState!) -> Int32 {
+private func key(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     if let event = iohandler.key(), let charcode = event.keycode.toCharcode() {
         L.push(charcode)
@@ -655,25 +624,23 @@ private func key(_ L: LuaState!) -> Int32 {
     return 2
 }
 
-private func keysDown(_ L: LuaState!) -> Int32 {
+private func keysDown(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let keys = iohandler.keysDown()
-    lua_createtable(L, 0, Int32(keys.count))
+    lua_createtable(L, 0, CInt(keys.count))
     for key in keys {
-        L.push(key.rawValue)
-        L.push(true)
-        lua_settable(L, -3)
+        L.rawset(-1, key: key.rawValue, value: true)
     }
     return 1
 }
 
-private func opsync(_ L: LuaState!) -> Int32 {
+private func opsync(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.opsync()
     return 0
 }
 
-private func getConfig(_ L: LuaState!) -> Int32 {
+private func getConfig(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     if let keyName = L.tostring(1),
        let key = ConfigName(rawValue: keyName) {
@@ -685,7 +652,7 @@ private func getConfig(_ L: LuaState!) -> Int32 {
     }    
 }
 
-private func setConfig(_ L: LuaState!) -> Int32 {
+private func setConfig(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     if let keyName = L.tostring(1),
        let key = ConfigName(rawValue: keyName),
@@ -697,7 +664,7 @@ private func setConfig(_ L: LuaState!) -> Int32 {
     return 0
 }
 
-private func setAppTitle(_ L: LuaState!) -> Int32 {
+private func setAppTitle(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     if let title = L.tostring(1) {
         iohandler.setAppTitle(title)
@@ -705,19 +672,19 @@ private func setAppTitle(_ L: LuaState!) -> Int32 {
     return 0
 }
 
-private func displayTaskList(_ L: LuaState!) -> Int32 {
+private func displayTaskList(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.displayTaskList()
     return 0
 }
 
-private func setForeground(_ L: LuaState!) -> Int32 {
+private func setForeground(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.setForeground()
     return 0
 }
 
-private func setBackground(_ L: LuaState!) -> Int32 {
+private func setBackground(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     iohandler.setBackground()
     return 0
@@ -730,7 +697,7 @@ private func stop(_ L: LuaState!, _: UnsafeMutablePointer<lua_Debug>!) {
     lua_error(L)
 }
 
-private func runApp(_ L: LuaState!) -> Int32 {
+private func runApp(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let prog = L.tostring(1), let doc = L.tostring(2) else {
         return 0
@@ -750,11 +717,11 @@ private func getTimeField(_ L: LuaState!, _ key: String) -> Int32? {
     return Int32(result)
 }
 
-private func utctime(_ L: LuaState!) -> Int32 {
+private func utctime(_ L: LuaState!) -> CInt {
     // Really annoying Lua can't/won't use timegm...
     var ts = tm()
     luaL_checktype(L, 1, LUA_TTABLE)
-    lua_settop(L, 1)  /* make sure table is at the top */
+    L.settop(1)  /* make sure table is at the top */
     ts.tm_sec = getTimeField(L, "sec") ?? 0
     ts.tm_min = getTimeField(L, "min") ?? 0
     ts.tm_hour = getTimeField(L, "hour") ?? 12
@@ -779,7 +746,7 @@ private func utctime(_ L: LuaState!) -> Int32 {
     return 1
 }
 
-private func setEra(_ L: LuaState!) -> Int32 {
+private func setEra(_ L: LuaState!) -> CInt {
     if let era: OpoInterpreter.AppEra = L.todecodable(1) {
         switch era {
         case .sibo:
@@ -811,32 +778,26 @@ class OpoInterpreter {
         L = LuaState(libraries: [.package, .table, .io, .os, .string, .math, .utf8, .debug])
         L.setDefaultStringEncoding(kDefaultEpocEncoding)
 
-        // Now configure the require path
-        lua_getglobal(L, "package")
-        lua_getfield(L, -1, "searchers")
-        lua_pushcfunction(L, searcher)
-        lua_rawseti(L, -2, 2) // 2nd searcher is the .lua lookup one
-        lua_pushnil(L)
-        lua_rawseti(L, -2, 3) // And prevent 3 (or 4) from being used
-        lua_pop(L, 2) // searchers, package
+        let srcRoot = Bundle.main.url(forResource: "init", withExtension: "lua")!.deletingLastPathComponent()
+        L.setRequireRoot(srcRoot.path)
 
         // Finally, run init.lua
-        lua_getglobal(L, "require")
+        L.getglobal("require")
         L.push("init")
         guard logpcall(1, 0) else {
             fatalError("Failed to load init.lua!")
         }
 
-        assert(lua_gettop(L) == 0) // In case we failed to balance stack during init
+        assert(L.gettop() == 0) // In case we failed to balance stack during init
     }
 
     deinit {
-        lua_close(L)
+        L.close()
     }
 
     // throws an InterpreterError or subclass thereof
-    func pcall(_ narg: Int32, _ nret: Int32) throws {
-        let base = lua_gettop(L) - narg // Where the function is, and where the msghandler will be
+    func pcall(_ narg: CInt, _ nret: CInt) throws {
+        let base = L.gettop() - narg // Where the function is, and where the msghandler will be
         lua_pushcfunction(L, traceHandler)
         lua_insert(L, base)
         let err = lua_pcall(L, narg, nret, base);
@@ -870,7 +831,7 @@ class OpoInterpreter {
         }
     }
 
-    func logpcall(_ narg: Int32, _ nret: Int32) -> Bool {
+    func logpcall(_ narg: CInt, _ nret: CInt) -> Bool {
         do {
             try pcall(narg, nret)
             return true
@@ -936,10 +897,10 @@ class OpoInterpreter {
         guard let data = FileManager.default.contents(atPath: file) else {
             return nil
         }
-        lua_getglobal(L, "require")
+        L.getglobal("require")
         L.push("opofile")
         guard logpcall(1, 1) else { return nil }
-        lua_getfield(L, -1, "parseOpo")
+        L.rawget(-1, key: "parseOpo")
         L.push(data)
         guard logpcall(1, 1) else {
             L.pop() // opofile
@@ -949,7 +910,7 @@ class OpoInterpreter {
         for _ in L.ipairs(-1) {
             let name = L.tostring(-1, key: "name")!
             var args: [ValType] = []
-            if lua_getfield(L, -1, "params") == LUA_TTABLE {
+            if L.rawget(-1, key: "params") == .table {
                 for _ in L.ipairs(-1) {
                     // insert at front because params are listed bass-ackwards
                     args.insert(ValType(rawValue: L.toint(-1)!)!, at: 0)
@@ -985,17 +946,17 @@ class OpoInterpreter {
     }
 
     func appInfo(for path: String) -> AppInfo? {
-        let top = lua_gettop(L)
+        let top = L.gettop()
         defer {
-            lua_settop(L, top)
+            L.settop(top)
         }
         guard let data = FileManager.default.contents(atPath: path) else {
             return nil
         }
-        lua_getglobal(L, "require")
+        L.getglobal("require")
         L.push("aif")
         guard logpcall(1, 1) else { return nil }
-        lua_getfield(L, -1, "parseAif")
+        L.rawget(-1, key: "parseAif")
         lua_remove(L, -2) // aif module
         L.push(data)
         guard logpcall(1, 1) else { return nil }
@@ -1004,17 +965,17 @@ class OpoInterpreter {
     }
 
     func getMbmBitmaps(path: String) -> [Graphics.Bitmap]? {
-        let top = lua_gettop(L)
+        let top = L.gettop()
         defer {
-            lua_settop(L, top)
+            L.settop(top)
         }
         guard let data = FileManager.default.contents(atPath: path) else {
             return nil
         }
-        lua_getglobal(L, "require")
+        L.getglobal("require")
         L.push("recognizer")
         guard logpcall(1, 1) else { return nil }
-        lua_getfield(L, -1, "getMbmBitmaps")
+        L.rawget(-1, key: "getMbmBitmaps")
         lua_remove(L, -2) // recognizer module
         L.push(data)
         guard logpcall(1, 1) else { return nil }
@@ -1087,12 +1048,12 @@ class OpoInterpreter {
     }
 
     func run(devicePath: String, procedureName: String? = nil) throws {
-        lua_settop(L, 0)
+        L.settop(0)
 
-        lua_getglobal(L, "require")
+        L.getglobal("require")
         L.push("runtime")
         guard logpcall(1, 1) else { fatalError("Couldn't load runtime") }
-        lua_getfield(L, -1, "runOpo")
+        L.rawget(-1, key: "runOpo")
         L.push(devicePath)
         if let proc = procedureName {
             L.push(proc)
@@ -1122,9 +1083,9 @@ class OpoInterpreter {
     }
 
     func completeRequest(_ L: LuaState!, _ response: Async.Response) {
-        lua_settop(L, 0)
-        let t = lua_rawgeti(L, LUA_REGISTRYINDEX, lua_Integer(response.handle)) // 1: registry[requestHandle] -> requestTable
-        assert(t == LUA_TTABLE, "Failed to locate requestTable for requestHandle \(response.handle)!")
+        L.settop(0)
+        let t = L.rawget(LUA_REGISTRYINDEX, key: response.handle) // 1: registry[requestHandle] -> requestTable
+        assert(t == .table, "Failed to locate requestTable for requestHandle \(response.handle)!")
 
         // Deal with writing any result data
 
@@ -1227,13 +1188,13 @@ class OpoInterpreter {
             lua_pop(L, 1)
         }
 
-        lua_settop(L, 0)
+        L.settop(0)
     }
 
     func installSisFile(path: String) throws {
-        let top = lua_gettop(L)
+        let top = L.gettop()
         defer {
-            lua_settop(L, top)
+            L.settop(top)
         }
         guard let data = FileManager.default.contents(atPath: path) else {
             throw InterpreterError(message: "Couldn't read \(path)")
@@ -1288,20 +1249,20 @@ class OpoInterpreter {
     }
 
     func recognize(path: String) -> FileType {
-        let top = lua_gettop(L)
+        let top = L.gettop()
         defer {
-            lua_settop(L, top)
+            L.settop(top)
         }
         // We don't actually need the whole file data here, oh well
         guard let data = FileManager.default.contents(atPath: path) else {
             return .unknown
         }
-        lua_getglobal(L, "require")
+        L.getglobal("require")
         L.push("recognizer")
         guard logpcall(1, 1) else {
             return .unknown
         }
-        lua_getfield(L, -1, "recognize")
+        L.rawget(-1, key: "recognize")
         lua_remove(L, -2) // recognizer module
         L.push(data)
         L.push(false) // allData
@@ -1315,19 +1276,19 @@ class OpoInterpreter {
     }
 
     func getFileInfo(path: String) -> FileInfo {
-        let top = lua_gettop(L)
+        let top = L.gettop()
         defer {
-            lua_settop(L, top)
+            L.settop(top)
         }
         guard let data = FileManager.default.contents(atPath: path) else {
             return .unknown
         }
-        lua_getglobal(L, "require")
+        L.getglobal("require")
         L.push("recognizer")
         guard logpcall(1, 1) else {
             return .unknown
         }
-        lua_getfield(L, -1, "recognize")
+        L.rawget(-1, key: "recognize")
         lua_remove(L, -2) // recognizer module
         L.push(data)
         L.push(true) // allData
