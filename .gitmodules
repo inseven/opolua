@@ -1,10 +1,3 @@
-[submodule "lua"]
-	path = lua
-	url = git@github.com:lua/lua.git
-	branch = v5.3
-[submodule "luac"]
-	path = luac
-	url = git@github.com:lua/luac.git
 [submodule "scripts/changes"]
 	path = scripts/changes
 	url = git@github.com:jbmorley/changes.git
@@ -14,3 +7,6 @@
 [submodule "diligence"]
 	path = diligence
 	url = git@github.com:inseven/diligence.git
+[submodule "LuaSwift"]
+	path = LuaSwift
+	url = git@github.com:tomsci/LuaSwift.git

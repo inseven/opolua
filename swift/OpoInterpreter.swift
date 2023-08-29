@@ -19,6 +19,8 @@
 // SOFTWARE.
 
 import Foundation
+import Lua
+import CLua
 
 // ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
 private let kDefaultEpocEncoding: ExtendedStringEncoding = .stringEncoding(.windowsCP1252)
@@ -31,7 +33,7 @@ private extension LuaState {
         if lua_isnoneornil(L, index) {
             return nil
         }
-        let era = L.getfield(index, "era", OpoInterpreter.AppEra.self) ?? .er5
+        let era: OpoInterpreter.AppEra = L.getdecodable(index, key: "era") ?? .er5
         let encoding = era == .er5 ? kDefaultEpocEncoding : kSiboEncoding
         lua_getfield(L, index, "captions")
         var captions: [OpoInterpreter.LocalizedString] = []
@@ -52,11 +54,11 @@ private extension LuaState {
         lua_getfield(L, index, "icons")
         var icons: [Graphics.MaskedBitmap] = []
         // Need to refactor the Lua data structure before we can make MaskedBitmap decodable
-        for _ in L.ipairs(-1, requiredType: .table) {
-            if let bmp = L.tovalue(-1, Graphics.Bitmap.self) {
+        for _ in L.ipairs(-1) {
+            if let bmp = L.todecodable(-1, Graphics.Bitmap.self) {
                 var mask: Graphics.Bitmap? = nil
                 if lua_getfield(L, -1, "mask") == LUA_TTABLE {
-                    mask = L.tovalue(-1, Graphics.Bitmap.self)
+                    mask = L.todecodable(-1)
                 }
                 L.pop()
                 icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
@@ -103,7 +105,7 @@ private func traceHandler(_ L: LuaState!) -> Int32 {
         lua_newtable(L)
         // We shouldn't be getting eg raw numbers-as-leave-codes being thrown here
         let msg = L.tostring(1) ?? "(No error message)"
-        L.setfield("msg", msg)
+        L.rawset(-1, key: "msg", value: msg)
         lua_remove(L, 1)
     }
 
@@ -140,7 +142,7 @@ private func beep(_ L: LuaState!) -> Int32 {
 
 private func editValue(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
-    let params = L.tovalue(1, EditParams.self)!
+    let params = L.todecodable(1, EditParams.self)!
     let result = iohandler.editValue(params)
     L.push(result)
     return 1
@@ -149,21 +151,21 @@ private func editValue(_ L: LuaState!) -> Int32 {
 private func draw(_ L: LuaState!) -> Int32 {
     let iohandler = getInterpreterUpval(L).iohandler
     var ops: [Graphics.DrawCommand] = []
-    for _ in L.ipairs(1, requiredType: .table) {
+    for _ in L.ipairs(1) {
         let id = Graphics.DrawableId(value: L.toint(-1, key: "id") ?? 1)
         let t = L.tostring(-1, key: "type") ?? ""
-        let origin = L.tovalue(-1, Graphics.Point.self) ?? .zero
-        guard let color = L.getfield(-1, "color", Graphics.Color.self) else {
+        let origin = L.todecodable(-1, Graphics.Point.self) ?? .zero
+        guard let color: Graphics.Color = L.getdecodable(-1, key: "color") else {
             print("missing color")
             continue
         }
-        guard let bgcolor = L.getfield(-1, "bgcolor", Graphics.Color.self) else {
+        guard let bgcolor: Graphics.Color = L.getdecodable(-1, key: "bgcolor") else {
             print("missing bgcolor")
             continue
         }
         var mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
         let penWidth = L.toint(-1, key: "penwidth") ?? 1
-        let greyMode = L.getfield(-1, "greyMode", Graphics.GreyMode.self) ?? .normal
+        let greyMode: Graphics.GreyMode = L.getdecodable(-1, key: "greyMode") ?? .normal
         let optype: Graphics.DrawCommand.OpType
         switch (t) {
         case "fill":
@@ -182,7 +184,7 @@ private func draw(_ L: LuaState!) -> Int32 {
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             optype = .box(size)
         case "bitblt":
-            if let bitmap = L.getfield(-1, "bitmap", Graphics.Bitmap.self) {
+            if let bitmap: Graphics.Bitmap = L.getdecodable(-1, key: "bitmap") {
                 optype = .bitblt(bitmap)
             } else {
                 print("Missing params in bitblt!")
@@ -215,7 +217,7 @@ private func draw(_ L: LuaState!) -> Int32 {
         case "scroll":
             let dx = L.toint(-1, key: "dx") ?? 0
             let dy = L.toint(-1, key: "dy") ?? 0
-            guard let rect = L.getfield(-1, "rect", Graphics.Rect.self) else {
+            guard let rect: Graphics.Rect = L.getdecodable(-1, key: "rect") else {
                 print("Bad rect param in scroll!")
                 continue
             }
@@ -236,8 +238,8 @@ private func draw(_ L: LuaState!) -> Int32 {
         case "text":
             let str = L.tostring(-1, key: "string") ?? ""
             mode = Graphics.Mode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
-            let xstyle = L.getfield(-1, "xflags", Graphics.XStyle.self)
-            if let fontInfo = L.getfield(-1, "fontinfo", Graphics.FontInfo.self) {
+            let xstyle: Graphics.XStyle? = L.getdecodable(-1, key: "xflags")
+            if let fontInfo: Graphics.FontInfo = L.getdecodable(-1, key: "fontinfo") {
                 optype = .text(str, fontInfo, xstyle)
             } else {
                 print("Bad text params!")
@@ -368,11 +370,11 @@ private func graphicsop(_ L: LuaState!) -> Int32 {
             break
         }
         let window = Graphics.DrawableId(value: winId)
-        let sprite = L.tovalue(4, Graphics.Sprite.self)
+        let sprite: Graphics.Sprite? = L.todecodable(4)
         return doGraphicsOp(L, iohandler, .sprite(window, spriteId, sprite))
     case "clock":
         let drawableId = Graphics.DrawableId(value: L.toint(2) ?? 0)
-        let clockInfo = L.tovalue(3, Graphics.ClockInfo.self)
+        let clockInfo: Graphics.ClockInfo? = L.todecodable(3)
         return doGraphicsOp(L, iohandler, .clock(drawableId, clockInfo))
     case "peekline":
         if let id = L.toint(2),
@@ -427,7 +429,7 @@ private func fsop(_ L: LuaState!) -> Int32 {
         op = .rmdir
     case "write":
         if let data = L.todata(3) {
-            op = .write(data)
+            op = .write(Data(data))
         } else {
             return 0
         }
@@ -474,8 +476,8 @@ private func fsop(_ L: LuaState!) -> Int32 {
         return 1
     case .stat(let stat):
         lua_newtable(L)
-        L.setfield("size", stat.size)
-        L.setfield("lastModified", stat.lastModified.timeIntervalSince1970)
+        L.rawset(-1, key: "size", value: stat.size)
+        L.rawset(-1, key: "lastModified", value: stat.lastModified.timeIntervalSince1970)
         return 1
     }
 }
@@ -490,8 +492,8 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
     guard let name = L.tostring(1) else { return 0 }
     lua_settop(L, 2)
     lua_remove(L, 1) // Removes name, so requestTable is now at position 1
-    L.setfield("type", name) // requestTable.type = name
-    lua_getfield(L, 1, "var") // Put var at 2 for compat with code below
+    L.rawset(-1, key: "type", value: name) // requestTable.type = name
+    L.rawget(1, key: "var") // Put var at 2 for compat with code below
 
     let type: Async.RequestType
     switch name {
@@ -516,7 +518,7 @@ private func asyncRequest(_ L: LuaState!) -> Int32 {
             print("Bad param to playsound asyncRequest")
             return 0
         }
-        type = .playsound(data)
+        type = .playsound(Data(data))
     default:
         fatalError("Unhandled asyncRequest type \(name)")
     }
@@ -778,12 +780,12 @@ private func utctime(_ L: LuaState!) -> Int32 {
 }
 
 private func setEra(_ L: LuaState!) -> Int32 {
-    if let era = L.tovalue(1, OpoInterpreter.AppEra.self) {
+    if let era: OpoInterpreter.AppEra = L.todecodable(1) {
         switch era {
         case .sibo:
-            L.setStringEncoding(kSiboEncoding)
+            L.setDefaultStringEncoding(kSiboEncoding)
         case .er5:
-            L.setStringEncoding(kDefaultEpocEncoding)
+            L.setDefaultStringEncoding(kDefaultEpocEncoding)
         }
     }
     return 0
@@ -806,24 +808,8 @@ class OpoInterpreter {
 
     init() {
         iohandler = DummyIoHandler() // For now...
-        L = luaL_newstate()
-        L.setStringEncoding(kDefaultEpocEncoding)
-
-        let libs: [(String, lua_CFunction)] = [
-            ("_G", luaopen_base),
-            (LUA_LOADLIBNAME, luaopen_package),
-            (LUA_TABLIBNAME, luaopen_table),
-            (LUA_IOLIBNAME, luaopen_io),
-            (LUA_OSLIBNAME, luaopen_os),
-            (LUA_STRLIBNAME, luaopen_string),
-            (LUA_MATHLIBNAME, luaopen_math),
-            (LUA_UTF8LIBNAME, luaopen_utf8),
-            (LUA_DBLIBNAME, luaopen_debug)
-        ]
-        for (name, fn) in libs {
-            luaL_requiref(L, name, fn, 1)
-            lua_pop(L, 1)
-        }
+        L = LuaState(libraries: [.package, .table, .io, .os, .string, .math, .utf8, .debug])
+        L.setDefaultStringEncoding(kDefaultEpocEncoding)
 
         // Now configure the require path
         lua_getglobal(L, "package")
@@ -898,34 +884,34 @@ class OpoInterpreter {
         lua_newtable(L)
         let val = Unmanaged<OpoInterpreter>.passUnretained(self)
         lua_pushlightuserdata(L, val.toOpaque())
-        let fns: [(String, lua_CFunction)] = [
-            ("editValue", editValue),
-            // ("print", print_lua),
-            ("beep", beep),
-            ("draw", draw),
-            ("graphicsop", graphicsop),
-            ("getScreenInfo", getScreenInfo),
-            ("fsop", fsop),
-            ("asyncRequest", asyncRequest),
-            ("waitForAnyRequest", waitForAnyRequest),
-            ("checkCompletions", checkCompletions),
-            ("testEvent", testEvent),
-            ("cancelRequest", cancelRequest),
-            ("createBitmap", createBitmap),
-            ("createWindow", createWindow),
-            ("getTime", getTime),
-            ("key", key),
-            ("keysDown", keysDown),
-            ("opsync", opsync),
-            ("getConfig", getConfig),
-            ("setConfig", setConfig),
-            ("setAppTitle", setAppTitle),
-            ("displayTaskList", displayTaskList),
-            ("setForeground", setForeground),
-            ("setBackground", setBackground),
-            ("runApp", runApp),
-            ("utctime", utctime),
-            ("setEra", setEra),
+        let fns: [String: lua_CFunction] = [
+            "editValue": editValue,
+            // "print": print_lua,
+            "beep": beep,
+            "draw": draw,
+            "graphicsop": graphicsop,
+            "getScreenInfo": getScreenInfo,
+            "fsop": fsop,
+            "asyncRequest": asyncRequest,
+            "waitForAnyRequest": waitForAnyRequest,
+            "checkCompletions": checkCompletions,
+            "testEvent": testEvent,
+            "cancelRequest": cancelRequest,
+            "createBitmap": createBitmap,
+            "createWindow": createWindow,
+            "getTime": getTime,
+            "key": key,
+            "keysDown": keysDown,
+            "opsync": opsync,
+            "getConfig": getConfig,
+            "setConfig": setConfig,
+            "setAppTitle": setAppTitle,
+            "displayTaskList": displayTaskList,
+            "setForeground": setForeground,
+            "setBackground": setBackground,
+            "runApp": runApp,
+            "utctime": utctime,
+            "setEra": setEra,
         ]
         L.setfuncs(fns, nup: 1)
     }
@@ -960,11 +946,11 @@ class OpoInterpreter {
             return nil
         }
         var procs: [Procedure] = []
-        for _ in L.ipairs(-1, requiredType: .table) {
+        for _ in L.ipairs(-1) {
             let name = L.tostring(-1, key: "name")!
             var args: [ValType] = []
             if lua_getfield(L, -1, "params") == LUA_TTABLE {
-                for _ in L.ipairs(-1, requiredType: .number) {
+                for _ in L.ipairs(-1) {
                     // insert at front because params are listed bass-ackwards
                     args.insert(ValType(rawValue: L.toint(-1)!)!, at: 0)
                 }
@@ -1033,7 +1019,7 @@ class OpoInterpreter {
         L.push(data)
         guard logpcall(1, 1) else { return nil }
         // top of stack should now be bitmap array
-        let result = L.tovalue(-1, [Graphics.Bitmap].self)
+        let result: [Graphics.Bitmap]? = L.todecodable(-1)
         return result
     }
 
@@ -1358,19 +1344,19 @@ class OpoInterpreter {
                 return .aif(info)
             }
         case "mbm":
-            if let info = L.tovalue(-1, MbmFile.self) {
+            if let info: MbmFile = L.todecodable(-1) {
                 return .mbm(info)
             }
         case "opl":
-            if let info = L.tovalue(-1, OplFile.self) {
+            if let info: OplFile = L.todecodable(-1) {
                 return .opl(info)
             }
         case "sound":
-            if let info = L.tovalue(-1, SoundFile.self) {
+            if let info: SoundFile = L.todecodable(-1) {
                 return .sound(info)
             }
         case "unknown":
-            if let info = L.tovalue(-1, UnknownEpocFile.self) {
+            if let info: UnknownEpocFile = L.todecodable(-1) {
                 return .unknownEpoc(info)
             }
         default:
