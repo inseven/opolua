@@ -45,7 +45,7 @@ class FileMetadataCache<T> {
 
     }
 
-    private class CacheItem<T> {
+    private class CacheItem {
 
         let item: T
 
@@ -62,7 +62,7 @@ class FileMetadataCache<T> {
         return FileMetadataCache.CacheKey(url: url, modificationDate: modificationDate)
     }
 
-    private let cache = NSCache<CacheKey, CacheItem<T>>()
+    private let cache = NSCache<CacheKey, CacheItem>()
 
     func metadata(for url: URL) -> T? {
         guard let key = Self.cacheKey(for: url) else {
@@ -75,7 +75,7 @@ class FileMetadataCache<T> {
         guard let key = Self.cacheKey(for: url) else {
             return
         }
-        cache.setObject(CacheItem<T>(item: metadata), forKey: key)
+        cache.setObject(CacheItem(item: metadata), forKey: key)
     }
 
 }
