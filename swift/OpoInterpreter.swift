@@ -23,14 +23,14 @@ import Lua
 import CLua
 
 // ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
-private let kDefaultEpocEncoding: ExtendedStringEncoding = .stringEncoding(.windowsCP1252)
+private let kDefaultEpocEncoding: LuaStringEncoding = .stringEncoding(.windowsCP1252)
 // And SIBO uses CP850 (which is handled completely differently and has an inconsistent name to boot)
-private let kSiboEncoding: ExtendedStringEncoding = .cfStringEncoding(.dosLatin1)
+private let kSiboEncoding: LuaStringEncoding = .cfStringEncoding(.dosLatin1)
 
 private extension LuaState {
     func toAppInfo(_ index: CInt) -> OpoInterpreter.AppInfo? {
         let L = self
-        if lua_isnoneornil(L, index) {
+        if isnoneornil(index) {
             return nil
         }
         let era: OpoInterpreter.AppEra = L.getdecodable(index, key: "era") ?? .er5
@@ -55,7 +55,7 @@ private extension LuaState {
         var icons: [Graphics.MaskedBitmap] = []
         // Need to refactor the Lua data structure before we can make MaskedBitmap decodable
         for _ in L.ipairs(-1) {
-            if let bmp = L.todecodable(-1, Graphics.Bitmap.self) {
+            if let bmp = L.todecodable(-1, type: Graphics.Bitmap.self) {
                 var mask: Graphics.Bitmap? = nil
                 if L.rawget(-1, key: "mask") == .table {
                     mask = L.todecodable(-1)
@@ -113,7 +113,7 @@ private func beep(_ L: LuaState!) -> CInt {
 
 private func editValue(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
-    let params = L.todecodable(1, EditParams.self)!
+    let params = L.todecodable(1, type: EditParams.self)!
     let result = iohandler.editValue(params)
     L.push(result)
     return 1
@@ -125,7 +125,7 @@ private func draw(_ L: LuaState!) -> CInt {
     for _ in L.ipairs(1) {
         let id = Graphics.DrawableId(value: L.toint(-1, key: "id") ?? 1)
         let t = L.tostring(-1, key: "type") ?? ""
-        let origin = L.todecodable(-1, Graphics.Point.self) ?? .zero
+        let origin = L.todecodable(-1, type: Graphics.Point.self) ?? .zero
         guard let color: Graphics.Color = L.getdecodable(-1, key: "color") else {
             print("missing color")
             continue
@@ -446,7 +446,7 @@ private func fsop(_ L: LuaState!) -> CInt {
         return 1
     case .stat(let stat):
         lua_newtable(L)
-        L.rawset(-1, key: "size", value: stat.size)
+        L.rawset(-1, key: "size", value: Int64(stat.size))
         L.rawset(-1, key: "lastModified", value: stat.lastModified.timeIntervalSince1970)
         return 1
     }
