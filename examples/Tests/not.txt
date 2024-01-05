@@ -1,0 +1,9 @@
+PROC main:
+	LOCAL f, g
+	PRINT NOT 0, NOT -1
+	f = 3.14
+	g = 0.0
+	PRINT f, NOT f
+	PRINT g, NOT g
+	GET
+ENDP

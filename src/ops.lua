@@ -1123,7 +1123,7 @@ end
 NotLong = NotInt -- 0x65
 
 function NotFloat(stack) -- 0x66
-    stack:push(stack:pop() ~= 0)
+    stack:push(stack:pop() == 0)
 end
 
 function OplDebug(pos)
