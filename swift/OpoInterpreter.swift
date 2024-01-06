@@ -778,8 +778,8 @@ class OpoInterpreter {
         L = LuaState(libraries: [.package, .table, .io, .os, .string, .math, .utf8, .debug])
         L.setDefaultStringEncoding(kDefaultEpocEncoding)
 
-        let srcRoot = Bundle.main.url(forResource: "init", withExtension: "lua")!.deletingLastPathComponent()
-        L.setRequireRoot(srcRoot.path)
+        L.setRequireRoot(nil)
+        L.addModules(lua_sources)
 
         // Finally, run init.lua
         L.getglobal("require")
