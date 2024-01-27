@@ -86,7 +86,7 @@ struct SettingsView: View {
                 case .about:
 
                     AboutView(repository: "inseven/opolua", copyright: "Copyright © 2021-2023\nJason Morley, Tom Sutcliffe") {
-                        Action("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
+                        Action("Website", url: URL(string: "https://opolua.org")!)
                         Action("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
                         Action("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
                         Action("Support", url: URL(address: "support@opolua.org", subject: "OpoLua Support")!)
