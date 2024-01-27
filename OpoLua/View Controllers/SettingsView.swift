@@ -96,6 +96,7 @@ struct SettingsView: View {
                             Credit("Tom Sutcliffe", url: URL(string: "https://github.com/tomsci"))
                         }
                         Acknowledgements("Thanks") {
+                            Credit("Lukas Fittl")
                             Credit("Sara Frederixon")
                             Credit("Sarah Barbour")
                             Credit("Shawn Leedy")
