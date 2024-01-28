@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
 
-    name: build
+  app-build:
+
     runs-on: macos-ventura
 
     steps:
@@ -42,3 +42,31 @@ jobs:
 
       run: |
         scripts/build.sh
+
+  website-build:
+
+    runs-on: macos-ventura
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: scripts/install-dependencies.sh
+
+    - name: Update release notes
+      run: |
+        scripts/update-release-notes.sh
+
+    - name: Commit documentation
+      uses: stefanzweifel/git-auto-commit-action@v4
+      id: auto-commit
+      with:
+        branch: documentation
+        create_branch: true
+        push_options: --force
+        commit_message: "docs: Update release notes"
