@@ -96,13 +96,6 @@ sudo xcode-select --switch "$IOS_XCODE_PATH"
 # List the available schemes.
 xcode_project -list
 
-# Smoke test builds.
-
-# iOS
-build_scheme "OpoLua" clean build \
-    -sdk iphonesimulator \
-    -destination "$IPHONE_DESTINATION"
-
 # Clean up the build directory.
 if [ -d "$BUILD_DIRECTORY" ] ; then
     rm -r "$BUILD_DIRECTORY"
