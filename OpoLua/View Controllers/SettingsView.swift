@@ -85,11 +85,13 @@ struct SettingsView: View {
                 switch sheet {
                 case .about:
 
+                    let subject = "OpoLua Support (\(Bundle.main.version ?? "Unknown Version"))"
+
                     AboutView(repository: "inseven/opolua", copyright: "Copyright © 2021-2024\nJason Morley, Tom Sutcliffe") {
                         Action("Website", url: URL(string: "https://opolua.org")!)
                         Action("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
                         Action("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
-                        Action("Support", url: URL(address: "support@opolua.org", subject: "OpoLua Support")!)
+                        Action("Support", url: URL(address: "support@opolua.org", subject: subject)!)
                     } acknowledgements: {
                         Acknowledgements("Developers") {
                             Credit("Jason Morley", url: URL(string: "https://jbmorley.co.uk"))

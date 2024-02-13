@@ -39,7 +39,6 @@
 		D85F596F27ACB64E006AAF3B /* UIButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85F596E27ACB64E006AAF3B /* UIButton.swift */; };
 		D85F597127ACB682006AAF3B /* WizardFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85F597027ACB682006AAF3B /* WizardFooterView.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
-		D862465727A5C69500B2BBCA /* Diligence.txt in Resources */ = {isa = PBXBuildFile; fileRef = D862465627A5C69500B2BBCA /* Diligence.txt */; };
 		D8632832279C240600B63625 /* UID.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8632831279C240600B63625 /* UID.swift */; };
 		D8647C702793540500DCC261 /* TaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8647C6F2793540500DCC261 /* TaskManager.swift */; };
 		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
@@ -186,7 +185,6 @@
 		D85F596E27ACB64E006AAF3B /* UIButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIButton.swift; sourceTree = "<group>"; };
 		D85F597027ACB682006AAF3B /* WizardFooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WizardFooterView.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
-		D862465627A5C69500B2BBCA /* Diligence.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Diligence.txt; sourceTree = "<group>"; };
 		D8632831279C240600B63625 /* UID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UID.swift; sourceTree = "<group>"; };
 		D8647C6F2793540500DCC261 /* TaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManager.swift; sourceTree = "<group>"; };
 		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
@@ -379,7 +377,6 @@
 			children = (
 				D86FBAB9278C76FB003DF611 /* Lua.txt */,
 				D805F95027A1D7FF00DFBC20 /* License.txt */,
-				D862465627A5C69500B2BBCA /* Diligence.txt */,
 			);
 			path = Licenses;
 			sourceTree = "<group>";
@@ -672,7 +669,6 @@
 				DB93498A27DD2F1000DB8723 /* sibosyscalls.lua in Resources */,
 				DB5AC972275577990043FE5C /* mbm.lua in Resources */,
 				DB0B91862771031F006F5CD0 /* sis.lua in Resources */,
-				D862465727A5C69500B2BBCA /* Diligence.txt in Resources */,
 				DB5AC97C275CD5690043FE5C /* opl.lua in Resources */,
 				DB0B91852771031F006F5CD0 /* aif.lua in Resources */,
 				DBE291842796FA1900EE824B /* const.lua in Resources */,
