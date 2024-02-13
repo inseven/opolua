@@ -694,6 +694,14 @@ function newModuleInstance(moduleName)
     -- require() it and we have to abuse the fact that we know
     -- OpoInterpreter.swift keeps package.searchers[2] as "the thing to call to
     -- load a .lua file" just like the stock Lua runtime does.
+
+    -- Also check preloads first, because that's what compiled-in modules use.
+    local preload = package.preload[moduleName]
+    if type(preload) == "function" then
+        local instance = preload(moduleName)
+        return instance
+    end
+
     local loader = package.searchers[2](moduleName)
     assert(type(loader) == "function", loader)
     local instance = loader()

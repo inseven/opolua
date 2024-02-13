@@ -280,4 +280,7 @@ function runApp(prog, doc)
     return nil
 end
 
+function setEra(era)
+end
+
 return _ENV

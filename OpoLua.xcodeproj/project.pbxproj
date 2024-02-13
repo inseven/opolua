@@ -93,9 +93,6 @@
 		D8D95506279B7B100049A3C3 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95505279B7B100049A3C3 /* UIColor.swift */; };
 		D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03D277AC9B300760302 /* WindowServer.swift */; };
 		D8DCD040277ACD7800760302 /* CanvasSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03F277ACD7800760302 /* CanvasSprite.swift */; };
-		D8DF3FAE278B3DA100FF658B /* Common.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAB278B3DA100FF658B /* Common.xcconfig */; };
-		D8DF3FAF278B3DA100FF658B /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */; };
-		D8DF3FB0278B3DA100FF658B /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D8DF3FAD278B3DA100FF658B /* Release.xcconfig */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */; };
@@ -107,50 +104,99 @@
 		D8FE60092757208000711717 /* ApplicationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60082757208000711717 /* ApplicationError.swift */; };
 		DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */; };
 		DB0B918227710120006F5CD0 /* CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B918127710120006F5CD0 /* CGImage.swift */; };
-		DB0B91852771031F006F5CD0 /* aif.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB0B91832771031F006F5CD0 /* aif.lua */; };
-		DB0B91862771031F006F5CD0 /* sis.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB0B91842771031F006F5CD0 /* sis.lua */; };
+		DB0B91862771031F006F5CD0 /* sis.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB0B91842771031F006F5CD0 /* sis.lua */; };
 		DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9190278369A4006F5CD0 /* BitmapFont.swift */; };
 		DB0B919327836E70006F5CD0 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = DB0B919227836E70006F5CD0 /* fonts */; };
-		DB0B91952789C561006F5CD0 /* directfilestore.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB0B91942789C561006F5CD0 /* directfilestore.lua */; };
+		DB0B91952789C561006F5CD0 /* directfilestore.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB0B91942789C561006F5CD0 /* directfilestore.lua */; };
 		DB3FAC2E27C2CA4A004155C1 /* CGRect.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3FAC2D27C2CA49004155C1 /* CGRect.swift */; };
 		DB48A70D2A9CEC9200F698CB /* Lua in Frameworks */ = {isa = PBXBuildFile; productRef = DB48A70C2A9CEC9200F698CB /* Lua */; };
-		DB5AC970275198A20043FE5C /* database.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC96F275198A20043FE5C /* database.lua */; };
-		DB5AC972275577990043FE5C /* mbm.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC971275577980043FE5C /* mbm.lua */; };
+		DB5AC970275198A20043FE5C /* database.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB5AC96F275198A20043FE5C /* database.lua */; };
+		DB5AC972275577990043FE5C /* mbm.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB5AC971275577980043FE5C /* mbm.lua */; };
 		DB5AC974275681510043FE5C /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC973275681510043FE5C /* CanvasView.swift */; };
 		DB5AC9762757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift */; };
-		DB5AC97827583DC70043FE5C /* opx in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC97727583DC70043FE5C /* opx */; };
-		DB5AC97A275AC72A0043FE5C /* sound.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC979275AC72A0043FE5C /* sound.lua */; };
-		DB5AC97C275CD5690043FE5C /* opl.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB5AC97B275CD5690043FE5C /* opl.lua */; };
+		DB5AC97A275AC72A0043FE5C /* sound.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB5AC979275AC72A0043FE5C /* sound.lua */; };
+		DB5AC97C275CD5690043FE5C /* opl.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB5AC97B275CD5690043FE5C /* opl.lua */; };
 		DB6B438427A55D1200625788 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB6B438327A55D1200625788 /* RootView.swift */; };
 		DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79001B2746B88F005E904F /* OpoIoHandler.swift */; };
-		DB7900262746D915005E904F /* defaultiohandler.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB7900242746D915005E904F /* defaultiohandler.lua */; };
+		DB7900262746D915005E904F /* defaultiohandler.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB7900242746D915005E904F /* defaultiohandler.lua */; };
 		DB79FFBE2742D99C005E904F /* ProgramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFBD2742D99C005E904F /* ProgramViewController.swift */; };
 		DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FE6227428292005E904F /* AppDelegate.swift */; };
 		DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFE52742E596005E904F /* OpoInterpreter.swift */; };
-		DB79FFF02742E631005E904F /* runtime.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFE82742E631005E904F /* runtime.lua */; };
-		DB79FFF12742E631005E904F /* init.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFE92742E631005E904F /* init.lua */; };
-		DB79FFF22742E631005E904F /* fns.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFEA2742E631005E904F /* fns.lua */; };
-		DB79FFF32742E631005E904F /* opofile.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFEB2742E631005E904F /* opofile.lua */; };
-		DB79FFF42742E631005E904F /* runopo.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFEC2742E631005E904F /* runopo.lua */; };
-		DB79FFF52742E631005E904F /* dumpopo.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFED2742E631005E904F /* dumpopo.lua */; };
-		DB79FFF62742E631005E904F /* stack.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFEE2742E631005E904F /* stack.lua */; };
-		DB79FFF72742E631005E904F /* ops.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB79FFEF2742E631005E904F /* ops.lua */; };
-		DB93498A27DD2F1000DB8723 /* sibosyscalls.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB93498927DD2F1000DB8723 /* sibosyscalls.lua */; };
-		DB93498E27E659CA00DB8723 /* oplkeycode.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB93498D27E659CA00DB8723 /* oplkeycode.lua */; };
+		DB79FFF02742E631005E904F /* runtime.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB79FFE82742E631005E904F /* runtime.lua */; };
+		DB79FFF12742E631005E904F /* init.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB79FFE92742E631005E904F /* init.lua */; };
+		DB79FFF22742E631005E904F /* fns.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB79FFEA2742E631005E904F /* fns.lua */; };
+		DB79FFF32742E631005E904F /* opofile.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB79FFEB2742E631005E904F /* opofile.lua */; };
+		DB79FFF42742E631005E904F /* runopo.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB79FFEC2742E631005E904F /* runopo.lua */; };
+		DB79FFF52742E631005E904F /* dumpopo.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB79FFED2742E631005E904F /* dumpopo.lua */; };
+		DB79FFF62742E631005E904F /* stack.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB79FFEE2742E631005E904F /* stack.lua */; };
+		DB79FFF72742E631005E904F /* ops.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB79FFEF2742E631005E904F /* ops.lua */; };
+		DB93498A27DD2F1000DB8723 /* sibosyscalls.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB93498927DD2F1000DB8723 /* sibosyscalls.lua */; };
+		DB93498E27E659CA00DB8723 /* oplkeycode.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB93498D27E659CA00DB8723 /* oplkeycode.lua */; };
 		DB9533FE27AC06A1001CF58D /* FlagSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9533FD27AC06A1001CF58D /* FlagSet.swift */; };
-		DB95340127AE91B6001CF58D /* recognizer.lua in Resources */ = {isa = PBXBuildFile; fileRef = DB95340027AE91B6001CF58D /* recognizer.lua */; };
+		DB95340127AE91B6001CF58D /* recognizer.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB95340027AE91B6001CF58D /* recognizer.lua */; };
 		DB9F837127D3834000940D5C /* z-s5 in Resources */ = {isa = PBXBuildFile; fileRef = DB9F837027D3834000940D5C /* z-s5 */; };
-		DBA18836279C408A00B2954B /* dialog.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBA18835279C408A00B2954B /* dialog.lua */; };
-		DBACE9C3274F895D002612DF /* modules in Resources */ = {isa = PBXBuildFile; fileRef = DBACE9C2274F895D002612DF /* modules */; };
-		DBE2917C278CCB0B00EE824B /* crc.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE2917B278CCB0B00EE824B /* crc.lua */; };
+		DBA18836279C408A00B2954B /* dialog.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBA18835279C408A00B2954B /* dialog.lua */; };
+		DBE2917C278CCB0B00EE824B /* crc.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBE2917B278CCB0B00EE824B /* crc.lua */; };
 		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
-		DBE291802794813F00EE824B /* rsc.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE2917F2794813D00EE824B /* rsc.lua */; };
+		DBE291802794813F00EE824B /* rsc.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBE2917F2794813D00EE824B /* rsc.lua */; };
 		DBE291822795F86200EE824B /* UIKeyModifierFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */; };
-		DBE291842796FA1900EE824B /* const.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE291832796FA1900EE824B /* const.lua */; };
-		DBE29186279747D100EE824B /* menu.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE29185279747D000EE824B /* menu.lua */; };
-		DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */ = {isa = PBXBuildFile; fileRef = DBE91522276A9D0900BDB8F5 /* memory.lua */; };
+		DBE291842796FA1900EE824B /* const.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBE291832796FA1900EE824B /* const.lua */; };
+		DBE29186279747D100EE824B /* menu.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBE29185279747D000EE824B /* menu.lua */; };
+		DBE91523276A9D0A00BDB8F5 /* memory.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBE91522276A9D0900BDB8F5 /* memory.lua */; };
 		DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE91524276D25A900BDB8F5 /* UIKey.swift */; };
+		DBF28C5C2B49C0A00044C330 /* toolbar.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBF28C5B2B49C0A00044C330 /* toolbar.lua */; };
+		DBF28C612B49C3630044C330 /* aif.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB0B91832771031F006F5CD0 /* aif.lua */; };
+		DBF28C6A2B49C52D0044C330 /* systinfo.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBF28C642B49C52D0044C330 /* systinfo.lua */; };
+		DBF28C6B2B49C52D0044C330 /* system.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBF28C652B49C52D0044C330 /* system.lua */; };
+		DBF28C6C2B49C52D0044C330 /* alarm.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBF28C662B49C52D0044C330 /* alarm.lua */; };
+		DBF28C6D2B49C52D0044C330 /* sysram1.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBF28C672B49C52D0044C330 /* sysram1.lua */; };
+		DBF28C6E2B49C52D0044C330 /* date.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBF28C682B49C52D0044C330 /* date.lua */; };
+		DBF28C6F2B49C52D0044C330 /* bmp.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBF28C692B49C52D0044C330 /* bmp.lua */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DBF28C602B49C33B0044C330 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = dummyCopyLocationForLuaFiles;
+			dstSubfolderSpec = 16;
+			files = (
+				DB5AC97C275CD5690043FE5C /* opl.lua in CopyFiles */,
+				DBE291842796FA1900EE824B /* const.lua in CopyFiles */,
+				DBE291802794813F00EE824B /* rsc.lua in CopyFiles */,
+				DBE2917C278CCB0B00EE824B /* crc.lua in CopyFiles */,
+				DB0B91952789C561006F5CD0 /* directfilestore.lua in CopyFiles */,
+				DB93498E27E659CA00DB8723 /* oplkeycode.lua in CopyFiles */,
+				DBF28C5C2B49C0A00044C330 /* toolbar.lua in CopyFiles */,
+				DBF28C612B49C3630044C330 /* aif.lua in CopyFiles */,
+				DB5AC97A275AC72A0043FE5C /* sound.lua in CopyFiles */,
+				DB5AC970275198A20043FE5C /* database.lua in CopyFiles */,
+				DB79FFF22742E631005E904F /* fns.lua in CopyFiles */,
+				DBE29186279747D100EE824B /* menu.lua in CopyFiles */,
+				DB95340127AE91B6001CF58D /* recognizer.lua in CopyFiles */,
+				DBA18836279C408A00B2954B /* dialog.lua in CopyFiles */,
+				DB79FFF72742E631005E904F /* ops.lua in CopyFiles */,
+				DB79FFF52742E631005E904F /* dumpopo.lua in CopyFiles */,
+				DBE91523276A9D0A00BDB8F5 /* memory.lua in CopyFiles */,
+				DB79FFF62742E631005E904F /* stack.lua in CopyFiles */,
+				DB7900262746D915005E904F /* defaultiohandler.lua in CopyFiles */,
+				DB79FFF32742E631005E904F /* opofile.lua in CopyFiles */,
+				DB79FFF42742E631005E904F /* runopo.lua in CopyFiles */,
+				DB79FFF12742E631005E904F /* init.lua in CopyFiles */,
+				DB79FFF02742E631005E904F /* runtime.lua in CopyFiles */,
+				DB93498A27DD2F1000DB8723 /* sibosyscalls.lua in CopyFiles */,
+				DB5AC972275577990043FE5C /* mbm.lua in CopyFiles */,
+				DB0B91862771031F006F5CD0 /* sis.lua in CopyFiles */,
+				DBF28C6C2B49C52D0044C330 /* alarm.lua in CopyFiles */,
+				DBF28C6B2B49C52D0044C330 /* system.lua in CopyFiles */,
+				DBF28C6E2B49C52D0044C330 /* date.lua in CopyFiles */,
+				DBF28C6F2B49C52D0044C330 /* bmp.lua in CopyFiles */,
+				DBF28C6A2B49C52D0044C330 /* systinfo.lua in CopyFiles */,
+				DBF28C6D2B49C52D0044C330 /* sysram1.lua in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		D805F94C27A1BD9800DFBC20 /* AutoOrientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoOrientView.swift; sourceTree = "<group>"; };
@@ -263,7 +309,6 @@
 		DB5AC971275577980043FE5C /* mbm.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mbm.lua; sourceTree = "<group>"; };
 		DB5AC973275681510043FE5C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CGExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpoIoHandler_CGExtensions.swift; sourceTree = "<group>"; };
-		DB5AC97727583DC70043FE5C /* opx */ = {isa = PBXFileReference; lastKnownFileType = folder; path = opx; sourceTree = "<group>"; };
 		DB5AC979275AC72A0043FE5C /* sound.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sound.lua; sourceTree = "<group>"; };
 		DB5AC97B275CD5690043FE5C /* opl.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = opl.lua; sourceTree = "<group>"; };
 		DB6B438327A55D1200625788 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -290,7 +335,6 @@
 		DB95340027AE91B6001CF58D /* recognizer.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = recognizer.lua; sourceTree = "<group>"; };
 		DB9F837027D3834000940D5C /* z-s5 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "z-s5"; path = "resources/z-s5"; sourceTree = SOURCE_ROOT; };
 		DBA18835279C408A00B2954B /* dialog.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dialog.lua; sourceTree = "<group>"; };
-		DBACE9C2274F895D002612DF /* modules */ = {isa = PBXFileReference; lastKnownFileType = folder; path = modules; sourceTree = "<group>"; };
 		DBE2917B278CCB0B00EE824B /* crc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crc.lua; sourceTree = "<group>"; };
 		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
 		DBE2917F2794813D00EE824B /* rsc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rsc.lua; sourceTree = "<group>"; };
@@ -299,6 +343,13 @@
 		DBE29185279747D000EE824B /* menu.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu.lua; sourceTree = "<group>"; };
 		DBE91522276A9D0900BDB8F5 /* memory.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = memory.lua; sourceTree = "<group>"; };
 		DBE91524276D25A900BDB8F5 /* UIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKey.swift; sourceTree = "<group>"; };
+		DBF28C5B2B49C0A00044C330 /* toolbar.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = toolbar.lua; sourceTree = "<group>"; };
+		DBF28C642B49C52D0044C330 /* systinfo.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = systinfo.lua; sourceTree = "<group>"; };
+		DBF28C652B49C52D0044C330 /* system.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = system.lua; sourceTree = "<group>"; };
+		DBF28C662B49C52D0044C330 /* alarm.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = alarm.lua; sourceTree = "<group>"; };
+		DBF28C672B49C52D0044C330 /* sysram1.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sysram1.lua; sourceTree = "<group>"; };
+		DBF28C682B49C52D0044C330 /* date.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = date.lua; sourceTree = "<group>"; };
+		DBF28C692B49C52D0044C330 /* bmp.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bmp.lua; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -548,6 +599,7 @@
 		DB79FFE72742E631005E904F /* src */ = {
 			isa = PBXGroup;
 			children = (
+				DBF28C632B49C52D0044C330 /* opx */,
 				DBE291832796FA1900EE824B /* const.lua */,
 				DB79FFE92742E631005E904F /* init.lua */,
 				DB79FFE82742E631005E904F /* runtime.lua */,
@@ -573,10 +625,30 @@
 				DB95340027AE91B6001CF58D /* recognizer.lua */,
 				DB93498927DD2F1000DB8723 /* sibosyscalls.lua */,
 				DB93498D27E659CA00DB8723 /* oplkeycode.lua */,
-				DBACE9C2274F895D002612DF /* modules */,
-				DB5AC97727583DC70043FE5C /* opx */,
+				DBF28C5A2B49C0A00044C330 /* modules */,
 			);
 			path = src;
+			sourceTree = "<group>";
+		};
+		DBF28C5A2B49C0A00044C330 /* modules */ = {
+			isa = PBXGroup;
+			children = (
+				DBF28C5B2B49C0A00044C330 /* toolbar.lua */,
+			);
+			path = modules;
+			sourceTree = "<group>";
+		};
+		DBF28C632B49C52D0044C330 /* opx */ = {
+			isa = PBXGroup;
+			children = (
+				DBF28C642B49C52D0044C330 /* systinfo.lua */,
+				DBF28C652B49C52D0044C330 /* system.lua */,
+				DBF28C662B49C52D0044C330 /* alarm.lua */,
+				DBF28C672B49C52D0044C330 /* sysram1.lua */,
+				DBF28C682B49C52D0044C330 /* date.lua */,
+				DBF28C692B49C52D0044C330 /* bmp.lua */,
+			);
+			path = opx;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -587,13 +659,14 @@
 			buildConfigurationList = DB79FFB72742D88B005E904F /* Build configuration list for PBXNativeTarget "OpoLua" */;
 			buildPhases = (
 				DB79FFA22742D88A005E904F /* Sources */,
+				DBF28C602B49C33B0044C330 /* CopyFiles */,
 				DB79FFA32742D88A005E904F /* Frameworks */,
-				DB0B91802770A66C006F5CD0 /* ShellScript */,
 				DB79FFA42742D88A005E904F /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				DB2363262B499772004802AD /* PBXTargetDependency */,
 			);
 			name = OpoLua;
 			packageProductDependencies = (
@@ -610,8 +683,9 @@
 		DB79FE5727428292005E904F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = NO;
 				LastSwiftUpdateCheck = 1310;
-				LastUpgradeCheck = 1320;
+				LastUpgradeCheck = 1510;
 				TargetAttributes = {
 					DB79FFA52742D88A005E904F = {
 						CreatedOnToolsVersion = 12.5.1;
@@ -627,6 +701,8 @@
 				Base,
 			);
 			mainGroup = DB79FE5627428292005E904F;
+			packageReferences = (
+			);
 			productRefGroup = DB79FE6027428292005E904F /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -641,67 +717,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DBACE9C3274F895D002612DF /* modules in Resources */,
 				D87A9249274C517000254DE9 /* Assets.xcassets in Resources */,
-				D8DF3FB0278B3DA100FF658B /* Release.xcconfig in Resources */,
-				DB5AC97A275AC72A0043FE5C /* sound.lua in Resources */,
 				D893EAD5276073CA00E64219 /* Borders in Resources */,
-				DB5AC970275198A20043FE5C /* database.lua in Resources */,
-				DB5AC97827583DC70043FE5C /* opx in Resources */,
 				DB9F837127D3834000940D5C /* z-s5 in Resources */,
-				DB79FFF22742E631005E904F /* fns.lua in Resources */,
 				D805F95127A1D7FF00DFBC20 /* License.txt in Resources */,
-				DBE29186279747D100EE824B /* menu.lua in Resources */,
-				DB95340127AE91B6001CF58D /* recognizer.lua in Resources */,
 				D8C679BD27484BF400BD8720 /* examples in Resources */,
-				DBA18836279C408A00B2954B /* dialog.lua in Resources */,
-				DB79FFF72742E631005E904F /* ops.lua in Resources */,
-				DB79FFF52742E631005E904F /* dumpopo.lua in Resources */,
-				DBE91523276A9D0A00BDB8F5 /* memory.lua in Resources */,
 				DB0B919327836E70006F5CD0 /* fonts in Resources */,
-				DB79FFF62742E631005E904F /* stack.lua in Resources */,
-				DB7900262746D915005E904F /* defaultiohandler.lua in Resources */,
 				D86FBABA278C76FB003DF611 /* Lua.txt in Resources */,
-				DB79FFF32742E631005E904F /* opofile.lua in Resources */,
-				DB79FFF42742E631005E904F /* runopo.lua in Resources */,
-				DB79FFF12742E631005E904F /* init.lua in Resources */,
-				DB79FFF02742E631005E904F /* runtime.lua in Resources */,
-				DB93498A27DD2F1000DB8723 /* sibosyscalls.lua in Resources */,
-				DB5AC972275577990043FE5C /* mbm.lua in Resources */,
-				DB0B91862771031F006F5CD0 /* sis.lua in Resources */,
-				DB5AC97C275CD5690043FE5C /* opl.lua in Resources */,
-				DB0B91852771031F006F5CD0 /* aif.lua in Resources */,
-				DBE291842796FA1900EE824B /* const.lua in Resources */,
-				DBE291802794813F00EE824B /* rsc.lua in Resources */,
-				DBE2917C278CCB0B00EE824B /* crc.lua in Resources */,
-				DB0B91952789C561006F5CD0 /* directfilestore.lua in Resources */,
-				D8DF3FAF278B3DA100FF658B /* Debug.xcconfig in Resources */,
-				D8DF3FAE278B3DA100FF658B /* Common.xcconfig in Resources */,
-				DB93498E27E659CA00DB8723 /* oplkeycode.lua in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		DB0B91802770A66C006F5CD0 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# TODO use luac to validate .lua files\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		DB79FFA22742D88A005E904F /* Sources */ = {
@@ -816,6 +842,13 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		DB2363262B499772004802AD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DB2363252B499772004802AD /* EmbedLuaPlugin */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		DB79FE6B27428294005E904F /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -851,9 +884,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -917,9 +952,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
@@ -1027,6 +1064,10 @@
 		D86FBAB6278C75E1003DF611 /* Diligence */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Diligence;
+		};
+		DB2363252B499772004802AD /* EmbedLuaPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "plugin:EmbedLuaPlugin";
 		};
 		DB48A70C2A9CEC9200F698CB /* Lua */ = {
 			isa = XCSwiftPackageProductDependency;
