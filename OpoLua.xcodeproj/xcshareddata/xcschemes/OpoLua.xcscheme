@@ -20,6 +20,34 @@
                ReferencedContainer = "container:OpoLua.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "EmbedLuaPlugin"
+               BuildableName = "EmbedLuaPlugin"
+               BlueprintName = "EmbedLuaPlugin"
+               ReferencedContainer = "container:LuaSwift">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "Lua"
+               BuildableName = "Lua"
+               BlueprintName = "Lua"
+               ReferencedContainer = "container:LuaSwift">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
