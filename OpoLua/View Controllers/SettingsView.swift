@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2023 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2021-2024 Jason Morley, Tom Sutcliffe
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -85,17 +85,20 @@ struct SettingsView: View {
                 switch sheet {
                 case .about:
 
-                    AboutView(repository: "inseven/opolua", copyright: "Copyright © 2021-2023\nJason Morley, Tom Sutcliffe") {
-                        Action("InSeven Limited", url: URL(string: "https://inseven.co.uk")!)
+                    let subject = "OpoLua Support (\(Bundle.main.version ?? "Unknown Version"))"
+
+                    AboutView(repository: "inseven/opolua", copyright: "Copyright © 2021-2024\nJason Morley, Tom Sutcliffe") {
+                        Action("Website", url: URL(string: "https://opolua.org")!)
                         Action("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
                         Action("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
-                        Action("Support", url: URL(address: "support@opolua.org", subject: "OpoLua Support")!)
+                        Action("Support", url: URL(address: "support@opolua.org", subject: subject)!)
                     } acknowledgements: {
                         Acknowledgements("Developers") {
                             Credit("Jason Morley", url: URL(string: "https://jbmorley.co.uk"))
                             Credit("Tom Sutcliffe", url: URL(string: "https://github.com/tomsci"))
                         }
                         Acknowledgements("Thanks") {
+                            Credit("Lukas Fittl")
                             Credit("Sara Frederixon")
                             Credit("Sarah Barbour")
                             Credit("Shawn Leedy")

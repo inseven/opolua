@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2021-2023 Jason Morley, Tom Sutcliffe
+# Copyright (c) 2021-2024 Jason Morley, Tom Sutcliffe
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -169,7 +169,7 @@ if $RELEASE ; then
     popd
 
     mkdir -p ~/.appstoreconnect/private_keys/
-    echo -n "$APPLE_API_KEY" | base64 --decode -o ~/".appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
+    echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o ~/".appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
     ls ~/.appstoreconnect/private_keys/
     changes \
         release \
