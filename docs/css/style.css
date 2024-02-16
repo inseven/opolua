@@ -62,6 +62,7 @@ ul.navigation a,
 
 ul.navigation {
     list-style: none;
+    text-align: center;
     margin: 0;
     padding: var(--navigation-padding);
     background-color: white;
