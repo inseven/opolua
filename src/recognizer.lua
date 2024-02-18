@@ -73,12 +73,18 @@ function recognize(data, allData)
         local toc = dfs.parse(data)
         local texted = toc[dfs.SectionUids.KUidTextEdSection]
         if texted then
-            return "opl", allData and { text = getOplText(data) }
+            return "opl", { text = getOplText(data) }
         end
 
         local sndData = toc[dfs.SectionUids.KUidSoundData]
         if sndData then
-            return "sound", allData and { data = require("sound").parseWveFile(data) }
+            return "sound", { data = require("sound").parseWveFile(data) }
+        end
+
+        local textPos = toc[dfs.SectionUids.KUidPlainText]
+        if textPos then
+            local len, start = string.unpack("<I4", data, 1 + textPos)
+            return "text", convertEpocString(data:sub(start, start + len - 1))
         end
     end
 
@@ -92,6 +98,11 @@ local specialChars = {
     ["\x06"] = "\n",
     ["\x10"] = " ", -- Not going to distinguish nonbreaking space, not important for OPL
 }
+
+function convertEpocString(str)
+    local result = str:gsub("[\x06\x10]", specialChars)
+    return result
+end
 
 function getOplText(data)
     local dfs = require("directfilestore")
@@ -109,7 +120,7 @@ function getOplText(data)
             local len, pos = readCardinality(data, pos)
             -- 06 means "new paragraph" in TextEd land... everything else likely
             -- to appear in an OPL script is ASCII
-            local text = data:sub(pos, pos + len - 1):gsub("[\x06\x10]", specialChars)
+            local text = convertEpocString(data:sub(pos, pos + len - 1))
             return text
         else
             pos = pos + 4 -- Skip over offset of section we don't care about

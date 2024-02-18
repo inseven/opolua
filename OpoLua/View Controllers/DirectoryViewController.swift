@@ -233,7 +233,7 @@ class DirectoryViewController : UICollectionViewController {
                     let viewController = ResourceViewController(url: item.url)
                     self.navigationController?.pushViewController(viewController, animated: true)
                 })
-            case .text, .opl:
+            case .text, .opl, .epocText:
                 actions.append(UIAction(title: "View", image: UIImage(systemName: "eye")) { action in
                     let sourceViewController = SourceViewController(url: item.url)
                     self.navigationController?.pushViewController(sourceViewController, animated: true)
@@ -293,7 +293,7 @@ class DirectoryViewController : UICollectionViewController {
         case .image, .applicationInformation:
             let viewController = ResourceViewController(url: item.url)
             navigationController?.pushViewController(viewController, animated: true)
-        case .text, .opl:
+        case .text, .opl, .epocText:
             let sourceViewController = SourceViewController(url: item.url)
             navigationController?.pushViewController(sourceViewController, animated: true)
         case .sound:

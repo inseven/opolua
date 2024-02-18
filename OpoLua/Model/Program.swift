@@ -21,6 +21,7 @@
 import Combine
 import UIKit
 import GameController
+import UniformTypeIdentifiers
 
 /**
  Called on the main queue.
@@ -137,6 +138,8 @@ class Program {
             switch key {
             case .clockFormat:
                 oplConfig[key] = "0" // analog
+            case .clipboard:
+                break // We don't support reading the iOS clipboard (yet)
             }
         }
         if applicationMetadata?.appInfo.era == .er5 {
@@ -495,6 +498,9 @@ extension Program: OpoIoHandler {
             case .clockFormat:
                 let clockType: Settings.ClockType = value == "1" ? .digital : .analog
                 settings.clockType = clockType
+            case .clipboard:
+                // print("Got clipboard \(value)")
+                UIPasteboard.general.setValue(value, forPasteboardType: UTType.utf8PlainText.identifier)
             }
         }
     }

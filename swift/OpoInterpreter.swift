@@ -377,7 +377,8 @@ private func getScreenInfo(_ L: LuaState!) -> CInt {
 }
 
 private func fsop(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
+    let interpreter = getInterpreterUpval(L)
+    let iohandler = interpreter.iohandler
     guard let cmd = L.tostring(1) else {
         return 0
     }
@@ -399,10 +400,19 @@ private func fsop(_ L: LuaState!) -> CInt {
     case "rmdir":
         op = .rmdir
     case "write":
-        if let data = L.todata(3) {
-            op = .write(Data(data))
-        } else {
+        guard let data = L.todata(3) else {
             return 0
+        }
+        op = .write(Data(data))
+
+        // Special case writing to the clipboard
+        if path.caseInsensitiveCompare("c:\\system\\data\\clpboard.cbd") == .orderedSame {
+            switch interpreter.getFileInfo(data: Data(data)) {
+            case .text(let text):
+                iohandler.setConfig(key: .clipboard, value: text.text)
+            default:
+                print("Failed to parse clipboard data from \(path)")
+            }
         }
     case "read":
         op = .read
@@ -1231,12 +1241,17 @@ class OpoInterpreter {
         let data: Data
     }
 
+    struct TextFile: Codable {
+        let text: String
+    }
+
     enum FileType: String, Codable {
         case unknown
         case aif
         case mbm
         case opl
         case sound
+        case text
     }
 
     enum FileInfo {
@@ -1246,6 +1261,7 @@ class OpoInterpreter {
         case mbm(MbmFile)
         case opl(OplFile)
         case sound(SoundFile)
+        case text(TextFile)
     }
 
     func recognize(path: String) -> FileType {
@@ -1253,7 +1269,8 @@ class OpoInterpreter {
         defer {
             L.settop(top)
         }
-        // We don't actually need the whole file data here, oh well
+        // Let's not bother with the optimisation recognizers technically had to only read the first N bytes of a file.
+        // Epoc files are tiny by modern standards and it simplifies the code to just read the entire file.
         guard let data = FileManager.default.contents(atPath: path) else {
             return .unknown
         }
@@ -1265,7 +1282,7 @@ class OpoInterpreter {
         L.rawget(-1, key: "recognize")
         lua_remove(L, -2) // recognizer module
         L.push(data)
-        L.push(false) // allData
+        L.push(true) // allData
         guard logpcall(2, 1) else {
             return .unknown
         }
@@ -1276,12 +1293,16 @@ class OpoInterpreter {
     }
 
     func getFileInfo(path: String) -> FileInfo {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        return getFileInfo(data: data)
+    }
+
+    func getFileInfo(data: Data) -> FileInfo {
         let top = L.gettop()
         defer {
             L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
         }
         L.getglobal("require")
         L.push("recognizer")
@@ -1319,6 +1340,10 @@ class OpoInterpreter {
         case "unknown":
             if let info: UnknownEpocFile = L.todecodable(-1) {
                 return .unknownEpoc(info)
+            }
+        case "text":
+            if let text = L.tostring(-1) {
+                return .text(TextFile(text: text))
             }
         default:
             break

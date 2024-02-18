@@ -54,6 +54,7 @@ class Directory {
             case sound
             case help
             case text
+            case epocText // Ie conceptually plain text, but requiring going through OpoInterpreter to parse
             case opl
             case unknown
         }
@@ -146,6 +147,8 @@ class Directory {
                 return Item(url: url, type: .opl, isWriteable: isWriteable)
             case .sound:
                 return Item(url: url, type: .sound, isWriteable: isWriteable)
+            case .text:
+                return Item(url: url, type: .epocText, isWriteable: isWriteable)
             default:
                 break
             }
@@ -309,7 +312,7 @@ extension Directory.Item.ItemType {
             return .sound()
         case .help:
             return .data()
-        case .text:
+        case .text, .epocText:
             return .text()
         case .opl:
             return .opl()

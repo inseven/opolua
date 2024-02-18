@@ -121,12 +121,16 @@ class SourceViewController: UIViewController {
         switch item.type {
         case .text:
             contents = try String(contentsOf: url)
-        case .opl:
+        case .opl, .epocText:
             let fileInfo = interpreter.getFileInfo(path: url.path)
-            guard case OpoInterpreter.FileInfo.opl(let opoFile) = fileInfo else {
+            switch fileInfo {
+            case .opl(let oplFile):
+                contents = oplFile.text
+            case .text(let textFile):
+                contents = textFile.text
+            default:
                 throw OpoLuaError.unsupportedFile
             }
-            contents = opoFile.text
         default:
             throw OpoLuaError.unsupportedFile
         }

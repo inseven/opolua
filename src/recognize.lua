@@ -1,3 +1,5 @@
+#!/usr/bin/env lua
+
 --[[
 
 Copyright (c) 2021-2024 Jason Morley, Tom Sutcliffe
@@ -22,29 +24,17 @@ SOFTWARE.
 
 ]]
 
-_ENV = module()
+dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
 
-SectionUids = enum {
-    KUidPrintSetupStream = 0x10000105,
-    KUidSoundData = 0x10000052, -- Not sure what this uid is officially called, can't find a reference...
-    KUidTextEdSection = KUidTextEdApp, -- It's called TextEd but it's basically the OPL editor
-    KUidPlainText = 0x10000033, -- Don't know what this is technically called...
-}
+function main()
+    local args = getopt({
+        "filename"
+    })
 
-function parse(data)
-    local uid1, uid2, uid3, checksum, tocOffset = string.unpack("<I4I4I4I4I4", data)
-    assert(uid1 == KUidDirectFileStore)
-    assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
-    local toc = {}
-    local tocLen, pos = string.unpack("B", data, 1 + tocOffset)
-    local n = tocLen // 2 -- tocLen is count of longs (as a byte), and each entry is 2 longs (uid and offset)
-    for i = 1, n do
-        local uid, offset
-        uid, offset, pos = string.unpack("<I4I4", data, pos)
-        toc[uid] = offset
-        -- print(string.format("0x%08X @ 0x%08X", uid, offset))
-    end
-    return toc
+    recognizer = require("recognizer")
+    local data = readFile(args.filename, "rb")
+    local type, info = recognizer.recognize(data, true)
+    print(type, info)
 end
 
-return _ENV
+pcallMain()

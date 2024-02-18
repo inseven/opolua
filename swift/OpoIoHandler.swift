@@ -499,6 +499,7 @@ extension Async.KeyPressEvent {
 
 enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
+    case clipboard
 }
 
 struct EditParams: Codable {
