@@ -297,7 +297,16 @@ function RunExe(stack, runtime) -- 32
 end
 
 function LogonToThread(stack, runtime) -- 33
-    unimplemented("opx.system.LogonToThread")
+    local status = stack:pop():asVariable(DataTypes.ELong)
+    local id = stack:pop()
+    printf("LogonToThread(%d, %s)\n", id, status:addressOf())
+    if id == 0 then
+        -- Probably a follow on from a RunApp which we've already handled
+        status(KErrGenFail)
+        stack:push(0)
+    else
+        unimplemented("opx.system.LogonToThread")
+    end
 end
 
 function TerminateCurrentProcess(stack, runtime) -- 34
@@ -436,7 +445,11 @@ function SetBackground(stack, runtime) -- 56
 end
 
 function SetForegroundByThread(stack, runtime) -- 57
-    unimplemented("opx.system.SetForegroundByThread")
+    local prev = stack:pop()
+    local id = stack:pop()
+    printf("TODO: SetForegroundByThread(%d,%d)\n", id, prev)
+    stack:push(KErrGenFail)
+    -- unimplemented("opx.system.SetForegroundByThread")
 end
 
 function SetBackgroundByThread(stack, runtime) -- 58

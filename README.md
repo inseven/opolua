@@ -103,6 +103,7 @@ Various useful resources which aided greatly in reverse-engineering the OPL and 
 * http://www.koeniglich.de/epoc32_fileformats.txt
 * https://frodo.looijaard.name/psifiles/MBM_File
 * http://www.davros.org/psion/psionics/
+* http://www.users.globalnet.co.uk/~datajam/opl-manual/html/opl/opchapt13.html
 
 ## Contributing
 
