@@ -307,6 +307,8 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     end
 
     lightGrey()
+    gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
+
     if state == 0 then
         gXBORDER(2, 0x84, width, height)
         gMOVE(3, 3)
