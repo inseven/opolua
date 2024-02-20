@@ -307,6 +307,8 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     end
 
     lightGrey()
+    gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
+
     if state == 0 then
         gXBORDER(2, 0x84, width, height)
         gMOVE(3, 3)
@@ -871,7 +873,7 @@ function GETEVENTA32(stat, evAddr)
         -- The GETCMD$ API is so stupid...
         if stat() == KErrNone then
             local ev = evAddr:asVariable(DataTypes.ELongArray)
-            if ev[KEvAType] == KEvCommand then
+            if ev[KEvAType]() == KEvCommand then
                 -- We never use KEvCommand for anything except quitCommand, so we can assume that here
                 runtime:setResource("GETCMD", "X")
             end
