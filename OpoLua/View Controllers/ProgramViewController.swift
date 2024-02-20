@@ -382,19 +382,21 @@ class ProgramViewController: UIViewController {
 
     func configureControllers() {
         for controller in GCController.controllers() {
-            controller.extendedGamepad?.buttonHome?.pressedChangedHandler = self.pressedChangeHandler(for: .home)
-            controller.extendedGamepad?.buttonA.pressedChangedHandler = self.pressedChangeHandler(for: .a)
-            controller.extendedGamepad?.buttonB.pressedChangedHandler = self.pressedChangeHandler(for: .b)
-            controller.extendedGamepad?.dpad.up.pressedChangedHandler = self.pressedChangeHandler(for: .up)
-            controller.extendedGamepad?.dpad.down.pressedChangedHandler = self.pressedChangeHandler(for: .down)
-            controller.extendedGamepad?.dpad.left.pressedChangedHandler = self.pressedChangeHandler(for: .left)
-            controller.extendedGamepad?.dpad.right.pressedChangedHandler = self.pressedChangeHandler(for: .right)
-            controller.extendedGamepad?.leftThumbstick.up.pressedChangedHandler = self.pressedChangeHandler(for: .up)
-            controller.extendedGamepad?.leftThumbstick.down.pressedChangedHandler = self.pressedChangeHandler(for: .down)
-            controller.extendedGamepad?.leftThumbstick.left.pressedChangedHandler = self.pressedChangeHandler(for: .left)
-            controller.extendedGamepad?.leftThumbstick.right.pressedChangedHandler = self.pressedChangeHandler(for: .right)
-            controller.extendedGamepad?.buttonOptions?.pressedChangedHandler = self.pressedChangeHandler(for: .options)
-            controller.extendedGamepad?.buttonMenu.pressedChangedHandler = self.pressedChangeHandler(for: .menu)
+            let input = controller.physicalInputProfile
+
+            for dpad in input.allDpads {
+                dpad.left.pressedChangedHandler = self.pressedChangeHandler(for: .left)
+                dpad.right.pressedChangedHandler = self.pressedChangeHandler(for: .right)
+                dpad.up.pressedChangedHandler = self.pressedChangeHandler(for: .up)
+                dpad.down.pressedChangedHandler = self.pressedChangeHandler(for: .down)
+            }
+
+            let buttons = input.buttons
+            buttons[GCInputButtonHome]?.pressedChangedHandler = self.pressedChangeHandler(for: .home)
+            buttons[GCInputButtonA]?.pressedChangedHandler = self.pressedChangeHandler(for: .a)
+            buttons[GCInputButtonB]?.pressedChangedHandler = self.pressedChangeHandler(for: .b)
+            buttons[GCInputButtonOptions]?.pressedChangedHandler = self.pressedChangeHandler(for: .options)
+            buttons[GCInputButtonMenu]?.pressedChangedHandler = self.pressedChangeHandler(for: .menu)
         }
     }
 
@@ -439,10 +441,7 @@ class ProgramViewController: UIViewController {
             let configuration = GCVirtualController.Configuration()
             configuration.elements = [GCInputButtonA,
                                       GCInputButtonB,
-                                      GCInputDirectionPad,
-                                      GCInputDirectionPad,
-                                      GCInputButtonHome,
-                                      GCInputButtonOptions]
+                                      GCInputDirectionPad]
             virtualController = GCVirtualController(configuration: configuration)
             virtualController?.connect()
         }
