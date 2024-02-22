@@ -26,6 +26,8 @@ _ENV = module()
 
 local kMenuFont = KFontArialNormal15
 local kShortcutFont = KFontArialNormal11
+local kChoiceUpArrow = "," -- in KFontEiksym15
+local kChoiceDownArrow = "-" -- in KFontEiksym15
 
 local DrawStyle = enum {
     normal = 0,
@@ -34,20 +36,333 @@ local DrawStyle = enum {
     unfocussedHighlighted = 3,
 }
 
-local function makeMenuPane(x, y, pos, values, selected, cutoutLen)
+local Scrollbar = class {}
+
+function Scrollbar:draw()
+    local x, y, w, h = self.x, self.y, self.w, self.h
+    local widgetHeight = self:widgetHeight()
+    gAT(x, y)
+
+    local barOffset = self:barOffset()
+    local barAreaHeight = self:barAreaHeight()
+    -- printf("x=%d y=%d widgetHeight=%d, barOffset=%d\n", x, y, widgetHeight, barOffset)
+    if barOffset > 0 then
+        gFILL(w, barOffset, KgModeClear)
+        gMOVE(0, barOffset)
+    end
+    gFILL(w, widgetHeight, KgModeClear)
+    gBUTTON("", KButtS5, w, widgetHeight, self.tracking and KButtS5SemiPressed or KButtS5Raised)
+    if barOffset + widgetHeight < barAreaHeight then
+        gAT(x, y + barOffset + widgetHeight)
+        gFILL(w, barAreaHeight - (barOffset + widgetHeight), KgModeClear)
+    end
+
+    local kStripeGap = 5
+    -- Make sure we don't draw any more strips than fill half the widgetHeight
+    local numStripes = math.min(10, (widgetHeight // 2) // kStripeGap)
+    local stripeWidth = w // 2
+    gAT(x + (w // 4) + 1, y + barOffset + (widgetHeight // 2) - ((numStripes * kStripeGap) // 2))
+    for i = 1, numStripes do
+        white()
+        gLINEBY(stripeWidth, 0)
+        gMOVE(-stripeWidth, 1)
+        black()
+        gLINEBY(stripeWidth, 0)
+        gMOVE(-stripeWidth, kStripeGap - 1)
+    end
+
+    -- Draw up and down arrows
+    black()
+    gFONT(KFontEiksym15)
+    gAT(x, y + barAreaHeight)
+    gBUTTON(kChoiceUpArrow, KButtS5, w, w, 0)
+    gMOVE(0, w - 1)
+    gBUTTON(kChoiceDownArrow, KButtS5, w, w, 0)
+end
+
+function Scrollbar:setContentOffset(offset)
+    -- printf("setContentOffset(%d)\n", offset)
+    self.contentOffset = math.min(math.max(offset, 0), self:maxContentOffset())
+    self:draw()
+end
+
+function Scrollbar:handlePointerEvent(x, y, type)
+    local widgetHeight = self:widgetHeight()
+    local barOffset = self:barOffset()
+    local barAreaHeight = self:barAreaHeight()
+    local yoffset = y - self.y
+    local deltaOffset = 0
+    if self.tracking then
+        if type == KEvPtrPenUp then
+            self.tracking = nil
+            self:draw()
+            return
+        else
+            deltaOffset = y - self.tracking
+            self.tracking = y
+        end
+    elseif yoffset < barOffset then
+        -- Scroll up a page
+        if type == KEvPtrPenDown then
+            deltaOffset = -widgetHeight
+        end
+    elseif yoffset < barOffset + widgetHeight then
+        -- Start dragging on the scroll widget
+        if type == KEvPtrPenDown then
+            self.tracking = y
+        end
+    elseif yoffset < barAreaHeight then
+        -- Scroll down a page
+        if type == KEvPtrPenDown then
+            deltaOffset = widgetHeight
+        end
+    elseif yoffset < barAreaHeight + self.w then
+        -- Up arrow
+        if type == KEvPtrPenDown and self.observer then
+            self.observer:scrollbarDidScroll(-1)
+        end
+    elseif yoffset < barAreaHeight + 2 * self.w then
+        -- Down arrow
+        if type == KEvPtrPenDown and self.observer then
+            self.observer:scrollbarDidScroll(1)
+        end
+    end
+
+    if deltaOffset ~= 0 then
+        self:setContentOffset(self.contentOffset + deltaOffset)
+        if self.observer then
+            self.observer:scrollbarContentOffsetChanged(self)
+        end
+    end
+end
+
+function Scrollbar:maxContentOffset()
+    -- Assuming we never want to be able to scroll to reveal beyond the content size
+    return self.contentHeight - self:barAreaHeight() - (2 * self.w) + 2
+end
+
+function Scrollbar:barOffset()
+    return math.floor(self:barAreaHeight() * (self.contentOffset / self.contentHeight))
+end
+
+-- The space the scrollbar can move in, total height minus the size of the buttons
+function Scrollbar:barAreaHeight()
+    return self.h - (self.w * 2)
+end
+
+function Scrollbar:widgetHeight()
+    return math.floor((self:barAreaHeight() - 1) * (self.h / self.contentHeight))
+end
+
+function Scrollbar.newVertical(x, y, h, contentHeight)
+    local w = 23
+    local barAreaHeight = h - (w * 2)
+    local scrollbar = Scrollbar {
+        x = x,
+        y = y,
+        w = w,
+        h = h,
+        contentHeight = contentHeight,
+        contentOffset = 0,
+    }
+
+    return scrollbar
+end
+
+local MenuPane = class {
+    borderWidth = 5,
+    textGap = 6,
+    lineGap = 5, -- 2 pixels space each side of the horizontal line
+    leftMargin = 15, -- This is part of the highlighted area
+    rightMargin = 20, -- ditto
+    textYPad = 3,
+}
+
+function MenuPane:drawItems()
+    for i, item in ipairs(self.items) do
+        if i >= self.firstVisibleItem and i < self.firstVisibleItem + self.numVisibleItems then
+            self:drawItem(i, i == self.selected)
+            if item.lineAfter then
+                black()
+                gAT(self.borderWidth, self:drawPosForContentPos(item.y) + self.lineHeight + (self.lineGap // 2))
+                gLINEBY(self.contentWidth, 0)
+            end
+        end
+    end
+end
+
+function MenuPane:drawItem(i, style)
+        local item = self.items[i]
+        local borderWidth, contentWidth, lineHeight = self.borderWidth, self.contentWidth, self.lineHeight
+        local leftMargin, textGap, textYPad = self.leftMargin, self.textGap, self.textYPad
+        assert(item, "Index out of range in drawItem! "..tostring(i))
+        local y = self:drawPosForContentPos(item.y)
+        gAT(borderWidth, y)
+        if style == false then
+            style = DrawStyle.normal
+        elseif style == true then
+            style = DrawStyle.highlighted
+        end
+        if style == DrawStyle.unfocussedHighlighted then
+            darkGrey()
+        else
+            black()
+        end
+        local highlighted = style == DrawStyle.highlighted or style == DrawStyle.unfocussedHighlighted
+        gFILL(contentWidth, lineHeight, highlighted and KgModeSet or KgModeClear)
+        if style == DrawStyle.dismissing then
+            gAT(borderWidth, y)
+            gCOLOR(0, 0, 0)
+            gBOX(contentWidth, lineHeight)
+        end
+        if item.key & KMenuDimmed > 0 then
+            darkGrey()
+        elseif highlighted then
+            white()
+        end
+        if item.key & (KMenuSymbolOn|KMenuCheckBox) == (KMenuSymbolOn|KMenuCheckBox) then
+            gAT(borderWidth, y + textYPad)
+            gFONT(KFontEiksym15)
+            runtime:drawCmd("text", { string = "." })
+        end
+        gAT(borderWidth + leftMargin, y + textYPad)
+        gFONT(kMenuFont)
+        runtime:drawCmd("text", { string = item.text })
+        if item.shortcutText then
+            local tx = borderWidth + leftMargin + self.maxTextWidth + textGap
+            local ty = y + textYPad + self.shortcutTextYOffset
+            gFONT(kShortcutFont)
+            runtime:drawCmd("text", { string = item.shortcutText, x = tx, y = ty })
+        end
+        if item.submenu then
+            gFONT(KFontEiksym15)
+            local tx = self.w - self.rightMargin
+            local ty = y + textYPad
+            item.submenuXPos = tx + gTWIDTH('"')
+            runtime:drawCmd("text", { string = '"', x = tx, y = ty })
+        end
+    end
+
+
+function MenuPane:moveSelectionTo(i)
+    if i == self.selected then
+        return
+    elseif i == 0 then
+        i = #self.items
+    elseif i and i > #self.items then
+        i = 1
+    end
+    local firstVisible = self.firstVisibleItem
+    local newFirstVisible = firstVisible
+    local numvis = self.numVisibleItems
+    if i and i < firstVisible then
+        newFirstVisible = i
+    elseif i and i >= firstVisible + numvis then
+        newFirstVisible = i - numvis + 1
+    end
+
+    if newFirstVisible == firstVisible then
+        if self.selected and self.selected >= firstVisible and self.selected < firstVisible + numvis then
+            self:drawItem(self.selected, false)
+        end
+        self.selected = i
+        if self.selected then
+            self:drawItem(self.selected, true)
+        end
+    else
+        self.selected = i
+        self.firstVisibleItem = newFirstVisible
+        self:drawItems()
+        self:updateScrollbar()
+    end
+end
+
+function MenuPane:updateScrollbar()
+    if self.scrollbar then
+        self.scrollbar:setContentOffset(self.items[self.firstVisibleItem].y - self.items[1].y)
+    end
+end
+
+function MenuPane:choose(i)
+    if not i then
+        return nil
+    end
+    local item = self.items[i]
+    local key = item.key
+    if key & KMenuDimmed > 0 then
+        gIPRINT("This item is not available", KBusyTopRight)
+        return nil
+    end
+    self:drawItem(i, DrawStyle.dismissing)
+    -- wait a bit to make it obvious it's been selected
+    PAUSE(5)
+    return key & 0xFF
+end
+
+function MenuPane:openSubmenu()
+    assert(self.submenu == nil, "Submenu already open?!")
+    local item = self.items[self.selected]
+    self:drawItem(self.selected, DrawStyle.unfocussedHighlighted)
+    assert(item.submenu, "No submenu to open!")
+    self.submenu = MenuPane.new(self.x + item.submenuXPos, self:drawPosForContentPos(self.y) + item.y, KMPopupPosTopLeft, item.submenu)
+end
+
+function MenuPane:closeSubmenu()
+    if self.submenu then
+        gCLOSE(self.submenu.id)
+        self.submenu = nil
+        gUSE(self.id)
+        local selected = self.selected
+        self.selected = nil -- To force the move to redraw
+        self:moveSelectionTo(selected)
+    end
+end
+
+function MenuPane:drawPosForContentPos(y)
+    return y - (self.items[self.firstVisibleItem].y - self.items[1].y)
+end
+
+function MenuPane:scrollbarContentOffsetChanged(scrollbar)
+    local contentOffset = scrollbar.contentOffset
+    local newFirstVisible
+    for i, item in ipairs(self.items) do
+        local itemContentPos = item.y - self.items[1].y
+        -- printf("Item %d contentPos=%d vs scrollbar contentOffset %d\n", i, itemContentPos, contentOffset)
+        if itemContentPos > contentOffset then
+            break
+        else
+            newFirstVisible = i
+        end
+    end
+
+    self.firstVisibleItem = newFirstVisible
+    self:drawItems()
+end
+
+function MenuPane:scrollbarDidScroll(inc)
+    local newFirstVisible = self.firstVisibleItem + inc
+    if newFirstVisible < 1 or newFirstVisible + self.numVisibleItems - 1 > #self.items then
+        return
+    end
+    self.firstVisibleItem = newFirstVisible
+    self:drawItems()
+    self:updateScrollbar()
+end
+
+function MenuPane.new(x, y, pos, values, selected, cutoutLen)
     -- Get required font metrics
     gFONT(kMenuFont)
     local _, textHeight, ascent = gTWIDTH("0")
-    local textYPad = 4
-    local lineHeight = textHeight + textYPad * 2
+    -- local textYPad = 3
+    local lineHeight = textHeight + MenuPane.textYPad * 2
     gFONT(kShortcutFont)
     local _, _, shortcutAscent = gTWIDTH("0")
     local shortcutTextYOffset = ascent - shortcutAscent
 
     -- Work out content and window size
-    local borderWidth = 5
-    local textGap = 6
-    local lineGap = 5 -- 2 pixels space each side of the horizontal line
+    local borderWidth = MenuPane.borderWidth
+    local textGap = MenuPane.textGap
+    local lineGap = MenuPane.lineGap -- 2 pixels space each side of the horizontal line
     local numItems = #values
     local items = {}
     local itemY = borderWidth + 3
@@ -86,10 +401,12 @@ local function makeMenuPane(x, y, pos, values, selected, cutoutLen)
             shortcutText = shortcutText,
             key = key,
             y = itemY,
+            h = lineHeight + (lineAfter and lineGap or 0),
             lineAfter = lineAfter,
             submenu = value.submenu,
         }
-        itemY = itemY + lineHeight + (lineAfter and lineGap or 0)
+        -- printf("Item %d y=%d\n", i, itemY)
+        itemY = itemY + items[i].h
     end
 
     local leftMargin = 15 -- This is part of the highlighted area
@@ -97,7 +414,26 @@ local function makeMenuPane(x, y, pos, values, selected, cutoutLen)
     local contentWidth = leftMargin + maxTextWidth + maxShortcutTextWidth + rightMargin
     local screenWidth, screenHeight = runtime:getScreenInfo()
     local w = math.min(contentWidth + borderWidth * 2, screenWidth)
-    local h = math.min(itemY + borderWidth, screenHeight)
+    local h = itemY + borderWidth
+    local scrollbar = nil
+
+    local numVisibleItems
+    if h > screenHeight then
+        numVisibleItems = (screenHeight - borderWidth - items[1].y) // lineHeight
+        h = items[numVisibleItems].y + lineHeight + borderWidth
+        local scrollbarTop = borderWidth
+        local scrollbarContentHeight = (items[#items].y + items[#items].h) - scrollbarTop
+        -- Where is this -3 from...?
+        scrollbar = Scrollbar.newVertical(w - borderWidth + 2, scrollbarTop, h - borderWidth - 3, scrollbarContentHeight)
+        w = w + scrollbar.w + 1
+        if w > screenWidth then
+            scrollbar.x = screenWidth - scrollbar.w
+            w = screenWidth
+        end
+    else
+        numVisibleItems = #items
+    end
+
     if pos == KMPopupPosTopLeft then
         -- coords correct as-is
     elseif pos == KMPopupPosTopRight then
@@ -117,14 +453,19 @@ local function makeMenuPane(x, y, pos, values, selected, cutoutLen)
     if x + w > screenWidth then
         x = screenWidth - w
     end
-    if y + h > screenHeight then
-        y = screenHeight - h
+    if y + h + 8 > screenHeight then
+        y = math.max(0, screenHeight - h - 8) -- 8 for the shadow
     end
 
     local win = gCREATE(x, y, w, h, false, KgCreate4GrayMode | KgCreateHasShadow | 0x400)
     gBOX(w, h)
     gAT(1, 1)
     gXBORDER(2, 0x94, w - 2, h - 2)
+    if scrollbar then
+        darkGrey()
+        gAT(scrollbar.x - 1, scrollbar.y)
+        gLINEBY(0, scrollbar.h)
+    end
 
     -- TODO this doesn't look right yet...
     -- if cutoutLen then
@@ -132,126 +473,32 @@ local function makeMenuPane(x, y, pos, values, selected, cutoutLen)
     --     gFILL(cutoutLen, borderWidth, KgModeClear)
     -- end
 
-    for _, item in ipairs(items) do
-        if item.lineAfter then
-            gAT(borderWidth, item.y + lineHeight + (lineGap // 2))
-            gLINEBY(contentWidth, 0)
-        end
-    end
-
-    local function drawItem(i, style)
-        local item = items[i]
-        assert(item, "Index out of range in drawItem! "..tostring(i))
-        gAT(borderWidth, item.y)
-        if style == false then
-            style = DrawStyle.normal
-        elseif style == true then
-            style = DrawStyle.highlighted
-        end
-        if style == DrawStyle.unfocussedHighlighted then
-            darkGrey()
-        else
-            black()
-        end
-        local highlighted = style == DrawStyle.highlighted or style == DrawStyle.unfocussedHighlighted
-        gFILL(contentWidth, lineHeight, highlighted and KgModeSet or KgModeClear)
-        if style == DrawStyle.dismissing then
-            gAT(borderWidth, item.y)
-            gCOLOR(0, 0, 0)
-            gBOX(contentWidth, lineHeight)
-        end
-        if item.key & KMenuDimmed > 0 then
-            darkGrey()
-        elseif highlighted then
-            white()
-        end
-        if item.key & (KMenuSymbolOn|KMenuCheckBox) == (KMenuSymbolOn|KMenuCheckBox) then
-            gAT(borderWidth, item.y + textYPad)
-            gFONT(KFontEiksym15)
-            runtime:drawCmd("text", { string = "." })
-        end
-        gAT(borderWidth + leftMargin, item.y + textYPad)
-        gFONT(kMenuFont)
-        runtime:drawCmd("text", { string = item.text })
-        if item.shortcutText then
-            local x = borderWidth + leftMargin + maxTextWidth + textGap
-            local y = item.y + textYPad + shortcutTextYOffset
-            gFONT(kShortcutFont)
-            runtime:drawCmd("text", { string = item.shortcutText, x = x, y = y })
-        end
-        if item.submenu then
-            gFONT(KFontEiksym15)
-            local x = w - rightMargin
-            local y = item.y + textYPad
-            item.submenuXPos = x + gTWIDTH('"')
-            runtime:drawCmd("text", { string = '"', x = x, y = y })
-        end
-    end
-    local pane = {
+    local pane = MenuPane {
         id = win,
         x = x,
         y = y,
         w = w,
         h = h,
+        contentWidth = contentWidth,
+        lineHeight = lineHeight,
         items = items,
-        selected = selected or 1,
+        selected = 1,
+        numVisibleItems = numVisibleItems,
+        firstVisibleItem = 1,
+        scrollbar = scrollbar,
+        shortcutTextYOffset = shortcutTextYOffset,
+        maxTextWidth = maxTextWidth,
     }
-    for i in ipairs(items) do
-        drawItem(i, i == pane.selected)
+
+    pane:drawItems()
+    if pane.scrollbar then
+        pane.scrollbar.observer = pane
+        pane.scrollbar:draw()
+    end
+    if selected then
+        pane:moveSelectionTo(selected)
     end
     gVISIBLE(true)
-
-    pane.moveSelectionTo = function(i)
-        if i == pane.selected then
-            return
-        elseif i == 0 then
-            i = numItems
-        elseif i and i > numItems then
-            i = 1
-        end
-        if pane.selected then
-            drawItem(pane.selected, false)
-        end
-        if i then
-            drawItem(i, true)
-        end
-        pane.selected = i
-    end
-
-    pane.choose = function(i)
-        if not i then
-            return nil
-        end
-        local item = items[i]
-        local key = item.key
-        if key & KMenuDimmed > 0 then
-            gIPRINT("This item is not available", KBusyTopRight)
-            return nil
-        end
-        drawItem(i, DrawStyle.dismissing)
-        -- wait a bit to make it obvious it's been selected
-        PAUSE(5)
-        return key & 0xFF
-    end
-
-    pane.openSubmenu = function()
-        assert(pane.submenu == nil, "Submenu already open?!")
-        local item = items[pane.selected]
-        drawItem(pane.selected, DrawStyle.unfocussedHighlighted)
-        assert(item.submenu, "No submenu to open!")
-        pane.submenu = makeMenuPane(pane.x + item.submenuXPos, pane.y + item.y, KMPopupPosTopLeft, item.submenu)
-    end
-
-    pane.closeSubmenu = function()
-        if pane.submenu then
-            gCLOSE(pane.submenu.id)
-            pane.submenu = nil
-            gUSE(pane.id)
-            local selected = pane.selected
-            pane.selected = nil -- To force the move to redraw
-            pane.moveSelectionTo(selected)
-        end
-    end
 
     return pane
 end
@@ -267,6 +514,7 @@ local function runMenuEventLoop(bar, pane, shortcuts)
     local result = nil
     local highlight = nil
     local seenPointerDown = false
+    local capturedByControl = nil
     while result == nil do
         if bar then
             pane = bar.pane
@@ -279,32 +527,32 @@ local function runMenuEventLoop(bar, pane, shortcuts)
         if k == KKeyMenu then
             result = 0
         elseif k == KKeyUpArrow then
-            current.moveSelectionTo(current.selected - 1)
+            current:moveSelectionTo(current.selected - 1)
         elseif k == KKeyDownArrow then
-            current.moveSelectionTo(current.selected + 1)
+            current:moveSelectionTo(current.selected + 1)
         elseif k == KKeyLeftArrow then
             if pane.submenu then
-                pane.closeSubmenu()
+                pane:closeSubmenu()
             elseif bar then
                 bar.moveSelectionTo(bar.selected - 1)
             end
         elseif k == KKeyRightArrow then
             if pane.submenu == nil and pane.items[pane.selected].submenu then
-                pane.openSubmenu()
+                pane:openSubmenu()
             elseif bar then
                 bar.moveSelectionTo(bar.selected + 1)
             end
         elseif k == KKeyEsc then
             if pane.submenu then
-                pane.closeSubmenu()
+                pane:closeSubmenu()
             else
                 result = 0
             end
         elseif k == KKeyEnter then
             if current.items[current.selected].submenu then
-                current.openSubmenu()
+                current:openSubmenu()
             else
-                result = current.choose(current.selected)
+                result = current:choose(current.selected)
                 highlight = bar and (bar.selected - 1) * 256 + (pane.selected - 1)
             end
         elseif k <= 26 then
@@ -317,20 +565,27 @@ local function runMenuEventLoop(bar, pane, shortcuts)
         elseif k == KEvPtr then
             local evWinId = ev[KEvAPtrWindowId]()
             local x, y = ev[KEvAPtrPositionX](), ev[KEvAPtrPositionY]()
+            local eventType = ev[KEvAPtrType]()
             local handled = false
-            if evWinId ~= current.id then
+            if capturedByControl then
+                capturedByControl:handlePointerEvent(x, y, eventType)
+                handled = true
+                if eventType == KEvPtrPenUp then
+                    capturedByControl = nil
+                end
+            elseif evWinId ~= current.id then
                 if evWinId == pane.id then
-                    pane.closeSubmenu()
+                    pane:closeSubmenu()
                     current = pane
                     -- And keep going to handle it
                 elseif bar and bar.selectionWin and evWinId == bar.selectionWin then
-                    pane.closeSubmenu()
-                    pane.moveSelectionTo(1)
+                    pane:closeSubmenu()
+                    pane:moveSelectionTo(1)
                     handled = true
                 elseif bar and evWinId == bar.id then
                     for i, item in ipairs(bar.items) do
                         if within(x, y, item) then
-                            pane.closeSubmenu()
+                            pane:closeSubmenu()
                             bar.moveSelectionTo(i)
                             break
                         end
@@ -338,7 +593,7 @@ local function runMenuEventLoop(bar, pane, shortcuts)
                     handled = true
                 elseif not seenPointerDown then
                     -- Ignore everything that might've resulted from a pen down before mPOPUP was called
-                    if ev[KEvAPtrType]() == KEvPtrPenDown then
+                    if eventType == KEvPtrPenDown then
                         seenPointerDown = true
                     end
                     handled = true
@@ -348,24 +603,32 @@ local function runMenuEventLoop(bar, pane, shortcuts)
                     break
                 end
             end
+            local idx
             if not handled then
-                local idx
                 if x >= 0 and x < current.w and y >= 0 and y < current.h then
-                    idx = #current.items
-                    while idx and y < current.items[idx].y do
-                        idx = idx - 1
-                        if idx == 0 then idx = nil end
+                    if current.scrollbar and x >= current.scrollbar.x and eventType == KEvPtrPenDown then
+                        capturedByControl = current.scrollbar
+                        current.scrollbar:handlePointerEvent(x, y, eventType)
+                        handled = true
+                    else
+                        idx = #current.items
+                        while idx and y < current:drawPosForContentPos(current.items[idx].y) do
+                            idx = idx - 1
+                            if idx == 0 then idx = nil end
+                        end
                     end
                 end
-                current.moveSelectionTo(idx)
-                if ev[KEvAPtrType]() == KEvPtrPenUp then
+            end
+            if not handled then
+                current:moveSelectionTo(idx)
+                if eventType == KEvPtrPenUp then
                     -- Pen up outside the window (ie when idx is nil) should always mean dismiss
                     if idx == nil then
                         result = 0
                     elseif current.items[current.selected].submenu then
-                        current.openSubmenu()
+                        current:openSubmenu()
                     else
-                        result = current.choose(idx)
+                        result = current:choose(idx)
                         highlight = bar and (bar.selected - 1) * 256 + (pane.selected - 1)
                     end
                 end
@@ -401,7 +664,7 @@ function mPOPUP(x, y, pos, values, init)
         end
     end
 
-    local pane = makeMenuPane(x, y, pos, values, init)
+    local pane = MenuPane.new(x, y, pos, values, init)
     local result = runMenuEventLoop(nil, pane, shortcuts)
     runtime:restoreGraphicsState(state)
     return result
@@ -503,16 +766,16 @@ function MENU(menubar)
         bar.selected = i
         drawBarSelection()
         if bar.pane then
-           bar.pane.closeSubmenu()
+           bar.pane:closeSubmenu()
            gCLOSE(bar.pane.id)
            bar.pane = nil
         end
         local item = bar.items[bar.selected]
-        bar.pane = makeMenuPane(bar.x + item.x, firstMenuY, KMPopupPosTopLeft, menubar[bar.selected], 1, item.w)
+        bar.pane = MenuPane.new(bar.x + item.x, firstMenuY, KMPopupPosTopLeft, menubar[bar.selected], 1, item.w)
     end
 
     bar.moveSelectionTo(initBarIdx)
-    bar.pane.moveSelectionTo(initPaneIdx)
+    bar.pane:moveSelectionTo(initPaneIdx)
 
     -- Construct shorcuts
     local shortcuts = {}

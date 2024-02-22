@@ -559,7 +559,7 @@ function Button:draw()
     gFONT(kButtonFont)
     gAT(self.x, self.y)
     local state = self.pressed and 1 or 0
-    gBUTTON(self.text, 2, self.w, self.h, state)
+    gBUTTON(self.text, KButtS5, self.w, self.h, state)
     gFONT(kDialogFont)
     View.draw(self)
 end
