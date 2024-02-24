@@ -564,6 +564,8 @@ extension ProgramViewController: ProgramDelegate {
                     textField.keyboardType = .numberPad
                 case .float:
                     textField.keyboardType = .decimalPad
+                case .password:
+                    textField.isSecureTextEntry = true
                 default:
                     break
                 }

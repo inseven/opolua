@@ -324,7 +324,7 @@ function DialogItemEdit:contentSize()
     return gTWIDTH(string.rep("@", self.len)) + 2 * kEditTextSpace, self.heightHint
 end
 
-function DialogItemEdit:draw()
+function DialogItemEdit:drawValue(val)
     local x = self:drawPrompt()
     local texty = self.y + kDialogLineTextYOffset
 
@@ -335,7 +335,11 @@ function DialogItemEdit:draw()
     black()
     gAT(x + 1, texty)
     gFILL(boxWidth - 2, self.charh, KgModeClear)
-    drawText(self.value, x + kEditTextSpace, texty)
+    drawText(val, x + kEditTextSpace, texty)
+end
+
+function DialogItemEdit:draw()
+    self:drawValue(self.value)
 end
 
 function DialogItemEdit:focussable()
@@ -399,6 +403,55 @@ function DialogItemEditLong:showEditor()
     self:setNeedsRedraw()
 end
 
+DialogItemEditFloat = class { _super = DialogItemEdit }
+
+function DialogItemEditFloat:contentSize()
+    local maxChars = 17
+    return gTWIDTH(string.rep("@", maxChars)) + 2 * kEditTextSpace, self.heightHint
+end
+
+function DialogItemEditFloat:showEditor()
+    local function dump(tbl) for k, v in pairs(tbl) do print(k,type(v), v) end end
+    print(dump({
+        type = "float",
+        initialValue = self.value,
+        prompt = self.prompt,
+        allowCancel = true,
+        min = self.min,
+        max = self.max,
+    }))
+    local result = runtime:iohandler().editValue({
+        type = "float",
+        initialValue = self.value,
+        prompt = self.prompt,
+        allowCancel = true,
+        min = self.min,
+        max = self.max,
+    })
+    if result then
+        self.value = tostring(math.min(self.max, math.max(tonumber(result), self.min)))
+    end
+    self:setNeedsRedraw()
+end
+
+DialogItemEditPass = class { _super = DialogItemEdit }
+
+function DialogItemEditPass:showEditor()
+    local result = runtime:iohandler().editValue({
+        type = "password",
+        initialValue = self.value,
+        prompt = self.prompt,
+        allowCancel = true,
+    })
+    if result then
+        self.value = result
+    end
+    self:setNeedsRedraw()
+end
+
+function DialogItemEditPass:draw()
+    self:drawValue(string.rep("*", #self.value))
+end
 
 DialogChoiceList = class {
     _super = View,
@@ -822,6 +875,8 @@ local itemTypes = {
     [dItemTypes.dCHECKBOX] = DialogCheckbox,
     [dItemTypes.dEDIT] = DialogItemEdit,
     [dItemTypes.dLONG] = DialogItemEditLong,
+    [dItemTypes.dFLOAT] = DialogItemEditFloat,
+    [dItemTypes.dXINPUT] = DialogItemEditPass,
 }
 
 function DIALOG(dialog)

@@ -1,14 +1,15 @@
 PROC main:
-	LOCAL choice%, dlg%
-	
-	REM dINIT "Smol not really long", 0
-	REM dBUTTONS "l", 13
-	REM DIALOG
-	
+	WHILE 1
+		loop:
+	ENDWH
+ENDP
+
+PROC loop:
+	LOCAL choice%, dlg%	
 	dINIT "Dialog test", 0
 	dTEXT "", "Pick a dialog type to test"
 	REM dTEXT "", "", $800
-	dCHOICE choice%, "Choose", "long,edit,checkbox,text,..."
+	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
 	dCHOICE choice%, "", "password,empty,date,time,..."
 	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg"
 	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
@@ -21,24 +22,26 @@ PROC main:
 	ELSEIF choice% = 1
 		longDlg:
 	ELSEIF choice% = 2
-		editDlg:
+		floatDlg:
 	ELSEIF choice% = 3
-		checkDlg:
+		editDlg:
 	ELSEIF choice% = 4
-		textDlg:
+		checkDlg:
 	ELSEIF choice% = 5
-		xDlg:
+		textDlg:
 	ELSEIF choice% = 6
-		emptyDlg:
+		xDlg:
 	ELSEIF choice% = 7
-		dateDlg:
+		emptyDlg:
 	ELSEIF choice% = 8
-		timeDlg:
+		dateDlg:
 	ELSEIF choice% = 9
-		buttonDlg:
+		timeDlg:
 	ELSEIF choice% = 10
-		bareButtonDlg:
+		buttonDlg:
 	ELSEIF choice% = 11
+		bareButtonDlg:
+	ELSEIF choice% = 12
 		cancelDlg:
 	ENDIF
 ENDP
@@ -46,16 +49,18 @@ ENDP
 PROC buttonDlg:
 	LOCAL result%
 	dINIT "Buttons"
-	dBUTTONS "OK", 13, "Cancel", -27, "A", %a, "B", %b, "C", -%C
+	dBUTTONS "OK", 13, "Cancel", -27, "Tab", 9, "A", %a, "B", -%b
 	result% = DIALOG
 	IF result% = 13:
 		PRINT "OK"
+	ELSEIF result% = 9
+		PRINT "Tab"
 	ELSEIF result% = %a
 		PRINT "A"
 	ELSEIF result% = %b
 		PRINT "B"
 	ELSEIF result% = 0
-		PRINT "Dialog Cancelled (Esc or Ctrl+C Pressed)"
+		PRINT "Dialog Cancelled (result = 0)"
 	ENDIF
 	GET
 ENDP
@@ -75,6 +80,18 @@ PROC longDlg:
 	dLONG val&, "Long", -1, 5
 	dBUTTONS "OK", 13
 	DIALOG
+	PRINT "Entered:", val&
+	GET
+ENDP
+
+PROC floatDlg:
+	LOCAL fval
+	fval = 2.0
+	dINIT "Float input"
+	dFLOAT fval, "Long", -1.1, 5.0
+	dBUTTONS "OK", 13
+	DIALOG
+	PRINT "Entered:", fval
 	GET
 ENDP
 
@@ -110,8 +127,8 @@ PROC textDlg:
 ENDP
 
 PROC xDlg:
-	LOCAL x$(8)
-	x$ = "woop"
+	LOCAL x$(20)
+	x$ = "12345"
 	dINIT "Password test"
 	dXINPUT x$, "Pass"
 	DIALOG
@@ -154,3 +171,5 @@ PROC cancelDlg:
 	PRINT "Dialog returned", result%
 	GET
 ENDP
+
+
