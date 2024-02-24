@@ -76,7 +76,7 @@ function Scrollbar:draw()
     gFONT(KFontEiksym15)
     gAT(x, y + barAreaHeight)
     gBUTTON(kChoiceUpArrow, KButtS5, w, w, 0)
-    gMOVE(0, w - 1)
+    gMOVE(0, w - 1) -- -1 because the buttons overlap by a pixel so the border between them isn't so heavy
     gBUTTON(kChoiceDownArrow, KButtS5, w, w, 0)
 end
 
@@ -91,30 +91,31 @@ function Scrollbar:handlePointerEvent(x, y, type)
     local barOffset = self:barOffset()
     local barAreaHeight = self:barAreaHeight()
     local yoffset = y - self.y
-    local deltaOffset = 0
+    local barDelta = 0
     if self.tracking then
         if type == KEvPtrPenUp then
             self.tracking = nil
             self:draw()
             return
         else
-            deltaOffset = y - self.tracking
+            barDelta = y - self.tracking
             self.tracking = y
         end
     elseif yoffset < barOffset then
         -- Scroll up a page
         if type == KEvPtrPenDown then
-            deltaOffset = -widgetHeight
+            barDelta = -widgetHeight
         end
     elseif yoffset < barOffset + widgetHeight then
         -- Start dragging on the scroll widget
         if type == KEvPtrPenDown then
             self.tracking = y
+            self:draw() -- To get the pressed effect
         end
     elseif yoffset < barAreaHeight then
         -- Scroll down a page
         if type == KEvPtrPenDown then
-            deltaOffset = widgetHeight
+            barDelta = widgetHeight
         end
     elseif yoffset < barAreaHeight + self.w then
         -- Up arrow
@@ -128,8 +129,9 @@ function Scrollbar:handlePointerEvent(x, y, type)
         end
     end
 
-    if deltaOffset ~= 0 then
-        self:setContentOffset(self.contentOffset + deltaOffset)
+    if barDelta ~= 0 then
+        local contentDelta = (barDelta * self.contentHeight) // barAreaHeight
+        self:setContentOffset(self.contentOffset + contentDelta)
         if self.observer then
             self.observer:scrollbarContentOffsetChanged(self)
         end
@@ -137,24 +139,25 @@ function Scrollbar:handlePointerEvent(x, y, type)
 end
 
 function Scrollbar:maxContentOffset()
-    -- Assuming we never want to be able to scroll to reveal beyond the content size
-    return self.contentHeight - self:barAreaHeight() - (2 * self.w) + 2
+    return self.contentHeight - self.visibleContentHeight
 end
 
 function Scrollbar:barOffset()
-    return math.floor(self:barAreaHeight() * (self.contentOffset / self.contentHeight))
+    local scrollFraction = self.contentOffset / self:maxContentOffset()
+    return math.floor((self:barAreaHeight() - self:widgetHeight()) * scrollFraction)
 end
 
 -- The space the scrollbar can move in, total height minus the size of the buttons
 function Scrollbar:barAreaHeight()
-    return self.h - (self.w * 2)
+    local buttonsSize = (self.w * 2) - 1 -- The buttons share a common pixel
+    return self.h - buttonsSize
 end
 
 function Scrollbar:widgetHeight()
-    return math.floor((self:barAreaHeight() - 1) * (self.h / self.contentHeight))
+    return math.floor((self:barAreaHeight()) * (self.visibleContentHeight / self.contentHeight))
 end
 
-function Scrollbar.newVertical(x, y, h, contentHeight)
+function Scrollbar.newVertical(x, y, h, visibleContentHeight, contentHeight)
     local w = 23
     local barAreaHeight = h - (w * 2)
     local scrollbar = Scrollbar {
@@ -162,6 +165,7 @@ function Scrollbar.newVertical(x, y, h, contentHeight)
         y = y,
         w = w,
         h = h,
+        visibleContentHeight = visibleContentHeight,
         contentHeight = contentHeight,
         contentOffset = 0,
     }
@@ -170,7 +174,8 @@ function Scrollbar.newVertical(x, y, h, contentHeight)
 end
 
 local MenuPane = class {
-    borderWidth = 5,
+    inset = 5, -- Nothing draws inside this except for borders and scrollbar
+    borderWidth = 4, -- See drawBorder(), 3 from the gXBORDER and 1 from the gBOX
     textGap = 6,
     lineGap = 5, -- 2 pixels space each side of the horizontal line
     leftMargin = 15, -- This is part of the highlighted area
@@ -178,71 +183,131 @@ local MenuPane = class {
     textYPad = 3,
 }
 
-function MenuPane:drawItems()
+function MenuPane:draw()
+    local scrollbar = self.scrollbar
+    -- Something has to draw the gap between the start of the content area and the content offset of the first item
+    -- (which is not right up against the top of the content area)
+    local topGap = self.items[1].contentOffset - self.contentOffset
+    if topGap > 0 then
+        gAT(self.inset, self.contentStartY)
+        gFILL(self.contentWidth, topGap, KgModeClear)
+    end
+
     for i, item in ipairs(self.items) do
-        if i >= self.firstVisibleItem and i < self.firstVisibleItem + self.numVisibleItems then
+        if self:itemAtLeastPartiallyVisible(i) then
             self:drawItem(i, i == self.selected)
             if item.lineAfter then
                 black()
-                gAT(self.borderWidth, self:drawPosForContentPos(item.y) + self.lineHeight + (self.lineGap // 2))
+                gAT(self.inset, self:drawPosForContentOffset(item.contentOffset) + self.lineHeight)
+                gFILL(self.contentWidth, self.lineGap, KgModeClear)
+                gMOVE(0, self.lineGap // 2)
                 gLINEBY(self.contentWidth, 0)
             end
         end
     end
+
+    -- Draw border last so if items overflow, it gets covered up
+    self:drawBorder()
+end
+
+-- This more like drawNonContentArea...
+function MenuPane:drawBorder()
+    black()
+    gAT(0, 0)
+    gBOX(self.w, self.h)
+    gMOVE(1, 1)
+    gXBORDER(2, 0x94, self.w - 2, self.h - 2)
+    local nonBorderInset = self.inset - self.borderWidth
+    gAT(self.borderWidth, self.borderWidth)
+    local fillWidth = nonBorderInset + self.contentWidth
+    gFILL(fillWidth, nonBorderInset, KgModeClear)
+    gAT(self.borderWidth, self.h - self.inset)
+    gFILL(fillWidth, nonBorderInset, KgModeClear)
 end
 
 function MenuPane:drawItem(i, style)
-        local item = self.items[i]
-        local borderWidth, contentWidth, lineHeight = self.borderWidth, self.contentWidth, self.lineHeight
-        local leftMargin, textGap, textYPad = self.leftMargin, self.textGap, self.textYPad
-        assert(item, "Index out of range in drawItem! "..tostring(i))
-        local y = self:drawPosForContentPos(item.y)
-        gAT(borderWidth, y)
-        if style == false then
-            style = DrawStyle.normal
-        elseif style == true then
-            style = DrawStyle.highlighted
+    local item = self.items[i]
+    local inset, contentWidth, lineHeight = self.inset, self.contentWidth, self.lineHeight
+    local leftMargin, textGap, textYPad = self.leftMargin, self.textGap, self.textYPad
+    assert(item, "Index out of range in drawItem! "..tostring(i))
+    local y = self:drawPosForContentOffset(item.contentOffset)
+    gAT(inset, y)
+    if style == false then
+        style = DrawStyle.normal
+    elseif style == true then
+        style = DrawStyle.highlighted
+    end
+    if style == DrawStyle.unfocussedHighlighted then
+        darkGrey()
+    else
+        black()
+    end
+    local highlighted = style == DrawStyle.highlighted or style == DrawStyle.unfocussedHighlighted
+    gFILL(contentWidth, lineHeight, highlighted and KgModeSet or KgModeClear)
+    if style == DrawStyle.dismissing then
+        gAT(inset, y)
+        black()
+        gBOX(contentWidth, lineHeight)
+    end
+    if item.key & KMenuDimmed > 0 then
+        darkGrey()
+    elseif highlighted then
+        white()
+    end
+    if item.key & (KMenuSymbolOn|KMenuCheckBox) == (KMenuSymbolOn|KMenuCheckBox) then
+        gAT(inset, y + textYPad)
+        gFONT(KFontEiksym15)
+        runtime:drawCmd("text", { string = "." })
+    end
+    gAT(inset + leftMargin, y + textYPad)
+    gFONT(kMenuFont)
+    runtime:drawCmd("text", { string = item.text })
+    if item.shortcutText then
+        local tx = inset + leftMargin + self.maxTextWidth + textGap
+        local ty = y + textYPad + self.shortcutTextYOffset
+        gFONT(kShortcutFont)
+        runtime:drawCmd("text", { string = item.shortcutText, x = tx, y = ty })
+    end
+    if item.submenu then
+        gFONT(KFontEiksym15)
+        local tx = self.w - self.rightMargin
+        if self.scrollbar then
+            tx = tx - self.scrollbar.w
         end
-        if style == DrawStyle.unfocussedHighlighted then
-            darkGrey()
-        else
-            black()
-        end
-        local highlighted = style == DrawStyle.highlighted or style == DrawStyle.unfocussedHighlighted
-        gFILL(contentWidth, lineHeight, highlighted and KgModeSet or KgModeClear)
-        if style == DrawStyle.dismissing then
-            gAT(borderWidth, y)
-            gCOLOR(0, 0, 0)
-            gBOX(contentWidth, lineHeight)
-        end
-        if item.key & KMenuDimmed > 0 then
-            darkGrey()
-        elseif highlighted then
-            white()
-        end
-        if item.key & (KMenuSymbolOn|KMenuCheckBox) == (KMenuSymbolOn|KMenuCheckBox) then
-            gAT(borderWidth, y + textYPad)
-            gFONT(KFontEiksym15)
-            runtime:drawCmd("text", { string = "." })
-        end
-        gAT(borderWidth + leftMargin, y + textYPad)
-        gFONT(kMenuFont)
-        runtime:drawCmd("text", { string = item.text })
-        if item.shortcutText then
-            local tx = borderWidth + leftMargin + self.maxTextWidth + textGap
-            local ty = y + textYPad + self.shortcutTextYOffset
-            gFONT(kShortcutFont)
-            runtime:drawCmd("text", { string = item.shortcutText, x = tx, y = ty })
-        end
-        if item.submenu then
-            gFONT(KFontEiksym15)
-            local tx = self.w - self.rightMargin
-            local ty = y + textYPad
-            item.submenuXPos = tx + gTWIDTH('"')
-            runtime:drawCmd("text", { string = '"', x = tx, y = ty })
+        local ty = y + textYPad
+        item.submenuXPos = tx + gTWIDTH('"')
+        runtime:drawCmd("text", { string = '"', x = tx, y = ty })
+    end
+end
+
+local function inrange(min, val, rangeLen)
+    return val >= min and val < min + rangeLen
+end
+
+local function within(x, y, rect)
+    return inrange(rect.x, x, rect.w) and inrange(rect.y, y, rect.h)
+end
+
+function MenuPane:itemAtLeastPartiallyVisible(i)
+    if self.scrollbar == nil then
+        -- Then it'll always be visible (assuming i is a valid item index...)
+        return true
+    end
+    local start = self.contentOffset
+    local visibleContentHeight = self:visibleContentHeight()
+    local item = self.items[i]
+    return inrange(start, item.contentOffset, visibleContentHeight) or
+        inrange(start, item.contentOffset + item.h, visibleContentHeight)
+end
+
+function MenuPane:firstFullyVisibleItem()
+    for i, item in ipairs(self.items) do
+        if item.contentOffset >= self.contentOffset then
+            return i
         end
     end
-
+    error("No visible items!?")
+end
 
 function MenuPane:moveSelectionTo(i)
     if i == self.selected then
@@ -252,34 +317,41 @@ function MenuPane:moveSelectionTo(i)
     elseif i and i > #self.items then
         i = 1
     end
-    local firstVisible = self.firstVisibleItem
-    local newFirstVisible = firstVisible
-    local numvis = self.numVisibleItems
-    if i and i < firstVisible then
-        newFirstVisible = i
-    elseif i and i >= firstVisible + numvis then
-        newFirstVisible = i - numvis + 1
+    local currentContentOffset = self.contentOffset
+    local newContentOffset = currentContentOffset
+    local item = i and self.items[i]
+    local visHeight = self:visibleContentHeight()
+
+    if item and item.contentOffset < self.contentOffset then
+        newContentOffset = item.contentOffset
+    elseif item and item.contentOffset + item.h > self.contentOffset + visHeight then
+        newContentOffset = math.max(0, item.contentOffset + item.h - visHeight)
     end
 
-    if newFirstVisible == firstVisible then
-        if self.selected and self.selected >= firstVisible and self.selected < firstVisible + numvis then
+    if newContentOffset == currentContentOffset then
+        local selectedIsVisible = self.selected and self:itemAtLeastPartiallyVisible(self.selected)
+        if selectedIsVisible then
             self:drawItem(self.selected, false)
         end
         self.selected = i
         if self.selected then
             self:drawItem(self.selected, true)
         end
+        if self.scrollbar then
+            self:drawBorder() -- In case we trampled it...
+        end
     else
+        -- We're scrolling, have to redraw everything
         self.selected = i
-        self.firstVisibleItem = newFirstVisible
-        self:drawItems()
+        self.contentOffset = newContentOffset
+        self:draw()
         self:updateScrollbar()
     end
 end
 
 function MenuPane:updateScrollbar()
     if self.scrollbar then
-        self.scrollbar:setContentOffset(self.items[self.firstVisibleItem].y - self.items[1].y)
+        self.scrollbar:setContentOffset(self.contentOffset)
     end
 end
 
@@ -295,6 +367,7 @@ function MenuPane:choose(i)
     end
     self:drawItem(i, DrawStyle.dismissing)
     -- wait a bit to make it obvious it's been selected
+    gUPDATE()
     PAUSE(5)
     return key & 0xFF
 end
@@ -304,7 +377,7 @@ function MenuPane:openSubmenu()
     local item = self.items[self.selected]
     self:drawItem(self.selected, DrawStyle.unfocussedHighlighted)
     assert(item.submenu, "No submenu to open!")
-    self.submenu = MenuPane.new(self.x + item.submenuXPos, self:drawPosForContentPos(self.y) + item.y, KMPopupPosTopLeft, item.submenu)
+    self.submenu = MenuPane.new(self.x + item.submenuXPos, self:drawPosForContentOffset(item.contentOffset), KMPopupPosTopLeft, item.submenu)
 end
 
 function MenuPane:closeSubmenu()
@@ -318,54 +391,65 @@ function MenuPane:closeSubmenu()
     end
 end
 
-function MenuPane:drawPosForContentPos(y)
-    return y - (self.items[self.firstVisibleItem].y - self.items[1].y)
+function MenuPane:drawPosForContentOffset(yoffset)
+    return self.contentStartY + (yoffset - self.contentOffset)
 end
 
 function MenuPane:scrollbarContentOffsetChanged(scrollbar)
-    local contentOffset = scrollbar.contentOffset
-    local newFirstVisible
-    for i, item in ipairs(self.items) do
-        local itemContentPos = item.y - self.items[1].y
-        -- printf("Item %d contentPos=%d vs scrollbar contentOffset %d\n", i, itemContentPos, contentOffset)
-        if itemContentPos > contentOffset then
-            break
-        else
-            newFirstVisible = i
-        end
-    end
-
-    self.firstVisibleItem = newFirstVisible
-    self:drawItems()
+    self.contentOffset = scrollbar.contentOffset
+    self:draw()
 end
 
 function MenuPane:scrollbarDidScroll(inc)
-    local newFirstVisible = self.firstVisibleItem + inc
-    if newFirstVisible < 1 or newFirstVisible + self.numVisibleItems - 1 > #self.items then
-        return
+    local newContentOffset
+    local firstVisible = self:firstFullyVisibleItem()
+    if inc < 0 then
+        if firstVisible == 1 then
+            newContentOffset = 0
+        else
+            newContentOffset = self.items[firstVisible - 1].contentOffset
+        end
+    else
+        local nextItem = self.items[firstVisible + 1]
+        if nextItem then
+            newContentOffset = nextItem.contentOffset
+        else
+            return
+        end
     end
-    self.firstVisibleItem = newFirstVisible
-    self:drawItems()
-    self:updateScrollbar()
+
+    -- We'll let scrollbar worry about bounds checking
+    self.scrollbar:setContentOffset(newContentOffset)
+    self:scrollbarContentOffsetChanged(self.scrollbar)
+end
+
+function MenuPane:contentHeight()
+    local items = self.items
+    local lastItem = items[#items]
+    return lastItem.contentOffset + lastItem.h
+end
+
+function MenuPane:visibleContentHeight()
+    return self.h - self.inset * 2
 end
 
 function MenuPane.new(x, y, pos, values, selected, cutoutLen)
     -- Get required font metrics
     gFONT(kMenuFont)
     local _, textHeight, ascent = gTWIDTH("0")
-    -- local textYPad = 3
     local lineHeight = textHeight + MenuPane.textYPad * 2
     gFONT(kShortcutFont)
     local _, _, shortcutAscent = gTWIDTH("0")
     local shortcutTextYOffset = ascent - shortcutAscent
 
     -- Work out content and window size
-    local borderWidth = MenuPane.borderWidth
+    local inset = MenuPane.inset
     local textGap = MenuPane.textGap
     local lineGap = MenuPane.lineGap -- 2 pixels space each side of the horizontal line
     local numItems = #values
     local items = {}
-    local itemY = borderWidth + 3
+    local contentStartY = inset
+    local contentOffset = 2 -- Gap between start of content area and first item
     local maxTextWidth = 20
     local maxShortcutTextWidth = 0
     local shortcuts = {}
@@ -400,41 +484,40 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
             text = value.text,
             shortcutText = shortcutText,
             key = key,
-            y = itemY,
+            contentOffset = contentOffset,
             h = lineHeight + (lineAfter and lineGap or 0),
             lineAfter = lineAfter,
             submenu = value.submenu,
         }
-        -- printf("Item %d y=%d\n", i, itemY)
-        itemY = itemY + items[i].h
+        contentOffset = contentOffset + items[i].h
     end
 
     local leftMargin = 15 -- This is part of the highlighted area
     local rightMargin = 20 -- ditto
+    local shadowHeight = 8
     local contentWidth = leftMargin + maxTextWidth + maxShortcutTextWidth + rightMargin
     local screenWidth, screenHeight = runtime:getScreenInfo()
-    local w = math.min(contentWidth + borderWidth * 2, screenWidth)
-    local h = itemY + borderWidth
+    local w = math.min(contentWidth + inset * 2, screenWidth)
+    local h = contentStartY + contentOffset + inset
     local scrollbar = nil
 
-    local numVisibleItems
-    if h > screenHeight then
-        numVisibleItems = (screenHeight - borderWidth - items[1].y) // lineHeight
-        h = items[numVisibleItems].y + lineHeight + borderWidth
-        local scrollbarTop = borderWidth
-        local scrollbarContentHeight = (items[#items].y + items[#items].h) - scrollbarTop
-        -- Where is this -3 from...?
-        scrollbar = Scrollbar.newVertical(w - borderWidth + 2, scrollbarTop, h - borderWidth - 3, scrollbarContentHeight)
+    local maxHeight = (pos == nil) and (screenHeight - shadowHeight - y) or screenHeight
+    if h > maxHeight then
+        h = maxHeight
+        local scrollbarTop = MenuPane.borderWidth
+        local scrollbarHeight = h - (MenuPane.borderWidth * 2) -- Note, larger than visibleContentHeight!
+        local visibleContentHeight = h - inset * 2 -- Same defn as MenuPane:visibleContentHeight()
+        local contentHeight = contentOffset -- Should be same as MenuPane:contentHeight()
+        scrollbar = Scrollbar.newVertical(w - inset + 2, scrollbarTop, scrollbarHeight, visibleContentHeight, contentHeight)
         w = w + scrollbar.w + 1
         if w > screenWidth then
             scrollbar.x = screenWidth - scrollbar.w
             w = screenWidth
         end
-    else
-        numVisibleItems = #items
     end
 
-    if pos == KMPopupPosTopLeft then
+    -- pos == nil means it's MENU not mPOPUP and the position is top left and not moveable
+    if pos == KMPopupPosTopLeft or pos == nil then
         -- coords correct as-is
     elseif pos == KMPopupPosTopRight then
         x = x - w
@@ -453,14 +536,11 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
     if x + w > screenWidth then
         x = screenWidth - w
     end
-    if y + h + 8 > screenHeight then
-        y = math.max(0, screenHeight - h - 8) -- 8 for the shadow
+    if y + h + shadowHeight > screenHeight then
+        y = math.max(0, screenHeight - h - shadowHeight)
     end
 
     local win = gCREATE(x, y, w, h, false, KgCreate4GrayMode | KgCreateHasShadow | 0x400)
-    gBOX(w, h)
-    gAT(1, 1)
-    gXBORDER(2, 0x94, w - 2, h - 2)
     if scrollbar then
         darkGrey()
         gAT(scrollbar.x - 1, scrollbar.y)
@@ -469,8 +549,8 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
 
     -- TODO this doesn't look right yet...
     -- if cutoutLen then
-    --     gAT(borderWidth, 0)
-    --     gFILL(cutoutLen, borderWidth, KgModeClear)
+    --     gAT(inset, 0)
+    --     gFILL(cutoutLen, inset, KgModeClear)
     -- end
 
     local pane = MenuPane {
@@ -480,17 +560,17 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         w = w,
         h = h,
         contentWidth = contentWidth,
+        contentStartY = contentStartY,
         lineHeight = lineHeight,
         items = items,
         selected = 1,
-        numVisibleItems = numVisibleItems,
-        firstVisibleItem = 1,
+        contentOffset = 0,
         scrollbar = scrollbar,
         shortcutTextYOffset = shortcutTextYOffset,
         maxTextWidth = maxTextWidth,
     }
 
-    pane:drawItems()
+    pane:draw()
     if pane.scrollbar then
         pane.scrollbar.observer = pane
         pane.scrollbar:draw()
@@ -503,11 +583,8 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
     return pane
 end
 
-local function within(x, y, rect)
-    return x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h
-end
-
 local function runMenuEventLoop(bar, pane, shortcuts)
+    gUPDATE(false)
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
     local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
     local evAddr = ev:addressOf()
@@ -612,7 +689,7 @@ local function runMenuEventLoop(bar, pane, shortcuts)
                         handled = true
                     else
                         idx = #current.items
-                        while idx and y < current:drawPosForContentPos(current.items[idx].y) do
+                        while idx and y < current:drawPosForContentOffset(current.items[idx].contentOffset) do
                             idx = idx - 1
                             if idx == 0 then idx = nil end
                         end
@@ -634,6 +711,7 @@ local function runMenuEventLoop(bar, pane, shortcuts)
                 end
             end
         end
+        gUPDATE()
     end
 
     if pane.submenu then
@@ -771,7 +849,7 @@ function MENU(menubar)
            bar.pane = nil
         end
         local item = bar.items[bar.selected]
-        bar.pane = MenuPane.new(bar.x + item.x, firstMenuY, KMPopupPosTopLeft, menubar[bar.selected], 1, item.w)
+        bar.pane = MenuPane.new(bar.x + item.x, firstMenuY, nil, menubar[bar.selected], 1, item.w)
     end
 
     bar.moveSelectionTo(initBarIdx)

@@ -136,8 +136,8 @@ end
 
 function gAT(x, y)
     local contextPos = runtime:getGraphicsContext().pos
-    contextPos.x = x
-    contextPos.y = y
+    contextPos.x = assert(x)
+    contextPos.y = assert(y)
 end
 
 function gMOVE(x, y)
