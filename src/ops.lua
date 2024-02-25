@@ -2129,8 +2129,9 @@ function dItem(stack, runtime) -- 0xED
         item.prompt = stack:pop()
         item.variable = stack:pop()
         item.value = tostring(item.variable())
-    elseif itemType == dItemTypes.dEDIT or itemType == dItemTypes.dEDITlen then
+    elseif itemType == dItemTypes.dEDIT or itemType == dItemTypes.dEDITlen or itemType == dItemTypes.dXINPUT then
         if itemType == dItemTypes.dEDITlen then
+            itemType = dItemTypes.dEDIT -- No need to distinguish in higher layers
             item.len = stack:pop()
         end
         item.prompt = stack:pop()
@@ -2140,10 +2141,7 @@ function dItem(stack, runtime) -- 0xED
         if not item.len then
             item.len = item.variable:stringMaxLen()
         end
-        item.type = dItemTypes.dEDIT -- No need to distinguish in higher layers
-    elseif itemType == dItemTypes.dXINPUT then
-        item.prompt = stack:pop()
-        item.variable = stack:pop()
+        item.type = itemType
     elseif itemType == dItemTypes.dBUTTONS then
         shouldAdd = false
         assert(dialog.buttons == nil, KOplStructure)

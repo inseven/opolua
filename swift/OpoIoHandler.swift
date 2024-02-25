@@ -515,8 +515,8 @@ struct EditParams: Codable {
     let initialValue: String
     let prompt: String?
     let allowCancel: Bool
-    let min: Int?
-    let max: Int?
+    let min: Double?
+    let max: Double?
 }
 
 protocol OpoIoHandler {
