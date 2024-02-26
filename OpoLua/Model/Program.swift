@@ -37,7 +37,7 @@ protocol ProgramLifecycleObserver: NSObject {
  */
 protocol ProgramDelegate: AnyObject {
 
-    func program(_ program: Program, editText params: EditParams) -> String?
+    func program(_ program: Program, editValue op: EditOperation) -> Any?
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
     func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32?
@@ -404,8 +404,8 @@ extension Program: OpoIoHandler {
         print(val)
     }
 
-    func editValue(_ params: EditParams) -> String? {
-        return delegate!.program(self, editText: params)
+    func editValue(_ op: EditOperation) -> Any? {
+        return delegate!.program(self, editValue: op)
     }
 
     func beep(frequency: Double, duration: Double) -> Error? {

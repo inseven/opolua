@@ -148,6 +148,16 @@ function View:setFocus(flag)
     end
 end
 
+function View:screenRect()
+    local origx, origy = gORIGINX(), gORIGINY()
+    return {
+        x = origx + self.x,
+        y = origy + self.y,
+        w = self.w,
+        h = self.h
+    }
+end
+
 function View:focussable()
     return false
 end
@@ -211,7 +221,10 @@ function View:capturePointer()
     -- print("end capture")
 end
 
-function View:updateValue()
+function View:updateVariable()
+    if self.variable and self.value then
+        self.variable(self.value)
+    end
 end
 
 
@@ -339,7 +352,7 @@ function DialogItemEdit:drawValue(val)
 end
 
 function DialogItemEdit:draw()
-    self:drawValue(self.value)
+    self:drawValue(tostring(self.value))
 end
 
 function DialogItemEdit:focussable()
@@ -370,8 +383,10 @@ function DialogItemEdit:showEditor()
     local result = runtime:iohandler().editValue({
         type = "text",
         initialValue = self.value,
+        max = self.len,
         prompt = self.prompt,
-        allowCancel = true
+        allowCancel = true,
+        screenRect = self:screenRect(),
     })
     if result then
         self.value = result
@@ -391,14 +406,15 @@ end
 function DialogItemEditLong:showEditor()
     local result = runtime:iohandler().editValue({
         type = "integer",
-        initialValue = self.value,
+        initialValue = tostring(self.value),
         prompt = self.prompt,
         allowCancel = true,
         min = self.min,
         max = self.max,
+        screenRect = self:screenRect(),
     })
     if result then
-        self.value = tostring(math.min(self.max, math.max(tonumber(result), self.min)))
+        self.value = math.min(self.max, math.max(result, self.min))
     end
     self:setNeedsRedraw()
 end
@@ -411,25 +427,17 @@ function DialogItemEditFloat:contentSize()
 end
 
 function DialogItemEditFloat:showEditor()
-    local function dump(tbl) for k, v in pairs(tbl) do print(k,type(v), v) end end
-    print(dump({
-        type = "float",
-        initialValue = self.value,
-        prompt = self.prompt,
-        allowCancel = true,
-        min = self.min,
-        max = self.max,
-    }))
     local result = runtime:iohandler().editValue({
         type = "float",
-        initialValue = self.value,
+        initialValue = tostring(self.value),
         prompt = self.prompt,
         allowCancel = true,
         min = self.min,
         max = self.max,
+        screenRect = self:screenRect(),
     })
     if result then
-        self.value = tostring(math.min(self.max, math.max(tonumber(result), self.min)))
+        self.value = math.min(self.max, math.max(result, self.min))
     end
     self:setNeedsRedraw()
 end
@@ -440,8 +448,10 @@ function DialogItemEditPass:showEditor()
     local result = runtime:iohandler().editValue({
         type = "password",
         initialValue = self.value,
+        max = self.variable:stringMaxLen(),
         prompt = self.prompt,
         allowCancel = true,
+        screenRect = self:screenRect(),
     })
     if result then
         self.value = result
@@ -451,6 +461,92 @@ end
 
 function DialogItemEditPass:draw()
     self:drawValue(string.rep("*", #self.value))
+end
+
+DialogItemEditDate = class { _super = DialogItemEdit }
+
+function DialogItemEditDate:contentSize()
+    return gTWIDTH("@@/@@/@@@@") + 2 * kEditTextSpace, self.heightHint
+end
+
+local kSecsFrom1900to1970 = 2208988800
+
+function DialogItemEditDate:draw()
+    -- Value is integer days since 1900
+    local dateStr = os.date("%d/%m/%Y", (self.value * 86400) - kSecsFrom1900to1970)
+    self:drawValue(dateStr)
+end
+
+function DialogItemEditDate:showEditor()
+    local result = runtime:iohandler().editValue({
+        type = "date",
+        initialValue = tostring(self.value),
+        prompt = self.prompt,
+        allowCancel = true,
+        min = self.min,
+        max = self.max,
+        screenRect = self:screenRect(),
+    })
+    if result then
+        self.value = result
+    end
+    self:setNeedsRedraw()
+end
+
+DialogItemEditTime = class { _super = DialogItemEdit }
+
+function DialogItemEditTime:contentSize()
+    return gTWIDTH("@@@@@@@@@@") + 2 * kEditTextSpace, self.heightHint
+end
+
+function DialogItemEditTime:draw()
+    local timeFlags = self.timeFlags & ~KDTimeNoHours -- This flag is such gibberish I'm not supporting it.
+    local str
+    if timeFlags & KDTimeDuration > 0 then
+        local hours = self.value // 3600
+        local mins = (self.value - (hours * 3600)) // 60
+        local secs = self.value - (hours * 3600) - (mins * 60)
+        if timeFlags == KDTimeDurationWithSecs then
+            str = string.format("%02d:%02d:%02d", hours, mins, secs)
+        else
+            str = string.format("%02d:%02d", hours, mins)
+        end
+    elseif timeFlags == KDTimeAbsNoSecs then
+        str = os.date("!%I:%M %p", self.value)
+    elseif timeFlags == KDTimeWithSeconds then
+        str = os.date("!%I:%M:%S %p", self.value)
+    elseif timeFlags == KDTime24Hour then
+        str = os.date("!%H:%M", self.value)
+    elseif timeFlags == KDTime24Hour | KDTimeWithSeconds then
+        str = os.date("!%H:%M:%S", self.value)
+    end
+    self:drawValue(str)
+end
+
+function DialogItemEditTime:showEditor()
+    local result = runtime:iohandler().editValue({
+        type = "time",
+        initialValue = tostring(self.value),
+        prompt = self.prompt,
+        allowCancel = true,
+        min = self.min,
+        max = self.max,
+        screenRect = self:screenRect(),
+        timeFlags = self.timeFlags,
+    })
+    if result then
+        self.value = result
+    end
+    self:setNeedsRedraw()
+end
+
+function DialogItemEditTime:updateVariable()
+    if self.timeFlags & KDTimeWithSeconds == 0 then
+        -- Make sure we remove any seconds (specifically if any were passed in, as hopefully the editor won't have
+        -- introduced any if the KDTimeWithSeconds flag isn't set)
+        self.value = (self.value // 60) * 60
+    end
+    self.variable(self.value)
 end
 
 DialogChoiceList = class {
@@ -565,8 +661,8 @@ function DialogChoiceList:displayPopupMenu()
     end
 end
 
-function DialogChoiceList:updateValue()
-    self.value = tostring(self.index)
+function DialogChoiceList:updateVariable()
+    self.variable(self.index)
 end
 
 DialogCheckbox = class {
@@ -584,8 +680,8 @@ function DialogCheckbox:displayPopupMenu()
     self:setNeedsRedraw()
 end
 
-function DialogCheckbox:updateValue()
-    self.value = self.index == 1 and "false" or "true"
+function DialogCheckbox:updateVariable()
+    self.variable(self.index == 1 and KFalse or KTrue)
 end
 
 DialogItemSeparator = class { _super = View }
@@ -877,6 +973,8 @@ local itemTypes = {
     [dItemTypes.dLONG] = DialogItemEditLong,
     [dItemTypes.dFLOAT] = DialogItemEditFloat,
     [dItemTypes.dXINPUT] = DialogItemEditPass,
+    [dItemTypes.dDATE] = DialogItemEditDate,
+    [dItemTypes.dTIME] = DialogItemEditTime,
 }
 
 function DIALOG(dialog)
@@ -917,7 +1015,7 @@ function DIALOG(dialog)
             item.index = tonumber(item.value)
         elseif item.type == dItemTypes.dCHECKBOX then
             item.choices = { "", kTickMark }
-            item.index = item.value == "true" and 2 or 1
+            item.index = item.value == KFalse and 1 or 2
         end
         item:setHeightHint(lineHeight)
         local cw, ch = item:contentSize()
@@ -1033,8 +1131,10 @@ function DIALOG(dialog)
 
     gCLOSE(win.windowId)
 
-    for _, item in ipairs(win.items) do
-        item:updateValue()
+    if result > 0 then
+        for _, item in ipairs(win.items) do
+            item:updateVariable()
+        end
     end
 
     runtime:restoreGraphicsState(state)

@@ -19,5 +19,10 @@ PROC main:
 	d& = DATETOSECS(2021, 7, 1, 0, 0, 0)
 	PRINT "DATETOSECS(2021, 7, 1, 0, 0, 0) = "; d&
 	IF d& <> 1625097600: RAISE -1: ENDIF
+	
+	d& = DAYS(1, 1, 1970)
+	PRINT "DAYS(1, 1, 1970)", d&
+	
 	GET
 ENDP
+

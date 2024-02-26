@@ -682,28 +682,7 @@ end
 function Dialog(stack, runtime) -- 0x37
     local dialog = runtime:getDialog()
     runtime:setDialog(nil)
-    local varMap = {} -- maps dialog item to variable
-    for _, item in ipairs(dialog.items) do
-        if item.variable ~= nil then
-            varMap[item] = item.variable
-            item.variable = nil -- Don't expose this to iohandler
-        end
-    end
     local result = runtime:DIALOG(dialog)
-    if result > 0 then
-        -- Assign any variables eg `dCHOICE choice%`
-        for item, var in pairs(varMap) do
-            if item.value then
-                -- Have to reconstruct type because item.value will always be a string
-                -- (But the type of var() will still be correct)
-                local isnum = type(var()) == "number"
-                if isnum then
-                    item.value = tonumber(item.value)
-                end
-                var(item.value)
-            end
-        end
-    end
     -- Be bug compatible with Psion 5 and return 0 if a negative-keycode or escape button was pressed
     if result < 0 or result == 27 then
         result = 0
@@ -791,11 +770,7 @@ function Days(stack, runtime) -- 0x37
     local year = stack:pop()
     local month = stack:pop()
     local day = stack:pop()
-    local t = runtime:iohandler().utctime({ year = year, month = month, day = day })
-    -- Result needs to be days since 1900. Who knows why since nothing else uses
-    -- 1900 as its epoch.
-    local epoch = runtime:iohandler().utctime({ year = 1900, month = 1, day = 1 })
-    t = (t - epoch) // (24 * 60 * 60)
+    local t = runtime:DAYS(day, month, year)
     stack:push(t)
 end
 
