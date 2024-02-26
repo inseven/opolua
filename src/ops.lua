@@ -2115,20 +2115,18 @@ function dItem(stack, runtime) -- 0xED
             end
         end
         -- Have to resolve default choice here, and _not_ at the point of the DIALOG call!
-        local val = math.min(math.max(item.variable(), 1), #item.choices)
-        item.value = tostring(val)
+        item.value = math.min(math.max(item.variable(), 1), #item.choices)
     elseif itemType == dItemTypes.dLONG or itemType == dItemTypes.dFLOAT or itemType == dItemTypes.dDATE or itemType == dItemTypes.dTIME then
         item.max = stack:pop()
         item.min = stack:pop()
         assert(item.max >= item.min, KErrInvalidArgs)
         local timeFlags
         if itemType == dItemTypes.dTIME then
-            timeFlags = stack:pop()
-            -- TODO something with timeFlags
+            item.timeFlags = stack:pop()
         end
         item.prompt = stack:pop()
         item.variable = stack:pop()
-        item.value = tostring(item.variable())
+        item.value = item.variable()
     elseif itemType == dItemTypes.dEDIT or itemType == dItemTypes.dEDITlen or itemType == dItemTypes.dXINPUT then
         if itemType == dItemTypes.dEDITlen then
             itemType = dItemTypes.dEDIT -- No need to distinguish in higher layers
@@ -2136,7 +2134,7 @@ function dItem(stack, runtime) -- 0xED
         end
         item.prompt = stack:pop()
         item.variable = stack:pop()
-        item.value = tostring(item.variable())
+        item.value = item.variable()
         -- printf("dEdit len=%s string maxlen=%d\n", item.len, item.variable:stringMaxLen())
         if not item.len then
             item.len = item.variable:stringMaxLen()
@@ -2623,7 +2621,7 @@ function dEditCheckbox(stack, runtime) -- 0x133
     local item = { type = dItemTypes.dCHECKBOX }
     item.prompt = stack:pop()
     item.variable = stack:pop()
-    item.value = tostring(item.variable())
+    item.value = item.variable()
     table.insert(dialog.items, item)
 end
 

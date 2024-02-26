@@ -73,7 +73,7 @@ class Installer {
 extension Installer: OpoIoHandler {
 
     func printValue(_ val: String) {}
-    func editValue(_ params: EditParams) -> String? { return nil }
+    func editValue(_ op: EditOperation) -> Any? { return nil }
     func beep(frequency: Double, duration: Double) -> Error? { return nil }
     func draw(operations: [Graphics.DrawCommand]) {}
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result { return .nothing }

@@ -1,11 +1,14 @@
 PROC main:
-	WHILE 1
-		loop:
+	GLOBAL choice%
+	LOCAL cont%
+	cont% = 1
+	WHILE cont%
+		cont% = loop%:
 	ENDWH
 ENDP
 
-PROC loop:
-	LOCAL choice%, dlg%	
+PROC loop%:
+	LOCAL dlg%	
 	dINIT "Dialog test", 0
 	dTEXT "", "Pick a dialog type to test"
 	REM dTEXT "", "", $800
@@ -19,6 +22,8 @@ PROC loop:
 	PRINT "Choice was ", choice%
 	IF dlg% = 0
 		PRINT "(dialog cancelled)"
+		GET
+		RETURN 0
 	ELSEIF choice% = 1
 		longDlg:
 	ELSEIF choice% = 2
@@ -44,6 +49,8 @@ PROC loop:
 	ELSEIF choice% = 12
 		cancelDlg:
 	ENDIF
+	
+	RETURN 1
 ENDP
 
 PROC buttonDlg:
@@ -101,6 +108,7 @@ PROC editDlg:
 	dEDIT val$, "Text"
 	dBUTTONS "OK", 13
 	DIALOG
+	PRINT "Got >", val$, "<"
 	GET
 ENDP
 
@@ -153,12 +161,21 @@ PROC dateDlg:
 ENDP
 
 PROC timeDlg:
-	LOCAL x&
-	x& = HOUR * INT(3600) + MINUTE * 60 + SECOND
+	LOCAL thms&, thm&, thms24&, dhm&, dhms&
+	thms& = HOUR * INT(3600) + MINUTE * 60 + SECOND
+	thm& = thms&
+	thms24& = thms&
+	dhm& = 65
+	dhms& = 65
 	dINIT "Time test"
-	dTIME x&, "Time", 1, 0, &1517F
+	dTIME thm&, "Time H:M", 0, 0, &1517F
+	dTIME thms&, "Time H:M:S", 1, 0, &1517F
+	dTIME thms24&, "Time H:M:S 24", 9, 0, &1517F
+	dTIME dhm&, "Duration H:M", 2, 0, 600
+	dTIME dhms&, "Duration H:M:S", 3, 0, 600
+	REM dTIME dms&, "Duration M:S", 7, 0, 6000
 	DIALOG
-	PRINT "Entered:", x&
+	PRINT "Entered:", thm&, thms&, thms24&, dhm&, dhms&
 	GET
 ENDP
 
