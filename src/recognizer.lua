@@ -60,6 +60,10 @@ function recognize(data, allData)
         return "mbm", allData and { bitmaps = getMbmBitmaps(data) }
     end
 
+    if uid1 == KUidDirectFileStore and uid3 == KUidOplInterpreter then
+        return "opo"
+    end
+
     if not allData and uid1 == KUidDirectFileStore then
         if uid3 == KUidTextEdApp then
             return "opl"

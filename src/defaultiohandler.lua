@@ -47,13 +47,14 @@ end
 
 function getch()
     -- Can't really do this with what Lua's io provides, as stdin is always in line mode
-    printf("GET called:")
+    printf("defaultiohandler: GET called:")
     local ch = io.stdin:read(1)
     return ch:byte(1, 1)
 end
 
 function beep(freq, duration)
-    printf("BEEP %gkHz for %gs", freq, duration)
+    printf("defaultiohandler: BEEP %gkHz for %gs\n", freq, duration)
+    return true
 end
 
 function dialog(d)
@@ -75,7 +76,7 @@ function dialog(d)
     end
     -- TODO some actual editing support?
     printf("---END DIALOG---\n")
-    return 0 -- meaning cancelled
+    return KKeyEsc -- Probably good enough...
 end
 
 function menu(m)
@@ -93,11 +94,11 @@ function menu(m)
         local indent = string.rep(" ", lvl * 4)
         for i, item in ipairs(card) do
             local hightlightIdx = idx and 256 * (idx - 1) + (i - 1)
-            printf("%s%s. %s [%s]\n", indent, hightlightIdx or "", item.text, fmtCode(item.keycode))
+            printf("%s%s. %s [%s]\n", indent, hightlightIdx or "", item.text, fmtCode(item.key))
             if item.submenu then
                 printCard(nil, item.submenu, lvl + 1)
             end
-            if item.keycode < 0 then
+            if item.key < 0 then
                 -- separator after
                 printf("--\n")
             end
@@ -130,7 +131,7 @@ function draw(ops)
 end
 
 function graphicsop(cmd, ...)
-    printf("graphicsop %s\n", cmd)
+    printf("defaultiohandler: graphicsop %s\n", cmd)
     if cmd == "textsize" then
         local text = ...
         return 7 * #text, 11, 9
@@ -145,6 +146,7 @@ end
 local fsmaps = {}
 
 function fsmap(devicePath, hostPath)
+    printf("defaultiohandler: Filesystem mapping: %s -> %s\n", devicePath, hostPath)
     table.insert(fsmaps, { devicePath = devicePath, hostPath = hostPath })
 end
 
@@ -209,6 +211,20 @@ function fsop(cmd, path, ...)
             return data
         else
             return nil, fileErrToOpl(errno)
+        end
+    elseif cmd == "dir" then
+        local h = io.popen(fmt('ls -1 "%s"', filename))
+        local data = assert(h:read("a"))
+        local ok, exitType, val = h:close()
+        if ok then
+            local result = {}
+            for line in data:gmatch("([^\n]+)") do
+                table.insert(result, line)
+            end
+            return result
+        else
+            printf("defaultiohandler: ls command failed (%d)\n", val, data)
+            return nil, KErrNotReady
         end
     else
         error("Unrecognised fsop "..cmd)

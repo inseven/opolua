@@ -1,4 +1,4 @@
-#!/usr/local/bin/lua-5.3
+#!/usr/bin/env lua
 
 --[[
 

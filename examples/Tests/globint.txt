@@ -1,19 +1,23 @@
 PROC main:
-	GLOBAL foo%
-	LOCAL bar%
-	foo% = 6
-	bar% = 124
-	fn:(bar%)
+	LOCAL bar&
+	GLOBAL foo&
+	GLOBAL unused&
+	foo& = 6
+	bar& = 124
+	fn:(bar&)
 	GET
 ENDP
 
-PROC fn:(x%)
-	GLOBAL nest% 
-	PRINT foo%
-	REM PRINT x%
-	PRINT fn2%: + x%
+PROC fn:(x&)
+	LOCAL fnloc&
+	GLOBAL nest&
+	fnloc& = &B00B5 
+	PRINT foo&
+	REM PRINT x&
+	PRINT fn2&: + x&
 ENDP
 
-PROC fn2%:
-	RETURN nest% + 3
+PROC fn2&:
+	RETURN nest& + 3
 ENDP
+

@@ -978,6 +978,12 @@ local itemTypes = {
 }
 
 function DIALOG(dialog)
+    -- Special case for defaultiohandler
+    local iohandlerDialog = runtime:iohandler().dialog
+    if iohandlerDialog then
+        return iohandlerDialog(dialog)
+    end
+
     local state = runtime:saveGraphicsState()
 
     local borderWidth = 4 -- 1 px black box plus 3 px for the gXBORDER
