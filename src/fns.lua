@@ -270,11 +270,6 @@ local function numParams_dump(runtime)
     return fmt(" numParams=%d", numParams)
 end
 
-function IP8_dump(runtime)
-    local val = runtime:IP8()
-    return fmt("%d (0x%02X)", val, val)
-end
-
 function Addr(stack, runtime) -- 0x00
     local var = stack:pop()
     stack:push(var:addressOf())
@@ -569,7 +564,7 @@ function gCreateBit(stack, runtime) -- 0x27
     stack:push(id)
 end
 
-gCreateBit_dump = IP8_dump
+gCreateBit_dump = numParams_dump
 
 function gLoadBit(stack, runtime) -- 0x28
     local numParams = runtime:IP8()

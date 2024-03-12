@@ -1,4 +1,4 @@
-#!/usr/local/bin/lua-5.3
+#!/usr/bin/env lua
 
 --[[
 
@@ -33,6 +33,7 @@ function main()
         verbose = true, v = "verbose",
         map = table, m = "map",
         defaultmap = true, d = "defaultmap",
+        devicepath = true, p = "devicepath",
         noget = true,
     })
 
@@ -43,7 +44,6 @@ function main()
     local iohandler = require("defaultiohandler")
     for _, m in ipairs(args.map) do
         local from, to = m:match("(.*)%=(.*)")
-        print(from, to)
         iohandler.fsmap(from, to) -- Not part of iohandler interface, specific to defaultiohandler
     end
     if #args.map == 0 or args.defaultmap then
@@ -56,9 +56,13 @@ function main()
         local appDir = string.format([[C:\SYSTEM\APPS\%s\]], appName)
         iohandler.fsmap(appDir, dir)
         devicePath = appDir..filename
-    else
-        -- If any maps are supplied on the commandline, the cmdline path is assumed to be a devicePath
-        devicePath = path
+    end
+
+    if args.devicepath then
+        devicePath = args.devicepath
+    elseif not devicePath then
+        local dir, filename = oplpath.split(path)
+        devicePath = "C:\\"..filename
     end
 
     if args.noget then
@@ -68,7 +72,23 @@ function main()
         end
     end
 
-    local err = runtime.runOpo(devicePath, procName, iohandler, verbose)
+    local progData = readFile(path)
+    local typ, recog = require("recognizer").recognize(progData, true)
+    if typ == "opl" then
+        progData = require("compiler").compile(path, nil, recog.text)
+    elseif path:lower():match("%.txt$") then
+        progData = require("compiler").compile(path, nil, progData)
+    elseif typ ~= "opo" then
+        error("Don't recognize "..path)
+    end
+
+    local procTable, opxTable, era = opofile.parseOpo(progData)
+    local rt = require("runtime").newRuntime(iohandler, era)
+    rt:setInstructionDebug(args.verbose)
+    rt:addModule(devicePath, procTable, opxTable)
+
+    local procToCall = procName and procName:upper() or procTable[1].name
+    local err = rt:pcallProc(procToCall)
     if err then
         print("Error: "..tostring(err))
     end

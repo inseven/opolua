@@ -40,7 +40,7 @@ PROC printerr:
 doom::
 	ONERR OFF
 	PRINT ERR, ERR$(ERR)
-	PRINT ERRX
+	PRINT ERRX$
 	TRAP RAISE 0
 	PRINT "Error cleared?", ERR
 	GET

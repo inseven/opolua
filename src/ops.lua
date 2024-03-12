@@ -593,9 +593,9 @@ local function IPs32_dump(runtime)
     return fmt("%d (0x%s)", val, fmt("%08X", val):sub(-8))
 end
 
-local function numParams_dump(runtime)
-    local numParams = runtime:IP8()
-    return fmt("numParams=%d", numParams)
+local function qualifier_dump(runtime)
+    local qualifier = runtime:IP8()
+    return fmt("qualifier=%d", qualifier)
 end
 
 local function logName_dump(runtime)
@@ -1159,7 +1159,7 @@ end
 function CallProcByStringExpr_dump(runtime)
     local numParams = runtime:IP8()
     local type = runtime:IP8()
-    return fmt("nargs=%d type=%s", numParams, type)
+    return fmt("nargs=%d type=%c", numParams, type)
 end
 
 function PercentLessThan(stack, runtime) -- 0x6C
@@ -1454,7 +1454,7 @@ function Cursor(stack, runtime) -- 0xA6
     printf("CURSOR numParams=%d\n", numParams) -- TODO
 end
 
-Cursor_dump = numParams_dump
+Cursor_dump = qualifier_dump
 
 function Delete(stack, runtime) -- 0xA7
     local filename = stack:pop()
@@ -1705,7 +1705,7 @@ function gSaveBit(stack, runtime) -- 0xC5
     runtime:setTrap(false)
 end
 
-gSaveBit_dump = numParams_dump
+gSaveBit_dump = qualifier_dump
 
 function gClose(stack, runtime) -- 0xC6
     local id = stack:pop()
@@ -1729,7 +1729,7 @@ function gSetWin(stack, runtime) -- 0xC8
     runtime:gSETWIN(x, y, w, h)
 end
 
-gSetWin_dump = numParams_dump
+gSetWin_dump = qualifier_dump
 
 function gVisible(stack, runtime) -- 0xC9
     local show = runtime:IP8() == 1
@@ -1862,7 +1862,7 @@ function gPrintBoxText(stack, runtime) -- 0xD9
     runtime:gPRINTB(text, width, align, top, bottom, margin)
 end
 
-gPrintBoxText_dump = numParams_dump
+gPrintBoxText_dump = qualifier_dump
 
 function gLineBy(stack, runtime) -- 0xDA
     local dx, dy = stack:popXY()
@@ -1884,7 +1884,7 @@ function gCircle(stack, runtime) -- 0xDC
     runtime:gCIRCLE(radius, fill)
 end
 
-gCircle_dump = numParams_dump
+gCircle_dump = qualifier_dump
 
 function gEllipse(stack, runtime) -- 0xDD
     local hasFill = runtime:IP8()
@@ -1896,7 +1896,7 @@ function gEllipse(stack, runtime) -- 0xDD
     runtime:gELLIPSE(x, y, fill)
 end
 
-gEllipse_dump = numParams_dump
+gEllipse_dump = qualifier_dump
 
 function gPoly(stack, runtime) -- 0xDE
     local addr = runtime:addrFromInt(stack:pop())
@@ -1946,7 +1946,7 @@ function gScroll(stack, runtime) -- 0xE2
     runtime:gSCROLL(dx, dy, x, y, w, h)
 end
 
-gScroll_dump = numParams_dump
+gScroll_dump = qualifier_dump
 
 function gUpdate(stack, runtime) -- 0xE3
     local val = runtime:IP8()
@@ -2049,7 +2049,7 @@ function mCard(stack, runtime) -- 0xEB
     table.insert(menu, card)
 end
 
-mCard_dump = numParams_dump
+mCard_dump = qualifier_dump
 
 function dInit(stack, runtime) -- 0xEC
     local numParams = runtime:IP8()
@@ -2069,7 +2069,7 @@ function dInit(stack, runtime) -- 0xEC
     runtime:setDialog(dialog)
 end
 
-dInit_dump = numParams_dump
+dInit_dump = qualifier_dump
 
 function dItem(stack, runtime) -- 0xED
     local itemType = runtime:IP8()
@@ -2187,7 +2187,7 @@ function Busy(stack, runtime) -- 0xF0
     runtime:BUSY(str, corner, delay)
 end
 
-Busy_dump = numParams_dump
+Busy_dump = qualifier_dump
 
 function Lock(stack, runtime) -- 0xF1
     runtime:IP8()
@@ -2217,7 +2217,7 @@ function gBorder(stack, runtime) -- 0xF4
     runtime:gBORDER(flags, w, h)
 end
 
-gBorder_dump = numParams_dump
+gBorder_dump = qualifier_dump
 
 function gClock(stack, runtime) -- 0xF5
     local numParams = runtime:IP8()
@@ -2241,7 +2241,7 @@ function gClock(stack, runtime) -- 0xF5
     runtime:gCLOCK(mode)
 end
 
-gClock_dump = numParams_dump
+gClock_dump = qualifier_dump
 
 function MkDir(stack, runtime) -- 0xF8
     local path = stack:pop()
@@ -2275,7 +2275,7 @@ function gIPrint(stack, runtime) -- 0xFC
     runtime:gIPRINT(stack:pop(), corner)
 end
 
-gIPrint_dump = numParams_dump
+gIPrint_dump = qualifier_dump
 
 function NextOpcodeTable(stack, runtime) -- 0xFF
     local realOpcode = 256 + runtime:IP8()
@@ -2350,7 +2350,7 @@ function gButton(stack, runtime) -- 0x10F
     runtime:gBUTTON(text, type, width, height, state, bitmap, mask, layout)
 end
 
-gButton_dump = numParams_dump
+gButton_dump = qualifier_dump
 
 function gXBorder(stack, runtime) -- 0x110
     local numParams =  runtime:IP8()
@@ -2363,7 +2363,7 @@ function gXBorder(stack, runtime) -- 0x110
     runtime:gXBORDER(type, flags, w, h)
 end
 
-gXBorder_dump = numParams_dump
+gXBorder_dump = qualifier_dump
 
 function ScreenInfo(stack, runtime) -- 0x114
     local addr = runtime:addrFromInt(stack:pop())
@@ -2391,7 +2391,7 @@ function CallOpxFunc(stack, runtime) -- 0x118
     assert(opx, "Bad opx id?")
     if not opx.module then
         local ok
-        local modName = "opx."..opx.filename
+        local modName = "opx." .. opx.name:lower()
         ok, opx.module = pcall(require, modName)
         if not ok then
             unimplemented(modName)
@@ -2399,11 +2399,11 @@ function CallOpxFunc(stack, runtime) -- 0x118
     end
     local fnName = opx.module.fns[fnIdx]
     if not fnName then
-        unimplemented(fmt("opx.%s.%d", opx.filename, fnIdx))
+        unimplemented(fmt("opx.%s.%d", opx.name, fnIdx))
     end
     local fn = opx.module[fnName]
     if not fn then
-        unimplemented(fmt("opx.%s.%s", opx.filename, fnName))
+        unimplemented(fmt("opx.%s.%s", opx.name, fnName))
     end
     fn(stack, runtime)
 end
@@ -2606,7 +2606,7 @@ function mCasc(stack, runtime) -- 0x130
     runtime:getMenu().cascades[title..">"] = card
 end
 
-mCasc_dump = numParams_dump
+mCasc_dump = qualifier_dump
 
 function EvalExternalRightSideRef(stack, runtime) -- 0x131
     unimplemented("EvalExternalRightSideRef")

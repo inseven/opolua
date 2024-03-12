@@ -65,6 +65,13 @@ function toint32(val)
     return val
 end
 
+function toint16(val)
+    if val >= 0x8000 then
+        val = string.unpack("<i2", string.pack("<I2", val))
+    end
+    return val
+end
+
 function touint16(val)
     return string.unpack("<I2", string.pack("<i2", val))
 end
@@ -443,4 +450,10 @@ end
 
 function unimplemented(opName)
     error({ msg = "Unimplemented operation "..opName, unimplemented = opName })
+end
+
+function dump(...)
+    require("init_dump")
+    -- Will replace dump fn, so re-call the new fn
+    return dump(...)
 end

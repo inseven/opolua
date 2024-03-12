@@ -8,10 +8,11 @@ PROC main:
 	PRINT a%(1), a%(5), gs$(2)
 	
 	s$ = "woop"
-	PRINT a%(6)
+	PRINT a%(5)
 ENDP
 
 PROC sub:
 	a%(5) = a%(5) * 2
 	gs$(2) = "yem"
 ENDP
+
