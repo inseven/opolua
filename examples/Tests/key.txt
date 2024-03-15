@@ -1,0 +1,13 @@
+PROC main:
+	LOCAL k%(1), stat%
+	WHILE 1
+		KEYA(stat%, k%())
+		IOWAIT
+		PRINT "Key", k%(1)
+	ENDWH
+ENDP
+
+PROC c:
+	LOCAL stat%
+	KEYC(stat%)
+ENDP

@@ -47,7 +47,7 @@ function main()
             print("Internal compiler error, please report to https://github.com/inseven/opolua/issues")
             print("including the above error message and if possible the file being compiled.")
         else
-            printf("%s:%d:%d: %s\n%s\n", result.src[1], result.src[2], result.src[3], result.msg, result.traceback)
+            printf("%s:%d:%d: %s\n%s\n", result.src.path, result.src.line, result.src.column, result.msg, result.traceback)
         end
         os.exit(false)
         return
