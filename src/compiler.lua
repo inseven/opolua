@@ -173,7 +173,7 @@ identifierTokens = enum {
 -- symbol is something with a src - either an expression or a token
 local function synerror(symbol, fmt, ...)
     local src = symbol.src
-    error({msg = string.format(fmt, ...), src = src}, 0)
+    error({msg = string.format(fmt, ...), src = { path = src[1], line = src[2], column = src[3] } }, 0)
 end
 
 local function synassert(test, symbol, ...)
@@ -299,6 +299,7 @@ SiboInt = Long -- Would be Int on sibo, if we ever support that in the compiler
 
 -- Only used by args in Callables. Values are arbitrary as these should be considered opaque.
 VarArgPrefix = "_Var_"
+AnyVarArg = "_Var_Any"
 IntVarArg = "_Var_Int"
 LongVarArg = "_Var_Long"
 FloatVarArg = "_Var_Float"
@@ -411,8 +412,8 @@ Callables = {
     EVAL = Fn("Eval", {String}, Float),
     EXIST = Fn("Exist", {String}, Int),
     EXP = Fn("Exp", {Float}, Float),
-    -- FIND = Fn("Find", {}, TODO),
-    -- FINDFIELD = Fn("FindField", {}, TODO),
+    FIND = Fn("Find", {String}, Int),
+    FINDFIELD = Fn("FindField", {String, Int, Int, Int}, Int),
     FREEALLOC = Op("FreeAlloc", {SiboInt}),
     ["FIX$"] = Fn("FixStr", {Float, Int, Int}, String),
     FLT = Fn("Flt", {Long}, Float),
@@ -434,8 +435,9 @@ Callables = {
     ["GETCMD$"] = Fn("WCmd", {}, String),
     ["GETDOC$"] = Fn("GetDocStr", {}, String),
     GETEVENT = Op("GetEvent", {IntArrayArg}),
+    GETEVENTA32 = Op("GetEventA32", {IntVarArg, LongArrayArg}),
     GETEVENT32 = Op("GetEvent32", {LongArrayArg}),
-    -- TODO GETEVENTC = SpecialFn(), -- (var stat%)
+    GETEVENTC = Fn("GetEventC", {IntVarArg}, Int),
     ["GET$"] = Fn("GetStr", {}, String),
     GFILL = Op("gFill", {Int, Int, Int}),
     GFONT = Op("gFont", {SiboInt}),
@@ -484,20 +486,20 @@ Callables = {
     INT = Fn("IntLong", {Float}, Long),
     INTF = Fn("Intf", {Float}, Float),
     INTRANS = Fn("InTrans", {}, Int),
-    -- IOA = Fn("Ioa", {}, TODO),
-    -- IOC = Fn("Ioc", {}, TODO),
-    -- IOCANCEL = Fn("IoCancel", {}, TODO),
-    -- IOCLOSE = Fn("IoClose", {}, TODO),
-    -- IOOPEN = Fn("IoOpen", {}, TODO),
-    -- IOOPENUNIQUE = Fn("IoOpenUnique", {}, TODO),
-    -- IOREAD = Fn("IoRead", {}, TODO),
-    -- IOSEEK = Fn("IoSeek", {}, TODO),
-    -- IOW = Fn("Iow", {}, TODO),
-    -- IOWAIT = Fn("IoWait", {}, TODO),
-    -- IOWRITE = Fn("IoWrite", {}, TODO),
+    IOA = Fn("Ioa", {Int, Int, IntVarArg, AnyVarArg, AnyVarArg}, Int),
+    IOC = Fn("Ioc", {Int, Int, IntVarArg, AnyVarArg, AnyVarArg, numParams = {4, 5}}, Int),
+    IOCANCEL = Fn("IoCancel", {Int}, Int),
+    IOCLOSE = Fn("IoClose", {Int}, Int),
+    IOOPEN = Fn("IoOpen", {IntVarArg, String, Int}, Int), -- TODO IoOpenUnique...
+    IOREAD = Fn("IoRead", {Int, SiboInt, Int}, Int),
+    IOSEEK = Fn("IoSeek", {Int, Int, LongVarArg}, Int),
+    IOW = Fn("Iow", {Int, Int, AnyVarArg, AnyVarArg}, Int),
+    IOWAIT = Fn("IoWait", {}, Int),
+    IOWRITE = Fn("IoWrite", {Int, SiboInt, Int}, Int),
+    IOYIELD = Op("IoYield", {}),
     KEY = Fn("Key", {}, Int),
-    -- KEYA = Fn("KeyA", {}, TODO),
-    -- KEYC = Fn("KeyC", {}, TODO),
+    KEYA = Fn("KeyA", {IntVarArg, IntArrayArg}, Int),
+    KEYC = Fn("KeyC", {IntVarArg}, Int),
     ["KEY$"] = Fn("KeyStr", {}, String),
     KILLMARK = Op("KillMark", {Int}),
     KMOD = Fn("Kmod", {}, Int),
@@ -524,7 +526,7 @@ Callables = {
     ["NUM$"] = Fn("NumStr", {Float, Int}, String),
     OPEN = SpecialOp(),
     OPENR = SpecialOp(),
-    -- ["PARSE$"] = Fn("ParseStr", {}, TODO),
+    ["PARSE$"] = Fn("ParseStr", {String, String, IntArrayArg}, String),
     PAUSE = Op("Pause", {Int}),
     PEEKB = Fn("PeekB", {SiboInt}, SiboInt),
     PEEKF = Fn("PeekF", {SiboInt}, Float),
@@ -546,11 +548,13 @@ Callables = {
     ROLLBACK = Op("Rollback", {}),
     RMDIR = Op("RmDir", {String}),
     RND = Fn("Rnd", {}, Float),
-    -- SADDR = Fn("SAddr", {}, TODO),
     ["SCI$"] = Fn("SciStr", {Float, Int, Int}, String),
     SCREEN = SpecialOp({Int, Int, Int, Int, numParams = {2, 4}}),
     SCREENINFO = Op("ScreenInfo", {IntArrayArg}),
     SECOND = Fn("Second", {}, Int),
+    SETDOC = Op("SetDoc", {String}),
+    SETFLAGS = Op("SetFlags", {Long}),
+    SETPATH = Op("SetPath", {String}),
     SIN = Fn("Sin", {Float}, Float),
     SPACE = Fn("Space", {}, Long),
     SQR = Fn("Sqr", {Float}, Float),
@@ -562,6 +566,7 @@ Callables = {
     TESTEVENT = Fn("TestEvent", {}, Int),
     UADD = Fn("Uadd", {Int, Int}, Int),
     ["UPPER$"] = Fn("UpperStr", {String}, String),
+    USE = SpecialOp(),
     USUB = Fn("Usub", {Int, Int}, Int),
     VAL = Fn("Val", {String}, Float), -- TODO is this only allowed to be a string literal?
     VAR = SpecialFn(nil, Float),
@@ -846,10 +851,10 @@ function literalToString(val)
     return result
 end
 
-function numberCast(from, to)
-    local fromType = TypeToStr[from]
+function numberCast(exp, to)
+    local fromType = TypeToStr[exp.valType]
     local toType = TypeToStr[to]
-    return assert(opcodes[string.format("%sTo%s", fromType, toType)], "Cannot cast from "..fromType.." to "..toType)
+    return synassert(opcodes[string.format("%sTo%s", fromType, toType)], exp, "Cannot cast from %s to %s", fromType, toType)
 end
 
 function evalConstExpr(requiredType, exp, consts)
@@ -1038,7 +1043,9 @@ function checkExpressionArguments(args, declArgs, token)
         synassert(numParams == #declArgs, token, "Expected %d args to %s, not %d", #declArgs, token.val, numParams)
     end
     for i, arg in ipairs(args or {}) do
-        if declArgs[i] == IntArrayArg then
+        if declArgs[i] == AnyVarArg then
+            synassert(arg.type == "identifier" or (arg.type == "call" and arg.args and #arg.args == 0), arg, "Expected variable")
+        elseif declArgs[i] == IntArrayArg then
             synassert(arg.type == "call" and arg.valType == Int and arg.args and #arg.args == 0, arg, "Expected Int array var")
         elseif declArgs[i] == LongArrayArg then
             synassert(arg.type == "call" and arg.valType == Long and arg.args and #arg.args == 0, arg, "Expected Long array var")
@@ -1089,7 +1096,7 @@ function ProcState:pushStack(...)
     for i = 1, select("#", ...) do
         local val = select(i, ...)
         local sz
-        if val:match(VarArgPrefix) then
+        if val:match("^"..VarArgPrefix) then
             sz = 6 -- Apparently...
         elseif val == String then
             sz = 0 -- Apparently...
@@ -1194,9 +1201,9 @@ The rule for number type coercion in OPL is:
 function ProcState:emitExpression(exp, requiredType)
     assert(requiredType)
 
-    if requiredType:match("^_Var") then
-        -- Special case, only used by ops which take the address of an array
-        local isArray = requiredType:match("Array$")
+    if requiredType:match("^"..VarArgPrefix) then
+        -- Special case, only used by ops which take the address of a variable
+        local isArray = exp.args ~= nil
         local var = self:getVar(exp, isArray)
         self:emitAddressOfVar(var, exp)
         return
@@ -1374,7 +1381,7 @@ function ProcState:emitExpression(exp, requiredType)
     end
 
     if exp.valType ~= requiredType then
-        self:emit("B", numberCast(exp.valType, requiredType))
+        self:emit("B", numberCast(exp, requiredType))
         self:popStack(1)
         self:pushStack(requiredType)
     end
@@ -1409,10 +1416,11 @@ function ProcState:emitAddressOfVar(var, token)
         -- The addressof(<array>) op is implemented as addressof(<array>[1])
         self:emit("BB", opcodes.StackByteAsWord, 1)
         self:pushStack(Int)
-        self:emitVarLhs(var, token)
-        self:emit("BB", opcodes.CallFunction, fncodes.Addr)
+    end
+    self:emitVarLhs(var, token)
+    if var.valType == String then
+        self:emit("BB", opcodes.CallFunction, fncodes.SAddr)
     else
-        self:emitVarLhs(var, token)
         self:emit("BB", opcodes.CallFunction, fncodes.Addr)
     end
 end
@@ -1879,8 +1887,7 @@ function ProcState:parse()
                 self:emit("B", opcodes["Assign"..TypeToStr[valType]])
                 self:popStack(2) -- the LHS and the RHS
             else
-                -- TODO once Callables is fully populated, this should be a synerror
-                error("Don't know what to do with "..dump(token))
+                synerror(token, "Unknown command %s", token.val)
             end
         elseif tokenType == "dyncall" then
             -- dyncall used as a statement
@@ -2393,6 +2400,16 @@ function handleOp_SCREEN(procState, args)
         procState:emit("B", opcodes.Screen2)
     end
     procState:popStack(#args)
+end
+
+function handleOp_USE(procState)
+    local cmdToken = procState.tokens:current()
+    procState.tokens:advance()
+    local logExp = parseExpression(procState.tokens)
+    local logicalName = logExp.val
+    synassert(logicalName:match("^[A-Z]$"), logExp, "Bad logical name for database handle")
+    local log = string.byte(logicalName) - string.byte("A")
+    procState:emit("BB", opcodes.Use, log)
 end
 
 function docompile(path, realPath, programText, isInclude)

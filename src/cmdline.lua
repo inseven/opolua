@@ -244,6 +244,9 @@ function pcallMain()
     local runtime = require("runtime")
     local ok, err = xpcall(main, runtime.traceback)
     if not ok then
+        if err.src then
+            printf("%s:%d:%d: ", err.src.path, err.src.line, err.src.column)
+        end
         print(err.msg)
         print(err.luaStack)
         os.exit(false)

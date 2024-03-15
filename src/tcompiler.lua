@@ -231,7 +231,7 @@ local function checkSyntaxError(statement, expectedError)
     assert(not ok, "Compile unexpectedly succeeded!")
     -- Line number should always be 4 because that's where checkCodeWrapper puts statement
     local expectedErrWithPrefix = "C:\\module:4:" .. expectedError
-    local errStr = string.format("%s:%d:%d: %s", err.src[1], err.src[2], err.src[3], err.msg)
+    local errStr = string.format("%s:%d:%d: %s", err.src.path, err.src.line, err.src.column, err.msg)
     assertEquals(errStr, expectedErrWithPrefix)
 end
 
@@ -497,6 +497,38 @@ checkCode("B.foo = A.bar", {
     ConstantString("BAR"),
     op"FieldRightSideFloat", 0,
     op"AssignFloat",
+    op"ZeroReturnFloat",
+})
+
+checkCode("ADDR(i%)", {
+    op"SimpleDirectLeftSideInt", h(0x12),
+    fn"Addr",
+    op"DropLong",
+    op"ZeroReturnFloat",
+})
+
+checkCode("ADDR(l&)", {
+    op"SimpleDirectLeftSideLong", h(0x14),
+    fn"Addr",
+    op"DropLong",
+    op"ZeroReturnFloat",
+})
+
+checkCode("IOC(0, 1, i%, l&)", {
+    op"StackByteAsWord", 0,
+    op"StackByteAsWord", 1,
+    op"SimpleDirectLeftSideInt", h(0x12),
+    fn"Addr",
+    op"SimpleDirectLeftSideLong", h(0x14),
+    fn"Addr",
+    fn"Ioc", 4,
+    op"DropInt",
+    op"ZeroReturnFloat",
+})
+
+checkCode("USE z", {
+    op"Use",
+    25,
     op"ZeroReturnFloat",
 })
 
