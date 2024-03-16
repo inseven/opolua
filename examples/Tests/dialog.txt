@@ -14,7 +14,8 @@ PROC loop%:
 	REM dTEXT "", "", $800
 	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
 	dCHOICE choice%, "", "password,empty,date,time,..."
-	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg"
+	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg,..."
+	dCHOICE choice%, "", "editmulti"
 	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
 	choice% = 2
 	dlg% = DIALOG
@@ -48,6 +49,8 @@ PROC loop%:
 		bareButtonDlg:
 	ELSEIF choice% = 12
 		cancelDlg:
+	ELSEIF choice% = 13
+		editMulti:
 	ENDIF
 	
 	RETURN 1
@@ -189,4 +192,17 @@ PROC cancelDlg:
 	GET
 ENDP
 
+PROC editMulti:
+	LOCAL result%, buf&(16), ptr&, text$(60), len&
+	ptr& = ADDR(buf&())
+	dINIT "Multi edit"
+	dEDITMULTI ptr&, "Prompt", 20, 5, 60
+	dBUTTONS "OK", %o
+	result% = DIALOG
+	len& = PEEKL(ptr&)
+	POKEB ptr& + 3, len&
+	text$ = PEEK$(ptr& + 3)
+	PRINT "Dialog returned", text$
+	GET
+ENDP
 

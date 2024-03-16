@@ -235,7 +235,7 @@ local function checkSyntaxError(statement, expectedError)
     assertEquals(errStr, expectedErrWithPrefix)
 end
 
-checklex("print a% --3.14e1 ** 2,", { "PRINT", id"a%", "sub", "sub", lit"3.14e1", "pow", lit"2", "comma", "eos" })
+checklex("print a% --3.14e1 ** 2,", { id"PRINT", id"a%", "sub", "sub", lit"3.14e1", "pow", lit"2", "comma", "eos" })
 checklex('string:"abc""" "def"\n', { id"STRING:", lit'"abc"""', lit'"def"', "eos"})
 checklex("( woop + &300", { "oparen", id"WOOP", "add", lit"&300", "eos" })
 checklex("Rem comment:\nREMnot a comment", { "eos", id"REMNOT", id"a", id"comment", "eos"})
