@@ -167,7 +167,6 @@ identifierTokens = enum {
     "TRAP", "ONERR",
     "ON", "OFF",
     "RETURN",
-    "PRINT", "GPRINT",
 }
 
 -- symbol is something with a src - either an expression or a token
@@ -363,6 +362,7 @@ Callables = {
     ASIN = Fn("ASin", {Float}, Float),
     AT = Op("At", {Int, Int}),
     ATAN = Fn("ATan", {Float}, Float),
+    BACK = Op("Back", {}),
     BEEP = Op("Beep", {Int, Int}),
     BEGINTRANS = Op("BeginTrans", {}),
     BOOKMARK = Fn("Bookmark", {}, Int),
@@ -373,11 +373,12 @@ Callables = {
     CLS = Op("Cls", {}),
     ["CMD$"] = Fn("CmdStr", {Int}, String),
     COMMITTRANS = Op("CommitTrans", {}),
+    COMPACT = Op("Compact", {}),
     COPY = Op("Copy", {String, String}),
     COS = Fn("Cos", {Float}, Float),
     COUNT = Fn("Count", {}, Int),
     CREATE = SpecialOp(),
-    -- TODO CURSOR = SpecialOp(),
+    CURSOR = SpecialOp(),
     DATETOSECS = Fn("DateToSecs", {Int, Int, Int, Int, Int, Int}, Long),
     ["DATIM$"] = Fn("DatimStr", {String}, String),
     DAY = Fn("Day", {}, Int),
@@ -389,7 +390,7 @@ Callables = {
     DCHOICE = SpecialOp({IntVarArg, String, String}),
     DDATE = SpecialOp({LongVarArg, String, Long, Long}),
     DEDIT = SpecialOp({StringVarArg, String, Int, numParams = {2, 3}}),
-    -- TODO DEDITMULTI
+    DEDITMULTI = SpecialOp({LongVarArg, String, Int, Int, Int}),
     DEFAULTWIN = Op("DefaultWin", {Int}),
     DEG = Fn("Deg", {Float}, Float),
     DELETE = Op("Delete", {String}),
@@ -400,6 +401,7 @@ Callables = {
     ["DIR$"] = Fn("DirStr", {String}, String),
     DLONG = SpecialOp({LongVarArg, String, Long, Long}),
     DOW = Fn("Dow", {Int, Int, Int}, Int),
+    DPOSITION = SpecialOp({Int, Int}),
     DTEXT = SpecialOp({String, String, Int, numParams = {2, 3}}),
     DTIME = SpecialOp({LongVarArg, String, Int, Long, Long}),
     DXINPUT = SpecialOp({StringVarArg, String}),
@@ -409,20 +411,23 @@ Callables = {
     ERR = Fn("Err", {}, Int),
     ["ERR$"] = Fn("ErrStr", {Int}, String),
     ["ERRX$"] = Fn("ErrxStr", {}, String),
+    ESCAPE = SpecialOp(),
     EVAL = Fn("Eval", {String}, Float),
     EXIST = Fn("Exist", {String}, Int),
     EXP = Fn("Exp", {Float}, Float),
     FIND = Fn("Find", {String}, Int),
     FINDFIELD = Fn("FindField", {String, Int, Int, Int}, Int),
-    FREEALLOC = Op("FreeAlloc", {SiboInt}),
+    FIRST = Op("First", {}),
     ["FIX$"] = Fn("FixStr", {Float, Int, Int}, String),
+    FONT = Op("Font", {SiboInt, Int}),
     FLT = Fn("Flt", {Long}, Float),
+    FREEALLOC = Op("FreeAlloc", {SiboInt}),
     GAT = Op("gAt", {Int, Int}),
     GBORDER = Op("gBorder", {Int, Int, Int, numParams = {1, 3}, numFixedParams = 0}),
     GBOX = Op("gBox", {Int, Int}),
     GBUTTON = Op("gButton", {String, Int, Int, Int, Int, Long, Long, Int, numParams = {5, 6, 7, 8}, numFixedParams = 5}),
     GCIRCLE = Op("gCircle", {Int, Int, numParams = {1, 2}, numFixedParams = 1}),
-    -- GCLOCK = TODO
+    GCLOCK = SpecialOp(),
     GCLOSE = Op("gClose", {Int}),
     GCLS = Op("gCls", {}),
     GCOLOR = Op("gColor", {Int, Int, Int}),
@@ -458,8 +463,9 @@ Callables = {
     GORIGINY = Fn("gOriginY", {}, Int),
     GOTOMARK = Op("GotoMark", {Int}),
     GPATT = Op("gPatt", {Int, Int, Int, Int}),
-    -- TODO GPEEKLINE = SpecialOp(),
+    GPEEKLINE = SpecialOp({Int, Int, Int, IntArrayArg, Int, Int, numParams = {5, 6}}),
     GPOLY = Op("gPoly", {IntArrayArg}),
+    GPRINT = SpecialOp(),
     GPRINTB = Op("gPrintBoxText", {String, Int, Int, Int, Int, Int, numParams = {2, 3, 4, 5, 6}, numFixedParams = 1}),
     GPRINTCLIP = Fn("gPrintClip", {String, Int}, Int),
     GRANK = Fn("gRank", {}, Int),
@@ -483,6 +489,7 @@ Callables = {
     HOUR = Fn("Hour", {}, Int),
     IABS = Fn("IAbs", {Long}, Long),
     INPUT = SpecialOp(),
+    INSERT = Op("Insert", {}),
     INT = Fn("IntLong", {Float}, Long),
     INTF = Fn("Intf", {Float}, Float),
     INTRANS = Fn("InTrans", {}, Int),
@@ -490,11 +497,13 @@ Callables = {
     IOC = Fn("Ioc", {Int, Int, IntVarArg, AnyVarArg, AnyVarArg, numParams = {4, 5}}, Int),
     IOCANCEL = Fn("IoCancel", {Int}, Int),
     IOCLOSE = Fn("IoClose", {Int}, Int),
-    IOOPEN = Fn("IoOpen", {IntVarArg, String, Int}, Int), -- TODO IoOpenUnique...
+    IOOPEN = SpecialFn(nil, Int),
     IOREAD = Fn("IoRead", {Int, SiboInt, Int}, Int),
     IOSEEK = Fn("IoSeek", {Int, Int, LongVarArg}, Int),
     IOW = Fn("Iow", {Int, Int, AnyVarArg, AnyVarArg}, Int),
     IOWAIT = Fn("IoWait", {}, Int),
+    IOWAITSTAT = Op("IoWaitStat", {IntVarArg}),
+    IOWAITSTAT32 = Op("IoWaitStat32", {LongVarArg}),
     IOWRITE = Fn("IoWrite", {Int, SiboInt, Int}, Int),
     IOYIELD = Op("IoYield", {}),
     KEY = Fn("Key", {}, Int),
@@ -503,14 +512,19 @@ Callables = {
     ["KEY$"] = Fn("KeyStr", {}, String),
     KILLMARK = Op("KillMark", {Int}),
     KMOD = Fn("Kmod", {}, Int),
+    LAST = Op("Last", {}),
+    LCLOSE = Op("LClose", {}),
     ["LEFT$"] = Fn("LeftStr", {String, Int}, String),
     LEN = Fn("Len", {String}, Int),
     LENALLOC = Fn("LenAlloc", {SiboInt}, SiboInt),
     LN = Fn("Ln", {Float}, Float),
     LOADM = Op("LoadM", {String}),
     LOC = Fn("Loc", {String, String}, Int),
+    LOCK = SpecialOp(),
     LOG = Fn("Log", {Float}, Float),
+    LOPEN = Op("LOpen", {String}),
     ["LOWER$"] = Fn("LowerStr", {String}, String),
+    LPRINT = SpecialOp(),
     MAX = SpecialFn(nil, Float),
     MCARD = SpecialOp(),
     MCASC = SpecialOp(),
@@ -520,9 +534,12 @@ Callables = {
     MIN = SpecialFn(nil, Float),
     MINIT = Op("mInit", {}),
     MINUTE = Fn("Minute", {}, Int),
+    MKDIR = Op("MkDir", {String}),
+    MODIFY = Op("Modify", {}),
     MONTH = Fn("Month", {}, Int),
     ["MONTH$"] = Fn("MonthStr", {Int}, String),
     MPOPUP = SpecialFn(nil, Int),
+    NEXT = Op("Next", {}),
     ["NUM$"] = Fn("NumStr", {Float, Int}, String),
     OPEN = SpecialOp(),
     OPENR = SpecialOp(),
@@ -539,12 +556,16 @@ Callables = {
     POKEL = Op("PokeL", {SiboInt, Long}),
     POKEW = Op("PokeW", {SiboInt, Int}),
     POS = Fn("Pos", {}, Int),
+    POSITION = Op("Position", {Int}),
+    PRINT = SpecialOp(),
+    PUT = Op("Put", {}),
     RAD = Fn("Rad", {Float}, Float),
+    RANDOMIZE = Op("Randomize", {Long}),
     RAISE = Op("Raise", {Int}),
     REALLOC = Fn("ReAlloc", {SiboInt, SiboInt}, SiboInt),
+    RENAME = Op("Rename", {String, String}),
     ["REPT$"] = Fn("ReptStr", {String, Int}, String),
     ["RIGHT$"] = Fn("RightStr", {String, Int}, String),
-    RANDOMIZE = Op("Randomize", {Long}),
     ROLLBACK = Op("Rollback", {}),
     RMDIR = Op("RmDir", {String}),
     RND = Fn("Rnd", {}, Float),
@@ -565,6 +586,8 @@ Callables = {
     TAN = Fn("Tan", {Float}, Float),
     TESTEVENT = Fn("TestEvent", {}, Int),
     UADD = Fn("Uadd", {Int, Int}, Int),
+    UNLOADM = Op("UnLoadM", {String}),
+    UPDATE = Op("Update", {}),
     ["UPPER$"] = Fn("UpperStr", {String}, String),
     USE = SpecialOp(),
     USUB = Fn("Usub", {Int, Int}, Int),
@@ -1365,6 +1388,7 @@ function ProcState:emitExpression(exp, requiredType)
             self:emitExpression(arg, arg.valType)
             -- After each arg, push the type
             self:emit("BB", opcodes.StackByteAsWord, TypeToDataType[arg.valType])
+            self:pushStack(Int)
         end
         -- Huh the return type param is '%', '&', '$' or '\0' rather than using DataType. Sigh.
         local type = exp.valType
@@ -1372,7 +1396,7 @@ function ProcState:emitExpression(exp, requiredType)
             type = "\0"
         end
         self:emit("BBc1", opcodes.CallProcByStringExpr, #exp.args - 1, type)
-        self:popStack(#exp.args)
+        self:popStack(1 + (#exp.args - 1) * 2)
     elseif op == nil and exp.type == nil then
         -- LHS of a unary operator expression, meaning we don't emit anything
         return
@@ -1535,7 +1559,8 @@ function ProcState:resolveOffsets(argExps)
 end
 
 function handleFn_ADDR(exp, procState)
-    synassert(exp.args and #exp.args == 1 and exp.args[1].type == "identifier", exp, "Expected 1 variable argument")
+    synassert(exp.args and #exp.args == 1 and (exp.args[1].type == "identifier" or exp.args[1].type == "call") , exp,
+        "Expected 1 variable argument")
     local varExp = exp.args[1]
     local isArray = varExp.args ~= nil
     if isArray then
@@ -1617,6 +1642,25 @@ function handleFn_MPOPUP(exp, procState)
     end
     procState:emit("BBB", opcodes.CallFunction, fncodes.mPopup, #exp.args)
     procState:popStack(#exp.args)
+    procState:pushStack(Int)
+end
+
+function handleFn_IOOPEN(exp, procState)
+    synassert(exp.args and #exp.args == 3, exp, "Expected 3 arguments")
+    if exp.args[2].valType == SiboInt then
+        checkExpressionArguments(exp.args, {IntVarArg, SiboInt, Int}, exp)
+        procState:emitExpression(exp.args[1], IntVarArg)
+        procState:emitExpression(exp.args[2], SiboInt)
+        procState:emitExpression(exp.args[3], Int)
+        procState:emit("BB", opcodes.CallFunction, fncodes.IoOpenUnique)
+    else
+        checkExpressionArguments(exp.args, {IntVarArg, String, Int}, exp)
+        procState:emitExpression(exp.args[1], IntVarArg)
+        procState:emitExpression(exp.args[2], String)
+        procState:emitExpression(exp.args[3], Int)
+        procState:emit("BB", opcodes.CallFunction, fncodes.IoOpen)
+    end
+    procState:popStack(3)
     procState:pushStack(Int)
 end
 
@@ -1778,35 +1822,6 @@ function ProcState:parse()
                     type = t,
                     valType = exp.valType,
                 }
-            end
-        elseif tokenType == "PRINT" or tokenType == "GPRINT" then
-            -- print is awkwardly variadic and untyped AND can separate params with semicolon as well as comma, so it
-            -- gets handled specially here.
-            local gprint = tokenType == "GPRINT"
-            local opPrefix = gprint and "gPrint" or "Print"
-            local endedWithSeparator = false
-            tokens:advance()
-            while not tokens:eos() do
-                local exp = parseExpression(tokens)
-                self:emitExpression(exp, exp.valType)
-                local opName = opPrefix..TypeToStr[exp.valType]
-                if opName == "gPrintString" then
-                    opName = "gPrintStr" -- Consistency, sigh
-                end
-                self:emit("B", opcodes[opName])
-                self:popStack(1)
-
-                local nextToken = tokens:expect("comma", "semicolon", "colon", "eos").type
-                if nextToken == "comma" then
-                    self:emit("B", opcodes[opPrefix.."Space"])
-                end
-                endedWithSeparator = nextToken == "comma" or nextToken == "semicolon"
-                if endedWithSeparator then
-                    tokens:advance()
-                end
-            end
-            if not endedWithSeparator and not gprint then
-                self:emit("B", opcodes.PrintCarriageReturn)
             end
         elseif tokenType == "identifier" then
             local callable = Callables[token.val]
@@ -2162,19 +2177,21 @@ function handleOp_CREATE(procState)
     handleOpenOrCreate(procState, opcodes.Create)
 end
 
---[[ We don't even support this in ops.lua, so...
 function handleOp_CURSOR(procState)
-    local cmdToken = procState.tokens:current()
-    procState.tokens:advance()
+    local tokens = procState.tokens
+    local cmdToken = tokens:current()
+    tokens:advance()
     local qualifier, args
-    if procState.tokens:current().type == "OFF" then
+    local firstArgType = tokens:expect("ON", "OFF", "identifier")
+
+    if firstArgType == "OFF" then
         qualifier = 0
-        procState.tokens:advance()
-    elseif procState.tokens:current().type == "ON" then
+        tokens:advance()
+    elseif firstArgType == "ON" then
         qualifier = 1
-        procState.tokens:advance()
+        tokens:advance()
     else
-        args = parseExpressionList(procState.tokens)
+        args = parseExpressionList(tokens)
         local declArgs = {Int, Int, Int, Int, Int, numParams = {1, 4, 5}}
         checkExpressionArguments(args, declArgs, cmdToken)
         for i, arg in ipairs(args) do
@@ -2187,7 +2204,6 @@ function handleOp_CURSOR(procState)
         procState:popStack(#args)
     end
 end
-]]
 
 function handleOp_DBUTTONS(procState)
     local cmdToken = procState.tokens:current()
@@ -2244,6 +2260,19 @@ function handleOp_DEDIT(procState, args)
     procState:popStack(#args)
 end
 
+function handleOp_DEDITMULTI(procState, args)
+    local var = procState:getVar(args[1], false)
+    procState:emitVarLhs(var, args[1])
+    procState:emitExpression(args[2], String)
+    procState:emitExpression(args[3], Int)
+    procState:emitExpression(args[4], Int)
+    -- Docs say this is an Int, Series 5 compiler reckons Long. Which makes more sense given it's describing the length
+    -- of a buffer which is allowed to be >64KB
+    procState:emitExpression(args[5], Long)
+    procState:emit("BB", opcodes.NextOpcodeTable, opcodes.dEditMulti - 256)
+    procState:popStack(#args)
+end
+
 function handleOp_DFILE(procState, args)
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
@@ -2271,6 +2300,13 @@ function handleOp_DLONG(procState, args)
     procState:emitExpression(args[4], Long)
     procState:emit("BB", opcodes.dItem, dItemTypes.dLONG)
     procState:popStack(#args)
+end
+
+function handleOp_DPOSITION(procState, args)
+    procState:emitExpression(args[1], Int)
+    procState:emitExpression(args[2], Int)
+    procState:emit("BB", opcodes.dItem, dItemTypes.dPOSITION)
+    procState:popStack(2)
 end
 
 function handleOp_DTEXT(procState, args)
@@ -2315,6 +2351,96 @@ function handleOp_EDIT(procState)
     procState:popStack(1)
 end
 
+function handleOp_ESCAPE(procState)
+    local val = procState.tokens:expectNext("ON", "OFF").val
+    procState:emit("BB", opcodes.Escape, val == "ON" and 1 or 0)
+    procState.tokens:advance()
+end
+
+function handleOp_GCLOCK(procState)
+    local tokens = procState.tokens
+    local cmdToken = tokens:current()
+    tokens:advance()
+    local qualifier, args
+    local firstArgType = tokens:expect("ON", "OFF").type
+
+    if firstArgType == "OFF" then
+        qualifier = 0
+        tokens:advance()
+    else
+        qualifier = 1
+        tokens:advance()
+        if tokens:current().type == "comma" then
+            tokens:advance()
+            args = parseExpressionList(tokens)
+            local declArgs = {Int, SiboInt, String, SiboInt, Int, numParams = {1, 2, 3, 4, 5}}
+            checkExpressionArguments(args, declArgs, cmdToken)
+            for i, arg in ipairs(args) do
+                procState:emitExpression(arg, declArgs[i])
+            end
+            qualifier = 1 + #args
+        end
+    end
+    procState:emit("BB", opcodes.gClock, qualifier)
+    if args then
+        procState:popStack(#args)
+    end
+end
+
+local function handlePrint(procState)
+    local tokens = procState.tokens
+    local cmdToken = tokens:current().val
+    local gprint = cmdToken == "GPRINT"
+    local opPrefix = gprint and "gPrint" or cmdToken == "LPRINT" and "LPrint" or "Print"
+    local endedWithSeparator = false
+    tokens:advance()
+    while not tokens:eos() do
+        local exp = parseExpression(tokens)
+        procState:emitExpression(exp, exp.valType)
+        local opName = opPrefix..TypeToStr[exp.valType]
+        if opName == "gPrintString" then
+            opName = "gPrintStr" -- Consistency, sigh
+        elseif opName == "gPrintFloat" then
+            opName = "gPrintDbl"
+        end
+        procState:emit("B", opcodes[opName])
+        procState:popStack(1)
+
+        local nextToken = tokens:expect("comma", "semicolon", "colon", "eos").type
+        if nextToken == "comma" then
+            procState:emit("B", opcodes[opPrefix.."Space"])
+        end
+        endedWithSeparator = nextToken == "comma" or nextToken == "semicolon"
+        if endedWithSeparator then
+            tokens:advance()
+        end
+    end
+    if not endedWithSeparator and not gprint then
+        procState:emit("B", opcodes[opPrefix.."CarriageReturn"])
+    end
+end
+
+function handleOp_GPEEKLINE(procState, args)
+    procState:emitExpression(args[1], Int)
+    procState:emitExpression(args[2], Int)
+    procState:emitExpression(args[3], Int)
+    local var = procState:getVar(args[4], true)
+    procState:emitAddressOfVar(var, args[4])
+    procState:emitExpression(args[5], Int)
+    if #args == 6 then
+        procState:emitExpression(args[6], Int)
+    else
+        procState:emit("BB", opcodes.StackByteAsWord, 0xFF)
+        procState:pushStack(Int)
+    end
+    procState:emit("B", opcodes.gPeekLine)
+    procState:popStack(6)
+end
+
+function handleOp_GPRINT(procState)
+    handlePrint(procState)
+end
+
 function handleOp_GUPDATE(procState)
     local tokens = procState.tokens
     tokens:advance()
@@ -2353,6 +2479,16 @@ function handleOp_INPUT(procState)
     procState:popStack(1)
 end
 
+function handleOp_LOCK(procState)
+    local val = procState.tokens:expectNext("ON", "OFF").val
+    procState:emit("BB", opcodes.Lock, val == "ON" and 1 or 0)
+    procState.tokens:advance()
+end
+
+function handleOp_LPRINT(procState)
+    handlePrint(procState)
+end
+
 function handleOp_MCARD(procState)
     local cmdToken = procState.tokens:current()
     procState.tokens:advance()
@@ -2387,6 +2523,10 @@ end
 
 function handleOp_OPENR(procState)
     handleOpenOrCreate(procState, opcodes.OpenR)
+end
+
+function handleOp_PRINT(procState)
+    handlePrint(procState)
 end
 
 function handleOp_SCREEN(procState, args)

@@ -339,7 +339,7 @@ codes_er5 = {
     [0x132] = "EvalExternalLeftSideRef",
     [0x133] = "dEditCheckbox", -- In 6.0 this opcode has actually been REDEFINED to gSetPenWidth
     [0x134] = "gSetPenWidth", -- in ER6 is "dEditMulti",
-    [0x135] = "IllegalOpCode", --"gColorInfo",
+    [0x135] = "dEditMulti", --"gColorInfo",
     [0x136] = "gColorInfo", --"gColorBackground",
     [0x137] = "gColorBackground", -- ER6 "mCardX",
     [0x138] = "SetHelp",
@@ -2625,6 +2625,15 @@ function dEditCheckbox(stack, runtime) -- 0x133
     table.insert(dialog.items, item)
 end
 
+function gSetPenWidth(stack, runtime) -- 0x134
+    local width = stack:pop()
+    runtime:gSETPENWIDTH(width)
+end
+
+function dEditMulti(stack, runtime) -- 0x135
+    unimplemented("dEditMulti")
+end
+
 function gXBorder32(stack, runtime) -- 0x13B
     unimplemented("gXBorder32")
 end
@@ -2660,11 +2669,6 @@ function gColorInfo(stack, runtime) -- ER5: 0x136, ER6: 0x135
         256, -- numGrays
     }
     addr:writeArray(result, DataTypes.ELong)
-end
-
-function gSetPenWidth(stack, runtime) -- 0x134
-    local width = stack:pop()
-    runtime:gSETPENWIDTH(width)
 end
 
 return _ENV

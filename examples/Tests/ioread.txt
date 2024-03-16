@@ -51,7 +51,9 @@ PROC ioa:
 	LOCAL h%, f%, status%, a1&, a2
 	IOSEEK(h%, 0, a1&)
 	IOA(h%, f%, status%, a1&, a2)
-	IOC(h%, f%, status%, a1&, a2)
+	IOC(h%, f%, status%, a1&)
 	IOW(h%, f%, a1&, a2)
+	IOWAITSTAT status%
+	IOWAITSTAT32 a1&
 ENDP
 
