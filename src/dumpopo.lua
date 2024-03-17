@@ -31,7 +31,7 @@ function main()
         "filename",
         "fnName",
         "startAddr",
-        all = true,
+        all = true, a = "all",
         help = true, h = "help",
     })
     local fnName = args.fnName

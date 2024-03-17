@@ -285,7 +285,8 @@ function lex(prog, source)
     end
 
     if idx <= #prog then
-        error("unhandled text: "..prog:sub(idx))
+        -- Means we hit something we couldn't parse
+        synerror({src={source, line, col}}, "Parse error")
     end
     return tokens
 end
@@ -1771,7 +1772,9 @@ function ProcState:parse()
     -- The main parse loop. Once through this for every statement, broadly.
     while true do
         local token = tokens:current()
-        assert((self.stackSz.sz or 0) == 0, "stack balance doom at "..dump(token))
+        if self.stackSz.sz ~= 0 then
+            error("stack balance doom at "..dump(token))
+        end
         -- print("Stack @ Zero")
         synassert(token, tokens:last(), "Missing ENDP")
         local tokenType = token.type
@@ -2037,17 +2040,18 @@ function ProcState:parse()
         elseif tokenType == "BREAK" or tokenType == "CONTINUE" then
             -- Find innermost DO or WHILE scope
             local breakableScope = scope
-            while scope.type == "IF" do
-                breakableScope = scope.prev
+            while breakableScope.type == "IF" do
+                breakableScope = breakableScope.prev
             end
             synassert(breakableScope.type == "WHILE" or breakableScope.type == "DO", token,
                 "Cannot %s from a %s scope", tokenType, breakableScope.type)
             self:emit("B", opcodes.GoTo)
             if tokenType == "BREAK" then
-                addPendingOffset("label", scope.endLabel, token)
+                self:addPendingOffset("label", breakableScope.endLabel, token)
             else
-                addPendingOffset("label", scope.condLabel, token)
+                self:addPendingOffset("label", breakableScope.condLabel, token)
             end
+            tokens:advance()
         elseif tokenType == "label" then
             local labelName = assert(token.val:match("(.+)::"))
             synassert(#labelName <= 32, "Label name is too long")
