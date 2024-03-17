@@ -1,0 +1,5 @@
+INCLUDE "inc.txt"
+
+PROC main:
+    RETURN Woop%
+ENDP

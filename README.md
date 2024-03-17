@@ -106,25 +106,17 @@ $ ./src/compile.lua <src> <output>
 
 The compiler supports most features of Series 5 era OPL, and will usually produce byte-for-byte identical output, compared with a Series 5. It tries to produce useful errors on malformed code, but it's likely there are some combinations that will produce something cryptic. Feel free to raise issues for these, or any examples where the output does not match the Series 5 compiler.
 
-Unlike the original OPL compiler, which parsed the source code into an intermediate format "PCode" before then converting that to QCode, `compiler.lua` is a broadly single-pass compiler that directly generates Q-code (with a final pass to fix up variable and branch offsets). Unlike the OpoLua interpreter, which in places has more relaxed runtime type checking than a Series 5, `compiler.lua` tracks expression types in exactly the same way as the original, including such quirks as `-32768` not being a valid integer literal (because internally it is parsed as the unary minus operator applied to 32768, and 32768 does not fit in an Integer).
+Unlike the original OPL compiler, which parsed the source code into an intermediate format "PCode" before then converting that to QCode, `compiler.lua` is a broadly single-pass compiler that directly generates QCode (with a final pass to fix up variable and branch offsets). Unlike the OpoLua interpreter, which in places has more relaxed runtime type checking than a Series 5, `compiler.lua` tracks expression types in exactly the same way as the original, including such quirks as `-32768` not being a valid integer literal (because internally it is parsed as the unary minus operator applied to 32768, and 32768 does not fit in an Integer).
 
 The `runopo.lua` script now supports taking a text or `.opl` file as input - it will compile them automatically and then execute the result. Note that `runopo.lua` is only suitable for running programs that do not have any UI beyond `PRINT` statements.
 
 ### Compiler limitations
 
-Some of the more rarely-used commands and opcodes have not yet been added.
-
-There are some restrictions in OPL that are not currently respected, and thus the compiler might incorrectly accept and produce an invalid OPO binary. These include:
-
-* Variable name length limits
-* Maximum nesting of IF/WHILE statements
-* Limitations of max size of local/global variables
-
-The `INCLUDE` command only currently supports including built-in headers such as `const.oxh` and not user files.
-
-Currently, the Series 3 target is not supported (aka SIBO or "OPL 1993").
+Compiling for the Series 3 target is not supported (aka SIBO or "OPL 1993").
 
 Generating AIF files from a `APP...ENDA` section is not currently implemented.
+
+The OPL compiler allows a maximum nesting of 8 IF/WHILE statements. There is no such limit in compiler.lua.
 
 ## References
 

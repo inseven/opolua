@@ -591,7 +591,7 @@ Callables = {
     ["UPPER$"] = Fn("UpperStr", {String}, String),
     USE = SpecialOp(),
     USUB = Fn("Usub", {Int, Int}, Int),
-    VAL = Fn("Val", {String}, Float), -- TODO is this only allowed to be a string literal?
+    VAL = Fn("Val", {String}, Float),
     VAR = SpecialFn(nil, Float),
     WEEK = Fn("Week", {Int, Int, Int}, Int),
     YEAR = Fn("Year", {}, Int),
@@ -1157,6 +1157,7 @@ function ProcState:getVar(token, isArray)
     end
 
     -- It must be an external
+    synassert(#token.val <= 32, token, "Variable name is too long")
     local valType = valTypeFromName(token.val)
     local dataType = TypeToDataType[valType]
     if isArray then
@@ -1507,29 +1508,42 @@ function ProcState:resolveOffsets(argExps)
     end
 
     local variableIdx = 0x12
+
+    local function checkSz(tok)
+        if variableIdx > 65535 then
+            synerror(tok or self, "Procedure variables exceed maximum size")
+        end
+    end
+
     for _, globalDecl in ipairs(self.globalDecls) do
         variableIdx = variableIdx + 1 + #globalDecl.val + 1 + 2
+        checkSz(globalDecl)
     end
     for _, subproc in ipairs(self.subprocs) do
         subproc.offset = variableIdx
         variableIdx = variableIdx + (1 + #subproc.name) + 1
+        checkSz()
     end
     self.iTotalTableSize = variableIdx - 0x12 -- size of globalDecls plus subprocs
     for _, arg in ipairs(argExps) do
         self.externals[arg.val].indirectIdx = variableIdx
         variableIdx = variableIdx + 2
+        checkSz(arg)
     end
     for _, external in ipairs(self.externals) do
         external.indirectIdx = variableIdx
         variableIdx = variableIdx + 2
+        checkSz()
     end
     for i, globalDecl in ipairs(self.globalDecls) do
         globalDecl.offset = variableIdx + declDataPos(globalDecl)
         variableIdx = variableIdx + sizeofDecl(globalDecl)
+        checkSz(globalDecl)
     end
     for _, localDecl in ipairs(self.localDecls) do
         localDecl.offset = variableIdx + declDataPos(localDecl)
         variableIdx = variableIdx + sizeofDecl(localDecl)
+        checkSz(localDecl)
     end
     self.iDataSize = variableIdx
 
@@ -1707,7 +1721,8 @@ end
 function ProcState:parse()
     local tokens = self.tokens
     tokens:expect("PROC")
-    local lineNumber = tokens:current().src[2]
+    self.src = tokens:current().src
+    local lineNumber = self.src[2]
     tokens:advance()
     local decl, argExps = parseProcDeclaration("PROC", self.tokens, self.procDecls)
 
@@ -1793,11 +1808,16 @@ function ProcState:parse()
                     if arrayLenExp then
                         exp.array = true
                         exp.arrayLen = evalConstExpr(Int, arrayLenExp, consts)
+                        -- Max array size is in practice constrained lower than this by the
+                        -- procedure variables overall size limit.
+                        synassert(exp.arrayLen > 0 and exp.arrayLen < 32768, maxLenExp, "Bad array size")
                     end
                     if maxLenExp then
                         exp.maxLen = evalConstExpr(Int, maxLenExp, consts)
+                        synassert(exp.maxLen > 0 and exp.maxLen < 256, maxLenExp, "String is too long")
                     end
                 end
+                synassert(#exp.val <= 32, exp, "Variable name is too long")
                 synassert(self.locals[exp.val] == nil and self.externalDecls[exp.val] == nil, exp,
                     "Duplicate definition of %s", exp.val)
                 self.locals[exp.val] = exp
@@ -2030,6 +2050,7 @@ function ProcState:parse()
             end
         elseif tokenType == "label" then
             local labelName = assert(token.val:match("(.+)::"))
+            synassert(#labelName <= 32, "Label name is too long")
             self.labels[labelName] = self.code.sz
             tokens:advance()
         elseif tokenType == "GOTO" then
@@ -2278,8 +2299,16 @@ function handleOp_DFILE(procState, args)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
     procState:emitExpression(args[3], Int)
-    error"TODO"
-    procState:popStack(#args)
+    if #args == 6 then
+        procState:emitExpression(args[4], Long)
+        procState:emitExpression(args[5], Long)
+        procState:emitExpression(args[6], Long)
+    else
+        procState:emit("BBBBBB", opcodes.StackByteAsLong, 0, opcodes.StackByteAsLong, 0, opcodes.StackByteAsLong, 0)
+        procState:pushStack(Long, Long, Long)
+    end
+    procState:emit("BB", opcodes.dItem, dItemTypes.dFILE)
+    procState:popStack(6)
 end
 
 function handleOp_DFLOAT(procState, args)
@@ -2552,7 +2581,7 @@ function handleOp_USE(procState)
     procState:emit("BB", opcodes.Use, log)
 end
 
-function docompile(path, realPath, programText, isInclude)
+function docompile(path, realPath, programText, includePaths)
     local tokens = lex(programText, realPath or path)
     local procTable = {}
     local opxTable = {}
@@ -2560,6 +2589,7 @@ function docompile(path, realPath, programText, isInclude)
     local procDecls = {}
     local aif = nil
     local strictExternals = false
+    local isInclude = includePaths == nil
     while true do
         local token = tokens:current()
         if token == nil then
@@ -2570,12 +2600,32 @@ function docompile(path, realPath, programText, isInclude)
             -- Don't think includes can have other includes?
             synassert(not isInclude, token, "Cannot use includes in include files")
 
-            local includePath = literalToString(tokens:expectNext("string").val)
-            modName = "includes." .. includePath:lower():gsub("%.", "_")
             tokens:advance()
-            local ok, includeText = pcall(require, modName)
-            synassert(ok, tokens:current(), 'Unsupported include "%s"', includePath)
-            local prog = docompile(modName, nil, includeText, true)
+            local includeTok = tokens:expect("string")
+            local includeName = literalToString(includeTok.val)
+            tokens:advance()
+
+            local includeText, foundIncludePath
+            for _, includePath in ipairs(includePaths) do
+                local path = includePath .. includeName
+                local f = io.open(path, "r")
+                if f then
+                    foundIncludePath = path
+                    includeText = f:read("*a")
+                    f:close()
+                    break
+                end
+            end
+            if includeText == nil then
+                -- Try built-ins
+                local modName = "includes." .. includeName:lower():gsub("%.", "_")
+                local ok, inc = pcall(require, modName)
+                if ok then
+                    includeText = inc
+                end
+            end
+            synassert(includeText, includeTok, 'Include not found "%s"', includeName)
+            local prog = docompile(includeName, foundIncludePath, includeText, nil)
             for name, exp in pairs(prog.consts) do
                 synassert(consts[name] == nil, token, "Duplicate definition of const %s", name)
                 consts[name] = exp
@@ -2651,8 +2701,8 @@ function docompile(path, realPath, programText, isInclude)
     end
 end
 
-function compile(path, realPath, programText)
-    return require("opofile").makeOpo(docompile(path, realPath, programText))
+function compile(path, realPath, programText, includePaths)
+    return require("opofile").makeOpo(docompile(path, realPath, programText, includePaths))
 end
 
 return _ENV

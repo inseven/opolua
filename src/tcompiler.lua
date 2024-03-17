@@ -152,7 +152,7 @@ end
 
 local function checkProg(prog, expected)
     local dummyPath = "C:\\module"
-    local progObj = compiler.docompile(dummyPath, nil, prog)
+    local progObj = compiler.docompile(dummyPath, nil, prog, {})
     local opoData = opofile.makeOpo(progObj)
     local procTable, opxTable = opofile.parseOpo(opoData)
     assertEquals(#procTable, #expected)
@@ -227,7 +227,7 @@ end
 
 local function checkSyntaxError(statement, expectedError)
     local prog = string.format(checkCodeWrapper, statement)
-    local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog)
+    local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {})
     assert(not ok, "Compile unexpectedly succeeded!")
     -- Line number should always be 4 because that's where checkCodeWrapper puts statement
     local expectedErrWithPrefix = "C:\\module:4:" .. expectedError
@@ -543,6 +543,15 @@ checkSyntaxError("ASC(A$", "7: Expected token cloparen")
 checkSyntaxError("ASC(A$, ,)", "9: Expected expression")
 
 checkSyntaxError(" ASC(A$, B$)", "2: Expected 1 args to ASC, not 2")
+
+-- First of these is fine, hence the check for column=41
+checkSyntaxError("LOCAL a1234567890123456789012345678901, a12345678901234567890123456789012", "41: Variable name is too long")
+
+checkSyntaxError("a12345678901234567890123456789012 = 1", "1: Variable name is too long")
+
+checkSyntaxError("LOCAL f$(256)", "10: String is too long")
+
+checkSyntaxError("LOCAL a&(30000)", "7: Procedure variables exceed maximum size")
 
 callbystr = [[
 PROC main:
@@ -1036,12 +1045,12 @@ ENDP
 ]]
 
 
-prog = compiler.docompile("D:\\const.oph", nil, require("includes.const_oph"))
-prog = compiler.docompile("D:\\beep.opl", nil, beep)
-prog = compiler.docompile("D:\\pause.opl", nil, pause)
-prog = compiler.docompile("D:\\simple.opl", nil, simple)
-prog = compiler.docompile("D:\\globint.opl", nil, globint)
-prog = compiler.docompile("D:\\globals.opl", nil, globals)
+prog = compiler.docompile("D:\\const.oph", nil, require("includes.const_oph"), {})
+prog = compiler.docompile("D:\\beep.opl", nil, beep, {})
+prog = compiler.docompile("D:\\pause.opl", nil, pause, {})
+prog = compiler.docompile("D:\\simple.opl", nil, simple, {})
+prog = compiler.docompile("D:\\globint.opl", nil, globint, {})
+prog = compiler.docompile("D:\\globals.opl", nil, globals, {})
 
 -- progData = require("opofile").makeOpo(prog)
 -- rt = require("runtime").newRuntime({ fsop = function(op) assert(op=="read"); return progData end })
