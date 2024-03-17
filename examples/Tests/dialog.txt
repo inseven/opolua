@@ -15,7 +15,7 @@ PROC loop%:
 	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
 	dCHOICE choice%, "", "password,empty,date,time,..."
 	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg,..."
-	dCHOICE choice%, "", "editmulti"
+	dCHOICE choice%, "", "editmulti,file"
 	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
 	choice% = 2
 	dlg% = DIALOG
@@ -50,7 +50,9 @@ PROC loop%:
 	ELSEIF choice% = 12
 		cancelDlg:
 	ELSEIF choice% = 13
-		editMulti:
+		editMultiDlg:
+	ELSEIF choice% = 14
+		fileDlg:
 	ENDIF
 	
 	RETURN 1
@@ -192,7 +194,7 @@ PROC cancelDlg:
 	GET
 ENDP
 
-PROC editMulti:
+PROC editMultiDlg:
 	LOCAL result%, buf&(16), ptr&, text$(60), len&
 	ptr& = ADDR(buf&())
 	dINIT "Multi edit"
@@ -203,6 +205,15 @@ PROC editMulti:
 	POKEB ptr& + 3, len&
 	text$ = PEEK$(ptr& + 3)
 	PRINT "Dialog returned", text$
+	GET
+ENDP
+
+PROC fileDlg:
+	LOCAL f$(255)
+	dINIT "File dialog"
+	dFILE f$, "File", 0
+	DIALOG
+	PRINT "Dialog returned", f$
 	GET
 ENDP
 

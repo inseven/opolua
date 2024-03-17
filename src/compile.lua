@@ -31,8 +31,40 @@ function main()
         "filename",
         "output",
         dump = true, d = "dump",
+        include = table, i = "include",
         source = string,
+        help = true, h = "help"
     })
+
+    if args.help then
+        print([[
+Syntax: compile.lua [options] <filename> [<ouput>]
+
+Compile a Series 5 era OPL program. If neither <output> nor --dump are
+specified, the result is written to <filename>.opo alongside <filename>.
+
+<filename> can be either a plain text file, or an OPL file. OPL files are
+converted to text as per opltotext.lua. 
+
+Options:
+    --dump, -d
+        Prints the bytecode of the resulting binary to stdout.
+
+    --include <dir>, -i <dir>
+        Add <dir> to the list of locations to be searched when an INCLUDE
+        statement is encountered. If no paths are specified, only the standard
+        built-in headers can be INCLUDEed. Note, paths MUST end in the
+        appropriate filesystem path separator, for example "-i ./". Note also
+        that while includes of built-ins are case-insensitive, when including
+        files from the filesystem the include name is case-sensitive if the
+        filesystem is.
+
+    --source <path>, -s <path>
+        Override the source file path included in the output. If not specified,
+        will be set to <filename>.
+]])
+        os.exit(false)
+    end
 
     local compiler = require("compiler")
     local progText = readFile(args.filename)
@@ -40,7 +72,7 @@ function main()
         -- Assume it's a .opl file
         progText = require("recognizer").getOplText(progText)
     end
-    local ok, result = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText)
+    local ok, result = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText, args.includes)
     if not ok then
         if type(result) == "string" then
             print(result)
