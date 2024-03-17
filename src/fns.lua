@@ -1063,7 +1063,20 @@ function Var(stack, runtime) -- 0x98
 end
 
 function Eval(stack, runtime) -- 0x99
-    unimplemented("fns.Eval")
+    local str = stack:pop()
+    -- We will treat this as an anonymous proc, which is the simplest way to resolve potential variable and proc
+    -- calls in the expression.
+    local proc = string.format([[
+        PROC evaluateExpression:
+            RETURN %s
+        ENDP
+        ]], str)
+    local ok, prog = pcall(require("compiler").compile, "evaluateExpression", nil, proc, {})
+    if not ok then
+        error(-87) -- "Syntax error", not sure what the actual constant name should be since it isn't in const.oph...
+    end
+    local proc = assert(require("opofile").parseOpo(prog)[1])
+    runtime:pushNewFrame(stack, proc, 0)
 end
 
 function ChrStr(stack) -- 0xC0
