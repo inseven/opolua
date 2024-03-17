@@ -998,6 +998,78 @@ checkProg(vector, {
     }
 })
 
+eval = [[
+INCLUDE "const.oph"
+
+PROC main:
+    LOCAL n$(64)
+    WHILE 1
+        PRINT "Input expression: ";
+        TRAP INPUT n$
+        IF ERR=KErrEsc%
+            BREAK
+        ENDIF
+        IF n$=""
+            CONTINUE
+        ENDIF
+        ONERR checkerr
+        PRINT n$;"=";EVAL(n$)
+        ONERR OFF
+        checkerr::
+        IF ERR
+            PRINT "Error"
+            TRAP RAISE 0
+        ENDIF
+    ENDWH
+ENDP
+]]
+checkProg(eval, {
+    {
+        iDataSize = 84,
+        strings = {
+            [0x12] = 64,
+        },
+
+        op"StackByteAsWord", 1,
+        op"BranchIfFalse", h(94),
+        ConstantString("Input expression: "),
+        op"PrintString",
+        op"Trap",
+        op"SimpleDirectLeftSideString", h(0x0013),
+        op"InputString",
+        fn"Err",
+        op"StackByteAsWord", 0x8E,
+        op"CompareEqualInt",
+        op"BranchIfFalse", h(6),
+        op"GoTo", h(57),
+        op"SimpleDirectRightSideString", h(0x0013),
+        ConstantString(""),
+        op"CompareEqualString",
+        op"BranchIfFalse", h(6),
+        op"GoTo", h(-51),
+        op"OnErr", h(21),
+        op"SimpleDirectRightSideString", h(0x0013),
+        op"PrintString",
+        ConstantString("="),
+        op"PrintString",
+        op"SimpleDirectRightSideString", h(0x0013),
+        fn"Eval",
+        op"PrintFloat",
+        op"PrintCarriageReturn",
+        op"OnErr", h(0),
+        fn"Err",
+        op"BranchIfFalse", h(16),
+        ConstantString("Error"),
+        op"PrintString",
+        op"PrintCarriageReturn",
+        op"Trap",
+        op"StackByteAsWord", 0,
+        op"Raise",
+        op"GoTo", h(-93),
+        op"ZeroReturnFloat",
+    },
+})
+
 dow = [[
 PROC main:
     PRINT "Today is", DAYNAME$(DOW(DAY, MONTH, YEAR))
