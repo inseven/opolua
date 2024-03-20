@@ -2631,7 +2631,19 @@ function gSetPenWidth(stack, runtime) -- 0x134
 end
 
 function dEditMulti(stack, runtime) -- 0x135
-    unimplemented("dEditMulti")
+    local dialog = runtime:getDialog()
+    local item = { type = dItemTypes.dEDITMULTI }
+    item.len = stack:pop()
+    item.numLines = stack:pop()
+    item.widthChars = stack:pop()
+    item.prompt = stack:pop()
+    item.addr = runtime:addrFromInt(stack:pop())
+
+    local len = string.unpack("<i4", item.addr:read(4))
+    local startOfData = item.addr + 4
+    item.value = startOfData:read(len)
+
+    table.insert(dialog.items, item)
 end
 
 function gXBorder32(stack, runtime) -- 0x13B

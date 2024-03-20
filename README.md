@@ -61,15 +61,14 @@ This interpreter is not 100% behaviour compatible with the original Psion. The m
 
 ## Example
 
-[simple.txt](examples/simple.txt) compiled on a Psion Series 5:
+[simple.txt](examples/Tests/simple.txt) compiled on a Psion Series 5:
 
 ```
-$ cd src
-$ ./runopo.lua ../examples/simple.opo
+$ ./src/runopo.lua --noget examples/Tests/simple.opo
 Hello world!
 Waaaat
-
-$ ./dumpopo.lua ../examples/simple.opo --all
+(Skipping get)
+$ ./src/dumpopo.lua examples/Tests/simple.opo --all
 Source name: D:\Program
 procTableIdx: 0x0000006B
 1: TEST @ 0x0000001F code=0x00000036 line=0

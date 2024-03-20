@@ -232,7 +232,8 @@ dItemTypes = enum {
     dPOSITION = 11,
     dCHECKBOX = 12,
     -- simulated types, not actually used by OPL
-    dSEPARATOR = 13,
+    dSEPARATOR = 257,
+    dEDITMULTI = 258,
 }
 
 KDefaultFontUid = KFontArialNormal15
