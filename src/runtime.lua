@@ -566,8 +566,8 @@ function Runtime:drawCmd(type, op)
 end
 
 function Runtime:flushGraphicsOps()
-    local graphics = self:getGraphics()
-    if graphics.buffer and graphics.buffer[1] then
+    local graphics = self.graphics
+    if graphics and graphics.buffer and graphics.buffer[1] then
         self.ioh.draw(graphics.buffer)
         graphics.buffer = {}
     end

@@ -389,7 +389,8 @@ function DialogItemEdit:showEditor()
         screenRect = self:screenRect(),
     })
     if result then
-        self.value = result
+        -- Native side doesn't respect max len, currently...
+        self.value = result:sub(1, 1 + self.len)
     end
     self:setNeedsRedraw()
 end
@@ -547,6 +548,95 @@ function DialogItemEditTime:updateVariable()
         self.value = (self.value // 60) * 60
     end
     self.variable(self.value)
+end
+
+DialogItemEditMulti = class { _super = DialogItemEdit }
+
+function DialogItemEditMulti:getValue()
+    local len = string.unpack("<i4", self.addr:read(4))
+    local startOfData = self.addr
+    return startOfData:read(len)
+end
+
+function DialogItemEditMulti:contentSize()
+    return gTWIDTH(string.rep("M", self.widthChars)) + 2 * kEditTextSpace, kDialogTightLineHeight * self.numLines
+end
+
+local function splitLine(line, maxWidth, widthFn)
+    local lines = {}
+    local currentLine = {}
+    local lineWidth = 0
+    local function newLine()
+        table.insert(lines, table.concat(currentLine))
+        currentLine = {}
+        lineWidth = 0
+    end
+    local function addToLine(word, wordWidth)
+        table.insert(currentLine, word)
+        lineWidth = lineWidth + wordWidth
+    end
+    local spaceWidth = widthFn(" ")
+    for word in line:gmatch("[^%s]+") do
+        local wordWidth = widthFn(word)
+        local lineAndWordWidth = lineWidth + wordWidth + (lineWidth == 0 and 0 or spaceWidth)
+        if lineAndWordWidth <= maxWidth then
+            -- Fits on current line
+            if next(currentLine) then
+                addToLine(" ", spaceWidth)
+            end
+            addToLine(word, wordWidth)
+        elseif wordWidth >= maxWidth * 3 / 4 then
+            -- Uh oh the word on its own doesn't fit. Try to camelcase split it
+            local w1, w2 = word:match("([A-Z][a-z]+)([A-Z][a-z]+)")
+            if w1 then
+                addToLine(w1, widthFn(w1))
+                newLine()
+                addToLine(w2, widthFn(w2))
+            else
+                -- Give up
+                if lineWidth > 0 then
+                    newLine()
+                end
+                addToLine(word, wordWidth)
+            end
+        else
+            if lineWidth > 0 then
+                newLine()
+            end
+            addToLine(word, wordWidth)
+        end
+    end
+    newLine()
+    return lines
+end
+
+function DialogItemEditMulti:drawValue(val)
+    local x = self:drawPrompt()
+    local texty = self.y + kDialogLineTextYOffset
+
+    local boxWidth = math.min(self:contentSize(), self.w - x)
+    local boxHeight = kDialogTightLineHeight * self.numLines
+    lightGrey()
+    gAT(x, texty - 2)
+    gBOX(boxWidth, boxHeight + 3)
+    black()
+    gAT(x + 1, texty)
+    gFILL(boxWidth - 2, boxHeight, KgModeClear)
+
+    local lines = splitLine(val, self:contentSize(), function(text)
+        return gTWIDTH(text)
+    end)
+
+    for i, line in ipairs(lines) do
+        drawText(line, x + kEditTextSpace, texty + (i-1) * kDialogTightLineHeight)
+    end
+end
+
+function DialogItemEditMulti:updateVariable()
+    local len = #self.value
+    self.addr:write(string.pack("<i4", #self.value))
+    local startOfData = self.addr + 4
+    startOfData:write(self.value)
 end
 
 DialogChoiceList = class {
@@ -970,6 +1060,7 @@ local itemTypes = {
     [dItemTypes.dSEPARATOR] = DialogItemSeparator,
     [dItemTypes.dCHECKBOX] = DialogCheckbox,
     [dItemTypes.dEDIT] = DialogItemEdit,
+    [dItemTypes.dEDITMULTI] = DialogItemEditMulti,
     [dItemTypes.dLONG] = DialogItemEditLong,
     [dItemTypes.dFLOAT] = DialogItemEditFloat,
     [dItemTypes.dXINPUT] = DialogItemEditPass,

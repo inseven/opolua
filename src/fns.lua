@@ -1210,7 +1210,9 @@ function NumStr(stack, runtime) -- 0xCE
 end
 
 function PeekStr(stack, runtime) -- 0xCF
-    unimplemented("fns.PeekStr")
+    local addr = runtime:addrFromInt(stack:pop())
+    local var = addr:asVariable(DataTypes.EString)
+    stack:push(var())
 end
 
 function ReptStr(stack, runtime) -- 0xD0
