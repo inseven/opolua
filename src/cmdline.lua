@@ -23,13 +23,15 @@ SOFTWARE.
 ]]
 
 -- Use to bootstrap cmdline scripts with the following magic:
--- dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+-- dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 -- local args = getopt({ ... })
 
 local args = arg
 -- Have to redo the calculation of our base path here, which is a bit annoying
 local launchFile = args[0]
-package.path = launchFile:sub(1, launchFile:match("/?()[^/]+$") - 1).."?.lua"
+_G.sep = nil -- Undo the temporary that the cmdline boilerplate created
+local sep = package.config:sub(1, 1)
+package.path = launchFile:sub(1, launchFile:match(sep.."?()[^" .. sep .. "]+$") - 1).."?.lua"
 require("init")
 
 local function printHelp(params)
@@ -244,6 +246,9 @@ function pcallMain()
     local runtime = require("runtime")
     local ok, err = xpcall(main, runtime.traceback)
     if not ok then
+        if err.src then
+            printf("%s:%d:%d: ", err.src.path, err.src.line, err.src.column)
+        end
         print(err.msg)
         print(err.luaStack)
         os.exit(false)

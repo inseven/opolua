@@ -1,5 +1,5 @@
 CONST kRadius = 100
-CONST kStep = 0.3
+CONST kStep = 0.1
 
 PROC main:
 	draw:
@@ -7,26 +7,47 @@ PROC main:
 	gCLS
 	gUPDATE OFF
 	draw:
-	gUPDATE ON
+	REM gUPDATE ON
 	GET
 ENDP
 
 PROC draw:
 	REM	DEFAULTWIN 1
-	LOCAL i
+	LOCAL i, w%, h%, c%
+	w% = gWIDTH
+	h% = gHEIGHT
 	
-	gAT 50, 50
 	gGREY 1
+	gAT 50, 50
 	gCIRCLE 20, 1
-	gAT gWIDTH - 50, 50
+	gAT w% - 50, 50
 	gCOLOR 200, 200, 200
 	gCIRCLE 20, 1
 
 	gGREY 0
 	
 	WHILE i < 6.23
-		gAT gWIDTH / 2, gHEIGHT / 2
+		gAT w% / 2, h% / 2
+		c% = i * 40
+		gCOLOR c%, c%, c%
 		gLINEBY kRadius * COS(i), kRadius * SIN(i)	
 		i = i + kStep
 	ENDWH
 ENDP
+
+PROC peek:
+	LOCAL d%(16)
+	gPEEKLINE 0, 1, 2, d%(), 4
+	gPEEKLINE 0, 1, 2, d%(), 4, 0
+ENDP
+
+PROC clock:
+	gCLOCK OFF
+	gCLOCK ON
+	gCLOCK ON, 1
+	gCLOCK ON, 1, 2
+	gCLOCK ON, 1, 2, "FMT"
+	gCLOCK ON, 1, 2, "FMT", 4
+	gCLOCK ON, 1, 2, "FMT", 4, 5
+ENDP
+

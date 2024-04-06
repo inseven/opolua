@@ -160,6 +160,19 @@ function Runtime:addModule(path, procTable, opxTable)
     }
     for _, proc in ipairs(procTable) do
         mod[proc.name] = proc
+        if proc.globals then
+            -- runtime expects to be able to do by name lookups in globals...
+            for _, global in ipairs(proc.globals) do
+                local nameForLookupByName = global.name
+                if isArrayType(global.type) then
+                    -- Array variable names live in a separate namespace to scalars,
+                    -- for the purposes of global variable lookup, the simplest
+                    -- solution is to disambiguate them here.
+                    nameForLookupByName = nameForLookupByName.."[]"
+                end
+                proc.globals[nameForLookupByName] = global
+            end
+        end
     end
     table.insert(self.modules, mod)
     if not self.cwd then
@@ -273,7 +286,7 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         end
         while not found do
             parentFrame = parentFrame.prevFrame
-            assert(parentFrame, "Failed to resolve external "..external.name)
+            assert(parentFrame, "Failed to resolve external "..nameForLookup)
             local parentProc = parentFrame.proc
             found = parentFrame.globals[nameForLookup]
         end
@@ -553,8 +566,8 @@ function Runtime:drawCmd(type, op)
 end
 
 function Runtime:flushGraphicsOps()
-    local graphics = self:getGraphics()
-    if graphics.buffer and graphics.buffer[1] then
+    local graphics = self.graphics
+    if graphics and graphics.buffer and graphics.buffer[1] then
         self.ioh.draw(graphics.buffer)
         graphics.buffer = {}
     end
@@ -897,9 +910,11 @@ local function addStacktraceToError(self, err, callingFrame)
         local info
         if self.frame.proc.fn then
             info = fmt("%s\\%s: [Lua] %s", mod.name, self.frame.proc.name, self.frame.lastPcallSite or "?")
-        else
+        elseif self.frame.lastIp then
             self.ip = self.frame.lastIp
             info = fmt("%s\\%s:%s", mod.name, self.frame.proc.name, self:decodeNextInstruction())
+        else
+            info = fmt("%s\\%s", mod.name, self.frame.proc.name)
         end
         table.insert(frameDescs, info)
         self:setFrame(self.frame.prevFrame)

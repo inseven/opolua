@@ -80,3 +80,9 @@ PROC printEvent:
 		RETURN
 	ENDIF
 ENDP
+
+PROC async:
+	LOCAL stat%, ev&(16)
+	GETEVENTA32 stat%, ev&()
+	GETEVENTC(stat%)
+ENDP

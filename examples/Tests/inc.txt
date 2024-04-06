@@ -1,0 +1,1 @@
+CONST Woop% = 1234

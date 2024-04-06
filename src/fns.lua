@@ -270,11 +270,6 @@ local function numParams_dump(runtime)
     return fmt(" numParams=%d", numParams)
 end
 
-function IP8_dump(runtime)
-    local val = runtime:IP8()
-    return fmt("%d (0x%02X)", val, val)
-end
-
 function Addr(stack, runtime) -- 0x00
     local var = stack:pop()
     stack:push(var:addressOf())
@@ -569,7 +564,7 @@ function gCreateBit(stack, runtime) -- 0x27
     stack:push(id)
 end
 
-gCreateBit_dump = IP8_dump
+gCreateBit_dump = numParams_dump
 
 function gLoadBit(stack, runtime) -- 0x28
     local numParams = runtime:IP8()
@@ -682,28 +677,7 @@ end
 function Dialog(stack, runtime) -- 0x37
     local dialog = runtime:getDialog()
     runtime:setDialog(nil)
-    local varMap = {} -- maps dialog item to variable
-    for _, item in ipairs(dialog.items) do
-        if item.variable ~= nil then
-            varMap[item] = item.variable
-            item.variable = nil -- Don't expose this to iohandler
-        end
-    end
     local result = runtime:DIALOG(dialog)
-    if result > 0 then
-        -- Assign any variables eg `dCHOICE choice%`
-        for item, var in pairs(varMap) do
-            if item.value then
-                -- Have to reconstruct type because item.value will always be a string
-                -- (But the type of var() will still be correct)
-                local isnum = type(var()) == "number"
-                if isnum then
-                    item.value = tonumber(item.value)
-                end
-                var(item.value)
-            end
-        end
-    end
     -- Be bug compatible with Psion 5 and return 0 if a negative-keycode or escape button was pressed
     if result < 0 or result == 27 then
         result = 0
@@ -791,11 +765,7 @@ function Days(stack, runtime) -- 0x37
     local year = stack:pop()
     local month = stack:pop()
     local day = stack:pop()
-    local t = runtime:iohandler().utctime({ year = year, month = month, day = day })
-    -- Result needs to be days since 1900. Who knows why since nothing else uses
-    -- 1900 as its epoch.
-    local epoch = runtime:iohandler().utctime({ year = 1900, month = 1, day = 1 })
-    t = (t - epoch) // (24 * 60 * 60)
+    local t = runtime:DAYS(day, month, year)
     stack:push(t)
 end
 
@@ -1093,7 +1063,20 @@ function Var(stack, runtime) -- 0x98
 end
 
 function Eval(stack, runtime) -- 0x99
-    unimplemented("fns.Eval")
+    local str = stack:pop()
+    -- We will treat this as an anonymous proc, which is the simplest way to resolve potential variable and proc
+    -- calls in the expression.
+    local proc = string.format([[
+        PROC evaluateExpression:
+            RETURN %s
+        ENDP
+        ]], str)
+    local ok, prog = pcall(require("compiler").compile, "evaluateExpression", nil, proc, {})
+    if not ok then
+        error(-87) -- "Syntax error", not sure what the actual constant name should be since it isn't in const.oph...
+    end
+    local proc = assert(require("opofile").parseOpo(prog)[1])
+    runtime:pushNewFrame(stack, proc, 0)
 end
 
 function ChrStr(stack) -- 0xC0
@@ -1227,7 +1210,9 @@ function NumStr(stack, runtime) -- 0xCE
 end
 
 function PeekStr(stack, runtime) -- 0xCF
-    unimplemented("fns.PeekStr")
+    local addr = runtime:addrFromInt(stack:pop())
+    local var = addr:asVariable(DataTypes.EString)
+    stack:push(var())
 end
 
 function ReptStr(stack, runtime) -- 0xD0

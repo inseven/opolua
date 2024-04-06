@@ -1,0 +1,13 @@
+PROC main:
+    LOCAL x%
+    x% = 1
+    IF x% = 0
+        PRINT "Bad";
+    ELSEIF x% = 1
+        PRINT "Good";
+    ELSE
+        Print "ohnonotmore";
+    ENDIF
+    PRINT " Done"
+ENDP
+

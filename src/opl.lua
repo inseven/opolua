@@ -136,8 +136,8 @@ end
 
 function gAT(x, y)
     local contextPos = runtime:getGraphicsContext().pos
-    contextPos.x = x
-    contextPos.y = y
+    contextPos.x = assert(x)
+    contextPos.y = assert(y)
 end
 
 function gMOVE(x, y)
@@ -1238,6 +1238,15 @@ end
 
 function assertPathValid(path)
     return assert(checkPathValid(path))
+end
+
+local kSecsFrom1900to1970 = 2208988800 -- runtime:iohandler().utctime({ year = 1900, month = 1, day = 1 })
+
+function DAYS(day, month, year)
+    local t = runtime:iohandler().utctime({ year = year, month = month, day = day })
+    -- Result needs to be days since 1900. Only the old sibo-era APIs use 1900, date.opx uses 1970. Ugh.
+    t = (t + kSecsFrom1900to1970) // (24 * 60 * 60)
+    return t
 end
 
 return _ENV

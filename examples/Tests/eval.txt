@@ -1,0 +1,23 @@
+INCLUDE "const.oph"
+
+PROC main:
+	LOCAL n$(64)
+	WHILE 1
+		PRINT "Input expression: ";
+		TRAP INPUT n$
+		IF ERR=KErrEsc%
+			BREAK
+		ENDIF
+		IF n$=""
+			CONTINUE
+		ENDIF
+		ONERR checkerr
+		PRINT n$;"=";EVAL(n$)
+		ONERR OFF
+		checkerr::
+		IF ERR
+			PRINT "Error"
+			TRAP RAISE 0
+		ENDIF
+	ENDWH
+ENDP

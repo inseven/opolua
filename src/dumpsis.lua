@@ -1,4 +1,4 @@
-#!/usr/local/bin/lua-5.3
+#!/usr/bin/env lua
 
 --[[
 
@@ -24,7 +24,7 @@ SOFTWARE.
 
 ]]
 
-dofile(arg[0]:sub(1, arg[0]:match("/?()[^/]+$") - 1).."cmdline.lua")
+dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 
 function main()
     local args = getopt({

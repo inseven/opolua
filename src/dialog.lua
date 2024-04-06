@@ -148,6 +148,16 @@ function View:setFocus(flag)
     end
 end
 
+function View:screenRect()
+    local origx, origy = gORIGINX(), gORIGINY()
+    return {
+        x = origx + self.x,
+        y = origy + self.y,
+        w = self.w,
+        h = self.h
+    }
+end
+
 function View:focussable()
     return false
 end
@@ -211,7 +221,10 @@ function View:capturePointer()
     -- print("end capture")
 end
 
-function View:updateValue()
+function View:updateVariable()
+    if self.variable and self.value then
+        self.variable(self.value)
+    end
 end
 
 
@@ -324,7 +337,7 @@ function DialogItemEdit:contentSize()
     return gTWIDTH(string.rep("@", self.len)) + 2 * kEditTextSpace, self.heightHint
 end
 
-function DialogItemEdit:draw()
+function DialogItemEdit:drawValue(val)
     local x = self:drawPrompt()
     local texty = self.y + kDialogLineTextYOffset
 
@@ -335,7 +348,11 @@ function DialogItemEdit:draw()
     black()
     gAT(x + 1, texty)
     gFILL(boxWidth - 2, self.charh, KgModeClear)
-    drawText(self.value, x + kEditTextSpace, texty)
+    drawText(val, x + kEditTextSpace, texty)
+end
+
+function DialogItemEdit:draw()
+    self:drawValue(tostring(self.value))
 end
 
 function DialogItemEdit:focussable()
@@ -366,11 +383,14 @@ function DialogItemEdit:showEditor()
     local result = runtime:iohandler().editValue({
         type = "text",
         initialValue = self.value,
+        max = self.len,
         prompt = self.prompt,
-        allowCancel = true
+        allowCancel = true,
+        screenRect = self:screenRect(),
     })
     if result then
-        self.value = result
+        -- Native side doesn't respect max len, currently...
+        self.value = result:sub(1, 1 + self.len)
     end
     self:setNeedsRedraw()
 end
@@ -387,18 +407,237 @@ end
 function DialogItemEditLong:showEditor()
     local result = runtime:iohandler().editValue({
         type = "integer",
-        initialValue = self.value,
+        initialValue = tostring(self.value),
         prompt = self.prompt,
         allowCancel = true,
         min = self.min,
         max = self.max,
+        screenRect = self:screenRect(),
     })
     if result then
-        self.value = tostring(math.min(self.max, math.max(tonumber(result), self.min)))
+        self.value = math.min(self.max, math.max(result, self.min))
     end
     self:setNeedsRedraw()
 end
 
+DialogItemEditFloat = class { _super = DialogItemEdit }
+
+function DialogItemEditFloat:contentSize()
+    local maxChars = 17
+    return gTWIDTH(string.rep("@", maxChars)) + 2 * kEditTextSpace, self.heightHint
+end
+
+function DialogItemEditFloat:showEditor()
+    local result = runtime:iohandler().editValue({
+        type = "float",
+        initialValue = tostring(self.value),
+        prompt = self.prompt,
+        allowCancel = true,
+        min = self.min,
+        max = self.max,
+        screenRect = self:screenRect(),
+    })
+    if result then
+        self.value = math.min(self.max, math.max(result, self.min))
+    end
+    self:setNeedsRedraw()
+end
+
+DialogItemEditPass = class { _super = DialogItemEdit }
+
+function DialogItemEditPass:showEditor()
+    local result = runtime:iohandler().editValue({
+        type = "password",
+        initialValue = self.value,
+        max = self.variable:stringMaxLen(),
+        prompt = self.prompt,
+        allowCancel = true,
+        screenRect = self:screenRect(),
+    })
+    if result then
+        self.value = result
+    end
+    self:setNeedsRedraw()
+end
+
+function DialogItemEditPass:draw()
+    self:drawValue(string.rep("*", #self.value))
+end
+
+DialogItemEditDate = class { _super = DialogItemEdit }
+
+function DialogItemEditDate:contentSize()
+    return gTWIDTH("@@/@@/@@@@") + 2 * kEditTextSpace, self.heightHint
+end
+
+local kSecsFrom1900to1970 = 2208988800
+
+function DialogItemEditDate:draw()
+    -- Value is integer days since 1900
+    local dateStr = os.date("%d/%m/%Y", (self.value * 86400) - kSecsFrom1900to1970)
+    self:drawValue(dateStr)
+end
+
+function DialogItemEditDate:showEditor()
+    local result = runtime:iohandler().editValue({
+        type = "date",
+        initialValue = tostring(self.value),
+        prompt = self.prompt,
+        allowCancel = true,
+        min = self.min,
+        max = self.max,
+        screenRect = self:screenRect(),
+    })
+    if result then
+        self.value = result
+    end
+    self:setNeedsRedraw()
+end
+
+DialogItemEditTime = class { _super = DialogItemEdit }
+
+function DialogItemEditTime:contentSize()
+    return gTWIDTH("@@@@@@@@@@") + 2 * kEditTextSpace, self.heightHint
+end
+
+function DialogItemEditTime:draw()
+    local timeFlags = self.timeFlags & ~KDTimeNoHours -- This flag is such gibberish I'm not supporting it.
+    local str
+    if timeFlags & KDTimeDuration > 0 then
+        local hours = self.value // 3600
+        local mins = (self.value - (hours * 3600)) // 60
+        local secs = self.value - (hours * 3600) - (mins * 60)
+        if timeFlags == KDTimeDurationWithSecs then
+            str = string.format("%02d:%02d:%02d", hours, mins, secs)
+        else
+            str = string.format("%02d:%02d", hours, mins)
+        end
+    elseif timeFlags == KDTimeAbsNoSecs then
+        str = os.date("!%I:%M %p", self.value)
+    elseif timeFlags == KDTimeWithSeconds then
+        str = os.date("!%I:%M:%S %p", self.value)
+    elseif timeFlags == KDTime24Hour then
+        str = os.date("!%H:%M", self.value)
+    elseif timeFlags == KDTime24Hour | KDTimeWithSeconds then
+        str = os.date("!%H:%M:%S", self.value)
+    end
+    self:drawValue(str)
+end
+
+function DialogItemEditTime:showEditor()
+    local result = runtime:iohandler().editValue({
+        type = "time",
+        initialValue = tostring(self.value),
+        prompt = self.prompt,
+        allowCancel = true,
+        min = self.min,
+        max = self.max,
+        screenRect = self:screenRect(),
+        timeFlags = self.timeFlags,
+    })
+    if result then
+        self.value = result
+    end
+    self:setNeedsRedraw()
+end
+
+function DialogItemEditTime:updateVariable()
+    if self.timeFlags & KDTimeWithSeconds == 0 then
+        -- Make sure we remove any seconds (specifically if any were passed in, as hopefully the editor won't have
+        -- introduced any if the KDTimeWithSeconds flag isn't set)
+        self.value = (self.value // 60) * 60
+    end
+    self.variable(self.value)
+end
+
+DialogItemEditMulti = class { _super = DialogItemEdit }
+
+function DialogItemEditMulti:getValue()
+    local len = string.unpack("<i4", self.addr:read(4))
+    local startOfData = self.addr
+    return startOfData:read(len)
+end
+
+function DialogItemEditMulti:contentSize()
+    return gTWIDTH(string.rep("M", self.widthChars)) + 2 * kEditTextSpace, kDialogTightLineHeight * self.numLines
+end
+
+local function splitLine(line, maxWidth, widthFn)
+    local lines = {}
+    local currentLine = {}
+    local lineWidth = 0
+    local function newLine()
+        table.insert(lines, table.concat(currentLine))
+        currentLine = {}
+        lineWidth = 0
+    end
+    local function addToLine(word, wordWidth)
+        table.insert(currentLine, word)
+        lineWidth = lineWidth + wordWidth
+    end
+    local spaceWidth = widthFn(" ")
+    for word in line:gmatch("[^%s]+") do
+        local wordWidth = widthFn(word)
+        local lineAndWordWidth = lineWidth + wordWidth + (lineWidth == 0 and 0 or spaceWidth)
+        if lineAndWordWidth <= maxWidth then
+            -- Fits on current line
+            if next(currentLine) then
+                addToLine(" ", spaceWidth)
+            end
+            addToLine(word, wordWidth)
+        elseif wordWidth >= maxWidth * 3 / 4 then
+            -- Uh oh the word on its own doesn't fit. Try to camelcase split it
+            local w1, w2 = word:match("([A-Z][a-z]+)([A-Z][a-z]+)")
+            if w1 then
+                addToLine(w1, widthFn(w1))
+                newLine()
+                addToLine(w2, widthFn(w2))
+            else
+                -- Give up
+                if lineWidth > 0 then
+                    newLine()
+                end
+                addToLine(word, wordWidth)
+            end
+        else
+            if lineWidth > 0 then
+                newLine()
+            end
+            addToLine(word, wordWidth)
+        end
+    end
+    newLine()
+    return lines
+end
+
+function DialogItemEditMulti:drawValue(val)
+    local x = self:drawPrompt()
+    local texty = self.y + kDialogLineTextYOffset
+
+    local boxWidth = math.min(self:contentSize(), self.w - x)
+    local boxHeight = kDialogTightLineHeight * self.numLines
+    lightGrey()
+    gAT(x, texty - 2)
+    gBOX(boxWidth, boxHeight + 3)
+    black()
+    gAT(x + 1, texty)
+    gFILL(boxWidth - 2, boxHeight, KgModeClear)
+
+    local lines = splitLine(val, self:contentSize(), function(text)
+        return gTWIDTH(text)
+    end)
+
+    for i, line in ipairs(lines) do
+        drawText(line, x + kEditTextSpace, texty + (i-1) * kDialogTightLineHeight)
+    end
+end
+
+function DialogItemEditMulti:updateVariable()
+    local len = #self.value
+    self.addr:write(string.pack("<i4", #self.value))
+    local startOfData = self.addr + 4
+    startOfData:write(self.value)
+end
 
 DialogChoiceList = class {
     _super = View,
@@ -512,8 +751,8 @@ function DialogChoiceList:displayPopupMenu()
     end
 end
 
-function DialogChoiceList:updateValue()
-    self.value = tostring(self.index)
+function DialogChoiceList:updateVariable()
+    self.variable(self.index)
 end
 
 DialogCheckbox = class {
@@ -531,8 +770,8 @@ function DialogCheckbox:displayPopupMenu()
     self:setNeedsRedraw()
 end
 
-function DialogCheckbox:updateValue()
-    self.value = self.index == 1 and "false" or "true"
+function DialogCheckbox:updateVariable()
+    self.variable(self.index == 1 and KFalse or KTrue)
 end
 
 DialogItemSeparator = class { _super = View }
@@ -559,7 +798,7 @@ function Button:draw()
     gFONT(kButtonFont)
     gAT(self.x, self.y)
     local state = self.pressed and 1 or 0
-    gBUTTON(self.text, 2, self.w, self.h, state)
+    gBUTTON(self.text, KButtS5, self.w, self.h, state)
     gFONT(kDialogFont)
     View.draw(self)
 end
@@ -821,10 +1060,21 @@ local itemTypes = {
     [dItemTypes.dSEPARATOR] = DialogItemSeparator,
     [dItemTypes.dCHECKBOX] = DialogCheckbox,
     [dItemTypes.dEDIT] = DialogItemEdit,
+    [dItemTypes.dEDITMULTI] = DialogItemEditMulti,
     [dItemTypes.dLONG] = DialogItemEditLong,
+    [dItemTypes.dFLOAT] = DialogItemEditFloat,
+    [dItemTypes.dXINPUT] = DialogItemEditPass,
+    [dItemTypes.dDATE] = DialogItemEditDate,
+    [dItemTypes.dTIME] = DialogItemEditTime,
 }
 
 function DIALOG(dialog)
+    -- Special case for defaultiohandler
+    local iohandlerDialog = runtime:iohandler().dialog
+    if iohandlerDialog then
+        return iohandlerDialog(dialog)
+    end
+
     local state = runtime:saveGraphicsState()
 
     local borderWidth = 4 -- 1 px black box plus 3 px for the gXBORDER
@@ -862,7 +1112,7 @@ function DIALOG(dialog)
             item.index = tonumber(item.value)
         elseif item.type == dItemTypes.dCHECKBOX then
             item.choices = { "", kTickMark }
-            item.index = item.value == "true" and 2 or 1
+            item.index = item.value == KFalse and 1 or 2
         end
         item:setHeightHint(lineHeight)
         local cw, ch = item:contentSize()
@@ -978,8 +1228,10 @@ function DIALOG(dialog)
 
     gCLOSE(win.windowId)
 
-    for _, item in ipairs(win.items) do
-        item:updateValue()
+    if result > 0 then
+        for _, item in ipairs(win.items) do
+            item:updateVariable()
+        end
     end
 
     runtime:restoreGraphicsState(state)

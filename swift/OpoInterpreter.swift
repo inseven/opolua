@@ -111,11 +111,52 @@ private func beep(_ L: LuaState!) -> CInt {
     }
 }
 
+private let kDaysFrom1900to1970: Double = 25567
+
 private func editValue(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
-    let params = L.todecodable(1, type: EditParams.self)!
-    let result = iohandler.editValue(params)
-    L.push(result)
+    let raw: EditOperation.Raw = L.todecodable(1)!
+    let details: EditOperation.Details
+    switch raw.type {
+    case .text:
+        details = .text(EditOperation.TextDetails(initialValue: raw.initialValue, maxLen: Int(raw.max!)))
+    case .password:
+        details = .password(EditOperation.TextDetails(initialValue: raw.initialValue, maxLen: Int(raw.max!)))
+    case .integer:
+        details = .integer(EditOperation.IntDetails(initialValue: Int(raw.initialValue)!,
+                                                    min: Int(raw.min!),
+                                                    max: Int(raw.max!)))
+    case .float:
+        details = .float(EditOperation.FloatDetails(initialValue: Double(raw.initialValue)!,
+                                                    min: raw.min!,
+                                                    max: raw.max!))
+    case .date:
+        let date = Date(timeIntervalSince1970: (Double(raw.initialValue)! - kDaysFrom1900to1970) * 86400)
+        let min = Date(timeIntervalSince1970: (raw.min! - kDaysFrom1900to1970) * 86400)
+        let max = Date(timeIntervalSince1970: (raw.max! - kDaysFrom1900to1970) * 86400)
+        details = .date(EditOperation.DateDetails(initialValue: date, min: min, max: max))
+    case .time:
+        let flags = raw.timeFlags!
+        let timeType: EditOperation.TimeType = (flags & 2) != 0 ? .duration : .absolute
+        details = .time(EditOperation.TimeDetails(initialValue: Int(raw.initialValue)!,
+                                                  min: Int(raw.min!),
+                                                  max: Int(raw.max!),
+                                                  timeType: timeType,
+                                                  display24hour: (flags & 8) != 0,
+                                                  includeSeconds: (flags & 1) != 0))
+    }
+    let op = EditOperation(prompt: raw.prompt,
+                           allowCancel: raw.allowCancel,
+                           screenRect: raw.screenRect,
+                           details: details)
+
+    var result = iohandler.editValue(op)
+
+    if raw.type == .date, let date = result as? Date {
+        // Convert from Date back to seconds since 1900
+        result = Int((date.timeIntervalSince1970 / 86400) + kDaysFrom1900to1970)
+    }
+    L.push(any: result)
     return 1
 }
 
@@ -724,7 +765,7 @@ private func utctime(_ L: LuaState!) -> CInt {
     L.settop(1)  /* make sure table is at the top */
     ts.tm_sec = getTimeField(L, "sec") ?? 0
     ts.tm_min = getTimeField(L, "min") ?? 0
-    ts.tm_hour = getTimeField(L, "hour") ?? 12
+    ts.tm_hour = getTimeField(L, "hour") ?? 0
     guard let day = getTimeField(L, "day"),
           let mon = getTimeField(L, "month"),
           let year = getTimeField(L, "year")

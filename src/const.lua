@@ -9,6 +9,9 @@
 KTrue = -1
 KFalse = 0
 
+KMinLong = -2147483648
+KMaxLong = 2147483647
+
 -- Special keys
 KKeyEsc = 27
 KKeySpace = 32
