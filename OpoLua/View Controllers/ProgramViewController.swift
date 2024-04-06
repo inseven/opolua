@@ -268,7 +268,11 @@ class ProgramViewController: UIViewController {
             navigationItem.rightBarButtonItems = [optionsBarButtonItem]
             toolbarItems = [.flexibleSpace(), keyboardBarButtonItem, .fixedSpace(16.0), controllerBarButtonItem, .flexibleSpace()]
         } else {
-            navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
+            if ProcessInfo.processInfo.isiOSAppOnMac {
+                navigationItem.rightBarButtonItems = [optionsBarButtonItem]
+            } else {
+                navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
+            }
             toolbarItems = []
         }
 
