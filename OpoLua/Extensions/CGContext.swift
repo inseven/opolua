@@ -29,12 +29,10 @@ extension CGContext {
     }
 
     func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
-        // TODO: Scale for the iOS screensize
         let col: CGColor
         if operation.mode == .clear {
             col = operation.bgcolor.cgColor()
         } else {
-            // TODO: not handling mode == .invert here...
             col = operation.color.cgColor()
         }
         setStrokeColor(col)
@@ -239,7 +237,9 @@ extension CGContext {
             }
         case .border(let rect, let type):
             gXBorder(type: type, frame: rect.cgRect())
-        case .invert(let size):
+        case .invert(_ /*let size*/):
+            fatalError("Shouldn't reach here") // Handled by Canvas
+            /*
             let rect = Graphics.Rect(origin: operation.origin, size: size).cgRect()
             let flippedRect = rect.flipped(forHeight: CGFloat(self.height))
             let img = CIImage(cgImage: makeImage()!).cropped(to: flippedRect).applyingFilter("CIColorInvert")
@@ -248,6 +248,7 @@ extension CGContext {
             self.clipToCornerlessBox(rect)
             drawUnflippedImage(cgImg, in: rect)
             self.restoreGState()
+            */
         }
     }
 
