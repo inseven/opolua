@@ -102,7 +102,7 @@ class WindowServer {
      */
     func createWindow(id: Graphics.DrawableId, rect: Graphics.Rect, mode: Graphics.Bitmap.Mode, shadowSize: Int) {
         dispatchPrecondition(condition: .onQueue(.main))
-        let canvas = Canvas(id: id, size: rect.size.cgSize(), mode: mode)
+        let canvas = Canvas(id: id, size: rect.size, mode: mode)
         let newView = CanvasView(canvas: canvas, shadowSize: shadowSize)
         newView.isHidden = true
         newView.frame = rect.cgRect()
@@ -115,7 +115,7 @@ class WindowServer {
 
     func createBitmap(id: Graphics.DrawableId, size: Graphics.Size, mode: Graphics.Bitmap.Mode) {
         dispatchPrecondition(condition: .onQueue(.main))
-        let canvas = Canvas(id: id, size: size.cgSize(), mode: mode)
+        let canvas = Canvas(id: id, size: size, mode: mode)
         drawablesById[canvas.id] = canvas
     }
 
@@ -192,7 +192,7 @@ class WindowServer {
             // Let's ignore attempts to move/resize the toplevel window
         } else if let view = self.window(for: drawableId) {
             if let size = size {
-                view.resize(to: size.cgSize())
+                view.resize(to: size)
             }
             view.frame = CGRect(origin: position.cgPoint(), size: view.frame.size)
         } else {
