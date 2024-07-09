@@ -182,7 +182,7 @@ class CanvasView : UIView, Drawable {
     }
 
     override var intrinsicContentSize: CGSize {
-        return canvas.size
+        return canvas.size.cgSize()
     }
 
     override func draw(_ rect: CGRect) {
@@ -192,9 +192,9 @@ class CanvasView : UIView, Drawable {
             return
         }
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: canvas.size.height)
+        context.translateBy(x: 0, y: CGFloat(canvas.size.height))
         context.scaleBy(x: 1.0, y: -1.0)
-        context.draw(image, in: CGRect(origin: .zero, size: canvas.size))
+        context.draw(image, in: CGRect(origin: .zero, size: canvas.size.cgSize()))
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -222,13 +222,13 @@ class CanvasView : UIView, Drawable {
         delegate?.canvasView(self, touchEnded: touch, with: event)
     }
 
-    func resize(to newSize: CGSize) {
+    func resize(to newSize: Graphics.Size) {
         let oldCanvas = self.canvas
         self.canvas = Canvas(id: id, size: newSize, mode: oldCanvas.mode)
         if let img = oldCanvas.getImage() {
             self.canvas.draw(image: img)
         }
-        self.bounds = CGRect(origin: .zero, size: newSize)
+        self.bounds = CGRect(origin: .zero, size: newSize.cgSize())
     }
 
 }

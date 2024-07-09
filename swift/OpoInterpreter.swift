@@ -207,8 +207,7 @@ private func draw(_ L: LuaState!) -> CInt {
                let height = L.toint(-1, key: "height"),
                let srcx = L.toint(-1, key: "srcx"),
                let srcy = L.toint(-1, key: "srcy"),
-               let srcid = L.toint(-1, key: "srcid"),
-               let _ = L.toint(-1, key: "mode") {
+               let srcid = L.toint(-1, key: "srcid") {
                 let size = Graphics.Size(width: width, height: height)
                 let rect = Graphics.Rect(origin: Graphics.Point(x: srcx, y: srcy), size: size)
                 let drawable = Graphics.DrawableId(value: srcid)

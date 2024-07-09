@@ -1,5 +1,10 @@
 PROC main:
 	PRINT "Hello world!"
 	gINVERT 30, 50
+	gAT 40, 5
+	gFILL 30, 50, 2
+	gCOLOR 20, 20, 20
+	gGMODE 2
+	gLINEBY 100, 30
 	GET
 ENDP
