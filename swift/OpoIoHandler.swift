@@ -20,16 +20,16 @@
 
 import Foundation
 
-struct Graphics {
+public struct Graphics {
 
-    struct Size: Equatable, Comparable, Codable {
+    public struct Size: Equatable, Comparable, Codable {
 
-        static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
+        public static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
             lhs.width < rhs.width && lhs.height < rhs.height
         }
 
-        let width: Int
-        let height: Int
+        public let width: Int
+        public let height: Int
 
         enum CodingKeys: String, CodingKey {
             case width = "w"
@@ -38,6 +38,12 @@ struct Graphics {
 
         static let icon = Self(width: 48, height: 48)
         static let zero = Self(width: 0, height: 0)
+
+        public init(width: Int, height: Int) {
+            self.width = width
+            self.height = height
+        }
+
     }
 
     struct Point: Equatable, Codable {
@@ -109,8 +115,9 @@ struct Graphics {
         static let white = Self(r: 255, g: 255, b: 255)
     }
 
-    struct Bitmap: Codable {
-        enum Mode: Int, Codable {
+    public struct Bitmap: Codable {
+
+        public enum Mode: Int, Codable {
             case gray2 = 0 // ie 1bpp
             case gray4 = 1 // ie 2bpp
             case gray16 = 2 // ie 4bpp grayscale
@@ -121,19 +128,22 @@ struct Graphics {
             case color16M = 7 // 24bpp color
             case color4K = 9 // ie 12bpp color
         }
-        let mode: Mode
-        let width: Int
-        let height: Int
-        let stride: Int
-        let imgData: Data
+
+        public let mode: Mode
+        public let width: Int
+        public let height: Int
+        public let stride: Int
+        public let imgData: Data
         // TODO palette info also needed, in due course
 
-        var size: Size {
+        public var size: Size {
             return Size(width: width, height: height)
         }
-        var isColor: Bool {
+
+        public var isColor: Bool {
             return mode.isColor
         }
+        
     }
 
     struct MaskedBitmap {

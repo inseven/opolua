@@ -315,7 +315,7 @@ extension CGImage {
     }
 
     // TODO: This should be a convenience constructor
-    static func from(bitmap: Graphics.Bitmap) -> CGImage {
+    public static func from(bitmap: Graphics.Bitmap) -> CGImage {
         switch bitmap.mode {
         case .gray2, .gray4, .gray16:
             // CoreGraphics doesn't seem to like <8bpp, so expand it
