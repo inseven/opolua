@@ -811,7 +811,8 @@ private extension Error {
 public class OpoInterpreter {
 
     private let L: LuaState
-    var iohandler: OpoIoHandler
+
+    public var iohandler: OpoIoHandler
 
     public init() {
         iohandler = DummyIoHandler() // For now...
