@@ -20,7 +20,7 @@
 
 import Foundation
 
-struct Graphics {
+public struct Graphics {
 
     struct Size: Equatable, Comparable, Codable {
 
@@ -109,7 +109,8 @@ struct Graphics {
         static let white = Self(r: 255, g: 255, b: 255)
     }
 
-    struct Bitmap: Codable {
+    public struct Bitmap: Codable {
+
         enum Mode: Int, Codable {
             case gray2 = 0 // ie 1bpp
             case gray4 = 1 // ie 2bpp
@@ -121,6 +122,7 @@ struct Graphics {
             case color16M = 7 // 24bpp color
             case color4K = 9 // ie 12bpp color
         }
+        
         let mode: Mode
         let width: Int
         let height: Int

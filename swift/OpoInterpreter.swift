@@ -689,7 +689,7 @@ private func getConfig(_ L: LuaState!) -> CInt {
     } else {
         print("Bad keyname to getConfig")
         return 0
-    }    
+    }
 }
 
 private func setConfig(_ L: LuaState!) -> CInt {
@@ -700,7 +700,7 @@ private func setConfig(_ L: LuaState!) -> CInt {
         iohandler.setConfig(key: key, value: val)
     } else {
         print("Bad key/val to setConfig")
-    }    
+    }
     return 0
 }
 
@@ -808,12 +808,12 @@ private extension Error {
     }
 }
 
-class OpoInterpreter {
+public class OpoInterpreter {
 
     private let L: LuaState
     var iohandler: OpoIoHandler
 
-    init() {
+    public init() {
         iohandler = DummyIoHandler() // For now...
         L = LuaState(libraries: [.package, .table, .io, .os, .string, .math, .utf8, .debug])
         L.setDefaultStringEncoding(kDefaultEpocEncoding)
@@ -1004,7 +1004,7 @@ class OpoInterpreter {
         return L.toAppInfo(-1)
     }
 
-    func getMbmBitmaps(path: String) -> [Graphics.Bitmap]? {
+    public func getMbmBitmaps(path: String) -> [Graphics.Bitmap]? {
         let top = L.gettop()
         defer {
             L.settop(top)
