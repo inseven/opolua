@@ -22,9 +22,9 @@ import Foundation
 
 public struct Graphics {
 
-    struct Size: Equatable, Comparable, Codable {
+    public struct Size: Equatable, Comparable, Codable {
 
-        static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
+        public static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
             lhs.width < rhs.width && lhs.height < rhs.height
         }
 
@@ -36,17 +36,17 @@ public struct Graphics {
             case height = "h"
         }
 
-        static let icon = Self(width: 48, height: 48)
-        static let zero = Self(width: 0, height: 0)
+        public static let icon = Self(width: 48, height: 48)
+        public static let zero = Self(width: 0, height: 0)
     }
 
-    struct Point: Equatable, Codable {
-        
-        static func +(lhs: Graphics.Point, rhs: Graphics.Point) -> Graphics.Point {
+    public struct Point: Equatable, Codable {
+
+        public static func +(lhs: Graphics.Point, rhs: Graphics.Point) -> Graphics.Point {
             return Self(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
         }
 
-        static func -(lhs: Graphics.Point, rhs: Graphics.Point) -> Graphics.Point {
+        public static func -(lhs: Graphics.Point, rhs: Graphics.Point) -> Graphics.Point {
             return Self(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
         }
 
@@ -56,7 +56,7 @@ public struct Graphics {
         static let zero = Self(x: 0, y: 0)
     }
 
-    struct Rect: Equatable, Codable {
+    public struct Rect: Equatable, Codable {
 
         let origin: Point
         let size: Size
@@ -81,7 +81,7 @@ public struct Graphics {
             case height = "h"
         }
 
-        init(from decoder: Decoder) throws {
+        public init(from decoder: Decoder) throws {
             let values = try decoder.container(keyedBy: CodingKeys.self)
             let x = try values.decode(Int.self, forKey: .x)
             let y = try values.decode(Int.self, forKey: .y)
@@ -91,7 +91,7 @@ public struct Graphics {
             self.size = Size(width: w, height: h)
         }
 
-        func encode(to encoder: Encoder) throws {
+        public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(minX, forKey: .x)
             try container.encode(minY, forKey: .y)
@@ -111,7 +111,7 @@ public struct Graphics {
 
     public struct Bitmap: Codable {
 
-        enum Mode: Int, Codable {
+        public enum Mode: Int, Codable {
             case gray2 = 0 // ie 1bpp
             case gray4 = 1 // ie 2bpp
             case gray16 = 2 // ie 4bpp grayscale
@@ -143,18 +143,19 @@ public struct Graphics {
         let mask: Bitmap?
     }
 
-    struct DrawableId: Hashable, Codable {
+    public struct DrawableId: Hashable, Codable {
+
         let value: Int
 
         init(value: Int) {
             self.value = value
         }
 
-        init(from decoder: Decoder) throws {
+        public init(from decoder: Decoder) throws {
             self.value = try decoder.singleValueContainer().decode(Int.self)
         }
 
-        func encode(to encoder: Encoder) throws {
+        public func encode(to encoder: Encoder) throws {
             var cont = encoder.singleValueContainer()
             try cont.encode(self.value)
         }
@@ -192,7 +193,7 @@ public struct Graphics {
     }
     typealias FontFlags = FlagSet<FontFlag>
 
-    struct FontInfo: Codable {
+    public struct FontInfo: Codable {
         let uid: UInt32
         let face: FontFace
         let size: Int
@@ -255,7 +256,7 @@ public struct Graphics {
         case bothPlanes = 2
     }
 
-    struct DrawCommand {
+    public struct DrawCommand {
         enum OpType {
             case fill(Size)
             case circle(Int, Bool) // radius, fill
@@ -280,7 +281,7 @@ public struct Graphics {
         let greyMode: GreyMode
     }
 
-    struct Sprite: Codable {
+    public struct Sprite: Codable {
         struct Frame: Codable {
             let offset: Point
             let bitmap: DrawableId
@@ -292,7 +293,7 @@ public struct Graphics {
         let frames: [Frame]
     }
 
-    struct ClockInfo: Codable {
+    public struct ClockInfo: Codable {
         enum Mode: Int, Codable {
             case systemSetting = 6
             case analog = 7
@@ -303,20 +304,20 @@ public struct Graphics {
         // TODO offset, format, etc
     }
 
-    struct TextMetrics {
+    public struct TextMetrics {
         let size: Graphics.Size
         let ascent: Int
         let descent: Int
     }
 
-    enum PeekMode: Int {
+    public enum PeekMode: Int {
         case oneBitBlack = -1
         case oneBitWhite = 0
         case twoBit = 1
         case fourBit = 2
     }
 
-    enum Operation {
+    public enum Operation {
         case close(DrawableId)
         case createBitmap(DrawableId, Size, Bitmap.Mode)
         case createWindow(DrawableId, Rect, Bitmap.Mode, Int) // Int is shadow size in pixels
@@ -331,7 +332,7 @@ public struct Graphics {
         case peekline(DrawableId, Point, Int, PeekMode) // drawableId, pos, numPixels, peekMode
     }
 
-    enum Result {
+    public enum Result {
         case nothing
         case textMetrics(TextMetrics)
         case peekedData(Data)
@@ -355,8 +356,8 @@ extension Graphics.GreyMode {
     }
 }
 
-struct Fs {
-    struct Operation {
+public struct Fs {
+    public struct Operation {
         enum OpType {
             case exists // return notFound or none (any access issue should result in notFound)
             case isdir // as per exists
@@ -373,12 +374,12 @@ struct Fs {
         let type: OpType
     }
 
-    struct Stat {
+    public struct Stat {
         let size: UInt64
         let lastModified: Date
     }
 
-    enum Err: Int {
+    public enum Err: Int {
         case none = 0
         case inUse = -9
         case notFound = -33
@@ -388,7 +389,7 @@ struct Fs {
         case notReady = -62 // For any op outside our sandbox
     }
 
-    enum Result {
+    public enum Result {
         case err(Err)
         case data(Data)
         case stat(Stat)
@@ -417,35 +418,42 @@ enum Modifier: Int, FlagEnum {
 }
 typealias Modifiers = FlagSet<Modifier>
 
-struct Async {
+public struct Async {
+
     enum RequestType {
         case getevent
         case playsound(Data)
         case after(TimeInterval)
         case at(Date)
     }
-    typealias RequestHandle = Int32
-    struct Request {
+
+    public typealias RequestHandle = Int32
+
+    public struct Request {
         let type: RequestType
         let handle: RequestHandle
     }
-    struct KeyPressEvent {
+
+    public struct KeyPressEvent {
         let timestamp: TimeInterval // Since boot
         let keycode: OplKeyCode
         let modifiers: Modifiers
         let isRepeat: Bool
     }
-    struct KeyUpDownEvent {
+
+    public struct KeyUpDownEvent {
         let timestamp: TimeInterval // Since boot
         let keycode: OplKeyCode
         let modifiers: Modifiers
     }
+
     enum PenEventType: Int {
         case down = 0
         case up = 1
         case drag = 6
     }
-    struct PenEvent {
+
+    public struct PenEvent {
         let timestamp: TimeInterval // Since boot
         let windowId: Graphics.DrawableId
         let type: PenEventType
@@ -455,14 +463,17 @@ struct Async {
         let screenx: Int
         let screeny: Int
     }
-    struct PenUpDownEvent {
+
+    public struct PenUpDownEvent {
         let timestamp: TimeInterval // Since boot
         let windowId: Graphics.DrawableId
     }
-    struct ActivationEvent {
+
+    public struct ActivationEvent {
         let timestamp: TimeInterval // Since boot
     }
-    enum ResponseValue {
+
+    public enum ResponseValue {
         case cancelled
         case completed
         // case stopped // ie throw a KStopErr to unwind the thread, do not pass go do not collect £200.
@@ -477,10 +488,18 @@ struct Async {
         case quitevent
         case interrupt
     }
-    struct Response {
+
+    public struct Response {
+        
         let handle: RequestHandle
         let value: ResponseValue
+
+        public init(handle: RequestHandle, value: ResponseValue) {
+            self.handle = handle
+            self.value = value
+        }
     }
+
 }
 
 extension Async.KeyPressEvent {
@@ -499,11 +518,11 @@ extension Async.KeyPressEvent {
     }
 }
 
-enum ConfigName: String, CaseIterable {
+public enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
 }
 
-struct EditOperation {
+public struct EditOperation {
     enum InputType: String, Codable {
         case text
         case password
@@ -582,7 +601,7 @@ extension EditOperation.Details {
     }
 }
 
-protocol OpoIoHandler {
+public protocol OpoIoHandler {
 
     func printValue(_ val: String) -> Void
 
