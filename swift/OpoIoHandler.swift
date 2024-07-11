@@ -22,14 +22,14 @@ import Foundation
 
 public struct Graphics {
 
-    public struct Size: Equatable, Comparable, Codable {
+    struct Size: Equatable, Comparable, Codable {
 
-        public static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
+        static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
             lhs.width < rhs.width && lhs.height < rhs.height
         }
 
-        public let width: Int
-        public let height: Int
+        let width: Int
+        let height: Int
 
         enum CodingKeys: String, CodingKey {
             case width = "w"
@@ -38,12 +38,6 @@ public struct Graphics {
 
         static let icon = Self(width: 48, height: 48)
         static let zero = Self(width: 0, height: 0)
-
-        public init(width: Int, height: Int) {
-            self.width = width
-            self.height = height
-        }
-
     }
 
     struct Point: Equatable, Codable {
@@ -117,7 +111,7 @@ public struct Graphics {
 
     public struct Bitmap: Codable {
 
-        public enum Mode: Int, Codable {
+        enum Mode: Int, Codable {
             case gray2 = 0 // ie 1bpp
             case gray4 = 1 // ie 2bpp
             case gray16 = 2 // ie 4bpp grayscale
@@ -128,22 +122,20 @@ public struct Graphics {
             case color16M = 7 // 24bpp color
             case color4K = 9 // ie 12bpp color
         }
-
-        public let mode: Mode
-        public let width: Int
-        public let height: Int
-        public let stride: Int
-        public let imgData: Data
+        
+        let mode: Mode
+        let width: Int
+        let height: Int
+        let stride: Int
+        let imgData: Data
         // TODO palette info also needed, in due course
 
-        public var size: Size {
+        var size: Size {
             return Size(width: width, height: height)
         }
-
-        public var isColor: Bool {
+        var isColor: Bool {
             return mode.isColor
         }
-        
     }
 
     struct MaskedBitmap {
