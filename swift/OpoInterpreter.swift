@@ -1232,7 +1232,7 @@ public class OpoInterpreter {
         L.settop(0)
     }
 
-    func installSisFile(path: String) throws {
+    public func installSisFile(path: String) throws {
         let top = L.gettop()
         defer {
             L.settop(top)
