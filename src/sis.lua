@@ -164,18 +164,21 @@ function parseSisFile(data, verbose)
 
     assert(instVer == 0x64, "Only ER5 SIS files are supported")
 
-    local options, type, verMaj, verMin, variant, langPtr, filesPtr, reqPtr, pos =
-        string.unpack("<I2I2I2I2I4I4I4I4", data, pos)
+    local options, type, verMaj, verMin, variant, langPtr, filesPtr, reqPtr, certPtr, namePtr, pos =
+        string.unpack("<I2I2I2I2I4I4I4I4I4I4", data, pos)
     if verbose then
-        printf("options=%d type=%d verMaj=%d verMin=%d variant=%d langPtr=0x%08X filesPtr=0x%08X reqPtr=0x%08X\n",
-            options, type, verMaj, verMin, variant, langPtr, filesPtr, reqPtr)
+        printf("options=%d type=%d verMaj=%d verMin=%d variant=%d langPtr=0x%08X filesPtr=0x%08X reqPtr=0x%08X certPtr=0x%08X namePtr=0x%08X \n",
+            options, type, verMaj, verMin, variant, langPtr, filesPtr, reqPtr, certPtr, namePtr)
     end
 
     assert(options & Options.IsUnicode == 0, "ER5U not supported!")
 
     local result = {
+        name = {},
         langs = {},
         files = {},
+        version = { verMaj, verMin },
+        uid = uid1,
     }
 
     pos = 1 + langPtr
@@ -198,6 +201,14 @@ function parseSisFile(data, verbose)
         end
         result.files[i] = file
     end
+
+    pos = 1 + namePtr
+    for i = 1, nLangs do
+        local len, ptr
+        len, ptr, pos = string.unpack("<I4I4", data, pos)
+        result.name[i] = data:sub(1 + ptr, ptr + len)
+    end
+
     return result
 end
 

@@ -177,10 +177,7 @@ function dump(t, outputFormat, indent, indentChars, seenTables)
     local tableStart, tableEnd = "{", "}"
     if nkeys == 0 and outputFormat == "json" then
         -- Check if there's a hint to say that this should be a dict
-        if jsonDictHintMetatable == nil then
-            jsonDictHintMetatable = native.getJsonDictHintMetatable()
-        end
-        if getmetatable(t) == jsonDictHintMetatable then
+        if getmetatable(t) == json.dictHintMetatable then
             array = false
         end
     end

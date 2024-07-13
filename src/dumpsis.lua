@@ -29,25 +29,40 @@ dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 function main()
     local args = getopt({
         "filename",
-        "dest"
+        "dest",
+        verbose = true, v = "verbose",
+        json = true, j = "json",
+        nolangs = true, n = "nolangs",
     })
 
     sis = require("sis")
     local data = readFile(args.filename)
-    local sisfile = sis.parseSisFile(data, false)
+    local sisfile = sis.parseSisFile(data, args.verbose)
 
     if args.dest then
         installSis(sisfile, args.dest)
     else
-        describeSis(sisfile, "")
-        return
+        if args.json then
+            print(json.encode(makeManifest(sisfile, not args.nolangs)))
+        else
+            describeSis(sisfile, "")
+        end
     end
 end
 
 function describeSis(sisfile, indent)
+    for _, name in ipairs(sisfile.name) do
+        printf("%sName: %s\n", indent, name)
+    end
+
+    printf("%sVersion: %d.%d\n", indent, sisfile.version[1], sisfile.version[2])
+    
+    printf("%sUid: 0x%08X\n", indent, sisfile.uid)
+
     for _, lang in ipairs(sisfile.langs) do
         printf("%sLanguage: 0x%04X (%s)\n", indent, lang, sis.Locales[lang])
     end
+
     local langIdx = sis.getBestLangIdx(sisfile.langs)
     for _, file in ipairs(sisfile.files) do
         local len
@@ -86,6 +101,72 @@ function extractFile(file, langIdx, dest)
         data = file.langData[langIdx]
     end
     writeFile(outName, data)
+end
+
+function langListToLocaleMap(langs, list)
+    local result = {}
+    for i = 1, math.min(#langs, #list) do
+        local langName = sis.Locales[langs[i]]
+        if langName then
+            result[langName] = list[i]
+        else
+            io.stderr:write(string.format("Warning: Language 0x%x not recognized!\n", langs[i]))
+        end
+    end
+    return result
+end
+
+function makeManifest(sisfile, includeLangs)
+    local langIdx
+    if not includeLangs then
+        langIdx = sis.getBestLangIdx(sisfile.langs)
+    end
+
+    local result = {
+        name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name)) or sisfile.name[langIdx],
+        version = string.format("%d.%d", sisfile.version[1], sisfile.version[2]),
+        uid = sisfile.uid,
+        languages = {},
+        files = json.Dict {},
+    }
+    for _, lang in ipairs(sisfile.langs) do
+        table.insert(result.languages, sis.Locales[lang])
+    end
+
+    for i, file in ipairs(sisfile.files) do
+        local f = {
+            type = sis.FileType[file.type]
+        }
+        if file.type ~= sis.FileType.FileNull then
+            f.src = file.src
+            if includeLangs then
+                f.len = {}
+                if file.langData then
+                    for i = 1, #sisfile.langs do
+                        f.len[sis.Locales[sisfile.langs[i]]] = #file.langData[i]
+                    end
+                else
+                    for i = 1, #sisfile.langs do
+                        f.len[sis.Locales[sisfile.langs[i]]] = #file.data
+                    end
+                end
+            else
+                f.len = #(file.data or file.langData[langIdx])
+            end
+        end
+        if file.type ~= sis.FileType.FileText then
+            f.dest = file.dest
+        end
+
+        if file.type == sis.FileType.SisComponent then
+            local componentSis = sis.parseSisFile(file.data)
+            f.sis = makeManifest(componentSis, includeLangs)
+        end
+
+        result.files[i] = f
+    end
+
+    return result
 end
 
 pcallMain()

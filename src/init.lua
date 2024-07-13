@@ -54,6 +54,13 @@ function enum(tbl)
     return result
 end
 
+json = {
+    dictHintMetatable = {},
+    null = function() error("json.null should never actually be called") end,
+    encode = function(val) return dump(val, "json") end,
+    Dict = function(tbl) return setmetatable(tbl, json.dictHintMetatable) end,
+}
+
 function printf(...)
     io.stdout:write(string.format(...))
 end

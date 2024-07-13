@@ -62,7 +62,7 @@ local function printHelp(params)
         printf("Options:\n")
     end
     for _, opt in ipairs(opts) do
-        local shortopt = shorts[opt] and string.format("|-%s", shorts[opt]) or ""
+        local shortopt = shorts[opt] and string.format(" | -%s", shorts[opt]) or ""
         if params[opt] == string then
             printf("    --%s%s <value>\n", opt, shortopt)
         elseif params[opt] == table then
