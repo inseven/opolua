@@ -203,10 +203,14 @@ function parseSisFile(data, verbose)
     end
 
     pos = 1 + namePtr
+    local nameLens = {}
     for i = 1, nLangs do
-        local len, ptr
-        len, ptr, pos = string.unpack("<I4I4", data, pos)
-        result.name[i] = data:sub(1 + ptr, ptr + len)
+        nameLens[i], pos = string.unpack("<I4", data, pos)
+    end
+    for i = 1, nLangs do
+        local ptr
+        ptr, pos = string.unpack("<I4", data, pos)
+        result.name[i] = data:sub(1 + ptr, ptr + nameLens[i])
     end
 
     return result
