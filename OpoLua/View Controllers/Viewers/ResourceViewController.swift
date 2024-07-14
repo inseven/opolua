@@ -115,7 +115,7 @@ class ResourceViewController: UITableViewController {
             return
         }
         isLoaded = true
-        let interpreter = OpoInterpreter()
+        let interpreter = PsiLuaState()
         let item = try Directory.item(for: url, interpreter: interpreter)
         switch item.type {
         case .applicationInformation(let applicationMetadata):
@@ -133,7 +133,7 @@ class ResourceViewController: UITableViewController {
                 .compactMap { UIImage(cgImage: $0) }
             tableView.reloadData()
         case .image:
-            let bitmaps = OpoInterpreter().getMbmBitmaps(path: url.path) ?? []
+            let bitmaps = interpreter.getMbmBitmaps(path: url.path) ?? []
             self.images = bitmaps
                 .compactMap { CGImage.from(bitmap: $0) }
                 .compactMap { UIImage(cgImage: $0) }

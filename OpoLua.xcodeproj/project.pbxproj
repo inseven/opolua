@@ -104,6 +104,7 @@
 		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
 		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
 		D8FE60092757208000711717 /* ApplicationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60082757208000711717 /* ApplicationError.swift */; };
+		DB0366A82C42E85500187DD0 /* PsiLuaState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0366A72C42E85500187DD0 /* PsiLuaState.swift */; };
 		DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */; };
 		DB0B91862771031F006F5CD0 /* sis.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB0B91842771031F006F5CD0 /* sis.lua */; };
 		DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9190278369A4006F5CD0 /* BitmapFont.swift */; };
@@ -137,6 +138,12 @@
 		DB95340127AE91B6001CF58D /* recognizer.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB95340027AE91B6001CF58D /* recognizer.lua */; };
 		DB9F837127D3834000940D5C /* z-s5 in Resources */ = {isa = PBXBuildFile; fileRef = DB9F837027D3834000940D5C /* z-s5 */; };
 		DBA18836279C408A00B2954B /* dialog.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBA18835279C408A00B2954B /* dialog.lua */; };
+		DBBC73F52BA21EFB008BBC72 /* compiler.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBBC73F32BA21ECE008BBC72 /* compiler.lua */; };
+		DBBC73F62BA21F06008BBC72 /* system_oxh.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBBC73E92BA21EAA008BBC72 /* system_oxh.lua */; };
+		DBBC73F72BA21F06008BBC72 /* date_oxh.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBBC73EA2BA21EAA008BBC72 /* date_oxh.lua */; };
+		DBBC73F82BA21F06008BBC72 /* const_oph.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBBC73EB2BA21EAA008BBC72 /* const_oph.lua */; };
+		DBBC73F92BA21F06008BBC72 /* bmp_oxh.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBBC73EC2BA21EAA008BBC72 /* bmp_oxh.lua */; };
+		DBBC73FA2BA21F06008BBC72 /* toolbar_oph.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBBC73ED2BA21EAA008BBC72 /* toolbar_oph.lua */; };
 		DBE2917C278CCB0B00EE824B /* crc.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBE2917B278CCB0B00EE824B /* crc.lua */; };
 		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
 		DBE291802794813F00EE824B /* rsc.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBE2917F2794813D00EE824B /* rsc.lua */; };
@@ -162,6 +169,12 @@
 			dstPath = dummyCopyLocationForLuaFiles;
 			dstSubfolderSpec = 16;
 			files = (
+				DBBC73F62BA21F06008BBC72 /* system_oxh.lua in CopyFiles */,
+				DBBC73F72BA21F06008BBC72 /* date_oxh.lua in CopyFiles */,
+				DBBC73F82BA21F06008BBC72 /* const_oph.lua in CopyFiles */,
+				DBBC73F92BA21F06008BBC72 /* bmp_oxh.lua in CopyFiles */,
+				DBBC73FA2BA21F06008BBC72 /* toolbar_oph.lua in CopyFiles */,
+				DBBC73F52BA21EFB008BBC72 /* compiler.lua in CopyFiles */,
 				DB5AC97C275CD5690043FE5C /* opl.lua in CopyFiles */,
 				DBE291842796FA1900EE824B /* const.lua in CopyFiles */,
 				DBE291802794813F00EE824B /* rsc.lua in CopyFiles */,
@@ -299,6 +312,7 @@
 		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
 		D8FE60082757208000711717 /* ApplicationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationError.swift; sourceTree = "<group>"; };
+		DB0366A72C42E85500187DD0 /* PsiLuaState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsiLuaState.swift; sourceTree = "<group>"; };
 		DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OplKeyCode.swift; sourceTree = "<group>"; };
 		DB0B91832771031F006F5CD0 /* aif.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = aif.lua; sourceTree = "<group>"; };
 		DB0B91842771031F006F5CD0 /* sis.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sis.lua; sourceTree = "<group>"; };
@@ -337,6 +351,12 @@
 		DB95340027AE91B6001CF58D /* recognizer.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = recognizer.lua; sourceTree = "<group>"; };
 		DB9F837027D3834000940D5C /* z-s5 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "z-s5"; path = "resources/z-s5"; sourceTree = SOURCE_ROOT; };
 		DBA18835279C408A00B2954B /* dialog.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dialog.lua; sourceTree = "<group>"; };
+		DBBC73E92BA21EAA008BBC72 /* system_oxh.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = system_oxh.lua; sourceTree = "<group>"; };
+		DBBC73EA2BA21EAA008BBC72 /* date_oxh.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = date_oxh.lua; sourceTree = "<group>"; };
+		DBBC73EB2BA21EAA008BBC72 /* const_oph.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = const_oph.lua; sourceTree = "<group>"; };
+		DBBC73EC2BA21EAA008BBC72 /* bmp_oxh.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bmp_oxh.lua; sourceTree = "<group>"; };
+		DBBC73ED2BA21EAA008BBC72 /* toolbar_oph.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = toolbar_oph.lua; sourceTree = "<group>"; };
+		DBBC73F32BA21ECE008BBC72 /* compiler.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = compiler.lua; sourceTree = "<group>"; };
 		DBE2917B278CCB0B00EE824B /* crc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = crc.lua; sourceTree = "<group>"; };
 		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
 		DBE2917F2794813D00EE824B /* rsc.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rsc.lua; sourceTree = "<group>"; };
@@ -595,6 +615,7 @@
 				DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */,
 				D8C409622C3CF62900C9E857 /* OpoIoHandler_UIKit.swift */,
 				DB79001B2746B88F005E904F /* OpoIoHandler.swift */,
+				DB0366A72C42E85500187DD0 /* PsiLuaState.swift */,
 			);
 			path = swift;
 			sourceTree = "<group>";
@@ -602,6 +623,8 @@
 		DB79FFE72742E631005E904F /* src */ = {
 			isa = PBXGroup;
 			children = (
+				DBBC73F32BA21ECE008BBC72 /* compiler.lua */,
+				DBBC73E82BA21EAA008BBC72 /* includes */,
 				DBF28C632B49C52D0044C330 /* opx */,
 				DBE291832796FA1900EE824B /* const.lua */,
 				DB79FFE92742E631005E904F /* init.lua */,
@@ -631,6 +654,18 @@
 				DBF28C5A2B49C0A00044C330 /* modules */,
 			);
 			path = src;
+			sourceTree = "<group>";
+		};
+		DBBC73E82BA21EAA008BBC72 /* includes */ = {
+			isa = PBXGroup;
+			children = (
+				DBBC73E92BA21EAA008BBC72 /* system_oxh.lua */,
+				DBBC73EA2BA21EAA008BBC72 /* date_oxh.lua */,
+				DBBC73EB2BA21EAA008BBC72 /* const_oph.lua */,
+				DBBC73EC2BA21EAA008BBC72 /* bmp_oxh.lua */,
+				DBBC73ED2BA21EAA008BBC72 /* toolbar_oph.lua */,
+			);
+			path = includes;
 			sourceTree = "<group>";
 		};
 		DBF28C5A2B49C0A00044C330 /* modules */ = {
@@ -798,6 +833,7 @@
 				D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */,
 				D8C409862C3CF6DB00C9E857 /* CGImage.swift in Sources */,
 				D889134F274C181F00794D55 /* CGPoint.swift in Sources */,
+				DB0366A82C42E85500187DD0 /* PsiLuaState.swift in Sources */,
 				DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */,
 				D80A9CBE27A4A35E00E49AD8 /* UIDevice.swift in Sources */,
 				D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */,

@@ -109,7 +109,7 @@ class Directory {
         }
     }
 
-    static func item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
+    static func item(for url: URL, isWriteable: Bool = false, interpreter: PsiLuaState) throws -> Item {
 
         let ext = url.pathExtension.lowercased()
         if FileManager.default.directoryExists(atPath: url.path) {
@@ -153,7 +153,7 @@ class Directory {
         }
     }
 
-    static func items(for url: URL, interpreter: OpoInterpreter) throws -> [Item] {
+    static func items(for url: URL, interpreter: PsiLuaState) throws -> [Item] {
         let fileManager = FileManager.default
         let isWriteable = fileManager.isWritableFile(atPath: url.path)
 
@@ -182,7 +182,7 @@ class Directory {
     weak var delegate: DirectoryDelegate?
 
     private let updateQueue = DispatchQueue(label: "Directory.updateQueue")
-    private let interpreter = OpoInterpreter()
+    private let interpreter = PsiLuaState()
     private var observer: RecursiveDirectoryMonitor.CancellableObserver?
 
     var localizedName: String {
@@ -239,7 +239,7 @@ class Directory {
 
 extension Directory.Item {
 
-    static func system(url: URL, interpreter: OpoInterpreter) throws -> ItemType? {
+    static func system(url: URL, interpreter: PsiLuaState) throws -> ItemType? {
         guard try FileManager.default.isSystem(at: url) else {
             return nil
         }

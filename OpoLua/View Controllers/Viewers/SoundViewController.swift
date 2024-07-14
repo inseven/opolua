@@ -111,9 +111,9 @@ class SoundViewController: UIViewController {
     func play() {
         state = .playing
         do {
-            let interpreter = OpoInterpreter()
+            let interpreter = PsiLuaState()
             let fileInfo = interpreter.getFileInfo(path: url.path)
-            guard case OpoInterpreter.FileInfo.sound(let soundFile) = fileInfo else {
+            guard case PsiLuaState.FileInfo.sound(let soundFile) = fileInfo else {
                 throw OpoLuaError.unsupportedFile
             }
             cancellable = Sound.play(data: soundFile.data) { [weak self] error in

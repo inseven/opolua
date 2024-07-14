@@ -21,14 +21,14 @@
 import UIKit
 
 fileprivate let appInfoCache = FileMetadataCache<ApplicationMetadata>()
-fileprivate let fileTypeCache = FileMetadataCache<OpoInterpreter.FileType>()
+fileprivate let fileTypeCache = FileMetadataCache<PsiLuaState.FileType>()
 
 struct ApplicationMetadata {
 
     let appInfoUrl: URL  // On-disk location of the app info (useful for keying caches)
-    let appInfo: OpoInterpreter.AppInfo  // Contents of the app info
+    let appInfo: PsiLuaState.AppInfo  // Contents of the app info
 
-    var captions: [OpoInterpreter.LocalizedString] {
+    var captions: [PsiLuaState.LocalizedString] {
         return appInfo.captions
     }
 

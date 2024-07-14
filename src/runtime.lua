@@ -1250,7 +1250,6 @@ function runOpo(fileName, procName, iohandler, verbose)
 end
 
 function installSis(data, iohandler)
-    local rt = newRuntime(iohandler)
     local sis = require("sis")
     local sisfile = sis.parseSisFile(data, false)
 
@@ -1261,7 +1260,8 @@ function installSis(data, iohandler)
             local path = file.dest:gsub("^.:\\", "C:\\")
             local dir = oplpath.dirname(path)
             if iohandler:fsop("isdir", dir) == KErrNotExists then
-                rt:MKDIR(dir)
+                local err = iohandler.fsop("mkdir", dir)
+                assert(err == KErrNone, "Failed to create dir "..dir)
             end
             local data = file.data
             if not data then

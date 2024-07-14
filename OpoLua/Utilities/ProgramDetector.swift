@@ -34,7 +34,7 @@ class ProgramDetector {
     private let indexableLocationObserver: IndexableLocationObserver
     private let rateLimiter = RateLimiter(delay: .microseconds(200))
     private var _items: [Directory.Item] = []
-    private var interpreter = OpoInterpreter()
+    private var interpreter = PsiLuaState()
     private var installerObserver: Any?
 
     var items: [Directory.Item] {
@@ -50,7 +50,7 @@ class ProgramDetector {
     }
 
     static func find(url: URL, filter: (Directory.Item) -> Bool,
-                     interpreter: OpoInterpreter) throws -> [Directory.Item] {
+                     interpreter: PsiLuaState) throws -> [Directory.Item] {
         var result: [Directory.Item] = []
         for item in try Directory.items(for: url, interpreter: interpreter) {
             if filter(item) {
