@@ -36,6 +36,7 @@ function main()
     })
 
     sis = require("sis")
+    cp1252 = require("cp1252")
     local data = readFile(args.filename)
     local sisfile = sis.parseSisFile(data, args.verbose)
 
@@ -52,7 +53,7 @@ end
 
 function describeSis(sisfile, indent)
     for _, name in ipairs(sisfile.name) do
-        printf("%sName: %s\n", indent, name)
+        printf("%sName: %s\n", indent, cp1252.toUtf8(name))
     end
 
     printf("%sVersion: %d.%d\n", indent, sisfile.version[1], sisfile.version[2])
@@ -71,7 +72,9 @@ function describeSis(sisfile, indent)
         elseif file.langData then
             len = #(file.langData[langIdx])
         end
-        printf("%s%s: %s -> %s len=%d\n", indent, sis.FileType[file.type], file.src, file.dest, len or 0)
+        local src = cp1252.toUtf8(file.src)
+        local dest = cp1252.toUtf8(file.dest)
+        printf("%s%s: %s -> %s len=%d\n", indent, sis.FileType[file.type], src, dest, len or 0)
         if file.type == sis.FileType.SisComponent then
             local componentSis = sis.parseSisFile(file.data)
             describeSis(componentSis, "    "..indent)
@@ -92,7 +95,8 @@ function installSis(sisfile, dest)
 end
 
 function extractFile(file, langIdx, dest)
-    local outName = dest.."/c/"..file.dest:sub(4):gsub("\\", "/")
+    local destName = cp1252.toUtf8(file.dest)
+    local outName = dest.."/c/"..destName:sub(4):gsub("\\", "/")
     local dir = oplpath.dirname(outName)
     -- print(dir)
     os.execute(string.format('mkdir -p "%s"', dir))
@@ -108,7 +112,7 @@ function langListToLocaleMap(langs, list)
     for i = 1, math.min(#langs, #list) do
         local langName = sis.Locales[langs[i]]
         if langName then
-            result[langName] = list[i]
+            result[langName] = cp1252.toUtf8(list[i])
         else
             io.stderr:write(string.format("Warning: Language 0x%x not recognized!\n", langs[i]))
         end
@@ -123,11 +127,12 @@ function makeManifest(sisfile, includeLangs)
     end
 
     local result = {
-        name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name)) or sisfile.name[langIdx],
+        name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name))
+            or cp1252.toUtf8(sisfile.name[langIdx]),
         version = string.format("%d.%d", sisfile.version[1], sisfile.version[2]),
         uid = sisfile.uid,
         languages = {},
-        files = json.Dict {},
+        files = {},
     }
     for _, lang in ipairs(sisfile.langs) do
         table.insert(result.languages, sis.Locales[lang])
@@ -138,7 +143,10 @@ function makeManifest(sisfile, includeLangs)
             type = sis.FileType[file.type]
         }
         if file.type ~= sis.FileType.FileNull then
-            f.src = file.src
+            -- It's not obvious what encoding src actually is (possibly depends on the PC the file was created on) so at
+            -- the very least, treating it as CP1252 as well will ensure we output a valid UTF-8 byte sequence, even if
+            -- it's not guaranteed to be correct.
+            f.src = cp1252.toUtf8(file.src)
             if includeLangs then
                 f.len = {}
                 if file.langData then
@@ -155,7 +163,7 @@ function makeManifest(sisfile, includeLangs)
             end
         end
         if file.type ~= sis.FileType.FileText then
-            f.dest = file.dest
+            f.dest = cp1252.toUtf8(file.dest)
         end
 
         if file.type == sis.FileType.SisComponent then

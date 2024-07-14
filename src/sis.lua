@@ -249,6 +249,13 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
     end
     local srcName = data:sub(1 + srcNamePtr, srcNamePtr + srcNameLen)
     local destName = data:sub(1 + destNamePtr, destNamePtr + destNameLen)
+
+    if type == FileType.SisComponent and destName:match("[\x00-\x1F]") then
+        -- SIS files created with Neuon's nSISUtil appear to put corrupt garbage data into the dest name for
+        -- embedded SIS files.
+        destName = ""
+    end
+
     local file = {
         type = type,
         src = srcName,
