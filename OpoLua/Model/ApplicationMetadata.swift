@@ -21,14 +21,14 @@
 import UIKit
 
 fileprivate let appInfoCache = FileMetadataCache<ApplicationMetadata>()
-fileprivate let fileTypeCache = FileMetadataCache<PsiLuaState.FileType>()
+fileprivate let fileTypeCache = FileMetadataCache<PsiLuaEnv.FileType>()
 
 struct ApplicationMetadata {
 
     let appInfoUrl: URL  // On-disk location of the app info (useful for keying caches)
-    let appInfo: PsiLuaState.AppInfo  // Contents of the app info
+    let appInfo: PsiLuaEnv.AppInfo  // Contents of the app info
 
-    var captions: [PsiLuaState.LocalizedString] {
+    var captions: [PsiLuaEnv.LocalizedString] {
         return appInfo.captions
     }
 

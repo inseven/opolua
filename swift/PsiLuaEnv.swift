@@ -27,7 +27,7 @@ public let kDefaultEpocEncoding: LuaStringEncoding = .stringEncoding(.windowsCP1
 // And SIBO uses CP850 (which is handled completely differently and has an inconsistent name to boot)
 public let kSiboEncoding: LuaStringEncoding = .cfStringEncoding(.dosLatin1)
 
-public class PsiLuaState {
+public class PsiLuaEnv {
 
     internal let L: LuaState
 
@@ -369,7 +369,7 @@ public class PsiLuaState {
         lua_newtable(L)
         L.push(FsHandlerWrapper(iohandler: handler))
         let fns: [String: lua_CFunction] = [
-            "fsop": { L in return autoreleasepool { return PsiLuaState.fsop(L) } },
+            "fsop": { L in return autoreleasepool { return PsiLuaEnv.fsop(L) } },
         ]
         L.setfuncs(fns, nup: 1)
     }
@@ -386,15 +386,15 @@ fileprivate class FsHandlerWrapper: PushableWithMetatable {
 }
 
 internal extension LuaState {
-    func toAppInfo(_ index: CInt) -> PsiLuaState.AppInfo? {
+    func toAppInfo(_ index: CInt) -> PsiLuaEnv.AppInfo? {
         let L = self
         if isnoneornil(index) {
             return nil
         }
-        let era: PsiLuaState.AppEra = L.getdecodable(index, key: "era") ?? .er5
+        let era: PsiLuaEnv.AppEra = L.getdecodable(index, key: "era") ?? .er5
         let encoding = era == .er5 ? kDefaultEpocEncoding : kSiboEncoding
         L.rawget(index, key: "captions")
-        var captions: [PsiLuaState.LocalizedString] = []
+        var captions: [PsiLuaEnv.LocalizedString] = []
         for (languageIndex, captionIndex) in L.pairs(-1) {
             guard let language = L.tostring(languageIndex),
                   let caption = L.tostring(captionIndex, encoding: encoding)
@@ -423,6 +423,6 @@ internal extension LuaState {
             }
         }
         L.pop() // icons
-        return PsiLuaState.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons, era: era)
+        return PsiLuaEnv.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons, era: era)
     }
 }

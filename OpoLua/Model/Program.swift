@@ -122,7 +122,7 @@ class Program {
     init(settings: Settings, url: URL) {
         self.settings = settings
         self.url = url
-        let applicationMetadata = PsiLuaState().cachedAppInfo(forApplicationUrl: url)
+        let applicationMetadata = PsiLuaEnv().cachedAppInfo(forApplicationUrl: url)
         let defaultDevice = Device.getDefault(forEra: applicationMetadata?.appInfo.era)
         self.configuration = Configuration.load(for: url, defaultDevice: defaultDevice)
         self.thread = InterpreterThread(url: url)

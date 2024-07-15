@@ -35,7 +35,7 @@
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
 		D8535A2A277139D900DFCE29 /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A29277139D900DFCE29 /* Tone.swift */; };
 		D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8553767278F535A00ED67C0 /* SettingsView.swift */; };
-		D85699C627A9948F00E6F6DD /* OpoInterpreter+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */; };
+		D85699C627A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */; };
 		D85F596F27ACB64E006AAF3B /* UIButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85F596E27ACB64E006AAF3B /* UIButton.swift */; };
 		D85F597127ACB682006AAF3B /* WizardFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85F597027ACB682006AAF3B /* WizardFooterView.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
@@ -104,7 +104,7 @@
 		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
 		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
 		D8FE60092757208000711717 /* ApplicationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60082757208000711717 /* ApplicationError.swift */; };
-		DB0366A82C42E85500187DD0 /* PsiLuaState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0366A72C42E85500187DD0 /* PsiLuaState.swift */; };
+		DB0366A82C42E85500187DD0 /* PsiLuaEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */; };
 		DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */; };
 		DB0B91862771031F006F5CD0 /* sis.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB0B91842771031F006F5CD0 /* sis.lua */; };
 		DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9190278369A4006F5CD0 /* BitmapFont.swift */; };
@@ -241,7 +241,7 @@
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
 		D8535A29277139D900DFCE29 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		D8553767278F535A00ED67C0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpoInterpreter+Utilities.swift"; sourceTree = "<group>"; };
+		D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PsiLuaEnv+Utilities.swift"; sourceTree = "<group>"; };
 		D85F596E27ACB64E006AAF3B /* UIButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIButton.swift; sourceTree = "<group>"; };
 		D85F597027ACB682006AAF3B /* WizardFooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WizardFooterView.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
@@ -312,7 +312,7 @@
 		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
 		D8FE60082757208000711717 /* ApplicationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationError.swift; sourceTree = "<group>"; };
-		DB0366A72C42E85500187DD0 /* PsiLuaState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsiLuaState.swift; sourceTree = "<group>"; };
+		DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsiLuaEnv.swift; sourceTree = "<group>"; };
 		DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OplKeyCode.swift; sourceTree = "<group>"; };
 		DB0B91832771031F006F5CD0 /* aif.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = aif.lua; sourceTree = "<group>"; };
 		DB0B91842771031F006F5CD0 /* sis.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sis.lua; sourceTree = "<group>"; };
@@ -485,7 +485,7 @@
 				D8CCACAD27B2FE3D008C8122 /* NSLock.swift */,
 				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
 				D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */,
-				D85699C527A9948F00E6F6DD /* OpoInterpreter+Utilities.swift */,
+				D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
 				D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */,
 				D85F596E27ACB64E006AAF3B /* UIButton.swift */,
@@ -615,7 +615,7 @@
 				DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */,
 				D8C409622C3CF62900C9E857 /* OpoIoHandler_UIKit.swift */,
 				DB79001B2746B88F005E904F /* OpoIoHandler.swift */,
-				DB0366A72C42E85500187DD0 /* PsiLuaState.swift */,
+				DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */,
 			);
 			path = swift;
 			sourceTree = "<group>";
@@ -833,7 +833,7 @@
 				D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */,
 				D8C409862C3CF6DB00C9E857 /* CGImage.swift in Sources */,
 				D889134F274C181F00794D55 /* CGPoint.swift in Sources */,
-				DB0366A82C42E85500187DD0 /* PsiLuaState.swift in Sources */,
+				DB0366A82C42E85500187DD0 /* PsiLuaEnv.swift in Sources */,
 				DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */,
 				D80A9CBE27A4A35E00E49AD8 /* UIDevice.swift in Sources */,
 				D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */,
@@ -855,7 +855,7 @@
 				D80D65AA279DDC290020F994 /* IconCollectionViewCell.swift in Sources */,
 				D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */,
 				D8FE60092757208000711717 /* ApplicationError.swift in Sources */,
-				D85699C627A9948F00E6F6DD /* OpoInterpreter+Utilities.swift in Sources */,
+				D85699C627A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift in Sources */,
 				D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */,
 				D85F597127ACB682006AAF3B /* WizardFooterView.swift in Sources */,
 				D89F8CEA27AEC48B009F25E5 /* UIViewController.swift in Sources */,

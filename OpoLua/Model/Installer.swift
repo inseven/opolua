@@ -35,7 +35,7 @@ class Installer {
     let url: URL
     let destinationUrl: URL
     let fileSystem: FileSystem
-    let psilua = PsiLuaState()
+    let psilua = PsiLuaEnv()
 
     weak var delegate: InstallerDelegate?
 
@@ -51,7 +51,7 @@ class Installer {
                 try self.fileSystem.prepare()
                 try self.psilua.installSisFile(path: self.url.path, handler: self)
                 let item: Directory.Item?
-                if let systemType = try Directory.Item.system(url: self.destinationUrl, interpreter: self.psilua) {
+                if let systemType = try Directory.Item.system(url: self.destinationUrl, env: self.psilua) {
                     item = Directory.Item(url: self.url, type: systemType, isWriteable: true)
                 } else {
                     item = nil

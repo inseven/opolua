@@ -115,8 +115,8 @@ class ResourceViewController: UITableViewController {
             return
         }
         isLoaded = true
-        let interpreter = PsiLuaState()
-        let item = try Directory.item(for: url, interpreter: interpreter)
+        let interpreter = PsiLuaEnv()
+        let item = try Directory.item(for: url, env: interpreter)
         switch item.type {
         case .applicationInformation(let applicationMetadata):
             guard let applicationMetadata = applicationMetadata else {

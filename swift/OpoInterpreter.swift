@@ -685,7 +685,7 @@ private extension Error {
     }
 }
 
-public class OpoInterpreter: PsiLuaState {
+public class OpoInterpreter: PsiLuaEnv {
 
     public var iohandler: OpoIoHandler
 
