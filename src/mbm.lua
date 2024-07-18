@@ -310,6 +310,7 @@ local string_pack, string_packsize, string_unpack = string.pack, string.packsize
 local ENoBitmapCompression = 0
 local EByteRLECompression = 1
 local ETwelveBitRLECompression = 2
+local ESixteenBitRLECompression = 3
 
 Bitmap = class {
     -- See parseSEpocBitmapHeader for members
@@ -362,7 +363,8 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
         imgData = table.concat(trimmed)
     elseif expandToBitDepth == 24 then
         local bytes
-        if self.bpp == 12 then
+        if self.bpp == 12 or self.bpp == 16 or self.bpp == 24 then
+            -- These are handled directly by getPixel() below
             bytes = imgData
         else
             -- First expand to 8bpp with no padding
@@ -374,11 +376,26 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
         local function getPixel(x, y)
             if self.bpp == 12 then
                 local pos = 1 + (y * self.width * 2 + x * 2)
+                -- Note the endianness is probably wrong here, but is balanced by returning r g and b in the wrong order
+                -- at the end. Probably.
                 local value = string.unpack(">I2", bytes, pos)
                 local b = ((value >> 8) & 0xF) * 17
                 local g = ((value >> 4) & 0xF) * 17
                 local r = (value & 0xF) * 17
                 return string_char(r & 0xFF, g & 0xFF, b & 0xFF)
+            elseif self.bpp == 16 then
+                local pos = 1 + (y * self.width * 2 + x * 2)
+                local value = string.unpack("<I2", bytes, pos)
+                local r = (value & 0xF800) >> 8
+                local g = (value & 0x7E0) >> 3
+                local b = (value & 0x1f) << 3
+                -- Adding an extra bit on to each value looks weird to me, but it's what
+                -- https://github.com/SymbianSource/oss.API_REF.Public_API/blob/c8cfcfafc002d82a4e96f1197865cc7acf7f6fc3/epoc32/include/gdi.inl#L326
+                -- did...
+                return string_char(b + (b >> 5), g + (g >> 6), r + (r >> 5))
+            elseif self.bpp == 24 then
+                local pos = 1 + (y * self.width * 3 + x * 3)
+                return string_sub(bytes, pos, pos + 2)
             end
             local pos = 1 + (y * self.width + x)
             local b = string_byte(bytes, pos, pos)
@@ -516,6 +533,8 @@ function decodeBitmap(bitmap, data)
         imgData = rle8decode(data, pos, len)
     elseif bitmap.compression == ETwelveBitRLECompression then
         imgData = rle12decode(data, pos, len)
+    elseif bitmap.compression == ESixteenBitRLECompression then
+        imgData = rle16decode(data, pos, len)
     else
         error("Unknown compression scheme "..tostring(bitmap.compression))
     end
@@ -554,6 +573,28 @@ function rle12decode(data, pos, len)
         local runLength = (value >> 12) + 1
         -- I'm too tired to figure out why this only works if bytes is written out big-endian here...
         bytes[i] = string_rep(string_pack(">I2", value & 0xFFF), runLength)
+        i = i + 1
+    end
+    local result = table.concat(bytes)
+    return result
+end
+
+function rle16decode(data, pos, len)
+    local bytes = {}
+    local i = 1
+    local endPos = pos + len
+    while pos+1 <= endPos do
+        local b = string_byte(data, pos)
+        if b < 0x80 then
+            -- b+1 repeats of word pos+1
+            bytes[i] = string_rep(string_sub(data, pos + 1, pos + 2), b + 1)
+            pos = pos + 3
+        else
+            -- 256-b words of raw data follow
+            local n = 256 - b
+            bytes[i] = string_sub(data, pos + 1, pos + (n * 2))
+            pos = pos + 1 + (n * 2)
+        end
         i = i + 1
     end
     local result = table.concat(bytes)
