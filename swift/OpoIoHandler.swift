@@ -28,8 +28,8 @@ public struct Graphics {
             lhs.width < rhs.width && lhs.height < rhs.height
         }
 
-        let width: Int
-        let height: Int
+        public let width: Int
+        public let height: Int
 
         enum CodingKeys: String, CodingKey {
             case width = "w"
@@ -50,27 +50,27 @@ public struct Graphics {
             return Self(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
         }
 
-        let x: Int
-        let y: Int
+        public let x: Int
+        public let y: Int
 
-        static let zero = Self(x: 0, y: 0)
+        public static let zero = Self(x: 0, y: 0)
     }
 
     public struct Rect: Equatable, Codable {
 
-        let origin: Point
-        let size: Size
-        var minX: Int { return origin.x }
-        var minY: Int { return origin.y }
-        var width: Int { return size.width }
-        var height: Int { return size.height }
+        public let origin: Point
+        public let size: Size
+        public var minX: Int { return origin.x }
+        public var minY: Int { return origin.y }
+        public var width: Int { return size.width }
+        public var height: Int { return size.height }
 
-        init(origin: Point, size: Size) {
+        public init(origin: Point, size: Size) {
             self.origin = origin
             self.size = size
         }
 
-        init(x: Int, y: Int, width: Int, height: Int) {
+        public init(x: Int, y: Int, width: Int, height: Int) {
             self.init(origin: .init(x: x, y: y), size: .init(width: width, height: height))
         }
 
@@ -122,25 +122,25 @@ public struct Graphics {
             case color16M = 7 // 24bpp color
             case color4K = 9 // ie 12bpp color
         }
-        
-        let mode: Mode
-        let width: Int
-        let height: Int
-        let stride: Int
-        let imgData: Data
+
+        public let mode: Mode
+        public let width: Int
+        public let height: Int
+        public let stride: Int
+        public let imgData: Data
         // TODO palette info also needed, in due course
 
-        var size: Size {
+        public var size: Size {
             return Size(width: width, height: height)
         }
-        var isColor: Bool {
+        public var isColor: Bool {
             return mode.isColor
         }
     }
 
-    struct MaskedBitmap {
-        let bitmap: Bitmap
-        let mask: Bitmap?
+    public struct MaskedBitmap {
+        public let bitmap: Bitmap
+        public let mask: Bitmap?
     }
 
     public struct DrawableId: Hashable, Codable {
@@ -358,7 +358,7 @@ extension Graphics.GreyMode {
 
 public struct Fs {
     public struct Operation {
-        enum OpType {
+        public enum OpType {
             case exists // return notFound or none (any access issue should result in notFound)
             case isdir // as per exists
             case delete // return none, notFound, accessDenied if readonly, notReady
@@ -370,13 +370,13 @@ public struct Fs {
             case rename(String) // return none, notFound, accessDenied if readonly, notReady, alreadyExists
             case stat // return stat, or notFound or notReady
         }
-        let path: String
-        let type: OpType
+        public let path: String
+        public let type: OpType
     }
 
     public struct Stat {
-        let size: UInt64
-        let lastModified: Date
+        public let size: UInt64
+        public let lastModified: Date
     }
 
     public enum Err: Int {
@@ -398,7 +398,7 @@ public struct Fs {
 }
 
 extension Fs.Operation {
-    func isReadonlyOperation() -> Bool {
+    public func isReadonlyOperation() -> Bool {
         switch type {
         case .exists: return true
         case .isdir: return true
@@ -601,7 +601,19 @@ extension EditOperation.Details {
     }
 }
 
-public protocol OpoIoHandler {
+public protocol FileSystemIoHandler {
+
+    func fsop(_ op: Fs.Operation) -> Fs.Result
+
+}
+
+public protocol SisInstallIoHandler: FileSystemIoHandler {
+
+    // probably some extra stuff for prompting the user
+
+}
+
+public protocol OpoIoHandler: FileSystemIoHandler {
 
     func printValue(_ val: String) -> Void
 
@@ -613,8 +625,6 @@ public protocol OpoIoHandler {
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
     func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode)
-
-    func fsop(_ op: Fs.Operation) -> Fs.Result
 
     func asyncRequest(_ request: Async.Request)
     func cancelRequest( _ requestHandle: Async.RequestHandle)

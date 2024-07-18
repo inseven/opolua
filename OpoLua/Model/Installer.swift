@@ -35,7 +35,7 @@ class Installer {
     let url: URL
     let destinationUrl: URL
     let fileSystem: FileSystem
-    let interpreter = OpoInterpreter()
+    let psilua = PsiLuaEnv()
 
     weak var delegate: InstallerDelegate?
 
@@ -43,16 +43,15 @@ class Installer {
         self.url = url
         self.destinationUrl = destinationUrl
         self.fileSystem = SystemFileSystem(rootUrl: destinationUrl)
-        self.interpreter.iohandler = self
     }
 
     func run() {
         DispatchQueue.global().async {
             do {
                 try self.fileSystem.prepare()
-                try self.interpreter.installSisFile(path: self.url.path)
+                try self.psilua.installSisFile(path: self.url.path, handler: self)
                 let item: Directory.Item?
-                if let systemType = try Directory.Item.system(url: self.destinationUrl, interpreter: self.interpreter) {
+                if let systemType = try Directory.Item.system(url: self.destinationUrl, env: self.psilua) {
                     item = Directory.Item(url: self.url, type: systemType, isWriteable: true)
                 } else {
                     item = nil
@@ -70,32 +69,10 @@ class Installer {
 
 }
 
-extension Installer: OpoIoHandler {
-
-    func printValue(_ val: String) {}
-    func editValue(_ op: EditOperation) -> Any? { return nil }
-    func beep(frequency: Double, duration: Double) -> Error? { return nil }
-    func draw(operations: [Graphics.DrawCommand]) {}
-    func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result { return .nothing }
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) { return (.zero, .gray2) }
+extension Installer: SisInstallIoHandler {
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
         return fileSystem.perform(op)
     }
 
-    func asyncRequest(_ request: Async.Request) {}
-    func cancelRequest(_ requestHandle: Async.RequestHandle) {}
-    func waitForAnyRequest() -> Async.Response { return .init(handle: 0, value: .cancelled) }
-    func anyRequest() -> Async.Response? { return nil }
-    func testEvent() -> Bool { return false }
-    func key() -> Async.KeyPressEvent? { return nil }
-    func keysDown() -> Set<OplKeyCode> { return [] }
-    func setConfig(key: ConfigName, value: String) {}
-    func getConfig(key: ConfigName) -> String { return "" }
-    func setAppTitle(_ title: String) {}
-    func displayTaskList() {}
-    func setForeground() {}
-    func setBackground() {}
-    func runApp(name: String, document: String) -> Int32? { return nil }
-    func opsync() {}
 }

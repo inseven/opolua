@@ -22,53 +22,6 @@ import Foundation
 import Lua
 import CLua
 
-// ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
-private let kDefaultEpocEncoding: LuaStringEncoding = .stringEncoding(.windowsCP1252)
-// And SIBO uses CP850 (which is handled completely differently and has an inconsistent name to boot)
-private let kSiboEncoding: LuaStringEncoding = .cfStringEncoding(.dosLatin1)
-
-private extension LuaState {
-    func toAppInfo(_ index: CInt) -> OpoInterpreter.AppInfo? {
-        let L = self
-        if isnoneornil(index) {
-            return nil
-        }
-        let era: OpoInterpreter.AppEra = L.getdecodable(index, key: "era") ?? .er5
-        let encoding = era == .er5 ? kDefaultEpocEncoding : kSiboEncoding
-        L.rawget(index, key: "captions")
-        var captions: [OpoInterpreter.LocalizedString] = []
-        for (languageIndex, captionIndex) in L.pairs(-1) {
-            guard let language = L.tostring(languageIndex),
-                  let caption = L.tostring(captionIndex, encoding: encoding)
-            else {
-                return nil
-            }
-            captions.append(.init(caption, locale: Locale(identifier: language)))
-        }
-        L.pop()
-
-        guard let uid3 = L.toint(index, key: "uid3") else {
-            return nil
-        }
-
-        L.rawget(index, key: "icons")
-        var icons: [Graphics.MaskedBitmap] = []
-        // Need to refactor the Lua data structure before we can make MaskedBitmap decodable
-        for _ in L.ipairs(-1) {
-            if let bmp = L.todecodable(-1, type: Graphics.Bitmap.self) {
-                var mask: Graphics.Bitmap? = nil
-                if L.rawget(-1, key: "mask") == .table {
-                    mask = L.todecodable(-1)
-                }
-                L.pop()
-                icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
-            }
-        }
-        L.pop() // icons
-        return OpoInterpreter.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons, era: era)
-    }
-}
-
 private func traceHandler(_ L: LuaState!) -> CInt {
     L.settop(1)
     if L.type(1) != .table {
@@ -416,82 +369,6 @@ private func getScreenInfo(_ L: LuaState!) -> CInt {
     return 3
 }
 
-private func fsop(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    guard let cmd = L.tostring(1) else {
-        return 0
-    }
-    guard let path = L.tostring(2) else {
-        return 0
-    }
-    let op: Fs.Operation.OpType
-    switch cmd {
-    case "exists":
-        op = .exists
-    case "stat":
-        op = .stat
-    case "isdir":
-        op = .isdir
-    case "delete":
-        op = .delete
-    case "mkdir":
-        op = .mkdir
-    case "rmdir":
-        op = .rmdir
-    case "write":
-        if let data = L.todata(3) {
-            op = .write(Data(data))
-        } else {
-            return 0
-        }
-    case "read":
-        op = .read
-    case "dir":
-        op = .dir
-    case "rename":
-        guard let dest = L.tostring(3) else {
-            print("Missing param to rename")
-            L.push(Fs.Err.notReady.rawValue)
-            return 1
-        }
-        op = .rename(dest)
-    default:
-        print("Unimplemented fsop \(cmd)!")
-        L.push(Fs.Err.notReady.rawValue)
-        return 1
-    }
-
-    let result = iohandler.fsop(Fs.Operation(path: path, type: op))
-    switch (result) {
-    case .err(let err):
-        if err != .none {
-            print("Error \(err) for cmd \(op) path \(path)")
-        }
-        if cmd == "read" || cmd == "dir" || cmd == "stat" {
-            L.pushnil()
-            L.push(err.rawValue)
-            return 2
-        } else {
-            L.push(err.rawValue)
-            return 1
-        }
-    case .data(let data):
-        L.push(data)
-        return 1
-    case .strings(let strings):
-        lua_createtable(L, CInt(strings.count), 0)
-        for (i, string) in strings.enumerated() {
-            L.rawset(-1, key: i + 1, value: string)
-        }
-        return 1
-    case .stat(let stat):
-        lua_newtable(L)
-        L.rawset(-1, key: "size", value: Int64(stat.size))
-        L.rawset(-1, key: "lastModified", value: stat.lastModified.timeIntervalSince1970)
-        return 1
-    }
-}
-
 // asyncRequest(requestName, requestTable)
 // asyncRequest("getevent", { var = ..., ev = ... })
 // asyncRequest("after", { var = ..., period = ... })
@@ -808,32 +685,13 @@ private extension Error {
     }
 }
 
-public class OpoInterpreter {
-
-    private let L: LuaState
+public class OpoInterpreter: PsiLuaEnv {
 
     public var iohandler: OpoIoHandler
 
-    public init() {
+    override init() {
         iohandler = DummyIoHandler() // For now...
-        L = LuaState(libraries: [.package, .table, .io, .os, .string, .math, .utf8, .debug])
-        L.setDefaultStringEncoding(kDefaultEpocEncoding)
-
-        L.setRequireRoot(nil)
-        L.addModules(lua_sources)
-
-        // Finally, run init.lua
-        L.getglobal("require")
-        L.push("init")
-        guard logpcall(1, 0) else {
-            fatalError("Failed to load init.lua!")
-        }
-
-        assert(L.gettop() == 0) // In case we failed to balance stack during init
-    }
-
-    deinit {
-        L.close()
+        super.init()
     }
 
     // throws an InterpreterError or subclass thereof
@@ -883,7 +741,9 @@ public class OpoInterpreter {
     }
 
     func makeIoHandlerBridge() {
-        lua_newtable(L)
+        // This creates the iohandler table, which we then add to
+        makeFsIoHandlerBridge(self.iohandler)
+
         let val = Unmanaged<OpoInterpreter>.passUnretained(self)
         lua_pushlightuserdata(L, val.toOpaque())
         let fns: [String: lua_CFunction] = [
@@ -893,7 +753,6 @@ public class OpoInterpreter {
             "draw": { L in return autoreleasepool { return draw(L) } },
             "graphicsop": { L in return autoreleasepool { return graphicsop(L) } },
             "getScreenInfo": { L in return autoreleasepool { return getScreenInfo(L) } },
-            "fsop": { L in return autoreleasepool { return fsop(L) } },
             "asyncRequest": { L in return autoreleasepool { return asyncRequest(L) } },
             "waitForAnyRequest": { L in return autoreleasepool { return waitForAnyRequest(L) } },
             "checkCompletions": { L in return autoreleasepool { return checkCompletions(L) } },
@@ -916,113 +775,6 @@ public class OpoInterpreter {
             "setEra": { L in return autoreleasepool { return setEra(L) } },
         ]
         L.setfuncs(fns, nup: 1)
-    }
-
-    enum ValType: Int {
-        case Word = 0
-        case Long = 1
-        case Real = 2
-        case String = 3
-        case WordArray = 0x80
-        case ELongArray = 0x81
-        case ERealArray = 0x82
-        case EStringArray = 0x83
-    }
-
-    struct Procedure {
-        let name: String
-        let arguments: [ValType]
-    }
-
-    func getProcedures(file: String) -> [Procedure]? {
-        guard let data = FileManager.default.contents(atPath: file) else {
-            return nil
-        }
-        L.getglobal("require")
-        L.push("opofile")
-        guard logpcall(1, 1) else { return nil }
-        L.rawget(-1, key: "parseOpo")
-        L.push(data)
-        guard logpcall(1, 1) else {
-            L.pop() // opofile
-            return nil
-        }
-        var procs: [Procedure] = []
-        for _ in L.ipairs(-1) {
-            let name = L.tostring(-1, key: "name")!
-            var args: [ValType] = []
-            if L.rawget(-1, key: "params") == .table {
-                for _ in L.ipairs(-1) {
-                    // insert at front because params are listed bass-ackwards
-                    args.insert(ValType(rawValue: L.toint(-1)!)!, at: 0)
-                }
-            }
-            L.pop() // params
-            procs.append(Procedure(name: name, arguments: args))
-        }
-        L.pop(2) // procs, opofile
-        return procs
-    }
-
-    struct LocalizedString {
-        var value: String
-        var locale: Locale
-
-        init(_ value: String, locale: Locale) {
-            self.value = value
-            self.locale = locale
-        }
-    }
-
-    enum AppEra: String, Codable {
-        case sibo
-        case er5
-    }
-
-    struct AppInfo {
-        let captions: [LocalizedString]
-        let uid3: UInt32
-        let icons: [Graphics.MaskedBitmap]
-        let era: AppEra
-    }
-
-    func appInfo(for path: String) -> AppInfo? {
-        let top = L.gettop()
-        defer {
-            L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return nil
-        }
-        L.getglobal("require")
-        L.push("aif")
-        guard logpcall(1, 1) else { return nil }
-        L.rawget(-1, key: "parseAif")
-        lua_remove(L, -2) // aif module
-        L.push(data)
-        guard logpcall(1, 1) else { return nil }
-
-        return L.toAppInfo(-1)
-    }
-
-    public func getMbmBitmaps(path: String) -> [Graphics.Bitmap]? {
-        let top = L.gettop()
-        defer {
-            L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return nil
-        }
-        L.getglobal("require")
-        L.push("recognizer")
-        guard logpcall(1, 1) else { return nil }
-        L.rawget(-1, key: "getMbmBitmaps")
-        lua_remove(L, -2) // recognizer module
-        L.push(data)
-        guard logpcall(1, 1) else { return nil }
-        // top of stack should now be bitmap array
-        let result: [Graphics.Bitmap]? = L.todecodable(-1)
-        return result
     }
 
     class InterpreterError: LocalizedError {
@@ -1091,10 +843,9 @@ public class OpoInterpreter {
     func run(devicePath: String, procedureName: String? = nil) throws {
         L.settop(0)
 
-        L.getglobal("require")
-        L.push("runtime")
-        guard logpcall(1, 1) else { fatalError("Couldn't load runtime") }
+        require("runtime")
         L.rawget(-1, key: "runOpo")
+        lua_remove(L, -2) // runtime
         L.push(devicePath)
         if let proc = procedureName {
             L.push(proc)
@@ -1232,138 +983,9 @@ public class OpoInterpreter {
         L.settop(0)
     }
 
-    public func installSisFile(path: String) throws {
-        let top = L.gettop()
-        defer {
-            L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            throw InterpreterError(message: "Couldn't read \(path)")
-        }
-        lua_getglobal(L, "require")
-        L.push("runtime")
-        guard logpcall(1, 1) else { fatalError("Couldn't load runtime") }
-        lua_getfield(L, -1, "installSis")
-        L.push(data)
-        makeIoHandlerBridge()
-        try pcall(2, 0)
-    }
-
     // Safe to call from any thread
     func interrupt() {
         lua_sethook(L, stop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT, 1)
     }
 
-    struct UnknownEpocFile: Codable {
-        let uid1: UInt32
-        let uid2: UInt32
-        let uid3: UInt32
-    }
-
-    struct MbmFile: Codable {
-        let bitmaps: [Graphics.Bitmap]
-    }
-
-    struct OplFile: Codable {
-        let text: String
-    }
-
-    struct SoundFile: Codable {
-        let data: Data
-    }
-
-    enum FileType: String, Codable {
-        case unknown
-        case aif
-        case mbm
-        case opl
-        case sound
-    }
-
-    enum FileInfo {
-        case unknown
-        case unknownEpoc(UnknownEpocFile)
-        case aif(AppInfo)
-        case mbm(MbmFile)
-        case opl(OplFile)
-        case sound(SoundFile)
-    }
-
-    func recognize(path: String) -> FileType {
-        let top = L.gettop()
-        defer {
-            L.settop(top)
-        }
-        // We don't actually need the whole file data here, oh well
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
-        }
-        L.getglobal("require")
-        L.push("recognizer")
-        guard logpcall(1, 1) else {
-            return .unknown
-        }
-        L.rawget(-1, key: "recognize")
-        lua_remove(L, -2) // recognizer module
-        L.push(data)
-        L.push(false) // allData
-        guard logpcall(2, 1) else {
-            return .unknown
-        }
-        guard let type = L.tostring(-1) else {
-            return .unknown
-        }
-        return FileType(rawValue: type) ?? .unknown
-    }
-
-    func getFileInfo(path: String) -> FileInfo {
-        let top = L.gettop()
-        defer {
-            L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
-        }
-        L.getglobal("require")
-        L.push("recognizer")
-        guard logpcall(1, 1) else {
-            return .unknown
-        }
-        L.rawget(-1, key: "recognize")
-        lua_remove(L, -2) // recognizer module
-        L.push(data)
-        L.push(true) // allData
-        guard logpcall(2, 2) else {
-            return .unknown
-        }
-        guard let type = L.tostring(-2) else {
-            return .unknown
-        }
-
-        switch type {
-        case "aif":
-            if let info = L.toAppInfo(-1) {
-                return .aif(info)
-            }
-        case "mbm":
-            if let info: MbmFile = L.todecodable(-1) {
-                return .mbm(info)
-            }
-        case "opl":
-            if let info: OplFile = L.todecodable(-1) {
-                return .opl(info)
-            }
-        case "sound":
-            if let info: SoundFile = L.todecodable(-1) {
-                return .sound(info)
-            }
-        case "unknown":
-            if let info: UnknownEpocFile = L.todecodable(-1) {
-                return .unknownEpoc(info)
-            }
-        default:
-            break
-        }
-        return .unknown
-    }
 }

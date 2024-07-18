@@ -103,7 +103,7 @@ extension Device {
         }
     }
 
-    static func getDefault(forEra era: OpoInterpreter.AppEra?) -> Device {
+    static func getDefault(forEra era: PsiLuaEnv.AppEra?) -> Device {
         switch era {
         case .sibo:
             return .psionSeries3c

@@ -21,9 +21,9 @@
 import Foundation
 
 fileprivate let appInfoCache = FileMetadataCache<ApplicationMetadata>()
-fileprivate let fileTypeCache = FileMetadataCache<OpoInterpreter.FileType>()
+fileprivate let fileTypeCache = FileMetadataCache<PsiLuaEnv.FileType>()
 
-extension OpoInterpreter {
+extension PsiLuaEnv {
 
     func cachedAppInfo(forApplicationUrl url: URL) -> ApplicationMetadata? {
         if let applicationInfoFile = url.applicationInfoUrl,

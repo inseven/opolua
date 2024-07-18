@@ -115,15 +115,15 @@ class SourceViewController: UIViewController {
             return
         }
         isLoaded = true
-        let interpreter = OpoInterpreter()
-        let item = try Directory.item(for: url, interpreter: interpreter)
+        let env = PsiLuaEnv()
+        let item = try Directory.item(for: url, env: env)
         var contents: String
         switch item.type {
         case .text:
             contents = try String(contentsOf: url)
         case .opl:
-            let fileInfo = interpreter.getFileInfo(path: url.path)
-            guard case OpoInterpreter.FileInfo.opl(let opoFile) = fileInfo else {
+            let fileInfo = env.getFileInfo(path: url.path)
+            guard case PsiLuaEnv.FileInfo.opl(let opoFile) = fileInfo else {
                 throw OpoLuaError.unsupportedFile
             }
             contents = opoFile.text

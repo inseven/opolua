@@ -109,12 +109,12 @@ class Directory {
         }
     }
 
-    static func item(for url: URL, isWriteable: Bool = false, interpreter: OpoInterpreter) throws -> Item {
+    static func item(for url: URL, isWriteable: Bool = false, env: PsiLuaEnv) throws -> Item {
 
         let ext = url.pathExtension.lowercased()
         if FileManager.default.directoryExists(atPath: url.path) {
             // Check for an app 'bundle'.
-            if let type = try Item.system(url: url, interpreter: interpreter) {
+            if let type = try Item.system(url: url, env: env) {
                 return Item(url: url, type: type, isWriteable: isWriteable)
             } else {
                 return Item(url: url, type: .directory, isWriteable: isWriteable)
@@ -123,7 +123,7 @@ class Directory {
             return Item(url: url, type: .object, isWriteable: isWriteable)
         } else if url.isApplication {
             return Item(url: url,
-                        type: .application(interpreter.cachedAppInfo(forApplicationUrl: url)),
+                        type: .application(env.cachedAppInfo(forApplicationUrl: url)),
                         isWriteable: isWriteable)
         } else if ext == "sis" {
             return Item(url: url, type: .installer, isWriteable: isWriteable)
@@ -135,9 +135,9 @@ class Directory {
             // Image files aren't always guaranteed to have the correct UIDs, so we also match on the file extension.
             return Item(url: url, type: .image, isWriteable: isWriteable)
         } else {
-            switch interpreter.cachedRecognize(url: url) {
+            switch env.cachedRecognize(url: url) {
             case .aif:
-                if let info = interpreter.cachedAppInfo(for: url) {
+                if let info = env.cachedAppInfo(for: url) {
                     return Item(url: url, type: .applicationInformation(info), isWriteable: isWriteable)
                 }
             case .mbm:
@@ -153,7 +153,7 @@ class Directory {
         }
     }
 
-    static func items(for url: URL, interpreter: OpoInterpreter) throws -> [Item] {
+    static func items(for url: URL, env: PsiLuaEnv) throws -> [Item] {
         let fileManager = FileManager.default
         let isWriteable = fileManager.isWritableFile(atPath: url.path)
 
@@ -169,7 +169,7 @@ class Directory {
         let items = try urls
             .filter { !$0.lastPathComponent.starts(with: ".") }
             .compactMap { url -> Item? in
-                return try item(for: url, isWriteable: isWriteable, interpreter: interpreter)
+                return try item(for: url, isWriteable: isWriteable, env: env)
             }
             .sorted(by: Directory.defaultSort())
         return items
@@ -182,7 +182,7 @@ class Directory {
     weak var delegate: DirectoryDelegate?
 
     private let updateQueue = DispatchQueue(label: "Directory.updateQueue")
-    private let interpreter = OpoInterpreter()
+    private let env = PsiLuaEnv()
     private var observer: RecursiveDirectoryMonitor.CancellableObserver?
 
     var localizedName: String {
@@ -210,7 +210,7 @@ class Directory {
     private func updateQueue_refresh() {
         dispatchPrecondition(condition: .onQueue(updateQueue))
         do {
-            let items = try Self.items(for: url, interpreter: interpreter)
+            let items = try Self.items(for: url, env: env)
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else {
                     return
@@ -239,7 +239,7 @@ class Directory {
 
 extension Directory.Item {
 
-    static func system(url: URL, interpreter: OpoInterpreter) throws -> ItemType? {
+    static func system(url: URL, env: PsiLuaEnv) throws -> ItemType? {
         guard try FileManager.default.isSystem(at: url) else {
             return nil
         }
@@ -259,7 +259,7 @@ extension Directory.Item {
               let url = apps.first else {
             return nil
         }
-        return .system(url, interpreter.cachedAppInfo(forApplicationUrl: url))
+        return .system(url, env.cachedAppInfo(forApplicationUrl: url))
     }
 
     func configurationActions(errorHandler: @escaping (Error) -> Void) -> [UIMenuElement] {

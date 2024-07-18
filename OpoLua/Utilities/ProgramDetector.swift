@@ -34,7 +34,7 @@ class ProgramDetector {
     private let indexableLocationObserver: IndexableLocationObserver
     private let rateLimiter = RateLimiter(delay: .microseconds(200))
     private var _items: [Directory.Item] = []
-    private var interpreter = OpoInterpreter()
+    private var env = PsiLuaEnv()
     private var installerObserver: Any?
 
     var items: [Directory.Item] {
@@ -50,9 +50,9 @@ class ProgramDetector {
     }
 
     static func find(url: URL, filter: (Directory.Item) -> Bool,
-                     interpreter: OpoInterpreter) throws -> [Directory.Item] {
+                     env: PsiLuaEnv) throws -> [Directory.Item] {
         var result: [Directory.Item] = []
-        for item in try Directory.items(for: url, interpreter: interpreter) {
+        for item in try Directory.items(for: url, env: env) {
             if filter(item) {
                 result.append(item)
             }
@@ -60,7 +60,7 @@ class ProgramDetector {
                 // Without this, the memory usage of this recursive find operation balloons and the application is
                 // killed with an OOM.
                 try autoreleasepool {
-                    result += try find(url: item.url, filter: filter, interpreter: interpreter)
+                    result += try find(url: item.url, filter: filter, env: env)
                 }
             }
         }
@@ -80,7 +80,7 @@ class ProgramDetector {
                     default:
                         return false
                     }
-                }, interpreter: interpreter)
+                }, env: env)
             }
             let uniqueItems = Array(Set(items)).sorted(by: Directory.defaultSort())
             DispatchQueue.main.async {
