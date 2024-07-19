@@ -311,6 +311,7 @@ local ENoBitmapCompression = 0
 local EByteRLECompression = 1
 local ETwelveBitRLECompression = 2
 local ESixteenBitRLECompression = 3
+local ETwentyFourBitRLECompression = 4
 
 Bitmap = class {
     -- See parseSEpocBitmapHeader for members
@@ -530,37 +531,17 @@ function decodeBitmap(bitmap, data)
     if bitmap.compression == ENoBitmapCompression then
         return data:sub(pos, pos + len)
     elseif bitmap.compression == EByteRLECompression then
-        imgData = rle8decode(data, pos, len)
+        imgData = rleDecode(data, pos, len, 1)
     elseif bitmap.compression == ETwelveBitRLECompression then
         imgData = rle12decode(data, pos, len)
     elseif bitmap.compression == ESixteenBitRLECompression then
-        imgData = rle16decode(data, pos, len)
+        imgData = rleDecode(data, pos, len, 2)
+    elseif bitmap.compression == ETwentyFourBitRLECompression then
+        imgData = rleDecode(data, pos, len, 3)
     else
         error("Unknown compression scheme "..tostring(bitmap.compression))
     end
     return imgData
-end
-
-function rle8decode(data, pos, len)
-    local bytes = {}
-    local i = 1
-    local endPos = pos + len
-    while pos+1 <= endPos do
-        local b = string_byte(data, pos)
-        if b < 0x80 then
-            -- b+1 repeats of byte pos+1
-            bytes[i] = string_rep(string_sub(data, pos + 1, pos + 1), b + 1)
-            pos = pos + 2
-        else
-            -- 256-b bytes of raw data follow
-            local n = 256 - b
-            bytes[i] = string_sub(data, pos + 1, pos + n)
-            pos = pos + 1 + n
-        end
-        i = i + 1
-    end
-    local result = table.concat(bytes)
-    return result
 end
 
 function rle12decode(data, pos, len)
@@ -579,21 +560,21 @@ function rle12decode(data, pos, len)
     return result
 end
 
-function rle16decode(data, pos, len)
+function rleDecode(data, pos, len, pixelSize)
     local bytes = {}
     local i = 1
     local endPos = pos + len
     while pos+1 <= endPos do
         local b = string_byte(data, pos)
         if b < 0x80 then
-            -- b+1 repeats of word pos+1
-            bytes[i] = string_rep(string_sub(data, pos + 1, pos + 2), b + 1)
-            pos = pos + 3
+            -- b+1 repeats of pixel pos+1
+            bytes[i] = string_rep(string_sub(data, pos + 1, pos + pixelSize), b + 1)
+            pos = pos + 1 + pixelSize
         else
-            -- 256-b words of raw data follow
+            -- 256-b pixels of raw data follow
             local n = 256 - b
-            bytes[i] = string_sub(data, pos + 1, pos + (n * 2))
-            pos = pos + 1 + (n * 2)
+            bytes[i] = string_sub(data, pos + 1, pos + (n * pixelSize))
+            pos = pos + 1 + (n * pixelSize)
         end
         i = i + 1
     end
