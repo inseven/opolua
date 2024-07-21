@@ -38,18 +38,18 @@ function main()
     local bitmaps = mbm.parseMbmHeader(data)
     if args.index then
         local i = tonumber(args.index)
-        dump(args.filename, i, bitmaps[i], data, args.extract)
+        dump(args.filename, i, bitmaps[i], args.extract)
     else
         for i, bitmap in ipairs(bitmaps) do
-            dump(args.filename, i, bitmap, data, args.extract)
+            dump(args.filename, i, bitmap, args.extract)
         end
     end
 end
 
-function dump(filename, i, bitmap, data, extract)
+function dump(filename, i, bitmap, extract)
     print(string.format("%d: len=%d w=%d h=%d stride=%d bpp=%d col=%s paletteSz=%d compression=%d",
-        i, bitmap.imgLen, bitmap.width, bitmap.height, bitmap.stride, bitmap.bpp, bitmap.isColor, bitmap.paletteSz, bitmap.compression))
-    local img = mbm.decodeBitmap(bitmap, data)
+        i, bitmap.imgLen, bitmap.width, bitmap.height, bitmap.stride, bitmap.bpp, bitmap.isColor, bitmap.paletteSz, mbm.compressionToString(bitmap.compression)))
+    local img = mbm.decodeBitmap(bitmap)
     if extract then
         local bmpName = string.format("%s_%d_%dx%d_%dbpp.bmp", filename, i, bitmap.width, bitmap.height, bitmap.bpp)
         writeFile(bmpName, bitmap:toBmp())
