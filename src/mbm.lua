@@ -345,8 +345,11 @@ local function byteWidth(pixelWidth, bpp)
 end
 
 function Bitmap:getImageData(expandToBitDepth, resultStride)
-    local imgData = decodeBitmap(self, self.data)
+    local imgData = decodeBitmap(self)
     if expandToBitDepth == 8 then
+        if resultStride == nil then
+            resultStride = self.width
+        end
         local stride = self.stride
         assert(self.bpp <= 8, "Cannot expand to a smaller bit depth")
         if self.bpp < 8 then
@@ -355,13 +358,14 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
         end
         local wdata = widenTo8bpp(imgData, self.bpp, self.isColor)
         local rowWidth = self.width -- since it's now 8bpp
-        local rowPad = string.rep("\0", (resultStride or 0) - rowWidth)
+        local rowPad = string.rep("\0", resultStride - rowWidth)
         local trimmed = {}
         for y = 0, self.height - 1 do
             local row = wdata:sub(1 + y * stride, y * stride + rowWidth)
             trimmed[1 + y] = row..rowPad
         end
         imgData = table.concat(trimmed)
+        assert(#imgData == resultStride * self.height, "getImageData did not return expected size")
     elseif expandToBitDepth == 24 then
         local bytes
         if self.bpp == 12 or self.bpp == 16 or self.bpp == 24 then
@@ -524,12 +528,21 @@ function parseRomBitmap(data, offset)
     return bitmap
 end
 
-function decodeBitmap(bitmap, data)
+function decodeBitmap(bitmap)
+    local data = bitmap.data
     local imgData
     local pos = 1 + bitmap.imgStart
     local len = bitmap.imgLen
     if bitmap.compression == ENoBitmapCompression then
-        return data:sub(pos, pos + len)
+        local expectedImgSize = bitmap.stride * bitmap.height
+        if len < expectedImgSize then
+            -- Workaround: Some AIFs appear to have an incorrectly-calculated length in the header (failing to include
+            -- headerLen) so we will allow this (on uncompressed bitmaps only) and just hope the data is otherwise
+            -- correct.
+            len = expectedImgSize
+        end
+
+        return data:sub(pos, pos + len - 1)
     elseif bitmap.compression == EByteRLECompression then
         imgData = rleDecode(data, pos, len, 1)
     elseif bitmap.compression == ETwelveBitRLECompression then
@@ -580,6 +593,18 @@ function rleDecode(data, pos, len, pixelSize)
     end
     local result = table.concat(bytes)
     return result
+end
+
+local compressionNames = {
+    [ENoBitmapCompression] = "none",
+    [EByteRLECompression] = "rle",
+    [ETwelveBitRLECompression] = "rle12",
+    [ESixteenBitRLECompression] = "rle16",
+    [ETwentyFourBitRLECompression] = "rle24",
+}
+
+function compressionToString(c)
+    return compressionNames[c] or string.format("Unknown compression scheme %d", c)
 end
 
 local function scale2bpp(val)

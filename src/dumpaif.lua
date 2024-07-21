@@ -43,10 +43,10 @@ function main()
             printf("Caption[%s]: %s\n", lang, caption)
         end
         for i, icon in ipairs(info.icons) do
-            printf("Icon %dx%d bpp=%d", icon.width, icon.height, icon.bpp)
+            printf("Icon %dx%d bpp=%d compression=%s", icon.width, icon.height, icon.bpp, mbm.compressionToString(icon.compression))
             local mask = icon.mask
             if mask then
-                printf(" mask %dx%d bpp=%d", mask.width, mask.height, mask.bpp)
+                printf(" mask %dx%d bpp=%d compression=%s", mask.width, mask.height, mask.bpp, mbm.compressionToString(icon.compression))
             end
             printf("\n")
         end
@@ -55,9 +55,11 @@ function main()
     if args.extract then
         for i, icon in ipairs(info.icons) do
             local iconName = string.format("%s_%d_%dx%d_%dbpp.bmp", args.filename, i, icon.width, icon.height, icon.bpp)
+            -- printf("toBmp icon %s\n", iconName)
             writeFile(iconName, icon:toBmp())
             if mask then
                 local maskName = string.format("%s_%d_mask_%dx%d_%dbpp.bmp", args.filename, i, mask.width, mask.height, mask.bpp)
+                -- printf("toBmp icon %s\n", maskName)
                 writeFile(maskName, mask:toBmp())
             end
         end
@@ -71,14 +73,14 @@ function main()
                 width = icon.width,
                 height = icon.height,
                 bpp = icon.bpp,
-                compression = icon.compression,
+                compression = mbm.compressionToString(icon.compression),
             }
             if icon.mask then
                 jsonIcon.mask = {
                     width = icon.mask.width,
                     height = icon.mask.height,
                     bpp = icon.mask.bpp,
-                    compression = icon.mask.compression,
+                    compression = mbm.compressionToString(icon.mask.compression),
                 }
             end
             icons[i] = jsonIcon
