@@ -74,8 +74,13 @@ function describeSis(sisfile, indent)
         end
         local src = cp1252.toUtf8(file.src)
         local dest = cp1252.toUtf8(file.dest)
-        printf("%s%s: %s -> %s len=%d\n", indent, sis.FileType[file.type], src, dest, len or 0)
-        if file.type == sis.FileType.SisComponent then
+        printf("%s%s: %s -> %s", indent, sis.FileType[file.type], src, dest)
+        if len then
+            printf(" len=%d", len)
+        end
+        printf("\n")
+
+        if file.type == sis.FileType.SisComponent and file.data then
             local componentSis = sis.parseSisFile(file.data)
             describeSis(componentSis, "    "..indent)
         end
@@ -86,7 +91,11 @@ function installSis(sisfile, dest)
     local langIdx = sis.getBestLangIdx(sisfile.langs)
     for _, file in ipairs(sisfile.files) do
         if file.type == sis.FileType.File then
-            extractFile(file, langIdx, dest)
+            if file.data or (file.langData and file.langData[langIdx]) then
+                extractFile(file, langIdx, dest)
+            else
+                printf("Warning: Skipping truncated file %s\n", file.dest)
+            end
         elseif file.type == sis.FileType.SisComponent then
             local componentSis = sis.parseSisFile(file.data)
             installSis(componentSis, dest)
@@ -151,22 +160,27 @@ function makeManifest(sisfile, includeLangs)
                 f.len = {}
                 if file.langData then
                     for i = 1, #sisfile.langs do
-                        f.len[sis.Locales[sisfile.langs[i]]] = #file.langData[i]
+                        if file.langData[i] then
+                            f.len[sis.Locales[sisfile.langs[i]]] = #file.langData[i]
+                        end
                     end
                 else
                     for i = 1, #sisfile.langs do
-                        f.len[sis.Locales[sisfile.langs[i]]] = #file.data
+                        if file.data then
+                            f.len[sis.Locales[sisfile.langs[i]]] = #file.data
+                        end
                     end
                 end
             else
-                f.len = #(file.data or file.langData[langIdx])
+                local data = file.data or (file.langData and file.langData[langIdx])
+                f.len = data and #data
             end
         end
         if file.type ~= sis.FileType.FileText then
             f.dest = cp1252.toUtf8(file.dest)
         end
 
-        if file.type == sis.FileType.SisComponent then
+        if file.type == sis.FileType.SisComponent and file.data then
             local componentSis = sis.parseSisFile(file.data)
             f.sis = makeManifest(componentSis, includeLangs)
         end
