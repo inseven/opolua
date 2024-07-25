@@ -228,6 +228,12 @@ function getBestLangIdx(langs)
 end
 
 function parseSimpleFileRecord(data, pos, numLangs, verbose)
+    local function vprintf(...)
+        if verbose then
+            printf(...)
+        end
+    end
+
     local type, details, srcNameLen, srcNamePtr, destNameLen, destNamePtr, pos =
         string.unpack("<I4I4I4I4I4I4", data, pos)
 
@@ -243,10 +249,9 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
         contents[i].ptr = ptr
     end
 
-    if verbose then
-        printf("type=%d details=%d srcNameLen=%d srcNamePtr=0x%08X destNameLen=%d destNamePtr=0x%08X\n",
-            type, details, srcNameLen, srcNamePtr, destNameLen, destNamePtr)
-    end
+    vprintf("type=%d details=%d srcNameLen=%d srcNamePtr=0x%08X destNameLen=%d destNamePtr=0x%08X\n",
+        type, details, srcNameLen, srcNamePtr, destNameLen, destNamePtr)
+
     local srcName = data:sub(1 + srcNamePtr, srcNamePtr + srcNameLen)
     local destName = data:sub(1 + destNamePtr, destNamePtr + destNameLen)
 
@@ -267,7 +272,13 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
         for i, lang in ipairs(contents) do
             local filePtr = contents[i].ptr
             local fileLen = contents[i].len
-            langData[i] = data:sub(1 + filePtr, filePtr + fileLen)
+            vprintf("    %s[%d] ptr=0x%08X len=%d", destName, i, filePtr, fileLen)
+            if filePtr + fileLen > #data then
+                vprintf(" TRUNCATED")
+            else
+                langData[i] = data:sub(1 + filePtr, filePtr + fileLen)
+            end
+            vprintf("\n")
         end
         if numLangs > 1 then
             file.langData = langData
