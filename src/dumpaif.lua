@@ -37,10 +37,12 @@ function main()
     local mbm = require("mbm")
     local data = readFile(args.filename)
     local info = aif.parseAif(data)
+    local cp1252 = require("cp1252")
+
     if not args.json then
         printf("UID3: 0x%08X\n", info.uid3)
         for lang, caption in pairs(info.captions) do
-            printf("Caption[%s]: %s\n", lang, caption)
+            printf("Caption[%s]: %s\n", lang, cp1252.toUtf8(caption))
         end
         for i, icon in ipairs(info.icons) do
             printf("Icon %dx%d bpp=%d compression=%s", icon.width, icon.height, icon.bpp, mbm.compressionToString(icon.compression))
@@ -85,8 +87,15 @@ function main()
             end
             icons[i] = jsonIcon
         end
-        info.icons = icons
-        print(json.encode(info))
+        local utf8Captions = {}
+        for lang, caption in pairs(info.captions) do
+            utf8Captions[lang] = cp1252.toUtf8(caption)
+        end
+        local jsonResult = {
+            icons = icons,
+            captions = utf8Captions,
+        }
+        print(json.encode(jsonResult))
     end
 end
 
