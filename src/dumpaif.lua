@@ -92,6 +92,8 @@ function main()
             utf8Captions[lang] = cp1252.toUtf8(caption)
         end
         local jsonResult = {
+            uid3 = info.uid3,
+            era = info.era,
             icons = icons,
             captions = utf8Captions,
         }
