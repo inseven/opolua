@@ -24,7 +24,7 @@ SOFTWARE.
 
 _ENV = module()
 
-function parseAif(data)
+function parseAif(data, verbose)
     local sis = require("sis")
     local mbm = require("mbm")
 
@@ -33,7 +33,7 @@ function parseAif(data)
         -- Not entirely clear how to establish if this is an OPA with metadata or just an OPO without - we will peek
         -- for a PIC header and assume that means we're an OPA
 
-        local _, _, era = require("opofile").parseOpo(data)
+        -- local _, _, era = require("opofile").parseOpo(data, verbose)
 
         local sourceName, pos = string.unpack("<s1", data, 21)
         local len, hdr = string.unpack("<I2c4", data, pos)
@@ -51,12 +51,13 @@ function parseAif(data)
             name = oplpath.splitext(name)
 
             return {
+                type = "opa",
                 uid3 = 0,
                 captions = {
                     en_GB = name,
                 },
                 icons = icons,
-                era = era,
+                era = "sibo",
             }
         else
             return nil
@@ -98,6 +99,7 @@ function parseAif(data)
     end
 
     return {
+        type = "aif",
         uid3 = uid3,
         captions = captions,
         icons = icons,

@@ -67,6 +67,7 @@ function parseOpo(data, verbose)
         assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
         -- assert(uid2 == KUidOPO, string.format("Bad header uid2 0x%08X", uid2))
         -- assert(uid3 == KUidOplInterpreter, "Bad header uid3!")
+        vprintf("UID2: 0x%08X\n", uid2)
         vprintf("UID3: 0x%08X\n", uid3)
         -- printf("rootStreamIdx = 0x%x\n", rootStreamIdx)
 

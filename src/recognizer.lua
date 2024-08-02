@@ -24,69 +24,88 @@ SOFTWARE.
 
 _ENV = module()
 
-function recognize(data, allData)
+function recognize(data, verbose)
     local siboHeader = data:sub(1, 16)
     if siboHeader == "ALawSoundFile**\0" then
-        return "sound", allData and { data = require("sound").parseWveFile(data) }
+        return { type = "sound", data = require("sound").parseWveFile(data) }
+    elseif siboHeader == "OPLObjectFile**\0" then
+        return require("aif").parseAif(data)
     elseif data:sub(1, 4) == "PIC\xDC" then
-        return "mbm", allData and { bitmaps = getMbmBitmaps(data) }
+        return { type = "mbm", bitmaps = getMbmBitmaps(data) }
     end
 
     if #data < 16 then
-        return nil, nil
+        return nil
     end
 
     local uid1, uid2, uid3, checksum = string.unpack("<I4I4I4I4", data)
 
     -- This has to come before the checksum check because ROM MBMs don't have a checksum...
     if uid1 == KMultiBitmapRomImageUid then
-        return "mbm", allData and { bitmaps = getMbmBitmaps(data) }
+        return { type = "mbm", bitmaps = getMbmBitmaps(data) }
     end
 
     if checksum ~= require("crc").getUidsChecksum(uid1, uid2, uid3) then
         -- It's not even an EPOC file
-        return nil, nil
+        return nil
     end
 
     if uid1 == KUidDirectFileStore and uid2 == KUidAppInfoFile8 then
         -- Because AIFs aren't actually directfilestore files and have to be parsed specially...
         local aif = require("aif")
-        return "aif", allData and aif.parseAif(data)
+        return aif.parseAif(data)
     end
 
-    -- Not all MBMs have uid2 set to this, but hopefully this is enough to be useful...
+    -- Not all MBMs have uid2 set usefully...
     if uid1 == KUidDirectFileStore and uid2 == KUidMultiBitmapFileImage then
         -- MBMs aren't directfilestore files either...
-        return "mbm", allData and { bitmaps = getMbmBitmaps(data) }
+        return { type = "mbm", bitmaps = getMbmBitmaps(data) }
     end
-
-    if uid1 == KUidDirectFileStore and uid3 == KUidOplInterpreter then
-        return "opo"
-    end
-
-    if not allData and uid1 == KUidDirectFileStore then
-        if uid3 == KUidTextEdApp then
-            return "opl"
-        elseif uid3 == KUidRecordApp then
-            return "sound"
+    -- .. so just try parsing it to see what happens
+    if uid1 == KUidDirectFileStore then
+        local ok, bitmaps = pcall(getMbmBitmaps, data)
+        if ok then
+            return { type = "mbm", bitmaps = bitmaps }
         end
     end
 
-    if allData and uid1 == KUidDirectFileStore then
+    if uid1 == KUidDirectFileStore and uid2 == KUidOplApp then
+        local procTable, opxTable, era = require("opofile").parseOpo(data, verbose)
+        return { type = "opa", era = era, uid3 = uid3 }
+    elseif uid1 == KUidDirectFileStore and uid2 == KUidOPO then
+        local procTable, opxTable, era = require("opofile").parseOpo(data, verbose)
+        return { type = "opo", era = era }
+    end
+
+    if uid1 == KUidDirectFileStore then
         local dfs = require("directfilestore")
         local toc = dfs.parse(data)
         local texted = toc[dfs.SectionUids.KUidTextEdSection]
         if texted then
-            return "opl", allData and { text = getOplText(data) }
+            return { type = "opl", text = getOplText(data) }
         end
 
         local sndData = toc[dfs.SectionUids.KUidSoundData]
         if sndData then
-            return "sound", allData and { data = require("sound").parseWveFile(data) }
+            return { type = "sound", data = require("sound").parseWveFile(data) }
         end
     end
 
-    return "unknown", { uid1 = uid1, uid2 = uid2, uid3 = uid3 }
+    if uid1 == KPermanentFileStoreLayoutUid then
+        return { type = "database" }
+    end
+
+    if uid2 == KUidSisFileEr5 or uid2 == KUidSisFileEr6 then
+        local sis = require("sis")
+        local info = sis.parseSisFile(data)
+        if info then
+            info = sis.makeManifest(info, true)
+            info.files = nil
+        end
+        return info
+    end
+
+    return { type = "unknown", uid1 = uid1, uid2 = uid2, uid3 = uid3 }
 end
 
 local KTextEdSectionMarker = 0x1000005C

@@ -153,8 +153,10 @@ Locales = enum {
 function parseSisFile(data, verbose)
     local uid1, uid2, uid3, uid4, checksum, nLangs, nFiles, pos = string.unpack("<I4I4I4I4I2I2I2", data)
     if verbose then
-        printf("nLangs=%d nFiles=%d\n", nLangs, nFiles)
+        printf("uid1=0x%08X uid2=0x%08X nLangs=%d nFiles=%d\n", uid1, uid2, nLangs, nFiles)
     end
+
+    assert(uid2 == KUidSisFileEr5 or uid2 == KUidSisFileEr6, "Bad uid2 in SIS file!")
 
     local nReq, lang, instFiles, instDrv, nCaps, instVer, pos = string.unpack("<I2I2I2I2I2I4", data, pos)
     if verbose then
@@ -291,6 +293,76 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
     end
 
     return file, pos
+end
+
+function makeManifest(sisfile, includeLangs)
+    local langIdx
+    if not includeLangs then
+        langIdx = getBestLangIdx(sisfile.langs)
+    end
+
+    local function langListToLocaleMap(langs, list)
+        local result = {}
+        for i = 1, math.min(#langs, #list) do
+            local langName = Locales[langs[i]]
+            if langName then
+                result[langName] = list[i]
+            else
+                -- io.stderr:write(string.format("Warning: Language 0x%x not recognized!\n", langs[i]))
+            end
+        end
+        return result
+    end
+
+    local result = {
+        type = "sis",
+        name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name)) or sisfile.name[langIdx],
+        version = string.format("%d.%d", sisfile.version[1], sisfile.version[2]),
+        uid = sisfile.uid,
+        languages = {},
+        files = {},
+    }
+    for _, lang in ipairs(sisfile.langs) do
+        table.insert(result.languages, Locales[lang])
+    end
+
+    for i, file in ipairs(sisfile.files) do
+        local f = {
+            type = FileType[file.type],
+            dest = file.dest,
+        }
+        if file.type ~= FileType.FileNull then
+            f.src = file.src
+            if includeLangs then
+                f.len = {}
+                if file.langData then
+                    for i = 1, #sisfile.langs do
+                        if file.langData[i] then
+                            f.len[Locales[sisfile.langs[i]]] = #file.langData[i]
+                        end
+                    end
+                else
+                    for i = 1, #sisfile.langs do
+                        if file.data then
+                            f.len[Locales[sisfile.langs[i]]] = #file.data
+                        end
+                    end
+                end
+            else
+                local data = file.data or (file.langData and file.langData[langIdx])
+                f.len = data and #data
+            end
+        end
+
+        if file.type == FileType.SisComponent and file.data then
+            local componentSis = parseSisFile(file.data)
+            f.sis = makeManifest(componentSis, includeLangs)
+        end
+
+        result.files[i] = f
+    end
+
+    return result
 end
 
 return _ENV
