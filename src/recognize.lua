@@ -29,31 +29,50 @@ dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 function main()
     local args = getopt({
         "filename",
-        "index",
-        extract = true, e = "extract",
+        json = true, j = "json",
+        verbose = true, v = "verbose",
     })
 
-    mbm = require("mbm")
+    recognizer = require("recognizer")
+    cp1252 = require("cp1252")
     local data = readFile(args.filename)
-    local bitmaps = mbm.parseMbmHeader(data)
-    if args.index then
-        local i = tonumber(args.index)
-        dump(args.filename, i, bitmaps[i], args.extract)
+
+    local info = recognizer.recognize(data, true)
+
+    -- replace any icons with the result of Bitmap:getMetadata()
+    info = filter(info)
+
+    if not info then
+        error("Not an epoc file")
+    end    
+    if args.json then
+        print(json.encode(info))
     else
-        for i, bitmap in ipairs(bitmaps) do
-            dump(args.filename, i, bitmap, args.extract)
-        end
+        print(dump(info))
     end
 end
 
-function dump(filename, i, bitmap, extract)
-    print(string.format("%d: len=%d w=%d h=%d stride=%d bpp=%d col=%s paletteSz=%d compression=%s",
-        i, bitmap.imgLen, bitmap.width, bitmap.height, bitmap.stride, bitmap.bpp, bitmap.isColor, bitmap.paletteSz, mbm.compressionToString(bitmap.compression)))
-    local img = mbm.decodeBitmap(bitmap)
-    if extract then
-        local bmpName = string.format("%s_%d_%dx%d_%dbpp.bmp", filename, i, bitmap.width, bitmap.height, bitmap.bpp)
-        writeFile(bmpName, bitmap:toBmp())
+-- This fn recursively iterates info and any table implementing getMetadata is replaced by the result of calling that
+-- fn. This lets us filter out all icons/bitmaps without having to hardcode each type. We also use it to ensure all the
+-- strings are UTF-8.
+function filter(info)
+    local t = type(info)
+    if t == "table" then
+        if type(info.getMetadata) == "function" then
+            return info:getMetadata()
+        else
+            local result = {}
+            for k, v in pairs(info) do
+                result[k] = filter(v)
+            end
+            return result
+        end
+    elseif t == "string" then
+        return cp1252.toUtf8(info)
+    else
+        return info
     end
 end
+
 
 pcallMain()

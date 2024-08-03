@@ -31,12 +31,13 @@ function main()
         "filename",
         extract = true, e = "extract",
         json = true, j = "json",
+        verbose = true, v = "verbose",
     })
 
     local aif = require("aif")
     local mbm = require("mbm")
     local data = readFile(args.filename)
-    local info = aif.parseAif(data)
+    local info = aif.parseAif(data, args.verbose)
     local cp1252 = require("cp1252")
 
     if not args.json then
@@ -71,27 +72,14 @@ function main()
         local icons = {}
         -- There's a lot of stuff in icons that isn't relevant to the JSON output
         for i, icon in ipairs(info.icons) do
-            local jsonIcon = {
-                width = icon.width,
-                height = icon.height,
-                bpp = icon.bpp,
-                compression = mbm.compressionToString(icon.compression),
-            }
-            if icon.mask then
-                jsonIcon.mask = {
-                    width = icon.mask.width,
-                    height = icon.mask.height,
-                    bpp = icon.mask.bpp,
-                    compression = mbm.compressionToString(icon.mask.compression),
-                }
-            end
-            icons[i] = jsonIcon
+            icons[i] = info.icons[i]:getMetadata()
         end
         local utf8Captions = {}
         for lang, caption in pairs(info.captions) do
             utf8Captions[lang] = cp1252.toUtf8(caption)
         end
         local jsonResult = {
+            type = info.type,
             uid3 = info.uid3,
             era = info.era,
             icons = icons,

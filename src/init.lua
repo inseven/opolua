@@ -217,8 +217,11 @@ KMultiBitmapRomImageUid = 0x10000041 -- uid1
 KUidMultiBitmapFileImage = 0x10000042
 KUidOplInterpreter = 0x10000168
 
+KUidSisFileEr5 = 0x1000006D -- Yes this is the same as KUidAppDllDoc8 (aka KUidAppDllDocValue), don't ask me I just work here.
+KUidSisFileEr6 = 0x10003A12 -- Allegedly
+
 KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
--- KUidOplFile = 0x1000008A -- DB file UID2
+KUidOplFile = 0x1000008A -- DB file UID2
 KUidTextEdApp = 0x10000085 -- OPL file UID3
 KUidRecordApp = 0x1000007E -- WAV file UID3
 

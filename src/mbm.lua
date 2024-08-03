@@ -703,4 +703,17 @@ function Bitmap:toBmp()
     return fileHeader..bmpHeader..pixels..pad
 end
 
+function Bitmap:getMetadata()
+    local result = {
+        width = self.width,
+        height = self.height,
+        bpp = self.bpp,
+        compression = compressionToString(self.compression),
+    }
+    if self.mask then
+        result.mask = self.mask:getMetadata()
+    end
+    return result
+end
+
 return _ENV

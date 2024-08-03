@@ -44,7 +44,8 @@ function main()
         installSis(sisfile, args.dest)
     else
         if args.json then
-            print(json.encode(makeManifest(sisfile, not args.nolangs)))
+            local manifest = manifestToUtf8(sis.makeManifest(sisfile, not args.nolangs))
+            print(json.encode(manifest))
         else
             describeSis(sisfile, "")
         end
@@ -116,76 +117,31 @@ function extractFile(file, langIdx, dest)
     writeFile(outName, data)
 end
 
-function langListToLocaleMap(langs, list)
-    local result = {}
-    for i = 1, math.min(#langs, #list) do
-        local langName = sis.Locales[langs[i]]
-        if langName then
-            result[langName] = cp1252.toUtf8(list[i])
-        else
-            io.stderr:write(string.format("Warning: Language 0x%x not recognized!\n", langs[i]))
-        end
-    end
-    return result
-end
-
-function makeManifest(sisfile, includeLangs)
-    local langIdx
-    if not includeLangs then
-        langIdx = sis.getBestLangIdx(sisfile.langs)
-    end
-
+function manifestToUtf8(manifest)
     local result = {
-        name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name))
-            or cp1252.toUtf8(sisfile.name[langIdx]),
-        version = string.format("%d.%d", sisfile.version[1], sisfile.version[2]),
-        uid = sisfile.uid,
-        languages = {},
+        type = manifest.type,
+        version = manifest.version,
+        uid = manifest.uid,
         files = {},
     }
-    for _, lang in ipairs(sisfile.langs) do
-        table.insert(result.languages, sis.Locales[lang])
+    if type(manifest.name) == "string" then
+        result.name = cp1252.toUtf8(manifest.name)
+    else
+        result.name = {}
+        for lang, name in pairs(manifest.name) do
+            result.name[lang] = cp1252.toUtf8(name)
+        end
     end
 
-    for i, file in ipairs(sisfile.files) do
-        local f = {
-            type = sis.FileType[file.type]
-        }
-        if file.type ~= sis.FileType.FileNull then
+    for i, file in ipairs(manifest.files) do
+        result.files[i] = {
             -- It's not obvious what encoding src actually is (possibly depends on the PC the file was created on) so at
             -- the very least, treating it as CP1252 as well will ensure we output a valid UTF-8 byte sequence, even if
             -- it's not guaranteed to be correct.
-            f.src = cp1252.toUtf8(file.src)
-            if includeLangs then
-                f.len = {}
-                if file.langData then
-                    for i = 1, #sisfile.langs do
-                        if file.langData[i] then
-                            f.len[sis.Locales[sisfile.langs[i]]] = #file.langData[i]
-                        end
-                    end
-                else
-                    for i = 1, #sisfile.langs do
-                        if file.data then
-                            f.len[sis.Locales[sisfile.langs[i]]] = #file.data
-                        end
-                    end
-                end
-            else
-                local data = file.data or (file.langData and file.langData[langIdx])
-                f.len = data and #data
-            end
-        end
-        if file.type ~= sis.FileType.FileText then
-            f.dest = cp1252.toUtf8(file.dest)
-        end
-
-        if file.type == sis.FileType.SisComponent and file.data then
-            local componentSis = sis.parseSisFile(file.data)
-            f.sis = makeManifest(componentSis, includeLangs)
-        end
-
-        result.files[i] = f
+            src = file.src and cp1252.toUtf8(file.src),
+            dest = file.dest and cp1252.toUtf8(file.dest),
+            len = file.len,
+        }
     end
 
     return result
