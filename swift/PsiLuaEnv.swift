@@ -151,6 +151,10 @@ public class PsiLuaEnv {
         public let era: AppEra
     }
 
+    public struct ResourceFile: Codable {
+        public let idOffset: UInt32?
+    }
+
     public struct SisFile: Codable {
         public let name: [String: String]
         public let uid: UInt32
@@ -166,6 +170,7 @@ public class PsiLuaEnv {
         case opl
         case opa
         case opo
+        case resource
         case sound
         case sis
     }
@@ -179,6 +184,7 @@ public class PsiLuaEnv {
         case opl(OplFile)
         case opa(OpaFile)
         case opo(OpoFile)
+        case resource(ResourceFile)
         case sound(SoundFile)
         case sis(SisFile)
     }
@@ -219,26 +225,29 @@ public class PsiLuaEnv {
         guard logpcall(1, 1) else {
             return .unknown
         }
-        guard let type = L.tostring(-1, key: "type") else {
+        guard let typeStr = L.tostring(-1, key: "type") else {
             return .unknown
+        }
+        guard let type = FileType(rawValue: typeStr) else {
+            fatalError("Unhandled type \(typeStr)")
         }
 
         switch type {
-        case "aif":
+        case .aif:
             if let info = L.toAppInfo(-1) {
                 return .aif(info)
             }
-        case "database":
+        case .database:
             return .database
-        case "mbm":
+        case .mbm:
             if let info: MbmFile = L.todecodable(-1) {
                 return .mbm(info)
             }
-        case "opl":
+        case .opl:
             if let info: OplFile = L.todecodable(-1) {
                 return .opl(info)
             }
-        case "opa":
+        case .opa:
             if let appInfo: AppInfo = L.toAppInfo(-1) {
                 let opa = OpaFile(uid3: appInfo.uid3, appInfo: appInfo, era: appInfo.era)
                 return .opa(opa)
@@ -248,27 +257,28 @@ public class PsiLuaEnv {
                       let uid3 = UInt32(exactly: uid3Int) {
                 return .opa(OpaFile(uid3: uid3, appInfo: nil, era: era))
             }
-        case "opo":
+        case .opo:
             if let info: OpoFile = L.todecodable(-1) {
                 return .opo(info)
             }
-        case "sis":
+        case .resource:
+            if let info: ResourceFile = L.todecodable(-1) {
+                return .resource(info)
+            }
+        case .sis:
             if let info: SisFile = L.todecodable(-1) {
                 return .sis(info)
             }
-        case "sound":
+        case .sound:
             if let info: SoundFile = L.todecodable(-1) {
                 return .sound(info)
             }
-        case "unknown":
+        case .unknown:
             if let info: UnknownEpocFile = L.todecodable(-1) {
                 return .unknownEpoc(info)
             }
-        default:
-            break
         }
-        // return .unknown
-        fatalError("Unhandled type \(type)")
+        return .unknown
     }
 
     public enum OpoArgumentType: Int {
