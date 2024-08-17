@@ -38,6 +38,23 @@ function recognize(data, verbose)
         return nil
     end
 
+    -- Resources don't have a UID header either...
+    local rcsTocOffset, rscTocLen = string.unpack("<I2I2", data)
+    if rcsTocOffset < #data and rcsTocOffset + rscTocLen <= #data then
+        local endBytes = string.unpack("<I2", data, #data - 1)
+        if endBytes == rcsTocOffset then
+            -- We at least try to parse it as a resource.
+            local rsc = require("rsc")
+            local ok, res = pcall(rsc.parseRsc, data)
+            if ok then
+                return {
+                    type = "resource",
+                    idOffset = res.idOffset,
+                }
+            end
+        end
+    end
+
     local uid1, uid2, uid3, checksum = string.unpack("<I4I4I4I4", data)
 
     -- This has to come before the checksum check because ROM MBMs don't have a checksum...
