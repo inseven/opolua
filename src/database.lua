@@ -24,6 +24,25 @@ SOFTWARE.
 
 _ENV = module()
 
+KDbmsStoreDatabase = 0x10000069
+
+FieldTypes = enum {
+    Boolean = 0x0,
+    Integer = 0x3,
+    Long = 0x5,
+    Double = 0x9,
+    Date = 0xA,
+    Text = 0xB,
+}
+
+-- The only types that (I think) OPL can handle
+FieldTypeToOplType = {
+    [FieldTypes.Integer] = DataTypes.EWord,
+    [FieldTypes.Long] = DataTypes.ELong,
+    [FieldTypes.Double] = DataTypes.EReal,
+    [FieldTypes.Text] = DataTypes.EString,
+}
+
 local Db = {
     path = nil,
     modified = false,
@@ -236,11 +255,16 @@ end
 function Db:load(data)
     self.tables = {}
     self.currentTable = nil
-    if data:sub(1, 4) == "\x50\x00\x00\x10" then
+    if data:sub(1, 4) == "\x50\x00\x00\x10" then -- KPermanentFileStoreLayoutUid
         -- It's an epoc binary db
-        unimplemented("database.loadBinary")
-        -- return self:loadBinary(data)
+        -- unimplemented("database.loadBinary")
+        return self:loadBinary(data)
+    else
+        return self:loadText(data)
     end
+end
+
+function Db:loadText(data)
     local currentTable, currentRec
     for line in data:gmatch("[^\r\n]+") do
         local tableName = line:match("^:TABLE (.+)")
@@ -306,8 +330,46 @@ function Db:save()
     return table.concat(lines, "\n")
 end
 
+function Db:tocsv()
+    assert(#self.tables == 1, "Cannot export a database with multiple tables to CSV")
+    local result = {}
+    local function line(vals)
+        local escaped = {}
+        for i, val in ipairs(vals) do
+            if type(val) == "string" then
+                if val:match('[",]') then
+                    local escaped = val:gsub('"', '""')
+                    escaped[i] = '"'..escaped..'"'
+                else
+                    escaped[i] = val
+                end
+            else
+                escaped[i] = val
+            end
+        end
+        table.insert(result, table.concat(escaped, ","))
+    end
 
--- TODO unfinished, broken
+    local headings = {}
+    for i, field in ipairs(self.currentTable.fields) do
+        headings[i] = field.name
+    end
+    line(headings)
+    for _, record in ipairs(self.currentTable) do
+        local rec = {}
+        for i, field in ipairs(self.currentTable.fields) do
+            rec[i] = record[field.name]
+        end
+        line(rec)
+    end
+    return table.concat(result, "\n")
+end
+
+KTableDefinitionHeaderLen = 9
+-- What to add to TOC entry offsets to convert to a file offset (to the start of the section - add 0x20 to skip the
+-- section's length word).
+KTocEntryOffset = 0x1E
+
 function Db:loadBinary(data)
     local uid1, uid2, uid3, uidChecksum, pos = string.unpack("<I4I4I4I4", data)
     assert(uid1 == KPermanentFileStoreLayoutUid, "Bad DB UID1 "..tostring(uid1))
@@ -315,25 +377,143 @@ function Db:loadBinary(data)
 
     -- TPermanentStoreHeader
     local backup, handle, ref, crc, pos = string.unpack("<I4i4i4I2", data, pos)
-    printf("backupToc=%08X dirty=%d handle=%08X ref=0x%08X\n", backup >> 1, backup & 1, handle, ref)
 
-    local permanentStoreOffset = 32 -- All CPermananentStore offsets are relative to 32 bytes from the start of the file
-    local toc = ref - 1 -- Whatevs. Do the backup toc checks if I can be bothered
+    local tocPos = ref + 0x14 + 1
+    local idBindingIdx, _, tocCount, tocEntriesPos = string.unpack("<I4I4I4", data, tocPos)
+    local toc = {} -- 1-based indexes into data, pointing to start of section length word
+    for i = 1, tocCount do
+        local offset
+        offset, tocEntriesPos = string.unpack("<xI4", data, tocEntriesPos)
+        toc[i] = 1 + offset + KTocEntryOffset
+    end
+    -- It seems like there should be a better way of making sense of toc, but it seems like the sections are hard-coded:
+    -- toc[1]: always section 1 - 9 null bytes
+    -- toc[2]: first table definition section
+    -- toc[3]: TOplDocRootStream
+    -- toc[4]: first data section
+    -- toc[5]: always section 9? Mystery, refer to Chief Aramaki
 
-    local function readToc(offset)
-        -- CPermanentStoreToc::STocHead, read by CPermanentStoreToc::ConstructL
-        local KOffsetTocHeader = 12 -- wat?
-        local primary, avail, count = string.unpack("<i4i4I4", data, 1 + permanentStoreOffset + offset + KOffsetTocHeader)
-        printf("primary=%08X avail=%X, count=%X\n", primary, avail, count)
-        return primary
+    -- There is nothing useful in TOplDocRootStream (referenced by toc[3]) so don't bother reading it.
+
+    -- Read the sections, starting from just after TPermanentStoreHeader (ie what pos currently is set to).
+    local sections = {} -- array of section positions (1 based)
+    local sectionStarts = {} -- map of position to section index
+    local sectionId = 1
+    while pos < #data do
+        sections[sectionId] = pos
+        sectionStarts[pos] = sectionId
+        -- bits 14 and 15 are used for something or other, plus 2 because the length doesn't include the length word itself
+        local sectionLen = (string.unpack("<I2", data, pos) & 0x3FFF) + 2
+        assert(sectionLen ~= 0, "Bad section length!")
+        sectionId = sectionId + 1
+        pos = pos + sectionLen
     end
 
-    local rootOffset = readToc(toc) -- good god this was a complicated way of establishing where the bloody data is
-    -- TOplDocRootStream
-    local appUid, streamID = string.unpack("<I4I4", data, 1 + permanentStoreOffset + rootOffset)
-    printf("appUid=0x%08X streamID=0x%08X\n", appUid, streamID)
-    assert(appUid == KUidOplInterpreter, "Something's gone wrong in the file store parsing!")
-    -- And yet another indirect... streamID is _finally_ where all our stuff is?
+    assert(sectionStarts[toc[2]], "toc[2] does not point to the start of a section")
+    assert(string.unpack("<I4", data, toc[2] + 2) == KDbmsStoreDatabase,
+        "toc[2] does not appear to point to a table definition")
+    self:readTableDefinition(data, toc[2] + 2 + KTableDefinitionHeaderLen)
+
+    local dataStartAddress = toc[4]
+    local dataSection = sectionStarts[dataStartAddress]
+    assert(dataSection, "toc[4] does not point to the start of a section")
+
+    -- Now iterate through the chain of data sections
+    while dataSection ~= 0 do
+        if sections[dataSection] == nil then
+            error(string.format("Data section %d not found!", dataSection))
+        end
+        local dataStart = sections[dataSection] + 2 -- +2 to skip section length field
+        -- There can be up to 16 "data sets" in each data section, where I think a data set equates to a record
+        -- How many there is is given by the count of bits in dataSetBitmask
+        local nextSectionIndex, dataSetBitmask, pos = string.unpack("<I4I2", data, dataStart)
+        local dataSetLengths = {}
+        for bit = 0, 15 do
+            if dataSetBitmask & (1 << bit) ~= 0 then
+                local len, nextPos = readCardinality(data, pos)
+                -- I don't think there will ever be gaps in the bitset, check that here
+                assert(bit == 0 or dataSetLengths[bit], "Set bit found with previous bit unset!")
+                dataSetLengths[1 + bit] = len
+                pos = nextPos
+            end
+        end
+
+        for _, dataSetLen in ipairs(dataSetLengths) do
+            local rec = {}
+            local startPos = pos
+            local fieldIdx = 0
+            while pos < startPos + dataSetLen do
+                local fieldMask
+                fieldMask, pos = string.unpack("B", data, pos)
+                -- Ignoring the way bool fields are packed into the fieldMask since we don't support them in OPL
+                for bit = 0, 7 do
+                    if fieldMask & (1 << bit) ~= 0 then
+                        local field = assert(self.currentTable.fields[1 + fieldIdx + bit])
+                        local val
+                        if field.type == DataTypes.EWord then
+                            val, pos = string.unpack("<i2", data, pos)
+                        elseif field.type == DataTypes.ELong then
+                            val, pos = string.unpack("<i4", data, pos)
+                        elseif field.type == DataTypes.EReal then
+                            val, pos = string.unpack("<d", data, pos)
+                        elseif field.type == DataTypes.EString then
+                            val, pos = string.unpack("<s1", data, pos)
+                        end
+                        rec[field.name] = val
+                    end
+                end
+                fieldIdx = fieldIdx + 8
+            end
+
+            assert(pos == startPos + dataSetLen, "Failed to read expected number of bytes")
+            -- In the interests of sanity we will zero initialise any fields missing from the file
+            for _, member in ipairs(self.currentTable.fields) do
+                if rec[member.name] == nil then
+                    rec[member.name] = DefaultSimpleTypes[member.type]
+                end
+            end
+            table.insert(self.currentTable, rec)
+        end
+        dataSection = nextSectionIndex
+    end
+end
+
+function Db:readTableDefinition(data, pos)
+    local function readVarLengthString(data, pos)
+        local len, strStart = readVarLength(data, pos)
+        local str = string.sub(data, strStart, strStart + len - 1)
+        return str, strStart + len
+    end
+    self.tables = {}
+    local numTables, pos = readCardinality(data, pos)
+    for i = 1, numTables do
+        local tableName, numFields
+        tableName, pos = readVarLengthString(data, pos)
+        local tbl = {
+            name = tableName,
+            fields = {},
+            fieldMap = {},
+        }
+        numFields, pos = readCardinality(data, pos)
+        for _ = 1, numFields do
+            local fieldName
+            fieldName, pos = readVarLengthString(data, pos)
+            local type = string.byte(data, pos)
+            local oplType = FieldTypeToOplType[type]
+            assert(oplType, "Unsupported field type!")
+            pos = pos + 2 -- past the type byte and the whatever-it-is byte
+            if type == FieldTypes.Text then
+                pos = pos + 1 -- Skip over maxLen
+            end
+
+            local field = { type = oplType, name = fieldName }
+            table.insert(tbl.fields, field)
+            tbl.fieldMap[fieldName] = field
+        end
+
+        self.tables[i] = tbl
+    end
+    self.currentTable = self.tables[1]
 end
 
 function Db:createTable(tableName, fields)

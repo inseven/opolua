@@ -460,6 +460,20 @@ function readCardinality(data, pos)
     return val, pos
 end
 
+-- What https://frodo.looijaard.name/psifiles/Basic_Elements refers to as
+-- "Special encoding"
+function readVarLength(data, pos)
+    local b, pos = string.unpack("B", data, pos)
+    if b & 3 == 2 then
+        -- Single byte
+        return b >> 2, pos
+    else
+        assert(b & 7 == 6, "Bad variable length encoding!")
+        local b2, pos = string.unpack("B", data, pos)
+        return (val + (b2 << 8)) >> 3, pos
+    end
+end
+
 function unimplemented(opName)
     error({ msg = "Unimplemented operation "..opName, unimplemented = opName })
 end
