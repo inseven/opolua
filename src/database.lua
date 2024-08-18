@@ -378,7 +378,7 @@ function Db:loadBinary(data)
     -- TPermanentStoreHeader
     local backup, handle, ref, crc, pos = string.unpack("<I4i4i4I2", data, pos)
 
-    local tocPos = ref + 0x14 + 1
+    local tocPos = handle == 0 and (1 + ref + 0x14) or (1 + #data - 12 - 5 * handle)
     local idBindingIdx, _, tocCount, tocEntriesPos = string.unpack("<I4I4I4", data, tocPos)
     local toc = {} -- 1-based indexes into data, pointing to start of section length word
     for i = 1, tocCount do

@@ -344,10 +344,14 @@ function dumpDb(data)
     read(TCheckedUid)
     local storeHeader = read(TPermanentStoreHeader)
 
-    local PermanentStoreOffset = 32 -- All CPermananentStore offsets are relative to 32 bytes from the start of the file
-    local KOffsetTocHeader = 12 -- wat?
+    local tocpos
+    if storeHeader.iHandle == 0 then
+        tocpos = storeHeader.iRef + 0x14
+    else
+        tocpos = #data - (Toc:sizeof() + storeHeader.iHandle * TocEntry:sizeof())
+    end
 
-    local toc = read(Toc, storeHeader.iRef + 0x14)
+    local toc = read(Toc, tocpos)
     toc:appendArray(toc.count, TocEntry, data)
 
     currentPos = storeHeader._pos + storeHeader._size -- Start of sections
