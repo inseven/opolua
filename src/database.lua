@@ -512,6 +512,7 @@ function Db:readTableDefinition(data, pos)
         end
 
         self.tables[i] = tbl
+        self.tables[tableName] = tbl
     end
     self.currentTable = self.tables[1]
 end
