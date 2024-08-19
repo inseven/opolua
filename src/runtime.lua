@@ -590,7 +590,7 @@ function Runtime:getGraphicsAutoFlush()
 end
 
 function Runtime:openDb(logName, tableSpec, variables, op)
-    assert(self.dbs[logName] == nil, KErrOpen)
+    assert(self.dbs.open[logName] == nil, KErrOpen)
     local path, tableName, fields = database.parseTableSpec(tableSpec)
     path = self:abs(path)
     if fields == nil then
@@ -613,7 +613,7 @@ function Runtime:openDb(logName, tableSpec, variables, op)
     local readonly = op == "OpenR"
     -- Check if there are already any other open handles to this db
     local cpath = oplpath.canon(path)
-    for _, db in pairs(self.dbs) do
+    for _, db in pairs(self.dbs.open) do
         if oplpath.canon(db:getPath()) == cpath then
             if not readonly or db:isWriteable() then
                 error(KErrInUse)
@@ -637,12 +637,12 @@ function Runtime:openDb(logName, tableSpec, variables, op)
     end
 
     db:setView(tableName, fields, variables)
-    self.dbs[logName] = db
+    self.dbs.open[logName] = db
     self.dbs.current = logName
 end
 
 function Runtime:getDb(logName)
-    local db = self.dbs[logName or self.dbs.current]
+    local db = self.dbs.open[logName or self.dbs.current]
     assert(db, KErrClosed)
     return db
 end
@@ -654,7 +654,7 @@ end
 
 function Runtime:closeDb()
     self:saveDbIfModified()
-    self.dbs[self.dbs.current] = nil
+    self.dbs.open[self.dbs.current] = nil
     self.dbs.current = nil
 end
 
@@ -731,7 +731,9 @@ function newRuntime(handler, era)
         opcodes = codes,
         frameBase = 0, -- Where in the chunk we start the stack frames' memory
         chunk = Chunk { address = 0 },
-        dbs = {},
+        dbs = {
+            open = {},
+        },
         modules = {},
         files = {},
         ioh = handler or require("defaultiohandler"),
