@@ -73,7 +73,10 @@ local statemachine = {
     },
     ['$[0-9A-Fa-f]+'] = 'number', -- hexdecimal int
     ['&[0-9A-Fa-f]+'] = 'number', -- hexdecimal long
-    ['%%[a-zA-Z]'] = 'number', -- charcode int
+    ['%%'] = {
+        [''] = 'percent', -- On its own is the percent operator
+        ['[a-zA-Z]'] = 'number', -- charcode int
+    },
     [':'] = 'colon',
     [';'] = 'semicolon',
     ['*'] = {
@@ -635,6 +638,15 @@ operatorOpcodes = {
     pow = "PowerOf",
 }
 
+percentOpcodes = {
+    add = "PercentAdd",
+    sub = "PercentSubtract",
+    mul = "PercentMultiply",
+    div = "PercentDivide",
+    lt = "PercentLessThan",
+    gt = "PercentGreaterThan",
+}
+
 unaryOperators = {
     NOT = true,
     unm = true,
@@ -724,6 +736,10 @@ function parseExpression(tokens)
                 expressionToReplaceRhsOf[2] = newExpression
                 expression = newExpression
             end
+        elseif token.type == "percent" then
+            -- Ugh this is a horrible special case
+            local exp = synassert(expression[2], tokens:current(), "Percent operator only valid on RHS of expression")
+            exp.isPercentage = true
         else
             -- Operand. See if it's a callable with parameters. At this stage of the parse a zero-args function call
             -- is indistinguishable from an identifier, but if it has arguments we'll change it to a "call" type.
@@ -789,6 +805,12 @@ function setExpressionType(exp)
     local op = exp.op
     if exp.valType then
         -- Already set
+    elseif op and exp[2].isPercentage then
+        -- Percentage expressions always promote to Float
+        setExpressionType(exp[1])
+        setExpressionType(exp[2])
+        exp.operandType = Float
+        exp.valType = exp.operandType
     elseif op then
         local lhs = unaryOperators[op] and exp[2] or exp[1]
         local lhsType = TypeToDataType[setExpressionType(lhs)]
@@ -1238,8 +1260,16 @@ function ProcState:emitExpression(exp, requiredType)
     if op then
         self:emitExpression(exp[1], exp.operandType)
         self:emitExpression(exp[2], exp.operandType)
-        local opcode = opcodes[operatorOpcodes[op] .. TypeToStr[exp.operandType]]
-        synassert(opcode, op, "Cannot apply operator %s to values of type %s", op, TypeToStr[exp.operandType])
+        local opcode
+        synassert(not exp[1].isPercentage, exp[1],
+            "Percentage operator cannot appear on the left hand side of an expression")
+        if exp[2].isPercentage then
+            opcode = opcodes[percentOpcodes[op]]
+            synassert(opcode, op, "Cannot use a percentage expression with operator %s", op)
+        else
+            opcode = opcodes[operatorOpcodes[op] .. TypeToStr[exp.operandType]]
+            synassert(opcode, op, "Cannot apply operator %s to values of type %s", op, TypeToStr[exp.operandType])
+        end
         self:emit("B", opcode)
         self:popStack(unaryOperators[op] and 1 or 2)
         self:pushStack(exp.operandType)

@@ -31,6 +31,14 @@ local function lit(val)
     return { type = val:sub(1,1) == '"' and "string" or "number", val = val }
 end
 
+local function percent(val)
+    if type(val) ~= "table" then
+        val = lit(val)
+    end
+    val.isPercentage = true
+    return val
+end
+
 local function call(name, ...)
     return { type = "call", val = name, args = { ... } }
 end
@@ -128,9 +136,14 @@ local function stripTokenSources(expression)
                 args[i] = stripTokenSources(arg)
             end
         end
-        return { type = expression.type, val = expression.val, args = args }
+        return { type = expression.type, val = expression.val, args = args, isPercentage = expression.isPercentage }
     else
-        return { op = expression.op, stripTokenSources(expression[1]), stripTokenSources(expression[2]) }
+        return {
+            op = expression.op,
+            isPercentage = expression.isPercentage,
+            stripTokenSources(expression[1]),
+            stripTokenSources(expression[2]),
+        }
     end
 end
 
@@ -241,6 +254,7 @@ checklex("( woop + &300", { "oparen", id"WOOP", "add", lit"&300", "eos" })
 checklex("Rem comment:\nREMnot a comment", { "eos", id"REMNOT", id"a", id"comment", "eos"})
 checklex('@%("name")', { { type="dyncall", val="@%" }, "oparen", lit'"name"', "cloparen", "eos" })
 checklex("a1: a1:: a1%::", { id"a1:", {type="label", val="A1::"}, id"A1%:", {type="colon", val=":"}, "eos" })
+checklex("1+2%", { lit"1", "add", lit"2", "percent", "eos"})
 
 -- Check all callables resolve
 for cmd, callable in pairs(compiler.Callables) do
@@ -301,6 +315,12 @@ checkExpression("proccall%:", id"PROCCALL%:")
 checkExpression("proccall:(1+1, woop)", call("PROCCALL:", { lit"1", op="add", lit"1" }, id"woop"))
 
 checkExpression('a + @%("name"):(b, c)', { id"a", op="add", dyncall("@%", lit'"name"', id"b", id"c") })
+
+checkExpression("1 + 2%", { lit"1", op="add", percent"2" })
+
+checkExpression("1 + 2 + 3%", {{ lit"1", op="add", lit"2" }, op="add", percent"3" })
+
+checkExpression("1 + (2 + 3)%", { lit"1", op="add", percent{ lit"2", op="add", lit"3" } })
 
 -- checkExpression("a b", {})
 
@@ -530,6 +550,15 @@ checkCode("USE z", {
     op"Use",
     25,
     op"ZeroReturnFloat",
+})
+
+checkCode("RETURN 1 + 2%", {
+    op"StackByteAsWord", 1,
+    op"IntToFloat",
+    op"StackByteAsWord", 2,
+    op"IntToFloat",
+    op"PercentAdd",
+    op"Return",
 })
 
 checkSyntaxError("ALERT()", "1: Zero-argument calls should not have ()")
