@@ -258,9 +258,9 @@ function Db:load(data)
     if data:sub(1, 4) == "\x50\x00\x00\x10" then -- KPermanentFileStoreLayoutUid
         -- It's an epoc binary db
         -- unimplemented("database.loadBinary")
-        return self:loadBinary(data)
+        self:loadBinary(data)
     else
-        return self:loadText(data)
+        self:loadText(data)
     end
 end
 
@@ -388,7 +388,7 @@ function Db:loadBinary(data)
     for i = 1, tocCount do
         local offset
         offset, tocEntriesPos = string.unpack("<xI4", data, tocEntriesPos)
-        toc[i] = 1 + offset + KTocEntryOffset
+        toc[i] = 1 + offset + KTocEntryOffset + 2
     end
     -- It seems like there should be a better way of making sense of toc, but it seems like the sections are hard-coded:
     -- toc[1]: always section 1 - 9 null bytes
@@ -396,38 +396,33 @@ function Db:loadBinary(data)
     -- toc[3]: TOplDocRootStream
     -- toc[4]: first data section
     -- toc[5]: always section 9? Mystery, refer to Chief Aramaki
+    -- other data sections potentially follow
 
     -- There is nothing useful in TOplDocRootStream (referenced by toc[3]) so don't bother reading it.
 
     -- Read the sections, starting from just after TPermanentStoreHeader (ie what pos currently is set to).
-    local sections = {} -- array of section positions (1 based)
-    local sectionStarts = {} -- map of position to section index
-    local sectionId = 1
-    while pos < #data do
-        sections[sectionId] = pos
-        sectionStarts[pos] = sectionId
-        -- bits 14 and 15 are used for something or other, plus 2 because the length doesn't include the length word itself
-        local sectionLen = (string.unpack("<I2", data, pos) & 0x3FFF) + 2
-        assert(sectionLen ~= 0, "Bad section length!")
-        sectionId = sectionId + 1
-        pos = pos + sectionLen
-    end
+    -- local sections = {} -- array of section positions (1 based)
+    -- local sectionStarts = {} -- map of position to section index
+    -- local sectionId = 1
+    -- while pos < #data do
+    --     sections[sectionId] = pos
+    --     sectionStarts[pos] = sectionId
+    --     -- bits 14 and 15 are used for something or other, plus 2 because the length doesn't include the length word itself
+    --     local sectionLen = (string.unpack("<I2", data, pos) & 0x3FFF) + 2
+    --     assert(sectionLen ~= 0, "Bad section length!")
+    --     sectionId = sectionId + 1
+    --     pos = pos + sectionLen
+    -- end
 
-    assert(sectionStarts[toc[2]], "toc[2] does not point to the start of a section")
-    assert(string.unpack("<I4", data, toc[2] + 2) == KDbmsStoreDatabase,
+    assert(string.unpack("<I4", data, toc[2]) == KDbmsStoreDatabase,
         "toc[2] does not appear to point to a table definition")
-    self:readTableDefinition(data, toc[2] + 2 + KTableDefinitionHeaderLen)
+    self:readTableDefinition(data, toc[2] + KTableDefinitionHeaderLen)
 
-    local dataStartAddress = toc[4]
-    local dataSection = sectionStarts[dataStartAddress]
-    assert(dataSection, "toc[4] does not point to the start of a section")
+    local dataSection = 4
 
     -- Now iterate through the chain of data sections
     while dataSection ~= 0 do
-        if sections[dataSection] == nil then
-            error(string.format("Data section %d not found!", dataSection))
-        end
-        local dataStart = sections[dataSection] + 2 -- +2 to skip section length field
+        local dataStart = toc[dataSection]
         -- There can be up to 16 "data sets" in each data section, where I think a data set equates to a record
         -- How many there is is given by the count of bits in dataSetBitmask
         local nextSectionIndex, dataSetBitmask, pos = string.unpack("<I4I2", data, dataStart)

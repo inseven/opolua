@@ -74,6 +74,12 @@ function Struct:unpack(data, pos)
     if pos == nil then
         pos = 0
     end
+    local sz = self:sizeof()
+    if pos + sz > #data then
+        printf("Warning: struct %s (size 0x%X) at 0x%X extends beyond the data\n", self.name, sz, pos)
+        return nil
+    end
+
     local result = Instance {
         _type = self,
         _pos = pos,
@@ -108,16 +114,24 @@ end
 
 function Instance:appendArray(count, structType, data)
     local pos = self._pos + self._size
+    local sz = structType:sizeof() * count
+    if pos + sz > #data then
+        printf("warning: Array data for %s extends beyond the data\n", structType.name)
+        return false
+    end
+    local arr = {}
+    self[structType.name] = arr
     for i = 1, count do
         local entry = structType:unpack(data, pos)
+        arr[i] = entry
         for _, entryMember in ipairs(entry) do
             entryMember.name = string.format("%s[%d]::%s", structType.name, i, entryMember.name)
             table.insert(self, entryMember)
-            self[entryMember.name] = entryMember.value
         end
         pos = pos + entry._size
         self._size = self._size + entry._size
     end
+    return true
 end
 
 TCheckedUid = Struct {
@@ -233,7 +247,9 @@ function dumpDb(data)
                 return a._pos < b._pos
             end
         end)
-        currentPos = area._pos + area._size
+        if area then
+            currentPos = area._pos + area._size
+        end
         return area
 
     end
@@ -316,14 +332,19 @@ function dumpDb(data)
         local len, dataPos = string.unpack("<I2", data, 1 + pos)
         local actualLen = len & 0x3FFF -- bits 14 and 15 are used for something or other.
         local sectionLen = actualLen + 2
+        if actualLen == 0 or pos + sectionLen > #data then
+            printf("Warning: Bad section length at %X\n", pos)
+            currentPos = #data -- Stop any further attempt at parsing sections
+            return nil
+        end
         local sectionData = data:sub(dataPos, dataPos + actualLen - 1)
         local section = {
             _pos = pos,
             _size = sectionLen,
             _name = name,
             dump = function()
-                printf("Section %s %08X - %08X (%d bytes)\n%s",
-                    name, pos, pos + sectionLen, sectionLen, hexdump(data, pos, sectionLen))
+                printf("Section %s %08X - %08X (%d bytes)\n", name, pos, pos + sectionLen, sectionLen)
+                print(hexdump(data, pos, sectionLen))
             end,
         }
         if string.unpack("<I4", data, dataPos) == KDbmsStoreDatabase then
@@ -352,7 +373,12 @@ function dumpDb(data)
     end
 
     local toc = read(Toc, tocpos)
-    toc:appendArray(toc.count, TocEntry, data)
+    if toc then
+        local ok = toc:appendArray(toc.count, TocEntry, data)
+        if not ok then
+            toc = nil
+        end
+    end
 
     currentPos = storeHeader._pos + storeHeader._size -- Start of sections
     local sections = {}
@@ -365,19 +391,18 @@ function dumpDb(data)
         sectionId = sectionId + 1
     end
 
-    local dataStart = toc["TocEntry[4]::offset"] + KTocEntryOffset
-    local dataSection = sectionStarts[dataStart]
-    if dataSection == nil then
-        printf("Warning: TocEntry[4] does not point to the start of a section!\n")
+    local dataOffset = nil
+    if toc then
+        dataOffset = toc.TocEntry[4].offset
+        if sectionStarts[dataOffset + KTocEntryOffset] == nil then
+            printf("Warning: TocEntry[4] does not point to the start of a section!\n")
+        end
+
+        read(TOplDocRootStream, toc.TocEntry[3].offset + KTocEntryOffset + 2)
     end
 
-    read(TOplDocRootStream, toc["TocEntry[3]::offset"] + KTocEntryOffset + 2)
-
-    while dataSection and dataSection ~= 0 do
-        if sections[dataSection] == nil then
-            break
-        end
-        local dataStart = sections[dataSection] + 2 -- +2 for section length field
+    while dataOffset do
+        local dataStart = dataOffset + KTocEntryOffset + 2 -- +2 for section length field
         local dataHeader = read(TableContentSectionHeader, dataStart)
         -- Now the length table
         local lenTable = Instance { _pos = currentPos, _type = DataSetLengthTable }
@@ -397,7 +422,12 @@ function dumpDb(data)
         lenTable._size = currentPos - lenTable._pos
         addArea(lenTable)
 
-        dataSection = dataHeader.nextSectionIndex
+        local nextSection = dataHeader.nextSectionIndex
+        if nextSection == 0 then
+            dataOffset = nil
+        else
+            dataOffset = toc.TocEntry[nextSection].offset
+        end
     end
 
     local pos = 0
