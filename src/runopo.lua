@@ -73,7 +73,8 @@ function main()
     end
 
     local progData = readFile(path)
-    local typ, recog = require("recognizer").recognize(progData, true)
+    local recog = require("recognizer").recognize(progData)
+    local typ = recog and recog.type
     if typ == "opl" then
         progData = require("compiler").compile(path, nil, recog.text, {})
     elseif path:lower():match("%.txt$") then
