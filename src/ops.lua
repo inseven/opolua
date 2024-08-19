@@ -1163,27 +1163,43 @@ function CallProcByStringExpr_dump(runtime)
 end
 
 function PercentLessThan(stack, runtime) -- 0x6C
-    unimplemented("PercentLessThan")
+    local right = stack:pop()
+    local left = stack:pop()
+    -- "how much of lhs is a rhs% increase?"
+    -- I _think_ this is just the remainder of the PercentGreaterThan operator, but who knows...
+    local geResult = left / (1 + (right / 100))
+    stack:push(left - geResult)
 end
 
 function PercentGreaterThan(stack, runtime) -- 0x6D
-    unimplemented("PercentGreaterThan")
+    local right = stack:pop()
+    local left = stack:pop()
+    -- "what number, when increased by rhs%, becomes lhs?"
+    stack:push(left / (1 + (right / 100)))
 end
 
 function PercentAdd(stack, runtime) -- 0x6E
-    unimplemented("PercentAdd")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left + (right / 100) * left)
 end
 
 function PercentSubtract(stack, runtime) -- 0x6F
-    unimplemented("PercentSubtract")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left - (right / 100) * left)
 end
 
 function PercentMultiply(stack, runtime) -- 0x70
-    unimplemented("PercentMultiply")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left * (right / 100))
 end
 
 function PercentDivide(stack, runtime) -- 0x71
-    unimplemented("PercentDivide")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left / (right / 100))
 end
 
 function ZeroReturn(stack, runtime)
