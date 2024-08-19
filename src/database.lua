@@ -375,6 +375,10 @@ function Db:loadBinary(data)
     assert(uid1 == KPermanentFileStoreLayoutUid, "Bad DB UID1 "..tostring(uid1))
     -- assert(uid2 == KUidAppDllDoc8, "Bad DB UID2")
 
+    if #data > 4096 then
+        unimplemented("database.loadBinary.4k")
+    end
+
     -- TPermanentStoreHeader
     local backup, handle, ref, crc, pos = string.unpack("<I4i4i4I2", data, pos)
 
