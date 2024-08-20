@@ -42,7 +42,7 @@ function main()
     local data = readFile(args.filename)
 
     if args.verbose then
-        dumpDb(data)
+        dumpDb(database.depageBinary(data))
     end
 
     local db = database.new(args.filename, true)
@@ -295,7 +295,7 @@ function dumpDb(data)
                 pos = nextPos
                 table.insert(tbl, field)
                 local type = string.byte(data, 1 + pos)
-                local typename = assert(FieldTypes[type], "Bad field type "..tostring(type))
+                local typename = FieldTypes[type] or string.format("Unknown_field_type_%X", type)
                 table.insert(tbl, {
                     name = string.format("Field[%d].type", i),
                     pos = pos,
@@ -367,7 +367,11 @@ function dumpDb(data)
 
     local tocpos
     if storeHeader.iHandle == 0 then
-        tocpos = storeHeader.iRef + 0x14
+        if storeHeader.iRef & 1 == 0 then
+            tocpos = (storeHeader.iBackup >> 1) + 0x14
+        else
+            tocpos = storeHeader.iRef + 0x14
+        end
     else
         tocpos = #data - (Toc:sizeof() + storeHeader.iHandle * TocEntry:sizeof())
     end
@@ -401,7 +405,7 @@ function dumpDb(data)
         read(TOplDocRootStream, toc.TocEntry[3].offset + KTocEntryOffset + 2)
     end
 
-    while dataOffset do
+    while dataOffset and dataOffset ~= 0 do
         local dataStart = dataOffset + KTocEntryOffset + 2 -- +2 for section length field
         local dataHeader = read(TableContentSectionHeader, dataStart)
         -- Now the length table
@@ -427,6 +431,7 @@ function dumpDb(data)
             dataOffset = nil
         else
             dataOffset = toc.TocEntry[nextSection].offset
+            -- printf("Next section is toc entry %d = %X\n", nextSection, dataOffset)
         end
     end
 

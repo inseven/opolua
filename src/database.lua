@@ -33,6 +33,7 @@ FieldTypes = enum {
     Double = 0x9,
     Date = 0xA,
     Text = 0xB,
+    Format = 0x10,
 }
 
 -- The only types that (I think) OPL can handle
@@ -257,7 +258,6 @@ function Db:load(data)
     self.currentTable = nil
     if data:sub(1, 4) == "\x50\x00\x00\x10" then -- KPermanentFileStoreLayoutUid
         -- It's an epoc binary db
-        -- unimplemented("database.loadBinary")
         self:loadBinary(data)
     else
         self:loadText(data)
@@ -313,7 +313,10 @@ function Db:save()
     for _, tbl in ipairs(self.tables) do
         line(":TABLE %s", tbl.name)
         for _, field in ipairs(tbl.fields) do
-            line(":FIELD %d %s", field.type, field.name)
+            if field.type then
+                -- can be nil for fields OPL can't represent
+                line(":FIELD %d %s", field.type, field.name)
+            end
         end
         for _, rec in ipairs(tbl) do
             line(":RECORD")
@@ -322,7 +325,10 @@ function Db:save()
                 if field.type == DataTypes.EString then
                     v = hexEscape(v)
                 end
-                line("%s=%s", field.name, v)
+                if v then
+                    -- can be nil for fields OPL can't represent
+                    line("%s=%s", field.name, v)
+                end
             end
         end
     end
@@ -371,24 +377,32 @@ KTableDefinitionHeaderLen = 9
 KTocEntryOffset = 0x1E
 
 function Db:loadBinary(data)
+    data = depageBinary(data)
     local uid1, uid2, uid3, uidChecksum, pos = string.unpack("<I4I4I4I4", data)
     assert(uid1 == KPermanentFileStoreLayoutUid, "Bad DB UID1 "..tostring(uid1))
     -- assert(uid2 == KUidAppDllDoc8, "Bad DB UID2")
 
-    if #data > 4096 then
-        unimplemented("database.loadBinary.4k")
-    end
-
     -- TPermanentStoreHeader
     local backup, handle, ref, crc, pos = string.unpack("<I4i4i4I2", data, pos)
 
-    local tocPos = handle == 0 and (1 + ref + 0x14) or (1 + #data - 12 - 5 * handle)
+
+    local tocPos
+    if handle == 0 then
+        if ref & 1 == 0 then
+            tocPos = 1 + (backup >> 1) + 0x14
+        else
+            tocPos = 1 + ref + 0x14
+        end
+    else
+        tocPos = 1 + #data - 12 - 5 * handle
+    end
+
     local idBindingIdx, _, tocCount, tocEntriesPos = string.unpack("<I4I4I4", data, tocPos)
     local toc = {} -- 1-based indexes into data, pointing to start of section length word
     for i = 1, tocCount do
         local offset
         offset, tocEntriesPos = string.unpack("<xI4", data, tocEntriesPos)
-        toc[i] = 1 + offset + KTocEntryOffset + 2
+        toc[i] = offset == 0 and 0 or (1 + offset + KTocEntryOffset + 2)
     end
     -- It seems like there should be a better way of making sense of toc, but it seems like the sections are hard-coded:
     -- toc[1]: always section 1 - 9 null bytes
@@ -423,9 +437,22 @@ function Db:loadBinary(data)
     -- Now iterate through the chain of data sections
     while dataSection ~= 0 do
         local dataStart = toc[dataSection]
+        if dataStart == 0 then
+            -- Sometimes nextSectionIndex will point to a toc entry that's zero, rather than simply being zero, to
+            -- terminate the data section list. Who knows...
+            break
+        end
         -- There can be up to 16 "data sets" in each data section, where I think a data set equates to a record
         -- How many there is is given by the count of bits in dataSetBitmask
         local nextSectionIndex, dataSetBitmask, pos = string.unpack("<I4I2", data, dataStart)
+        if dataSetBitmask & 1 == 0 then
+            -- Non-OPL databases can put a dummy section here which just points to the real first data section
+            assert(dataSection == 4, "Empty dataSetBitmask encountered not in first data section "..dataSection)
+            dataSection = nextSectionIndex
+            dataStart = toc[dataSection]
+            nextSectionIndex, dataSetBitmask, pos = string.unpack("<I4I2", data, dataStart)
+        end
+
         local dataSetLengths = {}
         for bit = 0, 15 do
             if dataSetBitmask & (1 << bit) ~= 0 then
@@ -444,8 +471,8 @@ function Db:loadBinary(data)
             while pos < startPos + dataSetLen do
                 local fieldMask
                 fieldMask, pos = string.unpack("B", data, pos)
-                -- Ignoring the way bool fields are packed into the fieldMask since we don't support them in OPL
-                for bit = 0, 7 do
+                local bit = 0
+                while bit < 8 do
                     if fieldMask & (1 << bit) ~= 0 then
                         local field = assert(self.currentTable.fields[1 + fieldIdx + bit])
                         local val
@@ -457,9 +484,27 @@ function Db:loadBinary(data)
                             val, pos = string.unpack("<d", data, pos)
                         elseif field.type == DataTypes.EString then
                             val, pos = string.unpack("<s1", data, pos)
+                        elseif field.rawType == FieldTypes.Boolean then
+                            -- We don't support it, so just skip the value bit in the fieldMask
+                            bit = bit + 1
+                        elseif field.rawType == FieldTypes.Date then
+                            pos = pos + 8
+                        elseif field.rawType == FieldTypes.Format then
+                            bit = bit + 1
+                            local inline = fieldMask & (1 << bit) ~= 0
+                            if inline then
+                                -- Don't know how big this data is
+                                unimplemented("database.inlineFormatSection")
+                            else
+                                pos = pos + 4
+                            end
+                        else
+                            error("Unhandled field type")
                         end
                         rec[field.name] = val
                     end
+                    assert(bit < 8, "Multibit val at end of byte??")
+                    bit = bit + 1
                 end
                 fieldIdx = fieldIdx + 8
             end
@@ -499,13 +544,13 @@ function Db:readTableDefinition(data, pos)
             fieldName, pos = readVarLengthString(data, pos)
             local type = string.byte(data, pos)
             local oplType = FieldTypeToOplType[type]
-            assert(oplType, "Unsupported field type!")
+            -- oplType is allowed to be nil in the case of fields not representable in OPL (which are just skipped)
             pos = pos + 2 -- past the type byte and the whatever-it-is byte
             if type == FieldTypes.Text then
                 pos = pos + 1 -- Skip over maxLen
             end
 
-            local field = { type = oplType, name = fieldName }
+            local field = { type = oplType, name = fieldName, rawType = type }
             table.insert(tbl.fields, field)
             tbl.fieldMap[fieldName] = field
         end
@@ -541,6 +586,20 @@ function parseTableSpec(spec)
         unimplemented("database.parseTableSpec")
     end
     return spec, "Table1", nil
+end
+
+-- Database files appear to have some sort of paging scheme whereby 2 extra bytes are inserted every 0x4000 bytes,
+-- starting from 0x4020. These bytes aren't part of the format and must be stripped out before any of the indexes will
+-- be correct. Or at least it's easier to do that than to fix up every index operation.
+function depageBinary(data)
+    local pos = 0x20
+    local pages = { data:sub(1, pos) }
+    while pos < #data do
+        local page = data:sub(1 + pos, pos + 0x4000)
+        table.insert(pages, page)
+        pos = pos + 0x4000 + 2
+    end
+    return table.concat(pages)
 end
 
 return _ENV
