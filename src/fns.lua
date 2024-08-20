@@ -1041,8 +1041,15 @@ end
 Max_dump = numParams_dump
 
 function Mean(stack, runtime) -- 0x94
-    unimplemented("fns.Mean")
+    local vals = valList(stack, runtime)
+    local sum = 0
+    for _, val in ipairs(vals) do
+        sum = sum + val
+    end
+    stack:push(sum / #vals)
 end
+
+Mean_dump = numParams_dump
 
 function Min(stack, runtime) -- 0x95
     stack:push(math.min(table.unpack(valList(stack, runtime))))
