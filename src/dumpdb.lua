@@ -108,7 +108,7 @@ end
 
 function Instance:dump()
     for i, member in ipairs(self) do
-        printf("%08X %s::%s "..member.printfmt.."\n", member.pos, self._type.name, member.name, member.value)
+        printf("%08X %s.%s "..member.printfmt.."\n", member.pos, self._type.name, member.name, member.value)
     end
 end
 
@@ -125,7 +125,7 @@ function Instance:appendArray(count, structType, data)
         local entry = structType:unpack(data, pos)
         arr[i] = entry
         for _, entryMember in ipairs(entry) do
-            entryMember.name = string.format("%s[%d]::%s", structType.name, i, entryMember.name)
+            entryMember.name = string.format("%s[%d].%s", structType.name, i, entryMember.name)
             table.insert(self, entryMember)
         end
         pos = pos + entry._size
@@ -152,7 +152,7 @@ TPermanentStoreHeader = Struct {
 
 Toc = Struct {
     name = "Toc",
-    { "idBindingIndex", UINT },
+    { "rootStreamIndex", UINT },
     { "unknown", UINT },
     { "count", UINT },
     -- Rest is count * TocEntry
@@ -177,8 +177,8 @@ DbmsStoreDbHeader = Struct {
     { "noclue", UINT },
 }
 
-TableSectionHeader = Struct {
-    name = "TableSection",
+TableDefinitionSectionHeader = Struct {
+    name = "TableDefinition",
     { "KDbmsStoreDatabase", UINT },
     { "nullbyte", BYTE },
     { "unknown", UINT },
@@ -186,13 +186,13 @@ TableSectionHeader = Struct {
 }
 
 TableContentSectionHeader = Struct {
-    name = "TableContentSectionHeader",
+    name = "TableContentSection",
     { "nextSectionIndex", UINT },
-    { "dataSetBitmask", USHORT },
+    { "recordBitmask", USHORT },
 }
 
-DataSetLengthTable = Struct {
-    name = "DataSetLengthTable",
+RecordLengthTable = Struct {
+    name = "RecordLengthTable",
     -- Variable length, so no fixed definitions
 }
 
@@ -262,12 +262,12 @@ function dumpDb(data)
     end
     -- Note, pos is zero-based
     local function readVarLengthString(data, pos)
-        local len, strStart = readVarLength(data, 1 + pos)
+        local len, strStart = readSpecialEncoding(data, 1 + pos)
         local str = string.sub(data, strStart, strStart + len - 1)
         return str, (strStart - 1) + len
     end
     local function readTableDefinition(pos)
-        local tbl = TableSectionHeader:unpack(data, pos)
+        local tbl = TableDefinitionSectionHeader:unpack(data, pos)
         pos = tbl._pos + tbl._size
         local numTables, nextPos = readExtra(data, pos)
         pos = nextPos
@@ -409,12 +409,12 @@ function dumpDb(data)
         local dataStart = dataOffset + KTocEntryOffset + 2 -- +2 for section length field
         local dataHeader = read(TableContentSectionHeader, dataStart)
         -- Now the length table
-        local lenTable = Instance { _pos = currentPos, _type = DataSetLengthTable }
+        local lenTable = Instance { _pos = currentPos, _type = RecordLengthTable }
         for bit = 0, 15 do
-            if dataHeader.dataSetBitmask & (1 << bit) ~= 0 then
+            if dataHeader.recordBitmask & (1 << bit) ~= 0 then
                 local len, nextPos = readExtra(data, currentPos)
                 table.insert(lenTable, {
-                    name = string.format("DataSet_%d_length", bit + 1),
+                    name = string.format("Record_%d_length", bit + 1),
                     pos = currentPos,
                     size = nextPos - currentPos,
                     printfmt = "%X",

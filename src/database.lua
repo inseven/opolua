@@ -397,7 +397,7 @@ function Db:loadBinary(data)
         tocPos = 1 + #data - 12 - 5 * handle
     end
 
-    local idBindingIdx, _, tocCount, tocEntriesPos = string.unpack("<I4I4I4", data, tocPos)
+    local rootStreamIdx, _, tocCount, tocEntriesPos = string.unpack("<I4I4I4", data, tocPos)
     local toc = {} -- 1-based indexes into data, pointing to start of section length word
     for i = 1, tocCount do
         local offset
@@ -442,33 +442,33 @@ function Db:loadBinary(data)
             -- terminate the data section list. Who knows...
             break
         end
-        -- There can be up to 16 "data sets" in each data section, where I think a data set equates to a record
-        -- How many there is is given by the count of bits in dataSetBitmask
-        local nextSectionIndex, dataSetBitmask, pos = string.unpack("<I4I2", data, dataStart)
-        if dataSetBitmask & 1 == 0 then
+        -- There can be up to 16 records in each data section. How many there is given by the count of bits in
+        -- recordBitmask.
+        local nextSectionIndex, recordBitmask, pos = string.unpack("<I4I2", data, dataStart)
+        if recordBitmask & 1 == 0 then
             -- Non-OPL databases can put a dummy section here which just points to the real first data section
-            assert(dataSection == 4, "Empty dataSetBitmask encountered not in first data section "..dataSection)
+            assert(dataSection == 4, "Empty recordBitmask encountered not in first data section "..dataSection)
             dataSection = nextSectionIndex
             dataStart = toc[dataSection]
-            nextSectionIndex, dataSetBitmask, pos = string.unpack("<I4I2", data, dataStart)
+            nextSectionIndex, recordBitmask, pos = string.unpack("<I4I2", data, dataStart)
         end
 
-        local dataSetLengths = {}
+        local recordLengths = {}
         for bit = 0, 15 do
-            if dataSetBitmask & (1 << bit) ~= 0 then
+            if recordBitmask & (1 << bit) ~= 0 then
                 local len, nextPos = readCardinality(data, pos)
                 -- I don't think there will ever be gaps in the bitset, check that here
-                assert(bit == 0 or dataSetLengths[bit], "Set bit found with previous bit unset!")
-                dataSetLengths[1 + bit] = len
+                assert(bit == 0 or recordLengths[bit], "Set bit found with previous bit unset!")
+                recordLengths[1 + bit] = len
                 pos = nextPos
             end
         end
 
-        for _, dataSetLen in ipairs(dataSetLengths) do
+        for _, recordLen in ipairs(recordLengths) do
             local rec = {}
             local startPos = pos
             local fieldIdx = 0
-            while pos < startPos + dataSetLen do
+            while pos < startPos + recordLen do
                 local fieldMask
                 fieldMask, pos = string.unpack("B", data, pos)
                 local bit = 0
@@ -509,7 +509,7 @@ function Db:loadBinary(data)
                 fieldIdx = fieldIdx + 8
             end
 
-            assert(pos == startPos + dataSetLen, "Failed to read expected number of bytes")
+            assert(pos == startPos + recordLen, "Failed to read expected number of bytes")
             -- In the interests of sanity we will zero initialise any fields missing from the file
             for _, member in ipairs(self.currentTable.fields) do
                 if rec[member.name] == nil then
@@ -524,7 +524,7 @@ end
 
 function Db:readTableDefinition(data, pos)
     local function readVarLengthString(data, pos)
-        local len, strStart = readVarLength(data, pos)
+        local len, strStart = readSpecialEncoding(data, pos)
         local str = string.sub(data, strStart, strStart + len - 1)
         return str, strStart + len
     end
