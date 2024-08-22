@@ -388,7 +388,7 @@ function Db:loadBinary(data)
 
     local tocPos
     if handle == 0 then
-        if ref & 1 == 0 then
+        if ref + 0x14 >= #data then
             tocPos = 1 + (backup >> 1) + 0x14
         else
             tocPos = 1 + ref + 0x14
@@ -409,7 +409,7 @@ function Db:loadBinary(data)
     -- toc[2]: first table definition section
     -- toc[3]: TOplDocRootStream
     -- toc[4]: first data section
-    -- toc[5]: always section 9? Mystery, refer to Chief Aramaki
+    -- toc[5]: always a 15 byte section
     -- other data sections potentially follow
 
     -- There is nothing useful in TOplDocRootStream (referenced by toc[3]) so don't bother reading it.
@@ -554,6 +554,7 @@ function Db:readTableDefinition(data, pos)
             table.insert(tbl.fields, field)
             tbl.fieldMap[fieldName] = field
         end
+        pos = pos + 6 -- skip the table footer
 
         self.tables[i] = tbl
         self.tables[tableName] = tbl

@@ -1,4 +1,10 @@
 PROC main:
+
+    PRINT "Deleting databases..."
+    DELETE "D:\db\*.db"
+
+    PRINT "Creating databases..."
+
     CREATE "D:\db\emptyint.db", A, inta%
     CLOSE
 
@@ -72,4 +78,28 @@ PROC main:
     APPEND
     CLOSE
 
+    CREATE "D:\db\onetable.db FIELDS inta, intb TO Table1", A, inta%, intb%
+    A.inta% = 42
+    A.intb% = 420
+    APPEND
+    A.inta% = $69
+    A.intb% = $0BB0
+    APPEND
+    CLOSE
+    COMPACT "D:\db\onetable.db"
+
+    COPY "D:\db\onetable.db", "D:\db\twotables.db"
+
+    CREATE "D:\db\twotables.db FIELDS txt(40) TO AnotherTbl", A, txt$
+    A.txt$ = "Woop"
+    APPEND
+    A.txt$ = "Wooooooop"
+    APPEND
+    A.txt$ = "Wooooooooooooop"
+    APPEND
+    CLOSE
+    PRINT "Compacting..."
+    COMPACT "D:\db\twotables.db"
+
+    PRINT "Done"
 ENDP

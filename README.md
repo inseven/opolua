@@ -142,11 +142,11 @@ There are two different variable-length integer encodings used, in addition to t
 | 00000018 | uint32 | ref |
 | 0000001C | uint16 | crc |
 
-`backup`, `handle` and `ref` all refer to the table of contents, or TOC.
+`backup`, `handle` and `ref` all relate to the table of contents, or TOC.
 
 * If `handle` is non-zero, the TOC is located at file offset `file_length - (12 + 5 * handle)`.
-* If `handle` is zero and the bottom bit of `ref` is set, the TOC is located at `ref + 20`.
-* If `handle` is zero and the bottom bit of `ref` is _not_ set, the TOC is located at `(backup >> 1) + 20`.
+* Otherwise, if `handle` is zero then the TOC should be located at `ref + 20`.
+* But if `ref + 20` is greater than `file_length`, then the backup TOC should be used instead, located at `(backup >> 1) + 20`.
 
 ### TOC section
 
@@ -206,16 +206,18 @@ As linked from the TOC entry 2.
 | uint32 | `KDbmsStoreDatabase` (10000069) |
 | byte   | nullbyte |
 | uint32 | unknown |
-| X      | `count` (TCardinality) |
-| ...    | `count` Tables follow |
+| X      | `tableCount` (TCardinality) |
+| ...    | `tableCount` Tables follow |
 
 Each `Table` is:
 
 | Type    | Name |
 | ----    | ---- |
 | SString | `tableName` |
-| X       | `count` (TCardinality) |
-| ...     | `count` Fields follow |
+| X       | `fieldCount` (TCardinality) |
+| ...     | `fieldCount` Fields follow |
+| uint16  | unknown |
+| uint32  | unknown |
 
 Each `Field` is:
 
@@ -224,7 +226,7 @@ Each `Field` is:
 | SString | `fieldName` |
 | byte    | `type` |
 | byte    | unknown |
-| uint32  | `maxLength` (only present for text fields) |
+| byte    | `maxLength` (only present for text fields) |
 
 The possible values for the `type` byte, and their meanings, are listed in the [Table Data section](#table-data-section).
 

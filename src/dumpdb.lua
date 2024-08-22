@@ -54,85 +54,7 @@ function main()
     end
 end
 
-BYTE = "B"
-UINT = "I4"
-USHORT = "I2"
-LONG = "i4"
-
-Struct = class {}
-Instance = class {}
-
-function Struct:sizeof()
-    local sz = 0
-    for _, member in ipairs(self) do
-        sz = sz + string.packsize(member[2])
-    end
-    return sz
-end
-
-function Struct:unpack(data, pos)
-    if pos == nil then
-        pos = 0
-    end
-    local sz = self:sizeof()
-    if pos + sz > #data then
-        printf("Warning: struct %s (size 0x%X) at 0x%X extends beyond the data\n", self.name, sz, pos)
-        return nil
-    end
-
-    local result = Instance {
-        _type = self,
-        _pos = pos,
-    }
-    for i, memberDef in ipairs(self) do
-        local val, nextPos = string.unpack("<"..memberDef[2], data, 1 + pos)
-        local printfmt
-        if math.type(val) == "integer" then
-            printfmt = string.format("%%0%dX", string.packsize(memberDef[2]) * 2)
-        else
-            printfmt = "%s"
-        end
-        result[i] = {
-            name = memberDef[1],
-            pos = pos,
-            size = (nextPos - 1) - pos,
-            printfmt = printfmt,
-            value = val,
-        }
-        result[memberDef[1]] = val
-        pos = nextPos - 1
-    end
-    result._size = pos - result._pos
-    return result
-end
-
-function Instance:dump()
-    for i, member in ipairs(self) do
-        printf("%08X %s.%s "..member.printfmt.."\n", member.pos, self._type.name, member.name, member.value)
-    end
-end
-
-function Instance:appendArray(count, structType, data)
-    local pos = self._pos + self._size
-    local sz = structType:sizeof() * count
-    if pos + sz > #data then
-        printf("warning: Array data for %s extends beyond the data\n", structType.name)
-        return false
-    end
-    local arr = {}
-    self[structType.name] = arr
-    for i = 1, count do
-        local entry = structType:unpack(data, pos)
-        arr[i] = entry
-        for _, entryMember in ipairs(entry) do
-            entryMember.name = string.format("%s[%d].%s", structType.name, i, entryMember.name)
-            table.insert(self, entryMember)
-        end
-        pos = pos + entry._size
-        self._size = self._size + entry._size
-    end
-    return true
-end
+require("struct").import(_ENV)
 
 TCheckedUid = Struct {
     name = "TCheckedUid",
@@ -178,11 +100,33 @@ DbmsStoreDbHeader = Struct {
 }
 
 TableDefinitionSectionHeader = Struct {
-    name = "TableDefinition",
+    name = "TableSection",
     { "KDbmsStoreDatabase", UINT },
     { "nullbyte", BYTE },
     { "unknown", UINT },
-    -- variable format fields follow
+    { "tableCount", TCARDINALITY },
+    -- `tableCount` number of Tables follow
+}
+
+TableStruct = Struct {
+    name = "Table",
+    { "tableName", SSTRING },
+    { "fieldCount", TCARDINALITY },
+    -- Variable number of fields, then TableFooter
+}
+
+FieldStruct = Struct {
+    name = "Field",
+    { "fieldName", SSTRING },
+    { "type", BYTE },
+    { "unknown", BYTE },
+    -- Possibly a maxLength here
+}
+
+TableFooter = Struct {
+    name = "TableFooter",
+    { "unknown1", USHORT },
+    { "unknown2", UINT },
 }
 
 TableContentSectionHeader = Struct {
@@ -260,69 +204,30 @@ function dumpDb(data)
         local instance = structFmt:unpack(data, pos)
         return addArea(instance)
     end
-    -- Note, pos is zero-based
-    local function readVarLengthString(data, pos)
-        local len, strStart = readSpecialEncoding(data, 1 + pos)
-        local str = string.sub(data, strStart, strStart + len - 1)
-        return str, (strStart - 1) + len
-    end
     local function readTableDefinition(pos)
-        local tbl = TableDefinitionSectionHeader:unpack(data, pos)
-        pos = tbl._pos + tbl._size
-        local numTables, nextPos = readExtra(data, pos)
-        pos = nextPos
-        for i = 1, numTables do
-            local tableName, nextPos = readVarLengthString(data, pos)
-            table.insert(tbl, {
-                name = string.format("Table[%d].name", i),
-                pos = pos,
-                size = nextPos - pos,
-                printfmt = "%s",
-                value = tableName
-            })
-            pos = nextPos
-            local numFields, nextPos = readExtra(data, pos)
-            pos = nextPos
-            for i = 1, numFields do
-                local fieldName, nextPos = readVarLengthString(data, pos)
-                local field = {
-                    name = string.format("Field[%d].name", i),
-                    pos = pos,
-                    size = nextPos - pos,
-                    printfmt = "%s",
-                    value = fieldName
-                }
-                pos = nextPos
-                table.insert(tbl, field)
-                local type = string.byte(data, 1 + pos)
-                local typename = FieldTypes[type] or string.format("Unknown_field_type_%X", type)
-                table.insert(tbl, {
-                    name = string.format("Field[%d].type", i),
-                    pos = pos,
-                    size = 1,
-                    printfmt = "%s",
-                    value = typename,
-                })
-                pos = pos + 2 -- move past type byte and the null byte all types seem to have
-
-                if type == FieldTypes.Text then
-                    local maxLen = string.unpack("B", data, 1 + pos)
-                    table.insert(tbl, {
-                        name = string.format("Field[%d].maxlen", i),
-                        pos = pos,
-                        size = 1,
-                        printfmt = "%X",
-                        value = maxLen,
-                    })
-                    pos = pos + 1
+        local tableSection = TableDefinitionSectionHeader:unpack(data, pos)
+        pos = tableSection:endPos()
+        local tables = {}
+        for i = 1, tableSection.tableCount do
+            local tbl = TableStruct:unpack(data, pos)
+            local fields = {}
+            pos = tbl:endPos()
+            for fieldIdx = 1, tbl.fieldCount do
+                local field = FieldStruct:unpack(data, pos)
+                field:annotate("type", FieldTypes[field.type] or "??")
+                if field.type == FieldTypes.Text then
+                    field:appendMember("maxLen", BYTE, data)
                 end
-                -- See "Coding of an Element of the Table Storage Definition Table" in
-                -- https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm
+                pos = field:endPos()
+                table.insert(fields, field)
             end
+            tbl:appendInstanceArray("Field", fields)
+            tbl:appendStruct(TableFooter, data, tbl:endPos())
+            pos = tbl:endPos()
+            table.insert(tables, tbl)
         end
-
-        tbl._size = pos - tbl._pos
-        return addArea(tbl)
+        tableSection:appendInstanceArray("Table", tables)
+        return addArea(tableSection)
     end
     local function readSection(sectionId, pos)
         local name = string.format("%d", sectionId)
@@ -362,12 +267,14 @@ function dumpDb(data)
             pos, endPos, hexdump(data, pos, endPos - pos), string.rep("-", 75))
     end
 
-    read(TCheckedUid)
+    local uids = read(TCheckedUid)
+    assert(uids.uid1 == KPermanentFileStoreLayoutUid, "Bad DB UID1 "..tostring(uids.uid1))
     local storeHeader = read(TPermanentStoreHeader)
 
     local tocpos
     if storeHeader.iHandle == 0 then
-        if storeHeader.iRef & 1 == 0 then
+        if storeHeader.iRef + 0x14 >= #data then
+            printf("TOC ref is out of bounds, using backup")
             tocpos = (storeHeader.iBackup >> 1) + 0x14
         else
             tocpos = storeHeader.iRef + 0x14
@@ -378,7 +285,7 @@ function dumpDb(data)
 
     local toc = read(Toc, tocpos)
     if toc then
-        local ok = toc:appendArray(toc.count, TocEntry, data)
+        local ok = toc:appendStructArray(toc.count, TocEntry, data)
         if not ok then
             toc = nil
         end
@@ -407,26 +314,15 @@ function dumpDb(data)
 
     while dataOffset and dataOffset ~= 0 do
         local dataStart = dataOffset + KTocEntryOffset + 2 -- +2 for section length field
-        local dataHeader = read(TableContentSectionHeader, dataStart)
+        local dataSection = read(TableContentSectionHeader, dataStart)
         -- Now the length table
-        local lenTable = Instance { _pos = currentPos, _type = RecordLengthTable }
         for bit = 0, 15 do
-            if dataHeader.recordBitmask & (1 << bit) ~= 0 then
-                local len, nextPos = readExtra(data, currentPos)
-                table.insert(lenTable, {
-                    name = string.format("Record_%d_length", bit + 1),
-                    pos = currentPos,
-                    size = nextPos - currentPos,
-                    printfmt = "%X",
-                    value = len,
-                })
-                currentPos = nextPos
+            if dataSection.recordBitmask & (1 << bit) ~= 0 then
+                dataSection:appendMember(string.format("recordLength[%d]", bit + 1), TCARDINALITY, data)
             end
         end
-        lenTable._size = currentPos - lenTable._pos
-        addArea(lenTable)
 
-        local nextSection = dataHeader.nextSectionIndex
+        local nextSection = dataSection.nextSectionIndex
         if nextSection == 0 then
             dataOffset = nil
         else
