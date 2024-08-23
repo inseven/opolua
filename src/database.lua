@@ -385,7 +385,6 @@ function Db:loadBinary(data)
     -- TPermanentStoreHeader
     local backup, handle, ref, crc, pos = string.unpack("<I4i4i4I2", data, pos)
 
-
     local tocPos
     if handle == 0 then
         if ref + 0x14 >= #data then
@@ -432,7 +431,14 @@ function Db:loadBinary(data)
         "toc[2] does not appear to point to a table definition")
     self:readTableDefinition(data, toc[2] + KTableDefinitionHeaderLen)
 
-    local dataSection = 4
+    for i = 1, #self.tables do
+        self:loadTable(data, toc, i)
+    end
+end
+
+function Db:loadTable(data, toc, tableIndex)
+    local tbl = self.tables[tableIndex]
+    local dataSection = tbl.dataIndex
 
     -- Now iterate through the chain of data sections
     while dataSection ~= 0 do
@@ -445,7 +451,7 @@ function Db:loadBinary(data)
         -- There can be up to 16 records in each data section. How many there is given by the count of bits in
         -- recordBitmask.
         local nextSectionIndex, recordBitmask, pos = string.unpack("<I4I2", data, dataStart)
-        if recordBitmask & 1 == 0 then
+        if recordBitmask & 1 == 0 and nextSectionIndex ~= 0 then
             -- Non-OPL databases can put a dummy section here which just points to the real first data section
             assert(dataSection == 4, "Empty recordBitmask encountered not in first data section "..dataSection)
             dataSection = nextSectionIndex
@@ -511,12 +517,12 @@ function Db:loadBinary(data)
 
             assert(pos == startPos + recordLen, "Failed to read expected number of bytes")
             -- In the interests of sanity we will zero initialise any fields missing from the file
-            for _, member in ipairs(self.currentTable.fields) do
+            for _, member in ipairs(tbl.fields) do
                 if rec[member.name] == nil then
                     rec[member.name] = DefaultSimpleTypes[member.type]
                 end
             end
-            table.insert(self.currentTable, rec)
+            table.insert(tbl, rec)
         end
         dataSection = nextSectionIndex
     end
@@ -554,7 +560,9 @@ function Db:readTableDefinition(data, pos)
             table.insert(tbl.fields, field)
             tbl.fieldMap[fieldName] = field
         end
-        pos = pos + 6 -- skip the table footer
+        local dataIndex
+        dataIndex, pos = string.unpack("<xI4x", data, pos)
+        tbl.dataIndex = dataIndex - 1 -- Not sure why these are one more than the (already 1-based) TOC index
 
         self.tables[i] = tbl
         self.tables[tableName] = tbl

@@ -121,7 +121,7 @@ function Instance:appendInstanceArray(memberName, instanceArray)
                 annotation = member.annotation,
             }
             table.insert(self, newMember)
-            newInstance[member.name] = newMember
+            newInstance[member.name] = newMember.value
             self._size = self._size + member.size
         end
     end

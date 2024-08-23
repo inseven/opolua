@@ -125,8 +125,9 @@ FieldStruct = Struct {
 
 TableFooter = Struct {
     name = "TableFooter",
-    { "unknown1", USHORT },
-    { "unknown2", UINT },
+    { "unknown1", BYTE },
+    { "dataIndex", UINT },
+    { "unknown2", BYTE },
 }
 
 TableContentSectionHeader = Struct {
@@ -204,6 +205,7 @@ function dumpDb(data)
         local instance = structFmt:unpack(data, pos)
         return addArea(instance)
     end
+    local tableSections = {} -- Map of pos to tableDefinition
     local function readTableDefinition(pos)
         local tableSection = TableDefinitionSectionHeader:unpack(data, pos)
         pos = tableSection:endPos()
@@ -227,7 +229,8 @@ function dumpDb(data)
             table.insert(tables, tbl)
         end
         tableSection:appendInstanceArray("Table", tables)
-        return addArea(tableSection)
+        tableSections[tableSection._pos] = tableSection
+        addArea(tableSection)
     end
     local function readSection(sectionId, pos)
         local name = string.format("%d", sectionId)
@@ -249,7 +252,7 @@ function dumpDb(data)
             _name = name,
             dump = function()
                 printf("Section %s %08X - %08X (%d bytes)\n", name, pos, pos + sectionLen, sectionLen)
-                print(hexdump(data, pos, sectionLen))
+                printf("%s", hexdump(data, pos, sectionLen))
             end,
         }
         if string.unpack("<I4", data, dataPos) == KDbmsStoreDatabase then
@@ -302,34 +305,46 @@ function dumpDb(data)
         sectionId = sectionId + 1
     end
 
-    local dataOffset = nil
     if toc then
-        dataOffset = toc.TocEntry[4].offset
-        if sectionStarts[dataOffset + KTocEntryOffset] == nil then
-            printf("Warning: TocEntry[4] does not point to the start of a section!\n")
-        end
-
         read(TOplDocRootStream, toc.TocEntry[3].offset + KTocEntryOffset + 2)
     end
 
-    while dataOffset and dataOffset ~= 0 do
-        local dataStart = dataOffset + KTocEntryOffset + 2 -- +2 for section length field
-        local dataSection = read(TableContentSectionHeader, dataStart)
-        -- Now the length table
-        for bit = 0, 15 do
-            if dataSection.recordBitmask & (1 << bit) ~= 0 then
-                dataSection:appendMember(string.format("recordLength[%d]", bit + 1), TCARDINALITY, data)
+    local function readTableData(tocIdx)
+        local dataOffset = nil
+        if toc then
+            dataOffset = toc.TocEntry[tocIdx].offset
+            if sectionStarts[dataOffset + KTocEntryOffset] == nil then
+                printf("Warning: TocEntry[%d] does not point to the start of a section!\n", tocIdx)
             end
         end
 
-        local nextSection = dataSection.nextSectionIndex
-        if nextSection == 0 then
-            dataOffset = nil
-        else
-            dataOffset = toc.TocEntry[nextSection].offset
-            -- printf("Next section is toc entry %d = %X\n", nextSection, dataOffset)
+        while dataOffset and dataOffset ~= 0 do
+            local dataStart = dataOffset + KTocEntryOffset + 2 -- +2 for section length field
+            local dataSection = read(TableContentSectionHeader, dataStart)
+            -- Now the length table
+            for bit = 0, 15 do
+                if dataSection.recordBitmask & (1 << bit) ~= 0 then
+                    dataSection:appendMember(string.format("recordLength[%d]", bit + 1), TCARDINALITY, data)
+                end
+            end
+
+            local nextSection = dataSection.nextSectionIndex
+            if nextSection == 0 then
+                dataOffset = nil
+            else
+                dataOffset = toc.TocEntry[nextSection].offset
+                -- printf("Next section is toc entry %d = %X\n", nextSection, dataOffset)
+            end
         end
     end
+
+    local tableSection = tableSections[toc.TocEntry[2].offset + KTocEntryOffset + 2]
+    assert(tableSection)
+    for i = 1, tableSection.tableCount do
+        local dataIndex = tableSection.Table[i].dataIndex - 1 -- Don't know why these are -1...
+        readTableData(dataIndex)
+    end
+
 
     local pos = 0
     for _, val in ipairs(parsed) do

@@ -119,7 +119,7 @@ The OPL compiler allows a maximum nesting of 8 IF/WHILE statements. There is no 
 
 ## Database format
 
-_This is derived from [http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm) with my own analysis added._
+_This is derived from [http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm) with my own analysis added, and represents my best understanding of the format at the time of writing. It's not guaranteed to be 100% perfect. -Tomsci_
 
 The base structure of a Database file (leaving aside the layers of implementation that leads to this format) is as follows. Broadly, the file is split into various sections, which are indexed via the TOC (Table Of Contents) section. The header of the file contains the location of the TOC.
 
@@ -131,16 +131,16 @@ There are two different variable-length integer encodings used, in addition to t
 
 ### Header
 
-| Offset   | Type   | Name |
-| ------   | ----   | ---- |
-| 00000000 | uint32 | uid1 |
-| 00000004 | uint32 | uid2 |
-| 00000008 | uint32 | uid3 |
-| 0000000C | uint32 | uidChecksum |
-| 00000010 | uint32 | backup |
-| 00000014 | uint32 | handle |
-| 00000018 | uint32 | ref |
-| 0000001C | uint16 | crc |
+| Offset     | Type     | Name |
+| ---------- | -------- | ---- |
+| `00000000` | `uint32` | `uid1` |
+| `00000004` | `uint32` | `uid2` |
+| `00000008` | `uint32` | `uid3` |
+| `0000000C` | `uint32` | `uidChecksum` |
+| `00000010` | `uint32` | `backup` |
+| `00000014` | `uint32` | `handle` |
+| `00000018` | `uint32` | `ref` |
+| `0000001C` | `uint16` | `crc` |
 
 `backup`, `handle` and `ref` all relate to the table of contents, or TOC.
 
@@ -150,22 +150,22 @@ There are two different variable-length integer encodings used, in addition to t
 
 ### TOC section
 
-| Type       | Name |
-| ----       | ---- |
-| uint32     | `rootStreamIndex` |
-| uint32     | `unknown` |
-| uint32     | `count` |
-| TocEntry[] | Array of `count` TocEntry structs follow |
+| Type         | Name |
+| ------------ | ---- |
+| `uint32`     | `rootStreamIndex` |
+| `uint32`     | `unknown` |
+| `uint32`     | `count` |
+| `TocEntry[]` | Array of `count` TocEntry structs follow |
 
-`rootStreamIndex` is an index, describing which `TocEntry` points to the root stream section. It appears to always be 3.
+`rootStreamIndex` is an index, describing which `TocEntry` points to the root stream section. It appears to always be 3. The root stream section is an artifact of the frameworks used for writing database files and serves no purpose in decoding the database data.
 
 Each `TocEntry` is 5 bytes, and contains the offset of a section, plus some flags that don't seem to be important. You must add 0x20 to `TocEntry.offset` to get the location in the file.
 
 
-| Type   | Name |
-| ----   | ---- |
-| byte   | `flags` (usually zero) |
-| uint32 | `offset` (add 0x20 to get file offset) |
+| Type     | Name |
+| -------- | ---- |
+| `byte`   | `flags` (usually zero) |
+| `uint32` | `offset` (add 0x20 to get file offset) |
 
 
 The TOC is treated as a one-based array. The first few entries in the TOC always seem to refer to specific sections:
@@ -173,84 +173,91 @@ The TOC is treated as a one-based array. The first few entries in the TOC always
 ```
 TocEntry[1] an uninteresting section, use unknown
 TocEntry[2] table definition section
-TocEntry[3] rootStream
-TocEntry[4] first data section
+TocEntry[3] rootStream (also uninteresting)
+TocEntry[4] first data section of first table
 ```
+
+Note that while `TocEntry[4]` can be used to locate the first table's data section, it is better to use `dataIndex` in the Table Definition Section because that handles multiple tables.
 
 Other sections may appear at indexes 5 and beyond - some unknown sections, and other data sections linked from the first (see below for description of how data sections link together).
 
 A simple TOC might look something like this (taken from the output of `dumpdb.lua --verbose`):
 
 ```
-000000D9 rootStreamIndex 00000003
-000000DD unknown 00000000
-000000E1 count 00000005
-000000E5 TocEntry[1].flags 00
-000000E6 TocEntry[1].offset 00000000
-000000EA TocEntry[2].flags 00
-000000EB TocEntry[2].offset 0000004D
-000000EF TocEntry[3].flags 00
-000000F0 TocEntry[3].offset 00000017
-000000F4 TocEntry[4].flags 00
-000000F5 TocEntry[4].offset 000000AD
-000000F9 TocEntry[5].flags 00
-000000FA TocEntry[5].offset 0000009E
+000000D9 Toc.rootStreamIndex 00000003
+000000DD Toc.unknown 00000000
+000000E1 Toc.count 00000005
+000000E5 Toc.TocEntry[1].flags 00
+000000E6 Toc.TocEntry[1].offset 00000000
+000000EA Toc.TocEntry[2].flags 00
+000000EB Toc.TocEntry[2].offset 0000004D
+000000EF Toc.TocEntry[3].flags 00
+000000F0 Toc.TocEntry[3].offset 00000017
+000000F4 Toc.TocEntry[4].flags 00
+000000F5 Toc.TocEntry[4].offset 000000AD
+000000F9 Toc.TocEntry[5].flags 00
+000000FA Toc.TocEntry[5].offset 0000009E
 ```
 
 ### Table definition section
 
 As linked from the TOC entry 2.
 
-| Type   | Name |
-| ----   | ---- |
-| uint32 | `KDbmsStoreDatabase` (10000069) |
-| byte   | nullbyte |
-| uint32 | unknown |
-| X      | `tableCount` (TCardinality) |
-| ...    | `tableCount` Tables follow |
+| Type     | Name |
+| -------- | ---- |
+| `uint32` | `KDbmsStoreDatabase` (10000069) |
+| `byte`   | nullbyte |
+| `uint32` | unknown |
+| `X`      | `tableCount` (TCardinality) |
+| ...      | `tableCount` Tables follow |
 
 Each `Table` is:
 
-| Type    | Name |
-| ----    | ---- |
-| SString | `tableName` |
-| X       | `fieldCount` (TCardinality) |
-| ...     | `fieldCount` Fields follow |
-| uint16  | unknown |
-| uint32  | unknown |
+| Type      | Name |
+| --------- | ---- |
+| `SString` | `tableName` |
+| `X`       | `fieldCount` (TCardinality) |
+|  ...      | `fieldCount` Fields follow |
+| `byte`    | unknown |
+| `uint32`  | `dataIndex` |
+| `byte`    | unknown |
+
+`dataIndex` is one more than the TOC index of the starting data section for this table. I'm not sure why you have to subtract one to get the TOC index, but it seems to be the way it is.
 
 Each `Field` is:
 
-| Type    | Name |
-| ----    | ---- |
-| SString | `fieldName` |
-| byte    | `type` |
-| byte    | unknown |
-| byte    | `maxLength` (only present for text fields) |
+| Type      | Name |
+| --------- | ---- |
+| `SString` | `fieldName` |
+| `byte`    | `type` |
+| `byte`    | unknown |
+| `byte`    | `maxLength` (only present for text fields) |
 
 The possible values for the `type` byte, and their meanings, are listed in the [Table Data section](#table-data-section).
 
 ### Table data section
 
-Each table data section can contain up to 16 records, as given by the count of bits in `recordBitmask`. The next data section is given by `nextSectionIndex` which is an index into the TOC. It is zero if this is the last data section. The last data section may also have `nextSectionIndex` be non-zero but referring to a TOC entry whose offset is zero. As a special case, if in the first table data section (as referenced by `TocEntry[4]`) the bottom bit of `recordBitmask`, then that data section should be ignored and the data starts in the next section (as given by the first section's `nextSectionIndex`). It depends what app created the database file, as to whether the empty first section is present or not.
+Table data sections are located by looking up the `dataIndex` field in the table definition, see previous section.
 
-| Type    | Name |
-| ----    | ---- |
-| uint32  | `nextSectionIndex` |
-| uint16  | `recordBitmask` (with `n` bits set) |
-| ...     | Array of `n` `recordLength` (TCardinality) |
+Each table data section can contain up to 16 records, as given by the count of bits in `recordBitmask`. The next data section for this table is given by `nextSectionIndex` which is an index into the TOC. It is zero if this is the last data section, that is if there are no more records for this table. The last data section may also have `nextSectionIndex` be non-zero but referring to a TOC entry whose offset is zero. As a special case, if in the first table data section (as referenced by `TocEntry[4]`) the bottom bit of `recordBitmask`, then that data section should be ignored and the data starts in the next section (as given by the first section's `nextSectionIndex`). It depends what app created the database file, as to whether the empty first section is present or not.
+
+| Type     | Name |
+| -------- | ---- |
+| `uint32` | `nextSectionIndex` |
+| `uint16` | `recordBitmask` (with `n` bits set) |
+| ...      | Array of `n` `recordLength` (TCardinality) |
 
 There is a `recordLength` for each set bit in `recordBitmask`. Each `recordLength` is a variable-length `TCardinality`.
 
 After the record length array, the data for each record follows. The record data is a repeating sequence of `fieldMask` byte, followed by 1-8 fields of data (as determined by `fieldMask`), which repeat up to the limit of `recordLength`.
 
-| Type | Name |
-| ---- | ---- |
-| byte | `fieldMask` |
-| ...  | 1-8 fields follow |
-| byte | another `fieldMask` |
-| ...  | 1-8 more fields follow |
-| ...  | _etc_ |
+| Type   | Name |
+| ------ | ---- |
+| `byte` | `fieldMask` |
+| ...    | 1-8 fields follow |
+| `byte` | another `fieldMask` |
+| ...    | 1-8 more fields follow |
+| ...    | _etc_ |
 
 The order of fields is determined by the Table Definition Section. For example in a table with fields A, B and C, bit zero of `fieldMask` refers to A, bit one to B, bit two to C, and the field data would follow A then B then C. If a bit is not set in `fieldMask`, then that field data is not present (and should be considered default-initialized when read). Some field types consume an extra bit in `fieldMask` to encode their value or additional info, so it is necessary to carefully cross-reference against the table definition section when parsing `fieldMask` and the field data.
 
@@ -259,14 +266,14 @@ The reason for this encoding is to make records somewhat self-describing, so tha
 The format of the field data (and the type byte used in the table definition section) for each field type is as follows:
 
 | Type      | Type byte | Format |
-| ----      | --------- | ------ |
-| `Boolean` | `00` | Value in next bit of `fieldMask` |
-| `Integer` | `03` | 2 bytes, little-endian |
-| `Long`    | `05` | 4 bytes, little-endian |
-| `Double`  | `09` | 8 bytes, IEE754 format |
-| `Date`    | `0A` | 8 bytes, see below |
-| `Text`    | `0B` | `BString` |
-| `Format`  | `10` | See below |
+| --------- | --------- | ------ |
+| `Boolean` | `00`      | Value in next bit of `fieldMask` |
+| `Integer` | `03`      | 2 bytes, little-endian |
+| `Long`    | `05`      | 4 bytes, little-endian |
+| `Double`  | `09`      | 8 bytes, IEE754 format |
+| `Date`    | `0A`      | 8 bytes, see below |
+| `Text`    | `0B`      | `BString` |
+| `Format`  | `10`      | See below |
 
 Fields other than `Integer`, `Long`, `Double` and `Text` are skipped over when decoded by OPL.
 

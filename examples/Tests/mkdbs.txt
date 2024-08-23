@@ -1,4 +1,5 @@
 PROC main:
+    LOCAL tbl$(16), i%
 
     PRINT "Deleting databases..."
     DELETE "D:\db\*.db"
@@ -86,7 +87,6 @@ PROC main:
     A.intb% = $0BB0
     APPEND
     CLOSE
-    COMPACT "D:\db\onetable.db"
 
     COPY "D:\db\onetable.db", "D:\db\twotables.db"
 
@@ -98,8 +98,24 @@ PROC main:
     A.txt$ = "Wooooooooooooop"
     APPEND
     CLOSE
+
+    i% = 1
+    WHILE i% < 20
+        tbl$ = "Table" + NUM$(i%, 3)
+        CREATE "D:\db\manytables.db FIELDS txt(40) TO " + tbl$, A, txt$
+        A.txt$ = "FieldForTable" + NUM$(i%, 3)
+        APPEND
+        CLOSE
+        i% = i% + 1
+    ENDWH
+
     PRINT "Compacting..."
-    COMPACT "D:\db\twotables.db"
+    COPY "D:\db\onetable.db", "D:\db\onetable-compacted.db"
+    COMPACT "D:\db\onetable-compacted.db"
+    COPY "D:\db\twotables.db", "D:\db\twotables-compacted.db"
+    COMPACT "D:\db\twotables-compacted.db"
+    COPY "D:\db\manytables.db", "D:\db\manytables-compacted.db"
+    COMPACT "D:\db\manytables-compacted.db"
 
     PRINT "Done"
 ENDP
