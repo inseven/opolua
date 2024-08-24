@@ -1159,7 +1159,8 @@ end
 function CallProcByStringExpr_dump(runtime)
     local numParams = runtime:IP8()
     local type = runtime:IP8()
-    return fmt("nargs=%d type=%c", numParams, type)
+    local typeStr = type == 0 and "" or string.format("%c", type)
+    return fmt("nargs=%d type=%s", numParams, typeStr)
 end
 
 function PercentLessThan(stack, runtime) -- 0x6C
@@ -2430,13 +2431,14 @@ function CallOpxFunc_dump(runtime)
     local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
     local fnName
     if opx then
-        local ok, module = pcall(require, fmt("opx.%s", opx.filename))
+        local modName = "opx." .. opx.name:lower()
+        local ok, module = pcall(require, modName)
         if ok then
             fnName = module.fns[fnIdx]
         end
     end
 
-    return fmt("%d %d (%s %s)", opxNo, fnIdx, opx and opx.filename or "?", fnName or "?")
+    return fmt("%d %d (%s %s)", opxNo, fnIdx, opx and opx.name or "?", fnName or "?")
 end
 
 function Statement32(stack, runtime) -- 0x119
