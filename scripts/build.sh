@@ -153,7 +153,7 @@ xcodebuild \
     -project OpoLua.xcodeproj \
     -scheme "OpoLua" \
     -config Release \
-    -destination "generic/platform=iOS" \
+    -destination "generic/platform=macOS" \
     OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
     BUILD_NUMBER=$BUILD_NUMBER \
     MARKETING_VERSION=$VERSION_NUMBER
