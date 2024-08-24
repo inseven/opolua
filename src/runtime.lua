@@ -592,24 +592,8 @@ end
 function Runtime:openDb(logName, tableSpec, variables, op)
     assert(self.dbs.open[logName] == nil, KErrOpen)
     printf("parseTableSpec: %s\n", tableSpec)
-    local path, tableName, fields = database.parseTableSpec(tableSpec)
+    local path, tableName, fieldNames = database.parseTableSpec(tableSpec)
     path = self:abs(path)
-    if fields == nil then
-        -- SIBO-style call where field names are derived from the variable names
-        fields = {}
-        for i, var in ipairs(variables) do
-            local fieldName = var.name:gsub("[%%&$]$", {
-                ["%"] = "i",
-                ["&"] = "a",
-                ["$"] = "s",
-            })
-            fields[i] = {
-                name = fieldName,
-                type = var.type,
-                -- TODO string maxlen?
-            }
-        end
-    end
 
     local readonly = op == "OpenR"
     -- Check if there are already any other open handles to this db
@@ -634,10 +618,28 @@ function Runtime:openDb(logName, tableSpec, variables, op)
     end
 
     if op == "Create" then
-        db:createTable(tableName, fields)
+        if fieldNames == nil then
+            -- SIBO-style call where field names are derived from the variable names
+            fieldNames = {}
+            for i, var in ipairs(variables) do
+                fieldNames[i] = var.name:gsub("[%%&$]$", {
+                    ["%"] = "i",
+                    ["&"] = "a",
+                    ["$"] = "s",
+                })
+            end
+        end
+
+        -- "*" is not valid for create, only open
+        assert(not (#fieldNames == 1 and fieldName[1] == "*"), KErrInvalidArgs)
+        local types = {}
+        for i, var in ipairs(variables) do
+            types[i] = var.type
+        end
+        db:createTable(tableName, fieldNames, types)
     end
 
-    db:setView(tableName, fields, variables)
+    db:setView(tableName, fieldNames, variables)
     self.dbs.open[logName] = db
     self.dbs.current = logName
 end

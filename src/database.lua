@@ -91,14 +91,44 @@ function Db:currentVarsToRecord()
     return result
 end
 
-function Db:setView(tableName, fields, variables)
+local function oplValidField(tbl, index)
+    -- It's not a straight index because we have to ignore fields that OPL skips over
+    local validCount = 0
+    for i, field in ipairs(tbl.fields) do
+        if field.type then
+            validCount = validCount + 1
+        end
+        if validCount == index then
+            return field
+        end
+    end
+    error("Index not found")
+end
+
+function Db:setView(tableName, fieldNames, variables)
     local tbl = self.tables[tableName]
     assert(tbl, "No such tableName "..tableName)
-    assert(#fields == #variables, KErrInvalidArgs)
+
+    if fieldNames and #fieldNames == 1 and fieldNames[1] == "*" then
+        -- Equivalent to all the fields in the table, in order
+        fieldNames = {}
+        for i, field in ipairs(tbl.fields) do
+            fieldNames[i] = field.name
+        end
+    end
+
+    assert(fieldNames == nil or #fieldNames == #variables, KErrInvalidArgs)
     local map = {}
     for i, var in ipairs(variables) do
-        assert(fields[i].type == var.type, KErrInvalidArgs)
-        map[var.name] = fields[i]
+        local fieldName = fieldNames and fieldNames[i] or oplValidField(tbl, i).name
+        if tbl.fields[fieldName].type ~= var.type then
+            printf("Field %s type is %d, var %s type is %d\n", fieldName, tbl.fields[fieldName].type, var.name, var.type)
+            error(KErrInvalidArgs)
+        end
+        map[var.name] = {
+            name = fieldName,
+            type = var.type,
+        }
     end
     self.currentTable = tbl
     self.viewMap = map
@@ -148,7 +178,6 @@ function Db:beginTransaction()
     self.preTransactionTable = {
         name = self.currentTable.name,
         fields = self.currentTable.fields,
-        fieldMap = self.currentTable.fieldMap,
     }
     for i, record in ipairs(self.currentTable) do
         local recCopy = {}
@@ -272,7 +301,6 @@ function Db:loadText(data)
             currentTable = {
                 name = tableName,
                 fields = {},
-                fieldMap = {},
             }
             table.insert(self.tables, currentTable)
             self.tables[tableName] = currentTable
@@ -283,14 +311,14 @@ function Db:loadText(data)
             local type, name = line:match("^:FIELD ([0-9]) (.+)")
             local field = { type = tonumber(type), name = name }
             table.insert(currentTable.fields, field)
-            currentTable.fieldMap[name] = field
+            currentTable.fields[name] = field
         elseif line:match("^:RECORD") then
             currentRec = {}
             table.insert(currentTable, currentRec)
         else
             local k, v = line:match("([^=]+)=(.*)")
             if k then
-                local field = assert(currentTable.fieldMap[k], "Field not found in assignment to "..k)
+                local field = assert(currentTable.fields[k], "Field not found in assignment to "..k)
                 if field.type == DataTypes.EString then
                     v = hexUnescape(v)
                 else
@@ -542,7 +570,6 @@ function Db:readTableDefinition(data, pos)
         local tbl = {
             name = tableName,
             fields = {},
-            fieldMap = {},
         }
         numFields, pos = readCardinality(data, pos)
         for _ = 1, numFields do
@@ -558,7 +585,7 @@ function Db:readTableDefinition(data, pos)
 
             local field = { type = oplType, name = fieldName, rawType = type }
             table.insert(tbl.fields, field)
-            tbl.fieldMap[fieldName] = field
+            tbl.fields[fieldName] = field
         end
         local dataIndex
         dataIndex, pos = string.unpack("<xI4x", data, pos)
@@ -570,11 +597,20 @@ function Db:readTableDefinition(data, pos)
     self.currentTable = self.tables[1]
 end
 
-function Db:createTable(tableName, fields)
+function Db:createTable(tableName, fieldNames, types)
     if self.tables[tableName] then
         error(KErrExists)
     end
     self:setModified()
+    local fields = {}
+    assert(#fieldNames == #types, "fieldNames and types length mismatch!")
+    for i, fieldName in ipairs(fieldNames) do
+        fields[i] = {
+            name = fieldName,
+            type = types[i],
+        }
+        fields[fieldName] = fields[i]
+    end
     local tbl = {
         name = tableName,
         fields = fields,
@@ -653,13 +689,13 @@ function parseTableSpec(spec)
     local query = splitQuery(spec)
 
     local tableName = "Table1"
-    local fields
+    local fieldNames
     if query.SELECT or query.FIELDS then
         assert(not (query.SELECT and query.FIELDS), "Query cannot specify both SELECT and FIELDS")
-        fields = commaSplit(query.SELECT or query.FIELDS)
+        fieldNames = commaSplit(query.SELECT or query.FIELDS)
         -- Split any max lengths from the declarations, we don't care about them
-        for i, field in ipairs(fields) do
-            fields[i] = field:match("[^(]+")
+        for i, field in ipairs(fieldNames) do
+            fieldNames[i] = field:match("[^(]+")
         end
     end
 
@@ -673,7 +709,7 @@ function parseTableSpec(spec)
         unimplemented("database.orderby")
     end
 
-    return filename, tableName, fields
+    return filename, tableName, fieldNames
 end
 
 -- Database files appear to have some sort of paging scheme whereby 2 extra bytes are inserted every 0x4000 bytes,
