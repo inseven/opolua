@@ -35,7 +35,7 @@ APP_DIRECTORY="${ROOT_DIRECTORY}"
 KEYCHAIN_PATH="${TEMPORARY_DIRECTORY}/temporary.keychain"
 MACOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-macOS.xcarchive"
 IOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-iOS.xcarchive"
-ENV_PATH="${APP_DIRECTORY}/.env"
+ENV_PATH="$APP_DIRECTORY/.env"
 RELEASE_SCRIPT_PATH="${SCRIPTS_DIRECTORY}/release.sh"
 
 source "${SCRIPTS_DIRECTORY}/environment.sh"
@@ -118,7 +118,8 @@ BUILD_NUMBER=`build-tools generate-build-number`
 echo "$APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$APPLE_DISTRIBUTION_CERTIFICATE_BASE64"
 
 # Install the provisioning profiles.
-build-tools install-provisioning-profile "${APP_DIRECTORY}/OpoLua_App_Store_Profile.mobileprovision"
+build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_App_Store_Profile.mobileprovision"
+build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_Mac_Catalyst_Developer_ID_Profile.provisionprofile"
 
 # Build and archive the iOS project.
 sudo xcode-select --switch "$IOS_XCODE_PATH"
@@ -135,7 +136,7 @@ xcodebuild \
     -archivePath "$IOS_ARCHIVE_PATH" \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
-    -exportOptionsPlist "${APP_DIRECTORY}/ExportOptions.plist"
+    -exportOptionsPlist "$APP_DIRECTORY/ExportOptions.plist"
 
 # Builds the macOS project.
 sudo xcode-select --switch "$MACOS_XCODE_PATH"

@@ -1055,10 +1055,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = OpoLua/OpoLua.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = $BUILD_NUMBER;
 				DEVELOPMENT_TEAM = 9GNGYP6YR7;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = QS82QFHKWB;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = QS82QFHKWB;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = OpoLua/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1070,6 +1072,7 @@
 				PRODUCT_NAME = OpoLua;
 				PROVISIONING_PROFILE_SPECIFIER = "OpoLua App Store Profile";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "OpoLua App Store Profile";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "OpoLua Mac Catalyst Developer ID Profile";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
