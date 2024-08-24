@@ -141,17 +141,32 @@ xcodebuild \
     -exportOptionsPlist "$APP_DIRECTORY/ExportOptions.plist"
 
 # Builds the macOS project.
-# sudo xcode-select --switch "$MACOS_XCODE_PATH"
-# xcodebuild \
-#     -project OpoLua.xcodeproj \
-#     -scheme "OpoLua" \
-#     -config Release \
-#     -archivePath "$MACOS_ARCHIVE_PATH" \
-#     -destination "generic/platform=macOS,variant=Mac Catalyst" \
-#     OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
-#     CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
-#     MARKETING_VERSION=$VERSION_NUMBER \
-#     clean archive
+sudo xcode-select --switch "$MACOS_XCODE_PATH"
+xcodebuild \
+    -project OpoLua.xcodeproj \
+    -scheme "OpoLua" \
+    -destination "generic/platform=macOS,variant=Mac Catalyst" \
+    clean
+xcodebuild \
+    -project OpoLua.xcodeproj \
+    -scheme "OpoLua" \
+    -config Release \
+    -archivePath "$IOS_ARCHIVE_PATH" \
+    -destination "generic/platform=iOS" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    BUILD_NUMBER=$BUILD_NUMBER \
+    MARKETING_VERSION=$VERSION_NUMBER \
+    archive
+xcodebuild \
+    -project OpoLua.xcodeproj \
+    -scheme "OpoLua" \
+    -config Release \
+    -archivePath "$MACOS_ARCHIVE_PATH" \
+    -destination "generic/platform=macOS,variant=Mac Catalyst" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+    MARKETING_VERSION=$VERSION_NUMBER \
+    archive
 
 if $RELEASE ; then
 
