@@ -972,6 +972,10 @@ function IOREAD(h, maxLen)
     end
     assert(f.pos, "Cannot IOREAD a non-file handle!")
 
+    if f.pos > #f.data then
+        return nil, KErrEof
+    end
+
     if f.mode & KIoOpenFormatText > 0 then
         local startPos, endPos = f.data:find("\r?\n", f.pos)
         if startPos then
@@ -990,7 +994,11 @@ function IOREAD(h, maxLen)
     else
         local data = f.data:sub(f.pos, f.pos + maxLen - 1)
         -- printf("IOREAD pos=%d len=%d data=%s\n", f.pos, #data, hexEscape(data))
-        f.pos = f.pos + #data
+        if #data == 0 then
+            f.pos = #f.data + 1 -- So we error next read
+        else
+            f.pos = f.pos + #data
+        end
         return data
     end
 end

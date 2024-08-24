@@ -980,6 +980,11 @@ function Runtime:pcallProc(procName, ...)
             addStacktraceToError(self, err, callingFrame)
             -- print(err)
             self.errorLocation = fmt("Error in %s\\%s", self:moduleForProc(self.frame.proc).name, self.frame.proc.name)
+
+            if err.code and err.code == KStopErr then
+                printf("Interrupted!\n%s\n", err)
+            end
+
             if err.code and err.code ~= KStopErr then
                 self.errorValue = err.code
                 -- An error code that might potentially be handled by a Trap or OnErr

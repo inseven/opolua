@@ -44,7 +44,7 @@ local KTbClockPosX = 4
 local KTbClockHeight = 64
 
 -- Global vars
-local visibleVar
+local TbVis, TbMenuSym
 
 -- Actual state
 local tbWinId
@@ -61,8 +61,10 @@ local defaultIcon
 function TBarLink(appLink)
     local tbWidthVar = runtime:declareGlobal("TbWidth%")
     tbWidthVar(KTbWidth)
-    visibleVar = runtime:declareGlobal("TbVis%")
-    visibleVar(0)
+    TbVis = runtime:declareGlobal("TbVis%")
+    TbVis(0)
+    TbMenuSym = runtime:declareGlobal("TbMenuSym%")
+    TbMenuSym(KMenuCheckBox)
     runtime:callProc(appLink:upper())
 end
 
@@ -278,7 +280,8 @@ function TBarShow()
     local prevId = gIDENTITY()
     gUSE(tbWinId)
     gVISIBLE(true)
-    visibleVar(-1)
+    TbVis(-1)
+    TbMenuSym(KMenuCheckBox | KMenuSymbolOn)
     gUSE(prevId)
 end
 
@@ -286,7 +289,8 @@ function TBarHide()
     local prevId = gIDENTITY()
     gUSE(tbWinId)
     gVISIBLE(false)
-    visibleVar(0)
+    TbVis(0)
+    TbMenuSym(KMenuCheckBox)
     gUSE(prevId)
 end
 
