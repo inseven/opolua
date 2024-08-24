@@ -123,7 +123,7 @@ build-tools install-provisioning-profile "${APP_DIRECTORY}/OpoLua_App_Store_Prof
 # Build and archive the iOS project.
 sudo xcode-select --switch "$IOS_XCODE_PATH"
 xcodebuild \
-    -project OpoLua.xcodeproj
+    -project OpoLua.xcodeproj \
     -scheme "OpoLua" \
     -config Release \
     -archivePath "$IOS_ARCHIVE_PATH" \
