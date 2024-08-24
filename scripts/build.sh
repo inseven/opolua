@@ -129,6 +129,7 @@ xcodebuild \
     -scheme "OpoLua" \
     -config Release \
     -archivePath "$IOS_ARCHIVE_PATH" \
+    -destination "generic/platform=iOS" \
     OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
     BUILD_NUMBER=$BUILD_NUMBER \
     MARKETING_VERSION=$VERSION_NUMBER \
