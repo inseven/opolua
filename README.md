@@ -6,7 +6,7 @@ An OPO (compiled OPL) interpreter written in Lua and Swift, based on the Psion S
 
 Supported features:
 
-* Ability to decode a variety of Psion file types, including MBM, SIS, and database.
+* Ability to decode a variety of Psion file types, including MBM, SIS, and databases.
 * SIS files can be installed directly by launching them.
 * Colour graphics (if the program originally provided them).
 * Sound.
@@ -55,6 +55,7 @@ This interpreter is not 100% behaviour compatible with the original Psion. The m
 ## Missing features
 
 * Various other less-common opcodes, functions and OPXes
+* Not all database features are supported yet.
 * Some dialog features like dTIME, dFILE
 * Invert drawing mode
 * Ability to suspend/resume app execution in the iOS UI

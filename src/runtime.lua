@@ -591,6 +591,7 @@ end
 
 function Runtime:openDb(logName, tableSpec, variables, op)
     assert(self.dbs.open[logName] == nil, KErrOpen)
+    printf("parseTableSpec: %s\n", tableSpec)
     local path, tableName, fields = database.parseTableSpec(tableSpec)
     path = self:abs(path)
     if fields == nil then

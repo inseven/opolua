@@ -93,7 +93,7 @@ end
 
 function Db:setView(tableName, fields, variables)
     local tbl = self.tables[tableName]
-    assert(tbl, "No such tableName in setView!")
+    assert(tbl, "No such tableName "..tableName)
     assert(#fields == #variables, KErrInvalidArgs)
     local map = {}
     for i, var in ipairs(variables) do
@@ -583,18 +583,97 @@ function Db:createTable(tableName, fields)
     self.tables[tableName] = tbl
 end
 
+local function trimTrailingSpace(val)
+    return val:match("(.-)%s*$")
+end
+
+function splitQuery(query)
+    local keywords = {
+        "SELECT",
+        "FIELDS",
+        "FROM",
+        "ORDER BY",
+        "TO",
+    }
+    local queryUpper = query:upper()
+    assert(#query == #queryUpper, "Case conversion fail!")
+    local pos = 1
+    local prevKeyword = nil
+    local result = {}
+    while true do
+        local foundKeyword
+        for i, keyword in ipairs(keywords) do
+            local prevGroupEnd, nextPos = queryUpper:match("()%s*"..keyword.."%s*()", pos)
+            if nextPos then
+                -- Found a keyword. Assemble everything prior to this to prevKeyword, if applicable
+                foundKeyword = keyword
+                if prevKeyword then
+                    result[prevKeyword] = query:sub(pos, prevGroupEnd - 1)
+                end
+                prevKeyword = keyword
+                pos = nextPos
+                break
+            end
+        end
+        if not foundKeyword then
+            break
+        end
+    end
+
+    -- Handle last keyword
+    if prevKeyword then
+        result[prevKeyword] = trimTrailingSpace(query:sub(pos))
+    end
+
+    return result
+end
+
+function commaSplit(str)
+    local result = {}
+    for val in str:gmatch("%s*([^,]*)") do
+        table.insert(result, trimTrailingSpace(val))
+    end
+    -- if #result == 1 and result[1] == "" then
+    --     return {}
+    -- end
+    return result
+end
+
 function parseTableSpec(spec)
-    -- TODO support
-    printf("parseTableSpec: %s\n", spec)
-    local quoted, rest = spec:match('^"([^"]+)"%s*(.*)')
+    local filename = spec
+    local quoted, rest = spec:match('^"([^"]+)%s*(.*)')
     if quoted then
-        spec = quoted
+        filename = quoted
+        spec = rest
+    else
+        filename, rest = spec:match("(%S+)%s*(.*)")
+        spec = rest
     end
-    local query = spec:match("^[%S]+%s+(SELECT .*)")
-    if query then
-        unimplemented("database.parseTableSpec")
+
+    local query = splitQuery(spec)
+
+    local tableName = "Table1"
+    local fields
+    if query.SELECT or query.FIELDS then
+        assert(not (query.SELECT and query.FIELDS), "Query cannot specify both SELECT and FIELDS")
+        fields = commaSplit(query.SELECT or query.FIELDS)
+        -- Split any max lengths from the declarations, we don't care about them
+        for i, field in ipairs(fields) do
+            fields[i] = field:match("[^(]+")
+        end
     end
-    return spec, "Table1", nil
+
+    if query.FROM or query.TO then
+        assert(not (query.FROM and query.TO), "Query cannot specify both FROM and TO!")
+        tableName = query.FROM or query.TO
+    end
+
+    -- TODO ORDER BY
+    if query["ORDER BY"] then
+        unimplemented("database.orderby")
+    end
+
+    return filename, tableName, fields
 end
 
 -- Database files appear to have some sort of paging scheme whereby 2 extra bytes are inserted every 0x4000 bytes,
