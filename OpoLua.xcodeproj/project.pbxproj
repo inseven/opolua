@@ -721,9 +721,9 @@
 		DB79FE5727428292005E904F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = NO;
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1310;
-				LastUpgradeCheck = 1510;
+				LastUpgradeCheck = 1540;
 				TargetAttributes = {
 					DB79FFA52742D88A005E904F = {
 						CreatedOnToolsVersion = 12.5.1;
@@ -1040,9 +1040,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = uk.co.inseven.opolua;
 				PRODUCT_NAME = OpoLua;
 				SDKROOT = iphoneos;
-				SUPPORTS_MACCATALYST = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Debug;
 		};
@@ -1070,9 +1071,10 @@
 				PROVISIONING_PROFILE_SPECIFIER = "OpoLua App Store Profile";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "OpoLua App Store Profile";
 				SDKROOT = iphoneos;
-				SUPPORTS_MACCATALYST = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

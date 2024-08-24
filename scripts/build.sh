@@ -33,7 +33,8 @@ TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
 APP_DIRECTORY="${ROOT_DIRECTORY}"
 
 KEYCHAIN_PATH="${TEMPORARY_DIRECTORY}/temporary.keychain"
-ARCHIVE_PATH="${BUILD_DIRECTORY}/OpoLua.xcarchive"
+MACOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-macOS.xcarchive"
+IOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-iOS.xcarchive"
 ENV_PATH="${APP_DIRECTORY}/.env"
 RELEASE_SCRIPT_PATH="${SCRIPTS_DIRECTORY}/release.sh"
 
@@ -73,28 +74,12 @@ if [ -f "$ENV_PATH" ] ; then
     source "$ENV_PATH"
 fi
 
-function xcode_project {
-    xcodebuild \
-        -project OpoLua.xcodeproj "$@"
-}
-
-function build_scheme {
-    # Disable code signing for the build server.
-    xcode_project \
-        -scheme "$1" \
-        CODE_SIGN_IDENTITY="" \
-        CODE_SIGNING_REQUIRED=NO \
-        CODE_SIGNING_ALLOWED=NO "${@:2}"
-}
-
 cd "$APP_DIRECTORY"
 
-# Select the correct Xcode.
-IOS_XCODE_PATH=${IOS_XCODE_PATH:-/Applications/Xcode.app}
-sudo xcode-select --switch "$IOS_XCODE_PATH"
-
 # List the available schemes.
-xcode_project -list
+xcodebuild \
+        -project OpoLua.xcodeproj \
+        -list
 
 # Clean up the build directory.
 if [ -d "$BUILD_DIRECTORY" ] ; then
@@ -136,19 +121,34 @@ echo "$APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD" | build-tools import-base64-cert
 build-tools install-provisioning-profile "${APP_DIRECTORY}/OpoLua_App_Store_Profile.mobileprovision"
 
 # Build and archive the iOS project.
-xcode_project \
+sudo xcode-select --switch "$IOS_XCODE_PATH"
+xcodebuild \
+    -project OpoLua.xcodeproj
     -scheme "OpoLua" \
     -config Release \
-    -archivePath "$ARCHIVE_PATH" \
+    -archivePath "$IOS_ARCHIVE_PATH" \
     OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
     BUILD_NUMBER=$BUILD_NUMBER \
     MARKETING_VERSION=$VERSION_NUMBER \
     clean archive
 xcodebuild \
-    -archivePath "$ARCHIVE_PATH" \
+    -archivePath "$IOS_ARCHIVE_PATH" \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
     -exportOptionsPlist "${APP_DIRECTORY}/ExportOptions.plist"
+
+# Builds the macOS project.
+sudo xcode-select --switch "$MACOS_XCODE_PATH"
+xcodebuild \
+    -project OpoLua.xcodeproj \
+    -scheme "OpoLua" \
+    -config Release \
+    -archivePath "$MACOS_ARCHIVE_PATH" \
+    -destination "generic/platform=macOS,variant=Mac Catalyst" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+    MARKETING_VERSION=$VERSION_NUMBER \
+    clean archive
 
 if $RELEASE ; then
 
