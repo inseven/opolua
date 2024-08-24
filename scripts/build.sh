@@ -149,14 +149,7 @@ xcodebuild \
     -scheme "OpoLua" \
     -destination "generic/platform=macOS,variant=Mac Catalyst" \
     clean
-xcodebuild \
-    -project OpoLua.xcodeproj \
-    -scheme "OpoLua" \
-    -config Release \
-    -destination "generic/platform=macOS" \
-    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
-    BUILD_NUMBER=$BUILD_NUMBER \
-    MARKETING_VERSION=$VERSION_NUMBER
+xcodebuild -project OpoLua.xcodeproj -scheme EmbedLuaPlugin
 xcodebuild \
     -project OpoLua.xcodeproj \
     -scheme "OpoLua" \
