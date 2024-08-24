@@ -149,6 +149,16 @@ xcodebuild \
     -scheme "OpoLua" \
     -config Release \
     -archivePath "$MACOS_ARCHIVE_PATH" \
+    -destination "generic/platform=iOS" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+    MARKETING_VERSION=$VERSION_NUMBER \
+    archive
+xcodebuild \
+    -project OpoLua.xcodeproj \
+    -scheme "OpoLua" \
+    -config Release \
+    -archivePath "$MACOS_ARCHIVE_PATH" \
     -destination "generic/platform=macOS,variant=Mac Catalyst" \
     OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
     CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
