@@ -1,0 +1,3211 @@
+00000000 TCheckedUid.uid1 10000050
+00000004 TCheckedUid.uid2 1000008A
+00000008 TCheckedUid.uid3 00000000
+0000000C TCheckedUid.uidCheck 4739C507
+
+00000010 TPermanentStoreHeader.iBackup 00004DF2
+00000014 TPermanentStoreHeader.iHandle 00000000
+00000018 TPermanentStoreHeader.iRef 000027FD
+0000001C TPermanentStoreHeader.iCrc 5928
+
+Section 1 0000001E - 00000029 (11 bytes)
+00000010                                            09 40                .@
+00000020  00 00 00 00 00 00 00 00 00                       .........
+
+Section 2 00000029 - 00000035 (12 bytes)
+00000020                             0A 40 69 00 00 10 00           .@i....
+00000030  01 00 00 00 00                                   .....
+
+0000002B DbmsStoreDbHeader.KDbmsStoreDatabase 10000069
+0000002F DbmsStoreDbHeader.version? 0100
+00000031 DbmsStoreDbHeader.noclue 00000000
+
+Section 3 00000035 - 0000003F (10 bytes)
+00000030                 08 40 68 01 00 10 02 00 00 00          .@h.......
+
+00000037 TOplDocRootStream.iAppUid 10000168
+0000003B TOplDocRootStream.iStreamId 00000002
+
+Section 4 0000003F - 0000005C (29 bytes)
+00000030                                               1B                 .
+00000040  80 03 00 00 00 00 00 00 00 03 00 00 00 00 00 00  ................
+00000050  00 00 00 0B 00 00 00 00 17 00 00 00              ............
+
+Section 5 0000005C - 0000006B (15 bytes)
+00000050                                      0D 40 04 00              .@..
+00000060  00 00 40 00 00 00 00 00 00 00 00                 ..@........
+
+Section 6 0000006B - 0000008C (33 bytes)
+00000060                                   1F 40 69 00 00             .@i..
+00000070  10 00 01 00 00 00 02 1A 54 61 62 6C 65 31 02 0E  ........Table1..
+00000080  74 78 74 0B 00 28 20 05 00 00 00 00              txt..( .....
+
+0000006D TableSection.KDbmsStoreDatabase 10000069
+00000071 TableSection.nullbyte 00
+00000072 TableSection.unknown 00000001
+00000076 TableSection.tableCount 1
+00000077 TableSection.Table[1].tableName Table1
+0000007E TableSection.Table[1].fieldCount 1
+0000007F TableSection.Table[1].Field[1].fieldName txt
+00000083 TableSection.Table[1].Field[1].type 0B (Text)
+00000084 TableSection.Table[1].Field[1].unknown 00
+00000085 TableSection.Table[1].Field[1].maxLen 28
+00000086 TableSection.Table[1].unknown1 20
+00000087 TableSection.Table[1].dataIndex 00000005
+0000008B TableSection.Table[1].unknown2 00
+
+Section 7 0000008C - 00000094 (8 bytes)
+00000080                                      06 40 00 00              .@..
+00000090  00 00 00 00                                      ....
+
+Section 8 00000094 - 000000BB (39 bytes)
+00000090              25 80 03 00 00 00 00 00 00 00 05 00      %...........
+000000A0  00 00 00 00 00 00 00 00 4D 00 00 00 00 17 00 00  ........M.......
+000000B0  00 00 6E 00 00 00 00 3E 00 00 00                 ..n....>...
+
+Section 9 000000BB - 000000CA (15 bytes)
+000000B0                                   0D 40 04 00 00             .@...
+000000C0  00 41 00 00 00 02 00 00 00 00                    .A........
+
+Section 10 000000CA - 000000E3 (25 bytes)
+000000C0                                17 40 00 00 00 00            .@....
+000000D0  01 00 20 01 0E 46 69 65 6C 64 46 6F 72 54 61 62  .. ..FieldForTab
+000000E0  6C 65 31                                         le1
+
+000000CC TableContentSection.nextSectionIndex 00000000
+000000D0 TableContentSection.recordBitmask 0001
+000000D2 TableContentSection.recordLength[1] 10
+
+--------------------- 000000D3 to 0x000000E3 UNPARSED ---------------------
+000000D0           01 0E 46 69 65 6C 64 46 6F 72 54 61 62     ..FieldForTab
+000000E0  6C 65 31                                         le1
+---------------------------------------------------------------------------
+
+Section 11 000000E3 - 0000010A (39 bytes)
+000000E0           25 80 03 00 00 00 00 00 00 00 05 00 00     %............
+000000F0  00 00 00 00 00 00 00 4D 00 00 00 00 17 00 00 00  .......M........
+00000100  00 AC 00 00 00 00 9D 00 00 00                    ..........
+
+Section 12 0000010A - 00000119 (15 bytes)
+00000100                                0D 40 06 00 00 00            .@....
+00000110  60 00 00 00 00 00 00 00 00                       `........
+
+Section 13 00000119 - 0000014F (54 bytes)
+00000110                             34 40 69 00 00 10 00           4@i....
+00000120  01 00 00 00 04 1A 54 61 62 6C 65 31 02 0E 74 78  ......Table1..tx
+00000130  74 0B 00 28 20 05 00 00 00 00 1A 54 61 62 6C 65  t..( ......Table
+00000140  32 02 0E 74 78 74 0B 00 28 20 07 00 00 00 00     2..txt..( .....
+
+0000011B TableSection.KDbmsStoreDatabase 10000069
+0000011F TableSection.nullbyte 00
+00000120 TableSection.unknown 00000001
+00000124 TableSection.tableCount 2
+00000125 TableSection.Table[1].tableName Table1
+0000012C TableSection.Table[1].fieldCount 1
+0000012D TableSection.Table[1].Field[1].fieldName txt
+00000131 TableSection.Table[1].Field[1].type 0B (Text)
+00000132 TableSection.Table[1].Field[1].unknown 00
+00000133 TableSection.Table[1].Field[1].maxLen 28
+00000134 TableSection.Table[1].unknown1 20
+00000135 TableSection.Table[1].dataIndex 00000005
+00000139 TableSection.Table[1].unknown2 00
+0000013A TableSection.Table[2].tableName Table2
+00000141 TableSection.Table[2].fieldCount 1
+00000142 TableSection.Table[2].Field[1].fieldName txt
+00000146 TableSection.Table[2].Field[1].type 0B (Text)
+00000147 TableSection.Table[2].Field[1].unknown 00
+00000148 TableSection.Table[2].Field[1].maxLen 28
+00000149 TableSection.Table[2].unknown1 20
+0000014A TableSection.Table[2].dataIndex 00000007
+0000014E TableSection.Table[2].unknown2 00
+
+Section 14 0000014F - 00000157 (8 bytes)
+00000140                                               06                 .
+00000150  40 00 00 00 00 00 00                             @......
+
+Section 15 00000157 - 00000188 (49 bytes)
+00000150                       2F 80 03 00 00 00 00 00 00         /........
+00000160  00 07 00 00 00 00 00 00 00 00 00 FB 00 00 00 00  ................
+00000170  17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 31  ...............1
+00000180  01 00 00 00 EC 00 00 00                          ........
+
+Section 16 00000188 - 00000197 (15 bytes)
+00000180                          0D 40 06 00 00 00 61 00          .@....a.
+00000190  00 00 02 00 00 00 00                             .......
+
+Section 17 00000197 - 000001B0 (25 bytes)
+00000190                       17 40 00 00 00 00 01 00 20         .@...... 
+000001A0  01 0E 46 69 65 6C 64 46 6F 72 54 61 62 6C 65 32  ..FieldForTable2
+
+00000199 TableContentSection.nextSectionIndex 00000000
+0000019D TableContentSection.recordBitmask 0001
+0000019F TableContentSection.recordLength[1] 10
+
+--------------------- 000001A0 to 0x000001B0 UNPARSED ---------------------
+000001A0  01 0E 46 69 65 6C 64 46 6F 72 54 61 62 6C 65 32  ..FieldForTable2
+---------------------------------------------------------------------------
+
+Section 18 000001B0 - 000001E1 (49 bytes)
+000001B0  2F 80 03 00 00 00 00 00 00 00 07 00 00 00 00 00  /...............
+000001C0  00 00 00 00 FB 00 00 00 00 17 00 00 00 00 AC 00  ................
+000001D0  00 00 00 9D 00 00 00 00 79 01 00 00 00 6A 01 00  ........y....j..
+000001E0  00                                               .
+
+Section 19 000001E1 - 000001F0 (15 bytes)
+000001E0     0D 40 08 00 00 00 80 00 00 00 00 00 00 00 00   .@.............
+
+Section 20 000001F0 - 0000023B (75 bytes)
+000001F0  49 40 69 00 00 10 00 01 00 00 00 06 1A 54 61 62  I@i..........Tab
+00000200  6C 65 31 02 0E 74 78 74 0B 00 28 20 05 00 00 00  le1..txt..( ....
+00000210  00 1A 54 61 62 6C 65 32 02 0E 74 78 74 0B 00 28  ..Table2..txt..(
+00000220  20 07 00 00 00 00 1A 54 61 62 6C 65 33 02 0E 74   ......Table3..t
+00000230  78 74 0B 00 28 20 09 00 00 00 00                 xt..( .....
+
+000001F2 TableSection.KDbmsStoreDatabase 10000069
+000001F6 TableSection.nullbyte 00
+000001F7 TableSection.unknown 00000001
+000001FB TableSection.tableCount 3
+000001FC TableSection.Table[1].tableName Table1
+00000203 TableSection.Table[1].fieldCount 1
+00000204 TableSection.Table[1].Field[1].fieldName txt
+00000208 TableSection.Table[1].Field[1].type 0B (Text)
+00000209 TableSection.Table[1].Field[1].unknown 00
+0000020A TableSection.Table[1].Field[1].maxLen 28
+0000020B TableSection.Table[1].unknown1 20
+0000020C TableSection.Table[1].dataIndex 00000005
+00000210 TableSection.Table[1].unknown2 00
+00000211 TableSection.Table[2].tableName Table2
+00000218 TableSection.Table[2].fieldCount 1
+00000219 TableSection.Table[2].Field[1].fieldName txt
+0000021D TableSection.Table[2].Field[1].type 0B (Text)
+0000021E TableSection.Table[2].Field[1].unknown 00
+0000021F TableSection.Table[2].Field[1].maxLen 28
+00000220 TableSection.Table[2].unknown1 20
+00000221 TableSection.Table[2].dataIndex 00000007
+00000225 TableSection.Table[2].unknown2 00
+00000226 TableSection.Table[3].tableName Table3
+0000022D TableSection.Table[3].fieldCount 1
+0000022E TableSection.Table[3].Field[1].fieldName txt
+00000232 TableSection.Table[3].Field[1].type 0B (Text)
+00000233 TableSection.Table[3].Field[1].unknown 00
+00000234 TableSection.Table[3].Field[1].maxLen 28
+00000235 TableSection.Table[3].unknown1 20
+00000236 TableSection.Table[3].dataIndex 00000009
+0000023A TableSection.Table[3].unknown2 00
+
+Section 21 0000023B - 00000243 (8 bytes)
+00000230                                   06 40 00 00 00             .@...
+00000240  00 00 00                                         ...
+
+Section 22 00000243 - 0000027E (59 bytes)
+00000240           39 80 03 00 00 00 00 00 00 00 09 00 00     9............
+00000250  00 00 00 00 00 00 00 D2 01 00 00 00 17 00 00 00  ................
+00000260  00 AC 00 00 00 00 9D 00 00 00 00 79 01 00 00 00  ...........y....
+00000270  6A 01 00 00 00 1D 02 00 00 00 C3 01 00 00        j.............
+
+Section 23 0000027E - 0000028D (15 bytes)
+00000270                                            0D 40                .@
+00000280  08 00 00 00 81 00 00 00 02 00 00 00 00           .............
+
+Section 24 0000028D - 000002A6 (25 bytes)
+00000280                                         17 40 00               .@.
+00000290  00 00 00 01 00 20 01 0E 46 69 65 6C 64 46 6F 72  ..... ..FieldFor
+000002A0  54 61 62 6C 65 33                                Table3
+
+0000028F TableContentSection.nextSectionIndex 00000000
+00000293 TableContentSection.recordBitmask 0001
+00000295 TableContentSection.recordLength[1] 10
+
+--------------------- 00000296 to 0x000002A6 UNPARSED ---------------------
+00000290                    01 0E 46 69 65 6C 64 46 6F 72        ..FieldFor
+000002A0  54 61 62 6C 65 33                                Table3
+---------------------------------------------------------------------------
+
+Section 25 000002A6 - 000002E1 (59 bytes)
+000002A0                    39 80 03 00 00 00 00 00 00 00        9.........
+000002B0  09 00 00 00 00 00 00 00 00 00 D2 01 00 00 00 17  ................
+000002C0  00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 79 01  ..............y.
+000002D0  00 00 00 6A 01 00 00 00 6F 02 00 00 00 60 02 00  ...j....o....`..
+000002E0  00                                               .
+
+Section 26 000002E1 - 000002F0 (15 bytes)
+000002E0     0D 40 0A 00 00 00 A0 00 00 00 00 00 00 00 00   .@.............
+
+Section 27 000002F0 - 00000350 (96 bytes)
+000002F0  5E 40 69 00 00 10 00 01 00 00 00 08 1A 54 61 62  ^@i..........Tab
+00000300  6C 65 31 02 0E 74 78 74 0B 00 28 20 05 00 00 00  le1..txt..( ....
+00000310  00 1A 54 61 62 6C 65 32 02 0E 74 78 74 0B 00 28  ..Table2..txt..(
+00000320  20 07 00 00 00 00 1A 54 61 62 6C 65 33 02 0E 74   ......Table3..t
+00000330  78 74 0B 00 28 20 09 00 00 00 00 1A 54 61 62 6C  xt..( ......Tabl
+00000340  65 34 02 0E 74 78 74 0B 00 28 20 0B 00 00 00 00  e4..txt..( .....
+
+000002F2 TableSection.KDbmsStoreDatabase 10000069
+000002F6 TableSection.nullbyte 00
+000002F7 TableSection.unknown 00000001
+000002FB TableSection.tableCount 4
+000002FC TableSection.Table[1].tableName Table1
+00000303 TableSection.Table[1].fieldCount 1
+00000304 TableSection.Table[1].Field[1].fieldName txt
+00000308 TableSection.Table[1].Field[1].type 0B (Text)
+00000309 TableSection.Table[1].Field[1].unknown 00
+0000030A TableSection.Table[1].Field[1].maxLen 28
+0000030B TableSection.Table[1].unknown1 20
+0000030C TableSection.Table[1].dataIndex 00000005
+00000310 TableSection.Table[1].unknown2 00
+00000311 TableSection.Table[2].tableName Table2
+00000318 TableSection.Table[2].fieldCount 1
+00000319 TableSection.Table[2].Field[1].fieldName txt
+0000031D TableSection.Table[2].Field[1].type 0B (Text)
+0000031E TableSection.Table[2].Field[1].unknown 00
+0000031F TableSection.Table[2].Field[1].maxLen 28
+00000320 TableSection.Table[2].unknown1 20
+00000321 TableSection.Table[2].dataIndex 00000007
+00000325 TableSection.Table[2].unknown2 00
+00000326 TableSection.Table[3].tableName Table3
+0000032D TableSection.Table[3].fieldCount 1
+0000032E TableSection.Table[3].Field[1].fieldName txt
+00000332 TableSection.Table[3].Field[1].type 0B (Text)
+00000333 TableSection.Table[3].Field[1].unknown 00
+00000334 TableSection.Table[3].Field[1].maxLen 28
+00000335 TableSection.Table[3].unknown1 20
+00000336 TableSection.Table[3].dataIndex 00000009
+0000033A TableSection.Table[3].unknown2 00
+0000033B TableSection.Table[4].tableName Table4
+00000342 TableSection.Table[4].fieldCount 1
+00000343 TableSection.Table[4].Field[1].fieldName txt
+00000347 TableSection.Table[4].Field[1].type 0B (Text)
+00000348 TableSection.Table[4].Field[1].unknown 00
+00000349 TableSection.Table[4].Field[1].maxLen 28
+0000034A TableSection.Table[4].unknown1 20
+0000034B TableSection.Table[4].dataIndex 0000000B
+0000034F TableSection.Table[4].unknown2 00
+
+Section 28 00000350 - 00000358 (8 bytes)
+00000350  06 40 00 00 00 00 00 00                          .@......
+
+Section 29 00000358 - 0000039D (69 bytes)
+00000350                          43 80 03 00 00 00 00 00          C.......
+00000360  00 00 0B 00 00 00 00 00 00 00 00 00 D2 02 00 00  ................
+00000370  00 17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00  ................
+00000380  79 01 00 00 00 6A 01 00 00 00 6F 02 00 00 00 60  y....j....o....`
+00000390  02 00 00 00 32 03 00 00 00 C3 02 00 00           ....2........
+
+Section 30 0000039D - 000003AC (15 bytes)
+00000390                                         0D 40 0A               .@.
+000003A0  00 00 00 A1 00 00 00 02 00 00 00 00              ............
+
+Section 31 000003AC - 000003C5 (25 bytes)
+000003A0                                      17 40 00 00              .@..
+000003B0  00 00 01 00 20 01 0E 46 69 65 6C 64 46 6F 72 54  .... ..FieldForT
+000003C0  61 62 6C 65 34                                   able4
+
+000003AE TableContentSection.nextSectionIndex 00000000
+000003B2 TableContentSection.recordBitmask 0001
+000003B4 TableContentSection.recordLength[1] 10
+
+--------------------- 000003B5 to 0x000003C5 UNPARSED ---------------------
+000003B0                 01 0E 46 69 65 6C 64 46 6F 72 54       ..FieldForT
+000003C0  61 62 6C 65 34                                   able4
+---------------------------------------------------------------------------
+
+Section 32 000003C5 - 0000040A (69 bytes)
+000003C0                 43 80 03 00 00 00 00 00 00 00 0B       C..........
+000003D0  00 00 00 00 00 00 00 00 00 D2 02 00 00 00 17 00  ................
+000003E0  00 00 00 AC 00 00 00 00 9D 00 00 00 00 79 01 00  .............y..
+000003F0  00 00 6A 01 00 00 00 6F 02 00 00 00 60 02 00 00  ..j....o....`...
+00000400  00 8E 03 00 00 00 7F 03 00 00                    ..........
+
+Section 33 0000040A - 00000419 (15 bytes)
+00000400                                0D 40 0C 00 00 00            .@....
+00000410  C0 00 00 00 00 00 00 00 00                       .........
+
+Section 34 00000419 - 0000048E (117 bytes)
+00000410                             73 40 69 00 00 10 00           s@i....
+00000420  01 00 00 00 0A 1A 54 61 62 6C 65 31 02 0E 74 78  ......Table1..tx
+00000430  74 0B 00 28 20 05 00 00 00 00 1A 54 61 62 6C 65  t..( ......Table
+00000440  32 02 0E 74 78 74 0B 00 28 20 07 00 00 00 00 1A  2..txt..( ......
+00000450  54 61 62 6C 65 33 02 0E 74 78 74 0B 00 28 20 09  Table3..txt..( .
+00000460  00 00 00 00 1A 54 61 62 6C 65 34 02 0E 74 78 74  .....Table4..txt
+00000470  0B 00 28 20 0B 00 00 00 00 1A 54 61 62 6C 65 35  ..( ......Table5
+00000480  02 0E 74 78 74 0B 00 28 20 0D 00 00 00 00        ..txt..( .....
+
+0000041B TableSection.KDbmsStoreDatabase 10000069
+0000041F TableSection.nullbyte 00
+00000420 TableSection.unknown 00000001
+00000424 TableSection.tableCount 5
+00000425 TableSection.Table[1].tableName Table1
+0000042C TableSection.Table[1].fieldCount 1
+0000042D TableSection.Table[1].Field[1].fieldName txt
+00000431 TableSection.Table[1].Field[1].type 0B (Text)
+00000432 TableSection.Table[1].Field[1].unknown 00
+00000433 TableSection.Table[1].Field[1].maxLen 28
+00000434 TableSection.Table[1].unknown1 20
+00000435 TableSection.Table[1].dataIndex 00000005
+00000439 TableSection.Table[1].unknown2 00
+0000043A TableSection.Table[2].tableName Table2
+00000441 TableSection.Table[2].fieldCount 1
+00000442 TableSection.Table[2].Field[1].fieldName txt
+00000446 TableSection.Table[2].Field[1].type 0B (Text)
+00000447 TableSection.Table[2].Field[1].unknown 00
+00000448 TableSection.Table[2].Field[1].maxLen 28
+00000449 TableSection.Table[2].unknown1 20
+0000044A TableSection.Table[2].dataIndex 00000007
+0000044E TableSection.Table[2].unknown2 00
+0000044F TableSection.Table[3].tableName Table3
+00000456 TableSection.Table[3].fieldCount 1
+00000457 TableSection.Table[3].Field[1].fieldName txt
+0000045B TableSection.Table[3].Field[1].type 0B (Text)
+0000045C TableSection.Table[3].Field[1].unknown 00
+0000045D TableSection.Table[3].Field[1].maxLen 28
+0000045E TableSection.Table[3].unknown1 20
+0000045F TableSection.Table[3].dataIndex 00000009
+00000463 TableSection.Table[3].unknown2 00
+00000464 TableSection.Table[4].tableName Table4
+0000046B TableSection.Table[4].fieldCount 1
+0000046C TableSection.Table[4].Field[1].fieldName txt
+00000470 TableSection.Table[4].Field[1].type 0B (Text)
+00000471 TableSection.Table[4].Field[1].unknown 00
+00000472 TableSection.Table[4].Field[1].maxLen 28
+00000473 TableSection.Table[4].unknown1 20
+00000474 TableSection.Table[4].dataIndex 0000000B
+00000478 TableSection.Table[4].unknown2 00
+00000479 TableSection.Table[5].tableName Table5
+00000480 TableSection.Table[5].fieldCount 1
+00000481 TableSection.Table[5].Field[1].fieldName txt
+00000485 TableSection.Table[5].Field[1].type 0B (Text)
+00000486 TableSection.Table[5].Field[1].unknown 00
+00000487 TableSection.Table[5].Field[1].maxLen 28
+00000488 TableSection.Table[5].unknown1 20
+00000489 TableSection.Table[5].dataIndex 0000000D
+0000048D TableSection.Table[5].unknown2 00
+
+Section 35 0000048E - 00000496 (8 bytes)
+00000480                                            06 40                .@
+00000490  00 00 00 00 00 00                                ......
+
+Section 36 00000496 - 000004E5 (79 bytes)
+00000490                    4D 80 03 00 00 00 00 00 00 00        M.........
+000004A0  0D 00 00 00 00 00 00 00 00 00 FB 03 00 00 00 17  ................
+000004B0  00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 79 01  ..............y.
+000004C0  00 00 00 6A 01 00 00 00 6F 02 00 00 00 60 02 00  ...j....o....`..
+000004D0  00 00 8E 03 00 00 00 7F 03 00 00 00 70 04 00 00  ............p...
+000004E0  00 EC 03 00 00                                   .....
+
+Section 37 000004E5 - 000004F4 (15 bytes)
+000004E0                 0D 40 0C 00 00 00 C1 00 00 00 02       .@.........
+000004F0  00 00 00 00                                      ....
+
+Section 38 000004F4 - 0000050D (25 bytes)
+000004F0              17 40 00 00 00 00 01 00 20 01 0E 46      .@...... ..F
+00000500  69 65 6C 64 46 6F 72 54 61 62 6C 65 35           ieldForTable5
+
+000004F6 TableContentSection.nextSectionIndex 00000000
+000004FA TableContentSection.recordBitmask 0001
+000004FC TableContentSection.recordLength[1] 10
+
+--------------------- 000004FD to 0x0000050D UNPARSED ---------------------
+000004F0                                         01 0E 46               ..F
+00000500  69 65 6C 64 46 6F 72 54 61 62 6C 65 35           ieldForTable5
+---------------------------------------------------------------------------
+
+Section 39 0000050D - 0000055C (79 bytes)
+00000500                                         4D 80 03               M..
+00000510  00 00 00 00 00 00 00 0D 00 00 00 00 00 00 00 00  ................
+00000520  00 FB 03 00 00 00 17 00 00 00 00 AC 00 00 00 00  ................
+00000530  9D 00 00 00 00 79 01 00 00 00 6A 01 00 00 00 6F  .....y....j....o
+00000540  02 00 00 00 60 02 00 00 00 8E 03 00 00 00 7F 03  ....`...........
+00000550  00 00 00 D6 04 00 00 00 C7 04 00 00              ............
+
+Section 40 0000055C - 0000056B (15 bytes)
+00000550                                      0D 40 0E 00              .@..
+00000560  00 00 E0 00 00 00 00 00 00 00 00                 ...........
+
+Section 41 0000056B - 000005F5 (138 bytes)
+00000560                                   88 40 69 00 00             .@i..
+00000570  10 00 01 00 00 00 0C 1A 54 61 62 6C 65 31 02 0E  ........Table1..
+00000580  74 78 74 0B 00 28 20 05 00 00 00 00 1A 54 61 62  txt..( ......Tab
+00000590  6C 65 32 02 0E 74 78 74 0B 00 28 20 07 00 00 00  le2..txt..( ....
+000005A0  00 1A 54 61 62 6C 65 33 02 0E 74 78 74 0B 00 28  ..Table3..txt..(
+000005B0  20 09 00 00 00 00 1A 54 61 62 6C 65 34 02 0E 74   ......Table4..t
+000005C0  78 74 0B 00 28 20 0B 00 00 00 00 1A 54 61 62 6C  xt..( ......Tabl
+000005D0  65 35 02 0E 74 78 74 0B 00 28 20 0D 00 00 00 00  e5..txt..( .....
+000005E0  1A 54 61 62 6C 65 36 02 0E 74 78 74 0B 00 28 20  .Table6..txt..( 
+000005F0  0F 00 00 00 00                                   .....
+
+0000056D TableSection.KDbmsStoreDatabase 10000069
+00000571 TableSection.nullbyte 00
+00000572 TableSection.unknown 00000001
+00000576 TableSection.tableCount 6
+00000577 TableSection.Table[1].tableName Table1
+0000057E TableSection.Table[1].fieldCount 1
+0000057F TableSection.Table[1].Field[1].fieldName txt
+00000583 TableSection.Table[1].Field[1].type 0B (Text)
+00000584 TableSection.Table[1].Field[1].unknown 00
+00000585 TableSection.Table[1].Field[1].maxLen 28
+00000586 TableSection.Table[1].unknown1 20
+00000587 TableSection.Table[1].dataIndex 00000005
+0000058B TableSection.Table[1].unknown2 00
+0000058C TableSection.Table[2].tableName Table2
+00000593 TableSection.Table[2].fieldCount 1
+00000594 TableSection.Table[2].Field[1].fieldName txt
+00000598 TableSection.Table[2].Field[1].type 0B (Text)
+00000599 TableSection.Table[2].Field[1].unknown 00
+0000059A TableSection.Table[2].Field[1].maxLen 28
+0000059B TableSection.Table[2].unknown1 20
+0000059C TableSection.Table[2].dataIndex 00000007
+000005A0 TableSection.Table[2].unknown2 00
+000005A1 TableSection.Table[3].tableName Table3
+000005A8 TableSection.Table[3].fieldCount 1
+000005A9 TableSection.Table[3].Field[1].fieldName txt
+000005AD TableSection.Table[3].Field[1].type 0B (Text)
+000005AE TableSection.Table[3].Field[1].unknown 00
+000005AF TableSection.Table[3].Field[1].maxLen 28
+000005B0 TableSection.Table[3].unknown1 20
+000005B1 TableSection.Table[3].dataIndex 00000009
+000005B5 TableSection.Table[3].unknown2 00
+000005B6 TableSection.Table[4].tableName Table4
+000005BD TableSection.Table[4].fieldCount 1
+000005BE TableSection.Table[4].Field[1].fieldName txt
+000005C2 TableSection.Table[4].Field[1].type 0B (Text)
+000005C3 TableSection.Table[4].Field[1].unknown 00
+000005C4 TableSection.Table[4].Field[1].maxLen 28
+000005C5 TableSection.Table[4].unknown1 20
+000005C6 TableSection.Table[4].dataIndex 0000000B
+000005CA TableSection.Table[4].unknown2 00
+000005CB TableSection.Table[5].tableName Table5
+000005D2 TableSection.Table[5].fieldCount 1
+000005D3 TableSection.Table[5].Field[1].fieldName txt
+000005D7 TableSection.Table[5].Field[1].type 0B (Text)
+000005D8 TableSection.Table[5].Field[1].unknown 00
+000005D9 TableSection.Table[5].Field[1].maxLen 28
+000005DA TableSection.Table[5].unknown1 20
+000005DB TableSection.Table[5].dataIndex 0000000D
+000005DF TableSection.Table[5].unknown2 00
+000005E0 TableSection.Table[6].tableName Table6
+000005E7 TableSection.Table[6].fieldCount 1
+000005E8 TableSection.Table[6].Field[1].fieldName txt
+000005EC TableSection.Table[6].Field[1].type 0B (Text)
+000005ED TableSection.Table[6].Field[1].unknown 00
+000005EE TableSection.Table[6].Field[1].maxLen 28
+000005EF TableSection.Table[6].unknown1 20
+000005F0 TableSection.Table[6].dataIndex 0000000F
+000005F4 TableSection.Table[6].unknown2 00
+
+Section 42 000005F5 - 000005FD (8 bytes)
+000005F0                 06 40 00 00 00 00 00 00                .@......
+
+Section 43 000005FD - 00000656 (89 bytes)
+000005F0                                         57 80 03               W..
+00000600  00 00 00 00 00 00 00 0F 00 00 00 00 00 00 00 00  ................
+00000610  00 4D 05 00 00 00 17 00 00 00 00 AC 00 00 00 00  .M..............
+00000620  9D 00 00 00 00 79 01 00 00 00 6A 01 00 00 00 6F  .....y....j....o
+00000630  02 00 00 00 60 02 00 00 00 8E 03 00 00 00 7F 03  ....`...........
+00000640  00 00 00 D6 04 00 00 00 C7 04 00 00 00 D7 05 00  ................
+00000650  00 00 3E 05 00 00                                ..>...
+
+Section 44 00000656 - 00000665 (15 bytes)
+00000650                    0D 40 0E 00 00 00 E1 00 00 00        .@........
+00000660  02 00 00 00 00                                   .....
+
+Section 45 00000665 - 0000067E (25 bytes)
+00000660                 17 40 00 00 00 00 01 00 20 01 0E       .@...... ..
+00000670  46 69 65 6C 64 46 6F 72 54 61 62 6C 65 36        FieldForTable6
+
+00000667 TableContentSection.nextSectionIndex 00000000
+0000066B TableContentSection.recordBitmask 0001
+0000066D TableContentSection.recordLength[1] 10
+
+--------------------- 0000066E to 0x0000067E UNPARSED ---------------------
+00000660                                            01 0E                ..
+00000670  46 69 65 6C 64 46 6F 72 54 61 62 6C 65 36        FieldForTable6
+---------------------------------------------------------------------------
+
+Section 46 0000067E - 000006D7 (89 bytes)
+00000670                                            57 80                W.
+00000680  03 00 00 00 00 00 00 00 0F 00 00 00 00 00 00 00  ................
+00000690  00 00 4D 05 00 00 00 17 00 00 00 00 AC 00 00 00  ..M.............
+000006A0  00 9D 00 00 00 00 79 01 00 00 00 6A 01 00 00 00  ......y....j....
+000006B0  6F 02 00 00 00 60 02 00 00 00 8E 03 00 00 00 7F  o....`..........
+000006C0  03 00 00 00 D6 04 00 00 00 C7 04 00 00 00 47 06  ..............G.
+000006D0  00 00 00 38 06 00 00                             ...8...
+
+Section 47 000006D7 - 000006E6 (15 bytes)
+000006D0                       0D 40 10 00 00 00 00 01 00         .@.......
+000006E0  00 00 00 00 00 00                                ......
+
+Section 48 000006E6 - 00000785 (159 bytes)
+000006E0                    9D 40 69 00 00 10 00 01 00 00        .@i.......
+000006F0  00 0E 1A 54 61 62 6C 65 31 02 0E 74 78 74 0B 00  ...Table1..txt..
+00000700  28 20 05 00 00 00 00 1A 54 61 62 6C 65 32 02 0E  ( ......Table2..
+00000710  74 78 74 0B 00 28 20 07 00 00 00 00 1A 54 61 62  txt..( ......Tab
+00000720  6C 65 33 02 0E 74 78 74 0B 00 28 20 09 00 00 00  le3..txt..( ....
+00000730  00 1A 54 61 62 6C 65 34 02 0E 74 78 74 0B 00 28  ..Table4..txt..(
+00000740  20 0B 00 00 00 00 1A 54 61 62 6C 65 35 02 0E 74   ......Table5..t
+00000750  78 74 0B 00 28 20 0D 00 00 00 00 1A 54 61 62 6C  xt..( ......Tabl
+00000760  65 36 02 0E 74 78 74 0B 00 28 20 0F 00 00 00 00  e6..txt..( .....
+00000770  1A 54 61 62 6C 65 37 02 0E 74 78 74 0B 00 28 20  .Table7..txt..( 
+00000780  11 00 00 00 00                                   .....
+
+000006E8 TableSection.KDbmsStoreDatabase 10000069
+000006EC TableSection.nullbyte 00
+000006ED TableSection.unknown 00000001
+000006F1 TableSection.tableCount 7
+000006F2 TableSection.Table[1].tableName Table1
+000006F9 TableSection.Table[1].fieldCount 1
+000006FA TableSection.Table[1].Field[1].fieldName txt
+000006FE TableSection.Table[1].Field[1].type 0B (Text)
+000006FF TableSection.Table[1].Field[1].unknown 00
+00000700 TableSection.Table[1].Field[1].maxLen 28
+00000701 TableSection.Table[1].unknown1 20
+00000702 TableSection.Table[1].dataIndex 00000005
+00000706 TableSection.Table[1].unknown2 00
+00000707 TableSection.Table[2].tableName Table2
+0000070E TableSection.Table[2].fieldCount 1
+0000070F TableSection.Table[2].Field[1].fieldName txt
+00000713 TableSection.Table[2].Field[1].type 0B (Text)
+00000714 TableSection.Table[2].Field[1].unknown 00
+00000715 TableSection.Table[2].Field[1].maxLen 28
+00000716 TableSection.Table[2].unknown1 20
+00000717 TableSection.Table[2].dataIndex 00000007
+0000071B TableSection.Table[2].unknown2 00
+0000071C TableSection.Table[3].tableName Table3
+00000723 TableSection.Table[3].fieldCount 1
+00000724 TableSection.Table[3].Field[1].fieldName txt
+00000728 TableSection.Table[3].Field[1].type 0B (Text)
+00000729 TableSection.Table[3].Field[1].unknown 00
+0000072A TableSection.Table[3].Field[1].maxLen 28
+0000072B TableSection.Table[3].unknown1 20
+0000072C TableSection.Table[3].dataIndex 00000009
+00000730 TableSection.Table[3].unknown2 00
+00000731 TableSection.Table[4].tableName Table4
+00000738 TableSection.Table[4].fieldCount 1
+00000739 TableSection.Table[4].Field[1].fieldName txt
+0000073D TableSection.Table[4].Field[1].type 0B (Text)
+0000073E TableSection.Table[4].Field[1].unknown 00
+0000073F TableSection.Table[4].Field[1].maxLen 28
+00000740 TableSection.Table[4].unknown1 20
+00000741 TableSection.Table[4].dataIndex 0000000B
+00000745 TableSection.Table[4].unknown2 00
+00000746 TableSection.Table[5].tableName Table5
+0000074D TableSection.Table[5].fieldCount 1
+0000074E TableSection.Table[5].Field[1].fieldName txt
+00000752 TableSection.Table[5].Field[1].type 0B (Text)
+00000753 TableSection.Table[5].Field[1].unknown 00
+00000754 TableSection.Table[5].Field[1].maxLen 28
+00000755 TableSection.Table[5].unknown1 20
+00000756 TableSection.Table[5].dataIndex 0000000D
+0000075A TableSection.Table[5].unknown2 00
+0000075B TableSection.Table[6].tableName Table6
+00000762 TableSection.Table[6].fieldCount 1
+00000763 TableSection.Table[6].Field[1].fieldName txt
+00000767 TableSection.Table[6].Field[1].type 0B (Text)
+00000768 TableSection.Table[6].Field[1].unknown 00
+00000769 TableSection.Table[6].Field[1].maxLen 28
+0000076A TableSection.Table[6].unknown1 20
+0000076B TableSection.Table[6].dataIndex 0000000F
+0000076F TableSection.Table[6].unknown2 00
+00000770 TableSection.Table[7].tableName Table7
+00000777 TableSection.Table[7].fieldCount 1
+00000778 TableSection.Table[7].Field[1].fieldName txt
+0000077C TableSection.Table[7].Field[1].type 0B (Text)
+0000077D TableSection.Table[7].Field[1].unknown 00
+0000077E TableSection.Table[7].Field[1].maxLen 28
+0000077F TableSection.Table[7].unknown1 20
+00000780 TableSection.Table[7].dataIndex 00000011
+00000784 TableSection.Table[7].unknown2 00
+
+Section 49 00000785 - 0000078D (8 bytes)
+00000780                 06 40 00 00 00 00 00 00                .@......
+
+Section 50 0000078D - 000007F0 (99 bytes)
+00000780                                         61 80 03               a..
+00000790  00 00 00 00 00 00 00 11 00 00 00 00 00 00 00 00  ................
+000007A0  00 C8 06 00 00 00 17 00 00 00 00 AC 00 00 00 00  ................
+000007B0  9D 00 00 00 00 79 01 00 00 00 6A 01 00 00 00 6F  .....y....j....o
+000007C0  02 00 00 00 60 02 00 00 00 8E 03 00 00 00 7F 03  ....`...........
+000007D0  00 00 00 D6 04 00 00 00 C7 04 00 00 00 47 06 00  .............G..
+000007E0  00 00 38 06 00 00 00 67 07 00 00 00 B9 06 00 00  ..8....g........
+
+Section 51 000007F0 - 000007FF (15 bytes)
+000007F0  0D 40 10 00 00 00 01 01 00 00 02 00 00 00 00     .@.............
+
+Section 52 000007FF - 00000818 (25 bytes)
+000007F0                                               17                 .
+00000800  40 00 00 00 00 01 00 20 01 0E 46 69 65 6C 64 46  @...... ..FieldF
+00000810  6F 72 54 61 62 6C 65 37                          orTable7
+
+00000801 TableContentSection.nextSectionIndex 00000000
+00000805 TableContentSection.recordBitmask 0001
+00000807 TableContentSection.recordLength[1] 10
+
+--------------------- 00000808 to 0x00000818 UNPARSED ---------------------
+00000800                          01 0E 46 69 65 6C 64 46          ..FieldF
+00000810  6F 72 54 61 62 6C 65 37                          orTable7
+---------------------------------------------------------------------------
+
+Section 53 00000818 - 0000087B (99 bytes)
+00000810                          61 80 03 00 00 00 00 00          a.......
+00000820  00 00 11 00 00 00 00 00 00 00 00 00 C8 06 00 00  ................
+00000830  00 17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00  ................
+00000840  79 01 00 00 00 6A 01 00 00 00 6F 02 00 00 00 60  y....j....o....`
+00000850  02 00 00 00 8E 03 00 00 00 7F 03 00 00 00 D6 04  ................
+00000860  00 00 00 C7 04 00 00 00 47 06 00 00 00 38 06 00  ........G....8..
+00000870  00 00 E1 07 00 00 00 D2 07 00 00                 ...........
+
+Section 54 0000087B - 0000088A (15 bytes)
+00000870                                   0D 40 12 00 00             .@...
+00000880  00 20 01 00 00 00 00 00 00 00                    . ........
+
+Section 55 0000088A - 0000093E (180 bytes)
+00000880                                B2 40 69 00 00 10            .@i...
+00000890  00 01 00 00 00 10 1A 54 61 62 6C 65 31 02 0E 74  .......Table1..t
+000008A0  78 74 0B 00 28 20 05 00 00 00 00 1A 54 61 62 6C  xt..( ......Tabl
+000008B0  65 32 02 0E 74 78 74 0B 00 28 20 07 00 00 00 00  e2..txt..( .....
+000008C0  1A 54 61 62 6C 65 33 02 0E 74 78 74 0B 00 28 20  .Table3..txt..( 
+000008D0  09 00 00 00 00 1A 54 61 62 6C 65 34 02 0E 74 78  ......Table4..tx
+000008E0  74 0B 00 28 20 0B 00 00 00 00 1A 54 61 62 6C 65  t..( ......Table
+000008F0  35 02 0E 74 78 74 0B 00 28 20 0D 00 00 00 00 1A  5..txt..( ......
+00000900  54 61 62 6C 65 36 02 0E 74 78 74 0B 00 28 20 0F  Table6..txt..( .
+00000910  00 00 00 00 1A 54 61 62 6C 65 37 02 0E 74 78 74  .....Table7..txt
+00000920  0B 00 28 20 11 00 00 00 00 1A 54 61 62 6C 65 38  ..( ......Table8
+00000930  02 0E 74 78 74 0B 00 28 20 13 00 00 00 00        ..txt..( .....
+
+0000088C TableSection.KDbmsStoreDatabase 10000069
+00000890 TableSection.nullbyte 00
+00000891 TableSection.unknown 00000001
+00000895 TableSection.tableCount 8
+00000896 TableSection.Table[1].tableName Table1
+0000089D TableSection.Table[1].fieldCount 1
+0000089E TableSection.Table[1].Field[1].fieldName txt
+000008A2 TableSection.Table[1].Field[1].type 0B (Text)
+000008A3 TableSection.Table[1].Field[1].unknown 00
+000008A4 TableSection.Table[1].Field[1].maxLen 28
+000008A5 TableSection.Table[1].unknown1 20
+000008A6 TableSection.Table[1].dataIndex 00000005
+000008AA TableSection.Table[1].unknown2 00
+000008AB TableSection.Table[2].tableName Table2
+000008B2 TableSection.Table[2].fieldCount 1
+000008B3 TableSection.Table[2].Field[1].fieldName txt
+000008B7 TableSection.Table[2].Field[1].type 0B (Text)
+000008B8 TableSection.Table[2].Field[1].unknown 00
+000008B9 TableSection.Table[2].Field[1].maxLen 28
+000008BA TableSection.Table[2].unknown1 20
+000008BB TableSection.Table[2].dataIndex 00000007
+000008BF TableSection.Table[2].unknown2 00
+000008C0 TableSection.Table[3].tableName Table3
+000008C7 TableSection.Table[3].fieldCount 1
+000008C8 TableSection.Table[3].Field[1].fieldName txt
+000008CC TableSection.Table[3].Field[1].type 0B (Text)
+000008CD TableSection.Table[3].Field[1].unknown 00
+000008CE TableSection.Table[3].Field[1].maxLen 28
+000008CF TableSection.Table[3].unknown1 20
+000008D0 TableSection.Table[3].dataIndex 00000009
+000008D4 TableSection.Table[3].unknown2 00
+000008D5 TableSection.Table[4].tableName Table4
+000008DC TableSection.Table[4].fieldCount 1
+000008DD TableSection.Table[4].Field[1].fieldName txt
+000008E1 TableSection.Table[4].Field[1].type 0B (Text)
+000008E2 TableSection.Table[4].Field[1].unknown 00
+000008E3 TableSection.Table[4].Field[1].maxLen 28
+000008E4 TableSection.Table[4].unknown1 20
+000008E5 TableSection.Table[4].dataIndex 0000000B
+000008E9 TableSection.Table[4].unknown2 00
+000008EA TableSection.Table[5].tableName Table5
+000008F1 TableSection.Table[5].fieldCount 1
+000008F2 TableSection.Table[5].Field[1].fieldName txt
+000008F6 TableSection.Table[5].Field[1].type 0B (Text)
+000008F7 TableSection.Table[5].Field[1].unknown 00
+000008F8 TableSection.Table[5].Field[1].maxLen 28
+000008F9 TableSection.Table[5].unknown1 20
+000008FA TableSection.Table[5].dataIndex 0000000D
+000008FE TableSection.Table[5].unknown2 00
+000008FF TableSection.Table[6].tableName Table6
+00000906 TableSection.Table[6].fieldCount 1
+00000907 TableSection.Table[6].Field[1].fieldName txt
+0000090B TableSection.Table[6].Field[1].type 0B (Text)
+0000090C TableSection.Table[6].Field[1].unknown 00
+0000090D TableSection.Table[6].Field[1].maxLen 28
+0000090E TableSection.Table[6].unknown1 20
+0000090F TableSection.Table[6].dataIndex 0000000F
+00000913 TableSection.Table[6].unknown2 00
+00000914 TableSection.Table[7].tableName Table7
+0000091B TableSection.Table[7].fieldCount 1
+0000091C TableSection.Table[7].Field[1].fieldName txt
+00000920 TableSection.Table[7].Field[1].type 0B (Text)
+00000921 TableSection.Table[7].Field[1].unknown 00
+00000922 TableSection.Table[7].Field[1].maxLen 28
+00000923 TableSection.Table[7].unknown1 20
+00000924 TableSection.Table[7].dataIndex 00000011
+00000928 TableSection.Table[7].unknown2 00
+00000929 TableSection.Table[8].tableName Table8
+00000930 TableSection.Table[8].fieldCount 1
+00000931 TableSection.Table[8].Field[1].fieldName txt
+00000935 TableSection.Table[8].Field[1].type 0B (Text)
+00000936 TableSection.Table[8].Field[1].unknown 00
+00000937 TableSection.Table[8].Field[1].maxLen 28
+00000938 TableSection.Table[8].unknown1 20
+00000939 TableSection.Table[8].dataIndex 00000013
+0000093D TableSection.Table[8].unknown2 00
+
+Section 56 0000093E - 00000946 (8 bytes)
+00000930                                            06 40                .@
+00000940  00 00 00 00 00 00                                ......
+
+Section 57 00000946 - 000009B3 (109 bytes)
+00000940                    6B 80 03 00 00 00 00 00 00 00        k.........
+00000950  13 00 00 00 00 00 00 00 00 00 6C 08 00 00 00 17  ..........l.....
+00000960  00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 79 01  ..............y.
+00000970  00 00 00 6A 01 00 00 00 6F 02 00 00 00 60 02 00  ...j....o....`..
+00000980  00 00 8E 03 00 00 00 7F 03 00 00 00 D6 04 00 00  ................
+00000990  00 C7 04 00 00 00 47 06 00 00 00 38 06 00 00 00  ......G....8....
+000009A0  E1 07 00 00 00 D2 07 00 00 00 20 09 00 00 00 5D  .......... ....]
+000009B0  08 00 00                                         ...
+
+Section 58 000009B3 - 000009C2 (15 bytes)
+000009B0           0D 40 12 00 00 00 21 01 00 00 02 00 00     .@....!......
+000009C0  00 00                                            ..
+
+Section 59 000009C2 - 000009DB (25 bytes)
+000009C0        17 40 00 00 00 00 01 00 20 01 0E 46 69 65    .@...... ..Fie
+000009D0  6C 64 46 6F 72 54 61 62 6C 65 38                 ldForTable8
+
+000009C4 TableContentSection.nextSectionIndex 00000000
+000009C8 TableContentSection.recordBitmask 0001
+000009CA TableContentSection.recordLength[1] 10
+
+--------------------- 000009CB to 0x000009DB UNPARSED ---------------------
+000009C0                                   01 0E 46 69 65             ..Fie
+000009D0  6C 64 46 6F 72 54 61 62 6C 65 38                 ldForTable8
+---------------------------------------------------------------------------
+
+Section 60 000009DB - 00000A48 (109 bytes)
+000009D0                                   6B 80 03 00 00             k....
+000009E0  00 00 00 00 00 13 00 00 00 00 00 00 00 00 00 6C  ...............l
+000009F0  08 00 00 00 17 00 00 00 00 AC 00 00 00 00 9D 00  ................
+00000A00  00 00 00 79 01 00 00 00 6A 01 00 00 00 6F 02 00  ...y....j....o..
+00000A10  00 00 60 02 00 00 00 8E 03 00 00 00 7F 03 00 00  ..`.............
+00000A20  00 D6 04 00 00 00 C7 04 00 00 00 47 06 00 00 00  ...........G....
+00000A30  38 06 00 00 00 E1 07 00 00 00 D2 07 00 00 00 A4  8...............
+00000A40  09 00 00 00 95 09 00 00                          ........
+
+Section 61 00000A48 - 00000A57 (15 bytes)
+00000A40                          0D 40 14 00 00 00 40 01          .@....@.
+00000A50  00 00 00 00 00 00 00                             .......
+
+Section 62 00000A57 - 00000B20 (201 bytes)
+00000A50                       C7 40 69 00 00 10 00 01 00         .@i......
+00000A60  00 00 12 1A 54 61 62 6C 65 31 02 0E 74 78 74 0B  ....Table1..txt.
+00000A70  00 28 20 05 00 00 00 00 1A 54 61 62 6C 65 32 02  .( ......Table2.
+00000A80  0E 74 78 74 0B 00 28 20 07 00 00 00 00 1A 54 61  .txt..( ......Ta
+00000A90  62 6C 65 33 02 0E 74 78 74 0B 00 28 20 09 00 00  ble3..txt..( ...
+00000AA0  00 00 1A 54 61 62 6C 65 34 02 0E 74 78 74 0B 00  ...Table4..txt..
+00000AB0  28 20 0B 00 00 00 00 1A 54 61 62 6C 65 35 02 0E  ( ......Table5..
+00000AC0  74 78 74 0B 00 28 20 0D 00 00 00 00 1A 54 61 62  txt..( ......Tab
+00000AD0  6C 65 36 02 0E 74 78 74 0B 00 28 20 0F 00 00 00  le6..txt..( ....
+00000AE0  00 1A 54 61 62 6C 65 37 02 0E 74 78 74 0B 00 28  ..Table7..txt..(
+00000AF0  20 11 00 00 00 00 1A 54 61 62 6C 65 38 02 0E 74   ......Table8..t
+00000B00  78 74 0B 00 28 20 13 00 00 00 00 1A 54 61 62 6C  xt..( ......Tabl
+00000B10  65 39 02 0E 74 78 74 0B 00 28 20 15 00 00 00 00  e9..txt..( .....
+
+00000A59 TableSection.KDbmsStoreDatabase 10000069
+00000A5D TableSection.nullbyte 00
+00000A5E TableSection.unknown 00000001
+00000A62 TableSection.tableCount 9
+00000A63 TableSection.Table[1].tableName Table1
+00000A6A TableSection.Table[1].fieldCount 1
+00000A6B TableSection.Table[1].Field[1].fieldName txt
+00000A6F TableSection.Table[1].Field[1].type 0B (Text)
+00000A70 TableSection.Table[1].Field[1].unknown 00
+00000A71 TableSection.Table[1].Field[1].maxLen 28
+00000A72 TableSection.Table[1].unknown1 20
+00000A73 TableSection.Table[1].dataIndex 00000005
+00000A77 TableSection.Table[1].unknown2 00
+00000A78 TableSection.Table[2].tableName Table2
+00000A7F TableSection.Table[2].fieldCount 1
+00000A80 TableSection.Table[2].Field[1].fieldName txt
+00000A84 TableSection.Table[2].Field[1].type 0B (Text)
+00000A85 TableSection.Table[2].Field[1].unknown 00
+00000A86 TableSection.Table[2].Field[1].maxLen 28
+00000A87 TableSection.Table[2].unknown1 20
+00000A88 TableSection.Table[2].dataIndex 00000007
+00000A8C TableSection.Table[2].unknown2 00
+00000A8D TableSection.Table[3].tableName Table3
+00000A94 TableSection.Table[3].fieldCount 1
+00000A95 TableSection.Table[3].Field[1].fieldName txt
+00000A99 TableSection.Table[3].Field[1].type 0B (Text)
+00000A9A TableSection.Table[3].Field[1].unknown 00
+00000A9B TableSection.Table[3].Field[1].maxLen 28
+00000A9C TableSection.Table[3].unknown1 20
+00000A9D TableSection.Table[3].dataIndex 00000009
+00000AA1 TableSection.Table[3].unknown2 00
+00000AA2 TableSection.Table[4].tableName Table4
+00000AA9 TableSection.Table[4].fieldCount 1
+00000AAA TableSection.Table[4].Field[1].fieldName txt
+00000AAE TableSection.Table[4].Field[1].type 0B (Text)
+00000AAF TableSection.Table[4].Field[1].unknown 00
+00000AB0 TableSection.Table[4].Field[1].maxLen 28
+00000AB1 TableSection.Table[4].unknown1 20
+00000AB2 TableSection.Table[4].dataIndex 0000000B
+00000AB6 TableSection.Table[4].unknown2 00
+00000AB7 TableSection.Table[5].tableName Table5
+00000ABE TableSection.Table[5].fieldCount 1
+00000ABF TableSection.Table[5].Field[1].fieldName txt
+00000AC3 TableSection.Table[5].Field[1].type 0B (Text)
+00000AC4 TableSection.Table[5].Field[1].unknown 00
+00000AC5 TableSection.Table[5].Field[1].maxLen 28
+00000AC6 TableSection.Table[5].unknown1 20
+00000AC7 TableSection.Table[5].dataIndex 0000000D
+00000ACB TableSection.Table[5].unknown2 00
+00000ACC TableSection.Table[6].tableName Table6
+00000AD3 TableSection.Table[6].fieldCount 1
+00000AD4 TableSection.Table[6].Field[1].fieldName txt
+00000AD8 TableSection.Table[6].Field[1].type 0B (Text)
+00000AD9 TableSection.Table[6].Field[1].unknown 00
+00000ADA TableSection.Table[6].Field[1].maxLen 28
+00000ADB TableSection.Table[6].unknown1 20
+00000ADC TableSection.Table[6].dataIndex 0000000F
+00000AE0 TableSection.Table[6].unknown2 00
+00000AE1 TableSection.Table[7].tableName Table7
+00000AE8 TableSection.Table[7].fieldCount 1
+00000AE9 TableSection.Table[7].Field[1].fieldName txt
+00000AED TableSection.Table[7].Field[1].type 0B (Text)
+00000AEE TableSection.Table[7].Field[1].unknown 00
+00000AEF TableSection.Table[7].Field[1].maxLen 28
+00000AF0 TableSection.Table[7].unknown1 20
+00000AF1 TableSection.Table[7].dataIndex 00000011
+00000AF5 TableSection.Table[7].unknown2 00
+00000AF6 TableSection.Table[8].tableName Table8
+00000AFD TableSection.Table[8].fieldCount 1
+00000AFE TableSection.Table[8].Field[1].fieldName txt
+00000B02 TableSection.Table[8].Field[1].type 0B (Text)
+00000B03 TableSection.Table[8].Field[1].unknown 00
+00000B04 TableSection.Table[8].Field[1].maxLen 28
+00000B05 TableSection.Table[8].unknown1 20
+00000B06 TableSection.Table[8].dataIndex 00000013
+00000B0A TableSection.Table[8].unknown2 00
+00000B0B TableSection.Table[9].tableName Table9
+00000B12 TableSection.Table[9].fieldCount 1
+00000B13 TableSection.Table[9].Field[1].fieldName txt
+00000B17 TableSection.Table[9].Field[1].type 0B (Text)
+00000B18 TableSection.Table[9].Field[1].unknown 00
+00000B19 TableSection.Table[9].Field[1].maxLen 28
+00000B1A TableSection.Table[9].unknown1 20
+00000B1B TableSection.Table[9].dataIndex 00000015
+00000B1F TableSection.Table[9].unknown2 00
+
+Section 63 00000B20 - 00000B28 (8 bytes)
+00000B20  06 40 00 00 00 00 00 00                          .@......
+
+Section 64 00000B28 - 00000B9F (119 bytes)
+00000B20                          75 80 03 00 00 00 00 00          u.......
+00000B30  00 00 15 00 00 00 00 00 00 00 00 00 39 0A 00 00  ............9...
+00000B40  00 17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00  ................
+00000B50  79 01 00 00 00 6A 01 00 00 00 6F 02 00 00 00 60  y....j....o....`
+00000B60  02 00 00 00 8E 03 00 00 00 7F 03 00 00 00 D6 04  ................
+00000B70  00 00 00 C7 04 00 00 00 47 06 00 00 00 38 06 00  ........G....8..
+00000B80  00 00 E1 07 00 00 00 D2 07 00 00 00 A4 09 00 00  ................
+00000B90  00 95 09 00 00 00 02 0B 00 00 00 2A 0A 00 00     ...........*...
+
+Section 65 00000B9F - 00000BAE (15 bytes)
+00000B90                                               0D                 .
+00000BA0  40 14 00 00 00 41 01 00 00 02 00 00 00 00        @....A........
+
+Section 66 00000BAE - 00000BC7 (25 bytes)
+00000BA0                                            17 40                .@
+00000BB0  00 00 00 00 01 00 20 01 0E 46 69 65 6C 64 46 6F  ...... ..FieldFo
+00000BC0  72 54 61 62 6C 65 39                             rTable9
+
+00000BB0 TableContentSection.nextSectionIndex 00000000
+00000BB4 TableContentSection.recordBitmask 0001
+00000BB6 TableContentSection.recordLength[1] 10
+
+--------------------- 00000BB7 to 0x00000BC7 UNPARSED ---------------------
+00000BB0                       01 0E 46 69 65 6C 64 46 6F         ..FieldFo
+00000BC0  72 54 61 62 6C 65 39                             rTable9
+---------------------------------------------------------------------------
+
+Section 67 00000BC7 - 00000C3E (119 bytes)
+00000BC0                       75 80 03 00 00 00 00 00 00         u........
+00000BD0  00 15 00 00 00 00 00 00 00 00 00 39 0A 00 00 00  ...........9....
+00000BE0  17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 79  ...............y
+00000BF0  01 00 00 00 6A 01 00 00 00 6F 02 00 00 00 60 02  ....j....o....`.
+00000C00  00 00 00 8E 03 00 00 00 7F 03 00 00 00 D6 04 00  ................
+00000C10  00 00 C7 04 00 00 00 47 06 00 00 00 38 06 00 00  .......G....8...
+00000C20  00 E1 07 00 00 00 D2 07 00 00 00 A4 09 00 00 00  ................
+00000C30  95 09 00 00 00 90 0B 00 00 00 81 0B 00 00        ..............
+
+Section 68 00000C3E - 00000C4D (15 bytes)
+00000C30                                            0D 40                .@
+00000C40  16 00 00 00 60 01 00 00 00 00 00 00 00           ....`........
+
+Section 69 00000C4D - 00000D2C (223 bytes)
+00000C40                                         DD 40 69               .@i
+00000C50  00 00 10 00 01 00 00 00 14 1A 54 61 62 6C 65 31  ..........Table1
+00000C60  02 0E 74 78 74 0B 00 28 20 05 00 00 00 00 1A 54  ..txt..( ......T
+00000C70  61 62 6C 65 32 02 0E 74 78 74 0B 00 28 20 07 00  able2..txt..( ..
+00000C80  00 00 00 1A 54 61 62 6C 65 33 02 0E 74 78 74 0B  ....Table3..txt.
+00000C90  00 28 20 09 00 00 00 00 1A 54 61 62 6C 65 34 02  .( ......Table4.
+00000CA0  0E 74 78 74 0B 00 28 20 0B 00 00 00 00 1A 54 61  .txt..( ......Ta
+00000CB0  62 6C 65 35 02 0E 74 78 74 0B 00 28 20 0D 00 00  ble5..txt..( ...
+00000CC0  00 00 1A 54 61 62 6C 65 36 02 0E 74 78 74 0B 00  ...Table6..txt..
+00000CD0  28 20 0F 00 00 00 00 1A 54 61 62 6C 65 37 02 0E  ( ......Table7..
+00000CE0  74 78 74 0B 00 28 20 11 00 00 00 00 1A 54 61 62  txt..( ......Tab
+00000CF0  6C 65 38 02 0E 74 78 74 0B 00 28 20 13 00 00 00  le8..txt..( ....
+00000D00  00 1A 54 61 62 6C 65 39 02 0E 74 78 74 0B 00 28  ..Table9..txt..(
+00000D10  20 15 00 00 00 00 1E 54 61 62 6C 65 31 30 02 0E   ......Table10..
+00000D20  74 78 74 0B 00 28 20 17 00 00 00 00              txt..( .....
+
+00000C4F TableSection.KDbmsStoreDatabase 10000069
+00000C53 TableSection.nullbyte 00
+00000C54 TableSection.unknown 00000001
+00000C58 TableSection.tableCount A
+00000C59 TableSection.Table[1].tableName Table1
+00000C60 TableSection.Table[1].fieldCount 1
+00000C61 TableSection.Table[1].Field[1].fieldName txt
+00000C65 TableSection.Table[1].Field[1].type 0B (Text)
+00000C66 TableSection.Table[1].Field[1].unknown 00
+00000C67 TableSection.Table[1].Field[1].maxLen 28
+00000C68 TableSection.Table[1].unknown1 20
+00000C69 TableSection.Table[1].dataIndex 00000005
+00000C6D TableSection.Table[1].unknown2 00
+00000C6E TableSection.Table[2].tableName Table2
+00000C75 TableSection.Table[2].fieldCount 1
+00000C76 TableSection.Table[2].Field[1].fieldName txt
+00000C7A TableSection.Table[2].Field[1].type 0B (Text)
+00000C7B TableSection.Table[2].Field[1].unknown 00
+00000C7C TableSection.Table[2].Field[1].maxLen 28
+00000C7D TableSection.Table[2].unknown1 20
+00000C7E TableSection.Table[2].dataIndex 00000007
+00000C82 TableSection.Table[2].unknown2 00
+00000C83 TableSection.Table[3].tableName Table3
+00000C8A TableSection.Table[3].fieldCount 1
+00000C8B TableSection.Table[3].Field[1].fieldName txt
+00000C8F TableSection.Table[3].Field[1].type 0B (Text)
+00000C90 TableSection.Table[3].Field[1].unknown 00
+00000C91 TableSection.Table[3].Field[1].maxLen 28
+00000C92 TableSection.Table[3].unknown1 20
+00000C93 TableSection.Table[3].dataIndex 00000009
+00000C97 TableSection.Table[3].unknown2 00
+00000C98 TableSection.Table[4].tableName Table4
+00000C9F TableSection.Table[4].fieldCount 1
+00000CA0 TableSection.Table[4].Field[1].fieldName txt
+00000CA4 TableSection.Table[4].Field[1].type 0B (Text)
+00000CA5 TableSection.Table[4].Field[1].unknown 00
+00000CA6 TableSection.Table[4].Field[1].maxLen 28
+00000CA7 TableSection.Table[4].unknown1 20
+00000CA8 TableSection.Table[4].dataIndex 0000000B
+00000CAC TableSection.Table[4].unknown2 00
+00000CAD TableSection.Table[5].tableName Table5
+00000CB4 TableSection.Table[5].fieldCount 1
+00000CB5 TableSection.Table[5].Field[1].fieldName txt
+00000CB9 TableSection.Table[5].Field[1].type 0B (Text)
+00000CBA TableSection.Table[5].Field[1].unknown 00
+00000CBB TableSection.Table[5].Field[1].maxLen 28
+00000CBC TableSection.Table[5].unknown1 20
+00000CBD TableSection.Table[5].dataIndex 0000000D
+00000CC1 TableSection.Table[5].unknown2 00
+00000CC2 TableSection.Table[6].tableName Table6
+00000CC9 TableSection.Table[6].fieldCount 1
+00000CCA TableSection.Table[6].Field[1].fieldName txt
+00000CCE TableSection.Table[6].Field[1].type 0B (Text)
+00000CCF TableSection.Table[6].Field[1].unknown 00
+00000CD0 TableSection.Table[6].Field[1].maxLen 28
+00000CD1 TableSection.Table[6].unknown1 20
+00000CD2 TableSection.Table[6].dataIndex 0000000F
+00000CD6 TableSection.Table[6].unknown2 00
+00000CD7 TableSection.Table[7].tableName Table7
+00000CDE TableSection.Table[7].fieldCount 1
+00000CDF TableSection.Table[7].Field[1].fieldName txt
+00000CE3 TableSection.Table[7].Field[1].type 0B (Text)
+00000CE4 TableSection.Table[7].Field[1].unknown 00
+00000CE5 TableSection.Table[7].Field[1].maxLen 28
+00000CE6 TableSection.Table[7].unknown1 20
+00000CE7 TableSection.Table[7].dataIndex 00000011
+00000CEB TableSection.Table[7].unknown2 00
+00000CEC TableSection.Table[8].tableName Table8
+00000CF3 TableSection.Table[8].fieldCount 1
+00000CF4 TableSection.Table[8].Field[1].fieldName txt
+00000CF8 TableSection.Table[8].Field[1].type 0B (Text)
+00000CF9 TableSection.Table[8].Field[1].unknown 00
+00000CFA TableSection.Table[8].Field[1].maxLen 28
+00000CFB TableSection.Table[8].unknown1 20
+00000CFC TableSection.Table[8].dataIndex 00000013
+00000D00 TableSection.Table[8].unknown2 00
+00000D01 TableSection.Table[9].tableName Table9
+00000D08 TableSection.Table[9].fieldCount 1
+00000D09 TableSection.Table[9].Field[1].fieldName txt
+00000D0D TableSection.Table[9].Field[1].type 0B (Text)
+00000D0E TableSection.Table[9].Field[1].unknown 00
+00000D0F TableSection.Table[9].Field[1].maxLen 28
+00000D10 TableSection.Table[9].unknown1 20
+00000D11 TableSection.Table[9].dataIndex 00000015
+00000D15 TableSection.Table[9].unknown2 00
+00000D16 TableSection.Table[10].tableName Table10
+00000D1E TableSection.Table[10].fieldCount 1
+00000D1F TableSection.Table[10].Field[1].fieldName txt
+00000D23 TableSection.Table[10].Field[1].type 0B (Text)
+00000D24 TableSection.Table[10].Field[1].unknown 00
+00000D25 TableSection.Table[10].Field[1].maxLen 28
+00000D26 TableSection.Table[10].unknown1 20
+00000D27 TableSection.Table[10].dataIndex 00000017
+00000D2B TableSection.Table[10].unknown2 00
+
+Section 70 00000D2C - 00000D34 (8 bytes)
+00000D20                                      06 40 00 00              .@..
+00000D30  00 00 00 00                                      ....
+
+Section 71 00000D34 - 00000DB5 (129 bytes)
+00000D30              7F 80 03 00 00 00 00 00 00 00 17 00      ............
+00000D40  00 00 00 00 00 00 00 00 2F 0C 00 00 00 17 00 00  ......../.......
+00000D50  00 00 AC 00 00 00 00 9D 00 00 00 00 79 01 00 00  ............y...
+00000D60  00 6A 01 00 00 00 6F 02 00 00 00 60 02 00 00 00  .j....o....`....
+00000D70  8E 03 00 00 00 7F 03 00 00 00 D6 04 00 00 00 C7  ................
+00000D80  04 00 00 00 47 06 00 00 00 38 06 00 00 00 E1 07  ....G....8......
+00000D90  00 00 00 D2 07 00 00 00 A4 09 00 00 00 95 09 00  ................
+00000DA0  00 00 90 0B 00 00 00 81 0B 00 00 00 0E 0D 00 00  ................
+00000DB0  00 20 0C 00 00                                   . ...
+
+Section 72 00000DB5 - 00000DC4 (15 bytes)
+00000DB0                 0D 40 16 00 00 00 61 01 00 00 02       .@....a....
+00000DC0  00 00 00 00                                      ....
+
+Section 73 00000DC4 - 00000DDE (26 bytes)
+00000DC0              18 40 00 00 00 00 01 00 22 01 0F 46      .@......"..F
+00000DD0  69 65 6C 64 46 6F 72 54 61 62 6C 65 31 30        ieldForTable10
+
+00000DC6 TableContentSection.nextSectionIndex 00000000
+00000DCA TableContentSection.recordBitmask 0001
+00000DCC TableContentSection.recordLength[1] 11
+
+--------------------- 00000DCD to 0x00000DDE UNPARSED ---------------------
+00000DC0                                         01 0F 46               ..F
+00000DD0  69 65 6C 64 46 6F 72 54 61 62 6C 65 31 30        ieldForTable10
+---------------------------------------------------------------------------
+
+Section 74 00000DDE - 00000E5F (129 bytes)
+00000DD0                                            7F 80                ..
+00000DE0  03 00 00 00 00 00 00 00 17 00 00 00 00 00 00 00  ................
+00000DF0  00 00 2F 0C 00 00 00 17 00 00 00 00 AC 00 00 00  ../.............
+00000E00  00 9D 00 00 00 00 79 01 00 00 00 6A 01 00 00 00  ......y....j....
+00000E10  6F 02 00 00 00 60 02 00 00 00 8E 03 00 00 00 7F  o....`..........
+00000E20  03 00 00 00 D6 04 00 00 00 C7 04 00 00 00 47 06  ..............G.
+00000E30  00 00 00 38 06 00 00 00 E1 07 00 00 00 D2 07 00  ...8............
+00000E40  00 00 A4 09 00 00 00 95 09 00 00 00 90 0B 00 00  ................
+00000E50  00 81 0B 00 00 00 A6 0D 00 00 00 97 0D 00 00     ...............
+
+Section 75 00000E5F - 00000E6E (15 bytes)
+00000E50                                               0D                 .
+00000E60  40 18 00 00 00 80 01 00 00 00 00 00 00 00        @.............
+
+Section 76 00000E6E - 00000F63 (245 bytes)
+00000E60                                            F3 40                .@
+00000E70  69 00 00 10 00 01 00 00 00 16 1A 54 61 62 6C 65  i..........Table
+00000E80  31 02 0E 74 78 74 0B 00 28 20 05 00 00 00 00 1A  1..txt..( ......
+00000E90  54 61 62 6C 65 32 02 0E 74 78 74 0B 00 28 20 07  Table2..txt..( .
+00000EA0  00 00 00 00 1A 54 61 62 6C 65 33 02 0E 74 78 74  .....Table3..txt
+00000EB0  0B 00 28 20 09 00 00 00 00 1A 54 61 62 6C 65 34  ..( ......Table4
+00000EC0  02 0E 74 78 74 0B 00 28 20 0B 00 00 00 00 1A 54  ..txt..( ......T
+00000ED0  61 62 6C 65 35 02 0E 74 78 74 0B 00 28 20 0D 00  able5..txt..( ..
+00000EE0  00 00 00 1A 54 61 62 6C 65 36 02 0E 74 78 74 0B  ....Table6..txt.
+00000EF0  00 28 20 0F 00 00 00 00 1A 54 61 62 6C 65 37 02  .( ......Table7.
+00000F00  0E 74 78 74 0B 00 28 20 11 00 00 00 00 1A 54 61  .txt..( ......Ta
+00000F10  62 6C 65 38 02 0E 74 78 74 0B 00 28 20 13 00 00  ble8..txt..( ...
+00000F20  00 00 1A 54 61 62 6C 65 39 02 0E 74 78 74 0B 00  ...Table9..txt..
+00000F30  28 20 15 00 00 00 00 1E 54 61 62 6C 65 31 30 02  ( ......Table10.
+00000F40  0E 74 78 74 0B 00 28 20 17 00 00 00 00 1E 54 61  .txt..( ......Ta
+00000F50  62 6C 65 31 31 02 0E 74 78 74 0B 00 28 20 19 00  ble11..txt..( ..
+00000F60  00 00 00                                         ...
+
+00000E70 TableSection.KDbmsStoreDatabase 10000069
+00000E74 TableSection.nullbyte 00
+00000E75 TableSection.unknown 00000001
+00000E79 TableSection.tableCount B
+00000E7A TableSection.Table[1].tableName Table1
+00000E81 TableSection.Table[1].fieldCount 1
+00000E82 TableSection.Table[1].Field[1].fieldName txt
+00000E86 TableSection.Table[1].Field[1].type 0B (Text)
+00000E87 TableSection.Table[1].Field[1].unknown 00
+00000E88 TableSection.Table[1].Field[1].maxLen 28
+00000E89 TableSection.Table[1].unknown1 20
+00000E8A TableSection.Table[1].dataIndex 00000005
+00000E8E TableSection.Table[1].unknown2 00
+00000E8F TableSection.Table[2].tableName Table2
+00000E96 TableSection.Table[2].fieldCount 1
+00000E97 TableSection.Table[2].Field[1].fieldName txt
+00000E9B TableSection.Table[2].Field[1].type 0B (Text)
+00000E9C TableSection.Table[2].Field[1].unknown 00
+00000E9D TableSection.Table[2].Field[1].maxLen 28
+00000E9E TableSection.Table[2].unknown1 20
+00000E9F TableSection.Table[2].dataIndex 00000007
+00000EA3 TableSection.Table[2].unknown2 00
+00000EA4 TableSection.Table[3].tableName Table3
+00000EAB TableSection.Table[3].fieldCount 1
+00000EAC TableSection.Table[3].Field[1].fieldName txt
+00000EB0 TableSection.Table[3].Field[1].type 0B (Text)
+00000EB1 TableSection.Table[3].Field[1].unknown 00
+00000EB2 TableSection.Table[3].Field[1].maxLen 28
+00000EB3 TableSection.Table[3].unknown1 20
+00000EB4 TableSection.Table[3].dataIndex 00000009
+00000EB8 TableSection.Table[3].unknown2 00
+00000EB9 TableSection.Table[4].tableName Table4
+00000EC0 TableSection.Table[4].fieldCount 1
+00000EC1 TableSection.Table[4].Field[1].fieldName txt
+00000EC5 TableSection.Table[4].Field[1].type 0B (Text)
+00000EC6 TableSection.Table[4].Field[1].unknown 00
+00000EC7 TableSection.Table[4].Field[1].maxLen 28
+00000EC8 TableSection.Table[4].unknown1 20
+00000EC9 TableSection.Table[4].dataIndex 0000000B
+00000ECD TableSection.Table[4].unknown2 00
+00000ECE TableSection.Table[5].tableName Table5
+00000ED5 TableSection.Table[5].fieldCount 1
+00000ED6 TableSection.Table[5].Field[1].fieldName txt
+00000EDA TableSection.Table[5].Field[1].type 0B (Text)
+00000EDB TableSection.Table[5].Field[1].unknown 00
+00000EDC TableSection.Table[5].Field[1].maxLen 28
+00000EDD TableSection.Table[5].unknown1 20
+00000EDE TableSection.Table[5].dataIndex 0000000D
+00000EE2 TableSection.Table[5].unknown2 00
+00000EE3 TableSection.Table[6].tableName Table6
+00000EEA TableSection.Table[6].fieldCount 1
+00000EEB TableSection.Table[6].Field[1].fieldName txt
+00000EEF TableSection.Table[6].Field[1].type 0B (Text)
+00000EF0 TableSection.Table[6].Field[1].unknown 00
+00000EF1 TableSection.Table[6].Field[1].maxLen 28
+00000EF2 TableSection.Table[6].unknown1 20
+00000EF3 TableSection.Table[6].dataIndex 0000000F
+00000EF7 TableSection.Table[6].unknown2 00
+00000EF8 TableSection.Table[7].tableName Table7
+00000EFF TableSection.Table[7].fieldCount 1
+00000F00 TableSection.Table[7].Field[1].fieldName txt
+00000F04 TableSection.Table[7].Field[1].type 0B (Text)
+00000F05 TableSection.Table[7].Field[1].unknown 00
+00000F06 TableSection.Table[7].Field[1].maxLen 28
+00000F07 TableSection.Table[7].unknown1 20
+00000F08 TableSection.Table[7].dataIndex 00000011
+00000F0C TableSection.Table[7].unknown2 00
+00000F0D TableSection.Table[8].tableName Table8
+00000F14 TableSection.Table[8].fieldCount 1
+00000F15 TableSection.Table[8].Field[1].fieldName txt
+00000F19 TableSection.Table[8].Field[1].type 0B (Text)
+00000F1A TableSection.Table[8].Field[1].unknown 00
+00000F1B TableSection.Table[8].Field[1].maxLen 28
+00000F1C TableSection.Table[8].unknown1 20
+00000F1D TableSection.Table[8].dataIndex 00000013
+00000F21 TableSection.Table[8].unknown2 00
+00000F22 TableSection.Table[9].tableName Table9
+00000F29 TableSection.Table[9].fieldCount 1
+00000F2A TableSection.Table[9].Field[1].fieldName txt
+00000F2E TableSection.Table[9].Field[1].type 0B (Text)
+00000F2F TableSection.Table[9].Field[1].unknown 00
+00000F30 TableSection.Table[9].Field[1].maxLen 28
+00000F31 TableSection.Table[9].unknown1 20
+00000F32 TableSection.Table[9].dataIndex 00000015
+00000F36 TableSection.Table[9].unknown2 00
+00000F37 TableSection.Table[10].tableName Table10
+00000F3F TableSection.Table[10].fieldCount 1
+00000F40 TableSection.Table[10].Field[1].fieldName txt
+00000F44 TableSection.Table[10].Field[1].type 0B (Text)
+00000F45 TableSection.Table[10].Field[1].unknown 00
+00000F46 TableSection.Table[10].Field[1].maxLen 28
+00000F47 TableSection.Table[10].unknown1 20
+00000F48 TableSection.Table[10].dataIndex 00000017
+00000F4C TableSection.Table[10].unknown2 00
+00000F4D TableSection.Table[11].tableName Table11
+00000F55 TableSection.Table[11].fieldCount 1
+00000F56 TableSection.Table[11].Field[1].fieldName txt
+00000F5A TableSection.Table[11].Field[1].type 0B (Text)
+00000F5B TableSection.Table[11].Field[1].unknown 00
+00000F5C TableSection.Table[11].Field[1].maxLen 28
+00000F5D TableSection.Table[11].unknown1 20
+00000F5E TableSection.Table[11].dataIndex 00000019
+00000F62 TableSection.Table[11].unknown2 00
+
+Section 77 00000F63 - 00000F6B (8 bytes)
+00000F60           06 40 00 00 00 00 00 00                    .@......
+
+Section 78 00000F6B - 00000FF6 (139 bytes)
+00000F60                                   89 80 03 00 00             .....
+00000F70  00 00 00 00 00 19 00 00 00 00 00 00 00 00 00 50  ...............P
+00000F80  0E 00 00 00 17 00 00 00 00 AC 00 00 00 00 9D 00  ................
+00000F90  00 00 00 79 01 00 00 00 6A 01 00 00 00 6F 02 00  ...y....j....o..
+00000FA0  00 00 60 02 00 00 00 8E 03 00 00 00 7F 03 00 00  ..`.............
+00000FB0  00 D6 04 00 00 00 C7 04 00 00 00 47 06 00 00 00  ...........G....
+00000FC0  38 06 00 00 00 E1 07 00 00 00 D2 07 00 00 00 A4  8...............
+00000FD0  09 00 00 00 95 09 00 00 00 90 0B 00 00 00 81 0B  ................
+00000FE0  00 00 00 A6 0D 00 00 00 97 0D 00 00 00 45 0F 00  .............E..
+00000FF0  00 00 41 0E 00 00                                ..A...
+
+Section 79 00000FF6 - 00001005 (15 bytes)
+00000FF0                    0D 40 18 00 00 00 81 01 00 00        .@........
+00001000  02 00 00 00 00                                   .....
+
+Section 80 00001005 - 0000101F (26 bytes)
+00001000                 18 40 00 00 00 00 01 00 22 01 0F       .@......"..
+00001010  46 69 65 6C 64 46 6F 72 54 61 62 6C 65 31 31     FieldForTable11
+
+00001007 TableContentSection.nextSectionIndex 00000000
+0000100B TableContentSection.recordBitmask 0001
+0000100D TableContentSection.recordLength[1] 11
+
+--------------------- 0000100E to 0x0000101F UNPARSED ---------------------
+00001000                                            01 0F                ..
+00001010  46 69 65 6C 64 46 6F 72 54 61 62 6C 65 31 31     FieldForTable11
+---------------------------------------------------------------------------
+
+Section 81 0000101F - 000010AA (139 bytes)
+00001010                                               89                 .
+00001020  80 03 00 00 00 00 00 00 00 19 00 00 00 00 00 00  ................
+00001030  00 00 00 50 0E 00 00 00 17 00 00 00 00 AC 00 00  ...P............
+00001040  00 00 9D 00 00 00 00 79 01 00 00 00 6A 01 00 00  .......y....j...
+00001050  00 6F 02 00 00 00 60 02 00 00 00 8E 03 00 00 00  .o....`.........
+00001060  7F 03 00 00 00 D6 04 00 00 00 C7 04 00 00 00 47  ...............G
+00001070  06 00 00 00 38 06 00 00 00 E1 07 00 00 00 D2 07  ....8...........
+00001080  00 00 00 A4 09 00 00 00 95 09 00 00 00 90 0B 00  ................
+00001090  00 00 81 0B 00 00 00 A6 0D 00 00 00 97 0D 00 00  ................
+000010A0  00 E7 0F 00 00 00 D8 0F 00 00                    ..........
+
+Section 82 000010AA - 000010B9 (15 bytes)
+000010A0                                0D 40 1A 00 00 00            .@....
+000010B0  A0 01 00 00 00 00 00 00 00                       .........
+
+Section 83 000010B9 - 000011C4 (267 bytes)
+000010B0                             09 41 69 00 00 10 00           .Ai....
+000010C0  01 00 00 00 18 1A 54 61 62 6C 65 31 02 0E 74 78  ......Table1..tx
+000010D0  74 0B 00 28 20 05 00 00 00 00 1A 54 61 62 6C 65  t..( ......Table
+000010E0  32 02 0E 74 78 74 0B 00 28 20 07 00 00 00 00 1A  2..txt..( ......
+000010F0  54 61 62 6C 65 33 02 0E 74 78 74 0B 00 28 20 09  Table3..txt..( .
+00001100  00 00 00 00 1A 54 61 62 6C 65 34 02 0E 74 78 74  .....Table4..txt
+00001110  0B 00 28 20 0B 00 00 00 00 1A 54 61 62 6C 65 35  ..( ......Table5
+00001120  02 0E 74 78 74 0B 00 28 20 0D 00 00 00 00 1A 54  ..txt..( ......T
+00001130  61 62 6C 65 36 02 0E 74 78 74 0B 00 28 20 0F 00  able6..txt..( ..
+00001140  00 00 00 1A 54 61 62 6C 65 37 02 0E 74 78 74 0B  ....Table7..txt.
+00001150  00 28 20 11 00 00 00 00 1A 54 61 62 6C 65 38 02  .( ......Table8.
+00001160  0E 74 78 74 0B 00 28 20 13 00 00 00 00 1A 54 61  .txt..( ......Ta
+00001170  62 6C 65 39 02 0E 74 78 74 0B 00 28 20 15 00 00  ble9..txt..( ...
+00001180  00 00 1E 54 61 62 6C 65 31 30 02 0E 74 78 74 0B  ...Table10..txt.
+00001190  00 28 20 17 00 00 00 00 1E 54 61 62 6C 65 31 31  .( ......Table11
+000011A0  02 0E 74 78 74 0B 00 28 20 19 00 00 00 00 1E 54  ..txt..( ......T
+000011B0  61 62 6C 65 31 32 02 0E 74 78 74 0B 00 28 20 1B  able12..txt..( .
+000011C0  00 00 00 00                                      ....
+
+000010BB TableSection.KDbmsStoreDatabase 10000069
+000010BF TableSection.nullbyte 00
+000010C0 TableSection.unknown 00000001
+000010C4 TableSection.tableCount C
+000010C5 TableSection.Table[1].tableName Table1
+000010CC TableSection.Table[1].fieldCount 1
+000010CD TableSection.Table[1].Field[1].fieldName txt
+000010D1 TableSection.Table[1].Field[1].type 0B (Text)
+000010D2 TableSection.Table[1].Field[1].unknown 00
+000010D3 TableSection.Table[1].Field[1].maxLen 28
+000010D4 TableSection.Table[1].unknown1 20
+000010D5 TableSection.Table[1].dataIndex 00000005
+000010D9 TableSection.Table[1].unknown2 00
+000010DA TableSection.Table[2].tableName Table2
+000010E1 TableSection.Table[2].fieldCount 1
+000010E2 TableSection.Table[2].Field[1].fieldName txt
+000010E6 TableSection.Table[2].Field[1].type 0B (Text)
+000010E7 TableSection.Table[2].Field[1].unknown 00
+000010E8 TableSection.Table[2].Field[1].maxLen 28
+000010E9 TableSection.Table[2].unknown1 20
+000010EA TableSection.Table[2].dataIndex 00000007
+000010EE TableSection.Table[2].unknown2 00
+000010EF TableSection.Table[3].tableName Table3
+000010F6 TableSection.Table[3].fieldCount 1
+000010F7 TableSection.Table[3].Field[1].fieldName txt
+000010FB TableSection.Table[3].Field[1].type 0B (Text)
+000010FC TableSection.Table[3].Field[1].unknown 00
+000010FD TableSection.Table[3].Field[1].maxLen 28
+000010FE TableSection.Table[3].unknown1 20
+000010FF TableSection.Table[3].dataIndex 00000009
+00001103 TableSection.Table[3].unknown2 00
+00001104 TableSection.Table[4].tableName Table4
+0000110B TableSection.Table[4].fieldCount 1
+0000110C TableSection.Table[4].Field[1].fieldName txt
+00001110 TableSection.Table[4].Field[1].type 0B (Text)
+00001111 TableSection.Table[4].Field[1].unknown 00
+00001112 TableSection.Table[4].Field[1].maxLen 28
+00001113 TableSection.Table[4].unknown1 20
+00001114 TableSection.Table[4].dataIndex 0000000B
+00001118 TableSection.Table[4].unknown2 00
+00001119 TableSection.Table[5].tableName Table5
+00001120 TableSection.Table[5].fieldCount 1
+00001121 TableSection.Table[5].Field[1].fieldName txt
+00001125 TableSection.Table[5].Field[1].type 0B (Text)
+00001126 TableSection.Table[5].Field[1].unknown 00
+00001127 TableSection.Table[5].Field[1].maxLen 28
+00001128 TableSection.Table[5].unknown1 20
+00001129 TableSection.Table[5].dataIndex 0000000D
+0000112D TableSection.Table[5].unknown2 00
+0000112E TableSection.Table[6].tableName Table6
+00001135 TableSection.Table[6].fieldCount 1
+00001136 TableSection.Table[6].Field[1].fieldName txt
+0000113A TableSection.Table[6].Field[1].type 0B (Text)
+0000113B TableSection.Table[6].Field[1].unknown 00
+0000113C TableSection.Table[6].Field[1].maxLen 28
+0000113D TableSection.Table[6].unknown1 20
+0000113E TableSection.Table[6].dataIndex 0000000F
+00001142 TableSection.Table[6].unknown2 00
+00001143 TableSection.Table[7].tableName Table7
+0000114A TableSection.Table[7].fieldCount 1
+0000114B TableSection.Table[7].Field[1].fieldName txt
+0000114F TableSection.Table[7].Field[1].type 0B (Text)
+00001150 TableSection.Table[7].Field[1].unknown 00
+00001151 TableSection.Table[7].Field[1].maxLen 28
+00001152 TableSection.Table[7].unknown1 20
+00001153 TableSection.Table[7].dataIndex 00000011
+00001157 TableSection.Table[7].unknown2 00
+00001158 TableSection.Table[8].tableName Table8
+0000115F TableSection.Table[8].fieldCount 1
+00001160 TableSection.Table[8].Field[1].fieldName txt
+00001164 TableSection.Table[8].Field[1].type 0B (Text)
+00001165 TableSection.Table[8].Field[1].unknown 00
+00001166 TableSection.Table[8].Field[1].maxLen 28
+00001167 TableSection.Table[8].unknown1 20
+00001168 TableSection.Table[8].dataIndex 00000013
+0000116C TableSection.Table[8].unknown2 00
+0000116D TableSection.Table[9].tableName Table9
+00001174 TableSection.Table[9].fieldCount 1
+00001175 TableSection.Table[9].Field[1].fieldName txt
+00001179 TableSection.Table[9].Field[1].type 0B (Text)
+0000117A TableSection.Table[9].Field[1].unknown 00
+0000117B TableSection.Table[9].Field[1].maxLen 28
+0000117C TableSection.Table[9].unknown1 20
+0000117D TableSection.Table[9].dataIndex 00000015
+00001181 TableSection.Table[9].unknown2 00
+00001182 TableSection.Table[10].tableName Table10
+0000118A TableSection.Table[10].fieldCount 1
+0000118B TableSection.Table[10].Field[1].fieldName txt
+0000118F TableSection.Table[10].Field[1].type 0B (Text)
+00001190 TableSection.Table[10].Field[1].unknown 00
+00001191 TableSection.Table[10].Field[1].maxLen 28
+00001192 TableSection.Table[10].unknown1 20
+00001193 TableSection.Table[10].dataIndex 00000017
+00001197 TableSection.Table[10].unknown2 00
+00001198 TableSection.Table[11].tableName Table11
+000011A0 TableSection.Table[11].fieldCount 1
+000011A1 TableSection.Table[11].Field[1].fieldName txt
+000011A5 TableSection.Table[11].Field[1].type 0B (Text)
+000011A6 TableSection.Table[11].Field[1].unknown 00
+000011A7 TableSection.Table[11].Field[1].maxLen 28
+000011A8 TableSection.Table[11].unknown1 20
+000011A9 TableSection.Table[11].dataIndex 00000019
+000011AD TableSection.Table[11].unknown2 00
+000011AE TableSection.Table[12].tableName Table12
+000011B6 TableSection.Table[12].fieldCount 1
+000011B7 TableSection.Table[12].Field[1].fieldName txt
+000011BB TableSection.Table[12].Field[1].type 0B (Text)
+000011BC TableSection.Table[12].Field[1].unknown 00
+000011BD TableSection.Table[12].Field[1].maxLen 28
+000011BE TableSection.Table[12].unknown1 20
+000011BF TableSection.Table[12].dataIndex 0000001B
+000011C3 TableSection.Table[12].unknown2 00
+
+Section 84 000011C4 - 000011CC (8 bytes)
+000011C0              06 40 00 00 00 00 00 00                  .@......
+
+Section 85 000011CC - 00001261 (149 bytes)
+000011C0                                      93 80 03 00              ....
+000011D0  00 00 00 00 00 00 1B 00 00 00 00 00 00 00 00 00  ................
+000011E0  9B 10 00 00 00 17 00 00 00 00 AC 00 00 00 00 9D  ................
+000011F0  00 00 00 00 79 01 00 00 00 6A 01 00 00 00 6F 02  ....y....j....o.
+00001200  00 00 00 60 02 00 00 00 8E 03 00 00 00 7F 03 00  ...`............
+00001210  00 00 D6 04 00 00 00 C7 04 00 00 00 47 06 00 00  ............G...
+00001220  00 38 06 00 00 00 E1 07 00 00 00 D2 07 00 00 00  .8..............
+00001230  A4 09 00 00 00 95 09 00 00 00 90 0B 00 00 00 81  ................
+00001240  0B 00 00 00 A6 0D 00 00 00 97 0D 00 00 00 E7 0F  ................
+00001250  00 00 00 D8 0F 00 00 00 A6 11 00 00 00 8C 10 00  ................
+00001260  00                                               .
+
+Section 86 00001261 - 00001270 (15 bytes)
+00001260     0D 40 1A 00 00 00 A1 01 00 00 02 00 00 00 00   .@.............
+
+Section 87 00001270 - 0000128A (26 bytes)
+00001270  18 40 00 00 00 00 01 00 22 01 0F 46 69 65 6C 64  .@......"..Field
+00001280  46 6F 72 54 61 62 6C 65 31 32                    ForTable12
+
+00001272 TableContentSection.nextSectionIndex 00000000
+00001276 TableContentSection.recordBitmask 0001
+00001278 TableContentSection.recordLength[1] 11
+
+--------------------- 00001279 to 0x0000128A UNPARSED ---------------------
+00001270                             01 0F 46 69 65 6C 64           ..Field
+00001280  46 6F 72 54 61 62 6C 65 31 32                    ForTable12
+---------------------------------------------------------------------------
+
+Section 88 0000128A - 0000131F (149 bytes)
+00001280                                93 80 03 00 00 00            ......
+00001290  00 00 00 00 1B 00 00 00 00 00 00 00 00 00 9B 10  ................
+000012A0  00 00 00 17 00 00 00 00 AC 00 00 00 00 9D 00 00  ................
+000012B0  00 00 79 01 00 00 00 6A 01 00 00 00 6F 02 00 00  ..y....j....o...
+000012C0  00 60 02 00 00 00 8E 03 00 00 00 7F 03 00 00 00  .`..............
+000012D0  D6 04 00 00 00 C7 04 00 00 00 47 06 00 00 00 38  ..........G....8
+000012E0  06 00 00 00 E1 07 00 00 00 D2 07 00 00 00 A4 09  ................
+000012F0  00 00 00 95 09 00 00 00 90 0B 00 00 00 81 0B 00  ................
+00001300  00 00 A6 0D 00 00 00 97 0D 00 00 00 E7 0F 00 00  ................
+00001310  00 D8 0F 00 00 00 52 12 00 00 00 43 12 00 00     ......R....C...
+
+Section 89 0000131F - 0000132E (15 bytes)
+00001310                                               0D                 .
+00001320  40 1C 00 00 00 C0 01 00 00 00 00 00 00 00        @.............
+
+Section 90 0000132E - 0000144F (289 bytes)
+00001320                                            1F 41                .A
+00001330  69 00 00 10 00 01 00 00 00 1A 1A 54 61 62 6C 65  i..........Table
+00001340  31 02 0E 74 78 74 0B 00 28 20 05 00 00 00 00 1A  1..txt..( ......
+00001350  54 61 62 6C 65 32 02 0E 74 78 74 0B 00 28 20 07  Table2..txt..( .
+00001360  00 00 00 00 1A 54 61 62 6C 65 33 02 0E 74 78 74  .....Table3..txt
+00001370  0B 00 28 20 09 00 00 00 00 1A 54 61 62 6C 65 34  ..( ......Table4
+00001380  02 0E 74 78 74 0B 00 28 20 0B 00 00 00 00 1A 54  ..txt..( ......T
+00001390  61 62 6C 65 35 02 0E 74 78 74 0B 00 28 20 0D 00  able5..txt..( ..
+000013A0  00 00 00 1A 54 61 62 6C 65 36 02 0E 74 78 74 0B  ....Table6..txt.
+000013B0  00 28 20 0F 00 00 00 00 1A 54 61 62 6C 65 37 02  .( ......Table7.
+000013C0  0E 74 78 74 0B 00 28 20 11 00 00 00 00 1A 54 61  .txt..( ......Ta
+000013D0  62 6C 65 38 02 0E 74 78 74 0B 00 28 20 13 00 00  ble8..txt..( ...
+000013E0  00 00 1A 54 61 62 6C 65 39 02 0E 74 78 74 0B 00  ...Table9..txt..
+000013F0  28 20 15 00 00 00 00 1E 54 61 62 6C 65 31 30 02  ( ......Table10.
+00001400  0E 74 78 74 0B 00 28 20 17 00 00 00 00 1E 54 61  .txt..( ......Ta
+00001410  62 6C 65 31 31 02 0E 74 78 74 0B 00 28 20 19 00  ble11..txt..( ..
+00001420  00 00 00 1E 54 61 62 6C 65 31 32 02 0E 74 78 74  ....Table12..txt
+00001430  0B 00 28 20 1B 00 00 00 00 1E 54 61 62 6C 65 31  ..( ......Table1
+00001440  33 02 0E 74 78 74 0B 00 28 20 1D 00 00 00 00     3..txt..( .....
+
+00001330 TableSection.KDbmsStoreDatabase 10000069
+00001334 TableSection.nullbyte 00
+00001335 TableSection.unknown 00000001
+00001339 TableSection.tableCount D
+0000133A TableSection.Table[1].tableName Table1
+00001341 TableSection.Table[1].fieldCount 1
+00001342 TableSection.Table[1].Field[1].fieldName txt
+00001346 TableSection.Table[1].Field[1].type 0B (Text)
+00001347 TableSection.Table[1].Field[1].unknown 00
+00001348 TableSection.Table[1].Field[1].maxLen 28
+00001349 TableSection.Table[1].unknown1 20
+0000134A TableSection.Table[1].dataIndex 00000005
+0000134E TableSection.Table[1].unknown2 00
+0000134F TableSection.Table[2].tableName Table2
+00001356 TableSection.Table[2].fieldCount 1
+00001357 TableSection.Table[2].Field[1].fieldName txt
+0000135B TableSection.Table[2].Field[1].type 0B (Text)
+0000135C TableSection.Table[2].Field[1].unknown 00
+0000135D TableSection.Table[2].Field[1].maxLen 28
+0000135E TableSection.Table[2].unknown1 20
+0000135F TableSection.Table[2].dataIndex 00000007
+00001363 TableSection.Table[2].unknown2 00
+00001364 TableSection.Table[3].tableName Table3
+0000136B TableSection.Table[3].fieldCount 1
+0000136C TableSection.Table[3].Field[1].fieldName txt
+00001370 TableSection.Table[3].Field[1].type 0B (Text)
+00001371 TableSection.Table[3].Field[1].unknown 00
+00001372 TableSection.Table[3].Field[1].maxLen 28
+00001373 TableSection.Table[3].unknown1 20
+00001374 TableSection.Table[3].dataIndex 00000009
+00001378 TableSection.Table[3].unknown2 00
+00001379 TableSection.Table[4].tableName Table4
+00001380 TableSection.Table[4].fieldCount 1
+00001381 TableSection.Table[4].Field[1].fieldName txt
+00001385 TableSection.Table[4].Field[1].type 0B (Text)
+00001386 TableSection.Table[4].Field[1].unknown 00
+00001387 TableSection.Table[4].Field[1].maxLen 28
+00001388 TableSection.Table[4].unknown1 20
+00001389 TableSection.Table[4].dataIndex 0000000B
+0000138D TableSection.Table[4].unknown2 00
+0000138E TableSection.Table[5].tableName Table5
+00001395 TableSection.Table[5].fieldCount 1
+00001396 TableSection.Table[5].Field[1].fieldName txt
+0000139A TableSection.Table[5].Field[1].type 0B (Text)
+0000139B TableSection.Table[5].Field[1].unknown 00
+0000139C TableSection.Table[5].Field[1].maxLen 28
+0000139D TableSection.Table[5].unknown1 20
+0000139E TableSection.Table[5].dataIndex 0000000D
+000013A2 TableSection.Table[5].unknown2 00
+000013A3 TableSection.Table[6].tableName Table6
+000013AA TableSection.Table[6].fieldCount 1
+000013AB TableSection.Table[6].Field[1].fieldName txt
+000013AF TableSection.Table[6].Field[1].type 0B (Text)
+000013B0 TableSection.Table[6].Field[1].unknown 00
+000013B1 TableSection.Table[6].Field[1].maxLen 28
+000013B2 TableSection.Table[6].unknown1 20
+000013B3 TableSection.Table[6].dataIndex 0000000F
+000013B7 TableSection.Table[6].unknown2 00
+000013B8 TableSection.Table[7].tableName Table7
+000013BF TableSection.Table[7].fieldCount 1
+000013C0 TableSection.Table[7].Field[1].fieldName txt
+000013C4 TableSection.Table[7].Field[1].type 0B (Text)
+000013C5 TableSection.Table[7].Field[1].unknown 00
+000013C6 TableSection.Table[7].Field[1].maxLen 28
+000013C7 TableSection.Table[7].unknown1 20
+000013C8 TableSection.Table[7].dataIndex 00000011
+000013CC TableSection.Table[7].unknown2 00
+000013CD TableSection.Table[8].tableName Table8
+000013D4 TableSection.Table[8].fieldCount 1
+000013D5 TableSection.Table[8].Field[1].fieldName txt
+000013D9 TableSection.Table[8].Field[1].type 0B (Text)
+000013DA TableSection.Table[8].Field[1].unknown 00
+000013DB TableSection.Table[8].Field[1].maxLen 28
+000013DC TableSection.Table[8].unknown1 20
+000013DD TableSection.Table[8].dataIndex 00000013
+000013E1 TableSection.Table[8].unknown2 00
+000013E2 TableSection.Table[9].tableName Table9
+000013E9 TableSection.Table[9].fieldCount 1
+000013EA TableSection.Table[9].Field[1].fieldName txt
+000013EE TableSection.Table[9].Field[1].type 0B (Text)
+000013EF TableSection.Table[9].Field[1].unknown 00
+000013F0 TableSection.Table[9].Field[1].maxLen 28
+000013F1 TableSection.Table[9].unknown1 20
+000013F2 TableSection.Table[9].dataIndex 00000015
+000013F6 TableSection.Table[9].unknown2 00
+000013F7 TableSection.Table[10].tableName Table10
+000013FF TableSection.Table[10].fieldCount 1
+00001400 TableSection.Table[10].Field[1].fieldName txt
+00001404 TableSection.Table[10].Field[1].type 0B (Text)
+00001405 TableSection.Table[10].Field[1].unknown 00
+00001406 TableSection.Table[10].Field[1].maxLen 28
+00001407 TableSection.Table[10].unknown1 20
+00001408 TableSection.Table[10].dataIndex 00000017
+0000140C TableSection.Table[10].unknown2 00
+0000140D TableSection.Table[11].tableName Table11
+00001415 TableSection.Table[11].fieldCount 1
+00001416 TableSection.Table[11].Field[1].fieldName txt
+0000141A TableSection.Table[11].Field[1].type 0B (Text)
+0000141B TableSection.Table[11].Field[1].unknown 00
+0000141C TableSection.Table[11].Field[1].maxLen 28
+0000141D TableSection.Table[11].unknown1 20
+0000141E TableSection.Table[11].dataIndex 00000019
+00001422 TableSection.Table[11].unknown2 00
+00001423 TableSection.Table[12].tableName Table12
+0000142B TableSection.Table[12].fieldCount 1
+0000142C TableSection.Table[12].Field[1].fieldName txt
+00001430 TableSection.Table[12].Field[1].type 0B (Text)
+00001431 TableSection.Table[12].Field[1].unknown 00
+00001432 TableSection.Table[12].Field[1].maxLen 28
+00001433 TableSection.Table[12].unknown1 20
+00001434 TableSection.Table[12].dataIndex 0000001B
+00001438 TableSection.Table[12].unknown2 00
+00001439 TableSection.Table[13].tableName Table13
+00001441 TableSection.Table[13].fieldCount 1
+00001442 TableSection.Table[13].Field[1].fieldName txt
+00001446 TableSection.Table[13].Field[1].type 0B (Text)
+00001447 TableSection.Table[13].Field[1].unknown 00
+00001448 TableSection.Table[13].Field[1].maxLen 28
+00001449 TableSection.Table[13].unknown1 20
+0000144A TableSection.Table[13].dataIndex 0000001D
+0000144E TableSection.Table[13].unknown2 00
+
+Section 91 0000144F - 00001457 (8 bytes)
+00001440                                               06                 .
+00001450  40 00 00 00 00 00 00                             @......
+
+Section 92 00001457 - 000014F6 (159 bytes)
+00001450                       9D 80 03 00 00 00 00 00 00         .........
+00001460  00 1D 00 00 00 00 00 00 00 00 00 10 13 00 00 00  ................
+00001470  17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 79  ...............y
+00001480  01 00 00 00 6A 01 00 00 00 6F 02 00 00 00 60 02  ....j....o....`.
+00001490  00 00 00 8E 03 00 00 00 7F 03 00 00 00 D6 04 00  ................
+000014A0  00 00 C7 04 00 00 00 47 06 00 00 00 38 06 00 00  .......G....8...
+000014B0  00 E1 07 00 00 00 D2 07 00 00 00 A4 09 00 00 00  ................
+000014C0  95 09 00 00 00 90 0B 00 00 00 81 0B 00 00 00 A6  ................
+000014D0  0D 00 00 00 97 0D 00 00 00 E7 0F 00 00 00 D8 0F  ................
+000014E0  00 00 00 52 12 00 00 00 43 12 00 00 00 31 14 00  ...R....C....1..
+000014F0  00 00 01 13 00 00                                ......
+
+Section 93 000014F6 - 00001505 (15 bytes)
+000014F0                    0D 40 1C 00 00 00 C1 01 00 00        .@........
+00001500  02 00 00 00 00                                   .....
+
+Section 94 00001505 - 0000151F (26 bytes)
+00001500                 18 40 00 00 00 00 01 00 22 01 0F       .@......"..
+00001510  46 69 65 6C 64 46 6F 72 54 61 62 6C 65 31 33     FieldForTable13
+
+00001507 TableContentSection.nextSectionIndex 00000000
+0000150B TableContentSection.recordBitmask 0001
+0000150D TableContentSection.recordLength[1] 11
+
+--------------------- 0000150E to 0x0000151F UNPARSED ---------------------
+00001500                                            01 0F                ..
+00001510  46 69 65 6C 64 46 6F 72 54 61 62 6C 65 31 33     FieldForTable13
+---------------------------------------------------------------------------
+
+Section 95 0000151F - 000015BE (159 bytes)
+00001510                                               9D                 .
+00001520  80 03 00 00 00 00 00 00 00 1D 00 00 00 00 00 00  ................
+00001530  00 00 00 10 13 00 00 00 17 00 00 00 00 AC 00 00  ................
+00001540  00 00 9D 00 00 00 00 79 01 00 00 00 6A 01 00 00  .......y....j...
+00001550  00 6F 02 00 00 00 60 02 00 00 00 8E 03 00 00 00  .o....`.........
+00001560  7F 03 00 00 00 D6 04 00 00 00 C7 04 00 00 00 47  ...............G
+00001570  06 00 00 00 38 06 00 00 00 E1 07 00 00 00 D2 07  ....8...........
+00001580  00 00 00 A4 09 00 00 00 95 09 00 00 00 90 0B 00  ................
+00001590  00 00 81 0B 00 00 00 A6 0D 00 00 00 97 0D 00 00  ................
+000015A0  00 E7 0F 00 00 00 D8 0F 00 00 00 52 12 00 00 00  ...........R....
+000015B0  43 12 00 00 00 E7 14 00 00 00 D8 14 00 00        C.............
+
+Section 96 000015BE - 000015CD (15 bytes)
+000015B0                                            0D 40                .@
+000015C0  1E 00 00 00 E0 01 00 00 00 00 00 00 00           .............
+
+Section 97 000015CD - 00001704 (311 bytes)
+000015C0                                         35 41 69               5Ai
+000015D0  00 00 10 00 01 00 00 00 1C 1A 54 61 62 6C 65 31  ..........Table1
+000015E0  02 0E 74 78 74 0B 00 28 20 05 00 00 00 00 1A 54  ..txt..( ......T
+000015F0  61 62 6C 65 32 02 0E 74 78 74 0B 00 28 20 07 00  able2..txt..( ..
+00001600  00 00 00 1A 54 61 62 6C 65 33 02 0E 74 78 74 0B  ....Table3..txt.
+00001610  00 28 20 09 00 00 00 00 1A 54 61 62 6C 65 34 02  .( ......Table4.
+00001620  0E 74 78 74 0B 00 28 20 0B 00 00 00 00 1A 54 61  .txt..( ......Ta
+00001630  62 6C 65 35 02 0E 74 78 74 0B 00 28 20 0D 00 00  ble5..txt..( ...
+00001640  00 00 1A 54 61 62 6C 65 36 02 0E 74 78 74 0B 00  ...Table6..txt..
+00001650  28 20 0F 00 00 00 00 1A 54 61 62 6C 65 37 02 0E  ( ......Table7..
+00001660  74 78 74 0B 00 28 20 11 00 00 00 00 1A 54 61 62  txt..( ......Tab
+00001670  6C 65 38 02 0E 74 78 74 0B 00 28 20 13 00 00 00  le8..txt..( ....
+00001680  00 1A 54 61 62 6C 65 39 02 0E 74 78 74 0B 00 28  ..Table9..txt..(
+00001690  20 15 00 00 00 00 1E 54 61 62 6C 65 31 30 02 0E   ......Table10..
+000016A0  74 78 74 0B 00 28 20 17 00 00 00 00 1E 54 61 62  txt..( ......Tab
+000016B0  6C 65 31 31 02 0E 74 78 74 0B 00 28 20 19 00 00  le11..txt..( ...
+000016C0  00 00 1E 54 61 62 6C 65 31 32 02 0E 74 78 74 0B  ...Table12..txt.
+000016D0  00 28 20 1B 00 00 00 00 1E 54 61 62 6C 65 31 33  .( ......Table13
+000016E0  02 0E 74 78 74 0B 00 28 20 1D 00 00 00 00 1E 54  ..txt..( ......T
+000016F0  61 62 6C 65 31 34 02 0E 74 78 74 0B 00 28 20 1F  able14..txt..( .
+00001700  00 00 00 00                                      ....
+
+000015CF TableSection.KDbmsStoreDatabase 10000069
+000015D3 TableSection.nullbyte 00
+000015D4 TableSection.unknown 00000001
+000015D8 TableSection.tableCount E
+000015D9 TableSection.Table[1].tableName Table1
+000015E0 TableSection.Table[1].fieldCount 1
+000015E1 TableSection.Table[1].Field[1].fieldName txt
+000015E5 TableSection.Table[1].Field[1].type 0B (Text)
+000015E6 TableSection.Table[1].Field[1].unknown 00
+000015E7 TableSection.Table[1].Field[1].maxLen 28
+000015E8 TableSection.Table[1].unknown1 20
+000015E9 TableSection.Table[1].dataIndex 00000005
+000015ED TableSection.Table[1].unknown2 00
+000015EE TableSection.Table[2].tableName Table2
+000015F5 TableSection.Table[2].fieldCount 1
+000015F6 TableSection.Table[2].Field[1].fieldName txt
+000015FA TableSection.Table[2].Field[1].type 0B (Text)
+000015FB TableSection.Table[2].Field[1].unknown 00
+000015FC TableSection.Table[2].Field[1].maxLen 28
+000015FD TableSection.Table[2].unknown1 20
+000015FE TableSection.Table[2].dataIndex 00000007
+00001602 TableSection.Table[2].unknown2 00
+00001603 TableSection.Table[3].tableName Table3
+0000160A TableSection.Table[3].fieldCount 1
+0000160B TableSection.Table[3].Field[1].fieldName txt
+0000160F TableSection.Table[3].Field[1].type 0B (Text)
+00001610 TableSection.Table[3].Field[1].unknown 00
+00001611 TableSection.Table[3].Field[1].maxLen 28
+00001612 TableSection.Table[3].unknown1 20
+00001613 TableSection.Table[3].dataIndex 00000009
+00001617 TableSection.Table[3].unknown2 00
+00001618 TableSection.Table[4].tableName Table4
+0000161F TableSection.Table[4].fieldCount 1
+00001620 TableSection.Table[4].Field[1].fieldName txt
+00001624 TableSection.Table[4].Field[1].type 0B (Text)
+00001625 TableSection.Table[4].Field[1].unknown 00
+00001626 TableSection.Table[4].Field[1].maxLen 28
+00001627 TableSection.Table[4].unknown1 20
+00001628 TableSection.Table[4].dataIndex 0000000B
+0000162C TableSection.Table[4].unknown2 00
+0000162D TableSection.Table[5].tableName Table5
+00001634 TableSection.Table[5].fieldCount 1
+00001635 TableSection.Table[5].Field[1].fieldName txt
+00001639 TableSection.Table[5].Field[1].type 0B (Text)
+0000163A TableSection.Table[5].Field[1].unknown 00
+0000163B TableSection.Table[5].Field[1].maxLen 28
+0000163C TableSection.Table[5].unknown1 20
+0000163D TableSection.Table[5].dataIndex 0000000D
+00001641 TableSection.Table[5].unknown2 00
+00001642 TableSection.Table[6].tableName Table6
+00001649 TableSection.Table[6].fieldCount 1
+0000164A TableSection.Table[6].Field[1].fieldName txt
+0000164E TableSection.Table[6].Field[1].type 0B (Text)
+0000164F TableSection.Table[6].Field[1].unknown 00
+00001650 TableSection.Table[6].Field[1].maxLen 28
+00001651 TableSection.Table[6].unknown1 20
+00001652 TableSection.Table[6].dataIndex 0000000F
+00001656 TableSection.Table[6].unknown2 00
+00001657 TableSection.Table[7].tableName Table7
+0000165E TableSection.Table[7].fieldCount 1
+0000165F TableSection.Table[7].Field[1].fieldName txt
+00001663 TableSection.Table[7].Field[1].type 0B (Text)
+00001664 TableSection.Table[7].Field[1].unknown 00
+00001665 TableSection.Table[7].Field[1].maxLen 28
+00001666 TableSection.Table[7].unknown1 20
+00001667 TableSection.Table[7].dataIndex 00000011
+0000166B TableSection.Table[7].unknown2 00
+0000166C TableSection.Table[8].tableName Table8
+00001673 TableSection.Table[8].fieldCount 1
+00001674 TableSection.Table[8].Field[1].fieldName txt
+00001678 TableSection.Table[8].Field[1].type 0B (Text)
+00001679 TableSection.Table[8].Field[1].unknown 00
+0000167A TableSection.Table[8].Field[1].maxLen 28
+0000167B TableSection.Table[8].unknown1 20
+0000167C TableSection.Table[8].dataIndex 00000013
+00001680 TableSection.Table[8].unknown2 00
+00001681 TableSection.Table[9].tableName Table9
+00001688 TableSection.Table[9].fieldCount 1
+00001689 TableSection.Table[9].Field[1].fieldName txt
+0000168D TableSection.Table[9].Field[1].type 0B (Text)
+0000168E TableSection.Table[9].Field[1].unknown 00
+0000168F TableSection.Table[9].Field[1].maxLen 28
+00001690 TableSection.Table[9].unknown1 20
+00001691 TableSection.Table[9].dataIndex 00000015
+00001695 TableSection.Table[9].unknown2 00
+00001696 TableSection.Table[10].tableName Table10
+0000169E TableSection.Table[10].fieldCount 1
+0000169F TableSection.Table[10].Field[1].fieldName txt
+000016A3 TableSection.Table[10].Field[1].type 0B (Text)
+000016A4 TableSection.Table[10].Field[1].unknown 00
+000016A5 TableSection.Table[10].Field[1].maxLen 28
+000016A6 TableSection.Table[10].unknown1 20
+000016A7 TableSection.Table[10].dataIndex 00000017
+000016AB TableSection.Table[10].unknown2 00
+000016AC TableSection.Table[11].tableName Table11
+000016B4 TableSection.Table[11].fieldCount 1
+000016B5 TableSection.Table[11].Field[1].fieldName txt
+000016B9 TableSection.Table[11].Field[1].type 0B (Text)
+000016BA TableSection.Table[11].Field[1].unknown 00
+000016BB TableSection.Table[11].Field[1].maxLen 28
+000016BC TableSection.Table[11].unknown1 20
+000016BD TableSection.Table[11].dataIndex 00000019
+000016C1 TableSection.Table[11].unknown2 00
+000016C2 TableSection.Table[12].tableName Table12
+000016CA TableSection.Table[12].fieldCount 1
+000016CB TableSection.Table[12].Field[1].fieldName txt
+000016CF TableSection.Table[12].Field[1].type 0B (Text)
+000016D0 TableSection.Table[12].Field[1].unknown 00
+000016D1 TableSection.Table[12].Field[1].maxLen 28
+000016D2 TableSection.Table[12].unknown1 20
+000016D3 TableSection.Table[12].dataIndex 0000001B
+000016D7 TableSection.Table[12].unknown2 00
+000016D8 TableSection.Table[13].tableName Table13
+000016E0 TableSection.Table[13].fieldCount 1
+000016E1 TableSection.Table[13].Field[1].fieldName txt
+000016E5 TableSection.Table[13].Field[1].type 0B (Text)
+000016E6 TableSection.Table[13].Field[1].unknown 00
+000016E7 TableSection.Table[13].Field[1].maxLen 28
+000016E8 TableSection.Table[13].unknown1 20
+000016E9 TableSection.Table[13].dataIndex 0000001D
+000016ED TableSection.Table[13].unknown2 00
+000016EE TableSection.Table[14].tableName Table14
+000016F6 TableSection.Table[14].fieldCount 1
+000016F7 TableSection.Table[14].Field[1].fieldName txt
+000016FB TableSection.Table[14].Field[1].type 0B (Text)
+000016FC TableSection.Table[14].Field[1].unknown 00
+000016FD TableSection.Table[14].Field[1].maxLen 28
+000016FE TableSection.Table[14].unknown1 20
+000016FF TableSection.Table[14].dataIndex 0000001F
+00001703 TableSection.Table[14].unknown2 00
+
+Section 98 00001704 - 0000170C (8 bytes)
+00001700              06 40 00 00 00 00 00 00                  .@......
+
+Section 99 0000170C - 000017B5 (169 bytes)
+00001700                                      A7 80 03 00              ....
+00001710  00 00 00 00 00 00 1F 00 00 00 00 00 00 00 00 00  ................
+00001720  AF 15 00 00 00 17 00 00 00 00 AC 00 00 00 00 9D  ................
+00001730  00 00 00 00 79 01 00 00 00 6A 01 00 00 00 6F 02  ....y....j....o.
+00001740  00 00 00 60 02 00 00 00 8E 03 00 00 00 7F 03 00  ...`............
+00001750  00 00 D6 04 00 00 00 C7 04 00 00 00 47 06 00 00  ............G...
+00001760  00 38 06 00 00 00 E1 07 00 00 00 D2 07 00 00 00  .8..............
+00001770  A4 09 00 00 00 95 09 00 00 00 90 0B 00 00 00 81  ................
+00001780  0B 00 00 00 A6 0D 00 00 00 97 0D 00 00 00 E7 0F  ................
+00001790  00 00 00 D8 0F 00 00 00 52 12 00 00 00 43 12 00  ........R....C..
+000017A0  00 00 E7 14 00 00 00 D8 14 00 00 00 E6 16 00 00  ................
+000017B0  00 A0 15 00 00                                   .....
+
+Section 100 000017B5 - 000017C4 (15 bytes)
+000017B0                 0D 40 1E 00 00 00 E1 01 00 00 02       .@.........
+000017C0  00 00 00 00                                      ....
+
+Section 101 000017C4 - 000017DE (26 bytes)
+000017C0              18 40 00 00 00 00 01 00 22 01 0F 46      .@......"..F
+000017D0  69 65 6C 64 46 6F 72 54 61 62 6C 65 31 34        ieldForTable14
+
+000017C6 TableContentSection.nextSectionIndex 00000000
+000017CA TableContentSection.recordBitmask 0001
+000017CC TableContentSection.recordLength[1] 11
+
+--------------------- 000017CD to 0x000017DE UNPARSED ---------------------
+000017C0                                         01 0F 46               ..F
+000017D0  69 65 6C 64 46 6F 72 54 61 62 6C 65 31 34        ieldForTable14
+---------------------------------------------------------------------------
+
+Section 102 000017DE - 00001887 (169 bytes)
+000017D0                                            A7 80                ..
+000017E0  03 00 00 00 00 00 00 00 1F 00 00 00 00 00 00 00  ................
+000017F0  00 00 AF 15 00 00 00 17 00 00 00 00 AC 00 00 00  ................
+00001800  00 9D 00 00 00 00 79 01 00 00 00 6A 01 00 00 00  ......y....j....
+00001810  6F 02 00 00 00 60 02 00 00 00 8E 03 00 00 00 7F  o....`..........
+00001820  03 00 00 00 D6 04 00 00 00 C7 04 00 00 00 47 06  ..............G.
+00001830  00 00 00 38 06 00 00 00 E1 07 00 00 00 D2 07 00  ...8............
+00001840  00 00 A4 09 00 00 00 95 09 00 00 00 90 0B 00 00  ................
+00001850  00 81 0B 00 00 00 A6 0D 00 00 00 97 0D 00 00 00  ................
+00001860  E7 0F 00 00 00 D8 0F 00 00 00 52 12 00 00 00 43  ..........R....C
+00001870  12 00 00 00 E7 14 00 00 00 D8 14 00 00 00 A6 17  ................
+00001880  00 00 00 97 17 00 00                             .......
+
+Section 103 00001887 - 00001896 (15 bytes)
+00001880                       0D 40 20 00 00 00 00 02 00         .@ ......
+00001890  00 00 00 00 00 00                                ......
+
+Section 104 00001896 - 000019E3 (333 bytes)
+00001890                    4B 41 69 00 00 10 00 01 00 00        KAi.......
+000018A0  00 1E 1A 54 61 62 6C 65 31 02 0E 74 78 74 0B 00  ...Table1..txt..
+000018B0  28 20 05 00 00 00 00 1A 54 61 62 6C 65 32 02 0E  ( ......Table2..
+000018C0  74 78 74 0B 00 28 20 07 00 00 00 00 1A 54 61 62  txt..( ......Tab
+000018D0  6C 65 33 02 0E 74 78 74 0B 00 28 20 09 00 00 00  le3..txt..( ....
+000018E0  00 1A 54 61 62 6C 65 34 02 0E 74 78 74 0B 00 28  ..Table4..txt..(
+000018F0  20 0B 00 00 00 00 1A 54 61 62 6C 65 35 02 0E 74   ......Table5..t
+00001900  78 74 0B 00 28 20 0D 00 00 00 00 1A 54 61 62 6C  xt..( ......Tabl
+00001910  65 36 02 0E 74 78 74 0B 00 28 20 0F 00 00 00 00  e6..txt..( .....
+00001920  1A 54 61 62 6C 65 37 02 0E 74 78 74 0B 00 28 20  .Table7..txt..( 
+00001930  11 00 00 00 00 1A 54 61 62 6C 65 38 02 0E 74 78  ......Table8..tx
+00001940  74 0B 00 28 20 13 00 00 00 00 1A 54 61 62 6C 65  t..( ......Table
+00001950  39 02 0E 74 78 74 0B 00 28 20 15 00 00 00 00 1E  9..txt..( ......
+00001960  54 61 62 6C 65 31 30 02 0E 74 78 74 0B 00 28 20  Table10..txt..( 
+00001970  17 00 00 00 00 1E 54 61 62 6C 65 31 31 02 0E 74  ......Table11..t
+00001980  78 74 0B 00 28 20 19 00 00 00 00 1E 54 61 62 6C  xt..( ......Tabl
+00001990  65 31 32 02 0E 74 78 74 0B 00 28 20 1B 00 00 00  e12..txt..( ....
+000019A0  00 1E 54 61 62 6C 65 31 33 02 0E 74 78 74 0B 00  ..Table13..txt..
+000019B0  28 20 1D 00 00 00 00 1E 54 61 62 6C 65 31 34 02  ( ......Table14.
+000019C0  0E 74 78 74 0B 00 28 20 1F 00 00 00 00 1E 54 61  .txt..( ......Ta
+000019D0  62 6C 65 31 35 02 0E 74 78 74 0B 00 28 20 21 00  ble15..txt..( !.
+000019E0  00 00 00                                         ...
+
+00001898 TableSection.KDbmsStoreDatabase 10000069
+0000189C TableSection.nullbyte 00
+0000189D TableSection.unknown 00000001
+000018A1 TableSection.tableCount F
+000018A2 TableSection.Table[1].tableName Table1
+000018A9 TableSection.Table[1].fieldCount 1
+000018AA TableSection.Table[1].Field[1].fieldName txt
+000018AE TableSection.Table[1].Field[1].type 0B (Text)
+000018AF TableSection.Table[1].Field[1].unknown 00
+000018B0 TableSection.Table[1].Field[1].maxLen 28
+000018B1 TableSection.Table[1].unknown1 20
+000018B2 TableSection.Table[1].dataIndex 00000005
+000018B6 TableSection.Table[1].unknown2 00
+000018B7 TableSection.Table[2].tableName Table2
+000018BE TableSection.Table[2].fieldCount 1
+000018BF TableSection.Table[2].Field[1].fieldName txt
+000018C3 TableSection.Table[2].Field[1].type 0B (Text)
+000018C4 TableSection.Table[2].Field[1].unknown 00
+000018C5 TableSection.Table[2].Field[1].maxLen 28
+000018C6 TableSection.Table[2].unknown1 20
+000018C7 TableSection.Table[2].dataIndex 00000007
+000018CB TableSection.Table[2].unknown2 00
+000018CC TableSection.Table[3].tableName Table3
+000018D3 TableSection.Table[3].fieldCount 1
+000018D4 TableSection.Table[3].Field[1].fieldName txt
+000018D8 TableSection.Table[3].Field[1].type 0B (Text)
+000018D9 TableSection.Table[3].Field[1].unknown 00
+000018DA TableSection.Table[3].Field[1].maxLen 28
+000018DB TableSection.Table[3].unknown1 20
+000018DC TableSection.Table[3].dataIndex 00000009
+000018E0 TableSection.Table[3].unknown2 00
+000018E1 TableSection.Table[4].tableName Table4
+000018E8 TableSection.Table[4].fieldCount 1
+000018E9 TableSection.Table[4].Field[1].fieldName txt
+000018ED TableSection.Table[4].Field[1].type 0B (Text)
+000018EE TableSection.Table[4].Field[1].unknown 00
+000018EF TableSection.Table[4].Field[1].maxLen 28
+000018F0 TableSection.Table[4].unknown1 20
+000018F1 TableSection.Table[4].dataIndex 0000000B
+000018F5 TableSection.Table[4].unknown2 00
+000018F6 TableSection.Table[5].tableName Table5
+000018FD TableSection.Table[5].fieldCount 1
+000018FE TableSection.Table[5].Field[1].fieldName txt
+00001902 TableSection.Table[5].Field[1].type 0B (Text)
+00001903 TableSection.Table[5].Field[1].unknown 00
+00001904 TableSection.Table[5].Field[1].maxLen 28
+00001905 TableSection.Table[5].unknown1 20
+00001906 TableSection.Table[5].dataIndex 0000000D
+0000190A TableSection.Table[5].unknown2 00
+0000190B TableSection.Table[6].tableName Table6
+00001912 TableSection.Table[6].fieldCount 1
+00001913 TableSection.Table[6].Field[1].fieldName txt
+00001917 TableSection.Table[6].Field[1].type 0B (Text)
+00001918 TableSection.Table[6].Field[1].unknown 00
+00001919 TableSection.Table[6].Field[1].maxLen 28
+0000191A TableSection.Table[6].unknown1 20
+0000191B TableSection.Table[6].dataIndex 0000000F
+0000191F TableSection.Table[6].unknown2 00
+00001920 TableSection.Table[7].tableName Table7
+00001927 TableSection.Table[7].fieldCount 1
+00001928 TableSection.Table[7].Field[1].fieldName txt
+0000192C TableSection.Table[7].Field[1].type 0B (Text)
+0000192D TableSection.Table[7].Field[1].unknown 00
+0000192E TableSection.Table[7].Field[1].maxLen 28
+0000192F TableSection.Table[7].unknown1 20
+00001930 TableSection.Table[7].dataIndex 00000011
+00001934 TableSection.Table[7].unknown2 00
+00001935 TableSection.Table[8].tableName Table8
+0000193C TableSection.Table[8].fieldCount 1
+0000193D TableSection.Table[8].Field[1].fieldName txt
+00001941 TableSection.Table[8].Field[1].type 0B (Text)
+00001942 TableSection.Table[8].Field[1].unknown 00
+00001943 TableSection.Table[8].Field[1].maxLen 28
+00001944 TableSection.Table[8].unknown1 20
+00001945 TableSection.Table[8].dataIndex 00000013
+00001949 TableSection.Table[8].unknown2 00
+0000194A TableSection.Table[9].tableName Table9
+00001951 TableSection.Table[9].fieldCount 1
+00001952 TableSection.Table[9].Field[1].fieldName txt
+00001956 TableSection.Table[9].Field[1].type 0B (Text)
+00001957 TableSection.Table[9].Field[1].unknown 00
+00001958 TableSection.Table[9].Field[1].maxLen 28
+00001959 TableSection.Table[9].unknown1 20
+0000195A TableSection.Table[9].dataIndex 00000015
+0000195E TableSection.Table[9].unknown2 00
+0000195F TableSection.Table[10].tableName Table10
+00001967 TableSection.Table[10].fieldCount 1
+00001968 TableSection.Table[10].Field[1].fieldName txt
+0000196C TableSection.Table[10].Field[1].type 0B (Text)
+0000196D TableSection.Table[10].Field[1].unknown 00
+0000196E TableSection.Table[10].Field[1].maxLen 28
+0000196F TableSection.Table[10].unknown1 20
+00001970 TableSection.Table[10].dataIndex 00000017
+00001974 TableSection.Table[10].unknown2 00
+00001975 TableSection.Table[11].tableName Table11
+0000197D TableSection.Table[11].fieldCount 1
+0000197E TableSection.Table[11].Field[1].fieldName txt
+00001982 TableSection.Table[11].Field[1].type 0B (Text)
+00001983 TableSection.Table[11].Field[1].unknown 00
+00001984 TableSection.Table[11].Field[1].maxLen 28
+00001985 TableSection.Table[11].unknown1 20
+00001986 TableSection.Table[11].dataIndex 00000019
+0000198A TableSection.Table[11].unknown2 00
+0000198B TableSection.Table[12].tableName Table12
+00001993 TableSection.Table[12].fieldCount 1
+00001994 TableSection.Table[12].Field[1].fieldName txt
+00001998 TableSection.Table[12].Field[1].type 0B (Text)
+00001999 TableSection.Table[12].Field[1].unknown 00
+0000199A TableSection.Table[12].Field[1].maxLen 28
+0000199B TableSection.Table[12].unknown1 20
+0000199C TableSection.Table[12].dataIndex 0000001B
+000019A0 TableSection.Table[12].unknown2 00
+000019A1 TableSection.Table[13].tableName Table13
+000019A9 TableSection.Table[13].fieldCount 1
+000019AA TableSection.Table[13].Field[1].fieldName txt
+000019AE TableSection.Table[13].Field[1].type 0B (Text)
+000019AF TableSection.Table[13].Field[1].unknown 00
+000019B0 TableSection.Table[13].Field[1].maxLen 28
+000019B1 TableSection.Table[13].unknown1 20
+000019B2 TableSection.Table[13].dataIndex 0000001D
+000019B6 TableSection.Table[13].unknown2 00
+000019B7 TableSection.Table[14].tableName Table14
+000019BF TableSection.Table[14].fieldCount 1
+000019C0 TableSection.Table[14].Field[1].fieldName txt
+000019C4 TableSection.Table[14].Field[1].type 0B (Text)
+000019C5 TableSection.Table[14].Field[1].unknown 00
+000019C6 TableSection.Table[14].Field[1].maxLen 28
+000019C7 TableSection.Table[14].unknown1 20
+000019C8 TableSection.Table[14].dataIndex 0000001F
+000019CC TableSection.Table[14].unknown2 00
+000019CD TableSection.Table[15].tableName Table15
+000019D5 TableSection.Table[15].fieldCount 1
+000019D6 TableSection.Table[15].Field[1].fieldName txt
+000019DA TableSection.Table[15].Field[1].type 0B (Text)
+000019DB TableSection.Table[15].Field[1].unknown 00
+000019DC TableSection.Table[15].Field[1].maxLen 28
+000019DD TableSection.Table[15].unknown1 20
+000019DE TableSection.Table[15].dataIndex 00000021
+000019E2 TableSection.Table[15].unknown2 00
+
+Section 105 000019E3 - 000019EB (8 bytes)
+000019E0           06 40 00 00 00 00 00 00                    .@......
+
+Section 106 000019EB - 00001A9E (179 bytes)
+000019E0                                   B1 80 03 00 00             .....
+000019F0  00 00 00 00 00 21 00 00 00 00 00 00 00 00 00 78  .....!.........x
+00001A00  18 00 00 00 17 00 00 00 00 AC 00 00 00 00 9D 00  ................
+00001A10  00 00 00 79 01 00 00 00 6A 01 00 00 00 6F 02 00  ...y....j....o..
+00001A20  00 00 60 02 00 00 00 8E 03 00 00 00 7F 03 00 00  ..`.............
+00001A30  00 D6 04 00 00 00 C7 04 00 00 00 47 06 00 00 00  ...........G....
+00001A40  38 06 00 00 00 E1 07 00 00 00 D2 07 00 00 00 A4  8...............
+00001A50  09 00 00 00 95 09 00 00 00 90 0B 00 00 00 81 0B  ................
+00001A60  00 00 00 A6 0D 00 00 00 97 0D 00 00 00 E7 0F 00  ................
+00001A70  00 00 D8 0F 00 00 00 52 12 00 00 00 43 12 00 00  .......R....C...
+00001A80  00 E7 14 00 00 00 D8 14 00 00 00 A6 17 00 00 00  ................
+00001A90  97 17 00 00 00 C5 19 00 00 00 69 18 00 00        ..........i...
+
+Section 107 00001A9E - 00001AAD (15 bytes)
+00001A90                                            0D 40                .@
+00001AA0  20 00 00 00 01 02 00 00 02 00 00 00 00            ............
+
+Section 108 00001AAD - 00001AC7 (26 bytes)
+00001AA0                                         18 40 00               .@.
+00001AB0  00 00 00 01 00 22 01 0F 46 69 65 6C 64 46 6F 72  ....."..FieldFor
+00001AC0  54 61 62 6C 65 31 35                             Table15
+
+00001AAF TableContentSection.nextSectionIndex 00000000
+00001AB3 TableContentSection.recordBitmask 0001
+00001AB5 TableContentSection.recordLength[1] 11
+
+--------------------- 00001AB6 to 0x00001AC7 UNPARSED ---------------------
+00001AB0                    01 0F 46 69 65 6C 64 46 6F 72        ..FieldFor
+00001AC0  54 61 62 6C 65 31 35                             Table15
+---------------------------------------------------------------------------
+
+Section 109 00001AC7 - 00001B7A (179 bytes)
+00001AC0                       B1 80 03 00 00 00 00 00 00         .........
+00001AD0  00 21 00 00 00 00 00 00 00 00 00 78 18 00 00 00  .!.........x....
+00001AE0  17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 79  ...............y
+00001AF0  01 00 00 00 6A 01 00 00 00 6F 02 00 00 00 60 02  ....j....o....`.
+00001B00  00 00 00 8E 03 00 00 00 7F 03 00 00 00 D6 04 00  ................
+00001B10  00 00 C7 04 00 00 00 47 06 00 00 00 38 06 00 00  .......G....8...
+00001B20  00 E1 07 00 00 00 D2 07 00 00 00 A4 09 00 00 00  ................
+00001B30  95 09 00 00 00 90 0B 00 00 00 81 0B 00 00 00 A6  ................
+00001B40  0D 00 00 00 97 0D 00 00 00 E7 0F 00 00 00 D8 0F  ................
+00001B50  00 00 00 52 12 00 00 00 43 12 00 00 00 E7 14 00  ...R....C.......
+00001B60  00 00 D8 14 00 00 00 A6 17 00 00 00 97 17 00 00  ................
+00001B70  00 8F 1A 00 00 00 80 1A 00 00                    ..........
+
+Section 110 00001B7A - 00001B89 (15 bytes)
+00001B70                                0D 40 22 00 00 00            .@"...
+00001B80  20 02 00 00 00 00 00 00 00                        ........
+
+Section 111 00001B89 - 00001CEC (355 bytes)
+00001B80                             61 41 69 00 00 10 00           aAi....
+00001B90  01 00 00 00 20 1A 54 61 62 6C 65 31 02 0E 74 78  .... .Table1..tx
+00001BA0  74 0B 00 28 20 05 00 00 00 00 1A 54 61 62 6C 65  t..( ......Table
+00001BB0  32 02 0E 74 78 74 0B 00 28 20 07 00 00 00 00 1A  2..txt..( ......
+00001BC0  54 61 62 6C 65 33 02 0E 74 78 74 0B 00 28 20 09  Table3..txt..( .
+00001BD0  00 00 00 00 1A 54 61 62 6C 65 34 02 0E 74 78 74  .....Table4..txt
+00001BE0  0B 00 28 20 0B 00 00 00 00 1A 54 61 62 6C 65 35  ..( ......Table5
+00001BF0  02 0E 74 78 74 0B 00 28 20 0D 00 00 00 00 1A 54  ..txt..( ......T
+00001C00  61 62 6C 65 36 02 0E 74 78 74 0B 00 28 20 0F 00  able6..txt..( ..
+00001C10  00 00 00 1A 54 61 62 6C 65 37 02 0E 74 78 74 0B  ....Table7..txt.
+00001C20  00 28 20 11 00 00 00 00 1A 54 61 62 6C 65 38 02  .( ......Table8.
+00001C30  0E 74 78 74 0B 00 28 20 13 00 00 00 00 1A 54 61  .txt..( ......Ta
+00001C40  62 6C 65 39 02 0E 74 78 74 0B 00 28 20 15 00 00  ble9..txt..( ...
+00001C50  00 00 1E 54 61 62 6C 65 31 30 02 0E 74 78 74 0B  ...Table10..txt.
+00001C60  00 28 20 17 00 00 00 00 1E 54 61 62 6C 65 31 31  .( ......Table11
+00001C70  02 0E 74 78 74 0B 00 28 20 19 00 00 00 00 1E 54  ..txt..( ......T
+00001C80  61 62 6C 65 31 32 02 0E 74 78 74 0B 00 28 20 1B  able12..txt..( .
+00001C90  00 00 00 00 1E 54 61 62 6C 65 31 33 02 0E 74 78  .....Table13..tx
+00001CA0  74 0B 00 28 20 1D 00 00 00 00 1E 54 61 62 6C 65  t..( ......Table
+00001CB0  31 34 02 0E 74 78 74 0B 00 28 20 1F 00 00 00 00  14..txt..( .....
+00001CC0  1E 54 61 62 6C 65 31 35 02 0E 74 78 74 0B 00 28  .Table15..txt..(
+00001CD0  20 21 00 00 00 00 1E 54 61 62 6C 65 31 36 02 0E   !.....Table16..
+00001CE0  74 78 74 0B 00 28 20 23 00 00 00 00              txt..( #....
+
+00001B8B TableSection.KDbmsStoreDatabase 10000069
+00001B8F TableSection.nullbyte 00
+00001B90 TableSection.unknown 00000001
+00001B94 TableSection.tableCount 10
+00001B95 TableSection.Table[1].tableName Table1
+00001B9C TableSection.Table[1].fieldCount 1
+00001B9D TableSection.Table[1].Field[1].fieldName txt
+00001BA1 TableSection.Table[1].Field[1].type 0B (Text)
+00001BA2 TableSection.Table[1].Field[1].unknown 00
+00001BA3 TableSection.Table[1].Field[1].maxLen 28
+00001BA4 TableSection.Table[1].unknown1 20
+00001BA5 TableSection.Table[1].dataIndex 00000005
+00001BA9 TableSection.Table[1].unknown2 00
+00001BAA TableSection.Table[2].tableName Table2
+00001BB1 TableSection.Table[2].fieldCount 1
+00001BB2 TableSection.Table[2].Field[1].fieldName txt
+00001BB6 TableSection.Table[2].Field[1].type 0B (Text)
+00001BB7 TableSection.Table[2].Field[1].unknown 00
+00001BB8 TableSection.Table[2].Field[1].maxLen 28
+00001BB9 TableSection.Table[2].unknown1 20
+00001BBA TableSection.Table[2].dataIndex 00000007
+00001BBE TableSection.Table[2].unknown2 00
+00001BBF TableSection.Table[3].tableName Table3
+00001BC6 TableSection.Table[3].fieldCount 1
+00001BC7 TableSection.Table[3].Field[1].fieldName txt
+00001BCB TableSection.Table[3].Field[1].type 0B (Text)
+00001BCC TableSection.Table[3].Field[1].unknown 00
+00001BCD TableSection.Table[3].Field[1].maxLen 28
+00001BCE TableSection.Table[3].unknown1 20
+00001BCF TableSection.Table[3].dataIndex 00000009
+00001BD3 TableSection.Table[3].unknown2 00
+00001BD4 TableSection.Table[4].tableName Table4
+00001BDB TableSection.Table[4].fieldCount 1
+00001BDC TableSection.Table[4].Field[1].fieldName txt
+00001BE0 TableSection.Table[4].Field[1].type 0B (Text)
+00001BE1 TableSection.Table[4].Field[1].unknown 00
+00001BE2 TableSection.Table[4].Field[1].maxLen 28
+00001BE3 TableSection.Table[4].unknown1 20
+00001BE4 TableSection.Table[4].dataIndex 0000000B
+00001BE8 TableSection.Table[4].unknown2 00
+00001BE9 TableSection.Table[5].tableName Table5
+00001BF0 TableSection.Table[5].fieldCount 1
+00001BF1 TableSection.Table[5].Field[1].fieldName txt
+00001BF5 TableSection.Table[5].Field[1].type 0B (Text)
+00001BF6 TableSection.Table[5].Field[1].unknown 00
+00001BF7 TableSection.Table[5].Field[1].maxLen 28
+00001BF8 TableSection.Table[5].unknown1 20
+00001BF9 TableSection.Table[5].dataIndex 0000000D
+00001BFD TableSection.Table[5].unknown2 00
+00001BFE TableSection.Table[6].tableName Table6
+00001C05 TableSection.Table[6].fieldCount 1
+00001C06 TableSection.Table[6].Field[1].fieldName txt
+00001C0A TableSection.Table[6].Field[1].type 0B (Text)
+00001C0B TableSection.Table[6].Field[1].unknown 00
+00001C0C TableSection.Table[6].Field[1].maxLen 28
+00001C0D TableSection.Table[6].unknown1 20
+00001C0E TableSection.Table[6].dataIndex 0000000F
+00001C12 TableSection.Table[6].unknown2 00
+00001C13 TableSection.Table[7].tableName Table7
+00001C1A TableSection.Table[7].fieldCount 1
+00001C1B TableSection.Table[7].Field[1].fieldName txt
+00001C1F TableSection.Table[7].Field[1].type 0B (Text)
+00001C20 TableSection.Table[7].Field[1].unknown 00
+00001C21 TableSection.Table[7].Field[1].maxLen 28
+00001C22 TableSection.Table[7].unknown1 20
+00001C23 TableSection.Table[7].dataIndex 00000011
+00001C27 TableSection.Table[7].unknown2 00
+00001C28 TableSection.Table[8].tableName Table8
+00001C2F TableSection.Table[8].fieldCount 1
+00001C30 TableSection.Table[8].Field[1].fieldName txt
+00001C34 TableSection.Table[8].Field[1].type 0B (Text)
+00001C35 TableSection.Table[8].Field[1].unknown 00
+00001C36 TableSection.Table[8].Field[1].maxLen 28
+00001C37 TableSection.Table[8].unknown1 20
+00001C38 TableSection.Table[8].dataIndex 00000013
+00001C3C TableSection.Table[8].unknown2 00
+00001C3D TableSection.Table[9].tableName Table9
+00001C44 TableSection.Table[9].fieldCount 1
+00001C45 TableSection.Table[9].Field[1].fieldName txt
+00001C49 TableSection.Table[9].Field[1].type 0B (Text)
+00001C4A TableSection.Table[9].Field[1].unknown 00
+00001C4B TableSection.Table[9].Field[1].maxLen 28
+00001C4C TableSection.Table[9].unknown1 20
+00001C4D TableSection.Table[9].dataIndex 00000015
+00001C51 TableSection.Table[9].unknown2 00
+00001C52 TableSection.Table[10].tableName Table10
+00001C5A TableSection.Table[10].fieldCount 1
+00001C5B TableSection.Table[10].Field[1].fieldName txt
+00001C5F TableSection.Table[10].Field[1].type 0B (Text)
+00001C60 TableSection.Table[10].Field[1].unknown 00
+00001C61 TableSection.Table[10].Field[1].maxLen 28
+00001C62 TableSection.Table[10].unknown1 20
+00001C63 TableSection.Table[10].dataIndex 00000017
+00001C67 TableSection.Table[10].unknown2 00
+00001C68 TableSection.Table[11].tableName Table11
+00001C70 TableSection.Table[11].fieldCount 1
+00001C71 TableSection.Table[11].Field[1].fieldName txt
+00001C75 TableSection.Table[11].Field[1].type 0B (Text)
+00001C76 TableSection.Table[11].Field[1].unknown 00
+00001C77 TableSection.Table[11].Field[1].maxLen 28
+00001C78 TableSection.Table[11].unknown1 20
+00001C79 TableSection.Table[11].dataIndex 00000019
+00001C7D TableSection.Table[11].unknown2 00
+00001C7E TableSection.Table[12].tableName Table12
+00001C86 TableSection.Table[12].fieldCount 1
+00001C87 TableSection.Table[12].Field[1].fieldName txt
+00001C8B TableSection.Table[12].Field[1].type 0B (Text)
+00001C8C TableSection.Table[12].Field[1].unknown 00
+00001C8D TableSection.Table[12].Field[1].maxLen 28
+00001C8E TableSection.Table[12].unknown1 20
+00001C8F TableSection.Table[12].dataIndex 0000001B
+00001C93 TableSection.Table[12].unknown2 00
+00001C94 TableSection.Table[13].tableName Table13
+00001C9C TableSection.Table[13].fieldCount 1
+00001C9D TableSection.Table[13].Field[1].fieldName txt
+00001CA1 TableSection.Table[13].Field[1].type 0B (Text)
+00001CA2 TableSection.Table[13].Field[1].unknown 00
+00001CA3 TableSection.Table[13].Field[1].maxLen 28
+00001CA4 TableSection.Table[13].unknown1 20
+00001CA5 TableSection.Table[13].dataIndex 0000001D
+00001CA9 TableSection.Table[13].unknown2 00
+00001CAA TableSection.Table[14].tableName Table14
+00001CB2 TableSection.Table[14].fieldCount 1
+00001CB3 TableSection.Table[14].Field[1].fieldName txt
+00001CB7 TableSection.Table[14].Field[1].type 0B (Text)
+00001CB8 TableSection.Table[14].Field[1].unknown 00
+00001CB9 TableSection.Table[14].Field[1].maxLen 28
+00001CBA TableSection.Table[14].unknown1 20
+00001CBB TableSection.Table[14].dataIndex 0000001F
+00001CBF TableSection.Table[14].unknown2 00
+00001CC0 TableSection.Table[15].tableName Table15
+00001CC8 TableSection.Table[15].fieldCount 1
+00001CC9 TableSection.Table[15].Field[1].fieldName txt
+00001CCD TableSection.Table[15].Field[1].type 0B (Text)
+00001CCE TableSection.Table[15].Field[1].unknown 00
+00001CCF TableSection.Table[15].Field[1].maxLen 28
+00001CD0 TableSection.Table[15].unknown1 20
+00001CD1 TableSection.Table[15].dataIndex 00000021
+00001CD5 TableSection.Table[15].unknown2 00
+00001CD6 TableSection.Table[16].tableName Table16
+00001CDE TableSection.Table[16].fieldCount 1
+00001CDF TableSection.Table[16].Field[1].fieldName txt
+00001CE3 TableSection.Table[16].Field[1].type 0B (Text)
+00001CE4 TableSection.Table[16].Field[1].unknown 00
+00001CE5 TableSection.Table[16].Field[1].maxLen 28
+00001CE6 TableSection.Table[16].unknown1 20
+00001CE7 TableSection.Table[16].dataIndex 00000023
+00001CEB TableSection.Table[16].unknown2 00
+
+Section 112 00001CEC - 00001CF4 (8 bytes)
+00001CE0                                      06 40 00 00              .@..
+00001CF0  00 00 00 00                                      ....
+
+Section 113 00001CF4 - 00001DB1 (189 bytes)
+00001CF0              BB 80 03 00 00 00 00 00 00 00 23 00      ..........#.
+00001D00  00 00 00 00 00 00 00 00 6B 1B 00 00 00 17 00 00  ........k.......
+00001D10  00 00 AC 00 00 00 00 9D 00 00 00 00 79 01 00 00  ............y...
+00001D20  00 6A 01 00 00 00 6F 02 00 00 00 60 02 00 00 00  .j....o....`....
+00001D30  8E 03 00 00 00 7F 03 00 00 00 D6 04 00 00 00 C7  ................
+00001D40  04 00 00 00 47 06 00 00 00 38 06 00 00 00 E1 07  ....G....8......
+00001D50  00 00 00 D2 07 00 00 00 A4 09 00 00 00 95 09 00  ................
+00001D60  00 00 90 0B 00 00 00 81 0B 00 00 00 A6 0D 00 00  ................
+00001D70  00 97 0D 00 00 00 E7 0F 00 00 00 D8 0F 00 00 00  ................
+00001D80  52 12 00 00 00 43 12 00 00 00 E7 14 00 00 00 D8  R....C..........
+00001D90  14 00 00 00 A6 17 00 00 00 97 17 00 00 00 8F 1A  ................
+00001DA0  00 00 00 80 1A 00 00 00 CE 1C 00 00 00 5C 1B 00  .............\..
+00001DB0  00                                               .
+
+Section 114 00001DB1 - 00001DC0 (15 bytes)
+00001DB0     0D 40 22 00 00 00 21 02 00 00 02 00 00 00 00   .@"...!........
+
+Section 115 00001DC0 - 00001DDA (26 bytes)
+00001DC0  18 40 00 00 00 00 01 00 22 01 0F 46 69 65 6C 64  .@......"..Field
+00001DD0  46 6F 72 54 61 62 6C 65 31 36                    ForTable16
+
+00001DC2 TableContentSection.nextSectionIndex 00000000
+00001DC6 TableContentSection.recordBitmask 0001
+00001DC8 TableContentSection.recordLength[1] 11
+
+--------------------- 00001DC9 to 0x00001DDA UNPARSED ---------------------
+00001DC0                             01 0F 46 69 65 6C 64           ..Field
+00001DD0  46 6F 72 54 61 62 6C 65 31 36                    ForTable16
+---------------------------------------------------------------------------
+
+Section 116 00001DDA - 00001E97 (189 bytes)
+00001DD0                                BB 80 03 00 00 00            ......
+00001DE0  00 00 00 00 23 00 00 00 00 00 00 00 00 00 6B 1B  ....#.........k.
+00001DF0  00 00 00 17 00 00 00 00 AC 00 00 00 00 9D 00 00  ................
+00001E00  00 00 79 01 00 00 00 6A 01 00 00 00 6F 02 00 00  ..y....j....o...
+00001E10  00 60 02 00 00 00 8E 03 00 00 00 7F 03 00 00 00  .`..............
+00001E20  D6 04 00 00 00 C7 04 00 00 00 47 06 00 00 00 38  ..........G....8
+00001E30  06 00 00 00 E1 07 00 00 00 D2 07 00 00 00 A4 09  ................
+00001E40  00 00 00 95 09 00 00 00 90 0B 00 00 00 81 0B 00  ................
+00001E50  00 00 A6 0D 00 00 00 97 0D 00 00 00 E7 0F 00 00  ................
+00001E60  00 D8 0F 00 00 00 52 12 00 00 00 43 12 00 00 00  ......R....C....
+00001E70  E7 14 00 00 00 D8 14 00 00 00 A6 17 00 00 00 97  ................
+00001E80  17 00 00 00 8F 1A 00 00 00 80 1A 00 00 00 A2 1D  ................
+00001E90  00 00 00 93 1D 00 00                             .......
+
+Section 117 00001E97 - 00001EA6 (15 bytes)
+00001E90                       0D 40 24 00 00 00 40 02 00         .@$...@..
+00001EA0  00 00 00 00 00 00                                ......
+
+Section 118 00001EA6 - 0000201F (377 bytes)
+00001EA0                    77 41 69 00 00 10 00 01 00 00        wAi.......
+00001EB0  00 22 1A 54 61 62 6C 65 31 02 0E 74 78 74 0B 00  .".Table1..txt..
+00001EC0  28 20 05 00 00 00 00 1A 54 61 62 6C 65 32 02 0E  ( ......Table2..
+00001ED0  74 78 74 0B 00 28 20 07 00 00 00 00 1A 54 61 62  txt..( ......Tab
+00001EE0  6C 65 33 02 0E 74 78 74 0B 00 28 20 09 00 00 00  le3..txt..( ....
+00001EF0  00 1A 54 61 62 6C 65 34 02 0E 74 78 74 0B 00 28  ..Table4..txt..(
+00001F00  20 0B 00 00 00 00 1A 54 61 62 6C 65 35 02 0E 74   ......Table5..t
+00001F10  78 74 0B 00 28 20 0D 00 00 00 00 1A 54 61 62 6C  xt..( ......Tabl
+00001F20  65 36 02 0E 74 78 74 0B 00 28 20 0F 00 00 00 00  e6..txt..( .....
+00001F30  1A 54 61 62 6C 65 37 02 0E 74 78 74 0B 00 28 20  .Table7..txt..( 
+00001F40  11 00 00 00 00 1A 54 61 62 6C 65 38 02 0E 74 78  ......Table8..tx
+00001F50  74 0B 00 28 20 13 00 00 00 00 1A 54 61 62 6C 65  t..( ......Table
+00001F60  39 02 0E 74 78 74 0B 00 28 20 15 00 00 00 00 1E  9..txt..( ......
+00001F70  54 61 62 6C 65 31 30 02 0E 74 78 74 0B 00 28 20  Table10..txt..( 
+00001F80  17 00 00 00 00 1E 54 61 62 6C 65 31 31 02 0E 74  ......Table11..t
+00001F90  78 74 0B 00 28 20 19 00 00 00 00 1E 54 61 62 6C  xt..( ......Tabl
+00001FA0  65 31 32 02 0E 74 78 74 0B 00 28 20 1B 00 00 00  e12..txt..( ....
+00001FB0  00 1E 54 61 62 6C 65 31 33 02 0E 74 78 74 0B 00  ..Table13..txt..
+00001FC0  28 20 1D 00 00 00 00 1E 54 61 62 6C 65 31 34 02  ( ......Table14.
+00001FD0  0E 74 78 74 0B 00 28 20 1F 00 00 00 00 1E 54 61  .txt..( ......Ta
+00001FE0  62 6C 65 31 35 02 0E 74 78 74 0B 00 28 20 21 00  ble15..txt..( !.
+00001FF0  00 00 00 1E 54 61 62 6C 65 31 36 02 0E 74 78 74  ....Table16..txt
+00002000  0B 00 28 20 23 00 00 00 00 1E 54 61 62 6C 65 31  ..( #.....Table1
+00002010  37 02 0E 74 78 74 0B 00 28 20 25 00 00 00 00     7..txt..( %....
+
+00001EA8 TableSection.KDbmsStoreDatabase 10000069
+00001EAC TableSection.nullbyte 00
+00001EAD TableSection.unknown 00000001
+00001EB1 TableSection.tableCount 11
+00001EB2 TableSection.Table[1].tableName Table1
+00001EB9 TableSection.Table[1].fieldCount 1
+00001EBA TableSection.Table[1].Field[1].fieldName txt
+00001EBE TableSection.Table[1].Field[1].type 0B (Text)
+00001EBF TableSection.Table[1].Field[1].unknown 00
+00001EC0 TableSection.Table[1].Field[1].maxLen 28
+00001EC1 TableSection.Table[1].unknown1 20
+00001EC2 TableSection.Table[1].dataIndex 00000005
+00001EC6 TableSection.Table[1].unknown2 00
+00001EC7 TableSection.Table[2].tableName Table2
+00001ECE TableSection.Table[2].fieldCount 1
+00001ECF TableSection.Table[2].Field[1].fieldName txt
+00001ED3 TableSection.Table[2].Field[1].type 0B (Text)
+00001ED4 TableSection.Table[2].Field[1].unknown 00
+00001ED5 TableSection.Table[2].Field[1].maxLen 28
+00001ED6 TableSection.Table[2].unknown1 20
+00001ED7 TableSection.Table[2].dataIndex 00000007
+00001EDB TableSection.Table[2].unknown2 00
+00001EDC TableSection.Table[3].tableName Table3
+00001EE3 TableSection.Table[3].fieldCount 1
+00001EE4 TableSection.Table[3].Field[1].fieldName txt
+00001EE8 TableSection.Table[3].Field[1].type 0B (Text)
+00001EE9 TableSection.Table[3].Field[1].unknown 00
+00001EEA TableSection.Table[3].Field[1].maxLen 28
+00001EEB TableSection.Table[3].unknown1 20
+00001EEC TableSection.Table[3].dataIndex 00000009
+00001EF0 TableSection.Table[3].unknown2 00
+00001EF1 TableSection.Table[4].tableName Table4
+00001EF8 TableSection.Table[4].fieldCount 1
+00001EF9 TableSection.Table[4].Field[1].fieldName txt
+00001EFD TableSection.Table[4].Field[1].type 0B (Text)
+00001EFE TableSection.Table[4].Field[1].unknown 00
+00001EFF TableSection.Table[4].Field[1].maxLen 28
+00001F00 TableSection.Table[4].unknown1 20
+00001F01 TableSection.Table[4].dataIndex 0000000B
+00001F05 TableSection.Table[4].unknown2 00
+00001F06 TableSection.Table[5].tableName Table5
+00001F0D TableSection.Table[5].fieldCount 1
+00001F0E TableSection.Table[5].Field[1].fieldName txt
+00001F12 TableSection.Table[5].Field[1].type 0B (Text)
+00001F13 TableSection.Table[5].Field[1].unknown 00
+00001F14 TableSection.Table[5].Field[1].maxLen 28
+00001F15 TableSection.Table[5].unknown1 20
+00001F16 TableSection.Table[5].dataIndex 0000000D
+00001F1A TableSection.Table[5].unknown2 00
+00001F1B TableSection.Table[6].tableName Table6
+00001F22 TableSection.Table[6].fieldCount 1
+00001F23 TableSection.Table[6].Field[1].fieldName txt
+00001F27 TableSection.Table[6].Field[1].type 0B (Text)
+00001F28 TableSection.Table[6].Field[1].unknown 00
+00001F29 TableSection.Table[6].Field[1].maxLen 28
+00001F2A TableSection.Table[6].unknown1 20
+00001F2B TableSection.Table[6].dataIndex 0000000F
+00001F2F TableSection.Table[6].unknown2 00
+00001F30 TableSection.Table[7].tableName Table7
+00001F37 TableSection.Table[7].fieldCount 1
+00001F38 TableSection.Table[7].Field[1].fieldName txt
+00001F3C TableSection.Table[7].Field[1].type 0B (Text)
+00001F3D TableSection.Table[7].Field[1].unknown 00
+00001F3E TableSection.Table[7].Field[1].maxLen 28
+00001F3F TableSection.Table[7].unknown1 20
+00001F40 TableSection.Table[7].dataIndex 00000011
+00001F44 TableSection.Table[7].unknown2 00
+00001F45 TableSection.Table[8].tableName Table8
+00001F4C TableSection.Table[8].fieldCount 1
+00001F4D TableSection.Table[8].Field[1].fieldName txt
+00001F51 TableSection.Table[8].Field[1].type 0B (Text)
+00001F52 TableSection.Table[8].Field[1].unknown 00
+00001F53 TableSection.Table[8].Field[1].maxLen 28
+00001F54 TableSection.Table[8].unknown1 20
+00001F55 TableSection.Table[8].dataIndex 00000013
+00001F59 TableSection.Table[8].unknown2 00
+00001F5A TableSection.Table[9].tableName Table9
+00001F61 TableSection.Table[9].fieldCount 1
+00001F62 TableSection.Table[9].Field[1].fieldName txt
+00001F66 TableSection.Table[9].Field[1].type 0B (Text)
+00001F67 TableSection.Table[9].Field[1].unknown 00
+00001F68 TableSection.Table[9].Field[1].maxLen 28
+00001F69 TableSection.Table[9].unknown1 20
+00001F6A TableSection.Table[9].dataIndex 00000015
+00001F6E TableSection.Table[9].unknown2 00
+00001F6F TableSection.Table[10].tableName Table10
+00001F77 TableSection.Table[10].fieldCount 1
+00001F78 TableSection.Table[10].Field[1].fieldName txt
+00001F7C TableSection.Table[10].Field[1].type 0B (Text)
+00001F7D TableSection.Table[10].Field[1].unknown 00
+00001F7E TableSection.Table[10].Field[1].maxLen 28
+00001F7F TableSection.Table[10].unknown1 20
+00001F80 TableSection.Table[10].dataIndex 00000017
+00001F84 TableSection.Table[10].unknown2 00
+00001F85 TableSection.Table[11].tableName Table11
+00001F8D TableSection.Table[11].fieldCount 1
+00001F8E TableSection.Table[11].Field[1].fieldName txt
+00001F92 TableSection.Table[11].Field[1].type 0B (Text)
+00001F93 TableSection.Table[11].Field[1].unknown 00
+00001F94 TableSection.Table[11].Field[1].maxLen 28
+00001F95 TableSection.Table[11].unknown1 20
+00001F96 TableSection.Table[11].dataIndex 00000019
+00001F9A TableSection.Table[11].unknown2 00
+00001F9B TableSection.Table[12].tableName Table12
+00001FA3 TableSection.Table[12].fieldCount 1
+00001FA4 TableSection.Table[12].Field[1].fieldName txt
+00001FA8 TableSection.Table[12].Field[1].type 0B (Text)
+00001FA9 TableSection.Table[12].Field[1].unknown 00
+00001FAA TableSection.Table[12].Field[1].maxLen 28
+00001FAB TableSection.Table[12].unknown1 20
+00001FAC TableSection.Table[12].dataIndex 0000001B
+00001FB0 TableSection.Table[12].unknown2 00
+00001FB1 TableSection.Table[13].tableName Table13
+00001FB9 TableSection.Table[13].fieldCount 1
+00001FBA TableSection.Table[13].Field[1].fieldName txt
+00001FBE TableSection.Table[13].Field[1].type 0B (Text)
+00001FBF TableSection.Table[13].Field[1].unknown 00
+00001FC0 TableSection.Table[13].Field[1].maxLen 28
+00001FC1 TableSection.Table[13].unknown1 20
+00001FC2 TableSection.Table[13].dataIndex 0000001D
+00001FC6 TableSection.Table[13].unknown2 00
+00001FC7 TableSection.Table[14].tableName Table14
+00001FCF TableSection.Table[14].fieldCount 1
+00001FD0 TableSection.Table[14].Field[1].fieldName txt
+00001FD4 TableSection.Table[14].Field[1].type 0B (Text)
+00001FD5 TableSection.Table[14].Field[1].unknown 00
+00001FD6 TableSection.Table[14].Field[1].maxLen 28
+00001FD7 TableSection.Table[14].unknown1 20
+00001FD8 TableSection.Table[14].dataIndex 0000001F
+00001FDC TableSection.Table[14].unknown2 00
+00001FDD TableSection.Table[15].tableName Table15
+00001FE5 TableSection.Table[15].fieldCount 1
+00001FE6 TableSection.Table[15].Field[1].fieldName txt
+00001FEA TableSection.Table[15].Field[1].type 0B (Text)
+00001FEB TableSection.Table[15].Field[1].unknown 00
+00001FEC TableSection.Table[15].Field[1].maxLen 28
+00001FED TableSection.Table[15].unknown1 20
+00001FEE TableSection.Table[15].dataIndex 00000021
+00001FF2 TableSection.Table[15].unknown2 00
+00001FF3 TableSection.Table[16].tableName Table16
+00001FFB TableSection.Table[16].fieldCount 1
+00001FFC TableSection.Table[16].Field[1].fieldName txt
+00002000 TableSection.Table[16].Field[1].type 0B (Text)
+00002001 TableSection.Table[16].Field[1].unknown 00
+00002002 TableSection.Table[16].Field[1].maxLen 28
+00002003 TableSection.Table[16].unknown1 20
+00002004 TableSection.Table[16].dataIndex 00000023
+00002008 TableSection.Table[16].unknown2 00
+00002009 TableSection.Table[17].tableName Table17
+00002011 TableSection.Table[17].fieldCount 1
+00002012 TableSection.Table[17].Field[1].fieldName txt
+00002016 TableSection.Table[17].Field[1].type 0B (Text)
+00002017 TableSection.Table[17].Field[1].unknown 00
+00002018 TableSection.Table[17].Field[1].maxLen 28
+00002019 TableSection.Table[17].unknown1 20
+0000201A TableSection.Table[17].dataIndex 00000025
+0000201E TableSection.Table[17].unknown2 00
+
+Section 119 0000201F - 00002027 (8 bytes)
+00002010                                               06                 .
+00002020  40 00 00 00 00 00 00                             @......
+
+Section 120 00002027 - 000020EE (199 bytes)
+00002020                       C5 80 03 00 00 00 00 00 00         .........
+00002030  00 25 00 00 00 00 00 00 00 00 00 88 1E 00 00 00  .%..............
+00002040  17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 79  ...............y
+00002050  01 00 00 00 6A 01 00 00 00 6F 02 00 00 00 60 02  ....j....o....`.
+00002060  00 00 00 8E 03 00 00 00 7F 03 00 00 00 D6 04 00  ................
+00002070  00 00 C7 04 00 00 00 47 06 00 00 00 38 06 00 00  .......G....8...
+00002080  00 E1 07 00 00 00 D2 07 00 00 00 A4 09 00 00 00  ................
+00002090  95 09 00 00 00 90 0B 00 00 00 81 0B 00 00 00 A6  ................
+000020A0  0D 00 00 00 97 0D 00 00 00 E7 0F 00 00 00 D8 0F  ................
+000020B0  00 00 00 52 12 00 00 00 43 12 00 00 00 E7 14 00  ...R....C.......
+000020C0  00 00 D8 14 00 00 00 A6 17 00 00 00 97 17 00 00  ................
+000020D0  00 8F 1A 00 00 00 80 1A 00 00 00 A2 1D 00 00 00  ................
+000020E0  93 1D 00 00 00 01 20 00 00 00 79 1E 00 00        ...... ...y...
+
+Section 121 000020EE - 000020FD (15 bytes)
+000020E0                                            0D 40                .@
+000020F0  24 00 00 00 41 02 00 00 02 00 00 00 00           $...A........
+
+Section 122 000020FD - 00002117 (26 bytes)
+000020F0                                         18 40 00               .@.
+00002100  00 00 00 01 00 22 01 0F 46 69 65 6C 64 46 6F 72  ....."..FieldFor
+00002110  54 61 62 6C 65 31 37                             Table17
+
+000020FF TableContentSection.nextSectionIndex 00000000
+00002103 TableContentSection.recordBitmask 0001
+00002105 TableContentSection.recordLength[1] 11
+
+--------------------- 00002106 to 0x00002117 UNPARSED ---------------------
+00002100                    01 0F 46 69 65 6C 64 46 6F 72        ..FieldFor
+00002110  54 61 62 6C 65 31 37                             Table17
+---------------------------------------------------------------------------
+
+Section 123 00002117 - 000021DE (199 bytes)
+00002110                       C5 80 03 00 00 00 00 00 00         .........
+00002120  00 25 00 00 00 00 00 00 00 00 00 88 1E 00 00 00  .%..............
+00002130  17 00 00 00 00 AC 00 00 00 00 9D 00 00 00 00 79  ...............y
+00002140  01 00 00 00 6A 01 00 00 00 6F 02 00 00 00 60 02  ....j....o....`.
+00002150  00 00 00 8E 03 00 00 00 7F 03 00 00 00 D6 04 00  ................
+00002160  00 00 C7 04 00 00 00 47 06 00 00 00 38 06 00 00  .......G....8...
+00002170  00 E1 07 00 00 00 D2 07 00 00 00 A4 09 00 00 00  ................
+00002180  95 09 00 00 00 90 0B 00 00 00 81 0B 00 00 00 A6  ................
+00002190  0D 00 00 00 97 0D 00 00 00 E7 0F 00 00 00 D8 0F  ................
+000021A0  00 00 00 52 12 00 00 00 43 12 00 00 00 E7 14 00  ...R....C.......
+000021B0  00 00 D8 14 00 00 00 A6 17 00 00 00 97 17 00 00  ................
+000021C0  00 8F 1A 00 00 00 80 1A 00 00 00 A2 1D 00 00 00  ................
+000021D0  93 1D 00 00 00 DF 20 00 00 00 D0 20 00 00        ...... .... ..
+
+Section 124 000021DE - 000021ED (15 bytes)
+000021D0                                            0D 40                .@
+000021E0  26 00 00 00 60 02 00 00 00 00 00 00 00           &...`........
+
+Section 125 000021ED - 0000237C (399 bytes)
+000021E0                                         8D 41 69               .Ai
+000021F0  00 00 10 00 01 00 00 00 24 1A 54 61 62 6C 65 31  ........$.Table1
+00002200  02 0E 74 78 74 0B 00 28 20 05 00 00 00 00 1A 54  ..txt..( ......T
+00002210  61 62 6C 65 32 02 0E 74 78 74 0B 00 28 20 07 00  able2..txt..( ..
+00002220  00 00 00 1A 54 61 62 6C 65 33 02 0E 74 78 74 0B  ....Table3..txt.
+00002230  00 28 20 09 00 00 00 00 1A 54 61 62 6C 65 34 02  .( ......Table4.
+00002240  0E 74 78 74 0B 00 28 20 0B 00 00 00 00 1A 54 61  .txt..( ......Ta
+00002250  62 6C 65 35 02 0E 74 78 74 0B 00 28 20 0D 00 00  ble5..txt..( ...
+00002260  00 00 1A 54 61 62 6C 65 36 02 0E 74 78 74 0B 00  ...Table6..txt..
+00002270  28 20 0F 00 00 00 00 1A 54 61 62 6C 65 37 02 0E  ( ......Table7..
+00002280  74 78 74 0B 00 28 20 11 00 00 00 00 1A 54 61 62  txt..( ......Tab
+00002290  6C 65 38 02 0E 74 78 74 0B 00 28 20 13 00 00 00  le8..txt..( ....
+000022A0  00 1A 54 61 62 6C 65 39 02 0E 74 78 74 0B 00 28  ..Table9..txt..(
+000022B0  20 15 00 00 00 00 1E 54 61 62 6C 65 31 30 02 0E   ......Table10..
+000022C0  74 78 74 0B 00 28 20 17 00 00 00 00 1E 54 61 62  txt..( ......Tab
+000022D0  6C 65 31 31 02 0E 74 78 74 0B 00 28 20 19 00 00  le11..txt..( ...
+000022E0  00 00 1E 54 61 62 6C 65 31 32 02 0E 74 78 74 0B  ...Table12..txt.
+000022F0  00 28 20 1B 00 00 00 00 1E 54 61 62 6C 65 31 33  .( ......Table13
+00002300  02 0E 74 78 74 0B 00 28 20 1D 00 00 00 00 1E 54  ..txt..( ......T
+00002310  61 62 6C 65 31 34 02 0E 74 78 74 0B 00 28 20 1F  able14..txt..( .
+00002320  00 00 00 00 1E 54 61 62 6C 65 31 35 02 0E 74 78  .....Table15..tx
+00002330  74 0B 00 28 20 21 00 00 00 00 1E 54 61 62 6C 65  t..( !.....Table
+00002340  31 36 02 0E 74 78 74 0B 00 28 20 23 00 00 00 00  16..txt..( #....
+00002350  1E 54 61 62 6C 65 31 37 02 0E 74 78 74 0B 00 28  .Table17..txt..(
+00002360  20 25 00 00 00 00 1E 54 61 62 6C 65 31 38 02 0E   %.....Table18..
+00002370  74 78 74 0B 00 28 20 27 00 00 00 00              txt..( '....
+
+000021EF TableSection.KDbmsStoreDatabase 10000069
+000021F3 TableSection.nullbyte 00
+000021F4 TableSection.unknown 00000001
+000021F8 TableSection.tableCount 12
+000021F9 TableSection.Table[1].tableName Table1
+00002200 TableSection.Table[1].fieldCount 1
+00002201 TableSection.Table[1].Field[1].fieldName txt
+00002205 TableSection.Table[1].Field[1].type 0B (Text)
+00002206 TableSection.Table[1].Field[1].unknown 00
+00002207 TableSection.Table[1].Field[1].maxLen 28
+00002208 TableSection.Table[1].unknown1 20
+00002209 TableSection.Table[1].dataIndex 00000005
+0000220D TableSection.Table[1].unknown2 00
+0000220E TableSection.Table[2].tableName Table2
+00002215 TableSection.Table[2].fieldCount 1
+00002216 TableSection.Table[2].Field[1].fieldName txt
+0000221A TableSection.Table[2].Field[1].type 0B (Text)
+0000221B TableSection.Table[2].Field[1].unknown 00
+0000221C TableSection.Table[2].Field[1].maxLen 28
+0000221D TableSection.Table[2].unknown1 20
+0000221E TableSection.Table[2].dataIndex 00000007
+00002222 TableSection.Table[2].unknown2 00
+00002223 TableSection.Table[3].tableName Table3
+0000222A TableSection.Table[3].fieldCount 1
+0000222B TableSection.Table[3].Field[1].fieldName txt
+0000222F TableSection.Table[3].Field[1].type 0B (Text)
+00002230 TableSection.Table[3].Field[1].unknown 00
+00002231 TableSection.Table[3].Field[1].maxLen 28
+00002232 TableSection.Table[3].unknown1 20
+00002233 TableSection.Table[3].dataIndex 00000009
+00002237 TableSection.Table[3].unknown2 00
+00002238 TableSection.Table[4].tableName Table4
+0000223F TableSection.Table[4].fieldCount 1
+00002240 TableSection.Table[4].Field[1].fieldName txt
+00002244 TableSection.Table[4].Field[1].type 0B (Text)
+00002245 TableSection.Table[4].Field[1].unknown 00
+00002246 TableSection.Table[4].Field[1].maxLen 28
+00002247 TableSection.Table[4].unknown1 20
+00002248 TableSection.Table[4].dataIndex 0000000B
+0000224C TableSection.Table[4].unknown2 00
+0000224D TableSection.Table[5].tableName Table5
+00002254 TableSection.Table[5].fieldCount 1
+00002255 TableSection.Table[5].Field[1].fieldName txt
+00002259 TableSection.Table[5].Field[1].type 0B (Text)
+0000225A TableSection.Table[5].Field[1].unknown 00
+0000225B TableSection.Table[5].Field[1].maxLen 28
+0000225C TableSection.Table[5].unknown1 20
+0000225D TableSection.Table[5].dataIndex 0000000D
+00002261 TableSection.Table[5].unknown2 00
+00002262 TableSection.Table[6].tableName Table6
+00002269 TableSection.Table[6].fieldCount 1
+0000226A TableSection.Table[6].Field[1].fieldName txt
+0000226E TableSection.Table[6].Field[1].type 0B (Text)
+0000226F TableSection.Table[6].Field[1].unknown 00
+00002270 TableSection.Table[6].Field[1].maxLen 28
+00002271 TableSection.Table[6].unknown1 20
+00002272 TableSection.Table[6].dataIndex 0000000F
+00002276 TableSection.Table[6].unknown2 00
+00002277 TableSection.Table[7].tableName Table7
+0000227E TableSection.Table[7].fieldCount 1
+0000227F TableSection.Table[7].Field[1].fieldName txt
+00002283 TableSection.Table[7].Field[1].type 0B (Text)
+00002284 TableSection.Table[7].Field[1].unknown 00
+00002285 TableSection.Table[7].Field[1].maxLen 28
+00002286 TableSection.Table[7].unknown1 20
+00002287 TableSection.Table[7].dataIndex 00000011
+0000228B TableSection.Table[7].unknown2 00
+0000228C TableSection.Table[8].tableName Table8
+00002293 TableSection.Table[8].fieldCount 1
+00002294 TableSection.Table[8].Field[1].fieldName txt
+00002298 TableSection.Table[8].Field[1].type 0B (Text)
+00002299 TableSection.Table[8].Field[1].unknown 00
+0000229A TableSection.Table[8].Field[1].maxLen 28
+0000229B TableSection.Table[8].unknown1 20
+0000229C TableSection.Table[8].dataIndex 00000013
+000022A0 TableSection.Table[8].unknown2 00
+000022A1 TableSection.Table[9].tableName Table9
+000022A8 TableSection.Table[9].fieldCount 1
+000022A9 TableSection.Table[9].Field[1].fieldName txt
+000022AD TableSection.Table[9].Field[1].type 0B (Text)
+000022AE TableSection.Table[9].Field[1].unknown 00
+000022AF TableSection.Table[9].Field[1].maxLen 28
+000022B0 TableSection.Table[9].unknown1 20
+000022B1 TableSection.Table[9].dataIndex 00000015
+000022B5 TableSection.Table[9].unknown2 00
+000022B6 TableSection.Table[10].tableName Table10
+000022BE TableSection.Table[10].fieldCount 1
+000022BF TableSection.Table[10].Field[1].fieldName txt
+000022C3 TableSection.Table[10].Field[1].type 0B (Text)
+000022C4 TableSection.Table[10].Field[1].unknown 00
+000022C5 TableSection.Table[10].Field[1].maxLen 28
+000022C6 TableSection.Table[10].unknown1 20
+000022C7 TableSection.Table[10].dataIndex 00000017
+000022CB TableSection.Table[10].unknown2 00
+000022CC TableSection.Table[11].tableName Table11
+000022D4 TableSection.Table[11].fieldCount 1
+000022D5 TableSection.Table[11].Field[1].fieldName txt
+000022D9 TableSection.Table[11].Field[1].type 0B (Text)
+000022DA TableSection.Table[11].Field[1].unknown 00
+000022DB TableSection.Table[11].Field[1].maxLen 28
+000022DC TableSection.Table[11].unknown1 20
+000022DD TableSection.Table[11].dataIndex 00000019
+000022E1 TableSection.Table[11].unknown2 00
+000022E2 TableSection.Table[12].tableName Table12
+000022EA TableSection.Table[12].fieldCount 1
+000022EB TableSection.Table[12].Field[1].fieldName txt
+000022EF TableSection.Table[12].Field[1].type 0B (Text)
+000022F0 TableSection.Table[12].Field[1].unknown 00
+000022F1 TableSection.Table[12].Field[1].maxLen 28
+000022F2 TableSection.Table[12].unknown1 20
+000022F3 TableSection.Table[12].dataIndex 0000001B
+000022F7 TableSection.Table[12].unknown2 00
+000022F8 TableSection.Table[13].tableName Table13
+00002300 TableSection.Table[13].fieldCount 1
+00002301 TableSection.Table[13].Field[1].fieldName txt
+00002305 TableSection.Table[13].Field[1].type 0B (Text)
+00002306 TableSection.Table[13].Field[1].unknown 00
+00002307 TableSection.Table[13].Field[1].maxLen 28
+00002308 TableSection.Table[13].unknown1 20
+00002309 TableSection.Table[13].dataIndex 0000001D
+0000230D TableSection.Table[13].unknown2 00
+0000230E TableSection.Table[14].tableName Table14
+00002316 TableSection.Table[14].fieldCount 1
+00002317 TableSection.Table[14].Field[1].fieldName txt
+0000231B TableSection.Table[14].Field[1].type 0B (Text)
+0000231C TableSection.Table[14].Field[1].unknown 00
+0000231D TableSection.Table[14].Field[1].maxLen 28
+0000231E TableSection.Table[14].unknown1 20
+0000231F TableSection.Table[14].dataIndex 0000001F
+00002323 TableSection.Table[14].unknown2 00
+00002324 TableSection.Table[15].tableName Table15
+0000232C TableSection.Table[15].fieldCount 1
+0000232D TableSection.Table[15].Field[1].fieldName txt
+00002331 TableSection.Table[15].Field[1].type 0B (Text)
+00002332 TableSection.Table[15].Field[1].unknown 00
+00002333 TableSection.Table[15].Field[1].maxLen 28
+00002334 TableSection.Table[15].unknown1 20
+00002335 TableSection.Table[15].dataIndex 00000021
+00002339 TableSection.Table[15].unknown2 00
+0000233A TableSection.Table[16].tableName Table16
+00002342 TableSection.Table[16].fieldCount 1
+00002343 TableSection.Table[16].Field[1].fieldName txt
+00002347 TableSection.Table[16].Field[1].type 0B (Text)
+00002348 TableSection.Table[16].Field[1].unknown 00
+00002349 TableSection.Table[16].Field[1].maxLen 28
+0000234A TableSection.Table[16].unknown1 20
+0000234B TableSection.Table[16].dataIndex 00000023
+0000234F TableSection.Table[16].unknown2 00
+00002350 TableSection.Table[17].tableName Table17
+00002358 TableSection.Table[17].fieldCount 1
+00002359 TableSection.Table[17].Field[1].fieldName txt
+0000235D TableSection.Table[17].Field[1].type 0B (Text)
+0000235E TableSection.Table[17].Field[1].unknown 00
+0000235F TableSection.Table[17].Field[1].maxLen 28
+00002360 TableSection.Table[17].unknown1 20
+00002361 TableSection.Table[17].dataIndex 00000025
+00002365 TableSection.Table[17].unknown2 00
+00002366 TableSection.Table[18].tableName Table18
+0000236E TableSection.Table[18].fieldCount 1
+0000236F TableSection.Table[18].Field[1].fieldName txt
+00002373 TableSection.Table[18].Field[1].type 0B (Text)
+00002374 TableSection.Table[18].Field[1].unknown 00
+00002375 TableSection.Table[18].Field[1].maxLen 28
+00002376 TableSection.Table[18].unknown1 20
+00002377 TableSection.Table[18].dataIndex 00000027
+0000237B TableSection.Table[18].unknown2 00
+
+Section 126 0000237C - 00002384 (8 bytes)
+00002370                                      06 40 00 00              .@..
+00002380  00 00 00 00                                      ....
+
+Section 127 00002384 - 00002455 (209 bytes)
+00002380              CF 80 03 00 00 00 00 00 00 00 27 00      ..........'.
+00002390  00 00 00 00 00 00 00 00 CF 21 00 00 00 17 00 00  .........!......
+000023A0  00 00 AC 00 00 00 00 9D 00 00 00 00 79 01 00 00  ............y...
+000023B0  00 6A 01 00 00 00 6F 02 00 00 00 60 02 00 00 00  .j....o....`....
+000023C0  8E 03 00 00 00 7F 03 00 00 00 D6 04 00 00 00 C7  ................
+000023D0  04 00 00 00 47 06 00 00 00 38 06 00 00 00 E1 07  ....G....8......
+000023E0  00 00 00 D2 07 00 00 00 A4 09 00 00 00 95 09 00  ................
+000023F0  00 00 90 0B 00 00 00 81 0B 00 00 00 A6 0D 00 00  ................
+00002400  00 97 0D 00 00 00 E7 0F 00 00 00 D8 0F 00 00 00  ................
+00002410  52 12 00 00 00 43 12 00 00 00 E7 14 00 00 00 D8  R....C..........
+00002420  14 00 00 00 A6 17 00 00 00 97 17 00 00 00 8F 1A  ................
+00002430  00 00 00 80 1A 00 00 00 A2 1D 00 00 00 93 1D 00  ................
+00002440  00 00 DF 20 00 00 00 D0 20 00 00 00 5E 23 00 00  ... .... ...^#..
+00002450  00 C0 21 00 00                                   ..!..
+
+Section 128 00002455 - 00002464 (15 bytes)
+00002450                 0D 40 26 00 00 00 61 02 00 00 02       .@&...a....
+00002460  00 00 00 00                                      ....
+
+Section 129 00002464 - 0000247E (26 bytes)
+00002460              18 40 00 00 00 00 01 00 22 01 0F 46      .@......"..F
+00002470  69 65 6C 64 46 6F 72 54 61 62 6C 65 31 38        ieldForTable18
+
+00002466 TableContentSection.nextSectionIndex 00000000
+0000246A TableContentSection.recordBitmask 0001
+0000246C TableContentSection.recordLength[1] 11
+
+--------------------- 0000246D to 0x0000247E UNPARSED ---------------------
+00002460                                         01 0F 46               ..F
+00002470  69 65 6C 64 46 6F 72 54 61 62 6C 65 31 38        ieldForTable18
+---------------------------------------------------------------------------
+
+Section 130 0000247E - 0000254F (209 bytes)
+00002470                                            CF 80                ..
+00002480  03 00 00 00 00 00 00 00 27 00 00 00 00 00 00 00  ........'.......
+00002490  00 00 CF 21 00 00 00 17 00 00 00 00 AC 00 00 00  ...!............
+000024A0  00 9D 00 00 00 00 79 01 00 00 00 6A 01 00 00 00  ......y....j....
+000024B0  6F 02 00 00 00 60 02 00 00 00 8E 03 00 00 00 7F  o....`..........
+000024C0  03 00 00 00 D6 04 00 00 00 C7 04 00 00 00 47 06  ..............G.
+000024D0  00 00 00 38 06 00 00 00 E1 07 00 00 00 D2 07 00  ...8............
+000024E0  00 00 A4 09 00 00 00 95 09 00 00 00 90 0B 00 00  ................
+000024F0  00 81 0B 00 00 00 A6 0D 00 00 00 97 0D 00 00 00  ................
+00002500  E7 0F 00 00 00 D8 0F 00 00 00 52 12 00 00 00 43  ..........R....C
+00002510  12 00 00 00 E7 14 00 00 00 D8 14 00 00 00 A6 17  ................
+00002520  00 00 00 97 17 00 00 00 8F 1A 00 00 00 80 1A 00  ................
+00002530  00 00 A2 1D 00 00 00 93 1D 00 00 00 DF 20 00 00  ............. ..
+00002540  00 D0 20 00 00 00 46 24 00 00 00 37 24 00 00     .. ...F$...7$..
+
+Section 131 0000254F - 0000255E (15 bytes)
+00002540                                               0D                 .
+00002550  40 28 00 00 00 80 02 00 00 00 00 00 00 00        @(............
+
+Section 132 0000255E - 00002703 (421 bytes)
+00002550                                            A3 41                .A
+00002560  69 00 00 10 00 01 00 00 00 26 1A 54 61 62 6C 65  i........&.Table
+00002570  31 02 0E 74 78 74 0B 00 28 20 05 00 00 00 00 1A  1..txt..( ......
+00002580  54 61 62 6C 65 32 02 0E 74 78 74 0B 00 28 20 07  Table2..txt..( .
+00002590  00 00 00 00 1A 54 61 62 6C 65 33 02 0E 74 78 74  .....Table3..txt
+000025A0  0B 00 28 20 09 00 00 00 00 1A 54 61 62 6C 65 34  ..( ......Table4
+000025B0  02 0E 74 78 74 0B 00 28 20 0B 00 00 00 00 1A 54  ..txt..( ......T
+000025C0  61 62 6C 65 35 02 0E 74 78 74 0B 00 28 20 0D 00  able5..txt..( ..
+000025D0  00 00 00 1A 54 61 62 6C 65 36 02 0E 74 78 74 0B  ....Table6..txt.
+000025E0  00 28 20 0F 00 00 00 00 1A 54 61 62 6C 65 37 02  .( ......Table7.
+000025F0  0E 74 78 74 0B 00 28 20 11 00 00 00 00 1A 54 61  .txt..( ......Ta
+00002600  62 6C 65 38 02 0E 74 78 74 0B 00 28 20 13 00 00  ble8..txt..( ...
+00002610  00 00 1A 54 61 62 6C 65 39 02 0E 74 78 74 0B 00  ...Table9..txt..
+00002620  28 20 15 00 00 00 00 1E 54 61 62 6C 65 31 30 02  ( ......Table10.
+00002630  0E 74 78 74 0B 00 28 20 17 00 00 00 00 1E 54 61  .txt..( ......Ta
+00002640  62 6C 65 31 31 02 0E 74 78 74 0B 00 28 20 19 00  ble11..txt..( ..
+00002650  00 00 00 1E 54 61 62 6C 65 31 32 02 0E 74 78 74  ....Table12..txt
+00002660  0B 00 28 20 1B 00 00 00 00 1E 54 61 62 6C 65 31  ..( ......Table1
+00002670  33 02 0E 74 78 74 0B 00 28 20 1D 00 00 00 00 1E  3..txt..( ......
+00002680  54 61 62 6C 65 31 34 02 0E 74 78 74 0B 00 28 20  Table14..txt..( 
+00002690  1F 00 00 00 00 1E 54 61 62 6C 65 31 35 02 0E 74  ......Table15..t
+000026A0  78 74 0B 00 28 20 21 00 00 00 00 1E 54 61 62 6C  xt..( !.....Tabl
+000026B0  65 31 36 02 0E 74 78 74 0B 00 28 20 23 00 00 00  e16..txt..( #...
+000026C0  00 1E 54 61 62 6C 65 31 37 02 0E 74 78 74 0B 00  ..Table17..txt..
+000026D0  28 20 25 00 00 00 00 1E 54 61 62 6C 65 31 38 02  ( %.....Table18.
+000026E0  0E 74 78 74 0B 00 28 20 27 00 00 00 00 1E 54 61  .txt..( '.....Ta
+000026F0  62 6C 65 31 39 02 0E 74 78 74 0B 00 28 20 29 00  ble19..txt..( ).
+00002700  00 00 00                                         ...
+
+00002560 TableSection.KDbmsStoreDatabase 10000069
+00002564 TableSection.nullbyte 00
+00002565 TableSection.unknown 00000001
+00002569 TableSection.tableCount 13
+0000256A TableSection.Table[1].tableName Table1
+00002571 TableSection.Table[1].fieldCount 1
+00002572 TableSection.Table[1].Field[1].fieldName txt
+00002576 TableSection.Table[1].Field[1].type 0B (Text)
+00002577 TableSection.Table[1].Field[1].unknown 00
+00002578 TableSection.Table[1].Field[1].maxLen 28
+00002579 TableSection.Table[1].unknown1 20
+0000257A TableSection.Table[1].dataIndex 00000005
+0000257E TableSection.Table[1].unknown2 00
+0000257F TableSection.Table[2].tableName Table2
+00002586 TableSection.Table[2].fieldCount 1
+00002587 TableSection.Table[2].Field[1].fieldName txt
+0000258B TableSection.Table[2].Field[1].type 0B (Text)
+0000258C TableSection.Table[2].Field[1].unknown 00
+0000258D TableSection.Table[2].Field[1].maxLen 28
+0000258E TableSection.Table[2].unknown1 20
+0000258F TableSection.Table[2].dataIndex 00000007
+00002593 TableSection.Table[2].unknown2 00
+00002594 TableSection.Table[3].tableName Table3
+0000259B TableSection.Table[3].fieldCount 1
+0000259C TableSection.Table[3].Field[1].fieldName txt
+000025A0 TableSection.Table[3].Field[1].type 0B (Text)
+000025A1 TableSection.Table[3].Field[1].unknown 00
+000025A2 TableSection.Table[3].Field[1].maxLen 28
+000025A3 TableSection.Table[3].unknown1 20
+000025A4 TableSection.Table[3].dataIndex 00000009
+000025A8 TableSection.Table[3].unknown2 00
+000025A9 TableSection.Table[4].tableName Table4
+000025B0 TableSection.Table[4].fieldCount 1
+000025B1 TableSection.Table[4].Field[1].fieldName txt
+000025B5 TableSection.Table[4].Field[1].type 0B (Text)
+000025B6 TableSection.Table[4].Field[1].unknown 00
+000025B7 TableSection.Table[4].Field[1].maxLen 28
+000025B8 TableSection.Table[4].unknown1 20
+000025B9 TableSection.Table[4].dataIndex 0000000B
+000025BD TableSection.Table[4].unknown2 00
+000025BE TableSection.Table[5].tableName Table5
+000025C5 TableSection.Table[5].fieldCount 1
+000025C6 TableSection.Table[5].Field[1].fieldName txt
+000025CA TableSection.Table[5].Field[1].type 0B (Text)
+000025CB TableSection.Table[5].Field[1].unknown 00
+000025CC TableSection.Table[5].Field[1].maxLen 28
+000025CD TableSection.Table[5].unknown1 20
+000025CE TableSection.Table[5].dataIndex 0000000D
+000025D2 TableSection.Table[5].unknown2 00
+000025D3 TableSection.Table[6].tableName Table6
+000025DA TableSection.Table[6].fieldCount 1
+000025DB TableSection.Table[6].Field[1].fieldName txt
+000025DF TableSection.Table[6].Field[1].type 0B (Text)
+000025E0 TableSection.Table[6].Field[1].unknown 00
+000025E1 TableSection.Table[6].Field[1].maxLen 28
+000025E2 TableSection.Table[6].unknown1 20
+000025E3 TableSection.Table[6].dataIndex 0000000F
+000025E7 TableSection.Table[6].unknown2 00
+000025E8 TableSection.Table[7].tableName Table7
+000025EF TableSection.Table[7].fieldCount 1
+000025F0 TableSection.Table[7].Field[1].fieldName txt
+000025F4 TableSection.Table[7].Field[1].type 0B (Text)
+000025F5 TableSection.Table[7].Field[1].unknown 00
+000025F6 TableSection.Table[7].Field[1].maxLen 28
+000025F7 TableSection.Table[7].unknown1 20
+000025F8 TableSection.Table[7].dataIndex 00000011
+000025FC TableSection.Table[7].unknown2 00
+000025FD TableSection.Table[8].tableName Table8
+00002604 TableSection.Table[8].fieldCount 1
+00002605 TableSection.Table[8].Field[1].fieldName txt
+00002609 TableSection.Table[8].Field[1].type 0B (Text)
+0000260A TableSection.Table[8].Field[1].unknown 00
+0000260B TableSection.Table[8].Field[1].maxLen 28
+0000260C TableSection.Table[8].unknown1 20
+0000260D TableSection.Table[8].dataIndex 00000013
+00002611 TableSection.Table[8].unknown2 00
+00002612 TableSection.Table[9].tableName Table9
+00002619 TableSection.Table[9].fieldCount 1
+0000261A TableSection.Table[9].Field[1].fieldName txt
+0000261E TableSection.Table[9].Field[1].type 0B (Text)
+0000261F TableSection.Table[9].Field[1].unknown 00
+00002620 TableSection.Table[9].Field[1].maxLen 28
+00002621 TableSection.Table[9].unknown1 20
+00002622 TableSection.Table[9].dataIndex 00000015
+00002626 TableSection.Table[9].unknown2 00
+00002627 TableSection.Table[10].tableName Table10
+0000262F TableSection.Table[10].fieldCount 1
+00002630 TableSection.Table[10].Field[1].fieldName txt
+00002634 TableSection.Table[10].Field[1].type 0B (Text)
+00002635 TableSection.Table[10].Field[1].unknown 00
+00002636 TableSection.Table[10].Field[1].maxLen 28
+00002637 TableSection.Table[10].unknown1 20
+00002638 TableSection.Table[10].dataIndex 00000017
+0000263C TableSection.Table[10].unknown2 00
+0000263D TableSection.Table[11].tableName Table11
+00002645 TableSection.Table[11].fieldCount 1
+00002646 TableSection.Table[11].Field[1].fieldName txt
+0000264A TableSection.Table[11].Field[1].type 0B (Text)
+0000264B TableSection.Table[11].Field[1].unknown 00
+0000264C TableSection.Table[11].Field[1].maxLen 28
+0000264D TableSection.Table[11].unknown1 20
+0000264E TableSection.Table[11].dataIndex 00000019
+00002652 TableSection.Table[11].unknown2 00
+00002653 TableSection.Table[12].tableName Table12
+0000265B TableSection.Table[12].fieldCount 1
+0000265C TableSection.Table[12].Field[1].fieldName txt
+00002660 TableSection.Table[12].Field[1].type 0B (Text)
+00002661 TableSection.Table[12].Field[1].unknown 00
+00002662 TableSection.Table[12].Field[1].maxLen 28
+00002663 TableSection.Table[12].unknown1 20
+00002664 TableSection.Table[12].dataIndex 0000001B
+00002668 TableSection.Table[12].unknown2 00
+00002669 TableSection.Table[13].tableName Table13
+00002671 TableSection.Table[13].fieldCount 1
+00002672 TableSection.Table[13].Field[1].fieldName txt
+00002676 TableSection.Table[13].Field[1].type 0B (Text)
+00002677 TableSection.Table[13].Field[1].unknown 00
+00002678 TableSection.Table[13].Field[1].maxLen 28
+00002679 TableSection.Table[13].unknown1 20
+0000267A TableSection.Table[13].dataIndex 0000001D
+0000267E TableSection.Table[13].unknown2 00
+0000267F TableSection.Table[14].tableName Table14
+00002687 TableSection.Table[14].fieldCount 1
+00002688 TableSection.Table[14].Field[1].fieldName txt
+0000268C TableSection.Table[14].Field[1].type 0B (Text)
+0000268D TableSection.Table[14].Field[1].unknown 00
+0000268E TableSection.Table[14].Field[1].maxLen 28
+0000268F TableSection.Table[14].unknown1 20
+00002690 TableSection.Table[14].dataIndex 0000001F
+00002694 TableSection.Table[14].unknown2 00
+00002695 TableSection.Table[15].tableName Table15
+0000269D TableSection.Table[15].fieldCount 1
+0000269E TableSection.Table[15].Field[1].fieldName txt
+000026A2 TableSection.Table[15].Field[1].type 0B (Text)
+000026A3 TableSection.Table[15].Field[1].unknown 00
+000026A4 TableSection.Table[15].Field[1].maxLen 28
+000026A5 TableSection.Table[15].unknown1 20
+000026A6 TableSection.Table[15].dataIndex 00000021
+000026AA TableSection.Table[15].unknown2 00
+000026AB TableSection.Table[16].tableName Table16
+000026B3 TableSection.Table[16].fieldCount 1
+000026B4 TableSection.Table[16].Field[1].fieldName txt
+000026B8 TableSection.Table[16].Field[1].type 0B (Text)
+000026B9 TableSection.Table[16].Field[1].unknown 00
+000026BA TableSection.Table[16].Field[1].maxLen 28
+000026BB TableSection.Table[16].unknown1 20
+000026BC TableSection.Table[16].dataIndex 00000023
+000026C0 TableSection.Table[16].unknown2 00
+000026C1 TableSection.Table[17].tableName Table17
+000026C9 TableSection.Table[17].fieldCount 1
+000026CA TableSection.Table[17].Field[1].fieldName txt
+000026CE TableSection.Table[17].Field[1].type 0B (Text)
+000026CF TableSection.Table[17].Field[1].unknown 00
+000026D0 TableSection.Table[17].Field[1].maxLen 28
+000026D1 TableSection.Table[17].unknown1 20
+000026D2 TableSection.Table[17].dataIndex 00000025
+000026D6 TableSection.Table[17].unknown2 00
+000026D7 TableSection.Table[18].tableName Table18
+000026DF TableSection.Table[18].fieldCount 1
+000026E0 TableSection.Table[18].Field[1].fieldName txt
+000026E4 TableSection.Table[18].Field[1].type 0B (Text)
+000026E5 TableSection.Table[18].Field[1].unknown 00
+000026E6 TableSection.Table[18].Field[1].maxLen 28
+000026E7 TableSection.Table[18].unknown1 20
+000026E8 TableSection.Table[18].dataIndex 00000027
+000026EC TableSection.Table[18].unknown2 00
+000026ED TableSection.Table[19].tableName Table19
+000026F5 TableSection.Table[19].fieldCount 1
+000026F6 TableSection.Table[19].Field[1].fieldName txt
+000026FA TableSection.Table[19].Field[1].type 0B (Text)
+000026FB TableSection.Table[19].Field[1].unknown 00
+000026FC TableSection.Table[19].Field[1].maxLen 28
+000026FD TableSection.Table[19].unknown1 20
+000026FE TableSection.Table[19].dataIndex 00000029
+00002702 TableSection.Table[19].unknown2 00
+
+Section 133 00002703 - 0000270B (8 bytes)
+00002700           06 40 00 00 00 00 00 00                    .@......
+
+Section 134 0000270B - 000027E6 (219 bytes)
+00002700                                   D9 80 03 00 00             .....
+00002710  00 00 00 00 00 29 00 00 00 00 00 00 00 00 00 40  .....).........@
+00002720  25 00 00 00 17 00 00 00 00 AC 00 00 00 00 9D 00  %...............
+00002730  00 00 00 79 01 00 00 00 6A 01 00 00 00 6F 02 00  ...y....j....o..
+00002740  00 00 60 02 00 00 00 8E 03 00 00 00 7F 03 00 00  ..`.............
+00002750  00 D6 04 00 00 00 C7 04 00 00 00 47 06 00 00 00  ...........G....
+00002760  38 06 00 00 00 E1 07 00 00 00 D2 07 00 00 00 A4  8...............
+00002770  09 00 00 00 95 09 00 00 00 90 0B 00 00 00 81 0B  ................
+00002780  00 00 00 A6 0D 00 00 00 97 0D 00 00 00 E7 0F 00  ................
+00002790  00 00 D8 0F 00 00 00 52 12 00 00 00 43 12 00 00  .......R....C...
+000027A0  00 E7 14 00 00 00 D8 14 00 00 00 A6 17 00 00 00  ................
+000027B0  97 17 00 00 00 8F 1A 00 00 00 80 1A 00 00 00 A2  ................
+000027C0  1D 00 00 00 93 1D 00 00 00 DF 20 00 00 00 D0 20  .......... .... 
+000027D0  00 00 00 46 24 00 00 00 37 24 00 00 00 E5 26 00  ...F$...7$....&.
+000027E0  00 00 31 25 00 00                                ..1%..
+
+Section 135 000027E6 - 000027F5 (15 bytes)
+000027E0                    0D 40 28 00 00 00 81 02 00 00        .@(.......
+000027F0  02 00 00 00 00                                   .....
+
+Section 136 000027F5 - 0000280F (26 bytes)
+000027F0                 18 40 00 00 00 00 01 00 22 01 0F       .@......"..
+00002800  46 69 65 6C 64 46 6F 72 54 61 62 6C 65 31 39     FieldForTable19
+
+000027F7 TableContentSection.nextSectionIndex 00000000
+000027FB TableContentSection.recordBitmask 0001
+000027FD TableContentSection.recordLength[1] 11
+
+--------------------- 000027FE to 0x0000280F UNPARSED ---------------------
+000027F0                                            01 0F                ..
+00002800  46 69 65 6C 64 46 6F 72 54 61 62 6C 65 31 39     FieldForTable19
+---------------------------------------------------------------------------
+
+Section 137 0000280F - 000028EA (219 bytes)
+00002800                                               D9                 .
+00002810  80 03 00 00 00 00 00 00 00 29 00 00 00 00 00 00  .........)......
+00002820  00 00 00 40 25 00 00 00 17 00 00 00 00 AC 00 00  ...@%...........
+00002830  00 00 9D 00 00 00 00 79 01 00 00 00 6A 01 00 00  .......y....j...
+00002840  00 6F 02 00 00 00 60 02 00 00 00 8E 03 00 00 00  .o....`.........
+00002850  7F 03 00 00 00 D6 04 00 00 00 C7 04 00 00 00 47  ...............G
+00002860  06 00 00 00 38 06 00 00 00 E1 07 00 00 00 D2 07  ....8...........
+00002870  00 00 00 A4 09 00 00 00 95 09 00 00 00 90 0B 00  ................
+00002880  00 00 81 0B 00 00 00 A6 0D 00 00 00 97 0D 00 00  ................
+00002890  00 E7 0F 00 00 00 D8 0F 00 00 00 52 12 00 00 00  ...........R....
+000028A0  43 12 00 00 00 E7 14 00 00 00 D8 14 00 00 00 A6  C...............
+000028B0  17 00 00 00 97 17 00 00 00 8F 1A 00 00 00 80 1A  ................
+000028C0  00 00 00 A2 1D 00 00 00 93 1D 00 00 00 DF 20 00  .............. .
+000028D0  00 00 D0 20 00 00 00 46 24 00 00 00 37 24 00 00  ... ...F$...7$..
+000028E0  00 D7 27 00 00 00 C8 27 00 00                    ..'....'..
+
+00002811 Toc.rootStreamIndex 00000003
+00002815 Toc.unknown 00000000
+00002819 Toc.count 00000029
+0000281D Toc.TocEntry[1].flags 00
+0000281E Toc.TocEntry[1].offset 00000000
+00002822 Toc.TocEntry[2].flags 00
+00002823 Toc.TocEntry[2].offset 00002540
+00002827 Toc.TocEntry[3].flags 00
+00002828 Toc.TocEntry[3].offset 00000017
+0000282C Toc.TocEntry[4].flags 00
+0000282D Toc.TocEntry[4].offset 000000AC
+00002831 Toc.TocEntry[5].flags 00
+00002832 Toc.TocEntry[5].offset 0000009D
+00002836 Toc.TocEntry[6].flags 00
+00002837 Toc.TocEntry[6].offset 00000179
+0000283B Toc.TocEntry[7].flags 00
+0000283C Toc.TocEntry[7].offset 0000016A
+00002840 Toc.TocEntry[8].flags 00
+00002841 Toc.TocEntry[8].offset 0000026F
+00002845 Toc.TocEntry[9].flags 00
+00002846 Toc.TocEntry[9].offset 00000260
+0000284A Toc.TocEntry[10].flags 00
+0000284B Toc.TocEntry[10].offset 0000038E
+0000284F Toc.TocEntry[11].flags 00
+00002850 Toc.TocEntry[11].offset 0000037F
+00002854 Toc.TocEntry[12].flags 00
+00002855 Toc.TocEntry[12].offset 000004D6
+00002859 Toc.TocEntry[13].flags 00
+0000285A Toc.TocEntry[13].offset 000004C7
+0000285E Toc.TocEntry[14].flags 00
+0000285F Toc.TocEntry[14].offset 00000647
+00002863 Toc.TocEntry[15].flags 00
+00002864 Toc.TocEntry[15].offset 00000638
+00002868 Toc.TocEntry[16].flags 00
+00002869 Toc.TocEntry[16].offset 000007E1
+0000286D Toc.TocEntry[17].flags 00
+0000286E Toc.TocEntry[17].offset 000007D2
+00002872 Toc.TocEntry[18].flags 00
+00002873 Toc.TocEntry[18].offset 000009A4
+00002877 Toc.TocEntry[19].flags 00
+00002878 Toc.TocEntry[19].offset 00000995
+0000287C Toc.TocEntry[20].flags 00
+0000287D Toc.TocEntry[20].offset 00000B90
+00002881 Toc.TocEntry[21].flags 00
+00002882 Toc.TocEntry[21].offset 00000B81
+00002886 Toc.TocEntry[22].flags 00
+00002887 Toc.TocEntry[22].offset 00000DA6
+0000288B Toc.TocEntry[23].flags 00
+0000288C Toc.TocEntry[23].offset 00000D97
+00002890 Toc.TocEntry[24].flags 00
+00002891 Toc.TocEntry[24].offset 00000FE7
+00002895 Toc.TocEntry[25].flags 00
+00002896 Toc.TocEntry[25].offset 00000FD8
+0000289A Toc.TocEntry[26].flags 00
+0000289B Toc.TocEntry[26].offset 00001252
+0000289F Toc.TocEntry[27].flags 00
+000028A0 Toc.TocEntry[27].offset 00001243
+000028A4 Toc.TocEntry[28].flags 00
+000028A5 Toc.TocEntry[28].offset 000014E7
+000028A9 Toc.TocEntry[29].flags 00
+000028AA Toc.TocEntry[29].offset 000014D8
+000028AE Toc.TocEntry[30].flags 00
+000028AF Toc.TocEntry[30].offset 000017A6
+000028B3 Toc.TocEntry[31].flags 00
+000028B4 Toc.TocEntry[31].offset 00001797
+000028B8 Toc.TocEntry[32].flags 00
+000028B9 Toc.TocEntry[32].offset 00001A8F
+000028BD Toc.TocEntry[33].flags 00
+000028BE Toc.TocEntry[33].offset 00001A80
+000028C2 Toc.TocEntry[34].flags 00
+000028C3 Toc.TocEntry[34].offset 00001DA2
+000028C7 Toc.TocEntry[35].flags 00
+000028C8 Toc.TocEntry[35].offset 00001D93
+000028CC Toc.TocEntry[36].flags 00
+000028CD Toc.TocEntry[36].offset 000020DF
+000028D1 Toc.TocEntry[37].flags 00
+000028D2 Toc.TocEntry[37].offset 000020D0
+000028D6 Toc.TocEntry[38].flags 00
+000028D7 Toc.TocEntry[38].offset 00002446
+000028DB Toc.TocEntry[39].flags 00
+000028DC Toc.TocEntry[39].offset 00002437
+000028E0 Toc.TocEntry[40].flags 00
+000028E1 Toc.TocEntry[40].offset 000027D7
+000028E5 Toc.TocEntry[41].flags 00
+000028E6 Toc.TocEntry[41].offset 000027C8
+
+:TABLE Table1
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable1
+:TABLE Table2
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable2
+:TABLE Table3
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable3
+:TABLE Table4
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable4
+:TABLE Table5
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable5
+:TABLE Table6
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable6
+:TABLE Table7
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable7
+:TABLE Table8
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable8
+:TABLE Table9
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable9
+:TABLE Table10
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable10
+:TABLE Table11
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable11
+:TABLE Table12
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable12
+:TABLE Table13
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable13
+:TABLE Table14
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable14
+:TABLE Table15
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable15
+:TABLE Table16
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable16
+:TABLE Table17
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable17
+:TABLE Table18
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable18
+:TABLE Table19
+:FIELD 3 txt
+:RECORD
+txt=FieldForTable19
+

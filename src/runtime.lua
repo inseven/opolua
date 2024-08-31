@@ -590,30 +590,15 @@ function Runtime:getGraphicsAutoFlush()
 end
 
 function Runtime:openDb(logName, tableSpec, variables, op)
-    assert(self.dbs[logName] == nil, KErrOpen)
-    local path, tableName, fields = database.parseTableSpec(tableSpec)
+    assert(self.dbs.open[logName] == nil, KErrOpen)
+    printf("parseTableSpec: %s\n", tableSpec)
+    local path, tableName, fieldNames = database.parseTableSpec(tableSpec)
     path = self:abs(path)
-    if fields == nil then
-        -- SIBO-style call where field names are derived from the variable names
-        fields = {}
-        for i, var in ipairs(variables) do
-            local fieldName = var.name:gsub("[%%&$]$", {
-                ["%"] = "i",
-                ["&"] = "a",
-                ["$"] = "s",
-            })
-            fields[i] = {
-                name = fieldName,
-                type = var.type,
-                -- TODO string maxlen?
-            }
-        end
-    end
 
     local readonly = op == "OpenR"
     -- Check if there are already any other open handles to this db
     local cpath = oplpath.canon(path)
-    for _, db in pairs(self.dbs) do
+    for _, db in pairs(self.dbs.open) do
         if oplpath.canon(db:getPath()) == cpath then
             if not readonly or db:isWriteable() then
                 error(KErrInUse)
@@ -633,16 +618,34 @@ function Runtime:openDb(logName, tableSpec, variables, op)
     end
 
     if op == "Create" then
-        db:createTable(tableName, fields)
+        if fieldNames == nil then
+            -- SIBO-style call where field names are derived from the variable names
+            fieldNames = {}
+            for i, var in ipairs(variables) do
+                fieldNames[i] = var.name:gsub("[%%&$]$", {
+                    ["%"] = "i",
+                    ["&"] = "a",
+                    ["$"] = "s",
+                })
+            end
+        end
+
+        -- "*" is not valid for create, only open
+        assert(not (#fieldNames == 1 and fieldName[1] == "*"), KErrInvalidArgs)
+        local types = {}
+        for i, var in ipairs(variables) do
+            types[i] = var.type
+        end
+        db:createTable(tableName, fieldNames, types)
     end
 
-    db:setView(tableName, fields, variables)
-    self.dbs[logName] = db
+    db:setView(tableName, fieldNames, variables)
+    self.dbs.open[logName] = db
     self.dbs.current = logName
 end
 
 function Runtime:getDb(logName)
-    local db = self.dbs[logName or self.dbs.current]
+    local db = self.dbs.open[logName or self.dbs.current]
     assert(db, KErrClosed)
     return db
 end
@@ -654,7 +657,7 @@ end
 
 function Runtime:closeDb()
     self:saveDbIfModified()
-    self.dbs[self.dbs.current] = nil
+    self.dbs.open[self.dbs.current] = nil
     self.dbs.current = nil
 end
 
@@ -731,7 +734,9 @@ function newRuntime(handler, era)
         opcodes = codes,
         frameBase = 0, -- Where in the chunk we start the stack frames' memory
         chunk = Chunk { address = 0 },
-        dbs = {},
+        dbs = {
+            open = {},
+        },
         modules = {},
         files = {},
         ioh = handler or require("defaultiohandler"),
