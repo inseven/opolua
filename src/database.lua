@@ -33,6 +33,7 @@ FieldTypes = enum {
     Double = 0x9,
     Date = 0xA,
     Text = 0xB,
+    Memo = 0xE,
     Format = 0x10,
 }
 
@@ -293,6 +294,18 @@ function Db:load(data)
     end
 end
 
+function Db:tableCount()
+    return #self.tables
+end
+
+function Db:getTableNames()
+    local result = {}
+    for i, tbl in ipairs(self.tables) do
+        result[i] = tbl.name
+    end
+    return result
+end
+
 function Db:loadText(data)
     local currentTable, currentRec
     for line in data:gmatch("[^\r\n]+") do
@@ -364,8 +377,15 @@ function Db:save()
     return table.concat(lines, "\n")
 end
 
-function Db:tocsv()
-    assert(#self.tables == 1, "Cannot export a database with multiple tables to CSV")
+function Db:tocsv(tableName)
+    if tableName == nil then
+        assert(#self.tables == 1, "A table name must be supplied when the database has multiple tables")
+        tableName = self.tables[1].name
+    end
+
+    local tbl = self.tables[tableName]
+    assert(tbl, "Table name "..tableName.. "not found")
+
     local result = {}
     local function line(vals)
         local escaped = {}
@@ -385,14 +405,16 @@ function Db:tocsv()
     end
 
     local headings = {}
-    for i, field in ipairs(self.currentTable.fields) do
-        headings[i] = field.name
+    for i, field in ipairs(tbl.fields) do
+        if field.type then
+            table.insert(headings, field.name)
+        end
     end
     line(headings)
-    for _, record in ipairs(self.currentTable) do
+    for _, record in ipairs(tbl) do
         local rec = {}
-        for i, field in ipairs(self.currentTable.fields) do
-            rec[i] = record[field.name]
+        for i, fieldName in ipairs(headings) do
+            rec[i] = record[fieldName]
         end
         line(rec)
     end
@@ -523,12 +545,23 @@ function Db:loadTable(data, toc, tableIndex)
                             bit = bit + 1
                         elseif field.rawType == FieldTypes.Date then
                             pos = pos + 8
+                        elseif field.rawType == FieldTypes.Memo then
+                            bit = bit + 1
+                            local inline = fieldMask & (1 << bit) ~= 0
+                            if inline then
+                                local len
+                                len, pos = readSpecialEncoding(data, pos)
+                                pos = pos + len
+                            else
+                                pos = pos + 8 -- Skip tocIndex and len
+                            end
                         elseif field.rawType == FieldTypes.Format then
                             bit = bit + 1
                             local inline = fieldMask & (1 << bit) ~= 0
                             if inline then
-                                -- Don't know how big this data is
-                                unimplemented("database.inlineFormatSection")
+                                local len
+                                len, pos = readSpecialEncoding(data, pos)
+                                pos = pos + len
                             else
                                 pos = pos + 4
                             end

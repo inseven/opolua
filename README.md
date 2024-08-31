@@ -55,7 +55,10 @@ This interpreter is not 100% behaviour compatible with the original Psion. The m
 ## Missing features
 
 * Various other less-common opcodes, functions and OPXes
-* Not all database features are supported yet.
+* Not all database features are supported yet, including:
+  * Sorting records with ORDER BY
+  * Some databases created outside of OPL
+  * Writing Psion-format databases
 * Some dialog features like dTIME, dFILE
 * Invert drawing mode
 * Ability to suspend/resume app execution in the iOS UI
@@ -158,7 +161,7 @@ There are two different variable-length integer encodings used, in addition to t
 | `uint32`     | `count` |
 | `TocEntry[]` | Array of `count` TocEntry structs follow |
 
-`rootStreamIndex` is an index, describing which `TocEntry` points to the root stream section. It appears to always be 3. The root stream section is an artifact of the frameworks used for writing database files and serves no purpose in decoding the database data.
+`rootStreamIndex` is an index, describing which `TocEntry` points to the root stream section. For OPL-created databases this is generally always 3. The root stream section is an artifact of the frameworks used for writing database files and serves no purpose in decoding the database data.
 
 Each `TocEntry` is 5 bytes, and contains the offset of a section, plus some flags that don't seem to be important. You must add 0x20 to `TocEntry.offset` to get the location in the file.
 
@@ -174,8 +177,8 @@ The TOC is treated as a one-based array. The first few entries in the TOC always
 ```
 TocEntry[1] an uninteresting section, use unknown
 TocEntry[2] table definition section
-TocEntry[3] rootStream (also uninteresting)
-TocEntry[4] first data section of first table
+TocEntry[3] rootStream, usually (also uninteresting)
+TocEntry[4] first data section of first table, usually
 ```
 
 Note that while `TocEntry[4]` can be used to locate the first table's data section, it is better to use `dataIndex` in the Table Definition Section because that handles multiple tables.
@@ -223,7 +226,7 @@ Each `Table` is:
 | `uint32`  | `dataIndex` |
 | `byte`    | unknown |
 
-`dataIndex` is one more than the TOC index of the starting data section for this table. I'm not sure why you have to subtract one to get the TOC index, but it seems to be the way it is.
+`dataIndex` is one more than the TOC index of the starting data section for this table. I'm not sure why you have to subtract one to get the TOC index, but this seems to work on the files I've looked at. It's always possible that `dataIndex` is something else entirely that is only coincidentally correct...
 
 Each `Field` is:
 
@@ -240,7 +243,7 @@ The possible values for the `type` byte, and their meanings, are listed in the [
 
 Table data sections are located by looking up the `dataIndex` field in the table definition, see previous section.
 
-Each table data section can contain up to 16 records, as given by the count of bits in `recordBitmask`. The next data section for this table is given by `nextSectionIndex` which is an index into the TOC. It is zero if this is the last data section, that is if there are no more records for this table. The last data section may also have `nextSectionIndex` be non-zero but referring to a TOC entry whose offset is zero. As a special case, if in the first table data section (as referenced by `TocEntry[4]`) the bottom bit of `recordBitmask`, then that data section should be ignored and the data starts in the next section (as given by the first section's `nextSectionIndex`). It depends what app created the database file, as to whether the empty first section is present or not.
+Each table data section can contain up to 16 records, as given by the count of bits in `recordBitmask`. The next data section for this table is given by `nextSectionIndex` which is an index into the TOC. It is zero if this is the last data section, that is if there are no more records for this table. The last data section may also have `nextSectionIndex` be non-zero but referring to a TOC entry whose offset is zero. As a special case, if in the first table data section (as referenced by `TocEntry[4]`) the bottom bit of `recordBitmask`, then that data section should be ignored and the data starts in the next section (as given by the first section's `nextSectionIndex`) - note this is my guess at interpreting the format, however. It depends what app created the database file, as to whether the empty first section is present or not.
 
 | Type     | Name |
 | -------- | ---- |
@@ -274,19 +277,20 @@ The format of the field data (and the type byte used in the table definition sec
 | `Double`  | `09`      | 8 bytes, IEE754 format |
 | `Date`    | `0A`      | 8 bytes, see below |
 | `Text`    | `0B`      | `BString` |
+| `Memo`    | `0E`      | See below |
 | `Format`  | `10`      | See below |
 
 Fields other than `Integer`, `Long`, `Double` and `Text` are skipped over when decoded by OPL.
 
 The `Date` type is ([apparently](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm); I haven't verified this myself) microseconds since 0000-01-01, applying Gregorian leap year rules from 1600 onward (ie leap century rules) and Julian leap year rules before that (ie every 4th year is a leap year). Ignoring the other nuances between the calendars. Which by my maths means divide by 1000000 and subtract `719540 * 86400` to convert to a unix-epoch (ie 1970) based date. 
 
-The `Format` type consumes an additional bit in `fieldMask` - if this bit is 0, the field data is 4 bytes which is the index into the TOC of a format section. If the bit is 1, there is `Format` data included inline which I don't currently know how it's encoded. `database.lua` will error when attempting to parse such a `Format` field, because without knowing the format encoding and length it is not possible to continue parsing the record data.
+The `Format` type consumes an additional bit in `fieldMask` - if this bit is 0, the field data is 4 bytes which is the index into the TOC of a format section. If the bit is 1, there is `Format` data included inline as an `SString` (I think - haven't confirmed this). The Format data itself is not documented, and is skipped over during decoding. The `Memo` section behaves the same as `Format`.
 
-It is not clear to me what happens if a `Boolean` or `Format` field ends up as the last bit in `fieldMask` (and thus there are no more bits left to consume) - `database.lua` will error if this occurs, please report it if you encounter this.
+It is not clear to me what happens if a `Boolean`, `Format` or `Memo` field ends up as the last bit in `fieldMask`, and thus there are no more bits left to consume -- `database.lua` will error if this occurs, please report it if you encounter this.
 
 ### Paging
 
-Database files appear to have some sort of paging scheme whereby 2 extra bytes (some sort of tag?) are inserted every 0x4000 bytes, starting from 0x4020. These bytes aren't part of the format proper and must be stripped out before any of the indexes will be correct. All the documentation above assumes these extra bytes have been removed.
+Database files appear to have some sort of paging scheme whereby 2 extra bytes (some sort of tag?) are inserted seemingly every 0x4000 bytes, starting from 0x4020. These bytes aren't part of the format proper and must be stripped out before any of the indexes will be correct. All the documentation above assumes these extra bytes have been removed. It's not clear to me how this paging scheme behaves, more analysis is needed.
 
 For some reason, when the extra bytes fall within a section, that section's prefix length bytes are zeroed - which is why relying on those lengths when parsing is a bad idea (for any file longer than 0x4020 bytes, at least).
 

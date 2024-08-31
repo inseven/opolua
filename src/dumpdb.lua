@@ -27,12 +27,43 @@ SOFTWARE.
 dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 
 function main()
-    local args = getopt({
+    local opts = {
         "filename",
-        csv = true,
-        verbose = true,
-        v = "verbose",
-    })
+        csv = true, c = "csv",
+        verbose = true, v = "verbose",
+        table = string, t = "table",
+        alltables = true, a = "alltables",
+        help = true, h = "help",
+        output = string, o = "output",
+    }
+    local args = getopt(opts)
+
+    if args.help then
+        printf([[
+Syntax: dumpdb.lua [options] <filename>
+
+Options:
+    --output | -o <path>
+    --alltables | -a
+    --csv | -c
+    --help | -h
+    --table | -t <table_name>
+    --verbose | -v
+
+Parses a Psion database file and outputs the result, in a variety of formats.
+With no options, all tables of the database are output in the internal text
+format used by database.lua.
+
+If --output <path> is specified, writes the output to that path. This parameter
+is required if using --csv and --alltables.
+
+If --csv is specified, outputs to CSV format. Use --table <tableName> if there
+are multiple tables, to select which to output, or use --alltables combined with
+--output <filename> to dump each table to a file named
+<filename>_<table_name>.csv.
+]])
+        os.exit()
+    end
 
     local database = require("database")
     KDbmsStoreDatabase = database.KDbmsStoreDatabase
@@ -47,10 +78,36 @@ function main()
 
     local db = database.new(args.filename, true)
     db:load(data)
+
+    local result
     if args.csv then
-        print(db:tocsv())
+        if db:tableCount() > 1 and args.table == nil and args.alltables == nil then
+            printf("Error: Database has multiple tables; specify --table <name> or --alltables\n")
+        end
+        if args.alltables then
+            assert(args.output, "--output must be specified when using --alltables")
+            for i, name in ipairs(db:getTableNames()) do
+                local data = db:tocsv(name)
+                local filename = string.format("%s_%s.csv", args.output, name)
+                local f = assert(io.open(filename, "w"))
+                f:write(data)
+                f:close()
+            end
+        else
+            result = db:tocsv(args.table)
+        end
     else
-        print(db:save())
+        result = db:save()
+    end
+
+    if result then
+        if args.output then
+            local f = assert(io.open(args.output, "w"))
+            f:write(result)
+            f:close()
+        else
+            print(result)
+        end
     end
 end
 
@@ -306,7 +363,7 @@ function dumpDb(data)
     end
 
     if toc then
-        read(TOplDocRootStream, toc.TocEntry[3].offset + KTocEntryOffset + 2)
+        read(TOplDocRootStream, toc.TocEntry[toc.rootStreamIndex].offset + KTocEntryOffset + 2)
     end
 
     local function readTableData(tocIdx)
@@ -332,7 +389,12 @@ function dumpDb(data)
             if nextSection == 0 then
                 dataOffset = nil
             else
-                dataOffset = toc.TocEntry[nextSection].offset
+                if nextSection < toc.count then
+                    dataOffset = toc.TocEntry[nextSection].offset
+                else
+                    dataOffset = nil
+                    printf("Warning: nexSection at %08X is greater than the TOC count!\n", dataSection[1].pos)
+                end
                 -- printf("Next section is toc entry %d = %X\n", nextSection, dataOffset)
             end
         end
@@ -344,7 +406,6 @@ function dumpDb(data)
         local dataIndex = tableSection.Table[i].dataIndex - 1 -- Don't know why these are -1...
         readTableData(dataIndex)
     end
-
 
     local pos = 0
     for _, val in ipairs(parsed) do
