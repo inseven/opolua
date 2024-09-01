@@ -211,14 +211,14 @@ assert(KRequestPending == -2147483647)
 -- OPL/OPO/AIF/MBM uid1 is KUidDirectFileStore
 KDynamicLibraryUid = 0x10000079 -- ie a native app
 KUidAppInfoFile8 = 0x1000006A -- AIF file uid2
--- KUidAppDllDoc8 = 0x1000006D
+KUidAppDllDoc8 = 0x1000006D -- generic uid2 for various apps (check uid3)
 -- KUidOPO = 0x10000073 -- pre-unicode OPO uid2
 KMultiBitmapRomImageUid = 0x10000041 -- uid1
 KUidMultiBitmapFileImage = 0x10000042
 KUidOplInterpreter = 0x10000168
 
-KUidSisFileEr5 = 0x1000006D -- Yes this is the same as KUidAppDllDoc8 (aka KUidAppDllDocValue), don't ask me I just work here.
-KUidSisFileEr6 = 0x10003A12 -- Allegedly
+KUidSisFileEr6 = 0x10003A12 -- ER6 SIS uid2, allegedly
+KUidInstallApp = 0x10000419 -- SIS file uid3 (all versions)
 
 KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
 KUidOplFile = 0x1000008A -- DB file UID2
