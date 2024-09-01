@@ -2406,9 +2406,9 @@ function CallOpxFunc(stack, runtime) -- 0x118
     local fnIdx = runtime:IP16()
     local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
     assert(opx, "Bad opx id?")
+    local modName = "opx." .. opx.name:lower()
     if not opx.module then
         local ok
-        local modName = "opx." .. opx.name:lower()
         ok, opx.module = pcall(require, modName)
         if not ok then
             unimplemented(modName)
@@ -2416,11 +2416,11 @@ function CallOpxFunc(stack, runtime) -- 0x118
     end
     local fnName = opx.module.fns[fnIdx]
     if not fnName then
-        unimplemented(fmt("opx.%s.%d", opx.name, fnIdx))
+        unimplemented(fmt("%s.%d", modName, fnIdx))
     end
     local fn = opx.module[fnName]
     if not fn then
-        unimplemented(fmt("opx.%s.%s", opx.name, fnName))
+        unimplemented(fmt("%s.%s", modName, fnName))
     end
     fn(stack, runtime)
 end

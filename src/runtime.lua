@@ -1220,10 +1220,11 @@ function Runtime:realloc(addr, sz)
     if addr ~= 0 then
         self.chunk:checkRange(addr)
         local offset = addr - self.chunk.address
-        if sz ~= 0 then
-            error("TODO REALLOC")
+        local newOffset = self.chunk:realloc(offset, sz)
+        if newOffset then
+            return self.chunk.address + newOffset
         else
-            self.chunk:free(offset)
+            return 0
         end
     else
         local offset = self.chunk:alloc(sz)
