@@ -561,6 +561,19 @@ checkCode("RETURN 1 + 2%", {
     op"Return",
 })
 
+checkCode('DELETE "foo"', {
+    ConstantString("foo"),
+    op"Delete",
+    op"ZeroReturnFloat"
+})
+
+checkCode('DELETE "foo", "bar"', {
+    ConstantString("foo"),
+    ConstantString("bar"),
+    op"DeleteTable",
+    op"ZeroReturnFloat"
+})
+
 checkSyntaxError("ALERT()", "1: Zero-argument calls should not have ()")
 
 checkSyntaxError("alert(a$, b$, c$, d$, e$, f$)", "1: Wrong number of arguments to ALERT")
