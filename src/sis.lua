@@ -156,7 +156,8 @@ function parseSisFile(data, verbose)
         printf("uid1=0x%08X uid2=0x%08X nLangs=%d nFiles=%d\n", uid1, uid2, nLangs, nFiles)
     end
 
-    assert(uid2 == KUidSisFileEr5 or uid2 == KUidSisFileEr6, "Bad uid2 in SIS file!")
+    assert(uid2 == KUidAppDllDoc8 or uid2 == KUidSisFileEr6, "Bad uid2 in SIS file!")
+    assert(uid3 == KUidInstallApp, "Bad uid3 in SIS file!")
 
     local nReq, lang, instFiles, instDrv, nCaps, instVer, pos = string.unpack("<I2I2I2I2I2I4", data, pos)
     if verbose then
