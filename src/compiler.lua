@@ -397,7 +397,7 @@ Callables = {
     DEDITMULTI = SpecialOp({LongVarArg, String, Int, Int, Int}),
     DEFAULTWIN = Op("DefaultWin", {Int}),
     DEG = Fn("Deg", {Float}, Float),
-    DELETE = Op("Delete", {String}),
+    DELETE = SpecialOp({String, String, numParams = {1, 2}}),
     DFILE = SpecialOp({StringVarArg, String, Int, Long, Long, Long, numParams = {3, 6}}),
     DFLOAT = SpecialOp({FloatVarArg, String, Float, Float}),
     DIALOG = Fn("Dialog", {}, Int),
@@ -2299,6 +2299,19 @@ function handleOp_DDATE(procState, args)
     procState:emitExpression(args[3], Long)
     procState:emitExpression(args[4], Long)
     procState:emit("BB", opcodes.dItem, dItemTypes.dDATE)
+    procState:popStack(#args)
+end
+
+function handleOp_DELETE(procState, args)
+    if #args == 1 then
+        procState:emitExpression(args[1], String)
+        procState:emit("B", opcodes.Delete)
+    else
+        assert(#args == 2)
+        procState:emitExpression(args[1], String)
+        procState:emitExpression(args[2], String)
+        procState:emit("BB", opcodes.NextOpcodeTable, opcodes.DeleteTable - 256)
+    end
     procState:popStack(#args)
 end
 
