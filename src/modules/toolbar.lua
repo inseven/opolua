@@ -181,6 +181,11 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
         butId = nil
     end
 
+    if ptrX == 0 and ptrY == 0 then
+        -- Conquete has a habit of making a spurious call with coords (0,0), so let's consider that a dead pixel.
+        butId = nil
+    end
+
     if pressedButtonId then
         local gupdateState = gUPDATE(false)
         local prevId = gIDENTITY()
