@@ -2,6 +2,8 @@ INCLUDE "DATE.OXH"
 
 PROC main:
 	LOCAL d&, dh&, epoch&
+	LOCAL year%, month%, day%
+
 	d& = DATETOSECS(1970, 1, 1, 0, 0, 0)
 	PRINT "DATETOSECS(1970, 1, 1, 0, 0, 0) = "; d&
 	IF d& <> 0: RAISE -1: ENDIF 
@@ -22,7 +24,13 @@ PROC main:
 	
 	d& = DAYS(1, 1, 1970)
 	PRINT "DAYS(1, 1, 1970)", d&
-	
+	IF d& <> 25567: RAISE -1: ENDIF
+
+	DAYSTODATE 25568, year%, month%, day%
+	PRINT "DAYSTODATE 25568 =", day%, month%, year%
+	IF year% <> 1970 OR month% <> 1 OR day% <> 2
+		RAISE -1
+	ENDIF
+ 
 	GET
 ENDP
-
