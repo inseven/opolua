@@ -1257,4 +1257,10 @@ function DAYS(day, month, year)
     return t
 end
 
+function DAYSTODATE(days)
+    local t = (days * 24 * 60 * 60) - kSecsFrom1900to1970
+    local result = os.date("!*t", t)
+    return result.year, result.month, result.day
+end
+
 return _ENV

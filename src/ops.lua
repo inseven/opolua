@@ -2514,7 +2514,14 @@ function SetDoc(stack, runtime) -- 0x126
 end
 
 function DaysToDate(stack, runtime) -- 0x127
-    unimplemented("DaysToDate")
+    local dayVar = stack:pop():asVariable(DataTypes.EWord)
+    local monthVar = stack:pop():asVariable(DataTypes.EWord)
+    local yearVar = stack:pop():asVariable(DataTypes.EWord)
+    local days = stack:pop()
+    local y, m, d = runtime:DAYSTODATE(days)
+    yearVar(y)
+    monthVar(m)
+    dayVar(d)
 end
 
 function gInfo32(stack, runtime) -- 0x128
