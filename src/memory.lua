@@ -325,9 +325,14 @@ function Chunk:free(offset)
     assert(offset & 3 == 0, "Bad offset to free!")
     -- self:write(offset, string.rep("\xDD", self:getAllocLen(offset)))
     local cellIdx = (offset >> strideshift) - 1
+    local cellLen = self:getCellLen(cellIdx)
+    self:declareFreeCell(cellIdx, cellLen)
+end
+
+function Chunk:declareFreeCell(cellIdx, cellLen)
+    self[cellIdx] = cellLen -- In the case of Chunk:free() this is already set, but do it here anyway to handle realloc
 
     -- Find the freeCell immediately before where this should go
-    local cellLen = self:getCellLen(cellIdx)
     local prev = -1
     local fc = self[prev + 1]
     while fc ~= 0 do
@@ -357,6 +362,37 @@ function Chunk:free(offset)
         self[prev + 1] = nextCell
     end
     -- printf("freeCellList after: %s\n", self:freeCellListStr())
+end
+
+function Chunk:realloc(offset, sz)
+    if sz == 0 then
+        self:free(offset)
+        return nil
+    end
+
+    -- Alloc lens are always rounded to a word size
+    sz = (sz + 3) & ~3
+
+    local allocLen = self:getAllocLen(offset)
+    if sz <= allocLen then
+        -- Shrink in place
+        local cellIdx = (offset - 4) >> strideshift
+        if allocLen - sz >= 8 then
+            self[cellIdx] = sz
+            self:declareFreeCell((offset + sz) >> strideshift, allocLen - sz)
+        end
+        return offset
+    else
+        local newOffset = self:alloc(sz)
+        local oldIdx = offset >> strideshift
+        local newIdx = newOffset >> strideshift
+        -- This is a little more optimised than doing a read() followed by a write()
+        for i = 0, (allocLen >> strideshift) - 1 do
+            self[newIdx + i] = self[oldIdx + i]
+        end
+        self:free(offset)
+        return newOffset
+    end
 end
 
 Variable = class {
