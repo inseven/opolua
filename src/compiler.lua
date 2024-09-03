@@ -250,16 +250,25 @@ function Token:__tostring()
     return string.format("%s:%d:%d: %s", self.src[1], self.src[2], self.src[3], desc)
 end
 
-function lex(prog, source)
+function lex(prog, source, language)
+    if language == nil then
+        language = {
+            statemachine = statemachine,
+            identifierTokens = identifierTokens,
+            precedences = precedences,
+            unaryOperators = unaryOperators,
+            rightAssociativeOperators = rightAssociativeOperators,
+        }
+    end
     local idx = 1
-    local tokens = Tokens { index = 1 }
+    local tokens = Tokens { index = 1, language = language }
     local line = 1
     local col = 1
     if source == nil then
         source = "<input>"
     end
     while true do
-        local tok, val = lexmatch(prog, idx, idx, statemachine)
+        local tok, val = lexmatch(prog, idx, idx, language.statemachine)
         if not tok then
             break
         end
@@ -273,7 +282,7 @@ function lex(prog, source)
         else
             if tok == "identifier" or tok == "label" then
                 val = val:upper()
-                if identifierTokens[val] then
+                if language.identifierTokens[val] then
                     tok = val
                 end
             end
@@ -666,12 +675,18 @@ booleanOperators = {
 
 rightAssociativeOperators = {
     pow = true,
-    -- These two are only due to our implementation detail that unary operators are treated like <nil> <operator> <val>
-    unm = true,
-    NOT = true,
 }
 
 function parseExpression(tokens)
+    local result = parseUntypedExpression(tokens)
+    setExpressionType(result)
+    return result
+end
+
+function parseUntypedExpression(tokens)
+    local precedences = tokens.language.precedences
+    local unaryOperators = tokens.language.unaryOperators
+    local rightAssociativeOperators = tokens.language.rightAssociativeOperators
     local root = { {}, op="noop" }
     local expression = root
     local prec = 0
@@ -684,7 +699,7 @@ function parseExpression(tokens)
         local operatorPrecedence = precedences[token.type]
         if token.type == "oparen" then
             tokens:advance()
-            addOperand(parseExpression(tokens))
+            addOperand(parseUntypedExpression(tokens))
             tokens:expect("cloparen")
         elseif operatorPrecedence then
             -- Token is an operator
@@ -702,7 +717,10 @@ function parseExpression(tokens)
             end
 
             local prec = precedences[expression.op]
-            if operatorPrecedence > prec or (operatorPrecedence == prec and rightAssociativeOperators[op]) then
+            -- Since unary operators are treated like <nil> <operator> <val>, all unary operators are considered
+            -- right-associative.
+            local isRightAssociative = rightAssociativeOperators[op] or unaryOperators[op]
+            if operatorPrecedence > prec or (operatorPrecedence == prec and isRightAssociative) then
                 -- A opa (B opb C)
                 --
                 --   [opa]         [opa]
@@ -778,7 +796,6 @@ function parseExpression(tokens)
         tokens:advance()
     end
     local result = synassert(root[2], tokens:current(), "Expected expression")
-    setExpressionType(result)
     return result
 end
 
