@@ -1172,3 +1172,5 @@ prog = compiler.docompile("D:\\globals.opl", nil, globals, {})
 -- rt:loadModule(prog.path)
 -- opofile.printProc(rt:findProc("MAIN"))
 -- rt:dumpProc("MAIN")
+
+print("All tests passed.")
