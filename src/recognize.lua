@@ -43,8 +43,8 @@ function main()
     info = filter(info)
 
     if not info then
-        error("Not an epoc file")
-    end    
+        info = { type = "unknown" }
+    end
     if args.json then
         print(json.encode(info))
     else

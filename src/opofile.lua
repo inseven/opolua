@@ -53,7 +53,7 @@ function parseOpo(data, verbose)
         vprintf("OPL1993 version=%d offset=0x%08X\n", fileVersion, offset)
         -- TOpoModuleHeader16
         local totalSize, translatorVersion, minRunVersion, pti = string.unpack("<i4I2I2i4", data, 1 + offset)
-        vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
+        -- vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
         assert(translatorVersion == EOplTranVersionOpl1993)
         assert(minRunVersion == EOplTranVersionOpl1993)
         procTableIdx = pti
@@ -67,8 +67,8 @@ function parseOpo(data, verbose)
         assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
         -- assert(uid2 == KUidOPO, string.format("Bad header uid2 0x%08X", uid2))
         -- assert(uid3 == KUidOplInterpreter, "Bad header uid3!")
-        vprintf("UID2: 0x%08X\n", uid2)
-        vprintf("UID3: 0x%08X\n", uid3)
+        -- vprintf("UID2: 0x%08X\n", uid2)
+        -- vprintf("UID3: 0x%08X\n", uid3)
         -- printf("rootStreamIdx = 0x%x\n", rootStreamIdx)
 
         -- TOpoRootStream
@@ -77,7 +77,7 @@ function parseOpo(data, verbose)
 
         -- printf("Interpreter UID: 0x%08X\n", interpreterUid)
         -- assert(interpreterUid == KUidOplInterpreter, "Bad interpreterUid!")
-        vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
+        -- vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
         assert(translatorVersion == EOplTranVersionOpler1, "Unexpected translatorVersion!")
         assert(minRunVersion == EOplTranVersionOpler1, "Unexpected minRunVersion!")
         srcNameIdx = sni
@@ -94,11 +94,11 @@ function parseOpo(data, verbose)
             -- SIBO format can include a null terminator here
             sourceName = unNullTerminated
         end
-        vprintf("Source name: %s\n", sourceName)
+        -- vprintf("Source name: %s\n", sourceName)
     end
 
     local procTable = {}
-    vprintf("procTableIdx: 0x%08X\n", procTableIdx)
+    -- vprintf("procTableIdx: 0x%08X\n", procTableIdx)
 
     local nextProcIdx = procTableIdx
     while nextProcIdx do
@@ -126,11 +126,11 @@ function parseOpo(data, verbose)
     if opxTableIdx ~= 0 then
         opxTable = {}
         local nopx, pos = string.unpack("<I2", data, 1 + opxTableIdx)
-        vprintf("opxTableIdx: 0x%08X count=%d\n", opxTableIdx, nopx)
+        -- vprintf("opxTableIdx: 0x%08X count=%d\n", opxTableIdx, nopx)
         for i = 1, nopx do
             local name, uid, version
             name, uid, version, pos = string.unpack("<s1I4I2", data, pos)
-            vprintf("OPX %d: %s 0x%08X v%d\n", i - 1, name, uid, version)
+            -- vprintf("OPX %d: %s 0x%08X v%d\n", i - 1, name, uid, version)
             table.insert(opxTable, {
                 name = name,
                 uid = uid,
