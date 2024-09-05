@@ -112,7 +112,7 @@ function recognize(data, verbose)
         return { type = "database" }
     end
 
-    if uid2 == KUidSisFileEr5 or uid2 == KUidSisFileEr6 then
+    if (uid2 == KUidAppDllDoc8 or uid2 == KUidSisFileEr6) and uid3 == KUidInstallApp then
         local sis = require("sis")
         local info = sis.parseSisFile(data)
         if info then
