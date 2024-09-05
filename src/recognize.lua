@@ -37,17 +37,18 @@ function main()
     cp1252 = require("cp1252")
     local data = readFile(args.filename)
 
-    local info = recognizer.recognize(data, true)
+    local info = recognizer.recognize(data, args.verbose)
 
     -- replace any icons with the result of Bitmap:getMetadata()
     info = filter(info)
 
-    if not info then
-        error("Not an epoc file")
-    end    
     if args.json then
+        if not info then
+            info = { type = "unknown" }
+        end
         print(json.encode(info))
     else
+        assert(info, "Not an epoc file")
         print(dump(info))
     end
 end
