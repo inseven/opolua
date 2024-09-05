@@ -102,6 +102,7 @@ fns = {
     [75] = "OpenFileDialog",
     [76] = "CreateFileDialog",
     [77] = "SaveAsFileDialog",
+    [78] = "IsExternalPowerPresent"
 }
 
 function BackLightOn(stack, runtime) -- 1
@@ -534,6 +535,10 @@ end
 
 function SaveAsFileDialog(stack, runtime) -- 77
     unimplemented("opx.system.SaveAsFileDialog")
+end
+
+function IsExternalPowerPresent(stack, runtime) -- 78
+    stack:push(0)
 end
 
 return _ENV
