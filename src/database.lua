@@ -45,17 +45,28 @@ FieldTypeToOplType = {
     [FieldTypes.Text] = DataTypes.EString,
 }
 
+-- Inverse of FieldTypeToOplType
+OplTypeToFieldType = {
+    [DataTypes.EWord] = FieldTypes.Integer,
+    [DataTypes.ELong] = FieldTypes.Long,
+    [DataTypes.EReal] = FieldTypes.Double,
+    [DataTypes.EString] = FieldTypes.Text,
+}
+
 local Db = {
     path = nil,
     modified = false,
     writeable = false,
-    viewMap = nil, -- Maps variable name to field
+    varMap = nil, -- Maps variable name to field
     currentVars = nil,
     tables = nil,
     currentTable = nil,
     pos = nil,
+    currentView = nil, -- Array of indexes into currentTable. Might be a different order than currentTable if ORDER BY is in effect.
     preTransactionTable = nil, -- Clone of currentTable taken by beginTransaction()
+    preTransactionView = nil, -- Clone of currentView
     inAppendUpdate = false, -- Prevents Insert/Modify
+    inInsert = false,
     inInsertModify = false, -- Prevents Append/Update
 }
 Db.__index = Db
@@ -66,7 +77,7 @@ end
 
 function Db:newView()
     local result = {}
-    for name, field in pairs(self.viewMap) do
+    for name, field in pairs(self.varMap) do
         local var = makeVar(field.type)
         var(DefaultSimpleTypes[field.type])
         result[name] = var
@@ -82,7 +93,7 @@ function Db:currentVarsToRecord()
     -- Turn all the vars into a record mapping names and default initialising anything not in the view
     local result = {}
     for varName, var in pairs(self.currentVars) do
-        result[self.viewMap[varName].name] = var()
+        result[self.varMap[varName].name] = var()
     end
     for i, field in ipairs(self.currentTable.fields) do
         if result[field.name] == nil then
@@ -106,7 +117,18 @@ local function oplValidField(tbl, index)
     error("Index not found")
 end
 
-function Db:setView(tableName, fieldNames, variables)
+function Db:setView(tableName, fieldNames, variables, filterPredicate, sortSpec)
+    -- tableName and fieldNames are not guaranteed to be the correct case, so fix them up now (sigh).
+    if self.tables[tableName] == nil then
+        local nameLower = tableName:lower()
+        for i, tbl in ipairs(self.tables) do
+            if tbl.name:lower() == nameLower then
+                tableName = tbl.name
+                break
+            end
+        end
+    end
+
     local tbl = self.tables[tableName]
     assert(tbl, "No such tableName "..tableName)
 
@@ -115,6 +137,20 @@ function Db:setView(tableName, fieldNames, variables)
         fieldNames = {}
         for i, field in ipairs(tbl.fields) do
             fieldNames[i] = field.name
+        end
+    end
+
+    if fieldNames then
+        for i, fieldName in ipairs(fieldNames) do
+            if tbl.fields[fieldName] == nil then
+                local lowerName = fieldName:lower()
+                for _, field in ipairs(tbl.fields) do
+                    if field.name:lower() == lowerName then
+                        fieldNames[i] = field.name
+                        break
+                    end
+                end
+            end
         end
     end
 
@@ -132,24 +168,67 @@ function Db:setView(tableName, fieldNames, variables)
         }
     end
     self.currentTable = tbl
-    self.viewMap = map
+    self.varMap = map
+
+    -- Construct the view on the table. Without a filterPredicate ("WHERE") or sortSpec ("ORDER BY") this is a
+    -- one-to-one mapping to the table records.
+    local view = {}
+    for i = 1, #tbl do
+        if filterPredicate then
+            -- For the purposes of predicate evaluation, all field names must be upper cased (because of reusing the
+            -- compiler.lua parser which uppercases all identifiers)
+            local rec = {}
+            for k, v in pairs(tbl[i]) do
+                rec[k:upper()] = v
+            end
+            if filterPredicate(rec) then
+                table.insert(view, i)
+            end
+        else
+            view[i] = i
+        end
+    end
+    if sortSpec then
+        table.sort(view, function(lidx, ridx)
+            local lhs = tbl[lidx]
+            local rhs = tbl[ridx]
+            for _, sortField in ipairs(sortSpec) do
+                local fieldName = sortField.name
+                if lhs[fieldName] == rhs[fieldName] then
+                    -- Keep going
+                else
+                    if sortField.ascending then
+                        return lhs[fieldName] < rhs[fieldName]
+                    else
+                        return lhs[fieldName] > rhs[fieldName]
+                    end
+                end
+            end
+            -- If we get here, all fields a tie
+            return false
+        end)
+    end
+
+    self.currentView = view
+
     self:setPos(1)
 end
 
+-- pos is an index into currentView, not directly into currentTable.
 function Db:setPos(pos)
     if pos < 0 then
         -- Epoc treats it as unsigned, so...
         pos = math.maxinteger
     end
-    self.pos = math.min(pos, self:getCount() + 1)
+    self.pos = math.min(pos, #self.currentView + 1)
     if self.pos == 0 then
         self.pos = 1
     end
     self:resetInsertState()
     self.currentVars = self:newView()
-    local rec = self.currentTable[pos]
+    local rec = self.currentTable[self.currentView[pos]]
     if rec then
-        for varName, field in pairs(self.viewMap) do
+        for varName, field in pairs(self.varMap) do
             -- printf("varname %s -> fieldname %s = %s\n", varName, field.name, rec[field.name])
             self.currentVars[varName](rec[field.name])
         end
@@ -187,6 +266,10 @@ function Db:beginTransaction()
         end
         self.preTransactionTable[i] = recCopy
     end
+    self.preTransactionView = {}
+    for i, index in ipairs(self.currentView) do
+        self.preTransactionView[i] = index
+    end
 end
 
 function Db:endTransaction(commit)
@@ -196,8 +279,10 @@ function Db:endTransaction(commit)
     if not commit then
         self.currentTable = self.preTransactionTable
         self.tables[self.currentTable.name] = self.currentTable
+        self.currentView = self.preTransactionView
     end
     self.preTransactionTable = nil
+    self.preTransactionView = nil
 end
 
 function Db:resetInsertState()
@@ -229,10 +314,13 @@ function Db:put()
     assert(self.inInsertModify, "Incompatible update mode")
     self:setModified()
     if self.inInsert then
-        table.insert(self.currentTable, self.pos, self:currentVarsToRecord())
-        self:setPos(self.pos + 1)
+        -- Inserts still always insert the new record at the end of the file/view
+        local newPos = #self.currentView + 1
+        table.insert(self.currentTable, self:currentVarsToRecord())
+        self.currentView[newPos] = newPos
+        self:setPos(newPos)
     else
-        self.currentTable[self.pos] = self:currentVarsToRecord()
+        self.currentTable[self.currentView[self.pos]] = self:currentVarsToRecord()
     end
     self.inInsertModify = false
 end
@@ -251,11 +339,12 @@ function Db:getPos()
 end
 
 function Db:eof()
-    return self.pos > #self.currentTable
+    return self.pos > #self.currentView
 end
 
 function Db:getCount()
-    return #self.currentTable
+    assert(not self.inAppendUpdate and not self.inInsertModify, "Incompatible update mode")
+    return #self.currentView
 end
 
 function Db:isModified()
@@ -265,13 +354,24 @@ end
 function Db:appendRecord()
     assert(self.inAppendUpdate, "Incompatible update mode")
     self:setModified()
+    local newPos = #self.currentView + 1
     table.insert(self.currentTable, self:currentVarsToRecord())
-    self:setPos(self:getCount())
+    self.currentView[newPos] = newPos
+    self:setPos(newPos)
 end
 
 function Db:deleteRecord()
     self:setModified()
-    table.remove(self.currentTable, self.pos)
+    local recordIndex = self.currentView[self.pos]
+    -- We have to go through the whole of currentView here and update the indexes
+    for i, index in ipairs(self.currentView) do
+        if index > recordIndex then
+            self.currentView[i] = index - 1
+        end
+    end
+
+    table.remove(self.currentView, self.pos)
+    table.remove(self.currentTable, recordIndex)
     self:setPos(self.pos)
 end
 
@@ -279,8 +379,9 @@ function Db:updateRecord()
     assert(self.inAppendUpdate, "Incompatible update mode")
     local pos = self.pos
     self:appendRecord()
-    table.remove(self.currentTable, pos)
-    self.pos = self.pos - 1
+    self:setPos(pos)
+    self:deleteRecord()
+    self:setPos(#self.currentView)
 end
 
 function Db:load(data)
@@ -322,7 +423,8 @@ function Db:loadText(data)
             end
         elseif line:match("^:FIELD") then
             local type, name = line:match("^:FIELD ([0-9]) (.+)")
-            local field = { type = tonumber(type), name = name }
+            local rawType = assert(OplTypeToFieldType[tonumber(type)])
+            local field = { type = tonumber(type), name = name, rawType = rawType }
             table.insert(currentTable.fields, field)
             currentTable.fields[name] = field
         elseif line:match("^:RECORD") then
@@ -652,6 +754,19 @@ function Db:createTable(tableName, fieldNames, types)
     self.tables[tableName] = tbl
 end
 
+function Db:deleteTable(tableName)
+    -- TODO need to revisit this once table-granularity database sharing is done
+    assert(self.currentTable == nil, "Cannot delete a table when currentTable is set")
+    for i, tbl in ipairs(self.tables) do
+        if tbl.name == tableName then
+            table.remove(self.tables, i)
+            self.tables[tableName] = nil
+            return
+        end
+    end
+    -- Not an error to delete a non-existent table
+end
+
 local function trimTrailingSpace(val)
     return val:match("(.-)%s*$")
 end
@@ -661,18 +776,25 @@ function splitQuery(query)
         "SELECT",
         "FIELDS",
         "FROM",
-        "ORDER BY",
+        "WHERE",
         "TO",
+        "ORDER BY",
     }
+    query = " "..query -- Logic is simpler if we can assume there's always at least one space before keywords
     local queryUpper = query:upper()
     assert(#query == #queryUpper, "Case conversion fail!")
+
+    -- Stomp anything in single quotes (in case a keyword appears in there)
+    -- Since we only use queryUpper for spltting keywords, This Is Fine
+    queryUpper = queryUpper:gsub("'([^']*)'", function(contents) return string.rep("X", #contents + 2) end)
+
     local pos = 1
     local prevKeyword = nil
     local result = {}
     while true do
         local foundKeyword
         for i, keyword in ipairs(keywords) do
-            local prevGroupEnd, nextPos = queryUpper:match("()%s*"..keyword.."%s*()", pos)
+            local prevGroupEnd, nextPos = queryUpper:match("()%s+"..keyword.."%s*()", pos)
             if nextPos then
                 -- Found a keyword. Assemble everything prior to this to prevKeyword, if applicable
                 foundKeyword = keyword
@@ -702,10 +824,22 @@ function commaSplit(str)
     for val in str:gmatch("%s*([^,]*)") do
         table.insert(result, trimTrailingSpace(val))
     end
-    -- if #result == 1 and result[1] == "" then
-    --     return {}
-    -- end
     return result
+end
+
+function spaceSplit(str)
+    local result = {}
+    for val in str:gmatch("([^ ]*)") do
+        table.insert(result, val)
+    end
+    return result
+end
+
+local function synassert(cond, ...)
+    if not cond then
+        print(string.format(...))
+        error(KErrSyntax, 2)
+    end
 end
 
 function parseTableSpec(spec)
@@ -721,28 +855,58 @@ function parseTableSpec(spec)
 
     local query = splitQuery(spec)
 
-    local tableName = "Table1"
+    -- Check this is a legal combination of query items
+    if query.FIELDS then
+        synassert(query.TO, "If FIELDS is specified, TO must be as well") -- Apparently...
+        synassert(query.SELECT == nil and query.FROM == nil and query["ORDER BY"] == nil,
+            "Invalid queries after a FIELDS")
+    elseif query.SELECT then
+        synassert(query.TO == nil, "TO is not valid after SELECT")
+        synassert(query.FROM, "FROM must be specified after SELECT")
+    else
+        synassert(next(query) == nil, "Any queries must start with FIELDS or SELECT")
+    end
+
     local fieldNames
-    if query.SELECT or query.FIELDS then
-        assert(not (query.SELECT and query.FIELDS), "Query cannot specify both SELECT and FIELDS")
-        fieldNames = commaSplit(query.SELECT or query.FIELDS)
-        -- Split any max lengths from the declarations, we don't care about them
+    local fieldsQuery = query.SELECT or query.FIELDS
+    if fieldsQuery then
+        fieldNames = commaSplit(fieldsQuery)
+        -- Split any max lengths from FIELDS declarations, we don't care about them
         for i, field in ipairs(fieldNames) do
             fieldNames[i] = field:match("[^(]+")
         end
     end
 
-    if query.FROM or query.TO then
-        assert(not (query.FROM and query.TO), "Query cannot specify both FROM and TO!")
-        tableName = query.FROM or query.TO
+    local tableName = query.FROM or query.TO or "Table1"
+
+    local filterPredicate
+    if query.WHERE then
+        filterPredicate = parseWhere(query.WHERE)
     end
 
-    -- TODO ORDER BY
+    local sortSpec
     if query["ORDER BY"] then
-        unimplemented("database.orderby")
+        sortSpec = {}
+        local orders = commaSplit(query["ORDER BY"])
+        for i, o in ipairs(orders) do
+            local name
+            local ascending
+            local parts = spaceSplit(o)
+            if #parts == 1 then
+                name = o
+                ascending = true
+            else
+                synassert(#parts == 2, "Couldn't parse ORDER BY spec '%s'", o)
+                name = parts[1]
+                local sortOrder = parts[2]:upper()
+                synassert(sortOrder == "ASC" or sortOrder == "DESC", "Unexpected sort order '%s'", parts[2])
+                ascending = sortOrder == "ASC"
+            end
+            table.insert(sortSpec, { name = name, ascending = ascending })
+        end
     end
 
-    return filename, tableName, fieldNames
+    return filename, tableName, fieldNames, filterPredicate, sortSpec
 end
 
 -- Database files appear to have some sort of paging scheme whereby 2 extra bytes are inserted every 0x4000 bytes,
@@ -757,6 +921,211 @@ function depageBinary(data)
         pos = pos + 0x4000 + 2
     end
     return table.concat(pages)
+end
+
+local function globToMatch(glob)
+    local m = glob:gsub("[.+%%^$%(%)%[%]-]", "%%%0"):gsub("%?", "."):gsub("%*", ".*")
+    return "^" .. m .. "$"
+end
+
+local function recordContains(tbl, record, matchText, firstField, lastField, caseSensitive)
+    for i, field in ipairs(tbl.fields) do
+        local fieldValue = record[field.name]
+        if i >= firstField and i <= lastField and field.type == FieldTypes.Text then
+            if caseSensitive and fieldValue:match(matchText) then
+                return true
+            elseif not caseSensitive and fieldValue:lower():match(matchText) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function Db:findField(text, start, num, flags)
+    local matchText = globToMatch(text)
+    local lastField = num == nil and #self.currentTable.fields or start + num
+
+    local inc
+    if (flags & KFindForwards) ~= 0 then
+        inc = 1
+    else
+        inc = -1
+    end
+
+    local count = #self.currentView
+    local pos
+    if (flags & 3) == KFindBackwardsFromEnd then
+        pos = count
+    elseif (flags & 3) == KFindForwardsFromStart then
+        pos = 1
+    else
+        pos = self.pos
+    end
+
+    local caseSensitive = (flags & KFindCaseDependent) ~= 0
+    if not caseSensitive then
+        matchText = matchText:lower()
+    end
+
+    while pos <= count and pos > 0 do
+        local record = self.currentTable[self.currentView[pos]]
+        if recordContains(self.currentTable, record, matchText, start, lastField, caseSensitive) then
+            self:setPos(pos)
+            return pos
+        end
+        pos = pos + inc
+    end
+
+    return 0 -- Indicates not found
+end
+
+local string_match, string_sub = string.match, string.sub
+
+sqlWhereLang = {
+    statemachine = {
+        ['<'] = {
+            [''] = 'lt',
+            ['>'] = 'neq',
+            ['='] = 'le',
+        },
+        ['>'] = {
+            [''] = 'gt',
+            ['='] = 'ge',
+        },
+        ['='] = 'eq',
+        ['%-?[0-9]+'] = {
+            [''] = 'number', -- int or long
+            ['[eE][%+%-]?[0-9]+'] = 'number', -- int or long with exponent
+            ['%.[0-9]*'] = {
+                [''] = 'number', -- float
+                ['[eE][%+%-]?[0-9]+'] = 'number', -- float with exponent
+            },
+        },
+        ['%('] = 'oparen',
+        ['%)'] = 'cloparen',
+        ['[ \t]+'] = 'space',
+        ["'"] = function(text, tokenStart)
+            local pos = tokenStart + 1
+            while true do
+                local delim, nextPos = string_match(text, "(['\r\n])()", pos)
+                if delim == "'" then
+                    if string_sub(text, nextPos, nextPos) == "'" then
+                        -- Double-' means an escaped ', keep going
+                        pos = nextPos + 1
+                    else
+                        -- End of string
+                        return "string", string_sub(text, tokenStart, nextPos - 1)
+                    end
+                else
+                    error("Unmatched '")
+                end
+            end
+        end,
+        ['[a-zA-Z_][a-zA-Z0-9_]*'] = 'identifier',
+    },
+    identifierTokens = enum {
+        "AND", "OR", "NOT", "LIKE",
+        "IS", "NULL",
+    },
+    precedences = enum {
+        noop = 0,
+        OR = 1,
+        AND = 2,
+        eq = 3,
+        lt = 3,
+        le = 3,
+        gt = 3,
+        ge = 3,
+        neq = 3,
+        NOT = 4,
+        LIKE = 5,
+        NOT_LIKE = 5,
+    },
+    unaryOperators = {
+        NOT = true,
+    },
+    rightAssociativeOperators = {}
+}
+
+
+function parseWhere(str)
+    local compiler = require("compiler")
+    -- print(dump(compiler.lex(str, nil, sqlWhereLang)))
+    local tokens = compiler.lex(str, nil, sqlWhereLang)
+    -- SQL has "NOT LIKE" which is effectively an operator, and the expression parser expects operators to be a single
+    -- token, so fix that up here.
+    for i, tok in ipairs(tokens) do
+        if tok.type == "NOT" and tokens[i + 1] and tokens[i + 1].type == "LIKE" then
+            table.remove(tokens, i + 1)
+            tok.type = "NOT_LIKE"
+        end
+    end
+
+    local exp = compiler.parseUntypedExpression(compiler.lex(str, nil, sqlWhereLang))
+    assert(exp.op, "Expected op!")
+    
+    -- Expressions are converted to a function which evaluates against an env. This technically accepts a bunch of
+    -- things that wouldn't be legal SQL but we don't care.
+    local function evalExpression(exp)
+        local op = exp.op
+        if op then
+            local lhs = evalExpression(exp[1])
+            local rhs = evalExpression(exp[2])
+            local function dbg(fn)
+                -- return function(env)
+                --     printf("%s %s %s\n", op, lhs(env), rhs(env))
+                --     return fn(env)
+                -- end
+                return fn
+            end
+            if op == "OR" then
+                return dbg(function(env) return lhs(env) or rhs(env) end)
+            elseif op == "AND" then
+                return dbg(function(env) return lhs(env) and rhs(env) end)
+            elseif op == "eq" then
+                return dbg(function(env) return lhs(env) == rhs(env) end)
+            elseif op == "lt" then
+                return dbg(function(env) return lhs(env) < rhs(env) end)
+            elseif op == "le" then
+                return dbg(function(env) return lhs(env) <= rhs(env) end)
+            elseif op == "gt" then
+                return dbg(function(env) return lhs(env) > rhs(env) end)
+            elseif op == "ge" then
+                return dbg(function(env) return lhs(env) >= rhs(env) end)
+            elseif op == "neq" then
+                return dbg(function(env) return lhs(env) ~= rhs(env) end)
+            elseif op == "NOT" then
+                return dbg(function(env) return not rhs(env) end)
+            elseif op == "LIKE" then
+                return dbg(function(env)
+                    return lhs(env):match(globToMatch(rhs(env))) ~= nil
+                end)
+            elseif op == "NOT_LIKE" then
+                return dbg(function(env)
+                    return lhs(env):match(globToMatch(rhs(env))) == nil
+                end)
+            else
+                error("Unhandled op "..op)
+            end
+        elseif exp.type == "number" then
+            return function()
+                local _, val = compiler.literalToNumber(exp.val)
+                return val
+            end
+        elseif exp.type == "string" then
+            return function() return assert(exp.val:match("^'(.*)'$")):gsub("''", "'") end
+        elseif exp.type == "identifier" then
+            return function(env)
+                -- printf("ENV[%s]=%s\n", exp.val, env[exp.val])
+                return env[exp.val]
+            end
+        else
+            error("Unhandled expression "..exp.type)
+        end
+    end
+
+    return evalExpression(exp)
 end
 
 return _ENV

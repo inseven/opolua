@@ -368,7 +368,9 @@ function Exist(stack, runtime) -- 0x08
 end
 
 function Find(stack, runtime) -- 0x09
-    unimplemented("fns.Find")
+    local text = stack:pop()
+    local db = runtime:getDb()
+    stack:push(db:findField(text, 1, nil, KFindForwards))
 end
 
 function Get(stack, runtime) -- 0x0A
@@ -891,7 +893,13 @@ function IoCancel(stack, runtime) -- 0x52
 end
 
 function FindField(stack, runtime) -- 0x54
-    unimplemented("fns.FindField")
+    local flags = stack:pop()
+    local num = stack:pop()
+    local start = stack:pop()
+    local text = stack:pop()
+
+    local db = runtime:getDb()
+    stack:push(db:findField(text, start, num, flags))
 end
 
 function Bookmark(stack, runtime) -- 0x55

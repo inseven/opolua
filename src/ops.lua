@@ -2468,7 +2468,11 @@ function Put(stack, runtime) -- 0x11D
 end
 
 function DeleteTable(stack, runtime) -- 0x11E
-    unimplemented("DeleteTable")
+    local tableName = stack:pop()
+    local path = stack:pop()
+    local db = runtime:newDb(path, "Open")
+    db:deleteTable(tableName)
+    runtime:saveDb(db)
 end
 
 function GotoMark(stack, runtime) -- 0x11F
