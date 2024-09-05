@@ -81,6 +81,10 @@ fns = {
     [54] = "SIRemoteLinkConfig",
 }
 
+KDateFormatAmerican = 0
+KDateFormatEuropean = 1
+KDateFormatJapanese = 2
+
 function SISystemVisible(stack, runtime) -- 1
     unimplemented("opx.systinfo.SISystemVisible")
 end
@@ -94,7 +98,18 @@ function SICurrencyFormat(stack, runtime) -- 3
 end
 
 function SIDateFormat(stack, runtime) -- 4
-    unimplemented("opx.systinfo.SIDateFormat")
+    local dateSep3 = stack:pop():asVariable(DataTypes.EWord)
+    local dateSep2 = stack:pop():asVariable(DataTypes.EWord)
+    local dateSep1 = stack:pop():asVariable(DataTypes.EWord)
+    local dateSep0 = stack:pop():asVariable(DataTypes.EWord)
+    local dateFormat = stack:pop():asVariable(DataTypes.ELong)
+
+    dateFormat(KDateFormatEuropean)
+    dateSep0(0)
+    dateSep1(string.byte('/'))
+    dateSep2(string.byte('/'))
+    dateSep3(0)
+    stack:push(0)
 end
 
 function SITimeFormat(stack, runtime) -- 5
