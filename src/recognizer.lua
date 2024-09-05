@@ -155,7 +155,6 @@ function getOplText(data)
             pos = pos + 4 -- Skip over offset of section we don't care about
         end
     end
-
 end
 
 function getMbmBitmaps(data)
