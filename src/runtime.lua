@@ -580,33 +580,46 @@ function Runtime:getGraphicsAutoFlush()
     return self:getGraphics().buffer == nil
 end
 
-function Runtime:openDb(logName, tableSpec, variables, op)
-    assert(self.dbs.open[logName] == nil, KErrOpen)
-    printf("parseTableSpec: %s\n", tableSpec)
-    local path, tableName, fieldNames = database.parseTableSpec(tableSpec)
-    path = self:abs(path)
+-- op==nil is used for dbase.opx functions like DbGetFieldCount which take a database path but the file is allowed to
+-- be open with any mode
+function Runtime:newDb(path, op)
+    local readonly = op == nil or op == "OpenR"
+    local isCreate = op == "Create"
 
-    local readonly = op == "OpenR"
+    -- TODO make this check at table granularity not file, AND share self.tables if already open
+
     -- Check if there are already any other open handles to this db
-    local cpath = oplpath.canon(path)
-    for _, db in pairs(self.dbs.open) do
-        if oplpath.canon(db:getPath()) == cpath then
-            if not readonly or db:isWriteable() then
-                error(KErrInUse)
-            end
-        end
-    end
+    -- if op then
+    --     local cpath = oplpath.canon(path)
+    --     for _, db in pairs(self.dbs.open) do
+    --         if oplpath.canon(db:getPath()) == cpath then
+    --             if not readonly or db:isWriteable() then
+    --                 error(KErrInUse)
+    --             end
+    --         end
+    --     end
+    -- end
 
     local db = database.new(path, readonly)
     -- See if db already exists
     local dbData, err = self.ioh.fsop("read", path)
     if dbData then
         db:load(dbData)
-    elseif err == KErrNotExists and op == "Create" then
+    elseif err == KErrNotExists and isCreate then
         -- This is fine
     else
         error(err)
     end
+    return db
+end
+
+function Runtime:openDb(logName, tableSpec, variables, op)
+    assert(self.dbs.open[logName] == nil, KErrOpen)
+    printf("parseTableSpec: %s\n", tableSpec)
+    local path, tableName, fieldNames, filterPredicate, sortSpec = database.parseTableSpec(tableSpec)
+    path = self:abs(path)
+
+    local db = self:newDb(path, op)
 
     if op == "Create" then
         if fieldNames == nil then
@@ -622,7 +635,7 @@ function Runtime:openDb(logName, tableSpec, variables, op)
         end
 
         -- "*" is not valid for create, only open
-        assert(not (#fieldNames == 1 and fieldName[1] == "*"), KErrInvalidArgs)
+        assert(not (#fieldNames == 1 and fieldNames[1] == "*"), KErrInvalidArgs)
         local types = {}
         for i, var in ipairs(variables) do
             types[i] = var.type
@@ -630,7 +643,7 @@ function Runtime:openDb(logName, tableSpec, variables, op)
         db:createTable(tableName, fieldNames, types)
     end
 
-    db:setView(tableName, fieldNames, variables)
+    db:setView(tableName, fieldNames, variables, filterPredicate, sortSpec)
     self.dbs.open[logName] = db
     self.dbs.current = logName
 end
@@ -652,12 +665,16 @@ function Runtime:closeDb()
     self.dbs.current = nil
 end
 
+function Runtime:saveDb(db)
+    local data = db:save()
+    local err = self.ioh.fsop("write", db:getPath(), data)
+    assert(err == KErrNone, err)
+end
+
 function Runtime:saveDbIfModified()
     local db = self:getDb()
     if db:isModified() and not db:inTransaction() then
-        local data = db:save()
-        local err = self.ioh.fsop("write", db:getPath(), data)
-        assert(err == KErrNone, err)
+        self:saveDb(db)
     end
 end
 

@@ -40,6 +40,18 @@ function main()
         ["ORDER BY"] = "name ASC, number DESC",
     })
 
+    checkQuery("FIELDS thingfrom TO woop", {
+        FIELDS = "thingfrom",
+        TO = "woop",
+    })
+
+    checkQuery("select text from texts where ID='         0' and TType=' order by ' order by id, l", {
+        SELECT = "text",
+        FROM = "texts",
+        WHERE = "ID='         0' and TType=' order by '",
+        ["ORDER BY"] = "id, l",
+    })
+
     checkSpec("clients SELECT name, tel FROM phone",
         "clients",
         "phone",
@@ -52,19 +64,44 @@ function main()
         { "name", "tel" }
     )
 
+    checkSpec('"dbname.db" SELECT name,number FROM phoneBook ORDER BY name ASC, number DESC',
+        "dbname.db",
+        "phoneBook",
+        { "name", "number" },
+        {
+            { name = "name", ascending = true },
+            { name = "number", ascending = false },
+        }
+    )
+
     checkSpec([["C:\System\Apps\biklog5\biklog5.ini" SELECT name,string,integer,long,float FROM deftable]],
         [[C:\System\Apps\biklog5\biklog5.ini]],
         "deftable",
         { "name", "string", "integer", "long", "float" }
     )
 
+    local exp = database.parseWhere("ID='0' and TType='NOTES'")
+    assertEquals(exp({ID="0", TTYPE="NOTES"}), true)
+    assertEquals(exp({ID="1", TTYPE="NOTES"}), false)
+
+    local likeExp = database.parseWhere("foo LIKE '*b?r'")
+    assertEquals(likeExp({FOO="abar"}), true)
+    assertEquals(likeExp({FOO="barr"}), false)
+    assertEquals(likeExp({FOO="foobor"}), true)
+
+    likeExp = database.parseWhere("FOO LIKE 'd?om%'")
+    assertEquals(likeExp({FOO="doom%"}), true)
+    assertEquals(likeExp({FOO="dom%"}), false)
+
+    print("All tests passed.")
 end
 
-function checkSpec(spec, expectedPath, expectedTableName, expectedFields)
-    local path, tableName, fields = database.parseTableSpec(spec)
+function checkSpec(spec, expectedPath, expectedTableName, expectedFields, expectedSort)
+    local path, tableName, fields, filterPredicate, sortSpec = database.parseTableSpec(spec)
     assertEquals(path, expectedPath)
     assertEquals(tableName, expectedTableName)
     assertEquals(fields, expectedFields)
+    assertEquals(sortSpec, expectedSort)
 end
 
 pcallMain()
