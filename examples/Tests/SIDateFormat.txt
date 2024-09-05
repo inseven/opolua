@@ -1,0 +1,8 @@
+INCLUDE "systinfo.oxh"
+
+PROC main:
+    LOCAL fmt&, sep0%, sep1%, sep2%, sep3%
+    SIDateFormat:(fmt&, sep0%, sep1%, sep2%, sep3%)
+    PRINT fmt&, sep0%, sep1%, sep2%, sep3%
+    GET
+ENDP
