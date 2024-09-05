@@ -2404,7 +2404,7 @@ end
 function CallOpxFunc(stack, runtime) -- 0x118
     local opxNo = runtime:IP8()
     local fnIdx = runtime:IP16()
-    local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
+    local opx = runtime:currentProc().module.opxTable[1 + opxNo]
     assert(opx, "Bad opx id?")
     local modName = "opx." .. opx.name:lower()
     if not opx.module then
@@ -2428,7 +2428,7 @@ end
 function CallOpxFunc_dump(runtime)
     local opxNo = runtime:IP8()
     local fnIdx = runtime:IP16()
-    local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
+    local opx = runtime:currentProc().module.opxTable[1 + opxNo]
     local fnName
     if opx then
         local modName = "opx." .. opx.name:lower()
