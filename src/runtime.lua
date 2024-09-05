@@ -160,6 +160,7 @@ function Runtime:addModule(path, procTable, opxTable)
     }
     for _, proc in ipairs(procTable) do
         mod[proc.name] = proc
+        proc.module = mod
         if proc.globals then
             -- runtime expects to be able to do by name lookups in globals...
             for _, global in ipairs(proc.globals) do
@@ -182,8 +183,9 @@ function Runtime:addModule(path, procTable, opxTable)
 end
 
 function Runtime:unloadModule(path)
+    local canonPath = oplpath.canon(path)
     for i, mod in ipairs(self.modules) do
-        if mod.path == path then
+        if oplpath.canon(mod.path) == canonPath then
             table.remove(self.modules, i)
             return
         end
@@ -201,17 +203,6 @@ function Runtime:findProc(procName)
         end
     end
     error("No proc named "..procName.." found in loaded modules")
-end
-
-function Runtime:moduleForProc(proc)
-    for _, mod in ipairs(self.modules) do
-        for k, v in pairs(mod) do
-            if v == proc then
-                return mod
-            end
-        end
-    end
-    return nil
 end
 
 local function quoteVal(val)
@@ -911,15 +902,15 @@ local function addStacktraceToError(self, err, callingFrame)
     -- In order to get instruction decode in the stacktrace we must swizzle
     -- frames around, but note we don't actually unwind them.
     while self.frame ~= callingFrame do
-        local mod = self:moduleForProc(self.frame.proc)
+        local modName = self.frame.proc.module.name
         local info
         if self.frame.proc.fn then
-            info = fmt("%s\\%s: [Lua] %s", mod.name, self.frame.proc.name, self.frame.lastPcallSite or "?")
+            info = fmt("%s\\%s: [Lua] %s", modName, self.frame.proc.name, self.frame.lastPcallSite or "?")
         elseif self.frame.lastIp then
             self.ip = self.frame.lastIp
-            info = fmt("%s\\%s:%s", mod.name, self.frame.proc.name, self:decodeNextInstruction())
+            info = fmt("%s\\%s:%s", modName, self.frame.proc.name, self:decodeNextInstruction())
         else
-            info = fmt("%s\\%s", mod.name, self.frame.proc.name)
+            info = fmt("%s\\%s", modName, self.frame.proc.name)
         end
         table.insert(frameDescs, info)
         self:setFrame(self.frame.prevFrame)
@@ -984,7 +975,7 @@ function Runtime:pcallProc(procName, ...)
         if not ok then
             addStacktraceToError(self, err, callingFrame)
             -- print(err)
-            self.errorLocation = fmt("Error in %s\\%s", self:moduleForProc(self.frame.proc).name, self.frame.proc.name)
+            self.errorLocation = fmt("Error in %s\\%s", self.frame.proc.module.name, self.frame.proc.name)
 
             if err.code and err.code == KStopErr then
                 printf("Interrupted!\n%s\n", err)
