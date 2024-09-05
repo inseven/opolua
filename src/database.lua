@@ -33,8 +33,8 @@ FieldTypes = enum {
     Double = 0x9,
     Date = 0xA,
     Text = 0xB,
-    Memo = 0xE,
-    Format = 0x10,
+    LongText8 = 0xE,
+    LongBinary = 0x10,
 }
 
 -- The only types that (I think) OPL can handle
@@ -545,7 +545,7 @@ function Db:loadTable(data, toc, tableIndex)
                             bit = bit + 1
                         elseif field.rawType == FieldTypes.Date then
                             pos = pos + 8
-                        elseif field.rawType == FieldTypes.Memo then
+                        elseif field.rawType == FieldTypes.LongText8 then
                             bit = bit + 1
                             local inline = fieldMask & (1 << bit) ~= 0
                             if inline then
@@ -555,7 +555,7 @@ function Db:loadTable(data, toc, tableIndex)
                             else
                                 pos = pos + 8 -- Skip tocIndex and len
                             end
-                        elseif field.rawType == FieldTypes.Format then
+                        elseif field.rawType == FieldTypes.LongBinary then
                             bit = bit + 1
                             local inline = fieldMask & (1 << bit) ~= 0
                             if inline then

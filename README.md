@@ -123,7 +123,7 @@ The OPL compiler allows a maximum nesting of 8 IF/WHILE statements. There is no 
 
 ## Database format
 
-_This is derived from [http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm) with my own analysis added, and represents my best understanding of the format at the time of writing. It's not guaranteed to be 100% perfect. -Tomsci_
+_This is derived from [http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm) with my own analysis added, and represents my best understanding of the format at the time of writing. Where original documentation can be found, I've used Psion terminology for preference. It's not guaranteed to be 100% perfect. -Tomsci_
 
 The base structure of a Database file (leaving aside the layers of implementation that leads to this format) is as follows. Broadly, the file is split into various sections, which are indexed via the TOC (Table Of Contents) section. The header of the file contains the location of the TOC.
 
@@ -265,28 +265,37 @@ After the record length array, the data for each record follows. The record data
 
 The order of fields is determined by the Table Definition Section. For example in a table with fields A, B and C, bit zero of `fieldMask` refers to A, bit one to B, bit two to C, and the field data would follow A then B then C. If a bit is not set in `fieldMask`, then that field data is not present (and should be considered default-initialized when read). Some field types consume an extra bit in `fieldMask` to encode their value or additional info, so it is necessary to carefully cross-reference against the table definition section when parsing `fieldMask` and the field data.
 
-The reason for this encoding is to make records somewhat self-describing, so that appending an additional field does not need to re-encode existing records (an operation considered very costly on a Psion 5).
+The reason for this encoding is to make records somewhat self-describing so that, for example, a record that omits some fields does not need to encode the default values.
 
 The format of the field data (and the type byte used in the table definition section) for each field type is as follows:
 
 | Type      | Type byte | Format |
 | --------- | --------- | ------ |
 | `Boolean` | `00`      | Value in next bit of `fieldMask` |
-| `Integer` | `03`      | 2 bytes, little-endian |
-| `Long`    | `05`      | 4 bytes, little-endian |
+| `int8`    | `01`      | 1 byte, signed |
+| `uint8`   | `02`      | 1 byte, unsigned |
+| `int16`   | `03`      | 2 bytes, signed |
+| `uint16`  | `04`      | 2 bytes, unsigned |
+| `int32`   | `05`      | 4 bytes, signed |
+| `uint32`  | `06`      | 4 bytes, unsigned |
+| `int64`   | `07`      | 8 bytes, signed |
+| `Float`   | `08`      | 4 bytes, IEE754 format |
 | `Double`  | `09`      | 8 bytes, IEE754 format |
 | `Date`    | `0A`      | 8 bytes, see below |
 | `Text`    | `0B`      | `BString` |
-| `Memo`    | `0E`      | See below |
-| `Format`  | `10`      | See below |
+| `Unicode` | `0C`      | Unsure, probably `BListW` or `WListW` |
+| `Binary`  | `0D`      | Unsure, probably `BListB` |
+| `LongText8` | `0E`    | See below |
+| `LongText16` | `0F`   | Unsure, probably similar to `LongText8` |
+| `LongBinary` | `10`   | See below |
 
-Fields other than `Integer`, `Long`, `Double` and `Text` are skipped over when decoded by OPL.
+Fields other than `int16`, `int32`, `Double` and `Text` are skipped over when decoded by OPL.
 
 The `Date` type is ([apparently](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm); I haven't verified this myself) microseconds since 0000-01-01, applying Gregorian leap year rules from 1600 onward (ie leap century rules) and Julian leap year rules before that (ie every 4th year is a leap year). Ignoring the other nuances between the calendars. Which by my maths means divide by 1000000 and subtract `719540 * 86400` to convert to a unix-epoch (ie 1970) based date. 
 
-The `Format` type consumes an additional bit in `fieldMask` - if this bit is 0, the field data is 4 bytes which is the index into the TOC of a format section. If the bit is 1, there is `Format` data included inline as an `SString` (I think - haven't confirmed this). The Format data itself is not documented, and is skipped over during decoding. The `Memo` section behaves the same as `Format`.
+The `LongBinary` type consumes an additional bit in `fieldMask` - if this bit is 0, the field data is 4 bytes which is the index into the TOC of a `LongBinary` section. If the bit is 1, there is `LongBinary` data included inline as an `SString` (I think - haven't confirmed this). The `LongBinary` data itself is not documented, and is skipped over during decoding. The `LongText8` (and, presumably, `LongText16`) section behaves the same as `LongBinary`.
 
-It is not clear to me what happens if a `Boolean`, `Format` or `Memo` field ends up as the last bit in `fieldMask`, and thus there are no more bits left to consume -- `database.lua` will error if this occurs, please report it if you encounter this.
+It is not clear to me what happens if a `Boolean`, or `Long...` field ends up as the last bit in `fieldMask`, and thus there are no more bits left to consume -- `database.lua` will error if this occurs, please report it if you encounter this.
 
 ### Paging
 
