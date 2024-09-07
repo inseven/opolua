@@ -110,6 +110,11 @@
 		DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9190278369A4006F5CD0 /* BitmapFont.swift */; };
 		DB0B919327836E70006F5CD0 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = DB0B919227836E70006F5CD0 /* fonts */; };
 		DB0B91952789C561006F5CD0 /* directfilestore.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB0B91942789C561006F5CD0 /* directfilestore.lua */; };
+		DB10E5892C84567C00F63541 /* printer_oxh.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB10E5882C84567C00F63541 /* printer_oxh.lua */; };
+		DB10E58B2C84568800F63541 /* printer.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB10E58A2C84568700F63541 /* printer.lua */; };
+		DB10E5B62C845A0700F63541 /* gprinter.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB10E5B52C845A0700F63541 /* gprinter.lua */; };
+		DB10E6392C848E7900F63541 /* dbase.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB10E6382C848E7900F63541 /* dbase.lua */; };
+		DB10E63B2C848E8800F63541 /* dbase_oxh.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB10E63A2C848E8800F63541 /* dbase_oxh.lua */; };
 		DB3FAC2E27C2CA4A004155C1 /* CGRect.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3FAC2D27C2CA49004155C1 /* CGRect.swift */; };
 		DB48A70D2A9CEC9200F698CB /* Lua in Frameworks */ = {isa = PBXBuildFile; productRef = DB48A70C2A9CEC9200F698CB /* Lua */; };
 		DB5AC970275198A20043FE5C /* database.lua in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB5AC96F275198A20043FE5C /* database.lua */; };
@@ -207,6 +212,11 @@
 				DBF28C6F2B49C52D0044C330 /* bmp.lua in CopyFiles */,
 				DBF28C6A2B49C52D0044C330 /* systinfo.lua in CopyFiles */,
 				DBF28C6D2B49C52D0044C330 /* sysram1.lua in CopyFiles */,
+				DB10E5892C84567C00F63541 /* printer_oxh.lua in CopyFiles */,
+				DB10E58B2C84568800F63541 /* printer.lua in CopyFiles */,
+				DB10E5B62C845A0700F63541 /* gprinter.lua in CopyFiles */,
+				DB10E63B2C848E8800F63541 /* dbase_oxh.lua in CopyFiles */,
+				DB10E6392C848E7900F63541 /* dbase.lua in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,6 +329,11 @@
 		DB0B9190278369A4006F5CD0 /* BitmapFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitmapFont.swift; sourceTree = "<group>"; };
 		DB0B919227836E70006F5CD0 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		DB0B91942789C561006F5CD0 /* directfilestore.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = directfilestore.lua; sourceTree = "<group>"; };
+		DB10E5882C84567C00F63541 /* printer_oxh.lua */ = {isa = PBXFileReference; lastKnownFileType = text; path = printer_oxh.lua; sourceTree = "<group>"; };
+		DB10E58A2C84568700F63541 /* printer.lua */ = {isa = PBXFileReference; lastKnownFileType = text; path = printer.lua; sourceTree = "<group>"; };
+		DB10E5B52C845A0700F63541 /* gprinter.lua */ = {isa = PBXFileReference; lastKnownFileType = text; path = gprinter.lua; sourceTree = "<group>"; };
+		DB10E6382C848E7900F63541 /* dbase.lua */ = {isa = PBXFileReference; lastKnownFileType = text; path = dbase.lua; sourceTree = "<group>"; };
+		DB10E63A2C848E8800F63541 /* dbase_oxh.lua */ = {isa = PBXFileReference; lastKnownFileType = text; path = dbase_oxh.lua; sourceTree = "<group>"; };
 		DB3FAC2D27C2CA49004155C1 /* CGRect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGRect.swift; sourceTree = "<group>"; };
 		DB48A70A2A9CEA6200F698CB /* LuaSwift */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = LuaSwift; sourceTree = "<group>"; };
 		DB5AC96F275198A20043FE5C /* database.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = database.lua; sourceTree = "<group>"; };
@@ -659,10 +674,12 @@
 		DBBC73E82BA21EAA008BBC72 /* includes */ = {
 			isa = PBXGroup;
 			children = (
-				DBBC73E92BA21EAA008BBC72 /* system_oxh.lua */,
-				DBBC73EA2BA21EAA008BBC72 /* date_oxh.lua */,
-				DBBC73EB2BA21EAA008BBC72 /* const_oph.lua */,
 				DBBC73EC2BA21EAA008BBC72 /* bmp_oxh.lua */,
+				DBBC73EB2BA21EAA008BBC72 /* const_oph.lua */,
+				DBBC73EA2BA21EAA008BBC72 /* date_oxh.lua */,
+				DB10E63A2C848E8800F63541 /* dbase_oxh.lua */,
+				DB10E5882C84567C00F63541 /* printer_oxh.lua */,
+				DBBC73E92BA21EAA008BBC72 /* system_oxh.lua */,
 				DBBC73ED2BA21EAA008BBC72 /* toolbar_oph.lua */,
 			);
 			path = includes;
@@ -679,12 +696,15 @@
 		DBF28C632B49C52D0044C330 /* opx */ = {
 			isa = PBXGroup;
 			children = (
+				DBF28C662B49C52D0044C330 /* alarm.lua */,
+				DBF28C692B49C52D0044C330 /* bmp.lua */,
+				DBF28C682B49C52D0044C330 /* date.lua */,
+				DB10E6382C848E7900F63541 /* dbase.lua */,
+				DB10E5B52C845A0700F63541 /* gprinter.lua */,
+				DB10E58A2C84568700F63541 /* printer.lua */,
+				DBF28C672B49C52D0044C330 /* sysram1.lua */,
 				DBF28C642B49C52D0044C330 /* systinfo.lua */,
 				DBF28C652B49C52D0044C330 /* system.lua */,
-				DBF28C662B49C52D0044C330 /* alarm.lua */,
-				DBF28C672B49C52D0044C330 /* sysram1.lua */,
-				DBF28C682B49C52D0044C330 /* date.lua */,
-				DBF28C692B49C52D0044C330 /* bmp.lua */,
 			);
 			path = opx;
 			sourceTree = "<group>";

@@ -48,26 +48,29 @@ function Stack:push(val)
     self[self.n] = val
 end
 
-function Stack:pop()
-    assert(self.n > 0, "Attempt to pop empty stack!")
-    local result = self[self.n]
-    self[self.n] = nil
-    self.n = self.n - 1
-    return result
+function Stack:pop(num)
+    if num == nil or num == 1 then
+        assert(self.n > 0, "Attempt to pop empty stack!")
+        local result = self[self.n]
+        self[self.n] = nil
+        self.n = self.n - 1
+        return result
+    else
+        local results = {}
+        for i = 0, num - 1 do
+            results[num - i] = self:pop()
+        end
+        return table.unpack(results, 1, num)
+    end
 end
 
 function Stack:popXY()
-    local y = self:pop()
-    local x = self:pop()
-    return x, y
+    return self:pop(2)
 end
 
 function Stack:popRect()
-    local h = self:pop()
-    local w = self:pop()
-    local y = self:pop()
-    local x = self:pop()
-    return x, y, w, h
+    -- returns x, y, w, h
+    return self:pop(4)
 end
 
 function Stack:getSize()
