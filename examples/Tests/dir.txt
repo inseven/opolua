@@ -1,0 +1,9 @@
+PROC main:
+	LOCAL d$(255)
+	d$ = DIR$("C:\")
+	WHILE d$ <> ""
+		PRINT d$
+		d$ = DIR$("")
+	ENDWH
+	GET
+ENDP

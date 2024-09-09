@@ -26,7 +26,7 @@ class ObjectFileSystem: FileSystem {
     var name: String
 
     /**
-     This file system mapper simulates a C:\System\Apps\<app name>\ path.
+     This file system mapper simulates a C:\ path.
      */
     init(objectUrl: URL) {
         self.baseUrl = objectUrl.deletingLastPathComponent()
@@ -34,7 +34,7 @@ class ObjectFileSystem: FileSystem {
     }
 
     var guestPrefix: String {
-        return "C:\\SYSTEM\\APPS\\" + name.uppercased() + "\\"
+        return "C:\\"
     }
 
     func prepare() throws {
@@ -47,7 +47,7 @@ class ObjectFileSystem: FileSystem {
     func hostUrl(for path: String) -> (URL, Bool)? {
         if path.uppercased().starts(with: guestPrefix) {
             let pathComponents = path
-                .split(separator: "\\")[4...]
+                .split(separator: "\\")[1...]
                 .map { String($0) }
             return (baseUrl.appendingCaseInsensitivePathComponents(pathComponents), true)
         } else {
