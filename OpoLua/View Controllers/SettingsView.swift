@@ -107,11 +107,11 @@ struct SettingsView: View {
                         License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "Lua.txt")
                         License(name: "OpoLua", author: "Jason Morley, Tom Sutcliffe", filename: "License.txt")
                     }
-
                 }
+
             }
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+        .navigationViewStyle(.stack)
     }
 
 }
