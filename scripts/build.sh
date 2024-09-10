@@ -27,17 +27,19 @@ set -u
 
 SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-ROOT_DIRECTORY="${SCRIPTS_DIRECTORY}/.."
-BUILD_DIRECTORY="${ROOT_DIRECTORY}/build"
-TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
-APP_DIRECTORY="${ROOT_DIRECTORY}"
+ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
+SRC_DIRECTORY="$ROOT_DIRECTORY/src"
+APP_DIRECTORY="$ROOT_DIRECTORY"
 
-KEYCHAIN_PATH="${TEMPORARY_DIRECTORY}/temporary.keychain"
-ARCHIVE_PATH="${BUILD_DIRECTORY}/OpoLua.xcarchive"
-ENV_PATH="${APP_DIRECTORY}/.env"
-RELEASE_SCRIPT_PATH="${SCRIPTS_DIRECTORY}/release.sh"
+BUILD_DIRECTORY="$ROOT_DIRECTORY/build"
+TEMPORARY_DIRECTORY="$ROOT_DIRECTORY/temp"
 
-source "${SCRIPTS_DIRECTORY}/environment.sh"
+KEYCHAIN_PATH="$TEMPORARY_DIRECTORY/temporary.keychain"
+ARCHIVE_PATH="$BUILD_DIRECTORY/OpoLua.xcarchive"
+ENV_PATH="$APP_DIRECTORY/.env"
+RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/release.sh"
+
+source "$SCRIPTS_DIRECTORY/environment.sh"
 
 # Check that the GitHub command is available on the path.
 which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
@@ -86,6 +88,10 @@ function build_scheme {
         CODE_SIGNING_REQUIRED=NO \
         CODE_SIGNING_ALLOWED=NO "${@:2}"
 }
+
+# Ensure the Lua source compiles.
+cd "$SRC_DIRECTORY"
+luac -p *.lua
 
 cd "$APP_DIRECTORY"
 
