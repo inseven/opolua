@@ -5,7 +5,7 @@
 	path = scripts/build-tools
 	url = https://github.com/jbmorley/build-tools.git
 [submodule "diligence"]
-	path = diligence
+	path = dependencies/diligence
 	url = git@github.com:inseven/diligence.git
 [submodule "LuaSwift"]
 	path = LuaSwift
