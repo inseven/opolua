@@ -170,14 +170,18 @@ end
 
 function fsop(cmd, path, ...)
     local filename = mapDevicePath(path)
-    if cmd == "exists" then
-        -- printf("exists %s\n", filename)
+    if cmd == "stat" then
+        -- printf("stat %s\n", filename)
         local f = io.open(filename, "r")
         if f then
+            -- Note, seek will also returns something normal-looking if it's a directory...
+            local sz = f:seek("end")
+            local val, errStr, err = f:read(1)
+            local isDir = err == 21 -- EISDIR (at least on macos)
             f:close()
-            return KErrExists
+            return { size = sz, lastModified = 0, isDir = isDir }
         else
-            return KErrNotExists
+            return nil, KErrNotExists
         end
     elseif cmd == "delete" then
         printf("delete %s\n", filename)

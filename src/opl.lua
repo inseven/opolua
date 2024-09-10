@@ -899,8 +899,8 @@ end
 -- File APIs
 
 function EXIST(path)
-    local ret = runtime:iohandler().fsop("exists", runtime:abs(path))
-    return ret == KErrNone
+    local ret = runtime:iohandler().fsop("stat", runtime:abs(path))
+    return ret ~= nil
 end
 
 function MKDIR(path)
@@ -946,10 +946,8 @@ function IOOPEN(path, mode)
             return nil, err, nil
         end
     elseif openMode == KIoOpenModeCreate then
-        local err = runtime:iohandler().fsop("exists", path)
-        if err ~= KErrNotExists then
-            printf("IOOPEN(%s) failed: %d\n", path, err)
-            return nil, err
+        if EXIST(path) then
+            return nil, KErrExists
         end
         mode = mode | KIoOpenAccessUpdate -- Not sure about this...
     elseif openMode == KIoOpenModeReplace then
