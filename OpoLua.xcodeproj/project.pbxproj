@@ -310,9 +310,6 @@
 		D8D95505279B7B100049A3C3 /* UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
 		D8DCD03D277AC9B300760302 /* WindowServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowServer.swift; sourceTree = "<group>"; };
 		D8DCD03F277ACD7800760302 /* CanvasSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasSprite.swift; sourceTree = "<group>"; };
-		D8DF3FAB278B3DA100FF658B /* Common.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Common.xcconfig; sourceTree = "<group>"; };
-		D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
-		D8DF3FAD278B3DA100FF658B /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramDetector.swift; sourceTree = "<group>"; };
@@ -597,9 +594,6 @@
 				DB79FE6927428294005E904F /* Info.plist */,
 				DB79FE6227428292005E904F /* AppDelegate.swift */,
 				DB79FE6427428294005E904F /* Assets.xcassets */,
-				D8DF3FAB278B3DA100FF658B /* Common.xcconfig */,
-				D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */,
-				D8DF3FAD278B3DA100FF658B /* Release.xcconfig */,
 				D889134B274C17F300794D55 /* Extensions */,
 				D86FBAB8278C76E4003DF611 /* Licenses */,
 				D861E8D9274A818D003C8D3D /* Model */,
@@ -1035,13 +1029,12 @@
 		};
 		DB79FFB82742D88B005E904F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D8DF3FAC278B3DA100FF658B /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = OpoLua/OpoLua.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = $BUILD_NUMBER;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = QS82QFHKWB;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = OpoLua/Info.plist;
@@ -1061,14 +1054,13 @@
 		};
 		DB79FFB92742D88B005E904F /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D8DF3FAD278B3DA100FF658B /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = OpoLua/OpoLua.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = $BUILD_NUMBER;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9GNGYP6YR7;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = QS82QFHKWB;
 				ENABLE_PREVIEWS = YES;
