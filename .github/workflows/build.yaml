@@ -26,6 +26,7 @@ jobs:
     - name: Check homebrew
       run: |
         which gh
+        echo $PATH
 
     - name: Install dependencies
       run: scripts/install-dependencies.sh
