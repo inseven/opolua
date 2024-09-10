@@ -23,11 +23,6 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: Check homebrew
-      run: |
-        which gh
-        echo $PATH
-
     - name: Install dependencies
       run: scripts/install-dependencies.sh
 
