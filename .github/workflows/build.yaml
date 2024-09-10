@@ -26,6 +26,9 @@ jobs:
     - name: Install dependencies
       run: scripts/install-dependencies.sh
 
+    - name: Test Lua
+      run: scripts/test.sh
+
     - name: Build, test, and release
       env:
 
