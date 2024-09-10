@@ -359,8 +359,6 @@ extension Graphics.GreyMode {
 public struct Fs {
     public struct Operation {
         public enum OpType {
-            case exists // return notFound or none (any access issue should result in notFound)
-            case isdir // as per exists
             case delete // return none, notFound, accessDenied if readonly, notReady
             case mkdir // return none, alreadyExists, accessDenied if readonly, notReady
             case rmdir // return none, notFound, inUse if it isn't empty, pathNotFound if it's not a dir, accessDenied if readonly, notReady
@@ -377,6 +375,7 @@ public struct Fs {
     public struct Stat {
         public let size: UInt64
         public let lastModified: Date
+        public let isDirectory: Bool
     }
 
     public enum Err: Int {
@@ -400,8 +399,6 @@ public struct Fs {
 extension Fs.Operation {
     public func isReadonlyOperation() -> Bool {
         switch type {
-        case .exists: return true
-        case .isdir: return true
         case .read: return true
         case .dir: return true
         case .stat: return true

@@ -41,20 +41,15 @@ extension FileSystem {
         let path = nativePath.path
         let fileManager = FileManager.default
         switch operation.type {
-        case .exists:
-            let exists = fileManager.fileExists(atPath: path)
-            return .err(exists ? .none : .notFound)
         case .stat:
             if let attribs = try? fileManager.attributesOfItem(atPath: path) as NSDictionary {
                 let mod = attribs.fileModificationDate() ?? Date(timeIntervalSince1970: 0)
                 let size = attribs.fileSize()
-                return .stat(Fs.Stat(size: size, lastModified: mod))
+                let isDir = attribs.fileType() == FileAttributeType.typeDirectory.rawValue
+                return .stat(Fs.Stat(size: size, lastModified: mod, isDirectory: isDir))
             } else {
                 return .err(.notFound)
             }
-        case .isdir:
-            let exists = fileManager.directoryExists(atPath: path)
-            return .err(exists ? .none : .notFound)
         case .delete:
             print("DELETE '\(operation.path)'")
             // Note, should not support wildcards or deleting directories

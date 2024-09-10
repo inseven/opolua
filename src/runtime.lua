@@ -1177,6 +1177,19 @@ local function globToMatch(glob)
     return m:upper()
 end
 
+function Runtime:ls(path)
+    local contents, err = self.ioh.fsop("dir", oplpath.join(path, ""))
+    if contents then
+        table.sort(contents)
+    end
+    return contents, err
+end
+
+function Runtime:isdir(path)
+    local stat = self.ioh.fsop("stat", path)
+    return stat and stat.isDir
+end
+
 function Runtime:dir(path)
     -- printf("dir: %s\n", path)
     if path == "" then
@@ -1188,10 +1201,7 @@ function Runtime:dir(path)
     end
 
     local dir, filenameFilter = oplpath.split(self:abs(path))
-    local contents, err = self.ioh.fsop("dir", oplpath.join(dir, ""))
-    if not contents then
-        error(err)
-    end
+    local contents = assert(self:ls(dir))
     if #filenameFilter > 0 then
         local filtered = {}
         local m = "^"..globToMatch(filenameFilter).."$"
@@ -1278,7 +1288,7 @@ function installSis(data, iohandler)
         if file.type == sis.FileType.File then
             local path = file.dest:gsub("^.:\\", "C:\\")
             local dir = oplpath.dirname(path)
-            if iohandler:fsop("isdir", dir) == KErrNotExists then
+            if iohandler.fsop("stat", dir) == nil then
                 local err = iohandler.fsop("mkdir", dir)
                 assert(err == KErrNone, "Failed to create dir "..dir)
             end
