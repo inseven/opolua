@@ -26,6 +26,9 @@ jobs:
     - name: Install dependencies
       run: scripts/install-dependencies.sh
 
+    - name: Test Lua
+      run: scripts/test.sh
+
     - name: Build, test, and release
       env:
 
@@ -67,6 +70,9 @@ jobs:
     - name: Install pipenv
       run: |
         python -m pip install --upgrade pipenv wheel
+
+    - name: Install asdf and tools
+      uses: asdf-vm/actions/install@v3
 
     - name: Install dependencies
       run: scripts/install-dependencies.sh
