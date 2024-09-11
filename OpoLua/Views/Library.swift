@@ -419,7 +419,7 @@ struct Library: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ProgramsView()
                 .environment(model)
         }
