@@ -21,6 +21,8 @@
 import GameController
 import UIKit
 
+import OpoLuaCore
+
 protocol WindowServerDelegate: CanvasViewDelegate {
 
     func windowServerClockIsDigital(_ windowServer: WindowServer) -> Bool

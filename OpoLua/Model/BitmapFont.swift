@@ -22,7 +22,7 @@ import Foundation
 import CoreGraphics
 import UIKit
 
-struct BitmapFontInfo {
+public struct BitmapFontInfo {
     struct MetadataJson: Codable {
         let name: String
         let charh: Int

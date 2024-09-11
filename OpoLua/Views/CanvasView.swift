@@ -20,6 +20,8 @@
 
 import UIKit
 
+import OpoLuaCore
+
 protocol CanvasViewDelegate: AnyObject {
 
     func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent)

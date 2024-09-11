@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 extension Error {
 
     private static func description(details: String) -> String {

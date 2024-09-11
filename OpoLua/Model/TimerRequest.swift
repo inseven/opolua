@@ -21,6 +21,8 @@
 import Foundation
 import Combine
 
+import OpoLuaCore
+
 /**
  A one-shot interval-based timer.
  */

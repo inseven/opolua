@@ -20,6 +20,8 @@
 
 import UIKit
 
+import OpoLuaCore
+
 class ClockView: UIView {
     var clockInfo: Graphics.ClockInfo
 

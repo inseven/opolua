@@ -22,6 +22,8 @@ import CoreGraphics
 import Foundation
 import UIKit
 
+import OpoLuaCore
+
 protocol DrawableImageProvider {
 
     func getImageFor(drawable: Graphics.DrawableId) -> CGImage?

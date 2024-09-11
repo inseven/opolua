@@ -21,6 +21,8 @@
 import Foundation
 import UIKit
 
+import OpoLuaCore
+
 enum Device: String, CaseIterable, Codable {
 
     case psionSeries3c = "psion-series-3c"

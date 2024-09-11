@@ -24,6 +24,8 @@ import Combine
 import CoreAudio
 import Foundation
 
+import OpoLuaCore
+
 class PlaySoundRequest: Scheduler.Request {
 
     private let data: Data

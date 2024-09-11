@@ -20,6 +20,8 @@
 
 import UIKit
 
+import OpoLuaCore
+
 extension UIKeyModifierFlags {
 
     func oplModifiers() -> Modifiers {

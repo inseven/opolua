@@ -21,6 +21,8 @@
 import Foundation
 import CoreGraphics
 
+import OpoLuaCore
+
 extension Graphics.MaskedBitmap {
 
     var cgImage: CGImage? {

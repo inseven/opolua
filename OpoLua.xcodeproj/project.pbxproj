@@ -14,11 +14,13 @@
 		D80A9CBE27A4A35E00E49AD8 /* UIDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */; };
 		D80A9CC027A4AF9200E49AD8 /* TaskManager+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */; };
 		D80A9CC227A4B66400E49AD8 /* SourceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CC127A4B66400E49AD8 /* SourceViewController.swift */; };
+		D80B49342C911F520077E850 /* OpoIoHandler_UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80B49332C911F520077E850 /* OpoIoHandler_UIKit.swift */; };
 		D80D65A8279DD2060020F994 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A7279DD2060020F994 /* Icon.swift */; };
 		D80D65AA279DDC290020F994 /* IconCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */; };
 		D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */; };
 		D80D65AE279DE0CE0020F994 /* RunningProgramsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */; };
 		D80D65B0279E31220020F994 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AF279E31220020F994 /* Configuration.swift */; };
+		D810AAF02C911E320049DD72 /* OpoLuaCore in Frameworks */ = {isa = PBXBuildFile; productRef = D810AAEF2C911E320049DD72 /* OpoLuaCore */; };
 		D81B4A4927B5AA650051B092 /* IndexableLocationObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B4A4827B5AA650051B092 /* IndexableLocationObserver.swift */; };
 		D81B4A4D27B5CF650051B092 /* UbiquitousDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B4A4C27B5CF650051B092 /* UbiquitousDownloader.swift */; };
 		D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B875B2790D52C00E71960 /* DrawableViewController.swift */; };
@@ -33,7 +35,6 @@
 		D82A37B827A9B43F00D8F5F4 /* DirectoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82A37B727A9B43F00D8F5F4 /* DirectoryMonitor.swift */; };
 		D82D2FCC27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82D2FCB27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift */; };
 		D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82D2FCD27AC3E62001A4283 /* Error.swift */; };
-		D82D76082C9142740040265E /* src in Resources */ = {isa = PBXBuildFile; fileRef = D82D76072C9142740040265E /* src */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
@@ -58,7 +59,6 @@
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
 		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
 		D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */; };
-		D889134D274C17FF00794D55 /* CGContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134C274C17FF00794D55 /* CGContext.swift */; };
 		D889134F274C181F00794D55 /* CGPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134E274C181F00794D55 /* CGPoint.swift */; };
 		D8891351274C184C00794D55 /* UIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891350274C184C00794D55 /* UIImage.swift */; };
 		D8891353274C186E00794D55 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891352274C186E00794D55 /* Canvas.swift */; };
@@ -82,8 +82,6 @@
 		D8C3BD652774BEC2003B1AD0 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD642774BEC2003B1AD0 /* Console.swift */; };
 		D8C3BD672774BF1F003B1AD0 /* OpoLuaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */; };
 		D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C3BD692774F4A2003B1AD0 /* GameController.framework */; };
-		D8C409632C3CF62900C9E857 /* OpoIoHandler_UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C409622C3CF62900C9E857 /* OpoIoHandler_UIKit.swift */; };
-		D8C409862C3CF6DB00C9E857 /* CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C409852C3CF6DB00C9E857 /* CGImage.swift */; };
 		D8C43DF527C3EFEF00944A11 /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C43DF427C3EFEF00944A11 /* RootViewController.swift */; };
 		D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* DirectoryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
@@ -103,23 +101,18 @@
 		D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */; };
 		D8F4835D278D3D31008AF80C /* PixelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F4835C278D3D31008AF80C /* PixelView.swift */; };
 		D8F5CADB279D07A700A2DC3F /* ResourceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F5CADA279D07A700A2DC3F /* ResourceViewController.swift */; };
+		D8F9F9C52C911EDF00855BF5 /* CGContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F9F9C42C911EDF00855BF5 /* CGContext.swift */; };
 		D8FE60032757106300711717 /* SecureLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* SecureLocation.swift */; };
 		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
 		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
 		D8FE60092757208000711717 /* ApplicationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60082757208000711717 /* ApplicationError.swift */; };
-		DB0366A82C42E85500187DD0 /* PsiLuaEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */; };
-		DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */; };
 		DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9190278369A4006F5CD0 /* BitmapFont.swift */; };
 		DB0B919327836E70006F5CD0 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = DB0B919227836E70006F5CD0 /* fonts */; };
 		DB3FAC2E27C2CA4A004155C1 /* CGRect.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3FAC2D27C2CA49004155C1 /* CGRect.swift */; };
 		DB5AC974275681510043FE5C /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC973275681510043FE5C /* CanvasView.swift */; };
-		DB5AC9762757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */; };
 		DB6B438427A55D1200625788 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB6B438327A55D1200625788 /* RootView.swift */; };
-		DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79001B2746B88F005E904F /* OpoIoHandler.swift */; };
 		DB79FFBE2742D99C005E904F /* ProgramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFBD2742D99C005E904F /* ProgramViewController.swift */; };
 		DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FE6227428292005E904F /* AppDelegate.swift */; };
-		DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB79FFE52742E596005E904F /* OpoInterpreter.swift */; };
-		DB9533FE27AC06A1001CF58D /* FlagSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9533FD27AC06A1001CF58D /* FlagSet.swift */; };
 		DB9F837127D3834000940D5C /* z-s5 in Resources */ = {isa = PBXBuildFile; fileRef = DB9F837027D3834000940D5C /* z-s5 */; };
 		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
 		DBE291822795F86200EE824B /* UIKeyModifierFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */; };
@@ -146,6 +139,7 @@
 		D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIDevice.swift; sourceTree = "<group>"; };
 		D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TaskManager+UIKit.swift"; sourceTree = "<group>"; };
 		D80A9CC127A4B66400E49AD8 /* SourceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceViewController.swift; sourceTree = "<group>"; };
+		D80B49332C911F520077E850 /* OpoIoHandler_UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler_UIKit.swift; sourceTree = "<group>"; };
 		D80D65A7279DD2060020F994 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewCell.swift; sourceTree = "<group>"; };
 		D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewLayout.swift; sourceTree = "<group>"; };
@@ -162,7 +156,6 @@
 		D82A37B727A9B43F00D8F5F4 /* DirectoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryMonitor.swift; sourceTree = "<group>"; };
 		D82D2FCB27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecursiveDirectoryMonitor.swift; sourceTree = "<group>"; };
 		D82D2FCD27AC3E62001A4283 /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
-		D82D76072C9142740040265E /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
@@ -176,6 +169,7 @@
 		D8647C6F2793540500DCC261 /* TaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManager.swift; sourceTree = "<group>"; };
 		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		D86724F12771672A009C7246 /* InterpreterThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterThread.swift; sourceTree = "<group>"; };
+		D86ABD1C2C91803C005688CD /* OpoLuaCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = OpoLuaCore; sourceTree = "<group>"; };
 		D86E42892799C0CC00D5596D /* UISplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISplitViewController.swift; sourceTree = "<group>"; };
 		D86FBAB9278C76FB003DF611 /* Lua.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Lua.txt; sourceTree = "<group>"; };
 		D87A62732752A67500075CB8 /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
@@ -186,7 +180,6 @@
 		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
 		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
 		D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslucentNavigationController.swift; sourceTree = "<group>"; };
-		D889134C274C17FF00794D55 /* CGContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGContext.swift; sourceTree = "<group>"; };
 		D889134E274C181F00794D55 /* CGPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPoint.swift; sourceTree = "<group>"; };
 		D8891350274C184C00794D55 /* UIImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImage.swift; sourceTree = "<group>"; };
 		D8891352274C186E00794D55 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
@@ -210,8 +203,6 @@
 		D8C3BD642774BEC2003B1AD0 /* Console.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
 		D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoLuaError.swift; sourceTree = "<group>"; };
 		D8C3BD692774F4A2003B1AD0 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk/System/Library/Frameworks/GameController.framework; sourceTree = DEVELOPER_DIR; };
-		D8C409622C3CF62900C9E857 /* OpoIoHandler_UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler_UIKit.swift; sourceTree = "<group>"; };
-		D8C409852C3CF6DB00C9E857 /* CGImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGImage.swift; sourceTree = "<group>"; };
 		D8C43DF427C3EFEF00944A11 /* RootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
 		D8C679B927483B5600BD8720 /* DirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
@@ -231,27 +222,22 @@
 		D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramDetector.swift; sourceTree = "<group>"; };
 		D8F4835C278D3D31008AF80C /* PixelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelView.swift; sourceTree = "<group>"; };
 		D8F5CADA279D07A700A2DC3F /* ResourceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceViewController.swift; sourceTree = "<group>"; };
+		D8F9F9C42C911EDF00855BF5 /* CGContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGContext.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* SecureLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureLocation.swift; sourceTree = "<group>"; };
 		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
 		D8FE60082757208000711717 /* ApplicationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationError.swift; sourceTree = "<group>"; };
-		DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsiLuaEnv.swift; sourceTree = "<group>"; };
-		DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OplKeyCode.swift; sourceTree = "<group>"; };
 		DB0B9190278369A4006F5CD0 /* BitmapFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitmapFont.swift; sourceTree = "<group>"; };
 		DB0B919227836E70006F5CD0 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		DB3FAC2D27C2CA49004155C1 /* CGRect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGRect.swift; sourceTree = "<group>"; };
 		DB5AC973275681510043FE5C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
-		DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpoIoHandler_CoreGraphics.swift; sourceTree = "<group>"; };
 		DB6B438327A55D1200625788 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		DB79001B2746B88F005E904F /* OpoIoHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoIoHandler.swift; sourceTree = "<group>"; };
 		DB79FE6227428292005E904F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		DB79FE6427428294005E904F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DB79FE6927428294005E904F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DB79FE6A27428294005E904F /* OpoLua.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpoLua.entitlements; sourceTree = "<group>"; };
 		DB79FFA62742D88A005E904F /* OpoLua.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpoLua.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB79FFBD2742D99C005E904F /* ProgramViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramViewController.swift; sourceTree = "<group>"; };
-		DB79FFE52742E596005E904F /* OpoInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpoInterpreter.swift; sourceTree = "<group>"; };
-		DB9533FD27AC06A1001CF58D /* FlagSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagSet.swift; sourceTree = "<group>"; };
 		DB9F837027D3834000940D5C /* z-s5 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = folder; name = "z-s5"; path = "OpoLua/Resources/z-s5"; sourceTree = SOURCE_ROOT; };
 		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
 		DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKeyModifierFlags.swift; sourceTree = "<group>"; };
@@ -266,6 +252,7 @@
 				D82464222C90E71B00CE8C0A /* Lua in Frameworks */,
 				D82464512C90E79C00CE8C0A /* Diligence in Frameworks */,
 				D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */,
+				D810AAF02C911E320049DD72 /* OpoLuaCore in Frameworks */,
 				D824641F2C90E71100CE8C0A /* Diligence in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -359,10 +346,10 @@
 		D889134B274C17F300794D55 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
-				DB3FAC2D27C2CA49004155C1 /* CGRect.swift */,
 				D8FE60062757201600711717 /* Bundle.swift */,
-				D889134C274C17FF00794D55 /* CGContext.swift */,
+				D8F9F9C42C911EDF00855BF5 /* CGContext.swift */,
 				D889134E274C181F00794D55 /* CGPoint.swift */,
+				DB3FAC2D27C2CA49004155C1 /* CGRect.swift */,
 				D87A62732752A67500075CB8 /* CGSize.swift */,
 				D8EB6FF9275995DB00FC139F /* Dictionary.swift */,
 				D82D2FCD27AC3E62001A4283 /* Error.swift */,
@@ -371,6 +358,7 @@
 				D8CCACAD27B2FE3D008C8122 /* NSLock.swift */,
 				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
 				D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */,
+				D80B49332C911F520077E850 /* OpoIoHandler_UIKit.swift */,
 				D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
 				D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */,
@@ -450,12 +438,11 @@
 		DB79FE5627428292005E904F = {
 			isa = PBXGroup;
 			children = (
-				D82D76072C9142740040265E /* src */,
+				D86ABD1C2C91803C005688CD /* OpoLuaCore */,
 				D8C679BC27484BF400BD8720 /* examples */,
 				D8C3BD682774F4A2003B1AD0 /* Frameworks */,
 				DB79FE6127428292005E904F /* OpoLua */,
 				DB79FE6027428292005E904F /* Products */,
-				DB79FFE12742E52B005E904F /* swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -485,21 +472,6 @@
 			path = OpoLua;
 			sourceTree = "<group>";
 		};
-		DB79FFE12742E52B005E904F /* swift */ = {
-			isa = PBXGroup;
-			children = (
-				D8C409852C3CF6DB00C9E857 /* CGImage.swift */,
-				DB9533FD27AC06A1001CF58D /* FlagSet.swift */,
-				DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */,
-				DB79FFE52742E596005E904F /* OpoInterpreter.swift */,
-				DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */,
-				D8C409622C3CF62900C9E857 /* OpoIoHandler_UIKit.swift */,
-				DB79001B2746B88F005E904F /* OpoIoHandler.swift */,
-				DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */,
-			);
-			path = swift;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -521,6 +493,7 @@
 				D824641E2C90E71100CE8C0A /* Diligence */,
 				D82464212C90E71B00CE8C0A /* Lua */,
 				D82464502C90E79C00CE8C0A /* Diligence */,
+				D810AAEF2C911E320049DD72 /* OpoLuaCore */,
 			);
 			productName = "OpoLua (iOS)";
 			productReference = DB79FFA62742D88A005E904F /* OpoLua.app */;
@@ -551,7 +524,6 @@
 			);
 			mainGroup = DB79FE5627428292005E904F;
 			packageReferences = (
-				D82464202C90E71B00CE8C0A /* XCLocalSwiftPackageReference "LuaSwift" */,
 				D824644F2C90E79C00CE8C0A /* XCLocalSwiftPackageReference "dependencies/diligence" */,
 			);
 			productRefGroup = DB79FE6027428292005E904F /* Products */;
@@ -571,7 +543,6 @@
 				D87A9249274C517000254DE9 /* Assets.xcassets in Resources */,
 				D893EAD5276073CA00E64219 /* Borders in Resources */,
 				DB9F837127D3834000940D5C /* z-s5 in Resources */,
-				D82D76082C9142740040265E /* src in Resources */,
 				D805F95127A1D7FF00DFBC20 /* License.txt in Resources */,
 				D8C679BD27484BF400BD8720 /* examples in Resources */,
 				DB0B919327836E70006F5CD0 /* fonts in Resources */,
@@ -589,8 +560,6 @@
 				D893EAD32760739500E64219 /* Border.swift in Sources */,
 				D81B4A4D27B5CF650051B092 /* UbiquitousDownloader.swift in Sources */,
 				D81B87612790ECC500E71960 /* InstallerIntroductionViewController.swift in Sources */,
-				DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */,
-				DB79001D2746BC33005E904F /* OpoIoHandler.swift in Sources */,
 				D86724F027715B88009C7246 /* Program.swift in Sources */,
 				D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */,
 				D805F94D27A1BD9800DFBC20 /* AutoOrientView.swift in Sources */,
@@ -598,7 +567,6 @@
 				D884A3D52779025A008954A0 /* SystemFileSystem.swift in Sources */,
 				D80D65A8279DD2060020F994 /* Icon.swift in Sources */,
 				D8FE60052757177200711717 /* Settings.swift in Sources */,
-				D8C409632C3CF62900C9E857 /* OpoIoHandler_UIKit.swift in Sources */,
 				D81B875E2790DAAD00E71960 /* InstallerViewController.swift in Sources */,
 				D8DCD040277ACD7800760302 /* CanvasSprite.swift in Sources */,
 				D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */,
@@ -616,12 +584,9 @@
 				D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */,
 				D82A37B827A9B43F00D8F5F4 /* DirectoryMonitor.swift in Sources */,
 				D86E428A2799C0CC00D5596D /* UISplitViewController.swift in Sources */,
-				D889134D274C17FF00794D55 /* CGContext.swift in Sources */,
-				DB5AC9762757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift in Sources */,
 				D85F596F27ACB64E006AAF3B /* UIButton.swift in Sources */,
 				D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */,
 				D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */,
-				DB9533FE27AC06A1001CF58D /* FlagSet.swift in Sources */,
 				D89A607E2756A98200C9757F /* ViewController.swift in Sources */,
 				D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */,
 				D88A472227B82C720094A438 /* ApplicationIdentifier.swift in Sources */,
@@ -645,9 +610,7 @@
 				D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */,
 				D8FE60072757201600711717 /* Bundle.swift in Sources */,
 				D8BA09722751BBEA00F4730D /* UIElement.swift in Sources */,
-				D8C409862C3CF6DB00C9E857 /* CGImage.swift in Sources */,
 				D889134F274C181F00794D55 /* CGPoint.swift in Sources */,
-				DB0366A82C42E85500187DD0 /* PsiLuaEnv.swift in Sources */,
 				DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */,
 				D80A9CBE27A4A35E00E49AD8 /* UIDevice.swift in Sources */,
 				D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */,
@@ -685,11 +648,12 @@
 				D89D137927C3411700338298 /* RaiseGitHubIssueActivity.swift in Sources */,
 				D8D184F527BACAB5004DDFFD /* SoundViewController.swift in Sources */,
 				DB5AC974275681510043FE5C /* CanvasView.swift in Sources */,
-				DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */,
 				D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */,
+				D8F9F9C52C911EDF00855BF5 /* CGContext.swift in Sources */,
 				DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */,
 				D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */,
 				DB79FFBE2742D99C005E904F /* ProgramViewController.swift in Sources */,
+				D80B49342C911F520077E850 /* OpoIoHandler_UIKit.swift in Sources */,
 				D8D44C49279A0B87007340B5 /* TaskManagerViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -917,10 +881,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		D82464202C90E71B00CE8C0A /* XCLocalSwiftPackageReference "LuaSwift" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = LuaSwift;
-		};
 		D824644F2C90E79C00CE8C0A /* XCLocalSwiftPackageReference "dependencies/diligence" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = dependencies/diligence;
@@ -928,6 +888,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		D810AAEF2C911E320049DD72 /* OpoLuaCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OpoLuaCore;
+		};
 		D824641E2C90E71100CE8C0A /* Diligence */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Diligence;

@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 extension Graphics.Bitmap.Mode {
 
     var localizedDescription: String {

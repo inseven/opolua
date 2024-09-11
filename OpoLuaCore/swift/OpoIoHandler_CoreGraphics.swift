@@ -21,25 +21,33 @@
 import CoreGraphics
 
 extension Graphics.Color {
-    func cgColor() -> CGColor {
+
+    public func cgColor() -> CGColor {
         return CGColor(red: CGFloat(self.r) / 256, green: CGFloat(self.g) / 256, blue: CGFloat(self.b) / 256, alpha: 1)
     }
+
 }
 
 extension Graphics.Size {
-    func cgSize() -> CGSize {
+
+    public func cgSize() -> CGSize {
         return CGSize(width: self.width, height: self.height)
     }
+
 }
 
 extension Graphics.Point {
-    func cgPoint() -> CGPoint {
+
+    public func cgPoint() -> CGPoint {
         return CGPoint(x: self.x, y: self.y)
     }
+
 }
 
 extension Graphics.Rect {
-    func cgRect() -> CGRect {
+
+    public func cgRect() -> CGRect {
         return CGRect(x: self.origin.x, y: self.origin.y, width: self.width, height: self.height)
     }
+
 }

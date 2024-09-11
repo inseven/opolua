@@ -38,6 +38,12 @@ public struct Graphics {
 
         public static let icon = Self(width: 48, height: 48)
         public static let zero = Self(width: 0, height: 0)
+
+        public init(width: Int, height: Int) {
+            self.width = width
+            self.height = height
+        }
+
     }
 
     public struct Point: Equatable, Codable {
@@ -54,6 +60,12 @@ public struct Graphics {
         public let y: Int
 
         public static let zero = Self(x: 0, y: 0)
+
+        public init(x: Int, y: Int) {
+            self.x = x
+            self.y = y
+        }
+
     }
 
     public struct Rect: Equatable, Codable {
@@ -100,13 +112,13 @@ public struct Graphics {
         }
     }
 
-    struct Color: Equatable, Codable {
-        let r: UInt8
-        let g: UInt8
-        let b: UInt8
+    public struct Color: Equatable, Codable {
+        public let r: UInt8
+        public let g: UInt8
+        public let b: UInt8
 
-        static let black = Self(r: 0, g: 0, b: 0)
-        static let white = Self(r: 255, g: 255, b: 255)
+        public static let black = Self(r: 0, g: 0, b: 0)
+        public static let white = Self(r: 255, g: 255, b: 255)
     }
 
     public struct Bitmap: Codable {
@@ -145,7 +157,7 @@ public struct Graphics {
 
     public struct DrawableId: Hashable, Codable {
 
-        let value: Int
+        public let value: Int
 
         init(value: Int) {
             self.value = value
@@ -160,17 +172,17 @@ public struct Graphics {
             try cont.encode(self.value)
         }
 
-        static var defaultWindow: DrawableId {
+        public static var defaultWindow: DrawableId {
             return .init(value: 1)
         }
     }
 
-    struct CopySource {
-        let drawableId: DrawableId
-        let rect: Rect
+    public struct CopySource {
+        public let drawableId: DrawableId
+        public let rect: Rect
     }
 
-    enum FontFace: String, Codable {
+    public enum FontFace: String, Codable {
         case arial
         case times
         case courier
@@ -180,7 +192,7 @@ public struct Graphics {
         case eiksym
     }
 
-    enum FontFlag: Int, FlagEnum {
+    public enum FontFlag: Int, FlagEnum {
         // These are gSTYLE values
         case bold = 1
         case underlined = 2
@@ -191,23 +203,23 @@ public struct Graphics {
         // extras we define
         case boldHint = 64 // Indicates the font is inherently bold
     }
-    typealias FontFlags = FlagSet<FontFlag>
+    public typealias FontFlags = FlagSet<FontFlag>
 
     public struct FontInfo: Codable {
-        let uid: UInt32
-        let face: FontFace
-        let size: Int
-        let flags: FontFlags
+        public let uid: UInt32
+        public let face: FontFace
+        public let size: Int
+        public let flags: FontFlags
     }
 
-    enum Mode: Int {
+    public enum Mode: Int {
         case set = 0
         case clear = 1
         case invert = 2
         case replace = 3 // Only applicable for copy, pattern and text operations
     }
 
-    enum BorderType: Int {
+    public enum BorderType: Int {
         // gBORDER
         case singlePixel = 0x0
         case singlePixelShadow = 0x1
@@ -240,7 +252,7 @@ public struct Graphics {
     }
 
     // Specific to gXPRINT, stacks (mostly) with FontFlag except when it doesn't
-    enum XStyle: Int, Codable {
+    public enum XStyle: Int, Codable {
         case normal = 0
         case inverse = 1
         case inverseNoCorner = 2
@@ -250,14 +262,15 @@ public struct Graphics {
         case thinUnderlined = 6
     }
 
-    enum GreyMode: Int, Codable {
+    public enum GreyMode: Int, Codable {
         case normal = 0
         case greyPlaneOnly = 1
         case bothPlanes = 2
     }
 
     public struct DrawCommand {
-        enum OpType {
+
+        public enum OpType {
             case fill(Size)
             case circle(Int, Bool) // radius, fill
             case ellipse(Int, Int, Bool) // hRadius, vRadius, fill
@@ -271,43 +284,57 @@ public struct Graphics {
             case border(Rect, BorderType)
             case invert(Size)
         }
-        let drawableId: DrawableId
-        let type: OpType
-        let mode: Mode
-        let origin: Point
-        let color: Color
-        let bgcolor: Color
-        let penWidth: Int
-        let greyMode: GreyMode
+
+        public let drawableId: DrawableId
+        public let type: OpType
+        public let mode: Mode
+        public let origin: Point
+        public let color: Color
+        public let bgcolor: Color
+        public let penWidth: Int
+        public let greyMode: GreyMode
     }
 
     public struct Sprite: Codable {
-        struct Frame: Codable {
-            let offset: Point
-            let bitmap: DrawableId
-            let mask: DrawableId
-            let invertMask: Bool
-            let time: TimeInterval
+
+        public struct Frame: Codable {
+            public let offset: Point
+            public let bitmap: DrawableId
+            public let mask: DrawableId
+            public let invertMask: Bool
+            public let time: TimeInterval
         }
-        let origin: Point
-        let frames: [Frame]
+
+        public let origin: Point
+        public let frames: [Frame]
+
     }
 
     public struct ClockInfo: Codable {
-        enum Mode: Int, Codable {
+
+        public enum Mode: Int, Codable {
             case systemSetting = 6
             case analog = 7
             case digital = 8
         }
-        let mode: Mode
-        let position: Point
+
+        public let mode: Mode
+        public let position: Point
         // TODO offset, format, etc
     }
 
     public struct TextMetrics {
+
         let size: Graphics.Size
         let ascent: Int
         let descent: Int
+
+        public init(size: Graphics.Size, ascent: Int, descent: Int) {
+            self.size = size
+            self.ascent = ascent
+            self.descent = descent
+        }
+
     }
 
     public enum PeekMode: Int {
@@ -341,19 +368,22 @@ public struct Graphics {
 
 extension Graphics.Bitmap.Mode {
 
-    var isColor: Bool {
+    public var isColor: Bool {
         return rawValue >= Self.color16.rawValue
     }
 
 }
 
 extension Graphics.GreyMode {
-    var drawGreyPlane: Bool {
+
+    public var drawGreyPlane: Bool {
         return self == .greyPlaneOnly || self == .bothPlanes
     }
-    var drawNormalPlane: Bool {
+
+    public var drawNormalPlane: Bool {
         return self == .normal || self == .bothPlanes
     }
+
 }
 
 public struct Fs {
@@ -375,8 +405,15 @@ public struct Fs {
     }
 
     public struct Stat {
+
         public let size: UInt64
         public let lastModified: Date
+
+        public init(size: UInt64, lastModified: Date) {
+            self.size = size
+            self.lastModified = lastModified
+        }
+
     }
 
     public enum Err: Int {
@@ -398,6 +435,7 @@ public struct Fs {
 }
 
 extension Fs.Operation {
+
     public func isReadonlyOperation() -> Bool {
         switch type {
         case .exists: return true
@@ -408,19 +446,20 @@ extension Fs.Operation {
         default: return false
         }
     }
+
 }
 
-enum Modifier: Int, FlagEnum {
+public enum Modifier: Int, FlagEnum {
     case shift = 2
     case control = 4
     case capsLock = 16
     case fn = 32
 }
-typealias Modifiers = FlagSet<Modifier>
+public typealias Modifiers = FlagSet<Modifier>
 
 public struct Async {
 
-    enum RequestType {
+    public enum RequestType {
         case getevent
         case playsound(Data)
         case after(TimeInterval)
@@ -430,47 +469,95 @@ public struct Async {
     public typealias RequestHandle = Int32
 
     public struct Request {
-        let type: RequestType
-        let handle: RequestHandle
+        public let type: RequestType
+        public let handle: RequestHandle
     }
 
     public struct KeyPressEvent {
-        let timestamp: TimeInterval // Since boot
-        let keycode: OplKeyCode
-        let modifiers: Modifiers
-        let isRepeat: Bool
+
+        public let timestamp: TimeInterval // Since boot
+        public let keycode: OplKeyCode
+        public let modifiers: Modifiers
+        public let isRepeat: Bool
+
+        public init(timestamp: TimeInterval, keycode: OplKeyCode, modifiers: Modifiers, isRepeat: Bool) {
+            self.timestamp = timestamp
+            self.keycode = keycode
+            self.modifiers = modifiers
+            self.isRepeat = isRepeat
+        }
+
     }
 
     public struct KeyUpDownEvent {
-        let timestamp: TimeInterval // Since boot
-        let keycode: OplKeyCode
-        let modifiers: Modifiers
+        
+        public let timestamp: TimeInterval // Since boot
+        public let keycode: OplKeyCode
+        public let modifiers: Modifiers
+
+        public init(timestamp: TimeInterval, keycode: OplKeyCode, modifiers: Modifiers) {
+            self.timestamp = timestamp
+            self.keycode = keycode
+            self.modifiers = modifiers
+        }
+
     }
 
-    enum PenEventType: Int {
+    public enum PenEventType: Int {
         case down = 0
         case up = 1
         case drag = 6
     }
 
     public struct PenEvent {
-        let timestamp: TimeInterval // Since boot
-        let windowId: Graphics.DrawableId
-        let type: PenEventType
-        let modifiers: Modifiers
-        let x: Int
-        let y: Int
-        let screenx: Int
-        let screeny: Int
+        public let timestamp: TimeInterval // Since boot
+        public let windowId: Graphics.DrawableId
+        public let type: PenEventType
+        public let modifiers: Modifiers
+        public let x: Int
+        public let y: Int
+        public let screenx: Int
+        public let screeny: Int
+
+        public init(timestamp: TimeInterval,
+                    windowId: Graphics.DrawableId,
+                    type: PenEventType,
+                    modifiers: Modifiers,
+                    x: Int,
+                    y: Int,
+                    screenx: Int,
+                    screeny: Int) {
+            self.timestamp = timestamp
+            self.windowId = windowId
+            self.type = type
+            self.modifiers = modifiers
+            self.x = x
+            self.y = y
+            self.screenx = screenx
+            self.screeny = screeny
+        }
     }
 
     public struct PenUpDownEvent {
-        let timestamp: TimeInterval // Since boot
-        let windowId: Graphics.DrawableId
+
+        public let timestamp: TimeInterval // Since boot
+        public let windowId: Graphics.DrawableId
+
+        public init(timestamp: TimeInterval, windowId: Graphics.DrawableId) {
+            self.timestamp = timestamp
+            self.windowId = windowId
+        }
+
     }
 
     public struct ActivationEvent {
-        let timestamp: TimeInterval // Since boot
+
+        public let timestamp: TimeInterval // Since boot
+
+        public init(timestamp: TimeInterval) {
+            self.timestamp = timestamp
+        }
+
     }
 
     public enum ResponseValue {
@@ -491,8 +578,8 @@ public struct Async {
 
     public struct Response {
         
-        let handle: RequestHandle
-        let value: ResponseValue
+        public let handle: RequestHandle
+        public let value: ResponseValue
 
         public init(handle: RequestHandle, value: ResponseValue) {
             self.handle = handle
@@ -503,7 +590,8 @@ public struct Async {
 }
 
 extension Async.KeyPressEvent {
-    func modifiedKeycode() -> Int? {
+
+    public func modifiedKeycode() -> Int? {
         if modifiers.contains(.control) && keycode.rawValue >= OplKeyCode.a.rawValue && keycode.rawValue <= OplKeyCode.z.rawValue {
             // OPL likes to send 1-26 for Ctrl-[Shift-]A thru Ctrl-[Shift-]Z
             return keycode.rawValue - (OplKeyCode.a.rawValue - 1)
@@ -516,6 +604,7 @@ extension Async.KeyPressEvent {
             return keycode.rawValue
         }
     }
+
 }
 
 public enum ConfigName: String, CaseIterable {
@@ -523,7 +612,8 @@ public enum ConfigName: String, CaseIterable {
 }
 
 public struct EditOperation {
-    enum InputType: String, Codable {
+
+    public enum InputType: String, Codable {
         case text
         case password
         case integer
@@ -531,48 +621,56 @@ public struct EditOperation {
         case date
         case time
     }
-    struct Raw: Codable {
-        let type: InputType
-        let initialValue: String
-        let prompt: String?
-        let allowCancel: Bool
-        let min: Double?
-        let max: Double?
-        let screenRect: Graphics.Rect?
-        let timeFlags: UInt32?
+
+    public struct Raw: Codable {
+        public let type: InputType
+        public let initialValue: String
+        public let prompt: String?
+        public let allowCancel: Bool
+        public let min: Double?
+        public let max: Double?
+        public let screenRect: Graphics.Rect?
+        public let timeFlags: UInt32?
     }
-    struct TextDetails {
-        let initialValue: String
-        let maxLen: Int
+
+    public struct TextDetails {
+        public let initialValue: String
+        public let maxLen: Int
     }
-    struct IntDetails {
-        let initialValue: Int
-        let min: Int
-        let max: Int
+
+    public struct IntDetails {
+        public let initialValue: Int
+        public let min: Int
+        public let max: Int
     }
-    struct FloatDetails {
-        let initialValue: Double
-        let min: Double
-        let max: Double
+
+    public struct FloatDetails {
+        public let initialValue: Double
+        public let min: Double
+        public let max: Double
     }
-    struct DateDetails {
-        let initialValue: Date
-        let min: Date
-        let max: Date
+
+    public struct DateDetails {
+        public let initialValue: Date
+        public let min: Date
+        public let max: Date
     }
-    enum TimeType {
+
+    public enum TimeType {
         case absolute
         case duration
     }
-    struct TimeDetails {
-        let initialValue: Int // in seconds (for timeType == .absolute, seconds since midnight)
-        let min: Int // ditto
-        let max: Int // ditto
-        let timeType: TimeType
-        let display24hour: Bool // Only for timeType == .absolute
-        let includeSeconds: Bool
+
+    public struct TimeDetails {
+        public let initialValue: Int // in seconds (for timeType == .absolute, seconds since midnight)
+        public let min: Int // ditto
+        public let max: Int // ditto
+        public let timeType: TimeType
+        public let display24hour: Bool // Only for timeType == .absolute
+        public let includeSeconds: Bool
     }
-    enum Details {
+
+    public enum Details {
         case text(TextDetails)
         case password(TextDetails)
         case integer(IntDetails)
@@ -581,15 +679,16 @@ public struct EditOperation {
         case time(TimeDetails)
     }
 
-    let prompt: String?
-    let allowCancel: Bool // Can only ever be false for text and integer types
-    let screenRect: Graphics.Rect?
-    let details: Details
+    public let prompt: String?
+    public let allowCancel: Bool // Can only ever be false for text and integer types
+    public let screenRect: Graphics.Rect?
+    public let details: Details
 }
 
 extension EditOperation.Details {
+
     // It's annoying there's no built-in way to get an untagged enum from a tagged one
-    var type: EditOperation.InputType {
+    public var type: EditOperation.InputType {
         switch self {
         case .text(_): return .text
         case .password(_): return .password
@@ -599,6 +698,7 @@ extension EditOperation.Details {
         case .time(_): return .time
         }
     }
+
 }
 
 public protocol FileSystemIoHandler {
@@ -649,16 +749,21 @@ public protocol OpoIoHandler: FileSystemIoHandler {
     func opsync()
 }
 
-class DummyIoHandler : OpoIoHandler {
+public class DummyIoHandler : OpoIoHandler {
 
-    func printValue(_ val: String) -> Void {
+    public init() {
+
+    }
+
+    public func printValue(_ val: String) -> Void {
         print(val, terminator: "")
     }
 
-    func editValue(_ op: EditOperation) -> Any? {
+    public func editValue(_ op: EditOperation) -> Any? {
         return nil
     }
 
+    // TODO: Is this needed???
     func alert(lines: [String], buttons: [String]) -> Int {
         return 1
     }
@@ -667,75 +772,75 @@ class DummyIoHandler : OpoIoHandler {
         return 0
     }
 
-    func beep(frequency: Double, duration: Double) -> Error? {
+    public func beep(frequency: Double, duration: Double) -> Error? {
         print("BEEP \(frequency)kHz \(duration)s")
         return nil
     }
 
-    func draw(operations: [Graphics.DrawCommand]) {
+    public func draw(operations: [Graphics.DrawCommand]) {
     }
 
-    func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
+    public func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
         return .nothing
     }
 
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
+    public func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
         return (Graphics.Size(width: 640, height: 240), .gray4)
     }
 
-    func fsop(_ op: Fs.Operation) -> Fs.Result {
+    public func fsop(_ op: Fs.Operation) -> Fs.Result {
         return .err(.notReady)
     }
 
-    func asyncRequest(_ request: Async.Request) {
+    public func asyncRequest(_ request: Async.Request) {
     }
 
-    func cancelRequest(_ requestHandle: Async.RequestHandle) {
+    public func cancelRequest(_ requestHandle: Async.RequestHandle) {
     }
 
-    func waitForAnyRequest() -> Async.Response {
+    public func waitForAnyRequest() -> Async.Response {
         fatalError("No support for waitForAnyRequest in DummyIoHandler")
     }
 
-    func anyRequest() -> Async.Response? {
+    public func anyRequest() -> Async.Response? {
         return nil
     }
 
-    func testEvent() -> Bool {
+    public func testEvent() -> Bool {
         return false
     }
 
-    func key() -> Async.KeyPressEvent? {
+    public func key() -> Async.KeyPressEvent? {
         return nil
     }
 
-    func keysDown() -> Set<OplKeyCode> {
+    public func keysDown() -> Set<OplKeyCode> {
         return []
     }
 
-    func setConfig(key: ConfigName, value: String) {
+    public func setConfig(key: ConfigName, value: String) {
     }
 
-    func getConfig(key: ConfigName) -> String {
+    public func getConfig(key: ConfigName) -> String {
         return ""
     }
 
-    func setAppTitle(_ title: String) {
+    public func setAppTitle(_ title: String) {
     }
 
-    func displayTaskList() {
+    public func displayTaskList() {
     }
 
-    func setForeground() {
+    public func setForeground() {
     }
 
-    func setBackground() {
+    public func setBackground() {
     }
 
-    func runApp(name: String, document: String) -> Int32? {
+    public func runApp(name: String, document: String) -> Int32? {
         return nil
     }
 
-    func opsync() {
+    public func opsync() {
     }
 }

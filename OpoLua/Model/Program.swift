@@ -22,6 +22,8 @@ import Combine
 import UIKit
 import GameController
 
+import OpoLuaCore
+
 /**
  Called on the main queue.
  */

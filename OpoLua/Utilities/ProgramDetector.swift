@@ -21,6 +21,8 @@
 import Combine
 import Foundation
 
+import OpoLuaCore
+
 protocol ProgramDetectorDelegate: AnyObject {
 
     func programDetectorDidUpdateItems(_ programDetector: ProgramDetector)

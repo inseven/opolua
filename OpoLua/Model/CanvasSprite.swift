@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 class CanvasSprite {
 
     struct Frame {

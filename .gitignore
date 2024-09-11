@@ -1,4 +1,5 @@
-.local
-build
+.build
 .jekyll-cache
+.local
 _site
+build

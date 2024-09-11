@@ -22,6 +22,8 @@ import Foundation
 import CoreGraphics
 import UIKit
 
+import OpoLuaCore
+
 extension CGContext {
 
     var coordinateFlipTransform: CGAffineTransform {

@@ -21,6 +21,8 @@
 import Foundation
 import UIKit
 
+import OpoLuaCore
+
 /**
  Called on the main queue.
  */

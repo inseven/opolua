@@ -20,6 +20,8 @@
 
 import UIKit
 
+import OpoLuaCore
+
 protocol RootViewDelegate: AnyObject {
 
     func rootView(_ rootView: RootView, insertCharacter character: Character)

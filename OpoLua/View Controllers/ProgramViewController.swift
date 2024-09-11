@@ -22,6 +22,8 @@ import Combine
 import GameController
 import UIKit
 
+import OpoLuaCore
+
 class ProgramViewController: UIViewController {
 
     enum ControllerButton: CaseIterable {

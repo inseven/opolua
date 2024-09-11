@@ -21,6 +21,8 @@
 import Combine
 import UIKit
 
+import OpoLuaCore
+
 class SoundViewController: UIViewController {
 
     enum State {

@@ -20,6 +20,8 @@
 
 import UIKit
 
+import OpoLuaCore
+
 extension CGContext {
 
     func gXBorder(type: Graphics.BorderType, frame: CGRect) {

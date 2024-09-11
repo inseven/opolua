@@ -20,6 +20,8 @@
 
 import UIKit
 
+import OpoLuaCore
+
 protocol ErrorViewControllerDelegate: AnyObject {
 
     func errorViewControllerDidFinish(_ errorViewController: ErrorViewController)

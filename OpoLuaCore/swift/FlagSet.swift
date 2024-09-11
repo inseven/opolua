@@ -18,23 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-protocol FlagEnum: RawRepresentable, Hashable, CaseIterable {}
+public protocol FlagEnum: RawRepresentable, Hashable, CaseIterable {}
 
 // In theory inheriting RawRepresentable should get Codable support for free,
 // but I cannot get it to work :-(
-struct FlagSet<T>: Equatable, Codable where T: FlagEnum, T.RawValue: Codable & BinaryInteger {
+public struct FlagSet<T>: Equatable, Codable where T: FlagEnum, T.RawValue: Codable & BinaryInteger {
 
-    var rawValue: T.RawValue
+    public var rawValue: T.RawValue
 
-    init() {
+    public init() {
         self.rawValue = 0
     }
 
-    init(rawValue: T.RawValue) {
+    public init(rawValue: T.RawValue) {
         self.rawValue = rawValue
     }
 
-    init(_ set: Set<T>) {
+    public init(_ set: Set<T>) {
         var val: T.RawValue = 0
         for flag in set {
             val = val | flag.rawValue
@@ -42,7 +42,7 @@ struct FlagSet<T>: Equatable, Codable where T: FlagEnum, T.RawValue: Codable & B
         self.rawValue = val
     }
 
-    func set() -> Set<T> {
+    public func set() -> Set<T> {
         var result = Set<T>()
         for caseVal in T.allCases {
             if self.contains(caseVal) {
@@ -52,20 +52,20 @@ struct FlagSet<T>: Equatable, Codable where T: FlagEnum, T.RawValue: Codable & B
         return result
     }
 
-    func contains(_ flag: T) -> Bool {
+    public func contains(_ flag: T) -> Bool {
         return (rawValue & flag.rawValue) == flag.rawValue
     }
 
-    mutating func insert(_ flag: T) {
+    public mutating func insert(_ flag: T) {
         rawValue = rawValue | flag.rawValue
     }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer().decode(T.RawValue.self)
         self.init(rawValue: value)
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var cont = encoder.singleValueContainer()
         try cont.encode(self.rawValue)
     }
