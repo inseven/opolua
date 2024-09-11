@@ -31,7 +31,7 @@ struct SettingsView: View {
         case about
     }
 
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
 
     @ObservedObject var settings: Settings
 
@@ -61,57 +61,41 @@ struct SettingsView: View {
                     Toggle("Show Scripts", isOn: $settings.showLibraryScripts)
                     Toggle("Show Tests", isOn: $settings.showLibraryTests)
                 }
-                #if DEBUG
+#if DEBUG
                 Section("Debug") {
                     Toggle("Always Show Error Details", isOn: $settings.alwaysShowErrorDetails)
                 }
-                #endif
+#endif
+#if !targetEnvironment(macCatalyst)
                 Section {
                     Button("About \(Bundle.main.displayName!)...") {
                         sheet = .about
                     }
                     .foregroundColor(.primary)
                 }
+#endif
             }
             .tint(Color(uiColor: settings.theme.color))
-            .navigationBarTitle("Settings", displayMode: .inline)
-            .navigationBarItems(trailing: Button {
-                presentationMode.wrappedValue.dismiss()
-            } label: {
-                Text("Done")
-                    .bold()
-            })
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+
+            .toolbar {
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+
+            }
             .sheet(item: $sheet) { sheet in
                 switch sheet {
                 case .about:
-
-                    let subject = "OpoLua Support (\(Bundle.main.version ?? "Unknown Version"))"
-
-                    AboutView(repository: "inseven/opolua", copyright: "Copyright © 2021-2024\nJason Morley, Tom Sutcliffe") {
-                        Action("Website", url: URL(string: "https://opolua.org")!)
-                        Action("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)
-                        Action("GitHub", url: URL(string: "https://github.com/inseven/opolua")!)
-                        Action("Support", url: URL(address: "support@opolua.org", subject: subject)!)
-                    } acknowledgements: {
-                        Acknowledgements("Developers") {
-                            Credit("Jason Morley", url: URL(string: "https://jbmorley.co.uk"))
-                            Credit("Tom Sutcliffe", url: URL(string: "https://github.com/tomsci"))
-                        }
-                        Acknowledgements("Thanks") {
-                            Credit("Lukas Fittl")
-                            Credit("Sara Frederixon")
-                            Credit("Sarah Barbour")
-                            Credit("Shawn Leedy")
-                        }
-                    } licenses: {
-                        License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "Lua.txt")
-                        License(name: "OpoLua", author: "Jason Morley, Tom Sutcliffe", filename: "License.txt")
-                    }
-
+                    AboutView(Legal.contents)
                 }
             }
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+        .navigationViewStyle(.stack)
     }
 
 }

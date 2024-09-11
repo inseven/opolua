@@ -20,6 +20,9 @@
 
 import Combine
 import UIKit
+import SwiftUI
+
+import Diligence
 
 class RootViewController: UISplitViewController {
 
@@ -82,6 +85,16 @@ class RootViewController: UISplitViewController {
             let navigationController = UINavigationController(rootViewController: viewController)
             setViewController(navigationController, for: .secondary)
         }
+    }
+
+    func showAbout() {
+        let viewController = UIHostingController(rootView: AboutView(Legal.contents))
+        self.present(viewController, animated: true)
+    }
+
+    func showSettings() {
+        let viewController = UIHostingController(rootView: SettingsView(settings: settings))
+        self.present(viewController, animated: true)
     }
 
     func showSection(_ section: ApplicationSection, animated: Bool = true) {

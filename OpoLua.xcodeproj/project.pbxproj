@@ -106,6 +106,7 @@
 		D8FE60052757177200711717 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60042757177200711717 /* Settings.swift */; };
 		D8FE60072757201600711717 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60062757201600711717 /* Bundle.swift */; };
 		D8FE60092757208000711717 /* ApplicationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60082757208000711717 /* ApplicationError.swift */; };
+		D8FE6D912C92251B0058CE2E /* Legal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE6D902C92251B0058CE2E /* Legal.swift */; };
 		DB0366A82C42E85500187DD0 /* PsiLuaEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */; };
 		DB0B914A276E1BC5006F5CD0 /* OplKeyCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */; };
 		DB0B9191278369A4006F5CD0 /* BitmapFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0B9190278369A4006F5CD0 /* BitmapFont.swift */; };
@@ -233,6 +234,7 @@
 		D8FE60042757177200711717 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		D8FE60062757201600711717 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
 		D8FE60082757208000711717 /* ApplicationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationError.swift; sourceTree = "<group>"; };
+		D8FE6D902C92251B0058CE2E /* Legal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Legal.swift; sourceTree = "<group>"; };
 		DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsiLuaEnv.swift; sourceTree = "<group>"; };
 		DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OplKeyCode.swift; sourceTree = "<group>"; };
 		DB0B9190278369A4006F5CD0 /* BitmapFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitmapFont.swift; sourceTree = "<group>"; };
@@ -302,6 +304,7 @@
 				D80D65A7279DD2060020F994 /* Icon.swift */,
 				D884A3D6277914CF008954A0 /* Installer.swift */,
 				D86724F12771672A009C7246 /* InterpreterThread.swift */,
+				D8FE6D902C92251B0058CE2E /* Legal.swift */,
 				D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */,
 				D8C3BD662774BF1F003B1AD0 /* OpoLuaError.swift */,
 				D86724EF27715B88009C7246 /* Program.swift */,
@@ -348,6 +351,7 @@
 				D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */,
 				D8F4835C278D3D31008AF80C /* PixelView.swift */,
 				DB6B438327A55D1200625788 /* RootView.swift */,
+				D8553767278F535A00ED67C0 /* SettingsView.swift */,
 				D85F597027ACB682006AAF3B /* WizardFooterView.swift */,
 			);
 			path = Views;
@@ -407,7 +411,6 @@
 				DB79FFBD2742D99C005E904F /* ProgramViewController.swift */,
 				D8C43DF427C3EFEF00944A11 /* RootViewController.swift */,
 				D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */,
-				D8553767278F535A00ED67C0 /* SettingsView.swift */,
 				D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */,
 				D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */,
 				D81B875F2790E9A600E71960 /* Installer */,
@@ -673,6 +676,7 @@
 				D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */,
 				DBE2917E27932C5400EE824B /* ClockView.swift in Sources */,
 				D80A9CC227A4B66400E49AD8 /* SourceViewController.swift in Sources */,
+				D8FE6D912C92251B0058CE2E /* Legal.swift in Sources */,
 				D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */,
 				D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */,
 				D88A472427B83D6E0094A438 /* FileMetadataCache.swift in Sources */,
