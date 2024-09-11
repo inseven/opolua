@@ -35,7 +35,8 @@ BUILD_DIRECTORY="$ROOT_DIRECTORY/build"
 TEMPORARY_DIRECTORY="$ROOT_DIRECTORY/temp"
 
 KEYCHAIN_PATH="$TEMPORARY_DIRECTORY/temporary.keychain"
-ARCHIVE_PATH="$BUILD_DIRECTORY/OpoLua.xcarchive"
+MACOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-macOS.xcarchive"
+IOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-iOS.xcarchive"
 ENV_PATH="$APP_DIRECTORY/.env"
 RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/release.sh"
 
@@ -75,20 +76,6 @@ if [ -f "$ENV_PATH" ] ; then
     source "$ENV_PATH"
 fi
 
-function xcode_project {
-    xcodebuild \
-        -project OpoLua.xcodeproj "$@"
-}
-
-function build_scheme {
-    # Disable code signing for the build server.
-    xcode_project \
-        -scheme "$1" \
-        CODE_SIGN_IDENTITY="" \
-        CODE_SIGNING_REQUIRED=NO \
-        CODE_SIGNING_ALLOWED=NO "${@:2}"
-}
-
 # Ensure the Lua source compiles.
 cd "$SRC_DIRECTORY"
 luac -p *.lua
@@ -100,7 +87,9 @@ IOS_XCODE_PATH=${IOS_XCODE_PATH:-/Applications/Xcode.app}
 sudo xcode-select --switch "$IOS_XCODE_PATH"
 
 # List the available schemes.
-xcode_project -list
+xcodebuild \
+        -project OpoLua.xcodeproj \
+        -list
 
 # Clean up the build directory.
 if [ -d "$BUILD_DIRECTORY" ] ; then
@@ -137,24 +126,54 @@ BUILD_NUMBER=`build-tools generate-build-number`
 
 # Import the certificates into our dedicated keychain.
 echo "$APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$APPLE_DISTRIBUTION_CERTIFICATE_BASE64"
+echo "$DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64"
 
 # Install the provisioning profiles.
 build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_App_Store_Profile.mobileprovision"
+build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_Mac_Catalyst_Developer_ID_Profile.provisionprofile"
 
 # Build and archive the iOS project.
-xcode_project \
+sudo xcode-select --switch "$IOS_XCODE_PATH"
+xcodebuild \
+    -project OpoLua.xcodeproj \
     -scheme "OpoLua" \
     -config Release \
-    -archivePath "$ARCHIVE_PATH" \
+    -archivePath "$IOS_ARCHIVE_PATH" \
+    -destination "generic/platform=iOS" \
     OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
     CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
     MARKETING_VERSION=$VERSION_NUMBER \
     clean archive
 xcodebuild \
-    -archivePath "$ARCHIVE_PATH" \
+    -archivePath "$IOS_ARCHIVE_PATH" \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
-    -exportOptionsPlist "${APP_DIRECTORY}/ExportOptions.plist"
+    -exportOptionsPlist "$APP_DIRECTORY/ExportOptions.plist"
+
+# Builds the macOS project.
+# This is a deeply collection of build steps designed to work around what looks to be an Xcode bug---it seems Xcode
+# builds the 'embedlua' dependency for the wrong architecture.
+sudo xcode-select --switch "$MACOS_XCODE_PATH"
+xcodebuild \
+    -project OpoLua.xcodeproj \
+    -scheme "OpoLua" \
+    -config Release \
+    -archivePath "$MACOS_ARCHIVE_PATH" \
+    -destination "generic/platform=iOS" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+    MARKETING_VERSION=$VERSION_NUMBER \
+    archive
+xcodebuild \
+    -project OpoLua.xcodeproj \
+    -scheme "OpoLua" \
+    -config Release \
+    -archivePath "$MACOS_ARCHIVE_PATH" \
+    -destination "generic/platform=macOS,variant=Mac Catalyst" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+    MARKETING_VERSION=$VERSION_NUMBER \
+    archive
 
 if $RELEASE ; then
 

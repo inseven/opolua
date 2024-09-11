@@ -35,8 +35,10 @@ public class PsiLuaEnv {
         L = LuaState(libraries: [.package, .table, .io, .os, .string, .math, .utf8, .debug])
         L.setDefaultStringEncoding(kDefaultEpocEncoding)
 
-        L.setRequireRoot(nil)
-        L.addModules(lua_sources)
+        let srcRoot = Bundle.main.url(forResource: "init",
+                                      withExtension: "lua",
+                                      subdirectory: "src")!.deletingLastPathComponent()
+        L.setRequireRoot(srcRoot.path)
 
         // Finally, run init.lua
         require("init")
