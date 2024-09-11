@@ -26,22 +26,9 @@ set -x
 set -u
 
 SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 ROOT_DIRECTORY="${SCRIPTS_DIRECTORY}/.."
-CHANGES_DIRECTORY="${SCRIPTS_DIRECTORY}/changes"
-BUILD_TOOLS_DIRECTORY="${SCRIPTS_DIRECTORY}/build-tools"
+SRC_DIRECTORY="${ROOT_DIRECTORY}/src"
 
-ENVIRONMENT_PATH="${SCRIPTS_DIRECTORY}/environment.sh"
-
-# Install tools.
-cd "$ROOT_DIRECTORY"
-asdf install
-
-# Create directory for local tools.
-if [ -d "${ROOT_DIRECTORY}/.local" ] ; then
-    rm -r "${ROOT_DIRECTORY}/.local"
-fi
-source "${ENVIRONMENT_PATH}"
-
-# Install the Python dependencies.
-PIPENV_PIPFILE="$CHANGES_DIRECTORY/Pipfile" pipenv install
-PIPENV_PIPFILE="$BUILD_TOOLS_DIRECTORY/Pipfile" pipenv install
+lua "$SRC_DIRECTORY/tcompiler.lua"
+lua "$SRC_DIRECTORY/unittest.lua"

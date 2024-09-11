@@ -21,6 +21,7 @@
 import AudioUnit
 import AVFoundation
 import Combine
+import CoreAudio
 import Foundation
 
 class PlaySoundRequest: Scheduler.Request {
