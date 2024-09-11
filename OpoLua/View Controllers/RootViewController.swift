@@ -57,6 +57,7 @@ class RootViewController: UISplitViewController {
         libraryViewController.delegate = self
         delegate = self
         preferredDisplayMode = .automatic
+        primaryBackgroundStyle = .sidebar
     }
 
     required init?(coder: NSCoder) {
