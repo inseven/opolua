@@ -28,7 +28,7 @@ set -u
 SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 ROOT_DIRECTORY="${SCRIPTS_DIRECTORY}/.."
-SRC_DIRECTORY="${ROOT_DIRECTORY}/src"
+SRC_DIRECTORY="${ROOT_DIRECTORY}/OpoLuaCore/swift/src"
 
 lua "$SRC_DIRECTORY/tcompiler.lua"
 lua "$SRC_DIRECTORY/unittest.lua"
