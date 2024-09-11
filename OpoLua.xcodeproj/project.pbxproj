@@ -360,7 +360,7 @@
 		DB93498D27E659CA00DB8723 /* oplkeycode.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = oplkeycode.lua; sourceTree = "<group>"; };
 		DB9533FD27AC06A1001CF58D /* FlagSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagSet.swift; sourceTree = "<group>"; };
 		DB95340027AE91B6001CF58D /* recognizer.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = recognizer.lua; sourceTree = "<group>"; };
-		DB9F837027D3834000940D5C /* z-s5 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "z-s5"; path = "resources/z-s5"; sourceTree = SOURCE_ROOT; };
+		DB9F837027D3834000940D5C /* z-s5 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = folder; name = "z-s5"; path = "OpoLua/Resources/z-s5"; sourceTree = SOURCE_ROOT; };
 		DBA18835279C408A00B2954B /* dialog.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dialog.lua; sourceTree = "<group>"; };
 		DBBC73E92BA21EAA008BBC72 /* system_oxh.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = system_oxh.lua; sourceTree = "<group>"; };
 		DBBC73EA2BA21EAA008BBC72 /* date_oxh.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = date_oxh.lua; sourceTree = "<group>"; };
@@ -455,6 +455,16 @@
 				D805F95027A1D7FF00DFBC20 /* License.txt */,
 			);
 			path = Licenses;
+			sourceTree = "<group>";
+		};
+		D88851242C91149400A7F663 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D893EAD4276073CA00E64219 /* Borders */,
+				DB0B919227836E70006F5CD0 /* fonts */,
+				DB9F837027D3834000940D5C /* z-s5 */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		D8891343274BF24D00794D55 /* Views */ = {
@@ -587,9 +597,6 @@
 		DB79FE6127428292005E904F /* OpoLua */ = {
 			isa = PBXGroup;
 			children = (
-				DB9F837027D3834000940D5C /* z-s5 */,
-				D893EAD4276073CA00E64219 /* Borders */,
-				DB0B919227836E70006F5CD0 /* fonts */,
 				DB79FE6A27428294005E904F /* OpoLua.entitlements */,
 				DB79FE6927428294005E904F /* Info.plist */,
 				DB79FE6227428292005E904F /* AppDelegate.swift */,
@@ -597,6 +604,7 @@
 				D889134B274C17F300794D55 /* Extensions */,
 				D86FBAB8278C76E4003DF611 /* Licenses */,
 				D861E8D9274A818D003C8D3D /* Model */,
+				D88851242C91149400A7F663 /* Resources */,
 				D8D95502279B52250049A3C3 /* Utilities */,
 				D8C679BB27484BB800BD8720 /* View Controllers */,
 				D8891343274BF24D00794D55 /* Views */,
