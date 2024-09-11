@@ -736,6 +736,8 @@ function CLS()
     local screen = runtime:getGraphics().screen
     gAT(screen.x, screen.y)
     gFILL(screen.w * screen.charw, screen.h * screen.charh, KgModeClear)
+    screen.cursorx = 0
+    screen.cursory = 0
     runtime:restoreGraphicsState(state)
     gUSE(prev)
     runtime:flushGraphicsOps()
