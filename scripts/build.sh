@@ -149,6 +149,7 @@ xcodebuild \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
     -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-iOS.plist"
+IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
 
 # Builds the macOS project.
 sudo xcode-select --switch "$MACOS_XCODE_PATH"
@@ -167,10 +168,9 @@ xcodebuild \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
     -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-macCatalyst.plist"
+PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
 
 if $RELEASE ; then
-
-    IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
 
     # Archive the build directory.
     ZIP_BASENAME="build-${VERSION_NUMBER}-${BUILD_NUMBER}.zip"
@@ -188,7 +188,6 @@ if $RELEASE ; then
         --pre-release \
         --push \
         --exec "${RELEASE_SCRIPT_PATH}" \
-        "${IPA_PATH}" "${ZIP_PATH}"
-
+        "$IPA_PATH" "$PKG_PATH" "$ZIP_PATH"
 
 fi
