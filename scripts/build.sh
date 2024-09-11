@@ -130,7 +130,7 @@ echo "$DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD" | build-tools import-base6
 
 # Install the provisioning profiles.
 build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_App_Store_Profile.mobileprovision"
-build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_Mac_Catalyst_Developer_ID_Profile.provisionprofile"
+build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_Mac_Catalyst_App_Store_Profile.provisionprofile"
 
 # Build and archive the iOS project.
 sudo xcode-select --switch "$IOS_XCODE_PATH"
@@ -148,7 +148,7 @@ xcodebuild \
     -archivePath "$IOS_ARCHIVE_PATH" \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
-    -exportOptionsPlist "$APP_DIRECTORY/ExportOptions.plist"
+    -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-iOS.plist"
 
 # Builds the macOS project.
 # This is a deeply collection of build steps designed to work around what looks to be an Xcode bug---it seems Xcode
