@@ -252,23 +252,34 @@ class DirectoryViewController : UICollectionViewController {
         guard item.isWriteable else {
             return []
         }
+
+        let attributes: UIMenuElement.Attributes = if isRunning(item: item) {
+            [.destructive, .disabled]
+        } else {
+            [.destructive]
+        }
+
         let deleteAction = UIAction(title: "Delete",
                                     image: UIImage(systemName: "trash"),
-                                    attributes: .destructive) { action in
+                                    attributes: attributes) { action in
             self.delete(item: item)
         }
+
         return [UIMenu(options: [.displayInline], children: [deleteAction])]
+    }
+
+    private func isRunning(item: Directory.Item) -> Bool {
+        guard let programUrl = item.programUrl else {
+            return false
+        }
+        return taskManager.isRunning(programUrl)
     }
 
     private func update(animated: Bool) {
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
         let items = directory.items.map { item -> Item in
-            var isRunning = false
-            if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
-                isRunning = true
-            }
-            return Item(directoryItem: item, icon: item.icon, isRunning: isRunning, theme: settings.theme)
+            return Item(directoryItem: item, icon: item.icon, isRunning: isRunning(item: item), theme: settings.theme)
         }
         snapshot.appendItems(items, toSection: Section.none)
         dataSource.apply(snapshot, animatingDifferences: animated)
