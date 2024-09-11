@@ -151,19 +151,7 @@ xcodebuild \
     -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-iOS.plist"
 
 # Builds the macOS project.
-# This is a deeply collection of build steps designed to work around what looks to be an Xcode bug---it seems Xcode
-# builds the 'embedlua' dependency for the wrong architecture.
 sudo xcode-select --switch "$MACOS_XCODE_PATH"
-xcodebuild \
-    -project OpoLua.xcodeproj \
-    -scheme "OpoLua" \
-    -config Release \
-    -archivePath "$MACOS_ARCHIVE_PATH" \
-    -destination "generic/platform=iOS" \
-    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
-    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
-    MARKETING_VERSION=$VERSION_NUMBER \
-    archive
 xcodebuild \
     -project OpoLua.xcodeproj \
     -scheme "OpoLua" \
@@ -173,7 +161,12 @@ xcodebuild \
     OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
     CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
     MARKETING_VERSION=$VERSION_NUMBER \
-    archive
+    clean archive
+xcodebuild \
+    -archivePath "$MACOS_ARCHIVE_PATH" \
+    -exportArchive \
+    -exportPath "$BUILD_DIRECTORY" \
+    -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-macCatalyst.plist"
 
 if $RELEASE ; then
 
