@@ -90,7 +90,6 @@ class DirectoryViewController : UICollectionViewController {
         self.directory = directory
         super.init(collectionViewLayout: IconCollectionViewLayout())
         self.directory.delegate = self
-        collectionView.backgroundColor = UIColor(named: "DirectoryBackground")
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
