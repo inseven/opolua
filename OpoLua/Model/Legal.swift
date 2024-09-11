@@ -37,6 +37,7 @@ public struct Legal {
             Credit("Tom Sutcliffe", url: URL(string: "https://github.com/tomsci"))
         }
         Acknowledgements("Thanks") {
+            Credit("Fabrice Cappaert")
             Credit("Lukas Fittl")
             Credit("Sara Frederixon")
             Credit("Sarah Barbour")
