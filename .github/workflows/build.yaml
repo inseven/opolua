@@ -43,7 +43,7 @@ jobs:
 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        RELEASE: ${{ github.ref == 'refs/heads/main' }}
+        RELEASE: true
 
       run: |
         scripts/build.sh
