@@ -56,7 +56,6 @@
 		D884A3D52779025A008954A0 /* SystemFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D42779025A008954A0 /* SystemFileSystem.swift */; };
 		D884A3D7277914CF008954A0 /* Installer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D6277914CF008954A0 /* Installer.swift */; };
 		D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891341274BF21900794D55 /* ChoiceViewController.swift */; };
-		D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */; };
 		D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */; };
 		D889134D274C17FF00794D55 /* CGContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134C274C17FF00794D55 /* CGContext.swift */; };
 		D889134F274C181F00794D55 /* CGPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = D889134E274C181F00794D55 /* CGPoint.swift */; };
@@ -184,7 +183,6 @@
 		D884A3D42779025A008954A0 /* SystemFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemFileSystem.swift; sourceTree = "<group>"; };
 		D884A3D6277914CF008954A0 /* Installer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Installer.swift; sourceTree = "<group>"; };
 		D8891341274BF21900794D55 /* ChoiceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceViewController.swift; sourceTree = "<group>"; };
-		D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
 		D8891349274BF3B000794D55 /* TranslucentNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslucentNavigationController.swift; sourceTree = "<group>"; };
 		D889134C274C17FF00794D55 /* CGContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGContext.swift; sourceTree = "<group>"; };
 		D889134E274C181F00794D55 /* CGPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPoint.swift; sourceTree = "<group>"; };
@@ -349,7 +347,6 @@
 				DBE2917D27932C5300EE824B /* ClockView.swift */,
 				D80D65A9279DDC290020F994 /* IconCollectionViewCell.swift */,
 				D8F4835C278D3D31008AF80C /* PixelView.swift */,
-				D8891344274BF25D00794D55 /* SwitchTableViewCell.swift */,
 				DB6B438327A55D1200625788 /* RootView.swift */,
 				D85F597027ACB682006AAF3B /* WizardFooterView.swift */,
 			);
@@ -613,7 +610,6 @@
 				D82D2FCC27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift in Sources */,
 				D8632832279C240600B63625 /* UID.swift in Sources */,
 				D8891353274C186E00794D55 /* Canvas.swift in Sources */,
-				D8891345274BF25D00794D55 /* SwitchTableViewCell.swift in Sources */,
 				D82A37B827A9B43F00D8F5F4 /* DirectoryMonitor.swift in Sources */,
 				D86E428A2799C0CC00D5596D /* UISplitViewController.swift in Sources */,
 				D889134D274C17FF00794D55 /* CGContext.swift in Sources */,
