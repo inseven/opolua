@@ -59,7 +59,7 @@
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>NSFileProviderDomainUsageDescription</key>
-	<string>Add folders to OpoLua to view browse files and programs.</string>
+	<string>Add folders to OpoLua to browse files and programs.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save screenshots and export images to your Photo Library.</string>
 	<key>UIApplicationSceneManifest</key>
