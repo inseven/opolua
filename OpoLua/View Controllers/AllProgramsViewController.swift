@@ -48,6 +48,14 @@ class AllProgramsViewController : UICollectionViewController {
         return true
     }
 
+    private lazy var addBarButtonItem: UIBarButtonItem = {
+        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
+                                            style: .plain,
+                                            target: self,
+                                            action: #selector(addTapped(sender:)))
+        return barButtonItem
+    }()
+
     lazy var wallpaperPixelView: PixelView = {
         let image = settings.theme.wallpaper
         let pixelView = PixelView(image: image)
@@ -91,6 +99,7 @@ class AllProgramsViewController : UICollectionViewController {
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
         title = "All Programs"
+        navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.largeTitleDisplayMode = .never
         configureRefreshControl()
     }
@@ -143,6 +152,12 @@ class AllProgramsViewController : UICollectionViewController {
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         updateWallpaper()
+    }
+
+    @objc func addTapped(sender: UIBarButtonItem) {
+        let softwareIndexViewController = SoftwareIndexViewController()
+        softwareIndexViewController.delegate = self
+        present(softwareIndexViewController, animated: true)
     }
 
     @objc func refreshControlDidChange(_ sender: UIRefreshControl) {
@@ -273,6 +288,20 @@ extension AllProgramsViewController: ProgramDetectorDelegate {
         dispatchPrecondition(condition: .onQueue(.main))
         collectionView.refreshControl?.endRefreshing()
         present(error: error)
+    }
+
+}
+
+extension AllProgramsViewController: SoftwareIndexViewControllerDelegate {
+
+    func softwareIndexViewCntrollerDidCancel(softwareIndexViewController: SoftwareIndexViewController) {
+        softwareIndexViewController.dismiss(animated: true)
+    }
+    
+    func softwareIndexViewCntroller(softwareIndexViewCntroller: SoftwareIndexViewController, didSelectURL url: URL) {
+        softwareIndexViewCntroller.dismiss(animated: true) {
+            AppDelegate.shared.install(url: url)
+        }
     }
 
 }

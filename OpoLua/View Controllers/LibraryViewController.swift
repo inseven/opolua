@@ -259,7 +259,6 @@ class LibraryViewController: UICollectionViewController {
         present(documentPicker, animated: true)
     }
 
-
     func addUrl(_ url: URL) {
         dispatchPrecondition(condition: .onQueue(.main))
 

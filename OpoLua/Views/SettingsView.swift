@@ -86,7 +86,6 @@ struct SettingsView: View {
                         dismiss()
                     }
                 }
-
             }
             .sheet(item: $sheet) { sheet in
                 switch sheet {
