@@ -57,7 +57,7 @@ class LibraryViewController: UICollectionViewController {
         return barButtonItem
     }()
 
-    private lazy var aboutBarButtonItem: UIBarButtonItem = {
+    private lazy var settingsBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "gear"),
                                             style: .plain,
                                             target: self,
@@ -72,7 +72,9 @@ class LibraryViewController: UICollectionViewController {
         super.init(collectionViewLayout: UICollectionViewCompositionalLayout.list(using: UICollectionLayoutListConfiguration(appearance: .insetGrouped)))
         title = "Library"
         navigationItem.rightBarButtonItem = addBarButtonItem
-        navigationItem.leftBarButtonItem = aboutBarButtonItem
+#if !targetEnvironment(macCatalyst)
+        navigationItem.leftBarButtonItem = settingsBarButtonItem
+#endif
         clearsSelectionOnViewWillAppear = false
 
         collectionView.collectionViewLayout = createLayout()

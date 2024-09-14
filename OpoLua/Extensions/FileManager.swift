@@ -118,14 +118,32 @@ extension FileManager {
     }
 
     func writeSecureBookmark(_ url: URL, to backingUrl: URL) throws {
+#if targetEnvironment(macCatalyst)
+        try prepareUrlForSecureAccess(url)
+        let data = try url.bookmarkData(options: [.withSecurityScope],
+                                        includingResourceValuesForKeys: nil,
+                                        relativeTo: nil)
+        try data.write(to: backingUrl, options: .atomic)
+#else
         try prepareUrlForSecureAccess(url)
         let data = try url.bookmarkData(options: .suitableForBookmarkFile,
                                         includingResourceValuesForKeys: nil,
                                         relativeTo: nil)
         try URL.writeBookmarkData(data, to: backingUrl)
+#endif
+
     }
 
     func readSecureBookmark(url: URL) throws -> URL {
+#if targetEnvironment(macCatalyst)
+        let data = try Data(contentsOf: url)
+        var isStale = true
+        let url = try URL(resolvingBookmarkData: data, options: .withSecurityScope, bookmarkDataIsStale: &isStale)
+        if !url.startAccessingSecurityScopedResource() {
+            throw OpoLuaError.secureAccess
+        }
+        return url
+#else
         let bookmarkData = try URL.bookmarkData(withContentsOf: url)
         var isStale: Bool = true
         let url = try URL(resolvingBookmarkData: bookmarkData,
@@ -134,6 +152,7 @@ extension FileManager {
                           bookmarkDataIsStale: &isStale)
         try prepareUrlForSecureAccess(url)
         return url
+#endif
     }
 
     func findCorrectCase(in path: URL, for uncasedName: String) throws -> String {
