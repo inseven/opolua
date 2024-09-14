@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import SwiftUI
 
 protocol SoftwareIndexViewControllerDelegate: AnyObject {
@@ -180,21 +181,35 @@ class LibraryModel: ObservableObject {
     }
 
     @Published @MainActor var programs: [Program] = []
+    @Published @MainActor var filter: String = ""
+    @Published @MainActor var filteredPrograms: [Program] = []
 
-    @MainActor var filter: String = ""
-
-    @MainActor var filteredPrograms: [Program] {
-        return programs.filter { filter.isEmpty || $0.name.localizedStandardContains(filter) }
-    }
+    private var cancellables: Set<AnyCancellable> = []
 
     weak var delegate: LibraryModelDelegate?
 
     init() {
     }
 
-    // TODO: Filter for only OPL.
+    @MainActor func start() {
+        $programs
+            .combineLatest($filter)
+            .map { programs, filter in
+               return programs.filter { filter.isEmpty || $0.name.localizedStandardContains(filter) }
+            }
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.filteredPrograms, on: self)
+            .store(in: &cancellables)
+        Task {
+            await self.fetch()
+        }
+    }
 
-    func fetch() async {
+    @MainActor func stop() {
+        cancellables.removeAll()
+    }
+
+    private func fetch() async {
         let url = URL(string: "https://software.psion.info/api/v1/programs.json")!
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
@@ -253,14 +268,10 @@ class LibraryModel: ObservableObject {
 
     func install(release: Release) async throws {
         guard let downloadURL = release.downloadURL else {
-            // TODO: Handle this error.
             print("No download URL!")
             return
         }
-
-//        let url = try await downloadFile(from: downloadURL)
         let (url, _) = try await URLSession.shared.download(from: downloadURL)
-
         DispatchQueue.main.async {
             self.delegate?.libraryModel(libraryModel: self, didSelectURL: url)
         }
@@ -400,9 +411,7 @@ struct ProgramsView: View {
             }
         }
         .onAppear {
-            Task {
-                await libraryModel.fetch()
-            }
+            libraryModel.start()
         }
         .environmentObject(libraryModel)
     }
