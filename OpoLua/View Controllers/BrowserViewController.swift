@@ -23,7 +23,20 @@ import UIKit
 class BrowserViewController: UICollectionViewController {
 
     internal lazy var addBarButtonItem: UIBarButtonItem = {
-        let actions = actions()
+        let softwareIndexAction = UIAction(title: "Psion Software Index",
+                                           image: UIImage(systemName: "list.dash.header.rectangle")) { [weak self] action in
+            self?.showSoftwareIndex()
+        }
+        let addFolderAction = UIAction(title: "Add Folder",
+                                       image: UIImage(systemName: "folder.badge.plus")) { [weak self] action in
+            self?.addFolder()
+        }
+        let localActionsMenu = UIMenu(options: [.displayInline], children: [softwareIndexAction])
+        let remoteActionsMenu = UIMenu(options: [.displayInline], children: [addFolderAction])
+        let actions = [
+            localActionsMenu,
+            remoteActionsMenu,
+        ]
         let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: actions)
         let addBarButtonItem = UIBarButtonItem(title: nil,
                                                image: UIImage(systemName: "plus"),
@@ -41,21 +54,6 @@ class BrowserViewController: UICollectionViewController {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    func actions() -> [UIMenuElement] {
-        let softwareIndexAction = UIAction(title: "Psion Software Index",
-                                           image: UIImage(systemName: "list.dash.header.rectangle")) { [weak self] action in
-            self?.showSoftwareIndex()
-        }
-        let addFolderAction = UIAction(title: "Add Folder",
-                                       image: UIImage(systemName: "folder.badge.plus")) { [weak self] action in
-            self?.addFolder()
-        }
-        return [UIMenu(options: [.displayInline], children: [
-            softwareIndexAction,
-            addFolderAction,
-        ])]
     }
 
     @objc func showSoftwareIndex() {
