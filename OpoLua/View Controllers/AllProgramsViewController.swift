@@ -155,7 +155,6 @@ class AllProgramsViewController : UICollectionViewController {
     }
 
     @objc func addTapped(sender: UIBarButtonItem) {
-        // TODO: We need a model with a delegate.
         let softwareIndexViewController = SoftwareIndexViewController()
         softwareIndexViewController.delegate = self
         present(softwareIndexViewController, animated: true)
