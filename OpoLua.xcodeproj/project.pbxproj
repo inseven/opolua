@@ -42,6 +42,7 @@
 		D85699C627A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */; };
 		D85F596F27ACB64E006AAF3B /* UIButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85F596E27ACB64E006AAF3B /* UIButton.swift */; };
 		D85F597127ACB682006AAF3B /* WizardFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85F597027ACB682006AAF3B /* WizardFooterView.swift */; };
+		D860FA752C963C51001932F8 /* BrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D860FA742C963C51001932F8 /* BrowserViewController.swift */; };
 		D861E8DD274A81B4003C8D3D /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861E8DC274A81B4003C8D3D /* Directory.swift */; };
 		D8632832279C240600B63625 /* UID.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8632831279C240600B63625 /* UID.swift */; };
 		D8647C702793540500DCC261 /* TaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8647C6F2793540500DCC261 /* TaskManager.swift */; };
@@ -172,6 +173,7 @@
 		D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PsiLuaEnv+Utilities.swift"; sourceTree = "<group>"; };
 		D85F596E27ACB64E006AAF3B /* UIButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIButton.swift; sourceTree = "<group>"; };
 		D85F597027ACB682006AAF3B /* WizardFooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WizardFooterView.swift; sourceTree = "<group>"; };
+		D860FA742C963C51001932F8 /* BrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserViewController.swift; sourceTree = "<group>"; };
 		D861E8DC274A81B4003C8D3D /* Directory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		D8632831279C240600B63625 /* UID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UID.swift; sourceTree = "<group>"; };
 		D8647C6F2793540500DCC261 /* TaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManager.swift; sourceTree = "<group>"; };
@@ -405,6 +407,7 @@
 			isa = PBXGroup;
 			children = (
 				D81C12A7279EF0C0000E70D0 /* AllProgramsViewController.swift */,
+				D860FA742C963C51001932F8 /* BrowserViewController.swift */,
 				D8891341274BF21900794D55 /* ChoiceViewController.swift */,
 				D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */,
 				D8C679B927483B5600BD8720 /* DirectoryViewController.swift */,
@@ -687,6 +690,7 @@
 				D8891342274BF21900794D55 /* ChoiceViewController.swift in Sources */,
 				D8647C702793540500DCC261 /* TaskManager.swift in Sources */,
 				D89D137927C3411700338298 /* RaiseGitHubIssueActivity.swift in Sources */,
+				D860FA752C963C51001932F8 /* BrowserViewController.swift in Sources */,
 				D8D184F527BACAB5004DDFFD /* SoundViewController.swift in Sources */,
 				DB5AC974275681510043FE5C /* CanvasView.swift in Sources */,
 				DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */,

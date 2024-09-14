@@ -22,7 +22,7 @@ import Combine
 import Foundation
 import UIKit
 
-class DirectoryViewController : UICollectionViewController {
+class DirectoryViewController : BrowserViewController {
 
     private enum Section {
         case none
@@ -39,7 +39,6 @@ class DirectoryViewController : UICollectionViewController {
     private typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
     private typealias Cell = IconCollectionViewCell
 
-    private var settings: Settings
     private var taskManager: TaskManager
     var directory: Directory
     private var installer: Installer?
@@ -85,16 +84,16 @@ class DirectoryViewController : UICollectionViewController {
     }()
 
     init(settings: Settings, taskManager: TaskManager, directory: Directory) {
-        self.settings = settings
         self.taskManager = taskManager
         self.directory = directory
-        super.init(collectionViewLayout: IconCollectionViewLayout())
+        super.init(collectionViewLayout: IconCollectionViewLayout(), settings: settings)
         self.directory.delegate = self
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
         title = directory.localizedName
+        navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.largeTitleDisplayMode = .never
         configureRefreshControl()
         update(animated: false)

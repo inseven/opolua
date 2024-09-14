@@ -49,14 +49,6 @@ class LibraryViewController: UICollectionViewController {
 
     weak var delegate: LibraryViewControllerDelegate?
 
-    private lazy var addBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(addTapped(sender:)))
-        return barButtonItem
-    }()
-
     private lazy var settingsBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "gear"),
                                             style: .plain,
@@ -71,7 +63,6 @@ class LibraryViewController: UICollectionViewController {
         self.detector = detector
         super.init(collectionViewLayout: UICollectionViewCompositionalLayout.list(using: UICollectionLayoutListConfiguration(appearance: .insetGrouped)))
         title = "Library"
-        navigationItem.rightBarButtonItem = addBarButtonItem
 #if !targetEnvironment(macCatalyst)
         navigationItem.leftBarButtonItem = settingsBarButtonItem
 #endif
@@ -253,42 +244,6 @@ class LibraryViewController: UICollectionViewController {
         return UICollectionViewCompositionalLayout.list(using: configuration)
     }
 
-    @objc func addTapped(sender: UIBarButtonItem) {
-        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
-        documentPicker.delegate = self
-        present(documentPicker, animated: true)
-    }
-
-    func addUrl(_ url: URL) {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        let perform: () -> Void = {
-            do {
-                try self.settings.addLocation(url)
-                self.reload(animated: true)
-            } catch {
-                self.present(error: error)
-            }
-        }
-
-        // Show a warning when adding iCloud Drive locations to ensure the user understand that we'll download all the
-        // folder contents, giving them the option to select a directory with fewer contents.
-        if FileManager.default.isUbiquitousItem(at: url) {
-
-            let alertController = UIAlertController(title: "iCloud Drive",
-                                                    message: "OPL automatically downloads files from iCloud Drive to ensure they are available to running programs.\n\nThis can cause increased disk usage when adding large folders.",
-                                                    preferredStyle: .alert)
-            alertController.addAction(UIAlertAction(title: "Continue", style: .default) { action in
-                perform()
-            })
-            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-            present(alertController, animated: true)
-
-        } else {
-            perform()
-        }
-    }
-
     func deleteLocation(_ location: URL) {
         do {
             try settings.removeLocation(location)
@@ -313,20 +268,6 @@ class LibraryViewController: UICollectionViewController {
         }
         section = item
         delegate?.libraryViewController(self, showSection: item)
-    }
-
-}
-
-extension LibraryViewController: UIDocumentPickerDelegate {
-
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        for url in urls {
-            addUrl(url)
-        }
-    }
-
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentAt url: URL) {
-        addUrl(url)
     }
 
 }
