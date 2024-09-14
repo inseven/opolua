@@ -19,10 +19,9 @@
 // SOFTWARE.
 
 import Combine
-import Foundation
 import UIKit
 
-class AllProgramsViewController : UICollectionViewController {
+class AllProgramsViewController : BrowserViewController {
 
     enum Section {
         case none
@@ -38,7 +37,6 @@ class AllProgramsViewController : UICollectionViewController {
     typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
     typealias Cell = IconCollectionViewCell
 
-    private var settings: Settings
     private var taskManager: TaskManager
     private var detector: ProgramDetector
     private var items: [Directory.Item] = []
@@ -47,14 +45,6 @@ class AllProgramsViewController : UICollectionViewController {
     override var canBecomeFirstResponder: Bool {
         return true
     }
-
-    private lazy var addBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(image: UIImage(systemName: "plus"),
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(addTapped(sender:)))
-        return barButtonItem
-    }()
 
     lazy var wallpaperPixelView: PixelView = {
         let image = settings.theme.wallpaper
@@ -90,10 +80,9 @@ class AllProgramsViewController : UICollectionViewController {
     }()
 
     init(settings: Settings, taskManager: TaskManager, detector: ProgramDetector) {
-        self.settings = settings
         self.taskManager = taskManager
         self.detector = detector
-        super.init(collectionViewLayout: IconCollectionViewLayout())
+        super.init(collectionViewLayout: IconCollectionViewLayout(), settings: settings)
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
@@ -152,12 +141,6 @@ class AllProgramsViewController : UICollectionViewController {
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         updateWallpaper()
-    }
-
-    @objc func addTapped(sender: UIBarButtonItem) {
-        let softwareIndexViewController = SoftwareIndexViewController()
-        softwareIndexViewController.delegate = self
-        present(softwareIndexViewController, animated: true)
     }
 
     @objc func refreshControlDidChange(_ sender: UIRefreshControl) {
@@ -288,20 +271,6 @@ extension AllProgramsViewController: ProgramDetectorDelegate {
         dispatchPrecondition(condition: .onQueue(.main))
         collectionView.refreshControl?.endRefreshing()
         present(error: error)
-    }
-
-}
-
-extension AllProgramsViewController: SoftwareIndexViewControllerDelegate {
-
-    func softwareIndexViewCntrollerDidCancel(softwareIndexViewController: SoftwareIndexViewController) {
-        softwareIndexViewController.dismiss(animated: true)
-    }
-    
-    func softwareIndexViewCntroller(softwareIndexViewCntroller: SoftwareIndexViewController, didSelectURL url: URL) {
-        softwareIndexViewCntroller.dismiss(animated: true) {
-            AppDelegate.shared.install(url: url)
-        }
     }
 
 }
