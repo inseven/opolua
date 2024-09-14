@@ -82,7 +82,7 @@ func downloadFile(from url: URL) async throws -> URL {
     return destinationURL
 }
 
-@Observable class LibraryModel {
+class LibraryModel: ObservableObject {
 
     enum Kind: String, Codable {
         case installer
@@ -179,7 +179,7 @@ func downloadFile(from url: URL) async throws -> URL {
 
     }
 
-    @MainActor var programs: [Program] = []
+    @Published @MainActor var programs: [Program] = []
 
     @MainActor var filter: String = ""
 
@@ -232,7 +232,7 @@ func downloadFile(from url: URL) async throws -> URL {
 
                 }
 
-                guard versions.count > 0 && program.tags.contains(["opl"]) else {
+                guard versions.count > 0 && program.tags.contains("opl") else {
                     return nil
                 }
 
@@ -272,7 +272,7 @@ struct ReleaseView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    @Environment(LibraryModel.self) private var libraryModel
+    @EnvironmentObject private var libraryModel: LibraryModel
 
     var release: LibraryModel.Release
 
@@ -296,7 +296,7 @@ struct ReleaseView: View {
 
 struct ProgramView: View {
 
-    @Environment(LibraryModel.self) private var libraryModel
+    @EnvironmentObject private var libraryModel: LibraryModel
 
     var program: LibraryModel.Program
 
@@ -308,7 +308,7 @@ struct ProgramView: View {
                         ForEach(variant.items) { item in
                             NavigationLink {
                                 ReleaseView(release: item)
-                                    .environment(libraryModel)
+                                    .environmentObject(libraryModel)
                             } label: {
                                 Label {
                                     VStack(alignment: .leading) {
@@ -349,15 +349,14 @@ struct ProgramsView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    @Environment(LibraryModel.self) private var libraryModel
+    @EnvironmentObject private var libraryModel: LibraryModel
 
     var body: some View {
-        @Bindable var libraryModel = libraryModel
         List {
             ForEach(libraryModel.filteredPrograms) { program in
                 NavigationLink {
                     ProgramView(program: program)
-                        .environment(libraryModel)
+                        .environmentObject(libraryModel)
                 } label: {
                     Label {
                         Text(program.name)
@@ -405,24 +404,25 @@ struct ProgramsView: View {
                 await libraryModel.fetch()
             }
         }
-        .environment(libraryModel)
+        .environmentObject(libraryModel)
     }
 
 }
 
 struct Library: View {
 
-    @State var model: LibraryModel
+    @StateObject var model: LibraryModel
 
     init(model: LibraryModel) {
-        _model = State(wrappedValue: model)
+        _model = StateObject(wrappedValue: model)
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ProgramsView()
-                .environment(model)
+                .environmentObject(model)
         }
+        .navigationViewStyle(.stack)
     }
 
 }

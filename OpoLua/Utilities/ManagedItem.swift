@@ -34,7 +34,6 @@ protocol ManagedItemDelegate: AnyObject {
 
  If anyone sees this and feels a bit 🤢, we're very open to improvement suggestions, or being told how to use NSMetadataQuery correctly.
  */
-// TODO: Download URLs if they're HTTP or HTTPS.
 class ManagedItem {
 
     let url: URL
