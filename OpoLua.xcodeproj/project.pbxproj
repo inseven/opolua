@@ -34,6 +34,11 @@
 		D82D2FCC27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82D2FCB27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift */; };
 		D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82D2FCD27AC3E62001A4283 /* Error.swift */; };
 		D82D76082C9142740040265E /* src in Resources */ = {isa = PBXBuildFile; fileRef = D82D76072C9142740040265E /* src */; };
+		D83543702C9658700053A8C8 /* ProgramsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D835436F2C9658700053A8C8 /* ProgramsView.swift */; };
+		D83543722C9658980053A8C8 /* SoftwareIndexViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83543712C9658980053A8C8 /* SoftwareIndexViewController.swift */; };
+		D83543742C9658C20053A8C8 /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83543732C9658C20053A8C8 /* LibraryModel.swift */; };
+		D83543762C9659180053A8C8 /* ReleaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83543752C9659180053A8C8 /* ReleaseView.swift */; };
+		D83543782C9659420053A8C8 /* ProgramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83543772C9659420053A8C8 /* ProgramView.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
@@ -96,7 +101,7 @@
 		D8D6701527A72B2100D12E96 /* DestinationPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */; };
 		D8D95504279B52370049A3C3 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95503279B52370049A3C3 /* Localization.swift */; };
 		D8D95506279B7B100049A3C3 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95505279B7B100049A3C3 /* UIColor.swift */; };
-		D8DAD5B92C8CEF1D00CFEF4A /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DAD5B82C8CEF1D00CFEF4A /* Library.swift */; };
+		D8DAD5B92C8CEF1D00CFEF4A /* SoftwareIndexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DAD5B82C8CEF1D00CFEF4A /* SoftwareIndexView.swift */; };
 		D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03D277AC9B300760302 /* WindowServer.swift */; };
 		D8DCD040277ACD7800760302 /* CanvasSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03F277ACD7800760302 /* CanvasSprite.swift */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
@@ -165,6 +170,11 @@
 		D82D2FCB27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecursiveDirectoryMonitor.swift; sourceTree = "<group>"; };
 		D82D2FCD27AC3E62001A4283 /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		D82D76072C9142740040265E /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
+		D835436F2C9658700053A8C8 /* ProgramsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramsView.swift; sourceTree = "<group>"; };
+		D83543712C9658980053A8C8 /* SoftwareIndexViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareIndexViewController.swift; sourceTree = "<group>"; };
+		D83543732C9658C20053A8C8 /* LibraryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryModel.swift; sourceTree = "<group>"; };
+		D83543752C9659180053A8C8 /* ReleaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseView.swift; sourceTree = "<group>"; };
+		D83543772C9659420053A8C8 /* ProgramView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramView.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
@@ -226,7 +236,7 @@
 		D8D6701427A72B2100D12E96 /* DestinationPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationPickerViewController.swift; sourceTree = "<group>"; };
 		D8D95503279B52370049A3C3 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		D8D95505279B7B100049A3C3 /* UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
-		D8DAD5B82C8CEF1D00CFEF4A /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
+		D8DAD5B82C8CEF1D00CFEF4A /* SoftwareIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareIndexView.swift; sourceTree = "<group>"; };
 		D8DCD03D277AC9B300760302 /* WindowServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowServer.swift; sourceTree = "<group>"; };
 		D8DCD03F277ACD7800760302 /* CanvasSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasSprite.swift; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
@@ -286,6 +296,19 @@
 				D81B875D2790DAAD00E71960 /* InstallerViewController.swift */,
 			);
 			path = Installer;
+			sourceTree = "<group>";
+		};
+		D835436D2C96584B0053A8C8 /* Software Index */ = {
+			isa = PBXGroup;
+			children = (
+				D83543732C9658C20053A8C8 /* LibraryModel.swift */,
+				D835436F2C9658700053A8C8 /* ProgramsView.swift */,
+				D83543772C9659420053A8C8 /* ProgramView.swift */,
+				D83543752C9659180053A8C8 /* ReleaseView.swift */,
+				D8DAD5B82C8CEF1D00CFEF4A /* SoftwareIndexView.swift */,
+				D83543712C9658980053A8C8 /* SoftwareIndexViewController.swift */,
+			);
+			path = "Software Index";
 			sourceTree = "<group>";
 		};
 		D861E8D9274A818D003C8D3D /* Model */ = {
@@ -357,7 +380,6 @@
 				DB6B438327A55D1200625788 /* RootView.swift */,
 				D8553767278F535A00ED67C0 /* SettingsView.swift */,
 				D85F597027ACB682006AAF3B /* WizardFooterView.swift */,
-				D8DAD5B82C8CEF1D00CFEF4A /* Library.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -484,6 +506,7 @@
 				D86FBAB8278C76E4003DF611 /* Licenses */,
 				D861E8D9274A818D003C8D3D /* Model */,
 				D88851242C91149400A7F663 /* Resources */,
+				D835436D2C96584B0053A8C8 /* Software Index */,
 				D8D95502279B52250049A3C3 /* Utilities */,
 				D8C679BB27484BB800BD8720 /* View Controllers */,
 				D8891343274BF24D00794D55 /* Views */,
@@ -605,7 +628,7 @@
 				D80D65A8279DD2060020F994 /* Icon.swift in Sources */,
 				D8FE60052757177200711717 /* Settings.swift in Sources */,
 				D8C409632C3CF62900C9E857 /* OpoIoHandler_UIKit.swift in Sources */,
-				D8DAD5B92C8CEF1D00CFEF4A /* Library.swift in Sources */,
+				D8DAD5B92C8CEF1D00CFEF4A /* SoftwareIndexView.swift in Sources */,
 				D81B875E2790DAAD00E71960 /* InstallerViewController.swift in Sources */,
 				D8DCD040277ACD7800760302 /* CanvasSprite.swift in Sources */,
 				D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */,
@@ -629,6 +652,7 @@
 				D889134A274BF3B000794D55 /* TranslucentNavigationController.swift in Sources */,
 				DB9533FE27AC06A1001CF58D /* FlagSet.swift in Sources */,
 				D89A607E2756A98200C9757F /* ViewController.swift in Sources */,
+				D83543782C9659420053A8C8 /* ProgramView.swift in Sources */,
 				D82D2FCE27AC3E62001A4283 /* Error.swift in Sources */,
 				D88A472227B82C720094A438 /* ApplicationIdentifier.swift in Sources */,
 				D8C43DF527C3EFEF00944A11 /* RootViewController.swift in Sources */,
@@ -641,12 +665,14 @@
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				D884A3D32778E335008954A0 /* FileSystem.swift in Sources */,
 				D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */,
+				D83543762C9659180053A8C8 /* ReleaseView.swift in Sources */,
 				D80A9CBC27A48BED00E49AD8 /* ApplicationSection.swift in Sources */,
 				D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */,
 				D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */,
 				DB3FAC2E27C2CA4A004155C1 /* CGRect.swift in Sources */,
 				D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */,
 				D81B4A4927B5AA650051B092 /* IndexableLocationObserver.swift in Sources */,
+				D83543742C9658C20053A8C8 /* LibraryModel.swift in Sources */,
 				DB6B438427A55D1200625788 /* RootView.swift in Sources */,
 				D89A607A2756A2CC00C9757F /* FileManager.swift in Sources */,
 				D8FE60072757201600711717 /* Bundle.swift in Sources */,
@@ -671,6 +697,7 @@
 				D890B46727A8CA7B007A7A78 /* ManagedItem.swift in Sources */,
 				D89A607C2756A6A300C9757F /* URL.swift in Sources */,
 				D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */,
+				D83543702C9658700053A8C8 /* ProgramsView.swift in Sources */,
 				D890B46927A8CBED007A7A78 /* InstallerProgressViewController.swift in Sources */,
 				D80D65AA279DDC290020F994 /* IconCollectionViewCell.swift in Sources */,
 				D82639362783CAE500AB4086 /* TimerRequest.swift in Sources */,
@@ -694,6 +721,7 @@
 				D8D184F527BACAB5004DDFFD /* SoundViewController.swift in Sources */,
 				DB5AC974275681510043FE5C /* CanvasView.swift in Sources */,
 				DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */,
+				D83543722C9658980053A8C8 /* SoftwareIndexViewController.swift in Sources */,
 				D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */,
 				DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */,
 				D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */,
