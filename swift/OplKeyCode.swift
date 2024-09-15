@@ -156,7 +156,7 @@ extension OplKeyCode {
         "f": .f,
         "g": .g,
         "h": .h,
-        "i": .j,
+        "i": .i,
         "j": .j,
         "k": .k,
         "l": .l,
