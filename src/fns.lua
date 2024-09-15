@@ -526,11 +526,18 @@ function Kmod(stack, runtime) -- 0x22
 end
 
 function KeyA(stack, runtime) -- 0x23
-    unimplemented("fns.KeyA")
+    local keyArrayAddr = runtime:addrFromInt(stack:pop())
+    local stat = stack:pop():asVariable(DataTypes.EWord)
+    runtime:KEYA(stat, keyArrayAddr)
+    stack:push(KErrNone)
 end
 
 function KeyC(stack, runtime) -- 0x24
-    unimplemented("fns.KeyC")
+    -- As with GetEventC, this includes the waitForRequest
+    local stat = stack:pop():asVariable(DataTypes.EWord)
+    runtime:iohandler().cancelRequest(stat)
+    runtime:waitForRequest(stat)
+    stack:push(KErrNone)
 end
 
 function IoOpenUnique(stack, runtime) -- 0x25
@@ -634,7 +641,7 @@ function gPrintClip(stack, runtime) -- 0x33
 end
 
 function TestEvent(stack, runtime) -- 0x34
-    stack:push(runtime:iohandler().testEvent())
+    stack:push(runtime:TESTEVENT())
 end
 
 local syscallPackFmt = "<I2I2I2I2I2I2"

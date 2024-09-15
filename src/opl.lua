@@ -806,10 +806,56 @@ function PRINT(str)
     gUSE(prevId)
 end
 
+function TESTEVENT()
+    return runtime:iohandler().testEvent()
+end
+
 function KEY()
-    local charcode, modifiers = runtime:iohandler().key()
-    runtime:setResource("kmod", modifiers)
-    return charcode
+    -- It's annoying that calling TESTEVENT() then GET() doesn't _quite_ have the right semantics (because that will
+    -- still block if there's say a keydown event and no keypress events in the queue)
+
+    local eventsWaiting = TESTEVENT()
+    if not eventsWaiting then
+        return 0
+    end
+
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
+    local evAddr = ev:addressOf()
+    while eventsWaiting do
+        GETEVENTA32(stat, evAddr)
+        runtime:waitForRequest(stat)
+        if ev[KEvAType]() & KEvNotKeyMask == 0 then
+            runtime:setResource("kmod", ev[KEvAKMod]())
+            return keycodeToCharacterCode(ev[KEvAType]())
+        end
+        eventsWaiting = TESTEVENT()
+    end
+    return 0
+end
+
+function KEYA(stat, keyArrayAddr)
+    -- This is similar to GETEVENTA32 except for the actual async call
+
+    local existingEvent = runtime:getResource("getevent")
+    if existingEvent then
+        -- printf("Outstanding getevent request, cancelling\n")
+        runtime:iohandler().cancelRequest(existingEvent.var)
+        runtime:waitForRequest(existingEvent.var)
+        assert(runtime:getResource("getevent") == nil, "cancelRequest did not release getevent resource!")
+    end
+
+    stat(KErrFilePending)
+    local function completion()
+        runtime:setResource("getevent", nil)
+    end
+    local requestTable = {
+        var = stat,
+        ev = keyArrayAddr,
+        completion = completion,
+    }
+    runtime:setResource("getevent", requestTable)
+    runtime:iohandler().asyncRequest("keya", requestTable)
 end
 
 function KEYSTR()
@@ -833,16 +879,17 @@ function PAUSE(val)
 end
 
 function GET()
-    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
-    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
-    local evAddr = ev:addressOf()
-    repeat
-        GETEVENTA32(stat, evAddr)
-        runtime:waitForRequest(stat)
-    until ev[KEvAType]() & KEvNotKeyMask == 0
+    -- GET() is the synchronous version of KEYA(). KEY(), by comparison, is a non-blocking poll function
+    -- which returns 0 if no key has been pressed since the last event fetch.
 
-    runtime:setResource("kmod", ev[KEvAKMod]())
-    return keycodeToCharacterCode(ev[KEvAType]())
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local k = runtime:makeTemporaryVar(DataTypes.EWordArray, 2)
+    KEYA(stat, k:addressOf())
+    runtime:waitForRequest(stat)
+
+    local modifiers = k[2]() & 0xFF
+    runtime:setResource("kmod", modifiers)
+    return k[1]()
 end
 
 function GETSTR()

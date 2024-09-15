@@ -417,8 +417,9 @@ typealias Modifiers = FlagSet<Modifier>
 
 public struct Async {
 
-    enum RequestType {
+    public enum RequestType {
         case getevent
+        case keya
         case playsound(Data)
         case after(TimeInterval)
         case at(Date)
@@ -623,15 +624,14 @@ public protocol OpoIoHandler: FileSystemIoHandler {
 
     func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode)
 
-    func asyncRequest(_ request: Async.Request)
-    func cancelRequest( _ requestHandle: Async.RequestHandle)
+    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType)
+    func cancelRequest(handle: Async.RequestHandle)
     func waitForAnyRequest() -> Async.Response
     func anyRequest() -> Async.Response?
 
     // Return true if there is an event waiting
     func testEvent() -> Bool
 
-    func key() -> Async.KeyPressEvent?
     func keysDown() -> Set<OplKeyCode>
 
     func setConfig(key: ConfigName, value: String)
@@ -684,10 +684,10 @@ class DummyIoHandler : OpoIoHandler {
         return .err(.notReady)
     }
 
-    func asyncRequest(_ request: Async.Request) {
+    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType) {
     }
 
-    func cancelRequest(_ requestHandle: Async.RequestHandle) {
+    func cancelRequest(handle: Async.RequestHandle) {
     }
 
     func waitForAnyRequest() -> Async.Response {
@@ -700,10 +700,6 @@ class DummyIoHandler : OpoIoHandler {
 
     func testEvent() -> Bool {
         return false
-    }
-
-    func key() -> Async.KeyPressEvent? {
-        return nil
     }
 
     func keysDown() -> Set<OplKeyCode> {
