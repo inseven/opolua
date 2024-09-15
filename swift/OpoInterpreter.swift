@@ -371,6 +371,7 @@ private func getScreenInfo(_ L: LuaState!) -> CInt {
 
 // asyncRequest(requestName, requestTable)
 // asyncRequest("getevent", { var = ..., ev = ... })
+// asyncRequest("keya", { var = ..., k = ... })
 // asyncRequest("after", { var = ..., period = ... })
 // asyncRequest("at", { var = ..., time = ...})
 // asyncRequest("playsound", { var = ..., data = ... })
@@ -386,6 +387,8 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
     switch name {
     case "getevent":
         type = .getevent
+    case "keya":
+        type = .keya
     case "after":
         guard let period = L.toint(1, key: "period") else {
             print("Bad param to after asyncRequest")
@@ -424,9 +427,7 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
     lua_pushvalue(L, 1) // dup requestTable
     L.rawset(LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = requestTable
 
-    let req = Async.Request(type: type, handle: requestHandle)
-
-    iohandler.asyncRequest(req)
+    iohandler.asyncRequest(handle: requestHandle, type: type)
     return 0
 }
 
@@ -476,7 +477,7 @@ private func cancelRequest(_ L: LuaState!) -> CInt {
     }
     L.rawget(2, key: "ref")
     if let requestHandle = L.toint(-1) {
-        iohandler.cancelRequest(Int32(requestHandle))
+        iohandler.cancelRequest(handle: Int32(requestHandle))
     } else {
         print("Bad type for requestTable.ref!")
     }
@@ -527,18 +528,6 @@ private func getTime(_ L: LuaState!) -> CInt {
     let dt = Date()
     L.push(dt.timeIntervalSince1970)
     return 1
-}
-
-private func key(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    if let event = iohandler.key(), let charcode = event.keycode.toCharcode() {
-        L.push(charcode)
-        L.push(event.modifiers.rawValue)
-    } else {
-        L.push(0)
-        L.push(0)
-    }
-    return 2
 }
 
 private func keysDown(_ L: LuaState!) -> CInt {
@@ -761,7 +750,6 @@ public class OpoInterpreter: PsiLuaEnv {
             "createBitmap": { L in return autoreleasepool { return createBitmap(L) } },
             "createWindow": { L in return autoreleasepool { return createWindow(L) } },
             "getTime": { L in return autoreleasepool { return getTime(L) } },
-            "key": { L in return autoreleasepool { return key(L) } },
             "keysDown": { L in return autoreleasepool { return keysDown(L) } },
             "opsync": { L in return autoreleasepool { return opsync(L) } },
             "getConfig": { L in return autoreleasepool { return getConfig(L) } },
@@ -937,6 +925,8 @@ public class OpoInterpreter: PsiLuaEnv {
                 ev[0] = 0x402
                 ev[1] = timestampToInt32(event.timestamp)
             case .quitevent:
+                // 0x404 is actually just the generic "cmd" event, but since we don't support changing files, quit
+                // is the only thing it can be and doesn't require further elaboration.
                 ev[0] = 0x404
             case .cancelled, .completed, .interrupt:
                 break // No completion data for these
@@ -947,6 +937,23 @@ public class OpoInterpreter: PsiLuaEnv {
             L.push(ev) // ev as a table
             L.push(1) // DataTypes.ELong
             let _ = logpcall(3, 0)
+        case "keya":
+            switch response.value {
+            case .keypressevent(let event):
+                var k = Array<Int>(repeating: 0, count: 2)
+                k[0] = event.keycode.toCharcode()!
+                k[1] = event.modifiers.rawValue | (event.isRepeat ? 0x100 : 0)
+                lua_getfield(L, 1, "ev") // Pushes eventArray (as an Addr)
+                luaL_getmetafield(L, -1, "writeArray") // Addr:writeArray
+                lua_insert(L, -2) // put writeArray below eventArray
+                L.push(k) // k as a table
+                L.push(0) // DataTypes.EWord
+                let _ = logpcall(3, 0)
+            case .cancelled, .interrupt:
+                break
+            default:
+                print("Warning unhandled response type for keya \(response.value)")
+            }
         default:
             break // No data for these
         }

@@ -462,7 +462,7 @@ class ProgramViewController: UIViewController {
 
                 let (keydownCode, keypressCode) = key.toOplCodes()
 
-                // The could be no legitimate keydownCode if we're inputting say
+                // There could be no legitimate keydownCode if we're inputting say
                 // a tilde which is not on a key that the Psion 5 keyboard has
                 if let code = keydownCode {
                     program.sendEvent(.keydownevent(.init(timestamp: press.timestamp,

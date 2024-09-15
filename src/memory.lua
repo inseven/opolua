@@ -480,6 +480,9 @@ function Variable:__call(val)
         -- Slow path
         local data
         if t == EString then
+            if type(val) ~= "string" then
+                error("Cannot assign a "..type(val).." value to a string variable")
+            end
             if #val > self:stringMaxLen() then
                 printf("String too long: maxlen=%d val='%s'\n", self:stringMaxLen(), hexEscape(val))
                 error(KErrStrTooLong)
