@@ -23,14 +23,13 @@ import Foundation
 class ObjectFileSystem: FileSystem {
 
     var baseUrl: URL
-    var name: String
+    var sharedDrives: [String: (URL)] = [:]
 
     /**
      This file system mapper simulates a C:\ path.
      */
     init(objectUrl: URL) {
         self.baseUrl = objectUrl.deletingLastPathComponent()
-        self.name = objectUrl.basename
     }
 
     var guestPrefix: String {
@@ -41,15 +40,19 @@ class ObjectFileSystem: FileSystem {
     }
 
     func set(sharedDrive: String, url: URL, readonly: Bool) {
-        // Don't care, we'll just return notReady for anything on a shared drive
+        sharedDrives[sharedDrive] = url
     }
 
     func hostUrl(for path: String) -> (URL, Bool)? {
-        if path.uppercased().starts(with: guestPrefix) {
-            let pathComponents = path
-                .split(separator: "\\")[1...]
-                .map { String($0) }
-            return (baseUrl.appendingCaseInsensitivePathComponents(pathComponents), true)
+        let components = path.split(separator: "\\").map { String($0) }
+        guard let drive = path.first?.uppercased() else {
+            return nil
+        }
+        if let sharedDriveUrl = sharedDrives[drive] {
+            let hostUrl = sharedDriveUrl.appendingCaseInsensitivePathComponents(Array(components[1...]))
+            return (hostUrl, true)
+        } else if path.uppercased().starts(with: guestPrefix) {
+            return (baseUrl.appendingCaseInsensitivePathComponents(Array(components[1...])), true)
         } else {
             return nil
         }
