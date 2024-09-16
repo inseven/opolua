@@ -486,6 +486,10 @@ function Runtime:closeGraphicsContext(id)
     graphics[id] = nil
     self:flushGraphicsOps()
     self.ioh.graphicsop("close", id)
+    local cursor = self:getResource("cursor")
+    if cursor and cursor.id == id then
+        self:setResource("cursor", nil)
+    end
 end
 
 function Runtime:saveGraphicsState()
