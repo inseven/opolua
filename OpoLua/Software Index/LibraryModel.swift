@@ -21,6 +21,12 @@
 import Combine
 import SwiftUI
 
+extension URL {
+
+    static let softwareIndexAPIV1 = URL(string: "https://software.psion.info/api/v1")!
+
+}
+
 protocol LibraryModelDelegate: AnyObject {
 
     func libraryModelDidCancel(libraryModel: LibraryModel)
@@ -50,15 +56,14 @@ class LibraryModel: ObservableObject {
 
         let uid: String  // TODO: Rename to 'identifier'
         let kind: Kind
-        let icon: String?
+        let icon: Image?
         let reference: [ReferenceItem]
 
         var iconURL: URL? {
             guard let icon else {
                 return nil
             }
-            return URL(string: "https://software.psion.info/api/v1/")!
-                .appendingPathComponent(icon)
+            return URL.softwareIndexAPIV1.appendingPathComponent(icon.path)
         }
 
         var referenceString: String {
@@ -103,6 +108,14 @@ class LibraryModel: ObservableObject {
 
     }
 
+    struct Image: Codable {
+
+        let width: Int
+        let height: Int
+        let path: String
+
+    }
+
     struct Program: Codable, Identifiable {
 
         var id: String {
@@ -111,16 +124,16 @@ class LibraryModel: ObservableObject {
 
         let uid: String  // TODO: Rename to 'identifier'
         let name: String
-        let icon: String?
+        let icon: Image?
         let versions: [Version]
         let tags: [String]
+        var screenshots: [String]?
 
         var iconURL: URL? {
             guard let icon else {
                 return nil
             }
-            return URL(string: "https://software.psion.info/api/v1/")!
-                .appendingPathComponent(icon)
+            return URL.softwareIndexAPIV1.appendingPathComponent(icon.path)
         }
 
     }
@@ -200,7 +213,8 @@ class LibraryModel: ObservableObject {
                                name: program.name,
                                icon: program.icon,
                                versions: versions,
-                               tags: program.tags)
+                               tags: program.tags,
+                               screenshots: program.screenshots)
             }
 
             await MainActor.run {
