@@ -39,35 +39,21 @@ struct ProgramsView: View {
                         if let iconURL = program.iconURL {
                             AsyncImage(url: iconURL) { image in
                                 image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
                             } placeholder: {
-                                Image(systemName: "app.dashed")
-                                    .foregroundColor(.secondary)
+                                Image(.unknownAppIconC)
                             }
-
+                            
                         } else {
-                            Image(systemName: "app.dashed")
-                                .foregroundColor(.secondary)
+                            Image(.unknownAppIconC)
                         }
                     }
                 }
             }
         }
+        .listStyle(.plain)
         .searchable(text: $libraryModel.filter)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Software Index")
         .toolbar {
-
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 0) {
-                    Text("Psion Software Index")
-                        .font(.headline)
-                    Text("\(libraryModel.filteredPrograms.count) Programs")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
             ToolbarItem(placement: .destructiveAction) {
                 Button("Cancel") {
                     dismiss()
