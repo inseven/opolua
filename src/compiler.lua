@@ -403,7 +403,7 @@ Callables = {
     DCHOICE = SpecialOp({IntVarArg, String, String}),
     DDATE = SpecialOp({LongVarArg, String, Long, Long}),
     DEDIT = SpecialOp({StringVarArg, String, Int, numParams = {2, 3}}),
-    DEDITMULTI = SpecialOp({LongVarArg, String, Int, Int, Int}),
+    DEDITMULTI = Op("dEditMulti", {Long, String, Int, Int, Long}),
     DEFAULTWIN = Op("DefaultWin", {Int}),
     DEG = Fn("Deg", {Float}, Float),
     DELETE = SpecialOp({String, String, numParams = {1, 2}}),
@@ -2342,19 +2342,6 @@ function handleOp_DEDIT(procState, args)
         procState:emitExpression(args[3], Int)
         procState:emit("BB", opcodes.dItem, dItemTypes.dEDITlen)
     end
-    procState:popStack(#args)
-end
-
-function handleOp_DEDITMULTI(procState, args)
-    local var = procState:getVar(args[1], false)
-    procState:emitVarLhs(var, args[1])
-    procState:emitExpression(args[2], String)
-    procState:emitExpression(args[3], Int)
-    procState:emitExpression(args[4], Int)
-    -- Docs say this is an Int, Series 5 compiler reckons Long. Which makes more sense given it's describing the length
-    -- of a buffer which is allowed to be >64KB
-    procState:emitExpression(args[5], Long)
-    procState:emit("BB", opcodes.NextOpcodeTable, opcodes.dEditMulti - 256)
     procState:popStack(#args)
 end
 
