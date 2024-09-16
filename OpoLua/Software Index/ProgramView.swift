@@ -47,27 +47,20 @@ struct ProgramView: View {
                                 ReleaseView(release: item)
                                     .environmentObject(libraryModel)
                             } label: {
-                                Label {
+                                HStack(alignment: .center) {
+                                    if let iconURL = item.iconURL {
+                                        AsyncImage(url: iconURL) { image in
+                                            image
+                                        } placeholder: {
+                                            Image(.unknownAppIconC)
+                                        }
+                                    } else {
+                                        Image(.unknownAppIconC)
+                                    }
                                     VStack(alignment: .leading) {
                                         Text(item.filename)
                                         Text(item.referenceString)
                                             .font(.footnote)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                } icon: {
-                                    if let iconURL = item.iconURL {
-                                        AsyncImage(url: iconURL) { image in
-                                            image
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
-                                        } placeholder: {
-                                            Image(systemName: "app.dashed")
-                                                .foregroundColor(.secondary)
-                                        }
-
-                                    } else {
-                                        Image(systemName: "app.dashed")
-                                            .foregroundColor(.secondary)
                                     }
                                 }
                             }
