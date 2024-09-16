@@ -253,6 +253,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("order", drawableId, pos)
 // graphicsop("textsize", str, font, style)
 // graphicsop("busy", drawableId, delay)
+// graphicsop("cursor", [cursor])
 // graphicsop("giprint", drawableId)
 // graphicsop("setwin", drawableId, x, y, [w, h])
 // graphicsop("sprite", windowId, id, [sprite])
@@ -306,6 +307,15 @@ private func graphicsop(_ L: LuaState!) -> CInt {
         let drawableId = Graphics.DrawableId(value: id)
         let delay = (L.toint(3) ?? 0) * 500
         return doGraphicsOp(L, iohandler, .busy(drawableId, delay))
+    case "cursor":
+        if L.isnil(2) {
+            return doGraphicsOp(L, iohandler, .cursor(nil))
+        }
+        guard let cursor: Graphics.Cursor = L.todecodable(2) else {
+            print("Bad cursor arg!")
+            return 0
+        }
+        return doGraphicsOp(L, iohandler, .cursor(cursor))
     case "giprint":
         let id = L.toint(2) ?? 0
         let drawableId = Graphics.DrawableId(value: id)

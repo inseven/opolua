@@ -1468,7 +1468,14 @@ end
 
 function Cursor(stack, runtime) -- 0xA6
     local numParams = runtime:IP8()
-    printf("CURSOR numParams=%d\n", numParams) -- TODO
+    if numParams == 0 then
+        runtime:CURSOR(false)
+    elseif numParams == 1 then
+        runtime:CURSOR(true)
+    else
+        local id, asc, w, h, t = stack:pop(numParams - 1)
+        runtime:CURSOR(id, asc, w, h, t)
+    end
 end
 
 Cursor_dump = qualifier_dump

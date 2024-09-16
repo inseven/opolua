@@ -317,6 +317,18 @@ public struct Graphics {
         case fourBit = 2
     }
 
+    public enum CursorFlag: Int, FlagEnum {
+        case notFlashing = 2
+        case grey = 4
+    }
+
+    public struct Cursor: Codable {
+        let id: DrawableId
+        let rect: Rect
+        let ascent: Int
+        let flags: FlagSet<CursorFlag>
+    }
+
     public enum Operation {
         case close(DrawableId)
         case createBitmap(DrawableId, Size, Bitmap.Mode)
@@ -330,6 +342,7 @@ public struct Graphics {
         case sprite(DrawableId, Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
         case clock(DrawableId, ClockInfo?)
         case peekline(DrawableId, Point, Int, PeekMode) // drawableId, pos, numPixels, peekMode
+        case cursor(Cursor?)
     }
 
     public enum Result {

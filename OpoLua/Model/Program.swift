@@ -373,6 +373,9 @@ class Program {
             let data = windowServer.peekLine(drawableId: drawableId, position: position, numPixels: numPixels, mode: mode)
             return .peekedData(data)
 
+        case .cursor(let cursor):
+            windowServer.cursor(cursor)
+            return .nothing
         }
     }
 
