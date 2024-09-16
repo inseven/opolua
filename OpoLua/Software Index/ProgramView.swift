@@ -28,6 +28,17 @@ struct ProgramView: View {
 
     var body: some View {
         List {
+            if !(program.screenshots ?? []).isEmpty {
+                Section {
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(program.screenshots ?? [], id: \.self) { screenshot in
+                                AsyncImage(url: URL.softwareIndexAPIV1.appendingPathComponent(screenshot))
+                            }
+                        }
+                    }
+                }
+            }
             ForEach(program.versions) { version in
                 Section(version.id) {
                     ForEach(version.variants) { variant in
@@ -65,6 +76,7 @@ struct ProgramView: View {
                 }
             }
         }
+        .listStyle(.plain)
         .navigationTitle(program.name)
         .navigationBarTitleDisplayMode(.inline)
     }
