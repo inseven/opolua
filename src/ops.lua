@@ -2602,7 +2602,8 @@ function IoWaitStat32(stack, runtime) -- 0x129
 end
 
 function Compact(stack, runtime) -- 0x12A
-    unimplemented("Compact")
+    local path = stack:pop()
+    printf("COMPACT(%s)\n", path)
 end
 
 function BeginTrans(stack, runtime) -- 0x12B
