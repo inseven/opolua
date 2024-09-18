@@ -73,8 +73,10 @@ jobs:
       run: |
         python -m pip install --upgrade pipenv wheel
 
-    - name: Install asdf and tools
-      uses: asdf-vm/actions/install@v3
+    - uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
 
     - name: Install dependencies
       run: scripts/install-dependencies.sh
