@@ -34,7 +34,7 @@ ENVIRONMENT_PATH="${SCRIPTS_DIRECTORY}/environment.sh"
 
 # Install tools.
 cd "$ROOT_DIRECTORY"
-asdf install
+mise install
 
 # Create directory for local tools.
 if [ -d "${ROOT_DIRECTORY}/.local" ] ; then
