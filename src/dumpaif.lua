@@ -60,6 +60,7 @@ function main()
             local iconName = string.format("%s_%d_%dx%d_%dbpp.bmp", args.filename, i, icon.width, icon.height, icon.bpp)
             -- printf("toBmp icon %s\n", iconName)
             writeFile(iconName, icon:toBmp())
+            local mask = icon.mask
             if mask then
                 local maskName = string.format("%s_%d_mask_%dx%d_%dbpp.bmp", args.filename, i, mask.width, mask.height, mask.bpp)
                 -- printf("toBmp icon %s\n", maskName)
