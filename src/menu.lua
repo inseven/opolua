@@ -369,7 +369,8 @@ function MenuPane:choose(i)
     -- wait a bit to make it obvious it's been selected
     gUPDATE()
     PAUSE(5)
-    return key & 0xFF
+    -- If there's no key (in the case of mPOPUPEx) then return the index
+    return (key == 0 and i) or (key & 0xFF)
 end
 
 function MenuPane:openSubmenu()
@@ -454,8 +455,10 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
     local maxShortcutTextWidth = 0
     local shortcuts = {}
     for i, value in ipairs(values) do
-        assert(value.key and value.key ~= 0 and value.text, KErrInvalidArgs)
-        local key = value.key
+        -- For menus in a menubar, key should always be set. But in a dialog dCHOICE popup, there are no shortcuts so
+        -- key will be nil
+        assert((value.key == nil or value.key ~= 0) and value.text, KErrInvalidArgs)
+        local key = value.key or 0
         local lineAfter = key < 0
         if lineAfter then
             key = -key
@@ -727,18 +730,28 @@ local function runMenuEventLoop(bar, pane, shortcuts)
     return result, highlight
 end
 
-function mPOPUP(x, y, pos, values, init)
-    -- Note, init isn't part of the actual OPL mPOPUP API but is needed to implement dialog choicelists properly
+function mPOPUP(x, y, pos, values)
+    for _, item in ipairs(values) do
+        assert(item.key and item.key ~= 0, KErrInvalidArgs)
+    end
+    return mPOPUPEx(x, y, pos, values, nil)
+end
+
+-- This is an opolua extension that allows an initial value to be specified, and also doesn't require a key shortcut to
+-- be specified (which also means menus with more than 32 items without keyboard shortcuts are allowed).
+function mPOPUPEx(x, y, pos, values, init)
     local state = runtime:saveGraphicsState()
 
     local shortcuts = {}
     for _, item in ipairs(values) do
         local key = item.key
-        if key < 0 then
-            key = -key
-        end
-        if key > 32 then
-            shortcuts[key & 0xFF] = true
+        if key then
+            if key < 0 then
+                key = -key
+            end
+            if key > 32 then
+                shortcuts[key & 0xFF] = true
+            end
         end
     end
 

@@ -744,7 +744,7 @@ function DialogChoiceList:displayPopupMenu()
     for i, choice in ipairs(self.choices) do
         popupItems[i] = { key = i, text = choice }
     end
-    local result = mPOPUP(gORIGINX() + self.x + self.promptWidth, gORIGINY() + self.y, KMPopupPosTopLeft, popupItems, self.index)
+    local result = mPOPUPEx(gORIGINX() + self.x + self.promptWidth, gORIGINY() + self.y, KMPopupPosTopLeft, popupItems, self.index)
     if result > 0 then
         self.index = result
         self:setNeedsRedraw()
