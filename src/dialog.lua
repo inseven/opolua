@@ -58,6 +58,10 @@ function View:setHeightHint(hint)
     self.heightHint = hint
 end
 
+function View:init(lineHeight)
+    self:setHeightHint(lineHeight)
+end
+
 -- This shouldn't include prompt width, if getPromptWidth returns non-nil
 function View:contentSize()
     return 0, 0
@@ -140,7 +144,7 @@ function View:setFocus(flag)
         local view = self.parent
         while view do
             if view.onFocusChanged then
-                view.onFocusChanged(view, self)
+                view:onFocusChanged(self)
                 return
             end
             view = view.parent
@@ -162,6 +166,11 @@ function View:focussable()
     return false
 end
 
+-- Used by subclasses to prevent a dialog being dismissed due to eg invalid selections
+function View:canDismiss()
+    return true
+end
+
 function View:setPromptWidth(w)
     self.promptWidth = w
 end
@@ -177,7 +186,7 @@ function View:drawPrompt()
     else
         white()
     end
-    gAT(self.x, texty - 1)
+    gAT(x, texty - 1)
     gFILL(gTWIDTH(self.prompt), self.charh + 2)
     if self.hasFocus then
         white()
@@ -240,6 +249,7 @@ function PlaceholderView:draw()
     gFILL(self.w, self.h)
     black()
     drawText(string.format("TODO dItem type %d", self.type), self.x, self.y + kDialogLineTextYOffset)
+    View.draw(self)
 end
 
 DialogTitleBar = class { _super = View }
@@ -261,6 +271,7 @@ function DialogTitleBar:draw()
     end
     gFILL(self.w, self.h)
     black()
+    gFONT(kDialogFont)
     drawText(self.value, self.x + self.hMargin, self.y + 2)
     View.draw(self)
 end
@@ -327,7 +338,22 @@ function DialogItemText:focussable()
     return self.selectable
 end
 
-DialogItemEdit = class { _super = View }
+DialogItemEdit = class {
+    _super = View,
+    cursorWidth = 2,
+}
+
+function DialogItemEdit:init(lineHeight)
+    View.init(self, lineHeight)
+    local editorValue = tostring(self.value)
+    self.value = nil -- From now on, managed by editor
+    self.editor = require("editor").Editor {
+        view = self,
+    }
+    self.editor:setValue(editorValue)
+    -- Edit items start with the whole text selected, it seems
+    self.editor:setCursorPos(#editorValue + 1, 1)
+end
 
 local kEditTextSpace = 2
 
@@ -341,58 +367,140 @@ function DialogItemEdit:drawValue(val)
     local x = self:drawPrompt()
     local texty = self.y + kDialogLineTextYOffset
 
-    local boxWidth = math.min(self:contentSize(), self.w - x)
+    local boxWidth = math.min(self:contentSize(), self.w - (x - self.x))
     lightGrey()
     gAT(x, texty - 2)
     gBOX(boxWidth, self.charh + 3)
     black()
+    gAT(x + 1, texty - 1)
+    gFILL(boxWidth - 2, self.charh + 1, KgModeClear)
     gAT(x + 1, texty)
-    gFILL(boxWidth - 2, self.charh, KgModeClear)
     drawText(val, x + kEditTextSpace, texty)
+    if self.editor and self.editor:hasSelection() then
+        local selStart, selEnd = self.editor:getSelectionRange()
+        local selText = self.editor.value:sub(selStart, selEnd)
+        local selOffset = gTWIDTH(self.editor.value:sub(1, selStart - 1))
+        local selWidth = gTWIDTH(selText)
+        gAT(x + kEditTextSpace + selOffset, texty - 1)
+        gFILL(selWidth, self.charh + 1, KgModeInvert)
+    end
+
+    self:updateCursorIfFocussed()
+end
+
+function DialogItemEdit:getCursorPos()
+    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1))
+    return self.x + self.promptWidth + kEditTextSpace + textw, self.y + kDialogLineTextYOffset - 1
+end
+
+function DialogItemEdit:posToCharPos(x, y)
+    local tx = x - self.x - kEditTextSpace - self.promptWidth
+
+    -- Is there a better way to do this?
+    local result = 1
+    while gTWIDTH(self.editor.value:sub(1, result)) < tx do
+        result = result + 1
+        if result >= #self.editor.value + 1 then
+            break
+        end
+    end
+    return result
+end
+
+function DialogItemEdit:updateCursorIfFocussed()
+    if self.hasFocus then
+        gAT(self:getCursorPos())
+        local _, h, ascent = gTWIDTH("")
+        CURSOR(gIDENTITY(), ascent + 1, self.cursorWidth, h + 1)
+    end
 end
 
 function DialogItemEdit:draw()
-    self:drawValue(tostring(self.value))
+    self:drawValue(self.editor.value)
+    View.draw(self)
 end
 
 function DialogItemEdit:focussable()
     return true
 end
 
+function DialogItemEdit:inputType()
+    return "text"
+end
+
 function DialogItemEdit:handlePointerEvent(x, y, type)
-    if type == KEvPtrPenDown then
+    if self.capturing then
+        self.editor:setCursorPos(self:posToCharPos(x, y), self.editor.anchor)
+    elseif type == KEvPtrPenDown then
         if not self.hasFocus then
             self:setFocus(true)
         end
-        if x >= self.promptWidth then
-            self:showEditor()
+        if x >= self.x + self.promptWidth then
+            self.editor:setCursorPos(self:posToCharPos(x, y))
+            self:capturePointer()
+            self:setNeedsRedraw()
         end
     end
     return true
 end
 
 function DialogItemEdit:handleKeyPress(k, modifiers)
-    if modifiers == 0 and k == KKeyTab then
-        self:showEditor()
-        return true
-    end
-    return false
+    return self.editor:handleKeyPress(k, modifiers)
 end
 
-function DialogItemEdit:showEditor()
-    local result = runtime:iohandler().editValue({
-        type = "text",
-        initialValue = self.value,
-        max = self.len,
-        prompt = self.prompt,
-        allowCancel = true,
-        screenRect = self:screenRect(),
-    })
-    if result then
-        -- Native side doesn't respect max len, currently...
-        self.value = result:sub(1, 1 + self.len)
+function DialogItemEdit:setFocus(flag)
+    DialogItemEdit._super.setFocus(self, flag)
+    if flag then
+        -- When focussed, the draw call triggered by View.setFocus takes care of calling CURSOR (via updateCursorIfFocussed)
+        self:updateIohandler()
+    else
+        CURSOR(false)
+        runtime:iohandler().textEditor(nil)
     end
-    self:setNeedsRedraw()
+end
+
+function DialogItemEdit:onEditorChanged()
+    if self.capturing then
+        self:draw()
+    else
+        self:setNeedsRedraw()
+    end
+    if self.hasFocus then
+        self:updateIohandler()
+    end
+end
+
+function DialogItemEdit:updateIohandler()
+    local origx, origy = gORIGINX(), gORIGINY()
+    local rect = {
+        x = origx + self.x + self.promptWidth,
+        y = origy + self.y,
+        w = self.w - self.promptWidth,
+        h = self.h,
+    }
+    runtime:iohandler().textEditor({
+        id = gIDENTITY(),
+        rect = rect,
+        contents = self.editor.value,
+        type = self:inputType(),
+        cursorPos = self.editor.cursorPos - 1, -- Zero based for native code
+    })
+end
+
+-- returning false from canUpdate() should only be if newVal cannot _become_
+-- valid with more text. So really only for rejecting too many chars or
+-- character classes that are not legal.
+function DialogItemEdit:canUpdate(newVal)
+    if self.len and #newVal > self.len then
+        gIPRINT("Maximum number of characters reached", KBusyTopRight)
+        return false
+    else
+        return true
+    end
+end
+
+function DialogItemEdit:updateVariable()
+    self.variable(self.editor.value)
 end
 
 DialogItemEditLong = class { _super = DialogItemEdit }
@@ -404,70 +512,135 @@ function DialogItemEditLong:contentSize()
     return gTWIDTH(string.rep("@", maxChars)) + 2 * kEditTextSpace, self.heightHint
 end
 
-function DialogItemEditLong:showEditor()
-    local result = runtime:iohandler().editValue({
-        type = "integer",
-        initialValue = tostring(self.value),
-        prompt = self.prompt,
-        allowCancel = true,
-        min = self.min,
-        max = self.max,
-        screenRect = self:screenRect(),
-    })
-    if result then
-        self.value = math.min(self.max, math.max(result, self.min))
-    end
-    self:setNeedsRedraw()
+function DialogItemEditLong:inputType()
+    return "integer"
 end
 
-DialogItemEditFloat = class { _super = DialogItemEdit }
+function DialogItemEditLong:canUpdate(newVal)
+    if newVal == "-" then
+        -- Allowed as an in-progress negative number
+        return true
+    end
+    local n = tonumber(newVal, 10)
+    local maxChars = math.max(#tostring(self.min), #tostring(self.max))
+    if n == nil or math.tointeger(n) == nil or newVal:match("[xX.e]") then
+        return false
+    elseif #newVal > maxChars then
+        return false
+    else
+        return true
+    end
+end
+
+function DialogItemEditLong:canDismiss()
+    if self.editor.value == "" then
+        gIPRINT("No number has been entered", KBusyTopRight)
+        self.editor:setValue(tostring(self.max))
+        return false
+    end
+    local n = tonumber(self.editor.value, 10) or 0
+
+    if n > self.max then
+        gIPRINT(string.format("Maximum allowed value is %d", self.max), KBusyTopRight)
+        self.editor:setValue(tostring(self.max))
+        return false
+    elseif n < self.min then
+        gIPRINT(string.format("Minimum allowed value is %d", self.min), KBusyTopRight)
+        self.editor:setValue(tostring(self.min))
+        return false
+    else
+        return true
+    end
+end
+
+function DialogItemEditLong:updateVariable()
+    self.variable(tonumber(self.editor.value))
+end
+
+DialogItemEditFloat = class {
+    _super = DialogItemEdit,
+    maxChars = 17,
+}
 
 function DialogItemEditFloat:contentSize()
-    local maxChars = 17
-    return gTWIDTH(string.rep("@", maxChars)) + 2 * kEditTextSpace, self.heightHint
+    return gTWIDTH(string.rep("0", self.maxChars)) + 2 * kEditTextSpace, self.heightHint
 end
 
-function DialogItemEditFloat:showEditor()
-    local result = runtime:iohandler().editValue({
-        type = "float",
-        initialValue = tostring(self.value),
-        prompt = self.prompt,
-        allowCancel = true,
-        min = self.min,
-        max = self.max,
-        screenRect = self:screenRect(),
-    })
-    if result then
-        self.value = math.min(self.max, math.max(result, self.min))
+function DialogItemEditFloat:inputType()
+    return "float"
+end
+
+function DialogItemEditFloat:canUpdate(newVal)
+    local n = tonumber(newVal)
+    if newVal == "-" then
+        return true
+    elseif n == nil or newVal:match("[xXe ]") then
+        return false
+    elseif #newVal > self.maxChars then
+        return false
+    else
+        return true
     end
-    self:setNeedsRedraw()
+end
+
+function DialogItemEditFloat:canDismiss()
+    if self.editor.value == "" or self.editor.value == "-" then
+        gIPRINT("Please enter a number", KBusyTopRight)
+        return false
+    end
+    local n = assert(tonumber(self.editor.value))
+
+    if n > self.max then
+        gIPRINT(string.format("Maximum allowed value is %g", self.max), KBusyTopRight)
+        return false
+    elseif n < self.min then
+        gIPRINT(string.format("Minimum allowed value is %g", self.min), KBusyTopRight)
+        return false
+    else
+        return true
+    end
+end
+
+function DialogItemEditFloat:updateVariable()
+    self.variable(tonumber(self.editor.value))
 end
 
 DialogItemEditPass = class { _super = DialogItemEdit }
 
-function DialogItemEditPass:showEditor()
-    local result = runtime:iohandler().editValue({
-        type = "password",
-        initialValue = self.value,
-        max = self.variable:stringMaxLen(),
-        prompt = self.prompt,
-        allowCancel = true,
-        screenRect = self:screenRect(),
-    })
-    if result then
-        self.value = result
-    end
-    self:setNeedsRedraw()
+function DialogItemEditPass:init(lineHeight)
+    DialogItemEditPass._super.init(self, lineHeight)
+    self.editor.movableCursor = false
+    self.cursorWidth = gTWIDTH("*")
+    -- Don't select the contents (undo what DialogItemEdit:init() did)
+    self.editor:setCursorPos(#self.editor.value + 1)    
+end
+
+function DialogItemEditPass:contentSize()
+    return self.cursorWidth * (self.len + 1) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEditPass:draw()
-    self:drawValue(string.rep("*", #self.value))
+    self:drawValue(string.rep("*", #self.editor.value))
+    View.draw(self)
 end
 
-DialogItemEditDate = class { _super = DialogItemEdit }
+function DialogItemEditPass:getCursorPos()
+    local val = string.rep("*", #self.editor.value)
+    local textw, texth = gTWIDTH(val:sub(1, self.editor.cursorPos - 1))
+    return self.x + self.promptWidth + kEditTextSpace + textw, self.y + kDialogLineTextYOffset - 1
+end
+
+DialogItemEditDate = class {
+    _super = DialogItemEdit,
+}
+
+function DialogItemEditDate:init(lineHeight)
+    -- Skip DialogItemEdit:init()
+    View.init(self, lineHeight)
+end
 
 function DialogItemEditDate:contentSize()
-    return gTWIDTH("@@/@@/@@@@") + 2 * kEditTextSpace, self.heightHint
+    return gTWIDTH("00/00/0000") + 2 * kEditTextSpace, self.heightHint
 end
 
 local kSecsFrom1900to1970 = 2208988800
@@ -476,25 +649,17 @@ function DialogItemEditDate:draw()
     -- Value is integer days since 1900
     local dateStr = os.date("%d/%m/%Y", (self.value * 86400) - kSecsFrom1900to1970)
     self:drawValue(dateStr)
+    View.draw(self)
 end
 
-function DialogItemEditDate:showEditor()
-    local result = runtime:iohandler().editValue({
-        type = "date",
-        initialValue = tostring(self.value),
-        prompt = self.prompt,
-        allowCancel = true,
-        min = self.min,
-        max = self.max,
-        screenRect = self:screenRect(),
-    })
-    if result then
-        self.value = result
-    end
-    self:setNeedsRedraw()
-end
+DialogItemEditTime = class {
+    _super = DialogItemEdit,
+}
 
-DialogItemEditTime = class { _super = DialogItemEdit }
+function DialogItemEditTime:init(lineHeight)
+    -- Skip DialogItemEdit:init()
+    View.init(self, lineHeight)
+end
 
 function DialogItemEditTime:contentSize()
     return gTWIDTH("@@@@@@@@@@") + 2 * kEditTextSpace, self.heightHint
@@ -522,23 +687,7 @@ function DialogItemEditTime:draw()
         str = os.date("!%H:%M:%S", self.value)
     end
     self:drawValue(str)
-end
-
-function DialogItemEditTime:showEditor()
-    local result = runtime:iohandler().editValue({
-        type = "time",
-        initialValue = tostring(self.value),
-        prompt = self.prompt,
-        allowCancel = true,
-        min = self.min,
-        max = self.max,
-        screenRect = self:screenRect(),
-        timeFlags = self.timeFlags,
-    })
-    if result then
-        self.value = result
-    end
-    self:setNeedsRedraw()
+    View.draw(self)
 end
 
 function DialogItemEditTime:updateVariable()
@@ -552,17 +701,54 @@ end
 
 DialogItemEditMulti = class { _super = DialogItemEdit }
 
-function DialogItemEditMulti:getValue()
-    local len = string.unpack("<i4", self.addr:read(4))
-    local startOfData = self.addr
-    return startOfData:read(len)
-end
-
 function DialogItemEditMulti:contentSize()
     return gTWIDTH(string.rep("M", self.widthChars)) + 2 * kEditTextSpace, kDialogTightLineHeight * self.numLines
 end
 
-local function splitLine(line, maxWidth, widthFn)
+local function withoutNewline(line)
+    return line:match("[^\x06\x07\x08]*")
+end
+
+function DialogItemEditMulti:getCursorPos()
+    local pos = self.editor.cursorPos
+    local line, col = self:charPosToLineColumn(pos)
+    local lineInfo = self.lines[line]
+    local textw = gTWIDTH(withoutNewline(lineInfo.text):sub(1, col - 1))
+    local x = lineInfo.x + textw
+    local y = lineInfo.y - 1
+    return x, y
+end
+
+function DialogItemEditMulti:charPosToLineColumn(pos)
+    -- Work out which line pos is in
+    for i, line in ipairs(self.lines) do
+        if pos < line.charPos + #line.text or self.lines[i + 1] == nil then
+            -- It's on this line
+            local textw = gTWIDTH(withoutNewline(line.text):sub(1, pos - line.charPos - 1))
+            -- printf("charPosToLineColumn(%d) = %d, %d\n", pos, i, pos - line.charPos + 1)
+            return i, pos - line.charPos + 1
+        end
+    end
+end
+
+function DialogItemEditMulti:posToCharPos(x, y)
+    local tx = x - self.x - kEditTextSpace - self.promptWidth
+    local ty = y - self.y - kDialogLineTextYOffset
+    local lineNumber = math.min(math.max(1, 1 + (ty // kDialogTightLineHeight)), #self.lines)
+    local lineInfo = self.lines[lineNumber]
+    local line = withoutNewline(lineInfo.text)
+
+    local result = 1
+    while gTWIDTH(line:sub(1, result)) < tx do
+        result = result + 1
+        if result >= #line + 1 then
+            break
+        end
+    end
+    return lineInfo.charPos + result
+end
+
+local function formatText(text, maxWidth)
     local lines = {}
     local currentLine = {}
     local lineWidth = 0
@@ -575,23 +761,20 @@ local function splitLine(line, maxWidth, widthFn)
         table.insert(currentLine, word)
         lineWidth = lineWidth + wordWidth
     end
-    local spaceWidth = widthFn(" ")
-    for word in line:gmatch("[^%s]+") do
-        local wordWidth = widthFn(word)
-        local lineAndWordWidth = lineWidth + wordWidth + (lineWidth == 0 and 0 or spaceWidth)
+    local spaceWidth = gTWIDTH(" ")
+    local function addWord(word)
+        local wordWidth = gTWIDTH(word)
+        local lineAndWordWidth = lineWidth + wordWidth
         if lineAndWordWidth <= maxWidth then
             -- Fits on current line
-            if next(currentLine) then
-                addToLine(" ", spaceWidth)
-            end
             addToLine(word, wordWidth)
         elseif wordWidth >= maxWidth * 3 / 4 then
             -- Uh oh the word on its own doesn't fit. Try to camelcase split it
             local w1, w2 = word:match("([A-Z][a-z]+)([A-Z][a-z]+)")
             if w1 then
-                addToLine(w1, widthFn(w1))
+                addToLine(w1, gTWIDTH(w1))
                 newLine()
-                addToLine(w2, widthFn(w2))
+                addToLine(w2, gTWIDTH(w2))
             else
                 -- Give up
                 if lineWidth > 0 then
@@ -604,6 +787,25 @@ local function splitLine(line, maxWidth, widthFn)
                 newLine()
             end
             addToLine(word, wordWidth)
+        end
+    end
+
+    local pos = 1
+    while true do
+        local ch = text:sub(pos, pos)
+        if ch == "" then
+            break
+        elseif ch == " " then
+            addWord(ch)
+            pos = pos + 1
+        elseif ch == KLineBreakStr or ch == KParagraphDelimiterStr then
+            addToLine(ch, 0)
+            newLine()
+            pos = pos + 1
+        else
+            local word, nextPos = text:match("([\x21-\xFF]+)()", pos)
+            addWord(word)
+            pos = nextPos
         end
     end
     newLine()
@@ -620,23 +822,80 @@ function DialogItemEditMulti:drawValue(val)
     gAT(x, texty - 2)
     gBOX(boxWidth, boxHeight + 3)
     black()
+    gAT(x + 1, texty - 1)
+    gFILL(boxWidth - 2, boxHeight + 1, KgModeClear)
     gAT(x + 1, texty)
-    gFILL(boxWidth - 2, boxHeight, KgModeClear)
 
-    local lines = splitLine(val, self:contentSize(), function(text)
-        return gTWIDTH(text)
-    end)
+    local lines = formatText(val, boxWidth - 2)
+    self.lines = {}
 
+    local charPos = 1
     for i, line in ipairs(lines) do
-        drawText(line, x + kEditTextSpace, texty + (i-1) * kDialogTightLineHeight)
+        local lineInfo = {
+            text = line,
+            charPos = charPos,
+            x = x + kEditTextSpace,
+            y = texty + (i-1) * kDialogTightLineHeight,
+        }
+        local printableChars = withoutNewline(lineInfo.text)
+        drawText(printableChars, lineInfo.x, lineInfo.y)
+        self.lines[i] = lineInfo
+
+        charPos = charPos + #line
+    end
+
+    if self.editor:hasSelection() then
+        local selStart, selEnd = self.editor:getSelectionRange()
+        local startLine, startCol = self:charPosToLineColumn(selStart)
+        local endLine, endCol = self:charPosToLineColumn(selEnd)
+        for i = startLine, endLine do
+            local line = self.lines[i]
+            local printableChars = withoutNewline(line.text)
+            local lineSelStart = (i == startLine) and startCol or 1
+            local lineSelEnd = (i == endLine) and endCol or #printableChars
+            local selOffset = gTWIDTH(printableChars:sub(1, lineSelStart - 1))
+            local selWidth = gTWIDTH(printableChars:sub(lineSelStart, lineSelEnd))
+            gAT(line.x + selOffset, line.y - 1)
+            gFILL(selWidth, kDialogTightLineHeight, KgModeInvert)
+        end
+    end
+
+    self:updateCursorIfFocussed()
+end
+
+function DialogItemEditMulti:handleKeyPress(k, modifiers)
+    local anchor = nil
+    if modifiers & KKmodShift ~= 0 then
+        anchor = self.editor.anchor
+    end
+    if k == KKeyEnter and modifiers == 0 then
+        self.editor:insert(KLineBreakStr)
+        return true
+    elseif k == KKeyUpArrow or k == KKeyDownArrow then
+        local line, col = self:charPosToLineColumn(self.editor.cursorPos)
+        local lineInfo = self.lines[line + (k == KKeyUpArrow and -1 or 1)]
+        if lineInfo then
+            self.editor:setCursorPos(lineInfo.charPos + col - 1, anchor)
+        end
+        return true
+    elseif k == KKeyPageLeft then
+        local line, col = self:charPosToLineColumn(self.editor.cursorPos)
+        self.editor:setCursorPos(self.lines[line].charPos, anchor)
+        return true
+    elseif k == KKeyPageRight then
+        local line, col = self:charPosToLineColumn(self.editor.cursorPos)
+        self.editor:setCursorPos(self.lines[line].charPos + #withoutNewline(self.lines[line].text), anchor)
+        return true
+    else
+        return DialogItemEdit.handleKeyPress(self, k, modifiers)
     end
 end
 
 function DialogItemEditMulti:updateVariable()
-    local len = #self.value
-    self.addr:write(string.pack("<i4", #self.value))
+    local len = #self.editor.value
+    self.addr:write(string.pack("<i4", len))
     local startOfData = self.addr + 4
-    startOfData:write(self.value)
+    startOfData:write(self.editor.value)
 end
 
 DialogChoiceList = class {
@@ -646,6 +905,10 @@ DialogChoiceList = class {
 
 local kChoiceArrowSpace = 2
 local kChoiceArrowSize = 12 + kChoiceArrowSpace
+
+function DialogChoiceList:init(lineHeight)
+    DialogChoiceList._super.init(self, lineHeight)
+end
 
 function DialogChoiceList:getChoicesWidth()
     local maxWidth = 0
@@ -702,13 +965,11 @@ function DialogChoiceList:handlePointerEvent(x, y, type)
             self:setFocus(true)
         end
         if x >= self.leftArrowX and x < self.leftArrowX + kChoiceArrowSize then
-            self.index = wrapIndex(self.index - 1, #self.choices)
-            self:setNeedsRedraw()
+            self:setIndex(wrapIndex(self.index - 1, #self.choices))
         elseif x >= self.leftArrowX + kChoiceArrowSize and x < self.rightArrowX then
             self:displayPopupMenu()
         elseif x >= self.rightArrowX and x < self.rightArrowX + kChoiceArrowSize then
-            self.index = wrapIndex(self.index + 1, #self.choices)
-            self:setNeedsRedraw()
+            self:setIndex(wrapIndex(self.index + 1, #self.choices))
         end
     end
     return true
@@ -719,16 +980,35 @@ function DialogChoiceList:handleKeyPress(k, modifiers)
         return false
     end
     if k == KKeyLeftArrow then
-        self.index = wrapIndex(self.index - 1, #self.choices)
-        self:setNeedsRedraw()
+        self:setIndex(wrapIndex(self.index - 1, #self.choices))
         return true
     elseif k == KKeyRightArrow then
-        self.index = wrapIndex(self.index + 1, #self.choices)
-        self:setNeedsRedraw()
+        self:setIndex(wrapIndex(self.index + 1, #self.choices))
         return true
     elseif k == KKeyTab then
         self:displayPopupMenu()
         return true
+    elseif k >= string.byte("a") and k <= string.byte("z") then
+        local ch = string.char(k)
+        -- Find the next thing after current pos that starts with ch
+        local i = self.index + 1
+        while true do
+            if self.choices[i] == nil then
+                -- Wrap around
+                i = 1
+            end
+            if i == self.index then
+                -- We've been all the way round, bail
+                break
+            elseif self.choices[i]:sub(1, 1):lower() == ch then
+                self:setIndex(i)
+                break
+            end
+            i = i + 1
+        end
+        return true
+    else
+        print("Unhandled key", k)
     end
     return false
 end
@@ -742,13 +1022,17 @@ function DialogChoiceList:displayPopupMenu()
     end
     local popupItems = {}
     for i, choice in ipairs(self.choices) do
-        popupItems[i] = { key = i, text = choice }
+        popupItems[i] = { text = choice }
     end
     local result = mPOPUPEx(gORIGINX() + self.x + self.promptWidth, gORIGINY() + self.y, KMPopupPosTopLeft, popupItems, self.index)
     if result > 0 then
-        self.index = result
-        self:setNeedsRedraw()
+        self:setIndex(result)
     end
+end
+
+function DialogChoiceList:setIndex(index)
+    self.index = index
+    self:setNeedsRedraw()
 end
 
 function DialogChoiceList:updateVariable()
@@ -760,6 +1044,12 @@ DialogCheckbox = class {
     choiceFont = KFontEiksym15,
     choiceTextSpace = 1,
 }
+
+function DialogCheckbox:init(lineHeight)
+    DialogCheckbox._super.init(self, lineHeight)
+    self.choices = { "", kTickMark }
+    self.index = self.value == KFalse and 1 or 2
+end
 
 function DialogCheckbox:getChoicesWidth()
     return 18
@@ -893,7 +1183,7 @@ function Button:press()
     local view = self.parent
     while view do
         if view.onButtonPressed then
-            view.onButtonPressed(view, self)
+            view:onButtonPressed(self)
             return
         end
         view = view.parent
@@ -966,7 +1256,7 @@ end
 DialogWindow = class { _super = View }
 
 function DialogWindow.new(items, x, y, w, h)
-    local id = gCREATE(x, y, w, h, false, KgCreate256ColorMode | KgCreateHasShadow | 0x200)
+    local id = gCREATE(x, y, w, h, false, KgCreate256GrayMode | KgCreateHasShadow | 0x200)
     return DialogWindow {
         x = x,
         y = y,
@@ -1007,7 +1297,7 @@ function DialogWindow:processEvent(ev)
             handled = self.items[self.focussedItemIndex]:handleKeyPress(k, modifiers)
         end
         if handled then
-            return
+            return nil
         end
     end
 
@@ -1041,9 +1331,16 @@ function DialogWindow:processEvent(ev)
         local y = ev[KEvAPtrPositionY]()
         self:handlePointerEvent(x, y, ptrType)
     end
+
+    return nil
 end
 
 function DialogWindow:onButtonPressed(button)
+    for _, item in ipairs(self.items) do
+        if not item:canDismiss() then
+            return
+        end
+    end
     self.buttonPressed = button
 end
 
@@ -1078,9 +1375,10 @@ function DIALOG(dialog)
     local state = runtime:saveGraphicsState()
 
     local borderWidth = 4 -- 1 px black box plus 3 px for the gXBORDER
-    local hMargin = 4
+    local hMargin = 8
     local bottomMargin = 4
     -- local titleIndent = 3
+    local titleBarSpace = 4 -- extra gap between title bar and first item
     local maxPromptWidth = 0
     local maxContentWidth = 0
     local maxWidth = 0 -- For anything that doesn't split into prompt and content
@@ -1099,22 +1397,16 @@ function DIALOG(dialog)
             value = dialog.title,
             draggable = (dialog.flags & KDlgNoDrag) == 0,
         }
-        titleBar:setHeightHint(lineHeight)
+        titleBar:init(lineHeight)
         local cw, ch = titleBar:contentSize()
         maxWidth = math.max(cw, maxWidth)
-        h = h + ch
+        h = h + ch + titleBarSpace
     end
 
     for i, item in ipairs(dialog.items) do
         -- printf("Item %i is type %d\n", i, item.type)
         setmetatable(item, itemTypes[item.type] or PlaceholderView)
-        if item.type == dItemTypes.dCHOICE then
-            item.index = tonumber(item.value)
-        elseif item.type == dItemTypes.dCHECKBOX then
-            item.choices = { "", kTickMark }
-            item.index = item.value == KFalse and 1 or 2
-        end
-        item:setHeightHint(lineHeight)
+        item:init(lineHeight)
         local cw, ch = item:contentSize()
         local promptWidth = item:getPromptWidth()
         if promptWidth then
@@ -1181,7 +1473,7 @@ function DIALOG(dialog)
     if titleBar then
         local ch = titleBar:contentHeight()
         win:addSubview(titleBar, borderWidth, y, w - borderWidth * 2, ch)
-        y = y + ch
+        y = y + ch + titleBarSpace
     end
 
     local itemWidth = w - (borderWidth + hMargin) * 2

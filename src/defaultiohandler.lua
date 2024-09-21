@@ -45,6 +45,9 @@ function editValue(params)
     return line
 end
 
+function textEditor(params)
+end
+
 function getch()
     -- Can't really do this with what Lua's io provides, as stdin is always in line mode
     printf("defaultiohandler: GET called:")

@@ -113,6 +113,20 @@ private func editValue(_ L: LuaState!) -> CInt {
     return 1
 }
 
+private func textEditor(_ L: LuaState!) -> CInt {
+    let iohandler = getInterpreterUpval(L).iohandler
+    if L.isnoneornil(1) {
+        iohandler.textEditor(nil)
+    } else {
+        guard let info: TextFieldInfo = L.todecodable(1) else {
+            print("Failed to decode TextFieldInfo!")
+            return 0
+        }
+        iohandler.textEditor(info)
+    }
+    return 0
+}
+
 private func draw(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     var ops: [Graphics.DrawCommand] = []
@@ -747,6 +761,7 @@ public class OpoInterpreter: PsiLuaEnv {
         lua_pushlightuserdata(L, val.toOpaque())
         let fns: [String: lua_CFunction] = [
             "editValue": { L in return autoreleasepool { return editValue(L) } },
+            "textEditor": { L in return autoreleasepool { return textEditor(L) } },
             // "print": { L in return autoreleasepool { return print_lua(L) } },
             "beep": { L in return autoreleasepool { return beep(L) } },
             "draw": { L in return autoreleasepool { return draw(L) } },
