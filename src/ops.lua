@@ -2139,7 +2139,7 @@ function dItem(stack, runtime) -- 0xED
             end
         end
         -- Have to resolve default choice here, and _not_ at the point of the DIALOG call!
-        item.value = math.min(math.max(item.variable(), 1), #item.choices)
+        item.index = math.min(math.max(item.variable(), 1), #item.choices)
     elseif itemType == dItemTypes.dLONG or itemType == dItemTypes.dFLOAT or itemType == dItemTypes.dDATE or itemType == dItemTypes.dTIME then
         item.max = stack:pop()
         item.min = stack:pop()

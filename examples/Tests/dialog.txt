@@ -89,7 +89,7 @@ ENDP
 PROC longDlg:
 	LOCAL val&
 	dINIT "Long input"
-	dLONG val&, "Long", -1, 5
+	dLONG val&, "Long", -1, 50
 	dBUTTONS "OK", 13
 	DIALOG
 	PRINT "Entered:", val&
@@ -100,7 +100,7 @@ PROC floatDlg:
 	LOCAL fval
 	fval = 2.0
 	dINIT "Float input"
-	dFLOAT fval, "Long", -1.1, 5.0
+	dFLOAT fval, "Float", -1.1, 5.0
 	dBUTTONS "OK", 13
 	DIALOG
 	PRINT "Entered:", fval
@@ -109,11 +109,12 @@ ENDP
 
 PROC editDlg:
 	LOCAL val$(16)
+	val$ = "Hello"
 	dINIT "Text edit"
 	dEDIT val$, "Text"
 	dBUTTONS "OK", 13
 	DIALOG
-	PRINT "Got >", val$, "<"
+	PRINT "Got >"; val$; "<"
 	GET
 ENDP
 
@@ -197,6 +198,9 @@ ENDP
 PROC editMultiDlg:
 	LOCAL result%, buf&(16), ptr&, text$(60), len&
 	ptr& = ADDR(buf&())
+	buf&(1) = 8
+	buf&(2) = &64636261
+	buf&(3) = &67666507
 	dINIT "Multi edit"
 	dEDITMULTI ptr&, "Prompt", 20, 5, 60
 	dBUTTONS "OK", %o

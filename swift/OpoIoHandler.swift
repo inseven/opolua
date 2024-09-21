@@ -612,6 +612,19 @@ extension EditOperation.Details {
     }
 }
 
+public struct TextFieldInfo: Codable {
+    enum InputType: String, Codable {
+        case text
+        case integer
+        case float
+    }
+    let id: Graphics.DrawableId
+    let type: InputType
+    let rect: Graphics.Rect
+    let contents: String
+    let cursorPos: Int
+}
+
 public protocol FileSystemIoHandler {
 
     func fsop(_ op: Fs.Operation) -> Fs.Result
@@ -629,6 +642,8 @@ public protocol OpoIoHandler: FileSystemIoHandler {
     func printValue(_ val: String) -> Void
 
     func editValue(_ op: EditOperation) -> Any?
+
+    func textEditor(_ info: TextFieldInfo?)
 
     func beep(frequency: Double, duration: Double) -> Error?
 
@@ -667,6 +682,9 @@ class DummyIoHandler : OpoIoHandler {
 
     func editValue(_ op: EditOperation) -> Any? {
         return nil
+    }
+
+    func textEditor(_ info: TextFieldInfo?) {
     }
 
     func alert(lines: [String], buttons: [String]) -> Int {

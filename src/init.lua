@@ -24,6 +24,9 @@ SOFTWARE.
 
 require("const")
 
+KLineBreakStr = string.char(KLineBreak)
+KParagraphDelimiterStr = string.char(KParagraphDelimiter)
+
 function module()
     return setmetatable({}, {__index=_G})
 end
@@ -483,3 +486,11 @@ function dump(...)
     -- Will replace dump fn, so re-call the new fn
     return dump(...)
 end
+
+textReplacements = {
+    [KParagraphDelimiterStr] = "\n\n",
+    [KLineBreakStr] = "\n",
+    [string.char(KNonBreakingSpace)] = " ", -- Close enough
+    [string.char(KNonBreakingTab)] = "\t", -- Close enough
+    [string.char(KNonBreakingHyphen)] = "-", -- Close enough
+}

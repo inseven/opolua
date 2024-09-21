@@ -128,11 +128,6 @@ end
 local KTextEdSectionMarker = 0x1000005C
 local KTextSectionMarker = 0x10000064
 
-local specialChars = {
-    ["\x06"] = "\n",
-    ["\x10"] = " ", -- Not going to distinguish nonbreaking space, not important for OPL
-}
-
 function getOplText(data)
     local dfs = require("directfilestore")
     local toc = dfs.parse(data)
@@ -149,7 +144,7 @@ function getOplText(data)
             local len, pos = readCardinality(data, pos)
             -- 06 means "new paragraph" in TextEd land... everything else likely
             -- to appear in an OPL script is ASCII
-            local text = data:sub(pos, pos + len - 1):gsub("[\x06\x10]", specialChars)
+            local text = data:sub(pos, pos + len - 1):gsub("[\x06\x10]", textReplacements)
             return text
         else
             pos = pos + 4 -- Skip over offset of section we don't care about

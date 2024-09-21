@@ -460,6 +460,10 @@ extension Program: OpoIoHandler {
         return delegate!.program(self, editValue: op)
     }
 
+    func textEditor(_ info: TextFieldInfo?) {
+        // print("textEditor: \(String(describing: info))")
+    }
+
     func beep(frequency: Double, duration: Double) -> Error? {
         do {
             try Sound.beep(frequency: frequency * 1000, duration: duration)
