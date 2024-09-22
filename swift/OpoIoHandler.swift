@@ -380,6 +380,7 @@ public struct Fs {
             case dir // return .strings(paths)
             case rename(String) // return none, notFound, accessDenied if readonly, notReady, alreadyExists
             case stat // return stat, or notFound or notReady
+            case disks // return .strings(diskList)
         }
         public let path: String
         public let type: OpType
@@ -415,6 +416,7 @@ extension Fs.Operation {
         case .read: return true
         case .dir: return true
         case .stat: return true
+        case .disks: return true
         default: return false
         }
     }

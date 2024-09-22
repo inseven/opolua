@@ -186,6 +186,8 @@ function fsop(cmd, path, ...)
         else
             return nil, KErrNotExists
         end
+    elseif cmd == "disks" then
+        return { "C", "Z" }
     elseif cmd == "delete" then
         printf("delete %s\n", filename)
         local ok, err, errno = os.remove(filename)

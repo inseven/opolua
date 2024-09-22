@@ -1076,7 +1076,9 @@ end
 
 DialogChoiceList = class {
     _super = View,
-    choiceTextSpace = 3 -- Yep, really not the same as kEditTextSpace despite how similar the two look
+    choiceTextSpace = 3, -- Yep, really not the same as kEditTextSpace despite how similar the two look
+    typeable = false,
+    cursorPos = 1, -- Only for typeable=true
 }
 
 local kChoiceArrowSpace = 2
@@ -1118,7 +1120,8 @@ function DialogChoiceList:draw()
     if self.choiceFont then
         gFONT(self.choiceFont)
     end
-    drawText(self.choices[self.index], x + self.choiceTextSpace, texty)
+    local text = self.choices[self.index]
+    drawText(text, x + self.choiceTextSpace, texty)
 
     self.rightArrowX = x + choicesWidth + kChoiceArrowSpace
     gFONT(KFontEiksym15)
@@ -1131,6 +1134,11 @@ function DialogChoiceList:draw()
     drawText(kChoiceRightArrow, self.rightArrowX, texty)
     gFONT(kDialogFont)
     black()
+
+    if self.typeable and self.hasFocus then
+        gAT(x + self.choiceTextSpace + gTWIDTH(text:sub(1, self.cursorPos - 1)), texty)
+        CURSOR(gIDENTITY(), nil, gTWIDTH(text:sub(self.cursorPos, self.cursorPos)))
+    end
 
     View.draw(self)
 end
@@ -1166,27 +1174,56 @@ function DialogChoiceList:handleKeyPress(k, modifiers)
         return true
     elseif k >= string.byte("a") and k <= string.byte("z") then
         local ch = string.char(k)
-        -- Find the next thing after current pos that starts with ch
-        local i = self.index + 1
-        while true do
-            if self.choices[i] == nil then
-                -- Wrap around
-                i = 1
+        if self.typeable then
+            local prefix = string.lower(self.choices[self.index]:sub(1, self.cursorPos - 1) .. ch)
+            -- Find first item (possibly including current) with this prefix
+            for i = self.index, #self.choices do
+                if self.choices[i]:sub(1, #prefix):lower() == prefix then
+                    self.index = i
+                    self.cursorPos = #prefix + 1
+                    self:setNeedsRedraw()
+                    break
+                end
             end
-            if i == self.index then
-                -- We've been all the way round, bail
-                break
-            elseif self.choices[i]:sub(1, 1):lower() == ch then
-                self:setIndex(i)
-                break
+        else
+            -- Find the next thing after current pos that starts with ch
+            local i = self.index + 1
+            while true do
+                if self.choices[i] == nil then
+                    -- Wrap around
+                    i = 1
+                end
+                if i == self.index then
+                    -- We've been all the way round, bail
+                    break
+                elseif self.choices[i]:sub(1, 1):lower() == ch then
+                    self:setIndex(i)
+                    break
+                end
+                i = i + 1
             end
-            i = i + 1
         end
         return true
+    elseif self.typeable and k == KKeyDel then
+        if self.cursorPos > 1 then
+            self.cursorPos = self.cursorPos - 1
+            self:setNeedsRedraw()
+        end
     else
         print("Unhandled key", k)
     end
     return false
+end
+
+function DialogChoiceList:setFocus(flag)
+    DialogChoiceList._super.setFocus(self, flag)
+    if flag then
+        -- When focussed, the draw call triggered by View.setFocus takes care of calling CURSOR (via updateCursorIfFocussed)
+        -- self:updateIohandler()
+    else
+        CURSOR(false)
+        runtime:iohandler().textEditor(nil)
+    end
 end
 
 function DialogChoiceList:displayPopupMenu()
@@ -1208,6 +1245,7 @@ end
 
 function DialogChoiceList:setIndex(index)
     self.index = index
+    self.cursorPos = 1
     self:setNeedsRedraw()
 end
 
@@ -1238,6 +1276,232 @@ end
 
 function DialogCheckbox:updateVariable()
     self.variable(self.index == 1 and KFalse or KTrue)
+end
+
+DialogItemFileChooser = class {
+    _super = DialogChoiceList,
+}
+
+function DialogItemFileChooser:init(lineHeight)
+    self.typeable = true
+
+    self._super.init(self, lineHeight)
+    if self.path == "" then
+        self.path = "C:\\"
+    end
+    local dir, name = oplpath.split(self.path)
+    assert(dir ~= "", "Bad path for DialogItemFileChooser")
+    self:update(dir, name)
+end
+
+function DialogItemFileChooser:getChoicesWidth()
+    return 350
+end
+
+function DialogItemFileChooser:update(dir, name)
+    printf("DialogItemFileChooser:update(%s, %s)\n", dir, name)
+
+    local canonName = name and oplpath.canon(name)
+    local dirContents = runtime:ls(dir)
+    self.choices = {}
+    self.paths = {}
+    self.index = 1
+    for _, item in ipairs(dirContents) do
+        if not runtime:isdir(item) then
+            local itemName = oplpath.basename(item)
+            table.insert(self.paths, item)
+            table.insert(self.choices, itemName)
+            if oplpath.canon(itemName) == canonName then
+                self.index = #self.choices
+            end
+        end
+    end
+    if #self.paths == 0 then
+        self.choices[1] = "(No files)"
+    end
+    self.path = self.paths[self.index] or dir
+    self:setNeedsRedraw()
+end
+
+function DialogItemFileChooser:getPath()
+    return self.path
+end
+
+function DialogItemFileChooser:canDismiss()
+    if self.flags & KDFileAllowNullStrings == 0 and #self.paths == 0 then
+        gIPRINT("No filename entered", KBusyTopRight)
+        return false
+    end
+    return true
+end
+
+function DialogItemFileChooser:updateVariable()
+    self.variable(self.path)
+end
+
+function DialogItemFileChooser:setIndex(index)
+    self.path = oplpath.join(oplpath.dirname(self.path), self.choices[index])
+    DialogChoiceList.setIndex(self, index)
+end
+
+DialogItemFileEdit = class {
+    _super = DialogItemEdit,
+}
+
+function DialogItemFileEdit:init(lineHeight)
+    self._super.init(self, lineHeight)
+    if self.path == "" then
+        self.path = "C:\\"
+    end
+    local dir, name = oplpath.split(self.path)
+    assert(dir ~= "", "Bad path for DialogItemFileEdit")
+    self:update(dir, name)
+end
+
+function DialogItemFileEdit:contentSize()
+    return 350, self.heightHint
+end
+
+function DialogItemFileEdit:update(dir, name)
+    printf("DialogItemFileEdit:update(%s, %s)\n", dir, name)
+    self.path = dir
+    self.editor:setValue(name or "")
+    self.editor:setCursorPos(#self.editor.value + 1, 1)
+end
+
+function DialogItemFileEdit:getPath()
+    return oplpath.join(self.path, self.editor.value)
+end
+
+function DialogItemFileEdit:canDismiss()
+    if self.editor.value == "" then
+        if self.flags & KDFileAllowNullStrings == 0 then
+            gIPRINT("No filename entered", KBusyTopRight)
+            return false
+        else
+            -- This is allowed without query even though the returned path is an existing directory
+            return true
+        end
+    elseif self.flags & KDFileEditorDisallowExisting ~= 0 and runtime:EXIST(self:getPath()) then
+        gIPRINT("File with this name already exists", KBusyTopRight)
+        return false
+    elseif self.flags & KDFileEditorQueryExisting ~= 0 and runtime:EXIST(self:getPath()) then
+        local ret = DIALOG({
+            title = "Confirm file replace",
+            flags = 0,
+            xpos = 0,
+            ypos = 0,
+            items = {
+                {
+                type = dItemTypes.dTEXT,
+                align = "center",
+                value = string.format('Replace file "%s"?', self.editor.value),
+                },
+            },
+            buttons = {
+                { key = string.byte("n") | KDButtonPlainKey | KDButtonNoLabel, text = "No" },
+                { key = string.byte("y") | KDButtonPlainKey | KDButtonNoLabel, text = "Yes" },
+            },
+        })
+        return ret == string.byte("y")
+    else
+        return true
+    end
+end
+
+function DialogItemFileEdit:updateVariable()
+    self.variable(oplpath.join(self.path, self.editor.value))
+end
+
+DialogItemFolder = class {
+    _super = DialogChoiceList,
+}
+
+function DialogItemFolder:init(lineHeight)
+    DialogItemFolder._super.init(self, lineHeight)
+    self:updateFolders()
+end
+
+function DialogItemFolder:getChoicesWidth()
+    return 350
+end
+
+function DialogItemFolder:updateVariable()
+    -- Nothing needed, all handled by DialogItemFileChooser/DialogItemFileEdit
+end
+
+function DialogItemFolder:updateFolders()
+    self.paths = {}
+    self.choices = {} -- Keep this separate to self.paths so we can reuse baseclass logic
+    local disk = self.fileItem:getPath():sub(1, 3)
+    self:addDir(disk)
+    self.index = 1
+    local targetDir = oplpath.canon(oplpath.dirname(self.fileItem:getPath()))
+    for i, dir in ipairs(self.paths) do
+        if oplpath.canon(oplpath.join(dir, "")) == targetDir then
+            self.index = i
+            break
+        end
+    end
+    self:setNeedsRedraw()
+end
+
+function DialogItemFolder:addDir(path)
+    -- print("addDir", path)
+    table.insert(self.paths, path)
+    local base = oplpath.basename(path)
+    if base == "" then
+        base = path
+    end
+    table.insert(self.choices, path)
+    for _, item in ipairs(runtime:ls(path)) do
+        if runtime:isdir(item) then
+            self:addDir(item)
+        end
+    end
+end
+
+function DialogItemFolder:setIndex(index)
+    if index ~= self.index then
+        self.fileItem:update(self.paths[index])
+        DialogItemFolder._super.setIndex(self, index)
+    end
+end
+
+-- function DialogItemFolder:displayPopupMenu()
+--     -- TODO the folder icon is Z:\System\Data\eikon.mbm index 4 (20x16)
+-- end
+
+DialogItemDisk = class {
+    _super = DialogChoiceList,
+}
+
+function DialogItemDisk:init(lineHeight)
+    DialogItemDisk._super.init(self, lineHeight)
+    self.choices = runtime:getDisks()
+    local showZ = self.fileItem.flags & KDFileSelectorWithRom ~= 0
+    if not showZ and self.choices[#self.choices] == "Z" then
+        self.choices[#self.choices] = nil
+    end
+    self.index = 1
+    for i, disk in ipairs(self.choices) do
+        if self.fileItem.path:match("^"..disk..":\\") then
+            self.index = i
+            break
+        end
+    end
+end
+
+function DialogItemDisk:updateVariable()
+    -- Nothing needed, all handled by DialogItemFileChooser/DialogItemFileEdit
+end
+
+function DialogItemDisk:setIndex(index)
+    if index ~= self.index then
+        self.fileItem:update(self.choices[index]..":\\", nil)
+        self.folderItem:updateFolders()
+        DialogItemDisk._super.setIndex(self, index)
+    end
 end
 
 DialogItemSeparator = class { _super = View }
@@ -1558,6 +1822,10 @@ local itemTypes = {
     [dItemTypes.dXINPUT] = DialogItemEditPass,
     [dItemTypes.dDATE] = DialogItemEditDate,
     [dItemTypes.dTIME] = DialogItemEditTime,
+    [dItemTypes.dFILECHOOSER] = DialogItemFileChooser,
+    [dItemTypes.dFILEEDIT] = DialogItemFileEdit,
+    [dItemTypes.dFILEFOLDER] = DialogItemFolder,
+    [dItemTypes.dFILEDISK] = DialogItemDisk,
 }
 
 function DIALOG(dialog)

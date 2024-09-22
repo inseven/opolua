@@ -2177,6 +2177,38 @@ function dItem(stack, runtime) -- 0xED
     elseif itemType == dItemTypes.dPOSITION then
         dialog.xpos, dialog.ypos = stack:popXY()
         shouldAdd = false
+    elseif itemType == dItemTypes.dFILE then
+        local var, prompt, flags, uid1, uid2, uid3 = stack:pop(6)
+        local prompts = {}
+        for p in prompt:gmatch("[^,]+") do
+            table.insert(prompts, p)
+        end
+
+        local fileItem = {
+            type = (flags & KDFileEditBox == 0) and dItemTypes.dFILECHOOSER or dItemTypes.dFILEEDIT,
+            variable = var,
+            path = var(),
+            prompt = prompts[1] or prompt,
+            uid1 = uid1,
+            uid2 = uid2,
+            uid3 = uid3,
+            flags = flags,
+        }
+        local folderItem = {
+            type = dItemTypes.dFILEFOLDER,
+            fileItem = fileItem,
+            prompt = prompts[2] or "",
+        }
+        local diskItem = {
+            type = dItemTypes.dFILEDISK,
+            fileItem = fileItem,
+            folderItem = folderItem,
+            prompt = prompts[3] or "",
+        }
+        table.insert(dialog.items, fileItem)
+        table.insert(dialog.items, folderItem)
+        table.insert(dialog.items, diskItem)
+        shouldAdd = false
     else
         error("Unsupported dItem type "..itemType)
     end

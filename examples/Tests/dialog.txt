@@ -1,3 +1,8 @@
+DECLARE EXTERNAL
+INCLUDE "const.oph"
+
+EXTERNAL loop%:
+
 PROC main:
 	GLOBAL choice%
 	LOCAL cont%
@@ -5,57 +10,6 @@ PROC main:
 	WHILE cont%
 		cont% = loop%:
 	ENDWH
-ENDP
-
-PROC loop%:
-	LOCAL dlg%	
-	dINIT "Dialog test", 0
-	dTEXT "", "Pick a dialog type to test"
-	REM dTEXT "", "", $800
-	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
-	dCHOICE choice%, "", "password,empty,date,time,..."
-	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg,..."
-	dCHOICE choice%, "", "editmulti,file"
-	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
-	choice% = 2
-	dlg% = DIALOG
-	PRINT "Dialog returned ", dlg%
-	PRINT "Choice was ", choice%
-	IF dlg% = 0
-		PRINT "(dialog cancelled)"
-		GET
-		RETURN 0
-	ELSEIF choice% = 1
-		longDlg:
-	ELSEIF choice% = 2
-		floatDlg:
-	ELSEIF choice% = 3
-		editDlg:
-	ELSEIF choice% = 4
-		checkDlg:
-	ELSEIF choice% = 5
-		textDlg:
-	ELSEIF choice% = 6
-		xDlg:
-	ELSEIF choice% = 7
-		emptyDlg:
-	ELSEIF choice% = 8
-		dateDlg:
-	ELSEIF choice% = 9
-		timeDlg:
-	ELSEIF choice% = 10
-		buttonDlg:
-	ELSEIF choice% = 11
-		bareButtonDlg:
-	ELSEIF choice% = 12
-		cancelDlg:
-	ELSEIF choice% = 13
-		editMultiDlg:
-	ELSEIF choice% = 14
-		fileDlg:
-	ENDIF
-	
-	RETURN 1
 ENDP
 
 PROC buttonDlg:
@@ -213,11 +167,102 @@ PROC editMultiDlg:
 ENDP
 
 PROC fileDlg:
-	LOCAL f$(255)
-	dINIT "File dialog"
-	dFILE f$, "File", 0
-	DIALOG
-	PRINT "Dialog returned", f$
+	LOCAL f$(255), type%, showz%, onlydir%, allowEmpty%
+	LOCAL result%, flags%
+	result% = 1
+	allowEmpty% = 1
+	type% = 1
+
+	WHILE result%
+		flags% = 0
+		IF allowEmpty%
+			flags% = flags% OR KDFileAllowNullStrings%
+		ENDIF
+		IF type% = 1
+			REM open file
+		ELSEIF type% = 2
+			REM save file (+ query)
+			flags% = flags% OR KDFileEditBox% OR KDFileEditorQueryExisting%
+		ELSEIF type% = 3
+			REM save file (-query)
+			flags% = flags% OR KDFileEditBox%
+		ELSEIF type% = 4
+			REM New file
+			flags% = flags% OR KDFileEditBox% OR KDFileEditorDisallowExisting%
+		ENDIF
+		IF showz%
+			flags% = flags% OR KDFileSelectorWithRom%
+		ENDIF
+		IF onlydir%
+			REM these two flags appear too broken for me to figure out what they should do.
+			REM flags% = flags% OR KDFileAllowFolders% OR KDFileFoldersOnly%
+		ENDIF
+
+		dINIT "File dialog", KDlgButRight% OR KDlgDensePack%
+		dFILE f$, "File,Dir,Drive", flags%
+		REM dCHECKBOX edit%, "Allow text entry"
+		dCHOICE type%, "Type", "Open file,Save file (query),Save file (overwrite),New file"
+		dCHECKBOX showz%, "Show Z:"
+		REM dCHECKBOX onlydir%, "Only directories"
+		dCHECKBOX allowEmpty%, "Allow empty"
+		dBUTTONS "OK", KDButtonEnter% + KDButtonNoLabel%, "Cancel", -(KDButtonEsc% + KDButtonNoLabel%)
+		result% = DIALOG
+
+		CLS
+		PRINT "Result is", result%, f$
+	ENDWH
+
 	GET
 ENDP
 
+PROC loop%:
+	LOCAL dlg%
+	EXTERNAL choice%
+	dINIT "Dialog test", 0
+	dTEXT "", "Pick a dialog type to test"
+	REM dTEXT "", "", $800
+	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
+	dCHOICE choice%, "", "password,empty,date,time,..."
+	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg,..."
+	dCHOICE choice%, "", "editmulti,file"
+	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
+	choice% = 2
+	dlg% = DIALOG
+	PRINT "Dialog returned ", dlg%
+	PRINT "Choice was ", choice%
+	IF dlg% = 0
+		PRINT "(dialog cancelled)"
+		GET
+		RETURN 0
+	ELSEIF choice% = 1
+		longDlg:
+	ELSEIF choice% = 2
+		floatDlg:
+	ELSEIF choice% = 3
+		editDlg:
+	ELSEIF choice% = 4
+		checkDlg:
+	ELSEIF choice% = 5
+		textDlg:
+	ELSEIF choice% = 6
+		xDlg:
+	ELSEIF choice% = 7
+		emptyDlg:
+	ELSEIF choice% = 8
+		dateDlg:
+	ELSEIF choice% = 9
+		timeDlg:
+	ELSEIF choice% = 10
+		buttonDlg:
+	ELSEIF choice% = 11
+		bareButtonDlg:
+	ELSEIF choice% = 12
+		cancelDlg:
+	ELSEIF choice% = 13
+		editMultiDlg:
+	ELSEIF choice% = 14
+		fileDlg:
+	ENDIF
+	
+	RETURN 1
+ENDP
