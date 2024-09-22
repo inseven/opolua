@@ -37,7 +37,6 @@
 		D83543702C9658700053A8C8 /* ProgramsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D835436F2C9658700053A8C8 /* ProgramsView.swift */; };
 		D83543722C9658980053A8C8 /* SoftwareIndexViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83543712C9658980053A8C8 /* SoftwareIndexViewController.swift */; };
 		D83543742C9658C20053A8C8 /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83543732C9658C20053A8C8 /* LibraryModel.swift */; };
-		D83543762C9659180053A8C8 /* ReleaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83543752C9659180053A8C8 /* ReleaseView.swift */; };
 		D83543782C9659420053A8C8 /* ProgramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D83543772C9659420053A8C8 /* ProgramView.swift */; };
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
@@ -174,7 +173,6 @@
 		D835436F2C9658700053A8C8 /* ProgramsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramsView.swift; sourceTree = "<group>"; };
 		D83543712C9658980053A8C8 /* SoftwareIndexViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareIndexViewController.swift; sourceTree = "<group>"; };
 		D83543732C9658C20053A8C8 /* LibraryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryModel.swift; sourceTree = "<group>"; };
-		D83543752C9659180053A8C8 /* ReleaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseView.swift; sourceTree = "<group>"; };
 		D83543772C9659420053A8C8 /* ProgramView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramView.swift; sourceTree = "<group>"; };
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
@@ -307,7 +305,6 @@
 				D83543732C9658C20053A8C8 /* LibraryModel.swift */,
 				D835436F2C9658700053A8C8 /* ProgramsView.swift */,
 				D83543772C9659420053A8C8 /* ProgramView.swift */,
-				D83543752C9659180053A8C8 /* ReleaseView.swift */,
 				D8DAD5B82C8CEF1D00CFEF4A /* SoftwareIndexView.swift */,
 				D83543712C9658980053A8C8 /* SoftwareIndexViewController.swift */,
 			);
@@ -669,7 +666,6 @@
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				D884A3D32778E335008954A0 /* FileSystem.swift in Sources */,
 				D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */,
-				D83543762C9659180053A8C8 /* ReleaseView.swift in Sources */,
 				D80A9CBC27A48BED00E49AD8 /* ApplicationSection.swift in Sources */,
 				D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */,
 				D8D50117275928CF008C1BC9 /* Scheduler.swift in Sources */,
