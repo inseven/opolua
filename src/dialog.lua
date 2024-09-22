@@ -363,7 +363,7 @@ function DialogItemEdit:contentSize()
     return gTWIDTH(string.rep("@", self.len)) + 2 * kEditTextSpace, self.heightHint
 end
 
-function DialogItemEdit:drawValue(val)
+function DialogItemEdit:drawPromptAndBox()
     local x = self:drawPrompt()
     local texty = self.y + kDialogLineTextYOffset
 
@@ -375,6 +375,11 @@ function DialogItemEdit:drawValue(val)
     gAT(x + 1, texty - 1)
     gFILL(boxWidth - 2, self.charh + 1, KgModeClear)
     gAT(x + 1, texty)
+    return x, texty
+end
+
+function DialogItemEdit:drawValue(val)
+    local x, texty = self:drawPromptAndBox()
     drawText(val, x + kEditTextSpace, texty)
     if self.editor and self.editor:hasSelection() then
         local selStart, selEnd = self.editor:getSelectionRange()
@@ -634,22 +639,193 @@ DialogItemEditDate = class {
     _super = DialogItemEdit,
 }
 
+local kSecsFrom1900to1970 = 2208988800
+
 function DialogItemEditDate:init(lineHeight)
     -- Skip DialogItemEdit:init()
     View.init(self, lineHeight)
+    local t = os.date("!*t", self.value * 86400 - kSecsFrom1900to1970)
+    self.parts = {
+        string.format("%02d", t.day),
+        string.format("%02d", t.month),
+        string.format("%04d", t.year)
+    }
+    self.day = 1
+    self.month = 2
+    self.year = 3
+    self.mins = { 1, 1, os.date("!*t", self.min * 86400 - kSecsFrom1900to1970).year }
+    self.maxes = { 31, 12, os.date("!*t", self.max * 86400 - kSecsFrom1900to1970).year }
+    self.widths = { gTWIDTH("00"), gTWIDTH("/00"), gTWIDTH("/0000") }
+    self.editor = require("editor").Editor {
+        view = self,
+    }
+    self.currentPart = 1
+    self:setPart(self.currentPart)
+end
+
+function DialogItemEditDate:setPart(idx)
+    -- This also commits any ongoing editing
+    local n = tonumber(self.parts[self.currentPart], 10)
+    assert(n, "Value should be a valid number in setPart!")
+    local min = self.mins[self.currentPart]
+    local max = self.maxes[self.currentPart]
+    if n < min then
+        idx = self.currentPart
+        n = min
+        gIPRINT("Minimum allowed value is "..tostring(min), KBusyTopRight)
+    elseif n > max then
+        n = max
+        idx = self.currentPart
+        gIPRINT("Maximum allowed value is "..tostring(max), KBusyTopRight)
+    end
+
+    self.parts[self.currentPart] = string.format("%02d", n)
+    self.currentPart = idx
+    self.editor:setValue(self.parts[idx])
+    self.editor:setCursorPos(#self.editor.value + 1, 1)
+    self:setNeedsRedraw()
+end
+
+function DialogItemEditDate:canUpdate(newVal)
+    local n = tonumber(newVal, 10)
+    if n == nil or n < 0 or (self.currentPart < 3 and #newVal > 2) or (self.currentPart == 3 and #newVal > 4) then
+        return false
+    else
+        return true
+    end
+end
+
+function DialogItemEditDate:onEditorChanged(editor)
+    -- print("onEditorChanged", self.currentPart, editor.value)
+    local cur = self.currentPart
+    local prevLen = #self.parts[cur]
+    local newLen = #editor.value
+    self.parts[cur] = editor.value
+    if cur ~= self.year and prevLen == 1 and newLen == 2 then
+        -- Move cursor to next part
+        self:setPart(cur + 1)
+    elseif cur == self.year and prevLen == 3 and newLen == 4 then
+        -- Just commit
+        self:setPart(cur)
+    end
+    self:setNeedsRedraw()
 end
 
 function DialogItemEditDate:contentSize()
-    return gTWIDTH("00/00/0000") + 2 * kEditTextSpace, self.heightHint
+    return self.widths[1] + self.widths[2] + self.widths[3] + 2 * kEditTextSpace, self.heightHint
 end
 
-local kSecsFrom1900to1970 = 2208988800
-
 function DialogItemEditDate:draw()
-    -- Value is integer days since 1900
-    local dateStr = os.date("%d/%m/%Y", (self.value * 86400) - kSecsFrom1900to1970)
-    self:drawValue(dateStr)
+    local x, texty = self:drawPromptAndBox()
+    x = x + kEditTextSpace
+    local oow = gTWIDTH("00")
+    local slashw = gTWIDTH("/")
+    for i = 1, 3 do
+        drawText(self.parts[i], x, texty)
+
+        if self.currentPart == i and self.editor:hasSelection() then
+            gAT(x, texty - 1)
+            gFILL(gTWIDTH(self.editor:getSelection()), self.charh + 1, KgModeInvert)
+        end
+
+        if i ~= 3 then
+            x = x + oow
+            drawText("/", x, texty)
+            x = x + slashw
+        end
+    end
+
+    self:updateCursorIfFocussed()
     View.draw(self)
+end
+
+function DialogItemEditDate:updateCursorIfFocussed()
+    if self.hasFocus then
+        if self.editor:hasSelection() then
+            -- We don't show a cursor when there's a selection (because a selection is used to indicate the entry is
+            -- complete).
+            CURSOR(false)
+        else
+            DialogItemEdit.updateCursorIfFocussed(self)
+        end
+    end
+end
+
+function DialogItemEditDate:getCursorPos()
+    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1))
+    local partw = gTWIDTH("00/")
+    local x = self.x + self.promptWidth + kEditTextSpace + ((self.currentPart - 1) * partw) + textw
+    local y = self.y + kDialogLineTextYOffset - 1
+    return x, y
+end
+
+function DialogItemEditDate:handlePointerEvent(x, y, type)
+    local pos = self.x + self.promptWidth + kEditTextSpace
+    if type == KEvPtrPenDown then
+        for i, w in ipairs(self.widths) do
+            if x >= pos and x < pos + w then
+                self:setPart(i)
+                break
+            else
+                pos = pos + w
+            end
+        end
+    end
+end
+
+function DialogItemEditDate:handleKeyPress(k, modifiers)
+    if k == KKeyLeftArrow then
+        if self.currentPart > 1 then
+            self:setPart(self.currentPart - 1)
+        end
+        return true
+    elseif k == KKeyRightArrow then
+        if self.currentPart < 3 then
+            self:setPart(self.currentPart + 1)
+        end
+        return true
+    elseif k == KKeyPageLeft or k == KKeyPageRight then
+        -- These shouldn't do anything in a date editor
+        return true
+    else
+        return self.editor:handleKeyPress(k, modifiers)
+    end
+end
+
+function DialogItemEditDate:getDate()
+    -- day and month will already have been checked to be 1-31 and 1-12, and year will already be right, so just check
+    -- that the days is allowed. Technique taken from DTDaysInMonth
+    local d = {
+        day = 31,
+        month = tonumber(self.parts[self.month], 10),
+        year = tonumber(self.parts[self.year], 10),
+    }
+    local maxDays = 31 - os.date("!*t", runtime:iohandler().utctime(d)).day
+    if maxDays == 0 then
+        maxDays = 31
+    end
+    d.day = tonumber(self.parts[self.day])
+    if d.day > maxDays then
+        return nil
+    else
+        return d
+    end
+end
+
+function DialogItemEditDate:canDismiss()
+    local date = self:getDate()
+    if date == nil then
+        gIPRINT("Invalid date", KBusyTopRight)
+        return false
+    end
+
+    return true
+end
+
+function DialogItemEditDate:updateVariable()
+    local d = assert(self:getDate())
+    local t = (runtime:iohandler().utctime(d) + kSecsFrom1900to1970) // 86400
+    self.variable(t)
 end
 
 DialogItemEditTime = class {
