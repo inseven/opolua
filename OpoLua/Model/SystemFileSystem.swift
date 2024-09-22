@@ -35,6 +35,10 @@ class SystemFileSystem: FileSystem {
         try fileManager.createDirectory(at: rootUrl.appendingPathComponent("c"), withIntermediateDirectories: true)
     }
 
+    func getSharedDrives() -> [String] {
+        return Array(sharedDrives.keys).sorted()
+    }
+
     func set(sharedDrive: String, url: URL, readonly: Bool) {
         sharedDrives[sharedDrive] = (url, readonly)
     }

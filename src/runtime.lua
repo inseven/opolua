@@ -1184,7 +1184,7 @@ end
 function Runtime:ls(path)
     local contents, err = self.ioh.fsop("dir", oplpath.join(path, ""))
     if contents then
-        table.sort(contents)
+        table.sort(contents, function(lhs, rhs) return oplpath.canon(lhs) < oplpath.canon(rhs) end)
     end
     return contents, err
 end
@@ -1192,6 +1192,12 @@ end
 function Runtime:isdir(path)
     local stat = self.ioh.fsop("stat", path)
     return stat and stat.isDir
+end
+
+function Runtime:getDisks()
+    local result = assert(self.ioh.fsop("disks", ""))
+    table.sort(result)
+    return result
 end
 
 function Runtime:dir(path)

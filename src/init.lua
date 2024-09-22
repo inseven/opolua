@@ -244,9 +244,13 @@ dItemTypes = enum {
     dBUTTONS = 10,
     dPOSITION = 11,
     dCHECKBOX = 12,
-    -- simulated types, not actually used by OPL
+    -- internal types, not actually used by OPL
     dSEPARATOR = 257,
     dEDITMULTI = 258,
+    dFILECHOOSER = 259,
+    dFILEEDIT = 260,
+    dFILEFOLDER = 261,
+    dFILEDISK = 262,
 }
 
 KDefaultFontUid = KFontArialNormal15

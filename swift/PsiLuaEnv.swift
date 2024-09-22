@@ -341,6 +341,8 @@ public class PsiLuaEnv {
         switch cmd {
         case "stat":
             op = .stat
+        case "disks":
+            op = .disks
         case "delete":
             op = .delete
         case "mkdir":

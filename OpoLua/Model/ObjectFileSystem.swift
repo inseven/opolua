@@ -39,6 +39,10 @@ class ObjectFileSystem: FileSystem {
     func prepare() throws {
     }
 
+    func getSharedDrives() -> [String] {
+        return Array(sharedDrives.keys).sorted()
+    }
+
     func set(sharedDrive: String, url: URL, readonly: Bool) {
         sharedDrives[sharedDrive] = url
     }
