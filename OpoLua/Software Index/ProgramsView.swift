@@ -40,11 +40,11 @@ struct ProgramsView: View {
                             AsyncImage(url: iconURL) { image in
                                 image
                             } placeholder: {
-                                Image(.unknownAppIconC)
+                                Image(.unknownAppIcon)
                             }
                             
                         } else {
-                            Image(.unknownAppIconC)
+                            Image(.unknownAppIcon)
                         }
                     }
                 }
