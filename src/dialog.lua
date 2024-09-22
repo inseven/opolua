@@ -1371,9 +1371,7 @@ DialogButtonGroup = class { _super = View }
 
 function DialogButtonGroup:contentSize()
     -- All buttons are the same size, which can grow to fit the longest button text
-    -- TODO support buttons on side
     local maxButtonWidth = 0
-    gFONT(kButtonFont)
     local numButtons = #self
     local hasLabels = false
     for _, button in ipairs(self) do
@@ -1382,25 +1380,38 @@ function DialogButtonGroup:contentSize()
             hasLabels = true
         end
     end
-    local buttonsWidth = maxButtonWidth * numButtons + kButtonSpacing * (numButtons - 1)
-    gFONT(kDialogFont)
-
     local h
     if hasLabels then
        h = kDialogLineHeight * 2
     else
        h = kButtonYOffset + kButtonHeight
     end
-    return buttonsWidth, h, maxButtonWidth
+
+    if self.side then
+        return maxButtonWidth + kButtonSpacing, h * numButtons, maxButtonWidth
+    else
+        local buttonsWidth = maxButtonWidth * numButtons + kButtonSpacing * (numButtons - 1)
+        return buttonsWidth, h, maxButtonWidth
+    end
 end
 
 function DialogButtonGroup:addButtonsToView()
     local cw, ch, buttonWidth = self:contentSize()
-    local x = self.x + ((self.w - cw) // 2)
-    local buttonY = self.y + kButtonYOffset
-    for _, button in ipairs(self) do
-        self:addSubview(button, x, buttonY, buttonWidth, kButtonHeight)
-        x = x + buttonWidth + kButtonSpacing
+    local buttonHeight = ch // #self
+    if self.side then
+        local x = self.x
+        local y = self.y
+        for _, button in ipairs(self) do
+            self:addSubview(button, x, y, buttonWidth, kButtonHeight)
+            y = y + buttonHeight
+        end
+    else
+        local x = self.x + ((self.w - cw) // 2)
+        local buttonY = self.y + kButtonYOffset
+        for _, button in ipairs(self) do
+            self:addSubview(button, x, buttonY, buttonWidth, kButtonHeight)
+            x = x + buttonWidth + kButtonSpacing
+        end
     end
 end
 
@@ -1497,10 +1508,12 @@ function DialogWindow:processEvent(ev)
         end
     elseif k == KKeyEnter then
         -- If we get here, there can't be a button with enter as a shortcut
-        return self.focussedItemIndex
+        if self:canDismiss() then
+            return self.focussedItemIndex
+        end
     elseif k == KEvPtr then
         if ev[KEvAPtrWindowId]() ~= self.windowId then
-            return
+            return nil
         end
         local ptrType = ev[KEvAPtrType]()
         local x = ev[KEvAPtrPositionX]()
@@ -1511,13 +1524,19 @@ function DialogWindow:processEvent(ev)
     return nil
 end
 
-function DialogWindow:onButtonPressed(button)
+function DialogWindow:canDismiss()
     for _, item in ipairs(self.items) do
         if not item:canDismiss() then
-            return
+            return false
         end
     end
-    self.buttonPressed = button
+    return true
+end
+
+function DialogWindow:onButtonPressed(button)
+    if button:getResultCode() <= 0 or self:canDismiss() then
+        self.buttonPressed = button
+    end
 end
 
 function DialogWindow:onFocusChanged(view)
@@ -1595,17 +1614,21 @@ function DIALOG(dialog)
     end
     h = h + bottomMargin + borderWidth
 
-    -- -- All buttons are the same size, which can grow to fit the longest button text
+    -- All buttons are the same size, which can grow to fit the longest button text
+    local butw, buth
     local numButtons = dialog.buttons and #dialog.buttons or 0
     if numButtons > 0 then
+        dialog.buttons.side = dialog.flags & KDlgButRight ~= 0
         setmetatable(dialog.buttons, DialogButtonGroup)
         for i, button in ipairs(dialog.buttons) do
             setmetatable(button, Button)
             -- printf("Button %i key: %d text: %s\n", i, button.key, button.text)
         end
-        local cw, ch = dialog.buttons:contentSize()
-        maxWidth = math.max(cw, maxWidth)
-        h = h + ch + kDialogLineGap
+        butw, buth = dialog.buttons:contentSize()
+        if not dialog.buttons.side then
+            maxWidth = math.max(butw, maxWidth)
+            h = h + buth + kDialogLineGap
+        end
     end
 
     if maxPromptWidth > 0 or maxContentWidth > 0 then
@@ -1614,6 +1637,11 @@ function DIALOG(dialog)
 
     local screenWidth, screenHeight = runtime:getScreenInfo()
     local w = maxWidth + (borderWidth + hMargin) * 2
+    local rightHandButtonWidth = 0
+    if numButtons > 0 and dialog.buttons.side then
+        rightHandButtonWidth = butw + hMargin
+        w = w + rightHandButtonWidth
+    end
     w = math.min(w, screenWidth)
     h = math.min(h, screenHeight)
     if dialog.flags & KDlgFillScreen ~= 0 then
@@ -1652,7 +1680,7 @@ function DIALOG(dialog)
         y = y + ch + titleBarSpace
     end
 
-    local itemWidth = w - (borderWidth + hMargin) * 2
+    local itemWidth = w - (borderWidth + hMargin) * 2 - rightHandButtonWidth
     for i, item in ipairs(dialog.items) do
         item:setPromptWidth(maxPromptWidth + promptGap)
         local ch = item:contentHeight()
@@ -1666,8 +1694,11 @@ function DIALOG(dialog)
 
     if numButtons > 0 then
         win.buttons = dialog.buttons
-        local cw, ch = dialog.buttons:contentSize()
-        win:addSubview(dialog.buttons, borderWidth + hMargin, y, itemWidth, ch)
+        if dialog.buttons.side then
+            win:addSubview(dialog.buttons, w - borderWidth - butw, h - bottomMargin - borderWidth - buth, butw, buth)
+        else
+            win:addSubview(dialog.buttons, borderWidth + hMargin, y, itemWidth, buth)
+        end
         win.buttons:addButtonsToView()
     end
 
