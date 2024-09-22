@@ -43,18 +43,28 @@ struct ProgramView: View {
                 Section(version.id) {
                     ForEach(version.variants) { variant in
                         ForEach(variant.items) { item in
-                            NavigationLink {
-                                ReleaseView(release: item)
-                                    .environmentObject(libraryModel)
-                            } label: {
-                                HStack(alignment: .center) {
-                                    IconView(url: item.iconURL)
-                                    VStack(alignment: .leading) {
-                                        Text(item.filename)
-                                        Text(item.referenceString)
-                                            .font(.footnote)
-                                    }
+                            HStack(alignment: .center) {
+                                IconView(url: item.iconURL)
+                                VStack(alignment: .leading) {
+                                    Text(item.filename)
+                                    Text(item.referenceString)
+                                        .font(.footnote)
                                 }
+                                Spacer()
+                                Button {
+                                    Task {
+                                        do {
+                                            try await libraryModel.install(release: item)
+                                        } catch {
+                                            print("Failed to install software with error")
+                                        }
+                                    }
+                                } label: {
+                                    Label("Download", systemImage: "arrow.down")
+                                        .labelStyle(.iconOnly)
+                                }
+                                .buttonStyle(.bordered)
+                                .buttonBorderShape(.capsule)
                             }
                         }
                     }
