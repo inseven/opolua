@@ -48,15 +48,7 @@ struct ProgramView: View {
                                     .environmentObject(libraryModel)
                             } label: {
                                 HStack(alignment: .center) {
-                                    if let iconURL = item.iconURL {
-                                        AsyncImage(url: iconURL) { image in
-                                            image
-                                        } placeholder: {
-                                            Image(.unknownAppIconC)
-                                        }
-                                    } else {
-                                        Image(.unknownAppIconC)
-                                    }
+                                    IconView(url: item.iconURL)
                                     VStack(alignment: .leading) {
                                         Text(item.filename)
                                         Text(item.referenceString)

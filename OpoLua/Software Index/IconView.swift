@@ -20,41 +20,24 @@
 
 import SwiftUI
 
-struct ProgramsView: View {
+struct IconView: View {
 
-    @Environment(\.dismiss) private var dismiss
-
-    @EnvironmentObject private var libraryModel: LibraryModel
+    let url: URL?
 
     var body: some View {
-        List {
-            ForEach(libraryModel.filteredPrograms) { program in
-                NavigationLink {
-                    ProgramView(program: program)
-                        .environmentObject(libraryModel)
-                } label: {
-                    Label {
-                        Text(program.name)
-                    } icon: {
-                        IconView(url: program.iconURL)
-                    }
-                }
+        if let url {
+            AsyncImage(url: url) { image in
+                image
+                    .interpolation(.none)
+            } placeholder: {
+                Image(.unknownAppIcon)
+                    .interpolation(.none)
             }
+
+        } else {
+            Image(.unknownAppIcon)
+                .interpolation(.none)
         }
-        .listStyle(.plain)
-        .searchable(text: $libraryModel.filter)
-        .navigationTitle("Software Index")
-        .toolbar {
-            ToolbarItem(placement: .destructiveAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
-        }
-        .onAppear {
-            libraryModel.start()
-        }
-        .environmentObject(libraryModel)
     }
 
 }

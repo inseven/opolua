@@ -107,6 +107,7 @@
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */; };
+		D8F06C6D2C9FED32002EDC2E /* IconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F06C6C2C9FED2E002EDC2E /* IconView.swift */; };
 		D8F4835D278D3D31008AF80C /* PixelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F4835C278D3D31008AF80C /* PixelView.swift */; };
 		D8F5CADB279D07A700A2DC3F /* ResourceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F5CADA279D07A700A2DC3F /* ResourceViewController.swift */; };
 		D8FE60032757106300711717 /* SecureLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FE60022757106300711717 /* SecureLocation.swift */; };
@@ -242,6 +243,7 @@
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramDetector.swift; sourceTree = "<group>"; };
+		D8F06C6C2C9FED2E002EDC2E /* IconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconView.swift; sourceTree = "<group>"; };
 		D8F4835C278D3D31008AF80C /* PixelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelView.swift; sourceTree = "<group>"; };
 		D8F5CADA279D07A700A2DC3F /* ResourceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceViewController.swift; sourceTree = "<group>"; };
 		D8FE60022757106300711717 /* SecureLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureLocation.swift; sourceTree = "<group>"; };
@@ -301,6 +303,7 @@
 		D835436D2C96584B0053A8C8 /* Software Index */ = {
 			isa = PBXGroup;
 			children = (
+				D8F06C6C2C9FED2E002EDC2E /* IconView.swift */,
 				D83543732C9658C20053A8C8 /* LibraryModel.swift */,
 				D835436F2C9658700053A8C8 /* ProgramsView.swift */,
 				D83543772C9659420053A8C8 /* ProgramView.swift */,
@@ -629,6 +632,7 @@
 				D8FE60052757177200711717 /* Settings.swift in Sources */,
 				D8C409632C3CF62900C9E857 /* OpoIoHandler_UIKit.swift in Sources */,
 				D8DAD5B92C8CEF1D00CFEF4A /* SoftwareIndexView.swift in Sources */,
+				D8F06C6D2C9FED32002EDC2E /* IconView.swift in Sources */,
 				D81B875E2790DAAD00E71960 /* InstallerViewController.swift in Sources */,
 				D8DCD040277ACD7800760302 /* CanvasSprite.swift in Sources */,
 				D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */,
