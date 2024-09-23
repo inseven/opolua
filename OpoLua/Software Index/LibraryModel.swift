@@ -168,7 +168,7 @@ class LibraryModel: ObservableObject {
     }
 
     private func fetch() async {
-        let url = URL(string: "https://software.psion.info/api/v1/programs.json")!
+        let url = URL(string: "https://software.psion.info/api/v1/programs/")!
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             // TODO: Check for success
