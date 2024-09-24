@@ -44,6 +44,7 @@ PROC longDlg:
 	LOCAL val&
 	dINIT "Long input"
 	dLONG val&, "Long", -1, 50
+	dTEXT "Another", "Option", KDTextAllowSelection%
 	dBUTTONS "OK", 13
 	DIALOG
 	PRINT "Entered:", val&
@@ -55,6 +56,7 @@ PROC floatDlg:
 	fval = 2.0
 	dINIT "Float input"
 	dFLOAT fval, "Float", -1.1, 5.0
+	dTEXT "Another", "Option", KDTextAllowSelection%
 	dBUTTONS "OK", 13
 	DIALOG
 	PRINT "Entered:", fval
@@ -66,6 +68,7 @@ PROC editDlg:
 	val$ = "Hello"
 	dINIT "Text edit"
 	dEDIT val$, "Text"
+	dTEXT "Another", "Option", KDTextAllowSelection%
 	dBUTTONS "OK", 13
 	DIALOG
 	PRINT "Got >"; val$; "<"
@@ -115,27 +118,29 @@ PROC dateDlg:
 	x& = DAYS(DAY, MONTH, YEAR)
 	dINIT "Date test"
 	dDATE x&, "Date", x& - 1, x& + 6
+	dTEXT "Another", "Option", KDTextAllowSelection%
 	DIALOG
 	PRINT "Entered:", x&
 	GET
 ENDP
 
 PROC timeDlg:
-	LOCAL thms&, thm&, thms24&, dhm&, dhms&
+	LOCAL thms&, thm&, thms24&, dhm&, dhms&, dms&
 	thms& = HOUR * INT(3600) + MINUTE * 60 + SECOND
 	thm& = thms&
 	thms24& = thms&
 	dhm& = 65
 	dhms& = 65
+	dms& = 65
 	dINIT "Time test"
 	dTIME thm&, "Time H:M", 0, 0, &1517F
 	dTIME thms&, "Time H:M:S", 1, 0, &1517F
 	dTIME thms24&, "Time H:M:S 24", 9, 0, &1517F
 	dTIME dhm&, "Duration H:M", 2, 0, 600
 	dTIME dhms&, "Duration H:M:S", 3, 0, 600
-	REM dTIME dms&, "Duration M:S", 7, 0, 6000
+	dTIME dms&, "Duration M:S", 7, 0, 6000
 	DIALOG
-	PRINT "Entered:", thm&, thms&, thms24&, dhm&, dhms&
+	PRINT "Entered:", thm&, thms&, thms24&, dhm&, dhms&, dms&
 	GET
 ENDP
 
