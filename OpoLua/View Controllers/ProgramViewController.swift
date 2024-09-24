@@ -556,69 +556,6 @@ extension ProgramViewController: ProgramDelegate {
         }
     }
 
-    func program(_ program: Program, editValue op: EditOperation) -> Any? {
-        let semaphore = DispatchSemaphore(value: 0)
-        let showTextAlert = { (value: String, keyboardType: UIKeyboardType?, isPassword: Bool) -> String? in
-            var textResult: String? = nil
-            DispatchQueue.main.async {
-                let alertController = UIAlertController(title: op.prompt ?? "Enter Text", message: nil, preferredStyle: .alert)
-                alertController.addTextField { textField in
-                    textField.text = value
-                    if let keyboardType {
-                        textField.keyboardType = keyboardType
-                    }
-                    if isPassword {
-                        textField.isSecureTextEntry = true
-                    }
-                }
-                alertController.addAction(UIAlertAction(title: "OK", style: .default) { [weak alertController] _ in
-                    defer {
-                        semaphore.signal()
-                    }
-                    guard let alertController = alertController else {
-                        return
-                    }
-                    textResult = alertController.textFields![0].text!
-                })
-                if op.allowCancel {
-                    alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-                        semaphore.signal()
-                    })
-                }
-                self.present(alertController, animated: true)
-            }
-            semaphore.wait()
-            return textResult
-        }
-
-        switch op.details {
-        case .text(let details):
-            return showTextAlert(details.initialValue, nil, false)
-        case .password(let details):
-            return showTextAlert(details.initialValue, nil, true)
-        case .integer(let details):
-            if let text = showTextAlert("\(details.initialValue)", .numberPad, false) {
-                return Int(text)
-            }
-        case .float(let details):
-            if let text = showTextAlert("\(details.initialValue)", .decimalPad, false) {
-                return Double(text)
-            }
-        default:
-            DispatchQueue.main.async {
-                let alertController = UIAlertController(title: "Not implemented",
-                    message: "Support for \(op.details.type) editors has not been implemented yet.", preferredStyle: .alert)
-                alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-                    semaphore.signal()
-                })
-                self.present(alertController, animated: true)
-            }
-            semaphore.wait()
-            return nil
-        }
-        return nil
-    }
-
     func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32? {
         return DispatchQueue.main.sync {
             return AppDelegate.shared.runApplication(applicationIdentifier, url: url)

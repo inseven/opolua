@@ -535,85 +535,6 @@ public enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
 }
 
-public struct EditOperation {
-    enum InputType: String, Codable {
-        case text
-        case password
-        case integer
-        case float
-        case date
-        case time
-    }
-    struct Raw: Codable {
-        let type: InputType
-        let initialValue: String
-        let prompt: String?
-        let allowCancel: Bool
-        let min: Double?
-        let max: Double?
-        let screenRect: Graphics.Rect?
-        let timeFlags: UInt32?
-    }
-    struct TextDetails {
-        let initialValue: String
-        let maxLen: Int
-    }
-    struct IntDetails {
-        let initialValue: Int
-        let min: Int
-        let max: Int
-    }
-    struct FloatDetails {
-        let initialValue: Double
-        let min: Double
-        let max: Double
-    }
-    struct DateDetails {
-        let initialValue: Date
-        let min: Date
-        let max: Date
-    }
-    enum TimeType {
-        case absolute
-        case duration
-    }
-    struct TimeDetails {
-        let initialValue: Int // in seconds (for timeType == .absolute, seconds since midnight)
-        let min: Int // ditto
-        let max: Int // ditto
-        let timeType: TimeType
-        let display24hour: Bool // Only for timeType == .absolute
-        let includeSeconds: Bool
-    }
-    enum Details {
-        case text(TextDetails)
-        case password(TextDetails)
-        case integer(IntDetails)
-        case float(FloatDetails)
-        case date(DateDetails)
-        case time(TimeDetails)
-    }
-
-    let prompt: String?
-    let allowCancel: Bool // Can only ever be false for text and integer types
-    let screenRect: Graphics.Rect?
-    let details: Details
-}
-
-extension EditOperation.Details {
-    // It's annoying there's no built-in way to get an untagged enum from a tagged one
-    var type: EditOperation.InputType {
-        switch self {
-        case .text(_): return .text
-        case .password(_): return .password
-        case .integer(_): return .integer
-        case .float(_): return .float
-        case .date(_): return .date
-        case .time(_): return .time
-        }
-    }
-}
-
 public struct TextFieldInfo: Codable {
     enum InputType: String, Codable {
         case text
@@ -642,8 +563,6 @@ public protocol SisInstallIoHandler: FileSystemIoHandler {
 public protocol OpoIoHandler: FileSystemIoHandler {
 
     func printValue(_ val: String) -> Void
-
-    func editValue(_ op: EditOperation) -> Any?
 
     func textEditor(_ info: TextFieldInfo?)
 
@@ -680,10 +599,6 @@ class DummyIoHandler : OpoIoHandler {
 
     func printValue(_ val: String) -> Void {
         print(val, terminator: "")
-    }
-
-    func editValue(_ op: EditOperation) -> Any? {
-        return nil
     }
 
     func textEditor(_ info: TextFieldInfo?) {

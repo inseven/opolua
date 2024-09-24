@@ -64,55 +64,6 @@ private func beep(_ L: LuaState!) -> CInt {
     }
 }
 
-private let kDaysFrom1900to1970: Double = 25567
-
-private func editValue(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    let raw: EditOperation.Raw = L.todecodable(1)!
-    let details: EditOperation.Details
-    switch raw.type {
-    case .text:
-        details = .text(EditOperation.TextDetails(initialValue: raw.initialValue, maxLen: Int(raw.max!)))
-    case .password:
-        details = .password(EditOperation.TextDetails(initialValue: raw.initialValue, maxLen: Int(raw.max!)))
-    case .integer:
-        details = .integer(EditOperation.IntDetails(initialValue: Int(raw.initialValue)!,
-                                                    min: Int(raw.min!),
-                                                    max: Int(raw.max!)))
-    case .float:
-        details = .float(EditOperation.FloatDetails(initialValue: Double(raw.initialValue)!,
-                                                    min: raw.min!,
-                                                    max: raw.max!))
-    case .date:
-        let date = Date(timeIntervalSince1970: (Double(raw.initialValue)! - kDaysFrom1900to1970) * 86400)
-        let min = Date(timeIntervalSince1970: (raw.min! - kDaysFrom1900to1970) * 86400)
-        let max = Date(timeIntervalSince1970: (raw.max! - kDaysFrom1900to1970) * 86400)
-        details = .date(EditOperation.DateDetails(initialValue: date, min: min, max: max))
-    case .time:
-        let flags = raw.timeFlags!
-        let timeType: EditOperation.TimeType = (flags & 2) != 0 ? .duration : .absolute
-        details = .time(EditOperation.TimeDetails(initialValue: Int(raw.initialValue)!,
-                                                  min: Int(raw.min!),
-                                                  max: Int(raw.max!),
-                                                  timeType: timeType,
-                                                  display24hour: (flags & 8) != 0,
-                                                  includeSeconds: (flags & 1) != 0))
-    }
-    let op = EditOperation(prompt: raw.prompt,
-                           allowCancel: raw.allowCancel,
-                           screenRect: raw.screenRect,
-                           details: details)
-
-    var result = iohandler.editValue(op)
-
-    if raw.type == .date, let date = result as? Date {
-        // Convert from Date back to seconds since 1900
-        result = Int((date.timeIntervalSince1970 / 86400) + kDaysFrom1900to1970)
-    }
-    L.push(any: result)
-    return 1
-}
-
 private func textEditor(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     if L.isnoneornil(1) {
@@ -760,7 +711,6 @@ public class OpoInterpreter: PsiLuaEnv {
         let val = Unmanaged<OpoInterpreter>.passUnretained(self)
         lua_pushlightuserdata(L, val.toOpaque())
         let fns: [String: lua_CFunction] = [
-            "editValue": { L in return autoreleasepool { return editValue(L) } },
             "textEditor": { L in return autoreleasepool { return textEditor(L) } },
             // "print": { L in return autoreleasepool { return print_lua(L) } },
             "beep": { L in return autoreleasepool { return beep(L) } },
