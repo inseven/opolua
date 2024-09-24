@@ -20,7 +20,7 @@
 
 import UIKit
 
-import PsionSoftwareIndexSwift
+import PsionSoftwareIndex
 
 class BrowserViewController: UICollectionViewController {
 
@@ -59,9 +59,9 @@ class BrowserViewController: UICollectionViewController {
     }
 
     @objc func showSoftwareIndex() {
-        let softwareIndexViewController = SoftwareIndexViewController()
-        softwareIndexViewController.delegate = self
-        present(softwareIndexViewController, animated: true)
+        let indexViewController = PsionSoftwareIndexViewController()
+        indexViewController.delegate = self
+        present(indexViewController, animated: true)
     }
 
     func addFolder() {
@@ -116,14 +116,14 @@ extension BrowserViewController: UIDocumentPickerDelegate {
 
 }
 
-extension BrowserViewController: SoftwareIndexViewControllerDelegate {
+extension BrowserViewController: PsionSoftwareIndexViewControllerDelegate {
 
-    func softwareIndexViewCntrollerDidCancel(softwareIndexViewController: SoftwareIndexViewController) {
-        softwareIndexViewController.dismiss(animated: true)
+    func psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: PsionSoftwareIndexViewController) {
+        psionSoftwareIndexViewController.dismiss(animated: true)
     }
 
-    func softwareIndexViewCntroller(softwareIndexViewCntroller: SoftwareIndexViewController, didSelectURL url: URL) {
-        softwareIndexViewCntroller.dismiss(animated: true) {
+    func psionSoftwareIndexViewController(psionSoftwareIndexViewController: PsionSoftwareIndexViewController, didSelectURL url: URL) {
+        psionSoftwareIndexViewController.dismiss(animated: true) {
             AppDelegate.shared.install(url: url)
         }
     }
