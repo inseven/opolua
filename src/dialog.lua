@@ -140,15 +140,16 @@ end
 function View:setFocus(flag)
     self.hasFocus = flag
     self:setNeedsRedraw()
-    if flag then
-        local view = self.parent
-        while view do
-            if view.onFocusChanged then
-                view:onFocusChanged(self)
-                return
-            end
-            view = view.parent
-        end
+end
+
+function View:takeFocus()
+    self:moveFocusTo(self)
+end
+
+function View:moveFocusTo(newView)
+    -- By default, just pass up the chain
+    if self.parent then
+        self.parent:moveFocusTo(newView)
     end
 end
 
@@ -166,8 +167,8 @@ function View:focussable()
     return false
 end
 
--- Used by subclasses to prevent a dialog being dismissed due to eg invalid selections
-function View:canDismiss()
+-- Used by subclasses to prevent a view being moved away from (or the dialog dismissed) due to eg invalid selections
+function View:canLoseFocus()
     return true
 end
 
@@ -381,7 +382,7 @@ end
 function DialogItemEdit:drawValue(val)
     local x, texty = self:drawPromptAndBox()
     drawText(val, x + kEditTextSpace, texty)
-    if self.editor and self.editor:hasSelection() then
+    if self.hasFocus and self.editor and self.editor:hasSelection() then
         local selStart, selEnd = self.editor:getSelectionRange()
         local selText = self.editor.value:sub(selStart, selEnd)
         local selOffset = gTWIDTH(self.editor.value:sub(1, selStart - 1))
@@ -438,7 +439,7 @@ function DialogItemEdit:handlePointerEvent(x, y, type)
         self.editor:setCursorPos(self:posToCharPos(x, y), self.editor.anchor)
     elseif type == KEvPtrPenDown then
         if not self.hasFocus then
-            self:setFocus(true)
+            self:takeFocus()
         end
         if x >= self.x + self.promptWidth then
             self.editor:setCursorPos(self:posToCharPos(x, y))
@@ -522,7 +523,9 @@ function DialogItemEditLong:inputType()
 end
 
 function DialogItemEditLong:canUpdate(newVal)
-    if newVal == "-" then
+    if newVal == "" then
+        return true
+    elseif newVal == "-" then
         -- Allowed as an in-progress negative number
         return true
     end
@@ -537,7 +540,7 @@ function DialogItemEditLong:canUpdate(newVal)
     end
 end
 
-function DialogItemEditLong:canDismiss()
+function DialogItemEditLong:canLoseFocus()
     if self.editor.value == "" then
         gIPRINT("No number has been entered", KBusyTopRight)
         self.editor:setValue(tostring(self.max))
@@ -577,7 +580,7 @@ end
 
 function DialogItemEditFloat:canUpdate(newVal)
     local n = tonumber(newVal)
-    if newVal == "-" then
+    if newVal == "" or newVal == "-" then
         return true
     elseif n == nil or newVal:match("[xXe ]") then
         return false
@@ -588,7 +591,7 @@ function DialogItemEditFloat:canUpdate(newVal)
     end
 end
 
-function DialogItemEditFloat:canDismiss()
+function DialogItemEditFloat:canLoseFocus()
     if self.editor.value == "" or self.editor.value == "-" then
         gIPRINT("Please enter a number", KBusyTopRight)
         return false
@@ -635,27 +638,13 @@ function DialogItemEditPass:getCursorPos()
     return self.x + self.promptWidth + kEditTextSpace + textw, self.y + kDialogLineTextYOffset - 1
 end
 
-DialogItemEditDate = class {
+DialogItemPartEditor = class { 
     _super = DialogItemEdit,
 }
 
-local kSecsFrom1900to1970 = 2208988800
-
-function DialogItemEditDate:init(lineHeight)
+function DialogItemPartEditor:init(lineHeight)
     -- Skip DialogItemEdit:init()
     View.init(self, lineHeight)
-    local t = os.date("!*t", self.value * 86400 - kSecsFrom1900to1970)
-    self.parts = {
-        string.format("%02d", t.day),
-        string.format("%02d", t.month),
-        string.format("%04d", t.year)
-    }
-    self.day = 1
-    self.month = 2
-    self.year = 3
-    self.mins = { 1, 1, os.date("!*t", self.min * 86400 - kSecsFrom1900to1970).year }
-    self.maxes = { 31, 12, os.date("!*t", self.max * 86400 - kSecsFrom1900to1970).year }
-    self.widths = { gTWIDTH("00"), gTWIDTH("/00"), gTWIDTH("/0000") }
     self.editor = require("editor").Editor {
         view = self,
     }
@@ -663,83 +652,158 @@ function DialogItemEditDate:init(lineHeight)
     self:setPart(self.currentPart)
 end
 
-function DialogItemEditDate:setPart(idx)
-    -- This also commits any ongoing editing
-    local n = tonumber(self.parts[self.currentPart], 10)
-    assert(n, "Value should be a valid number in setPart!")
-    local min = self.mins[self.currentPart]
-    local max = self.maxes[self.currentPart]
-    if n < min then
-        idx = self.currentPart
-        n = min
-        gIPRINT("Minimum allowed value is "..tostring(min), KBusyTopRight)
-    elseif n > max then
-        n = max
-        idx = self.currentPart
-        gIPRINT("Maximum allowed value is "..tostring(max), KBusyTopRight)
+function DialogItemPartEditor:canLoseFocus()
+    return self:validateCurrentPart()
+end
+
+function DialogItemPartEditor:validateCurrentPart()
+    local part = self.parts[self.currentPart]
+    local n
+    if part.format then
+        n = tonumber(part.value, 10)
+        -- assert(n, "Value should be a valid number in canLoseFocus!")
+    end
+    if part.min and n < part.min then
+        gIPRINT("Minimum allowed value is "..tostring(part.min), KBusyTopRight)
+        part.value = string.format(part.format, part.min)
+        return false
+    elseif part.max and n > part.max then
+        gIPRINT("Maximum allowed value is "..tostring(part.max), KBusyTopRight)
+        part.value = string.format(part.format, part.max)
+        return false
     end
 
-    self.parts[self.currentPart] = string.format("%02d", n)
+    if part.format then
+        part.value = string.format(part.format, n)
+    end
+    return true
+end
+
+function DialogItemPartEditor:setFocus(flag)
+    DialogItemPartEditor._super.setFocus(self, flag)
+    if not flag then
+        -- Losing focus always resets back to part 1
+        self:setPart(1)
+    end
+end
+
+function DialogItemPartEditor:setPart(idx)
+    -- This also commits any ongoing editing
+    if not self:validateCurrentPart() then
+        -- Stay on current part
+        idx = self.currentPart
+    end
+
     self.currentPart = idx
-    self.editor:setValue(self.parts[idx])
+    self.editor:setValue(self.parts[idx].value)
     self.editor:setCursorPos(#self.editor.value + 1, 1)
     self:setNeedsRedraw()
 end
 
-function DialogItemEditDate:canUpdate(newVal)
+function DialogItemPartEditor:getPart(type, nth)
+    local foundCount = 0
+    for i, part in ipairs(self.parts) do
+        if type == nil or type == part.type then
+            foundCount = foundCount + 1
+            if nth == nil or nth == foundCount then
+                return part
+            end
+        end
+    end
+    return nil
+end
+
+function DialogItemPartEditor:getPartValue(type, nth)
+    local part = self:getPart(type, nth)
+    return part and part.value
+end
+
+function DialogItemPartEditor:getValueAsString()
+    local parts = {}
+    for i, part in ipairs(self.parts) do
+        parts[i] = (part.prefix or "")..part.value
+    end
+    return table.concat(parts)
+end
+
+function DialogItemPartEditor:canUpdate(newVal)
     local n = tonumber(newVal, 10)
-    if n == nil or n < 0 or (self.currentPart < 3 and #newVal > 2) or (self.currentPart == 3 and #newVal > 4) then
+    local currentPart = self.parts[self.currentPart]
+
+    if newVal == "" then
+        return true
+    elseif currentPart.min and currentPart.min < 0 and newVal == "-" then
+        -- This is allowed as an in-progress negative number
+        return true
+    elseif (currentPart.min or currentPart.max) and n == nil then
+        return false
+    elseif currentPart.maxChars and #newVal > currentPart.maxChars then
         return false
     else
         return true
     end
 end
 
-function DialogItemEditDate:onEditorChanged(editor)
+function DialogItemPartEditor:onEditorChanged(editor)
     -- print("onEditorChanged", self.currentPart, editor.value)
-    local cur = self.currentPart
-    local prevLen = #self.parts[cur]
+
+    local currentPart = self.parts[self.currentPart]
+    local prevLen = #currentPart.value
     local newLen = #editor.value
-    self.parts[cur] = editor.value
-    if cur ~= self.year and prevLen == 1 and newLen == 2 then
-        -- Move cursor to next part
-        self:setPart(cur + 1)
-    elseif cur == self.year and prevLen == 3 and newLen == 4 then
-        -- Just commit
-        self:setPart(cur)
+    currentPart.value = editor.value
+    if currentPart.maxChars and prevLen == currentPart.maxChars - 1 and newLen == currentPart.maxChars then
+        if self.currentPart < #self.parts then
+            -- Move cursor to next part
+            self:setPart(self.currentPart + 1)
+        else
+            -- Just commit
+            self:setPart(self.currentPart)
+        end
     end
     self:setNeedsRedraw()
 end
 
-function DialogItemEditDate:contentSize()
-    return self.widths[1] + self.widths[2] + self.widths[3] + 2 * kEditTextSpace, self.heightHint
+function DialogItemPartEditor:contentSize()
+    local sz = 0
+    for _, part in ipairs(self.parts) do
+        if part.width then
+            sz = sz + part.width
+        else 
+            if part.prefix then
+                sz = sz + gTWIDTH(part.prefix)
+            end
+            sz = sz + (part.maxValueWidth or gTWIDTH(string.rep("0", part.maxChars)))
+        end
+    end
+    return sz + 2 * kEditTextSpace, self.heightHint
 end
 
-function DialogItemEditDate:draw()
+function DialogItemPartEditor:draw()
     local x, texty = self:drawPromptAndBox()
     x = x + kEditTextSpace
-    local oow = gTWIDTH("00")
-    local slashw = gTWIDTH("/")
-    for i = 1, 3 do
-        drawText(self.parts[i], x, texty)
 
-        if self.currentPart == i and self.editor:hasSelection() then
+    for i, part in ipairs(self.parts) do
+        part.startx = x
+        if part.prefix then
+            drawText(part.prefix, x, texty)
+            x = x + gTWIDTH(part.prefix)
+        end
+        drawText(part.value, x, texty)
+
+        if self.hasFocus and self.currentPart == i and self.editor:hasSelection() then
             gAT(x, texty - 1)
             gFILL(gTWIDTH(self.editor:getSelection()), self.charh + 1, KgModeInvert)
         end
 
-        if i ~= 3 then
-            x = x + oow
-            drawText("/", x, texty)
-            x = x + slashw
-        end
+        x = x + (part.maxValueWidth or gTWIDTH(string.rep("0", part.maxChars)))
+        part.width = x - part.startx
     end
 
     self:updateCursorIfFocussed()
     View.draw(self)
 end
 
-function DialogItemEditDate:updateCursorIfFocussed()
+function DialogItemPartEditor:updateCursorIfFocussed()
     if self.hasFocus then
         if self.editor:hasSelection() then
             -- We don't show a cursor when there's a selection (because a selection is used to indicate the entry is
@@ -751,36 +815,39 @@ function DialogItemEditDate:updateCursorIfFocussed()
     end
 end
 
-function DialogItemEditDate:getCursorPos()
+function DialogItemPartEditor:getCursorPos()
     local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1))
-    local partw = gTWIDTH("00/")
-    local x = self.x + self.promptWidth + kEditTextSpace + ((self.currentPart - 1) * partw) + textw
+    local currentPart = self.parts[self.currentPart]
+    local x = currentPart.startx + textw
+    if currentPart.prefix then
+        x = x + gTWIDTH(currentPart.prefix)
+    end
     local y = self.y + kDialogLineTextYOffset - 1
     return x, y
 end
 
-function DialogItemEditDate:handlePointerEvent(x, y, type)
-    local pos = self.x + self.promptWidth + kEditTextSpace
+function DialogItemPartEditor:handlePointerEvent(x, y, type)
     if type == KEvPtrPenDown then
-        for i, w in ipairs(self.widths) do
-            if x >= pos and x < pos + w then
+        if not self.hasFocus then
+            self:takeFocus()
+        end
+        for i, part in ipairs(self.parts) do
+            if x >= part.startx and x < part.startx + part.width then
                 self:setPart(i)
                 break
-            else
-                pos = pos + w
             end
         end
     end
 end
 
-function DialogItemEditDate:handleKeyPress(k, modifiers)
+function DialogItemPartEditor:handleKeyPress(k, modifiers)
     if k == KKeyLeftArrow then
         if self.currentPart > 1 then
             self:setPart(self.currentPart - 1)
         end
         return true
     elseif k == KKeyRightArrow then
-        if self.currentPart < 3 then
+        if self.currentPart < #self.parts then
             self:setPart(self.currentPart + 1)
         end
         return true
@@ -792,19 +859,58 @@ function DialogItemEditDate:handleKeyPress(k, modifiers)
     end
 end
 
+DialogItemEditDate = class {
+    _super = DialogItemPartEditor,
+}
+
+local kSecsFrom1900to1970 = 2208988800
+
+function DialogItemEditDate:init(lineHeight)
+    local t = os.date("!*t", self.value * 86400 - kSecsFrom1900to1970)
+    self.parts = {
+        {
+            type = "day",
+            min = 1,
+            max = 31,
+            maxChars = 2,
+            format = "%02d",
+            value = string.format("%02d", t.day)
+        },
+        {
+            type = "month",
+            min = 1,
+            max = 12,
+            maxChars = 2,
+            format = "%02d",
+            prefix = "/",
+            value = string.format("%02d", t.month)
+        },
+        {
+            type = "year",
+            min = os.date("!*t", self.min * 86400 - kSecsFrom1900to1970).year,
+            max = os.date("!*t", self.max * 86400 - kSecsFrom1900to1970).year,
+            maxChars = 4,
+            prefix = "/",
+            format = "%04d",
+            value = string.format("%04d", t.year),
+        },
+    }
+    DialogItemPartEditor.init(self, lineHeight)
+end
+
 function DialogItemEditDate:getDate()
     -- day and month will already have been checked to be 1-31 and 1-12, and year will already be right, so just check
     -- that the days is allowed. Technique taken from DTDaysInMonth
     local d = {
         day = 31,
-        month = tonumber(self.parts[self.month], 10),
-        year = tonumber(self.parts[self.year], 10),
+        month = tonumber(self:getPartValue("month"), 10),
+        year = tonumber(self:getPartValue("year"), 10),
     }
     local maxDays = 31 - os.date("!*t", runtime:iohandler().utctime(d)).day
     if maxDays == 0 then
         maxDays = 31
     end
-    d.day = tonumber(self.parts[self.day])
+    d.day = tonumber(self:getPartValue("day"))
     if d.day > maxDays then
         return nil
     else
@@ -812,7 +918,7 @@ function DialogItemEditDate:getDate()
     end
 end
 
-function DialogItemEditDate:canDismiss()
+function DialogItemEditDate:canLoseFocus()
     local date = self:getDate()
     if date == nil then
         gIPRINT("Invalid date", KBusyTopRight)
@@ -829,44 +935,163 @@ function DialogItemEditDate:updateVariable()
 end
 
 DialogItemEditTime = class {
-    _super = DialogItemEdit,
+    _super = DialogItemPartEditor,
 }
 
 function DialogItemEditTime:init(lineHeight)
-    -- Skip DialogItemEdit:init()
-    View.init(self, lineHeight)
-end
+    local hpart = {
+        type = "hour",
+        min = 0,
+        max = 23,
+        format = "%02d",
+        maxChars = 2,
+    }
+    local mpart = {
+        type = "min",
+        min = 0,
+        max = 59,
+        format = "%02d",
+        prefix = ":",
+        maxChars = 2,
+    }
+    local spart = {
+        type = "sec",
+        min = 0,
+        max = 59,
+        format = "%02d",
+        prefix = ":",
+        maxChars = 2,
+    }
+    local am = "am" -- os.date("!%p", 0)
+    local pm = "pm" -- os.date("!%p", 12 * 3600)
+    local ampmpart = {
+        type = "ampm",
+        prefix = " ",
+        am = am,
+        pm = pm,
+        maxValueWidth = math.max(gTWIDTH(am), gTWIDTH(pm)),
+    }
 
-function DialogItemEditTime:contentSize()
-    return gTWIDTH("@@@@@@@@@@") + 2 * kEditTextSpace, self.heightHint
-end
+    self.parts = {}
 
-function DialogItemEditTime:draw()
-    local timeFlags = self.timeFlags & ~KDTimeNoHours -- This flag is such gibberish I'm not supporting it.
-    local str
-    if timeFlags & KDTimeDuration > 0 then
-        local hours = self.value // 3600
-        local mins = (self.value - (hours * 3600)) // 60
-        local secs = self.value - (hours * 3600) - (mins * 60)
-        if timeFlags == KDTimeDurationWithSecs then
-            str = string.format("%02d:%02d:%02d", hours, mins, secs)
-        else
-            str = string.format("%02d:%02d", hours, mins)
-        end
-    elseif timeFlags == KDTimeAbsNoSecs then
-        str = os.date("!%I:%M %p", self.value)
-    elseif timeFlags == KDTimeWithSeconds then
-        str = os.date("!%I:%M:%S %p", self.value)
-    elseif timeFlags == KDTime24Hour then
-        str = os.date("!%H:%M", self.value)
-    elseif timeFlags == KDTime24Hour | KDTimeWithSeconds then
-        str = os.date("!%H:%M:%S", self.value)
+    if self.timeFlags & KDTimeNoHours == 0 then
+        table.insert(self.parts, hpart)
+    else
+        mpart.prefix = nil
     end
-    self:drawValue(str)
-    View.draw(self)
+    table.insert(self.parts, mpart)
+    if self.timeFlags & KDTimeWithSeconds ~= 0 then
+        table.insert(self.parts, spart)
+    end
+
+    if self.timeFlags & (KDTimeDuration | KDTime24Hour) == 0 then
+        table.insert(self.parts, ampmpart)
+    end
+
+    self:setTime(self.value)
+
+    DialogItemPartEditor.init(self, lineHeight)
+end
+
+function DialogItemEditTime:setTime(t)
+    local h = self:getPart("hour")
+    local m = self:getPart("min")
+    local s = self:getPart("sec")
+    local ampm = self:getPart("ampm")
+
+    if h then
+        if self.timeFlags & (KDTimeDuration | KDTime24Hour) ~= 0 then
+            h.value = os.date("!%H", t)
+        else
+            h.value = os.date("!%I", t)
+        end
+    end
+    if m then
+        m.value = os.date("!%M", t)
+    end
+    if s then
+        s.value = os.date("!%S", t)
+    end
+    if ampm then
+        ampm.value = (os.date("!%p", t) == os.date("!%p", 0)) and ampm.am or ampm.pm
+    end
+
+    self:setNeedsRedraw()
+end
+
+function DialogItemEditTime:canUpdate(newVal)
+    local part = self.parts[self.currentPart]
+    if part.type == "ampm" then
+        return newVal == part.am or newVal == part.pm
+            or newVal:lower() == part.am:sub(1, 1):lower()
+            or newVal:lower() == part.pm:sub(1, 1):lower()
+    else
+        return DialogItemEditTime._super.canUpdate(self, newVal)
+    end
+end
+
+function DialogItemEditTime:canLoseFocus()
+    if DialogItemEditTime._super.canLoseFocus(self) then
+        local t = self:getTime()
+        if t < self.min then
+            local timeOrDuration = self.timeFlags & KDTimeDuration == 0 and "time" or "duration"
+            self:setTime(self.min)
+            gIPRINT(string.format("Minimum allowed %s is %s", timeOrDuration, self:getValueAsString()), KBusyTopRight)
+            return false
+        elseif t > self.max then
+            local timeOrDuration = self.timeFlags & KDTimeDuration == 0 and "time" or "duration"
+            self:setTime(self.max)
+            gIPRINT(string.format("Maximum allowed %s is %s", timeOrDuration, self:getValueAsString()), KBusyTopRight)
+            return false
+        else
+            return true
+        end
+    else
+        return false
+    end
+end
+
+function DialogItemEditTime:onEditorChanged(editor)
+    local part = self.parts[self.currentPart]
+    local val = editor.value
+    if part.type == "ampm" and val ~= part.am and val ~= part.pm then
+        if editor.value:lower() == part.am:sub(1, 1):lower() then
+            val = part.am
+        elseif editor.value:lower() == part.pm:sub(1, 1):lower() then
+            val = part.pm
+        else
+            error("ampm not an expected value: "..val)
+        end
+        part.value = val
+        self:setPart(self.currentPart)
+    else
+        DialogItemEditTime._super.onEditorChanged(self, editor)
+    end
+end
+
+function DialogItemEditTime:getTime()
+    local h = tonumber(self:getPartValue("hour"))
+    local m = tonumber(self:getPartValue("min"))
+    local s = tonumber(self:getPartValue("sec"))
+    local ampm = self:getPart("ampm")
+    if ampm and ampm.value == ampm.pm then
+        h = h + 12
+    end
+    local t = 0
+    if h then
+        t = t + h * 3600
+    end
+    if m then
+        t = t + m * 60
+    end
+    if s then
+        t = t + s
+    end
+    return t
 end
 
 function DialogItemEditTime:updateVariable()
+    self.value = self:getTime()
     if self.timeFlags & KDTimeWithSeconds == 0 then
         -- Make sure we remove any seconds (specifically if any were passed in, as hopefully the editor won't have
         -- introduced any if the KDTimeWithSeconds flag isn't set)
@@ -1146,7 +1371,7 @@ end
 function DialogChoiceList:handlePointerEvent(x, y, type)
     if type == KEvPtrPenDown then
         if not self.hasFocus then
-            self:setFocus(true)
+            self:takeFocus()
         end
         if x >= self.leftArrowX and x < self.leftArrowX + kChoiceArrowSize then
             self:setIndex(wrapIndex(self.index - 1, #self.choices))
@@ -1327,7 +1552,7 @@ function DialogItemFileChooser:getPath()
     return self.path
 end
 
-function DialogItemFileChooser:canDismiss()
+function DialogItemFileChooser:canLoseFocus()
     if self.flags & KDFileAllowNullStrings == 0 and #self.paths == 0 then
         gIPRINT("No filename entered", KBusyTopRight)
         return false
@@ -1373,7 +1598,8 @@ function DialogItemFileEdit:getPath()
     return oplpath.join(self.path, self.editor.value)
 end
 
-function DialogItemFileEdit:canDismiss()
+function DialogItemFileEdit:canLoseFocus()
+    -- print("DialogItemFileEdit:canLoseFocus()", self.path, self.editor.value, self:getPath())
     if self.editor.value == "" then
         if self.flags & KDFileAllowNullStrings == 0 then
             gIPRINT("No filename entered", KBusyTopRight)
@@ -1760,7 +1986,7 @@ function DialogWindow:processEvent(ev)
             newIdx = wrapIndex(newIdx - 1, #self.items)
         until self.items[newIdx]:focussable()
         if newIdx ~= self.focussedItemIndex then
-            self.items[newIdx]:setFocus(true)
+            self:moveFocusTo(self.items[newIdx])
         end
     elseif k == KKeyDownArrow and self.focussedItemIndex then
         local newIdx = self.focussedItemIndex
@@ -1768,7 +1994,7 @@ function DialogWindow:processEvent(ev)
             newIdx = wrapIndex(newIdx + 1, #self.items)
         until self.items[newIdx]:focussable()
         if newIdx ~= self.focussedItemIndex then
-            self.items[newIdx]:setFocus(true)
+            self:moveFocusTo(self.items[newIdx])
         end
     elseif k == KKeyEnter then
         -- If we get here, there can't be a button with enter as a shortcut
@@ -1789,8 +2015,10 @@ function DialogWindow:processEvent(ev)
 end
 
 function DialogWindow:canDismiss()
+    -- Strictly speaking, only the currently focussed item should be able to prevent this, because anything not focussed
+    -- should have a valid value
     for _, item in ipairs(self.items) do
-        if not item:canDismiss() then
+        if not item:canLoseFocus() then
             return false
         end
     end
@@ -1803,11 +2031,16 @@ function DialogWindow:onButtonPressed(button)
     end
 end
 
-function DialogWindow:onFocusChanged(view)
-    if self.focussedItemIndex then
-        self.items[self.focussedItemIndex]:setFocus(false)
+function DialogWindow:moveFocusTo(newView)
+    local currentFocus = self.focussedItemIndex and self.items[self.focussedItemIndex]
+    if currentFocus then
+        if not currentFocus:canLoseFocus() then
+            return
+        end
+        currentFocus:setFocus(false)
     end
-    self.focussedItemIndex = assert(view.focusOrderIndex)
+    self.focussedItemIndex = assert(newView.focusOrderIndex)
+    newView:setFocus(true)
 end
 
 local itemTypes = {
@@ -1955,7 +2188,7 @@ function DIALOG(dialog)
         item.focusOrderIndex = i
         win:addSubview(item, borderWidth + hMargin, y, itemWidth, ch)
         if win.focussedItemIndex == nil and item:focussable() then
-            item:setFocus(true)
+            win:moveFocusTo(item)
         end
         y = y + ch + kDialogLineGap
     end

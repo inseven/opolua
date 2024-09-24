@@ -12,7 +12,7 @@ Editor = class {
 }
 
 function Editor:setValue(newVal, newCursorPos)
-    if newVal ~= self.value and (newVal == "" or self.view:canUpdate(newVal)) then
+    if newVal ~= self.value and self.view:canUpdate(newVal) then
         self.value = newVal
         if not self.movableCursor then
             newCursorPos = nil
