@@ -35,16 +35,6 @@ function print(val)
     printf("%s", val)
 end
 
-function editValue(params)
-    local line = io.stdin:read()
-    -- We don't support pressing esc to clear the line, oh well
-    if params.allowCancel and line:byte(1, 1) == 27 then
-        -- Close enough...
-        return nil
-    end
-    return line
-end
-
 function textEditor(params)
 end
 

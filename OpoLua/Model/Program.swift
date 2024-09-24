@@ -37,7 +37,6 @@ protocol ProgramLifecycleObserver: NSObject {
  */
 protocol ProgramDelegate: AnyObject {
 
-    func program(_ program: Program, editValue op: EditOperation) -> Any?
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
     func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32?
@@ -454,10 +453,6 @@ extension Program: OpoIoHandler {
 
     func printValue(_ val: String) {
         print(val)
-    }
-
-    func editValue(_ op: EditOperation) -> Any? {
-        return delegate!.program(self, editValue: op)
     }
 
     func textEditor(_ info: TextFieldInfo?) {
