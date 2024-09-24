@@ -490,9 +490,9 @@ Callables = {
     GTMODE = Op("gTMode", {Int}),
     GTWIDTH = Fn("gTWidth", {String}, Int),
     GUNLOADFONT = Op("gUnloadFont", {Int}),
-    GWIDTH = Fn("gWidth", {}, Int),
     GUPDATE = SpecialOp(),
     GUSE = Op("gUse", {Int}),
+    GVISIBLE = SpecialOp(),
     GWIDTH = Fn("gWidth", {}, Int),
     GX = Fn("gX", {}, Int),
     GXBORDER = Op("gXBorder", {Int, Int, Int, Int, numParams = {2, 4}, numFixedParams = 0}),
@@ -2537,6 +2537,12 @@ function handleOp_GUPDATE(procState)
         -- The end of statement check in the main parser will catch anything else that's not eos
     end
     procState:emit("BB", opcodes.gUpdate, flag)
+end
+
+function handleOp_GVISIBLE(procState)
+    local val = procState.tokens:expectNext("ON", "OFF").val
+    procState:emit("BB", opcodes.gVisible, val == "ON" and 1 or 0)
+    procState.tokens:advance()
 end
 
 function handleOp_INPUT(procState)
