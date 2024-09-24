@@ -576,8 +576,6 @@ local function IPs8_dump(runtime)
     return fmt("%d (0x%s)", val, fmt("%02X", val):sub(-2))
 end
 
-IP8_dump = fns.IP8_dump
-
 local function IP16_dump(runtime)
     local index = runtime:IP16()
     return fmt("0x%04X", index)
@@ -596,6 +594,12 @@ end
 local function qualifier_dump(runtime)
     local qualifier = runtime:IP8()
     return fmt("qualifier=%d", qualifier)
+end
+
+local function IPflag_dump(runtime)
+    local flag = runtime:IP8()
+    assert(flag == 0 or flag == 1, "Unexpected IP8 value in dump!")
+    return flag == 0 and "OFF" or "ON"
 end
 
 local function logName_dump(runtime)
@@ -1502,9 +1506,7 @@ function Escape(stack, runtime) -- 0xA9
     -- We don't care
 end
 
-function Escape_dump(runtime)
-    return fmt("state=%d", runtime:IP8())
-end
+Escape_dump = IPflag_dump
 
 function First(stack, runtime) -- 0xAA
     local db = runtime:getDb()
@@ -1760,7 +1762,7 @@ function gVisible(stack, runtime) -- 0xC9
     runtime:gVISIBLE(show)
 end
 
-gVisible_dump = IP8_dump
+gVisible_dump = IPflag_dump
 
 function gFont(stack, runtime) -- 0xCA
     local id = stack:pop()
@@ -2250,7 +2252,7 @@ function Lock(stack, runtime) -- 0xF1
     -- Don't care
 end
 
-Lock_dump = IPs8_dump
+Lock_dump = IPflag_dump
 
 function gInvert(stack, runtime) -- 0xF2
     local w, h = stack:popXY()
