@@ -171,6 +171,7 @@ class WindowServer {
         }
         self.setVisiblity(handle: canvas.id, visible: true)
         infoDrawableHandle = canvas.id
+        bringInfoWindowToFront()
 
         infoWindowDismissTimer = Timer.scheduledTimer(timeInterval: 2.0,
                                                       target: self,
