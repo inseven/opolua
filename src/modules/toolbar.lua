@@ -44,7 +44,7 @@ local KTbClockPosX = 4
 local KTbClockHeight = 64
 
 -- Global vars
-local TbVis, TbMenuSym
+local TbVis, TbMenuSym, TbBtFlags
 
 -- Actual state
 local tbWinId
@@ -65,6 +65,7 @@ function TBarLink(appLink)
     TbVis(0)
     TbMenuSym = runtime:declareGlobal("TbMenuSym%")
     TbMenuSym(KMenuCheckBox)
+    TbBtFlags = runtime:declareGlobal("TbBtFlags%", 4)
     runtime:callProc(appLink:upper())
 end
 
@@ -74,7 +75,7 @@ local function drawButton(pos)
     if pos == pressedButtonId and button.isPushedDown then
         state = state + 1
     end
-    if button.flags & KTbFlgLatched > 0 then
+    if button.flags() & KTbFlgLatched > 0 then
         state = state + 1
     end
     gUSE(tbWinId)
@@ -155,8 +156,9 @@ function TBarButt(shortcut, pos, text, state, bmp, mask, flags)
         state = state,
         bmp = bmp,
         mask = mask,
-        flags = flags
+        flags = TbBtFlags[pos]
     }
+    buttons[pos].flags(flags)
     drawButton(pos)
     gUSE(prevId)
 end
@@ -198,7 +200,7 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
             -- Note, already latched buttons don't get called (IF they actually are latchable)
             if butId == pressedButtonId then 
                 local button = buttons[butId]
-                local latched = button.flags & KTbFlgLatched ~= 0
+                local latched = button.flags() & KTbFlgLatched ~= 0
                 local latchable = button.flags & KTbFlgLatchable ~= 0
                 if not latchable or not latched then
                     -- Call the shortcut
@@ -247,8 +249,8 @@ end
 _ENV["TBarOffer%"] = TBarOffer
 
 local function unlatch(button)
-    if button.flags & KTbFlgLatched > 0 then
-        button.flags = button.flags & ~KTbFlgLatched
+    if button.flags() & KTbFlgLatched > 0 then
+        button.flags(button.flags() & ~KTbFlgLatched)
         drawButton(button.id)
     end
 end
@@ -258,9 +260,9 @@ function TBarLatch(butId)
     -- Apparently there's nothing to say you can't latch a button that doesn't have KTbFlgLatchable set...
     assert(button, "No button found!")
     -- Unlatch everything above that's in the same latch group
-    local buttonLatchGroup = button.flags & 0x30
+    local buttonLatchGroup = button.flags() & 0x30
     for id = butId - 1, 1, -1 do
-        local blg = buttons[id].flags & 0x30
+        local blg = buttons[id].flags() & 0x30
         if blg == 0 or blg > buttonLatchGroup then
             break
         end
@@ -268,15 +270,15 @@ function TBarLatch(butId)
     end
     -- And everything below
     for id = butId + 1, #buttons do
-        local blg = buttons[id].flags & 0x30
+        local blg = buttons[id].flags() & 0x30
         if blg == 0 or blg < buttonLatchGroup then
             break
         end
         unlatch(buttons[id])
     end
 
-    if button.flags & KTbFlgLatched == 0 then
-        button.flags = button.flags | KTbFlgLatched
+    if button.flags() & KTbFlgLatched == 0 then
+        button.flags(button.flags | KTbFlgLatched)
         drawButton(button.id)
     end
 end
