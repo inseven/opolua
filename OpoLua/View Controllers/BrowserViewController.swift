@@ -20,6 +20,8 @@
 
 import UIKit
 
+import PsionSoftwareIndexSwift
+
 class BrowserViewController: UICollectionViewController {
 
     internal lazy var addBarButtonItem: UIBarButtonItem = {
