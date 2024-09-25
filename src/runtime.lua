@@ -281,7 +281,7 @@ function Runtime:pushNewFrame(stack, proc, numParams)
             local parentProc = parentFrame.proc
             found = parentFrame.globals[nameForLookup]
         end
-        assert(found.type == external.type, "Mismatching types on resolved external!")
+        assert(found.type == external.type, "Mismatching types on resolved external "..nameForLookup)
         table.insert(frame.indirects, self:getLocalVar(found.offset, found.type, parentFrame))
         -- DEBUG
         -- printf("Fixed up external offset=0x%04X to indirect #%d\n", found.offset, #frame.indirects)
@@ -1109,6 +1109,7 @@ function Runtime:declareGlobal(name, arrayLen)
     local type = valType
     if arrayLen then
         type = valType | 0x80
+        name = name.."[]"
     end
 
     -- We define our indexes (which are how externals map to locals) as simply
@@ -1119,7 +1120,7 @@ function Runtime:declareGlobal(name, arrayLen)
 
     -- For simplicity we'll assume any strings should be 255 max len
     local var = self.chunk:allocVariable(type, 255, arrayLen)
-    frame.globals[name] = { offset = index, type = valType }
+    frame.globals[name] = { offset = index, type = type }
     frame.vars[index] = var
     table.insert(frame.frameAllocs, var)
 

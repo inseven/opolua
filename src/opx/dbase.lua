@@ -127,7 +127,9 @@ function DbRecover(stack, runtime) -- 13
 end
 
 function DbSetComparison(stack, runtime) -- 14
-    unimplemented("opx.dbase.DbSetComparison")
+    -- unimplemented("opx.dbase.DbSetComparison")
+    local key, order = stack:pop(2)
+    stack:push(0)
 end
 
 return _ENV

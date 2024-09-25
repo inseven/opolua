@@ -922,7 +922,7 @@ function GetEventC(stack, runtime) -- 0x56
 end
 
 function InTrans(stack, runtime) -- 0x57
-    local db = self:getDb()
+    local db = runtime:getDb()
     stack:push(db:inTransaction())
 end
 
