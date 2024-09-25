@@ -59,7 +59,9 @@ class BrowserViewController: UICollectionViewController {
     }
 
     @objc func showSoftwareIndex() {
-        let indexViewController = PsionSoftwareIndexViewController()
+        let indexViewController = PsionSoftwareIndexViewController { release in
+            return release.kind == .installer && release.hasDownload && release.tags.contains("opl")
+        }
         indexViewController.delegate = self
         present(indexViewController, animated: true)
     }
