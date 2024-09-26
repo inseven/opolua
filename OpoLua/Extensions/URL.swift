@@ -58,9 +58,7 @@ _Please provide details of the program you were running, and what you were doing
     }
 
     static func gitHubIssueURL(for error: Error, title: String, sourceUrl: URL?) -> URL? {
-        if let _ = error as? OpoInterpreter.BinaryDatabaseError {
-            return nil
-        } else if let _ = error as? OpoInterpreter.LeaveError {
+        if let _ = error as? OpoInterpreter.LeaveError {
             return nil
         } else if let _ = error as? OpoInterpreter.NativeBinaryError {
             return nil

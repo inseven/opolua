@@ -676,18 +676,12 @@ public class OpoInterpreter: PsiLuaEnv {
                 detail = "\(detail)\n\(luaStack)"
             }
             print(detail)
-            let error: InterpreterError
-            if let operation = L.tostring(-1, key: "unimplemented") {
-                if operation == "database.loadBinary" {
-                    // Special case as it's such a significant issue
-                    error = BinaryDatabaseError(message: msg, detail: detail, operation: operation)
-                } else {
-                    error = UnimplementedOperationError(message: msg, detail: detail, operation: operation)
-                }
+            let error = if let operation = L.tostring(-1, key: "unimplemented") {
+                UnimplementedOperationError(message: msg, detail: detail, operation: operation)
             } else if L.toboolean(-1, key: "notOpl") {
-                error = NativeBinaryError(message: msg, detail: detail)
+                NativeBinaryError(message: msg, detail: detail)
             } else {
-                error = InterpreterError(message: msg, detail: detail)
+                InterpreterError(message: msg, detail: detail)
             }
             L.pop() // the error object
             throw error
@@ -783,14 +777,6 @@ public class OpoInterpreter: PsiLuaEnv {
 
         override var errorDescription: String? {
             return "The program attempted to use the unimplemented operation '\(operation)'."
-        }
-
-    }
-
-    class BinaryDatabaseError: UnimplementedOperationError {
-
-        override var errorDescription: String? {
-            return "Database operations are currently unsupported."
         }
 
     }
