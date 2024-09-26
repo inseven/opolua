@@ -170,8 +170,15 @@ class Program {
                 oplConfig[key] = "0" // analog
             }
         }
-        if configuration.device != .psionSeries3c {
+        
+        switch configuration.device {
+        case .psionSeries3c:
+            break
+        case .psionSeries5, .psionRevo, .geofoxOne:
             let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s5", isDirectory: true)
+            self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
+        case .psionSeries7:
+            let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s7", isDirectory: true)
             self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
         }
     }

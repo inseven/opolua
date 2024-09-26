@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -261,6 +261,10 @@
 		DBE91524276D25A900BDB8F5 /* UIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKey.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D8DE1B512CA5F829007EF1CC /* z-s7 */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "z-s7"; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		DB79FFA32742D88A005E904F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -339,6 +343,7 @@
 		D88851242C91149400A7F663 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				D8DE1B512CA5F829007EF1CC /* z-s7 */,
 				D893EAD4276073CA00E64219 /* Borders */,
 				DB0B919227836E70006F5CD0 /* fonts */,
 				DB9F837027D3834000940D5C /* z-s5 */,
@@ -520,6 +525,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D8DE1B512CA5F829007EF1CC /* z-s7 */,
 			);
 			name = OpoLua;
 			packageProductDependencies = (
