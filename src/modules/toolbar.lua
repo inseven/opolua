@@ -65,7 +65,8 @@ function TBarLink(appLink)
     TbVis(0)
     TbMenuSym = runtime:declareGlobal("TbMenuSym%")
     TbMenuSym(KMenuCheckBox)
-    TbBtFlags = runtime:declareGlobal("TbBtFlags%", 4)
+    -- Allow more than the usual 4 buttons to cater for series 7 screen size
+    TbBtFlags = runtime:declareGlobal("TbBtFlags%", 10)
     runtime:callProc(appLink:upper())
 end
 
@@ -201,7 +202,7 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
             if butId == pressedButtonId then 
                 local button = buttons[butId]
                 local latched = button.flags() & KTbFlgLatched ~= 0
-                local latchable = button.flags & KTbFlgLatchable ~= 0
+                local latchable = button.flags() & KTbFlgLatchable ~= 0
                 if not latchable or not latched then
                     -- Call the shortcut
                     local shortcut = button.shortcut
