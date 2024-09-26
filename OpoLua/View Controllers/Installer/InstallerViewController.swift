@@ -33,16 +33,19 @@ class InstallerViewController: UINavigationController {
 
     private let settings: Settings
     private var item: ManagedItem
+    private var sourceURL: URL?
     private var installer: Installer?
     private var destinationUrl: URL?
 
     weak var installerDelegate: InstallerViewControllerDelegate?
 
-    init(settings: Settings, url: URL, preferredDestinationUrl: URL? = nil) {
+    // TODO: Drop the 
+    init(settings: Settings, url: URL, preferredDestinationURL: URL? = nil, sourceURL: URL?) {
         self.settings = settings
         self.item = ManagedItem(url: url)
+        self.sourceURL = sourceURL
         let introductionViewController = InstallerIntroductionViewController(settings: settings,
-                                                                             preferredDestinationUrl: preferredDestinationUrl)
+                                                                             preferredDestinationURL: preferredDestinationURL)
         super.init(rootViewController: introductionViewController)
         isModalInPresentation = true
         introductionViewController.delegate = self
@@ -62,8 +65,8 @@ class InstallerViewController: UINavigationController {
     func install(destinationUrl: URL) {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        let systemUrl = destinationUrl.appendingPathComponent(item.url.basename.deletingPathExtension + ".system")
-        guard !FileManager.default.fileExists(atUrl: systemUrl) else {
+        let systemURL = destinationUrl.appendingPathComponent(item.url.basename.deletingPathExtension + ".system")
+        guard !FileManager.default.fileExists(atUrl: systemURL) else {
             // Since we don't provide a mechanism to explicitly pick existing systems, we explicitly fail if a system
             // already exists with the auto-generated name. In the future, when we have a better picker, we can relax
             // this constraint.
@@ -71,7 +74,7 @@ class InstallerViewController: UINavigationController {
             return
         }
 
-        let installer = Installer(url: item.url, destinationUrl: systemUrl)
+        let installer = Installer(url: item.url, destinationURL: systemURL, sourceURL: sourceURL)
         self.installer = installer
         installer.delegate = self
         installer.run()

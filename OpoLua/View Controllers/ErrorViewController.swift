@@ -28,7 +28,8 @@ protocol ErrorViewControllerDelegate: AnyObject {
 
 class ErrorViewController: UIViewController {
 
-    var error: Error
+    let error: Error
+    let activities: [UIActivity]
 
     weak var delegate: ErrorViewControllerDelegate?
 
@@ -65,8 +66,9 @@ class ErrorViewController: UIViewController {
         return barButtonItem
     }()
 
-    init(error: Error, screenshot: UIImage) {
+    init(error: Error, screenshot: UIImage, activities: [UIActivity]) {
         self.error = error
+        self.activities = activities
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .systemBackground
         isModalInPresentation = true
@@ -127,14 +129,7 @@ class ErrorViewController: UIViewController {
         guard let text = textView.text else {
             return
         }
-        var activities: [UIActivity] = []
-        if error.gitHubIssueUrl != nil {
-            // TODO: Support raising issues for all errors shown in the error view controller #210
-            //       https://github.com/inseven/opolua/issues/210
-            activities.append(RaiseGitHubIssueActivity(error: error))
-        }
-        let activityViewController = UIActivityViewController(activityItems: [text],
-                                                              applicationActivities: activities)
+        let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: activities)
         self.present(activityViewController, animated: true)
     }
 

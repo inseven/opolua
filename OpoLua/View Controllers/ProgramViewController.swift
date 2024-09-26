@@ -594,8 +594,18 @@ extension ProgramViewController: ProgramLifecycleObserver {
         zoomInButton.isEnabled = false
         zoomOutButton.isEnabled = false
 
+        // Generate the GitHub issue URL and sharing activities.
+        let gitHubIssueURL = URL.gitHubIssueURL(for: error, title:
+                                                    program.title,
+                                                sourceURL: program.metadata.sourceURL)
+        let activities: [UIActivity] = if let gitHubIssueURL {
+            [RaiseGitHubIssueActivity(url: gitHubIssueURL)]
+        } else {
+            []
+        }
+
         let showErrorDetails: () -> Void = {
-            let viewController = ErrorViewController(error: error, screenshot: screenshot)
+            let viewController = ErrorViewController(error: error, screenshot: screenshot, activities: activities)
             viewController.delegate = self
             let navigationController = UINavigationController(rootViewController: viewController)
             self.present(navigationController, animated: true)
@@ -607,19 +617,19 @@ extension ProgramViewController: ProgramLifecycleObserver {
         }
 
         let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: { action in
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel) { action in
             self.navigationController?.popViewController(animated: true)
-        }))
-        alert.addAction(UIAlertAction(title: "Show Details", style: .default, handler: { action in
+        })
+        alert.addAction(UIAlertAction(title: "Show Details", style: .default) { action in
             showErrorDetails()
-        }))
-        if let gitHubIssueUrl = error.gitHubIssueUrl {
-            alert.addAction(UIAlertAction(title: "Raise GitHub Issue", style: .default, handler: { action in
-                UIApplication.shared.open(gitHubIssueUrl)
+        })
+        if let gitHubIssueURL {
+            alert.addAction(UIAlertAction(title: "Raise GitHub Issue", style: .default) { action in
+                UIApplication.shared.open(gitHubIssueURL)
                 self.navigationController?.popViewController(animated: true)
-            }))
+            })
         }
-        present(alert, animated: true, completion: nil)
+        present(alert, animated: true)
     }
 
     func program(_ program: Program, didUpdateTitle title: String) {

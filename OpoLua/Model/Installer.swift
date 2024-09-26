@@ -33,25 +33,28 @@ class Installer {
     static let didCompleteInstall = NSNotification.Name(rawValue: "InstallerDidCompleteInstall")
 
     let url: URL
-    let destinationUrl: URL
-    let fileSystem: FileSystem
+    let destinationURL: URL
+    let sourceURL: URL?
+    let fileSystem: SystemFileSystem
     let psilua = PsiLuaEnv()
 
     weak var delegate: InstallerDelegate?
 
-    init(url: URL, destinationUrl: URL) {
+    init(url: URL, destinationURL: URL, sourceURL: URL?) {
         self.url = url
-        self.destinationUrl = destinationUrl
-        self.fileSystem = SystemFileSystem(rootUrl: destinationUrl)
+        self.destinationURL = destinationURL
+        self.sourceURL = sourceURL
+        self.fileSystem = SystemFileSystem(rootUrl: destinationURL)
     }
 
     func run() {
         DispatchQueue.global().async {
             do {
                 try self.fileSystem.prepare()
+                self.fileSystem.metadata = Metadata(sourceURL: self.sourceURL)
                 try self.psilua.installSisFile(path: self.url.path, handler: self)
                 let item: Directory.Item?
-                if let systemType = try Directory.Item.system(url: self.destinationUrl, env: self.psilua) {
+                if let systemType = try Directory.Item.system(url: self.destinationURL, env: self.psilua) {
                     item = Directory.Item(url: self.url, type: systemType, isWriteable: true)
                 } else {
                     item = nil

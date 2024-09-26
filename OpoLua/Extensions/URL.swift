@@ -23,7 +23,28 @@ import UIKit
 
 extension URL {
 
-    static func gitHubIssue(title: String, description: String, labels: [String]) -> URL? {
+    private static func description(details: String, title: String, sourceURL: URL?) -> String {
+        return """
+## Description
+
+_Please provide details of the program you were running, and what you were doing when you encountered the error._
+
+## Metadata
+
+| Key | Value |
+| --- | --- |
+| **Title** | \(title) |
+| **Source URL** | \(sourceURL?.absoluteString ?? "*unknown*") |
+
+## Details
+
+```
+\(details)
+```
+"""
+    }
+
+    private static func gitHubIssueURL(title: String, description: String, labels: [String]) -> URL? {
         var components = URLComponents()
         components.scheme = "https"
         components.host = "github.com"
@@ -34,6 +55,27 @@ extension URL {
             URLQueryItem(name: "labels", value: labels.joined(separator: ",")),
         ]
         return components.url
+    }
+
+    static func gitHubIssueURL(for error: Error, title: String, sourceURL: URL?) -> URL? {
+        if let _ = error as? OpoInterpreter.BinaryDatabaseError {
+            return nil
+        } else if let _ = error as? OpoInterpreter.LeaveError {
+            return nil
+        } else if let _ = error as? OpoInterpreter.NativeBinaryError {
+            return nil
+        } else if let unimplementedOperation = error as? OpoInterpreter.UnimplementedOperationError {
+            let description = description(details: unimplementedOperation.detail, title: title, sourceURL: sourceURL)
+            return URL.gitHubIssueURL(title: "[\(title)] Unimplemented Operation: \(unimplementedOperation.operation)",
+                                   description: description,
+                                   labels: ["facerake", "bug"])
+        } else if let interpreterError = error as? OpoInterpreter.InterpreterError {
+            let description = description(details: interpreterError.detail, title: title, sourceURL: sourceURL)
+            return URL.gitHubIssueURL(title: "[\(title)] Internal Error: \(interpreterError.message)",
+                                   description: description,
+                                   labels: ["internal-error", "bug"])
+        }
+        return nil
     }
 
     var localizedName: String {

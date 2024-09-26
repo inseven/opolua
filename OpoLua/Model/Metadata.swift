@@ -18,51 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import Foundation
 
-class RaiseGitHubIssueActivity: UIActivity {
+struct Metadata: Codable {
 
-    override class var activityCategory: UIActivity.Category {
-        return .action
+    let sourceURL: URL?
+
+    init(sourceURL: URL? = nil) {
+        self.sourceURL = sourceURL
     }
 
-    let url: URL
-    var activityItems = [Any]()
-
-    override var activityTitle: String? {
-        return "Raise GitHub Issue"
+    init(contentsOf url: URL) throws {
+        let data = try Data(contentsOf: url)
+        let decoder = JSONDecoder()
+        self = try decoder.decode(Metadata.self, from: data)
     }
 
-    override var activityImage: UIImage? {
-        return UIImage(systemName: "ant")!
-    }
-
-    override var activityType: UIActivity.ActivityType {
-        return UIActivity.ActivityType(rawValue: "org.opolua.action.raise-github-issue")
-    }
-
-    init(url: URL) {
-        self.url = url
-        super.init()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func canPerform(withActivityItems activityItems: [Any]) -> Bool {
-        return true
-    }
-
-    override func prepare(withActivityItems activityItems: [Any]) {
-        self.activityItems = activityItems
-    }
-
-    override func perform() {
-        defer {
-            activityDidFinish(true)
-        }
-        UIApplication.shared.open(url)
+    func write(to url: URL) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        let data = try encoder.encode(self)
+        try data.write(to: url, options: .atomic)
     }
 
 }
