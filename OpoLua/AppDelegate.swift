@@ -112,10 +112,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         rootViewController.showSettings()
     }
 
-    func install(url: URL, preferredDestinationUrl: URL? = nil) {
+    func install(url: URL, preferredDestinationUrl: URL? = nil, sourceUrl: URL? = nil) {
         let installerViewController = InstallerViewController(settings: settings,
                                                               url: url,
-                                                              preferredDestinationUrl: preferredDestinationUrl)
+                                                              preferredDestinationUrl: preferredDestinationUrl,
+                                                              sourceUrl: sourceUrl)
         installerViewController.installerDelegate = self
         rootViewController.present(installerViewController, animated: true)
     }

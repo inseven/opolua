@@ -135,6 +135,13 @@ class Program {
         return applicationMetadata?.uid3
     }
 
+    var metadata: Metadata {
+        guard let systemFileSystem = fileSystem as? SystemFileSystem else {
+            return Metadata()
+        }
+        return systemFileSystem.metadata
+    }
+
     lazy private var fileSystem: FileSystem = {
         do {
             return try FileManager.default.detectSystemFileSystem(for: url) ?? ObjectFileSystem(objectUrl: url)
@@ -436,6 +443,8 @@ extension Program: InterpreterThreadDelegate {
         return fileSystem.guestPath(for: url)
     }
 
+    // TODO: Result might be better as an actual result. Oh. That's a Tom Thing.
+    // TODO: Unclear to me whether this would be the right place to handle the error or not.
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: Error?) {
         DispatchQueue.main.sync {
             interpreter.handler = nil

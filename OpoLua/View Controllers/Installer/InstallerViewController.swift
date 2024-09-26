@@ -33,14 +33,16 @@ class InstallerViewController: UINavigationController {
 
     private let settings: Settings
     private var item: ManagedItem
+    private var sourceUrl: URL?
     private var installer: Installer?
     private var destinationUrl: URL?
 
     weak var installerDelegate: InstallerViewControllerDelegate?
 
-    init(settings: Settings, url: URL, preferredDestinationUrl: URL? = nil) {
+    init(settings: Settings, url: URL, preferredDestinationUrl: URL? = nil, sourceUrl: URL?) {
         self.settings = settings
         self.item = ManagedItem(url: url)
+        self.sourceUrl = sourceUrl
         let introductionViewController = InstallerIntroductionViewController(settings: settings,
                                                                              preferredDestinationUrl: preferredDestinationUrl)
         super.init(rootViewController: introductionViewController)
@@ -71,7 +73,7 @@ class InstallerViewController: UINavigationController {
             return
         }
 
-        let installer = Installer(url: item.url, destinationUrl: systemUrl)
+        let installer = Installer(url: item.url, destinationUrl: systemUrl, sourceUrl: sourceUrl)
         self.installer = installer
         installer.delegate = self
         installer.run()
