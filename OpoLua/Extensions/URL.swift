@@ -23,7 +23,7 @@ import UIKit
 
 extension URL {
 
-    private static func description(details: String, title: String, sourceURL: URL?) -> String {
+    private static func description(details: String, title: String, sourceUrl: URL?) -> String {
         return """
 ## Description
 
@@ -34,7 +34,7 @@ _Please provide details of the program you were running, and what you were doing
 | Key | Value |
 | --- | --- |
 | **Title** | \(title) |
-| **Source URL** | \(sourceURL?.absoluteString ?? "*unknown*") |
+| **Source URL** | \(sourceUrl?.absoluteString ?? "*unknown*") |
 
 ## Details
 
@@ -57,7 +57,7 @@ _Please provide details of the program you were running, and what you were doing
         return components.url
     }
 
-    static func gitHubIssueURL(for error: Error, title: String, sourceURL: URL?) -> URL? {
+    static func gitHubIssueURL(for error: Error, title: String, sourceUrl: URL?) -> URL? {
         if let _ = error as? OpoInterpreter.BinaryDatabaseError {
             return nil
         } else if let _ = error as? OpoInterpreter.LeaveError {
@@ -65,12 +65,12 @@ _Please provide details of the program you were running, and what you were doing
         } else if let _ = error as? OpoInterpreter.NativeBinaryError {
             return nil
         } else if let unimplementedOperation = error as? OpoInterpreter.UnimplementedOperationError {
-            let description = description(details: unimplementedOperation.detail, title: title, sourceURL: sourceURL)
+            let description = description(details: unimplementedOperation.detail, title: title, sourceUrl: sourceUrl)
             return URL.gitHubIssueURL(title: "[\(title)] Unimplemented Operation: \(unimplementedOperation.operation)",
                                    description: description,
                                    labels: ["facerake", "bug"])
         } else if let interpreterError = error as? OpoInterpreter.InterpreterError {
-            let description = description(details: interpreterError.detail, title: title, sourceURL: sourceURL)
+            let description = description(details: interpreterError.detail, title: title, sourceUrl: sourceUrl)
             return URL.gitHubIssueURL(title: "[\(title)] Internal Error: \(interpreterError.message)",
                                    description: description,
                                    labels: ["internal-error", "bug"])

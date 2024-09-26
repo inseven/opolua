@@ -94,7 +94,7 @@ class InstallerIntroductionViewController: UICollectionViewController {
     private var dataSource: DataSource!
 
     private let settings: Settings
-    private let preferredDestinationURL: URL?
+    private let preferredDestinationUrl: URL?
     weak var delegate: InstallerIntroductionViewControllerDelegate?
 
     private var destinationUrl: URL
@@ -126,10 +126,10 @@ class InstallerIntroductionViewController: UICollectionViewController {
         return footerView
     }()
 
-    init(settings: Settings, preferredDestinationURL: URL?) {
+    init(settings: Settings, preferredDestinationUrl: URL?) {
         self.settings = settings
-        self.preferredDestinationURL = preferredDestinationURL
-        self.destinationUrl = preferredDestinationURL ?? FileManager.default.documentsUrl
+        self.preferredDestinationUrl = preferredDestinationUrl
+        self.destinationUrl = preferredDestinationUrl ?? FileManager.default.documentsUrl
         let configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
         super.init(collectionViewLayout: UICollectionViewCompositionalLayout.list(using: configuration))
         navigationItem.rightBarButtonItem = cancelBarButtonItem
@@ -228,8 +228,8 @@ class InstallerIntroductionViewController: UICollectionViewController {
         switch item {
         case .destination:
             var destinationUrls = [FileManager.default.documentsUrl]
-            if let preferredDestinationURL = preferredDestinationURL {
-                destinationUrls.append(preferredDestinationURL)
+            if let preferredDestinationUrl = preferredDestinationUrl {
+                destinationUrls.append(preferredDestinationUrl)
             }
             let destinationPicker = DestinationPickerViewController(urls: destinationUrls, selectedUrl: destinationUrl)
             destinationPicker.delegate = self

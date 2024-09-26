@@ -22,10 +22,10 @@ import Foundation
 
 struct Metadata: Codable {
 
-    let sourceURL: URL?
+    let sourceUrl: URL?
 
-    init(sourceURL: URL? = nil) {
-        self.sourceURL = sourceURL
+    init(sourceUrl: URL? = nil) {
+        self.sourceUrl = sourceUrl
     }
 
     init(contentsOf url: URL) throws {

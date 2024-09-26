@@ -595,11 +595,11 @@ extension ProgramViewController: ProgramLifecycleObserver {
         zoomOutButton.isEnabled = false
 
         // Generate the GitHub issue URL and sharing activities.
-        let gitHubIssueURL = URL.gitHubIssueURL(for: error, title:
-                                                    program.title,
-                                                sourceURL: program.metadata.sourceURL)
-        let activities: [UIActivity] = if let gitHubIssueURL {
-            [RaiseGitHubIssueActivity(url: gitHubIssueURL)]
+        let gitHubIssueUrl = URL.gitHubIssueURL(for: error,
+                                                title: program.title,
+                                                sourceUrl: program.metadata.sourceUrl)
+        let activities: [UIActivity] = if let gitHubIssueUrl {
+            [RaiseGitHubIssueActivity(url: gitHubIssueUrl)]
         } else {
             []
         }
@@ -623,9 +623,9 @@ extension ProgramViewController: ProgramLifecycleObserver {
         alert.addAction(UIAlertAction(title: "Show Details", style: .default) { action in
             showErrorDetails()
         })
-        if let gitHubIssueURL {
+        if let gitHubIssueUrl {
             alert.addAction(UIAlertAction(title: "Raise GitHub Issue", style: .default) { action in
-                UIApplication.shared.open(gitHubIssueURL)
+                UIApplication.shared.open(gitHubIssueUrl)
                 self.navigationController?.popViewController(animated: true)
             })
         }

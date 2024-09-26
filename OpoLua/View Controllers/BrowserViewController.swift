@@ -127,7 +127,7 @@ extension BrowserViewController: PsionSoftwareIndexViewControllerDelegate {
     func psionSoftwareIndexViewController(psionSoftwareIndexViewController: PsionSoftwareIndexViewController,
                                           didSelectItem item: SoftwareIndexView.Item) {
         psionSoftwareIndexViewController.dismiss(animated: true) {
-            AppDelegate.shared.install(url: item.url, sourceURL: item.sourceURL)
+            AppDelegate.shared.install(url: item.url, sourceUrl: item.sourceURL)
         }
     }
 

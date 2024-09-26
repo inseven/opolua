@@ -226,7 +226,7 @@ class DirectoryViewController : BrowserViewController {
                 break
             case .installer:
                 actions.append(UIAction(title: "Install", image: UIImage(systemName: "square.and.arrow.down")) { action in
-                    AppDelegate.shared.install(url: item.url, preferredDestinationURL: self.directory.url)
+                    AppDelegate.shared.install(url: item.url, preferredDestinationUrl: self.directory.url)
                 })
             case .image:
                 actions.append(UIAction(title: "View", image: UIImage(systemName: "eye")) { action in
@@ -300,7 +300,7 @@ class DirectoryViewController : BrowserViewController {
         case .directory:
             pushDirectoryViewController(for: item.url)
         case .installer:
-            AppDelegate.shared.install(url: item.url, preferredDestinationURL: directory.url)
+            AppDelegate.shared.install(url: item.url, preferredDestinationUrl: directory.url)
         case .image, .applicationInformation:
             let viewController = ResourceViewController(url: item.url)
             navigationController?.pushViewController(viewController, animated: true)

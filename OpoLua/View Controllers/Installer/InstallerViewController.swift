@@ -33,19 +33,18 @@ class InstallerViewController: UINavigationController {
 
     private let settings: Settings
     private var item: ManagedItem
-    private var sourceURL: URL?
+    private var sourceUrl: URL?
     private var installer: Installer?
     private var destinationUrl: URL?
 
     weak var installerDelegate: InstallerViewControllerDelegate?
 
-    // TODO: Drop the 
-    init(settings: Settings, url: URL, preferredDestinationURL: URL? = nil, sourceURL: URL?) {
+    init(settings: Settings, url: URL, preferredDestinationUrl: URL? = nil, sourceUrl: URL?) {
         self.settings = settings
         self.item = ManagedItem(url: url)
-        self.sourceURL = sourceURL
+        self.sourceUrl = sourceUrl
         let introductionViewController = InstallerIntroductionViewController(settings: settings,
-                                                                             preferredDestinationURL: preferredDestinationURL)
+                                                                             preferredDestinationUrl: preferredDestinationUrl)
         super.init(rootViewController: introductionViewController)
         isModalInPresentation = true
         introductionViewController.delegate = self
@@ -65,8 +64,8 @@ class InstallerViewController: UINavigationController {
     func install(destinationUrl: URL) {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        let systemURL = destinationUrl.appendingPathComponent(item.url.basename.deletingPathExtension + ".system")
-        guard !FileManager.default.fileExists(atUrl: systemURL) else {
+        let systemUrl = destinationUrl.appendingPathComponent(item.url.basename.deletingPathExtension + ".system")
+        guard !FileManager.default.fileExists(atUrl: systemUrl) else {
             // Since we don't provide a mechanism to explicitly pick existing systems, we explicitly fail if a system
             // already exists with the auto-generated name. In the future, when we have a better picker, we can relax
             // this constraint.
@@ -74,7 +73,7 @@ class InstallerViewController: UINavigationController {
             return
         }
 
-        let installer = Installer(url: item.url, destinationURL: systemURL, sourceURL: sourceURL)
+        let installer = Installer(url: item.url, destinationUrl: systemUrl, sourceUrl: sourceUrl)
         self.installer = installer
         installer.delegate = self
         installer.run()
