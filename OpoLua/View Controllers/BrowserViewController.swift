@@ -25,7 +25,7 @@ import PsionSoftwareIndex
 class BrowserViewController: UICollectionViewController {
 
     internal lazy var addBarButtonItem: UIBarButtonItem = {
-        let softwareIndexAction = UIAction(title: "Software Index",
+        let softwareIndexAction = UIAction(title: "Psion Software Index",
                                            image: UIImage(systemName: "list.dash.header.rectangle")) { [weak self] action in
             self?.showSoftwareIndex()
         }
@@ -58,8 +58,17 @@ class BrowserViewController: UICollectionViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    static let blockedUIDs: Set<String> = [
+        "0x1000af86",  // Strip Poker
+    ]
+
     @objc func showSoftwareIndex() {
         let indexViewController = PsionSoftwareIndexViewController { release in
+#if RELEASE
+            guard !Self.blockedUIDs.contains(release.uid) else {
+                return false
+            }
+#endif
             return release.kind == .installer && release.hasDownload && release.tags.contains("opl")
         }
         indexViewController.delegate = self
