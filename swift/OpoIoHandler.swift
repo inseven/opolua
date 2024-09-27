@@ -571,7 +571,7 @@ public protocol OpoIoHandler: FileSystemIoHandler {
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode)
+    func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String)
 
     func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType)
     func cancelRequest(handle: Async.RequestHandle)
@@ -624,8 +624,8 @@ class DummyIoHandler : OpoIoHandler {
         return .nothing
     }
 
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
-        return (Graphics.Size(width: 640, height: 240), .gray4)
+    func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
+        return (Graphics.Size(width: 640, height: 240), .gray4, "psion-series-5")
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {

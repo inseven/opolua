@@ -442,13 +442,14 @@ end
 
 function Runtime:getGraphics()
     if not self.graphics then
-        local w, h, mode = self.ioh.getScreenInfo()
+        local w, h, mode, device = self.ioh.getDeviceInfo()
         self.graphics = {
             screenWidth = w,
             screenHeight = h,
             screenMode = mode,
             sprites = {},
         }
+        self.deviceName = device
         local id = self:gCREATE(0, 0, w, h, true, mode)
         assert(id == KDefaultWin)
         self:FONT(KFontCourierNormal11, 0)
@@ -459,6 +460,13 @@ end
 function Runtime:getScreenInfo()
     local graphics = self:getGraphics()
     return graphics.screenWidth, graphics.screenHeight, graphics.screenMode
+end
+
+function Runtime:getDeviceName()
+    if not self.graphics then
+        self:getGraphics()
+    end
+    return self.deviceName
 end
 
 function Runtime:getGraphicsContext(id)

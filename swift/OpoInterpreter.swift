@@ -335,13 +335,14 @@ private func graphicsop(_ L: LuaState!) -> CInt {
     return 0
 }
 
-private func getScreenInfo(_ L: LuaState!) -> CInt {
+private func getDeviceInfo(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
-    let (sz, mode) = iohandler.getScreenInfo()
+    let (sz, mode, deviceName) = iohandler.getDeviceInfo()
     L.push(sz.width)
     L.push(sz.height)
     L.push(mode.rawValue)
-    return 3
+    L.push(deviceName)
+    return 4
 }
 
 // asyncRequest(requestName, requestTable)
@@ -710,7 +711,7 @@ public class OpoInterpreter: PsiLuaEnv {
             "beep": { L in return autoreleasepool { return beep(L) } },
             "draw": { L in return autoreleasepool { return draw(L) } },
             "graphicsop": { L in return autoreleasepool { return graphicsop(L) } },
-            "getScreenInfo": { L in return autoreleasepool { return getScreenInfo(L) } },
+            "getDeviceInfo": { L in return autoreleasepool { return getDeviceInfo(L) } },
             "asyncRequest": { L in return autoreleasepool { return asyncRequest(L) } },
             "waitForAnyRequest": { L in return autoreleasepool { return waitForAnyRequest(L) } },
             "checkCompletions": { L in return autoreleasepool { return checkCompletions(L) } },
