@@ -162,6 +162,7 @@ PROC editMultiDlg:
 	buf&(3) = &67666507
 	dINIT "Multi edit"
 	dEDITMULTI ptr&, "Prompt", 20, 5, 60
+	dTEXT "Another", "Option", KDTextAllowSelection%
 	dBUTTONS "OK", %o
 	result% = DIALOG
 	len& = PEEKL(ptr&)

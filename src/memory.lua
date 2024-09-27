@@ -401,6 +401,7 @@ Variable = class {
     _offset = nil, -- relative to start of _chunk
     _arrayLen = nil,
     _stringMaxLen = nil,
+    __name = "Variable",
 }
 
 function Variable:__index(k)
@@ -444,6 +445,10 @@ function Variable:__newindex(k, v)
     else
         rawset(self, k, v)
     end
+end
+
+function Variable:__tostring()
+    return string.format("<var %s>", DataTypes[self._type])
 end
 
 -- local sets = 0
@@ -642,6 +647,7 @@ end
 Addr = class {
     chunk = nil,
     offset = 0,
+    __name = "Addr",
 }
 
 local function getAddrAndOffset(lhs, rhs)

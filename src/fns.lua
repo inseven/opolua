@@ -686,6 +686,7 @@ end
 function Dialog(stack, runtime) -- 0x37
     local dialog = runtime:getDialog()
     runtime:setDialog(nil)
+    dialog.frame = nil -- Simplifies dumping dialog structure
     local result = runtime:DIALOG(dialog)
     -- Be bug compatible with Psion 5 and return 0 if a negative-keycode or escape button was pressed
     if result < 0 or result == 27 then
