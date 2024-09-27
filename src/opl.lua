@@ -208,9 +208,20 @@ function gXPRINT(text, flags)
     -- Note, doesn't increment context.pos.x
 end
 
-function gTWIDTH(text)
+function gTWIDTH(text, fontId, style)
     local context = runtime:getGraphicsContext()
-    local width, height, ascent, descent = runtime:iohandler().graphicsop("textsize", text, context.font, context.style)
+    -- fontId and style param are an opolua extension
+    local font
+    if fontId then
+        font = assert(FontIds[FontAliases[fontId] or fontId], "Bad font id!")
+        if style == nil then
+            style = 0
+        end
+    else
+        font = context.font
+        style = context.style
+    end
+    local width, height, ascent, descent = runtime:iohandler().graphicsop("textsize", text, font, style)
     return width, height, ascent, descent
 end
 

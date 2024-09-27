@@ -51,7 +51,7 @@ end
 
 -- Returns nil if the view doesn't layout with a prompt area (ie if it spans the entire dialog width)
 function View:getPromptWidth()
-    return self.prompt and gTWIDTH(self.prompt) or nil
+    return self.prompt and gTWIDTH(self.prompt, kDialogFont) or nil
 end
 
 function View:setHeightHint(hint)
@@ -260,7 +260,7 @@ function DialogTitleBar:contentSize()
     if self.lineBelow then
         h = h + 2
     end
-    return gTWIDTH(self.value), h
+    return gTWIDTH(self.value, kDialogFont), h
 end
 
 function DialogTitleBar:draw()
@@ -272,7 +272,6 @@ function DialogTitleBar:draw()
     end
     gFILL(self.w, self.h)
     black()
-    gFONT(kDialogFont)
     drawText(self.value, self.x + self.hMargin, self.y + 2)
     View.draw(self)
 end
@@ -305,7 +304,7 @@ function DialogItemText:contentSize()
             h = h + 1
         end
     end
-    return gTWIDTH(self.value), h
+    return gTWIDTH(self.value, kDialogFont), h
 end
 
 function DialogItemText:draw()
@@ -361,7 +360,7 @@ local kEditTextSpace = 2
 function DialogItemEdit:contentSize()
     -- The @ sign is an example of the widest character in the dialog font (we
     -- should really have an easy API for getting max font width...)
-    return gTWIDTH(string.rep("@", self.len)) + 2 * kEditTextSpace, self.heightHint
+    return gTWIDTH(string.rep("@", self.len), kDialogFont) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEdit:drawPromptAndBox()
@@ -395,7 +394,7 @@ function DialogItemEdit:drawValue(val)
 end
 
 function DialogItemEdit:getCursorPos()
-    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1))
+    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1), kDialogFont)
     return self.x + self.promptWidth + kEditTextSpace + textw, self.y + kDialogLineTextYOffset - 1
 end
 
@@ -404,7 +403,7 @@ function DialogItemEdit:posToCharPos(x, y)
 
     -- Is there a better way to do this?
     local result = 1
-    while gTWIDTH(self.editor.value:sub(1, result)) < tx do
+    while gTWIDTH(self.editor.value:sub(1, result), kDialogFont) < tx do
         result = result + 1
         if result >= #self.editor.value + 1 then
             break
@@ -416,7 +415,7 @@ end
 function DialogItemEdit:updateCursorIfFocussed()
     if self.hasFocus then
         gAT(self:getCursorPos())
-        local _, h, ascent = gTWIDTH("")
+        local _, h, ascent = gTWIDTH("", kDialogFont)
         CURSOR(gIDENTITY(), ascent + 1, self.cursorWidth, h + 1)
     end
 end
@@ -515,7 +514,7 @@ function DialogItemEditLong:contentSize()
     -- The @ sign is an example of the widest character in the dialog font (we
     -- should really have an easy API for getting max font width...)
     local maxChars = math.max(#tostring(self.min), #tostring(self.max))
-    return gTWIDTH(string.rep("@", maxChars)) + 2 * kEditTextSpace, self.heightHint
+    return gTWIDTH(string.rep("@", maxChars), kDialogFont) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEditLong:inputType()
@@ -571,7 +570,7 @@ DialogItemEditFloat = class {
 }
 
 function DialogItemEditFloat:contentSize()
-    return gTWIDTH(string.rep("0", self.maxChars)) + 2 * kEditTextSpace, self.heightHint
+    return gTWIDTH(string.rep("0", self.maxChars), kDialogFont) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEditFloat:inputType()
@@ -618,7 +617,7 @@ DialogItemEditPass = class { _super = DialogItemEdit }
 function DialogItemEditPass:init(lineHeight)
     DialogItemEditPass._super.init(self, lineHeight)
     self.editor.movableCursor = false
-    self.cursorWidth = gTWIDTH("*")
+    self.cursorWidth = gTWIDTH("*", kDialogFont)
     -- Don't select the contents (undo what DialogItemEdit:init() did)
     self.editor:setCursorPos(#self.editor.value + 1)    
 end
@@ -634,7 +633,7 @@ end
 
 function DialogItemEditPass:getCursorPos()
     local val = string.rep("*", #self.editor.value)
-    local textw, texth = gTWIDTH(val:sub(1, self.editor.cursorPos - 1))
+    local textw, texth = gTWIDTH(val:sub(1, self.editor.cursorPos - 1), kDialogFont)
     return self.x + self.promptWidth + kEditTextSpace + textw, self.y + kDialogLineTextYOffset - 1
 end
 
@@ -770,9 +769,9 @@ function DialogItemPartEditor:contentSize()
             sz = sz + part.width
         else 
             if part.prefix then
-                sz = sz + gTWIDTH(part.prefix)
+                sz = sz + gTWIDTH(part.prefix, kDialogFont)
             end
-            sz = sz + (part.maxValueWidth or gTWIDTH(string.rep("0", part.maxChars)))
+            sz = sz + (part.maxValueWidth or gTWIDTH(string.rep("0", part.maxChars), kDialogFont))
         end
     end
     return sz + 2 * kEditTextSpace, self.heightHint
@@ -816,11 +815,11 @@ function DialogItemPartEditor:updateCursorIfFocussed()
 end
 
 function DialogItemPartEditor:getCursorPos()
-    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1))
+    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1), kDialogFont)
     local currentPart = self.parts[self.currentPart]
     local x = currentPart.startx + textw
     if currentPart.prefix then
-        x = x + gTWIDTH(currentPart.prefix)
+        x = x + gTWIDTH(currentPart.prefix, kDialogFont)
     end
     local y = self.y + kDialogLineTextYOffset - 1
     return x, y
@@ -969,7 +968,7 @@ function DialogItemEditTime:init(lineHeight)
         prefix = " ",
         am = am,
         pm = pm,
-        maxValueWidth = math.max(gTWIDTH(am), gTWIDTH(pm)),
+        maxValueWidth = math.max(gTWIDTH(am, kDialogFont), gTWIDTH(pm, kDialogFont)),
     }
 
     self.parts = {}
@@ -1103,7 +1102,7 @@ end
 DialogItemEditMulti = class { _super = DialogItemEdit }
 
 function DialogItemEditMulti:contentSize()
-    return gTWIDTH(string.rep("M", self.widthChars)) + 2 * kEditTextSpace, kDialogTightLineHeight * self.numLines
+    return gTWIDTH(string.rep("M", self.widthChars), kDialogFont) + 2 * kEditTextSpace, kDialogTightLineHeight * self.numLines
 end
 
 local function withoutNewline(line)
@@ -1114,7 +1113,7 @@ function DialogItemEditMulti:getCursorPos()
     local pos = self.editor.cursorPos
     local line, col = self:charPosToLineColumn(pos)
     local lineInfo = self.lines[line]
-    local textw = gTWIDTH(withoutNewline(lineInfo.text):sub(1, col - 1))
+    local textw = gTWIDTH(withoutNewline(lineInfo.text):sub(1, col - 1), kDialogFont)
     local x = lineInfo.x + textw
     local y = lineInfo.y - 1
     return x, y
@@ -1125,7 +1124,7 @@ function DialogItemEditMulti:charPosToLineColumn(pos)
     for i, line in ipairs(self.lines) do
         if pos < line.charPos + #line.text or self.lines[i + 1] == nil then
             -- It's on this line
-            local textw = gTWIDTH(withoutNewline(line.text):sub(1, pos - line.charPos - 1))
+            local textw = gTWIDTH(withoutNewline(line.text):sub(1, pos - line.charPos - 1), kDialogFont)
             -- printf("charPosToLineColumn(%d) = %d, %d\n", pos, i, pos - line.charPos + 1)
             return i, pos - line.charPos + 1
         end
@@ -1139,10 +1138,10 @@ function DialogItemEditMulti:posToCharPos(x, y)
     local lineInfo = self.lines[lineNumber]
     local line = withoutNewline(lineInfo.text)
 
-    local result = 1
-    while gTWIDTH(line:sub(1, result)) < tx do
+    local result = 0
+    while gTWIDTH(line:sub(1, result), kDialogFont) < tx do
         result = result + 1
-        if result >= #line + 1 then
+        if result >= #line then
             break
         end
     end
@@ -1162,9 +1161,9 @@ local function formatText(text, maxWidth)
         table.insert(currentLine, word)
         lineWidth = lineWidth + wordWidth
     end
-    local spaceWidth = gTWIDTH(" ")
+    local spaceWidth = gTWIDTH(" ", kDialogFont)
     local function addWord(word)
-        local wordWidth = gTWIDTH(word)
+        local wordWidth = gTWIDTH(word, kDialogFont)
         local lineAndWordWidth = lineWidth + wordWidth
         if lineAndWordWidth <= maxWidth then
             -- Fits on current line
@@ -1173,9 +1172,9 @@ local function formatText(text, maxWidth)
             -- Uh oh the word on its own doesn't fit. Try to camelcase split it
             local w1, w2 = word:match("([A-Z][a-z]+)([A-Z][a-z]+)")
             if w1 then
-                addToLine(w1, gTWIDTH(w1))
+                addToLine(w1, gTWIDTH(w1, kDialogFont))
                 newLine()
-                addToLine(w2, gTWIDTH(w2))
+                addToLine(w2, gTWIDTH(w2, kDialogFont))
             else
                 -- Give up
                 if lineWidth > 0 then
@@ -1245,7 +1244,7 @@ function DialogItemEditMulti:drawValue(val)
         charPos = charPos + #line
     end
 
-    if self.editor:hasSelection() then
+    if self.hasFocus and self.editor:hasSelection() then
         local selStart, selEnd = self.editor:getSelectionRange()
         local startLine, startCol = self:charPosToLineColumn(selStart)
         local endLine, endCol = self:charPosToLineColumn(selEnd)
@@ -1270,10 +1269,29 @@ function DialogItemEditMulti:handleKeyPress(k, modifiers)
         anchor = self.editor.anchor
     end
     if k == KKeyEnter and modifiers == 0 then
-        self.editor:insert(KLineBreakStr)
+        if self.numLines > 1 then
+            self.editor:insert(KLineBreakStr)
+        end
         return true
     elseif k == KKeyUpArrow or k == KKeyDownArrow then
         local line, col = self:charPosToLineColumn(self.editor.cursorPos)
+        if k == KKeyUpArrow and line == 1 then
+            if col == 1 then
+                -- Allow the keypress to move the focus
+                return false
+            else
+                line = 2
+                col = 1
+            end
+        elseif k == KKeyDownArrow and line == #self.lines then
+            if col > #self.lines[line].text then
+                -- Allow the keypress to move the focus
+                return false
+            else
+                col = #self.lines[line].text + 1
+                line = line - 1
+            end
+        end
         local lineInfo = self.lines[line + (k == KKeyUpArrow and -1 or 1)]
         if lineInfo then
             self.editor:setCursorPos(lineInfo.charPos + col - 1, anchor)
@@ -1316,7 +1334,7 @@ end
 function DialogChoiceList:getChoicesWidth()
     local maxWidth = 0
     for _, choice in ipairs(self.choices) do
-        maxWidth = math.max(gTWIDTH(choice), maxWidth)
+        maxWidth = math.max(gTWIDTH(choice, kDialogFont), maxWidth)
     end
     return maxWidth + 2 * self.choiceTextSpace
 end
@@ -1745,8 +1763,7 @@ end
 Button = class { _super = View }
 
 function Button:contentSize()
-    gFONT(kButtonFont)
-    local w = math.max(gTWIDTH(self.text) + 8, kButtonMinWidth)
+    local w = math.max(gTWIDTH(self.text, kButtonFont) + 8, kButtonMinWidth)
     return w, kButtonHeight
 end
 
@@ -2062,6 +2079,8 @@ local itemTypes = {
 }
 
 function DIALOG(dialog)
+    -- print(dump(dialog, "minimal"))
+
     -- Special case for defaultiohandler
     local iohandlerDialog = runtime:iohandler().dialog
     if iohandlerDialog then
@@ -2082,8 +2101,7 @@ function DIALOG(dialog)
     local promptGap = 22 -- Must be at least as big as kChoiceArrowSize because the lefthand arrow goes in the prompt gap
     local lineHeight = (dialog.flags & KDlgDensePack) == 0 and kDialogLineHeight or kDialogTightLineHeight
 
-    gFONT(kDialogFont)
-    local _, charh = gTWIDTH("0")
+    local _, charh = gTWIDTH("0", kDialogFont)
     View.charh = charh
     local titleBar
     local h = borderWidth
