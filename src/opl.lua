@@ -306,7 +306,12 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         lineh = h
     end
 
-    lightGrey()
+    local series7 = runtime:getDeviceName() == "psion-series-7"
+    if series7 then
+        gCOLOR(0x99, 0x99, 0xCC)
+    else
+        lightGrey()
+    end
     gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
 
     if state == 0 then
@@ -316,8 +321,16 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     elseif state == 1 then
         gXBORDER(2, 0x42, width, height)
         gMOVE(2, 2)
-        gFILL(width - 4, height - 4, KgModeClear)
+        if series7 then
+            gCOLOR(0x88, 0x88, 0x88)
+        else
+            white()
+        end
+        gFILL(width - 4, height - 4)
     elseif state == 2 then
+        if series7 then
+            gCOLOR(0x66, 0x66, 0x99)
+        end
         gXBORDER(2, 0x54, width, height)
         gMOVE(3, 3)
         gFILL(width - 5, height - 5)
@@ -429,6 +442,7 @@ function gLINETO(x, y)
 end
 
 function gCOLOR(red, green, blue)
+    -- printf("gCOLOR(id=%d, r=%x, g=%x, b=%x)\n", gIDENTITY(), red, green, blue) 
     runtime:getGraphicsContext().color = { r = red, g = green, b = blue }
 end
 

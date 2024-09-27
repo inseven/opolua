@@ -27,8 +27,10 @@ _ENV = module()
 -- Constants
 
 local KTbWidth = 70
-local KTbBtTop = 24
-local KTbBtH = 37
+local KTbBtTop_s5 = 24
+local KTbBtTop_s7 = 48
+local KTbBtH_s5 = 37
+local KTbBtH_s7 = 48
 local KTbClockSize = 70
 local KTbNumComps = 6
 
@@ -54,6 +56,8 @@ local title
 local buttons = {}
 local pressedButtonId
 local toolbarHeight
+local buttonHeight
+local appTitleHeight
 local fgColour = { 0, 0, 0 } -- black
 local bgColour = { 0xFF, 0xFF, 0xFF } -- white
 local defaultIcon
@@ -65,8 +69,18 @@ function TBarLink(appLink)
     TbVis(0)
     TbMenuSym = runtime:declareGlobal("TbMenuSym%")
     TbMenuSym(KMenuCheckBox)
-    -- Allow more than the usual 4 buttons to cater for series 7 screen size
-    TbBtFlags = runtime:declareGlobal("TbBtFlags%", 10)
+    local deviceName = runtime:getDeviceName()
+    local maxButtons
+    if deviceName == "psion-series-7" then
+        appTitleHeight = KTbBtTop_s7
+        buttonHeight = KTbBtH_s7
+        maxButtons = 7 -- By inspection it looks like 7 would fit, dunno what the actual limit was
+    else
+        appTitleHeight = KTbBtTop_s5
+        buttonHeight = KTbBtH_s5
+        maxButtons = 4
+    end
+    TbBtFlags = runtime:declareGlobal("TbBtFlags%", maxButtons)
     runtime:callProc(appLink:upper())
 end
 
@@ -81,19 +95,21 @@ local function drawButton(pos)
     end
     gUSE(tbWinId)
     gFONT(KTbFont)
-    gAT(0, KTbBtTop + (pos - 1) * KTbBtH)
-    gBUTTON(button.text, 2, KTbWidth, KTbBtH + 1, state, button.bmp, button.mask)
+    gAT(0, appTitleHeight + (pos - 1) * buttonHeight)
+    gBUTTON(button.text, 2, KTbWidth, buttonHeight + 1, state, button.bmp, button.mask)
 end
 
 local function drawTitle()
     gUSE(tbWinId)
     gSTYLE(1) -- bold everything
     gAT(0, 0)
-    gFILL(KTbWidth, KTbBtTop, KgModeClear)
+    gFILL(KTbWidth, appTitleHeight, KgModeClear)
     gBOX(KTbWidth, toolbarHeight)
 
-    gAT(1, KTbBtTop - 8)
     gFONT(KTbTitleFont)
+    local _, _, ascent = gTWIDTH("")
+    local y = ((appTitleHeight - ascent) // 2) + ascent
+    gAT(1, y)
     local align = KgPrintBCentredAligned
     if gTWIDTH(title) > KTbWidth - 2 then
         align = KgPrintBLeftAligned
@@ -179,7 +195,7 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
     if ptrY >= toolbarHeight - KTbClockHeight then
         butId = KClockButtonId
     else
-        butId = 1 + ((ptrY - KTbBtTop) // KTbBtH)
+        butId = 1 + ((ptrY - appTitleHeight) // buttonHeight)
     end
 
     if winId ~= tbWinId or ptrY < 0 or ptrX < 0 or ptrX >= KTbWidth then
