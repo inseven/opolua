@@ -39,6 +39,8 @@ extension Graphics.Bitmap.Mode {
         case .color64K:
             return "Color, 16BPP"
         case .color16M:
+            return "Color, 24BPP"
+        case .colorRGB:
             return "Color, 32BPP"
         case .color4K:
             return "Color, 12BPP"

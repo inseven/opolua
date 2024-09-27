@@ -403,7 +403,7 @@ extension CGImage {
                 intent: .defaultIntent)!
         case .color64K:
             fatalError("Don't know how to CGImage 16bpp!")
-        case .color16M:
+        case .color16M, .colorRGB:
             let provider = CGDataProvider(data: bitmap.imgData as CFData)!
             let sp = CGColorSpaceCreateDeviceRGB()
             let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)

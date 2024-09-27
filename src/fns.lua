@@ -748,6 +748,12 @@ function gCreateEnhanced(stack, runtime) -- 0x39
     local visible = stack:pop()
     local x, y, w, h = stack:popRect()
     -- printf("gCreate x=%d y=%d w=%d h=%d flags=%d", x, y, w, h, flags)
+
+    if runtime:getDeviceName() == "psion-series-7" then
+        -- See https://github.com/inseven/opolua/issues/414 for why we do this
+        flags = (flags & ~0xF) | KgCreateRGBColorMode
+    end
+    
     local id = runtime:gCREATE(x, y, w, h, visible ~= 0, flags)
     -- printf(" -> %d\n", id)
     stack:push(id)

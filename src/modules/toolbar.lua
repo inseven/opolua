@@ -121,6 +121,10 @@ function TBarInitC(aTitle, screenWidth, screenHeight, winMode)
     local w = KTbWidth
     toolbarHeight = screenHeight
     gUPDATE(false)
+    if runtime:getDeviceName() == "psion-series-7" then
+        -- See https://github.com/inseven/opolua/issues/414 for why we do this
+        winMode = KgCreateRGBColorMode
+    end
     tbWinId = gCREATE(screenWidth - w, 0, w, toolbarHeight, false, winMode)
     gCOLOR(table.unpack(fgColour))
     gCOLORBACKGROUND(table.unpack(bgColour))
