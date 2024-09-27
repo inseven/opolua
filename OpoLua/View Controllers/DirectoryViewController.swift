@@ -123,7 +123,7 @@ class DirectoryViewController : BrowserViewController {
             }
             self.directory.refresh()
         }
-        installerObserver = notificationCenter.addObserver(forName: Installer.didCompleteInstall,
+        installerObserver = notificationCenter.addObserver(forName: .libraryDidUpdate,
                                                            object: nil,
                                                            queue: nil) { [weak self] notification in
             guard let self = self else {
@@ -180,6 +180,9 @@ class DirectoryViewController : BrowserViewController {
         alertController.addAction(UIAlertAction(title: "Delete", style: .destructive) { action in
             do {
                 try FileManager.default.removeItem(at: item.url)
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .libraryDidUpdate, object: self)
+                }
             } catch {
                 self.present(error: error)
             }
