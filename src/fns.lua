@@ -917,7 +917,9 @@ function FindField(stack, runtime) -- 0x54
 end
 
 function Bookmark(stack, runtime) -- 0x55
-    unimplemented("fns.Bookmark")
+    -- Since we have a very simple model for databases, the bookmark identifier can just be the same as the position
+    local db = runtime:getDb()
+    stack:push(db:getPos())
 end
 
 function GetEventC(stack, runtime) -- 0x56

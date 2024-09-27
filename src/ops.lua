@@ -2517,11 +2517,14 @@ function DeleteTable(stack, runtime) -- 0x11E
 end
 
 function GotoMark(stack, runtime) -- 0x11F
-    unimplemented("GotoMark")
+    local db = runtime:getDb()
+    local bookmark = stack:pop()
+    db:setPos(bookmark)
 end
 
 function KillMark(stack, runtime) -- 0x120
-    unimplemented("KillMark")
+    local bookmark = stack:pop()
+    -- Since bookmarks are just position integers, nothing required here    
 end
 
 function ReturnFromEval(stack, runtime) -- 0x121
