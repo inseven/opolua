@@ -30,8 +30,6 @@ class Installer {
 
     typealias Result = Swift.Result<Directory.Item?, Error>
 
-    static let didCompleteInstall = NSNotification.Name(rawValue: "InstallerDidCompleteInstall")
-
     let url: URL
     let destinationUrl: URL
     let sourceUrl: URL?
@@ -61,7 +59,7 @@ class Installer {
                 }
                 self.delegate?.installer(self, didFinishWithResult: .success(item))
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: Installer.didCompleteInstall, object: self)
+                    NotificationCenter.default.post(name: .libraryDidUpdate, object: self)
                 }
             } catch {
                 // TODO: Clean up if we've failed to install the file.

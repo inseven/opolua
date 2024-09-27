@@ -24,4 +24,6 @@ extension NSNotification.Name {
 
     static let UIPresentationControllerDismissalTransitionDidEndNotification = Self(rawValue: "UIPresentationControllerDismissalTransitionDidEndNotification")
 
+    static let libraryDidUpdate = NSNotification.Name(rawValue: "LibraryDidUpdate")
+
 }

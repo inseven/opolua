@@ -101,7 +101,7 @@ class ProgramDetector {
         indexableLocationObserver.start()
         update()
         let notificationCenter = NotificationCenter.default
-        installerObserver = notificationCenter.addObserver(forName: Installer.didCompleteInstall,
+        installerObserver = notificationCenter.addObserver(forName: .libraryDidUpdate,
                                                            object: nil,
                                                            queue: nil) { [weak self] notification in
             guard let self = self else {
