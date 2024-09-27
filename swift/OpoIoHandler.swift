@@ -119,7 +119,8 @@ public struct Graphics {
             case color16 = 4 // ie 4bpp color
             case color256 = 5 // ie 8bpp color
             case color64K = 6 // 16bpp color
-            case color16M = 7 // 24bpp color
+            case color16M = 7 // 24bpp color?
+            case colorRGB = 8 // 32bpp?
             case color4K = 9 // ie 12bpp color
         }
 
