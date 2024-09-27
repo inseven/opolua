@@ -496,8 +496,9 @@ extension Program: OpoIoHandler {
         }
     }
 
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
-        return (configuration.device.screenSize, configuration.device.screenMode)
+    func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
+        let device = configuration.device
+        return (device.screenSize, device.screenMode, device.rawValue)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {

@@ -198,7 +198,7 @@ class ProgramViewController: UIViewController {
 
     lazy var scaleView: AutoOrientView = {
 
-        let screenView = UIView(frame: CGRect(origin: .zero, size: program.getScreenInfo().0.cgSize()))
+        let screenView = UIView(frame: CGRect(origin: .zero, size: program.getDeviceInfo().0.cgSize()))
         screenView.translatesAutoresizingMaskIntoConstraints = false
         screenView.addSubview(program.rootView)
         screenView.addSubview(menuButton)

@@ -132,8 +132,8 @@ function graphicsop(cmd, ...)
     return 0 -- Pretend we succeed (probably)
 end
 
-function getScreenInfo()
-    return 640, 240, KgCreate4GrayMode
+function getDeviceInfo()
+    return 640, 240, KgCreate4GrayMode, "psion-series-5"
 end
 
 local fsmaps = {}
