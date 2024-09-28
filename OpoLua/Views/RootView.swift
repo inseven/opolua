@@ -54,6 +54,19 @@ class RootView : UIView {
         return screenSize
     }
 
+    private func makeKeyButton(imageName: String, key: OplKeyCode) -> UIButton {
+        var config: UIButton.Configuration = .plain()
+        config.image = UIImage(systemName: imageName)
+        let button = UIButton(configuration: config, primaryAction: UIAction { [weak self] action in
+            guard let self else {
+                return
+            }
+            self.delegate?.rootView(self, sendKey: key)
+        })
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }
+
     override var inputAccessoryView: UIView? {
         let view = UIView()
         view.tintColor = self.tintColor
@@ -64,25 +77,25 @@ class RootView : UIView {
         var doneButtonConfiguration: UIButton.Configuration = .plain()
         doneButtonConfiguration.title = "Done"
         let doneButton = UIButton(configuration: doneButtonConfiguration, primaryAction: UIAction(handler: { [weak self] action in
-            guard let self = self else {
+            guard let self else {
                 return
             }
             self.resignFirstResponder()
         }))
         doneButton.translatesAutoresizingMaskIntoConstraints = false
 
-        var escapeButtonConfiguration: UIButton.Configuration = .plain()
-        escapeButtonConfiguration.image = UIImage(systemName: "escape")
-        let escapeButton = UIButton(configuration: escapeButtonConfiguration, primaryAction: UIAction { [weak self] action in
-            guard let self = self else {
-                return
-            }
-            self.delegate?.rootView(self, sendKey: .escape)
-        })
-        escapeButton.translatesAutoresizingMaskIntoConstraints = false
+        let escapeButton = makeKeyButton(imageName: "escape", key: .escape)
+        let leftButton = makeKeyButton(imageName: "arrowtriangle.left", key: .leftArrow)
+        let upButton = makeKeyButton(imageName: "arrowtriangle.up", key: .upArrow)
+        let downButton = makeKeyButton(imageName: "arrowtriangle.down", key: .downArrow)
+        let rightButton = makeKeyButton(imageName: "arrowtriangle.right", key: .rightArrow)
 
         view.addSubview(effectView)
         view.addSubview(escapeButton)
+        view.addSubview(leftButton)
+        view.addSubview(upButton)
+        view.addSubview(downButton)
+        view.addSubview(rightButton)
         view.addSubview(doneButton)
         NSLayoutConstraint.activate([
 
@@ -94,6 +107,22 @@ class RootView : UIView {
             escapeButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             escapeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             escapeButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+            leftButton.leadingAnchor.constraint(equalTo: escapeButton.trailingAnchor),
+            leftButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            leftButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+            upButton.leadingAnchor.constraint(equalTo: leftButton.trailingAnchor),
+            upButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            upButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+            downButton.leadingAnchor.constraint(equalTo: upButton.trailingAnchor),
+            downButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            downButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+            rightButton.leadingAnchor.constraint(equalTo: downButton.trailingAnchor),
+            rightButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            rightButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
 
             doneButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
             doneButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
