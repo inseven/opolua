@@ -2321,7 +2321,16 @@ function SetPath(stack, runtime) -- 0xFA
 end
 
 function SecsToDate(stack, runtime) -- 0xFB
-    unimplemented("SecsToDate")
+    local s, year, month, day, hour, min, sec, yday = stack:pop(8)
+
+    local d = os.date("!*t", s)
+    runtime:addrAsVariable(year, DataTypes.EWord)(d.year)
+    runtime:addrAsVariable(month, DataTypes.EWord)(d.month)
+    runtime:addrAsVariable(day, DataTypes.EWord)(d.day)
+    runtime:addrAsVariable(hour, DataTypes.EWord)(d.hour)
+    runtime:addrAsVariable(min, DataTypes.EWord)(d.min)
+    runtime:addrAsVariable(sec, DataTypes.EWord)(d.sec)
+    runtime:addrAsVariable(yday, DataTypes.EWord)(d.yday)
 end
 
 function gIPrint(stack, runtime) -- 0xFC
