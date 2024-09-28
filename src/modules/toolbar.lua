@@ -299,7 +299,7 @@ function TBarLatch(butId)
     end
 
     if button.flags() & KTbFlgLatched == 0 then
-        button.flags(button.flags | KTbFlgLatched)
+        button.flags(button.flags() | KTbFlgLatched)
         drawButton(button.id)
     end
 end
