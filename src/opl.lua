@@ -208,9 +208,20 @@ function gXPRINT(text, flags)
     -- Note, doesn't increment context.pos.x
 end
 
-function gTWIDTH(text)
+function gTWIDTH(text, fontId, style)
     local context = runtime:getGraphicsContext()
-    local width, height, ascent, descent = runtime:iohandler().graphicsop("textsize", text, context.font, context.style)
+    -- fontId and style param are an opolua extension
+    local font
+    if fontId then
+        font = assert(FontIds[FontAliases[fontId] or fontId], "Bad font id!")
+        if style == nil then
+            style = 0
+        end
+    else
+        font = context.font
+        style = context.style
+    end
+    local width, height, ascent, descent = runtime:iohandler().graphicsop("textsize", text, font, style)
     return width, height, ascent, descent
 end
 
@@ -306,7 +317,12 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         lineh = h
     end
 
-    lightGrey()
+    local series7 = runtime:getDeviceName() == "psion-series-7"
+    if series7 then
+        gCOLOR(0x99, 0x99, 0xCC)
+    else
+        lightGrey()
+    end
     gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
 
     if state == 0 then
@@ -316,8 +332,16 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     elseif state == 1 then
         gXBORDER(2, 0x42, width, height)
         gMOVE(2, 2)
-        gFILL(width - 4, height - 4, KgModeClear)
+        if series7 then
+            gCOLOR(0x88, 0x88, 0x88)
+        else
+            white()
+        end
+        gFILL(width - 4, height - 4)
     elseif state == 2 then
+        if series7 then
+            gCOLOR(0x66, 0x66, 0x99)
+        end
         gXBORDER(2, 0x54, width, height)
         gMOVE(3, 3)
         gFILL(width - 5, height - 5)
@@ -429,6 +453,7 @@ function gLINETO(x, y)
 end
 
 function gCOLOR(red, green, blue)
+    -- printf("gCOLOR(id=%d, r=%x, g=%x, b=%x)\n", gIDENTITY(), red, green, blue) 
     runtime:getGraphicsContext().color = { r = red, g = green, b = blue }
 end
 
@@ -670,6 +695,68 @@ function BUSY(text, corner, delay)
     runtime:restoreGraphicsState(state)
 end
 
+function CURSOR(id, asc, w, h, t)
+    -- printf("CURSOR id=%s, asc=%s, w=%s, h=%s, t=%s\n", id, asc, w, h, t)
+    runtime:flushGraphicsOps()
+    local cursor = runtime:getResource("cursor")
+    if id == false then
+        if cursor then
+            cursor.shown = false
+        end
+        runtime:iohandler().graphicsop("cursor", nil)
+    elseif id == true then
+        if cursor == nil then
+            -- What happens if you get a CURSOR ON without any previous config?
+            return
+        end
+        if not cursor.shown then
+            cursor.shown = true
+            runtime:iohandler().graphicsop("cursor", cursor)
+        end
+    else
+        local fontw, fonth, fontAscent
+        if not h or not asc then
+            fontw, fonth, fontAscent = runtime:gTWIDTH("0")
+        end
+        if not asc then
+            asc = fontAscent
+        end
+        if not w then
+            w = 2
+        end
+        if not h then
+            h = fonth
+        end
+        if not t then
+            t = 0
+        end
+        local win = assert(runtime:getGraphicsContext(id), "Bad id for CURSOR")
+        assert(win.isWindow, "Cannot call CURSOR on a bitmap")
+
+        if cursor and cursor.shown and id == cursor.id and asc == cursor.ascent
+            and win.pos.x == cursor.rect.x and win.pos.y == cursor.rect.y
+            and w == cursor.rect.w and h == cursor.rect.h and t == cursor.flags then
+            -- Cursor has not moved or changed, don't interrupt the timing
+            return
+        end
+
+        if not cursor then
+            cursor = {}
+            runtime:setResource("cursor", cursor)
+        end
+        cursor.id = id
+        cursor.ascent = asc or fontAscent
+        cursor.rect = {
+            x = win.pos.x,
+            y = win.pos.y,
+            w = w or 2,
+            h = h or fonth,
+        }
+        cursor.flags = t or 0
+        runtime:iohandler().graphicsop("cursor", cursor)
+    end
+end
+
 function FONT(id, style)
     -- printf("FONT(0x%08X, %d)\n", id, style)
     local screen = runtime:getGraphics().screen
@@ -736,6 +823,8 @@ function CLS()
     local screen = runtime:getGraphics().screen
     gAT(screen.x, screen.y)
     gFILL(screen.w * screen.charw, screen.h * screen.charh, KgModeClear)
+    screen.cursorx = 0
+    screen.cursory = 0
     runtime:restoreGraphicsState(state)
     gUSE(prev)
     runtime:flushGraphicsOps()
@@ -804,10 +893,56 @@ function PRINT(str)
     gUSE(prevId)
 end
 
+function TESTEVENT()
+    return runtime:iohandler().testEvent()
+end
+
 function KEY()
-    local charcode, modifiers = runtime:iohandler().key()
-    runtime:setResource("kmod", modifiers)
-    return charcode
+    -- It's annoying that calling TESTEVENT() then GET() doesn't _quite_ have the right semantics (because that will
+    -- still block if there's say a keydown event and no keypress events in the queue)
+
+    local eventsWaiting = TESTEVENT()
+    if not eventsWaiting then
+        return 0
+    end
+
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
+    local evAddr = ev:addressOf()
+    while eventsWaiting do
+        GETEVENTA32(stat, evAddr)
+        runtime:waitForRequest(stat)
+        if ev[KEvAType]() & KEvNotKeyMask == 0 then
+            runtime:setResource("kmod", ev[KEvAKMod]())
+            return keycodeToCharacterCode(ev[KEvAType]())
+        end
+        eventsWaiting = TESTEVENT()
+    end
+    return 0
+end
+
+function KEYA(stat, keyArrayAddr)
+    -- This is similar to GETEVENTA32 except for the actual async call
+
+    local existingEvent = runtime:getResource("getevent")
+    if existingEvent then
+        -- printf("Outstanding getevent request, cancelling\n")
+        runtime:iohandler().cancelRequest(existingEvent.var)
+        runtime:waitForRequest(existingEvent.var)
+        assert(runtime:getResource("getevent") == nil, "cancelRequest did not release getevent resource!")
+    end
+
+    stat(KErrFilePending)
+    local function completion()
+        runtime:setResource("getevent", nil)
+    end
+    local requestTable = {
+        var = stat,
+        ev = keyArrayAddr,
+        completion = completion,
+    }
+    runtime:setResource("getevent", requestTable)
+    runtime:iohandler().asyncRequest("keya", requestTable)
 end
 
 function KEYSTR()
@@ -831,16 +966,17 @@ function PAUSE(val)
 end
 
 function GET()
-    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
-    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
-    local evAddr = ev:addressOf()
-    repeat
-        GETEVENTA32(stat, evAddr)
-        runtime:waitForRequest(stat)
-    until ev[KEvAType]() & KEvNotKeyMask == 0
+    -- GET() is the synchronous version of KEYA(). KEY(), by comparison, is a non-blocking poll function
+    -- which returns 0 if no key has been pressed since the last event fetch.
 
-    runtime:setResource("kmod", ev[KEvAKMod]())
-    return keycodeToCharacterCode(ev[KEvAType]())
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local k = runtime:makeTemporaryVar(DataTypes.EWordArray, 2)
+    KEYA(stat, k:addressOf())
+    runtime:waitForRequest(stat)
+
+    local modifiers = k[2]() & 0xFF
+    runtime:setResource("kmod", modifiers)
+    return k[1]()
 end
 
 function GETSTR()
@@ -899,8 +1035,8 @@ end
 -- File APIs
 
 function EXIST(path)
-    local ret = runtime:iohandler().fsop("exists", runtime:abs(path))
-    return ret == KErrNone
+    local ret = runtime:iohandler().fsop("stat", runtime:abs(path))
+    return ret ~= nil
 end
 
 function MKDIR(path)
@@ -946,10 +1082,8 @@ function IOOPEN(path, mode)
             return nil, err, nil
         end
     elseif openMode == KIoOpenModeCreate then
-        local err = runtime:iohandler().fsop("exists", path)
-        if err ~= KErrNotExists then
-            printf("IOOPEN(%s) failed: %d\n", path, err)
-            return nil, err
+        if EXIST(path) then
+            return nil, KErrExists
         end
         mode = mode | KIoOpenAccessUpdate -- Not sure about this...
     elseif openMode == KIoOpenModeReplace then

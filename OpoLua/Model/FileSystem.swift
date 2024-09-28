@@ -24,6 +24,7 @@ protocol FileSystem {
 
     func prepare() throws
     func set(sharedDrive: String, url: URL, readonly: Bool)
+    func getSharedDrives() -> [String]
     func hostUrl(for path: String) -> (URL, Bool)? // The bool is whether this is a readonly location
     func guestPath(for url: URL) -> String?
 
@@ -32,6 +33,13 @@ protocol FileSystem {
 extension FileSystem {
 
     func perform(_ operation: Fs.Operation) -> Fs.Result {
+        if case .disks = operation.type {
+            // disks doesn't have a path associated so handle that here and return before the path check
+            var result = ["C"]
+            result.append(contentsOf: getSharedDrives())
+            return .strings(result)
+        }
+
         guard let (nativePath, readonly) = hostUrl(for: operation.path) else {
             return .err(.notReady)
         }
@@ -41,20 +49,17 @@ extension FileSystem {
         let path = nativePath.path
         let fileManager = FileManager.default
         switch operation.type {
-        case .exists:
-            let exists = fileManager.fileExists(atPath: path)
-            return .err(exists ? .none : .notFound)
         case .stat:
             if let attribs = try? fileManager.attributesOfItem(atPath: path) as NSDictionary {
                 let mod = attribs.fileModificationDate() ?? Date(timeIntervalSince1970: 0)
                 let size = attribs.fileSize()
-                return .stat(Fs.Stat(size: size, lastModified: mod))
+                let isDir = attribs.fileType() == FileAttributeType.typeDirectory.rawValue
+                return .stat(Fs.Stat(size: size, lastModified: mod, isDirectory: isDir))
             } else {
                 return .err(.notFound)
             }
-        case .isdir:
-            let exists = fileManager.directoryExists(atPath: path)
-            return .err(exists ? .none : .notFound)
+        case .disks:
+            fatalError("Shouldn't get here!")
         case .delete:
             print("DELETE '\(operation.path)'")
             // Note, should not support wildcards or deleting directories

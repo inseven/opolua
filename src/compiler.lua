@@ -403,7 +403,7 @@ Callables = {
     DCHOICE = SpecialOp({IntVarArg, String, String}),
     DDATE = SpecialOp({LongVarArg, String, Long, Long}),
     DEDIT = SpecialOp({StringVarArg, String, Int, numParams = {2, 3}}),
-    DEDITMULTI = SpecialOp({LongVarArg, String, Int, Int, Int}),
+    DEDITMULTI = Op("dEditMulti", {Long, String, Int, Int, Long}),
     DEFAULTWIN = Op("DefaultWin", {Int}),
     DEG = Fn("Deg", {Float}, Float),
     DELETE = SpecialOp({String, String, numParams = {1, 2}}),
@@ -490,9 +490,9 @@ Callables = {
     GTMODE = Op("gTMode", {Int}),
     GTWIDTH = Fn("gTWidth", {String}, Int),
     GUNLOADFONT = Op("gUnloadFont", {Int}),
-    GWIDTH = Fn("gWidth", {}, Int),
     GUPDATE = SpecialOp(),
     GUSE = Op("gUse", {Int}),
+    GVISIBLE = SpecialOp(),
     GWIDTH = Fn("gWidth", {}, Int),
     GX = Fn("gX", {}, Int),
     GXBORDER = Op("gXBorder", {Int, Int, Int, Int, numParams = {2, 4}, numFixedParams = 0}),
@@ -2345,19 +2345,6 @@ function handleOp_DEDIT(procState, args)
     procState:popStack(#args)
 end
 
-function handleOp_DEDITMULTI(procState, args)
-    local var = procState:getVar(args[1], false)
-    procState:emitVarLhs(var, args[1])
-    procState:emitExpression(args[2], String)
-    procState:emitExpression(args[3], Int)
-    procState:emitExpression(args[4], Int)
-    -- Docs say this is an Int, Series 5 compiler reckons Long. Which makes more sense given it's describing the length
-    -- of a buffer which is allowed to be >64KB
-    procState:emitExpression(args[5], Long)
-    procState:emit("BB", opcodes.NextOpcodeTable, opcodes.dEditMulti - 256)
-    procState:popStack(#args)
-end
-
 function handleOp_DFILE(procState, args)
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
@@ -2550,6 +2537,12 @@ function handleOp_GUPDATE(procState)
         -- The end of statement check in the main parser will catch anything else that's not eos
     end
     procState:emit("BB", opcodes.gUpdate, flag)
+end
+
+function handleOp_GVISIBLE(procState)
+    local val = procState.tokens:expectNext("ON", "OFF").val
+    procState:emit("BB", opcodes.gVisible, val == "ON" and 1 or 0)
+    procState.tokens:advance()
 end
 
 function handleOp_INPUT(procState)

@@ -281,7 +281,7 @@ function Runtime:pushNewFrame(stack, proc, numParams)
             local parentProc = parentFrame.proc
             found = parentFrame.globals[nameForLookup]
         end
-        assert(found.type == external.type, "Mismatching types on resolved external!")
+        assert(found.type == external.type, "Mismatching types on resolved external "..nameForLookup)
         table.insert(frame.indirects, self:getLocalVar(found.offset, found.type, parentFrame))
         -- DEBUG
         -- printf("Fixed up external offset=0x%04X to indirect #%d\n", found.offset, #frame.indirects)
@@ -442,13 +442,14 @@ end
 
 function Runtime:getGraphics()
     if not self.graphics then
-        local w, h, mode = self.ioh.getScreenInfo()
+        local w, h, mode, device = self.ioh.getDeviceInfo()
         self.graphics = {
             screenWidth = w,
             screenHeight = h,
             screenMode = mode,
             sprites = {},
         }
+        self.deviceName = device
         local id = self:gCREATE(0, 0, w, h, true, mode)
         assert(id == KDefaultWin)
         self:FONT(KFontCourierNormal11, 0)
@@ -459,6 +460,13 @@ end
 function Runtime:getScreenInfo()
     local graphics = self:getGraphics()
     return graphics.screenWidth, graphics.screenHeight, graphics.screenMode
+end
+
+function Runtime:getDeviceName()
+    if not self.graphics then
+        self:getGraphics()
+    end
+    return self.deviceName
 end
 
 function Runtime:getGraphicsContext(id)
@@ -486,6 +494,10 @@ function Runtime:closeGraphicsContext(id)
     graphics[id] = nil
     self:flushGraphicsOps()
     self.ioh.graphicsop("close", id)
+    local cursor = self:getResource("cursor")
+    if cursor and cursor.id == id then
+        self:setResource("cursor", nil)
+    end
 end
 
 function Runtime:saveGraphicsState()
@@ -1105,6 +1117,7 @@ function Runtime:declareGlobal(name, arrayLen)
     local type = valType
     if arrayLen then
         type = valType | 0x80
+        name = name.."[]"
     end
 
     -- We define our indexes (which are how externals map to locals) as simply
@@ -1115,7 +1128,7 @@ function Runtime:declareGlobal(name, arrayLen)
 
     -- For simplicity we'll assume any strings should be 255 max len
     local var = self.chunk:allocVariable(type, 255, arrayLen)
-    frame.globals[name] = { offset = index, type = valType }
+    frame.globals[name] = { offset = index, type = type }
     frame.vars[index] = var
     table.insert(frame.frameAllocs, var)
 
@@ -1177,6 +1190,25 @@ local function globToMatch(glob)
     return m:upper()
 end
 
+function Runtime:ls(path)
+    local contents, err = self.ioh.fsop("dir", oplpath.join(path, ""))
+    if contents then
+        table.sort(contents, function(lhs, rhs) return oplpath.canon(lhs) < oplpath.canon(rhs) end)
+    end
+    return contents, err
+end
+
+function Runtime:isdir(path)
+    local stat = self.ioh.fsop("stat", path)
+    return stat and stat.isDir
+end
+
+function Runtime:getDisks()
+    local result = assert(self.ioh.fsop("disks", ""))
+    table.sort(result)
+    return result
+end
+
 function Runtime:dir(path)
     -- printf("dir: %s\n", path)
     if path == "" then
@@ -1188,10 +1220,7 @@ function Runtime:dir(path)
     end
 
     local dir, filenameFilter = oplpath.split(self:abs(path))
-    local contents, err = self.ioh.fsop("dir", oplpath.join(dir, ""))
-    if not contents then
-        error(err)
-    end
+    local contents = assert(self:ls(dir))
     if #filenameFilter > 0 then
         local filtered = {}
         local m = "^"..globToMatch(filenameFilter).."$"
@@ -1278,7 +1307,7 @@ function installSis(data, iohandler)
         if file.type == sis.FileType.File then
             local path = file.dest:gsub("^.:\\", "C:\\")
             local dir = oplpath.dirname(path)
-            if iohandler:fsop("isdir", dir) == KErrNotExists then
+            if iohandler.fsop("stat", dir) == nil then
                 local err = iohandler.fsop("mkdir", dir)
                 assert(err == KErrNone, "Failed to create dir "..dir)
             end

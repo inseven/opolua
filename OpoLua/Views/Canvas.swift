@@ -107,7 +107,7 @@ class Canvas: Drawable {
         }
     }
 
-    // Only supported when using 8bpp backing data
+    // Only supported when using 8bpp greyscale backing data
     func drawInverted(operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
         switch operation.type {
         case .fill(let size):

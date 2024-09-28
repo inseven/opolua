@@ -401,6 +401,7 @@ Variable = class {
     _offset = nil, -- relative to start of _chunk
     _arrayLen = nil,
     _stringMaxLen = nil,
+    __name = "Variable",
 }
 
 function Variable:__index(k)
@@ -446,6 +447,10 @@ function Variable:__newindex(k, v)
     end
 end
 
+function Variable:__tostring()
+    return string.format("<var %s>", DataTypes[self._type])
+end
+
 -- local sets = 0
 -- local gets = 0
 function Variable:__call(val)
@@ -480,6 +485,9 @@ function Variable:__call(val)
         -- Slow path
         local data
         if t == EString then
+            if type(val) ~= "string" then
+                error("Cannot assign a "..type(val).." value to a string variable")
+            end
             if #val > self:stringMaxLen() then
                 printf("String too long: maxlen=%d val='%s'\n", self:stringMaxLen(), hexEscape(val))
                 error(KErrStrTooLong)
@@ -639,6 +647,7 @@ end
 Addr = class {
     chunk = nil,
     offset = 0,
+    __name = "Addr",
 }
 
 local function getAddrAndOffset(lhs, rhs)

@@ -24,6 +24,9 @@ SOFTWARE.
 
 require("const")
 
+KLineBreakStr = string.char(KLineBreak)
+KParagraphDelimiterStr = string.char(KParagraphDelimiter)
+
 function module()
     return setmetatable({}, {__index=_G})
 end
@@ -241,9 +244,13 @@ dItemTypes = enum {
     dBUTTONS = 10,
     dPOSITION = 11,
     dCHECKBOX = 12,
-    -- simulated types, not actually used by OPL
+    -- internal types, not actually used by OPL
     dSEPARATOR = 257,
     dEDITMULTI = 258,
+    dFILECHOOSER = 259,
+    dFILEEDIT = 260,
+    dFILEFOLDER = 261,
+    dFILEDISK = 262,
 }
 
 KDefaultFontUid = KFontArialNormal15
@@ -483,3 +490,11 @@ function dump(...)
     -- Will replace dump fn, so re-call the new fn
     return dump(...)
 end
+
+textReplacements = {
+    [KParagraphDelimiterStr] = "\n\n",
+    [KLineBreakStr] = "\n",
+    [string.char(KNonBreakingSpace)] = " ", -- Close enough
+    [string.char(KNonBreakingTab)] = "\t", -- Close enough
+    [string.char(KNonBreakingHyphen)] = "-", -- Close enough
+}

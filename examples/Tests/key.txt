@@ -1,9 +1,9 @@
 PROC main:
-	LOCAL k%(1), stat%
+	LOCAL k%(2), stat%
 	WHILE 1
 		KEYA(stat%, k%())
 		IOWAIT
-		PRINT "Key", k%(1)
+		PRINT "Key", k%(1), "Modifiers", k%(2) AND $FF, "Rep", k%(2) / 256
 	ENDWH
 ENDP
 

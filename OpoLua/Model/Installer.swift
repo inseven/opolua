@@ -30,18 +30,18 @@ class Installer {
 
     typealias Result = Swift.Result<Directory.Item?, Error>
 
-    static let didCompleteInstall = NSNotification.Name(rawValue: "InstallerDidCompleteInstall")
-
     let url: URL
     let destinationUrl: URL
-    let fileSystem: FileSystem
+    let sourceUrl: URL?
+    let fileSystem: SystemFileSystem
     let psilua = PsiLuaEnv()
 
     weak var delegate: InstallerDelegate?
 
-    init(url: URL, destinationUrl: URL) {
+    init(url: URL, destinationUrl: URL, sourceUrl: URL?) {
         self.url = url
         self.destinationUrl = destinationUrl
+        self.sourceUrl = sourceUrl
         self.fileSystem = SystemFileSystem(rootUrl: destinationUrl)
     }
 
@@ -49,6 +49,7 @@ class Installer {
         DispatchQueue.global().async {
             do {
                 try self.fileSystem.prepare()
+                self.fileSystem.metadata = Metadata(sourceUrl: self.sourceUrl)
                 try self.psilua.installSisFile(path: self.url.path, handler: self)
                 let item: Directory.Item?
                 if let systemType = try Directory.Item.system(url: self.destinationUrl, env: self.psilua) {
@@ -58,7 +59,7 @@ class Installer {
                 }
                 self.delegate?.installer(self, didFinishWithResult: .success(item))
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: Installer.didCompleteInstall, object: self)
+                    NotificationCenter.default.post(name: .libraryDidUpdate, object: self)
                 }
             } catch {
                 // TODO: Clean up if we've failed to install the file.

@@ -526,11 +526,18 @@ function Kmod(stack, runtime) -- 0x22
 end
 
 function KeyA(stack, runtime) -- 0x23
-    unimplemented("fns.KeyA")
+    local keyArrayAddr = runtime:addrFromInt(stack:pop())
+    local stat = stack:pop():asVariable(DataTypes.EWord)
+    runtime:KEYA(stat, keyArrayAddr)
+    stack:push(KErrNone)
 end
 
 function KeyC(stack, runtime) -- 0x24
-    unimplemented("fns.KeyC")
+    -- As with GetEventC, this includes the waitForRequest
+    local stat = stack:pop():asVariable(DataTypes.EWord)
+    runtime:iohandler().cancelRequest(stat)
+    runtime:waitForRequest(stat)
+    stack:push(KErrNone)
 end
 
 function IoOpenUnique(stack, runtime) -- 0x25
@@ -634,7 +641,7 @@ function gPrintClip(stack, runtime) -- 0x33
 end
 
 function TestEvent(stack, runtime) -- 0x34
-    stack:push(runtime:iohandler().testEvent())
+    stack:push(runtime:TESTEVENT())
 end
 
 local syscallPackFmt = "<I2I2I2I2I2I2"
@@ -679,6 +686,7 @@ end
 function Dialog(stack, runtime) -- 0x37
     local dialog = runtime:getDialog()
     runtime:setDialog(nil)
+    dialog.frame = nil -- Simplifies dumping dialog structure
     local result = runtime:DIALOG(dialog)
     -- Be bug compatible with Psion 5 and return 0 if a negative-keycode or escape button was pressed
     if result < 0 or result == 27 then
@@ -741,6 +749,12 @@ function gCreateEnhanced(stack, runtime) -- 0x39
     local visible = stack:pop()
     local x, y, w, h = stack:popRect()
     -- printf("gCreate x=%d y=%d w=%d h=%d flags=%d", x, y, w, h, flags)
+
+    if runtime:getDeviceName() == "psion-series-7" then
+        -- See https://github.com/inseven/opolua/issues/414 for why we do this
+        flags = (flags & ~0xF) | KgCreateRGBColorMode
+    end
+    
     local id = runtime:gCREATE(x, y, w, h, visible ~= 0, flags)
     -- printf(" -> %d\n", id)
     stack:push(id)
@@ -903,7 +917,9 @@ function FindField(stack, runtime) -- 0x54
 end
 
 function Bookmark(stack, runtime) -- 0x55
-    unimplemented("fns.Bookmark")
+    -- Since we have a very simple model for databases, the bookmark identifier can just be the same as the position
+    local db = runtime:getDb()
+    stack:push(db:getPos())
 end
 
 function GetEventC(stack, runtime) -- 0x56
@@ -915,7 +931,7 @@ function GetEventC(stack, runtime) -- 0x56
 end
 
 function InTrans(stack, runtime) -- 0x57
-    local db = self:getDb()
+    local db = runtime:getDb()
     stack:push(db:inTransaction())
 end
 

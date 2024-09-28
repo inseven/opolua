@@ -64,6 +64,8 @@ class WindowServer {
     private var busyWindowShowTimer: Timer?
     private var spriteTimer: Timer?
     private var clockTimer: Timer?
+    private var cursorTimer: Timer?
+    private var cursorWindow: Graphics.DrawableId?
 
     // We run the timer at a fixed 0.05 (ie, 20Hz) interval on the basis that
     // the series 5 probably couldn't render anything faster than that anyway.
@@ -71,6 +73,8 @@ class WindowServer {
     // Some games ask for an unreasonably small interval that the series 5
     // absolutely isn't able to honour - emperically this looks about right.
     private let kMinSpriteTime: TimeInterval = 0.1
+
+    private let kCursorFlashTime: TimeInterval = 0.5
 
     public var drawables: [Drawable] {
         return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
@@ -151,6 +155,9 @@ class WindowServer {
         let view = self.window(for: drawableId)
         self.drawablesById[drawableId] = nil
         self.windows[drawableId] = nil
+        if drawableId == cursorWindow {
+            cancelCursorTimer()
+        }
         if let view = view {
             view.removeFromSuperview()
         }
@@ -164,6 +171,7 @@ class WindowServer {
         }
         self.setVisiblity(handle: canvas.id, visible: true)
         infoDrawableHandle = canvas.id
+        bringInfoWindowToFront()
 
         infoWindowDismissTimer = Timer.scheduledTimer(timeInterval: 2.0,
                                                       target: self,
@@ -184,6 +192,23 @@ class WindowServer {
                                                    selector: #selector(showBusyWindow),
                                                    userInfo: nil,
                                                    repeats: false)
+    }
+
+    func cursor(_ cursor: Graphics.Cursor?) {
+        cancelCursorTimer()
+        if let cursor {
+            let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
+            let cmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert, origin: cursor.rect.origin, color: .black, bgcolor: .white, penWidth: 1, greyMode: .normal)
+            window(for: cursor.id)?.draw(cmd, provider: self)
+            cursorWindow = cursor.id
+            cursorTimer = Timer.scheduledTimer(withTimeInterval: kCursorFlashTime, repeats: true, block: { timer in
+                guard let window = self.window(for: cmd.drawableId) else {
+                    self.cancelCursorTimer()
+                    return
+                }
+                window.draw(cmd, provider: self)
+            })
+        }
     }
 
     func setWin(drawableId: Graphics.DrawableId, position: Graphics.Point, size: Graphics.Size?) {
@@ -310,6 +335,12 @@ class WindowServer {
         busyWindowShowTimer = nil
     }
 
+    func cancelCursorTimer() {
+        cursorTimer?.invalidate()
+        cursorTimer = nil
+        cursorWindow = nil
+    }
+
     @objc func showBusyWindow() {
         cancelBusyTimer()
         guard let busyDrawableHandle = busyDrawableHandle else {
@@ -335,11 +366,16 @@ class WindowServer {
 
     func shutdown() {
         cancelBusyTimer()
+        cancelCursorTimer()
         hideInfoWindow()
         spriteTimer?.invalidate()
         spriteTimer = nil
         clockTimer?.invalidate()
         clockTimer = nil
+    }
+
+    deinit {
+        shutdown()
     }
 
     @objc func clocksChanged() {

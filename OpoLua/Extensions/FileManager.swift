@@ -194,28 +194,7 @@ extension FileManager {
     }
 
     func isSystem(at url: URL) throws -> Bool {
-        guard url.lastPathComponent.hasSuffix(".system") else {
-            return false
-        }
-
-        let contents = try contentsOfDirectory(atPath: url.path).map { url.appendingPathComponent($0) }
-        let drives: Set<String> = ["c", "m"]
-
-        // Ensure there only folders named for valid drive letters present.
-        // N.B. This implementation is intetnionally strict. We can relax it as and when we find we need to.
-        for url in contents {
-            let name = url.lastPathComponent
-            if name.starts(with: ".") {
-                // Ignore hidden files.
-                continue
-            }
-            guard url.isDirectory,
-                  drives.contains(name.lowercased())
-            else {
-                return false
-            }
-        }
-        return true
+        return url.lastPathComponent.hasSuffix(".system")
     }
 
     func detectSystemFileSystem(for url: URL) throws -> FileSystem? {

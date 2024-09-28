@@ -37,7 +37,6 @@ protocol ProgramLifecycleObserver: NSObject {
  */
 protocol ProgramDelegate: AnyObject {
 
-    func program(_ program: Program, editValue op: EditOperation) -> Any?
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
     func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32?
@@ -75,16 +74,41 @@ class Program {
         }
     }
 
+    class KeyaRequest: Scheduler.Request {
+        weak var program: Program?
+
+        init(handle: Async.RequestHandle, program: Program) {
+            self.program = program
+            super.init(handle: handle)
+        }
+
+        override func cancel() {
+            if let prog = program {
+                prog.keyaRequest = nil
+            }
+        }
+
+        override func start() {
+            guard let program = self.program else {
+                print("Cannot start request if program isn't set!")
+                return
+            }
+            program.startKeyaRequest(self)
+        }
+    }
+
     private let settings: Settings
     let url: URL
     private let configuration: Configuration
     private let thread: InterpreterThread
     private let applicationMetadata: ApplicationMetadata?
+    // eventQueue is only for things which can be returned from GETEVENT32
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     private var currentKeys = Set<OplKeyCode>()
     let windowServer: WindowServer
     private let scheduler = Scheduler()
     private var geteventRequest: GetEventRequest?
+    private var keyaRequest: KeyaRequest?
     private var settingsSink: AnyCancellable?
 
     private var _state: State = .idle
@@ -109,6 +133,13 @@ class Program {
 
     var uid3: UID? {
         return applicationMetadata?.uid3
+    }
+
+    var metadata: Metadata {
+        guard let systemFileSystem = fileSystem as? SystemFileSystem else {
+            return Metadata()
+        }
+        return systemFileSystem.metadata
     }
 
     lazy private var fileSystem: FileSystem = {
@@ -139,8 +170,15 @@ class Program {
                 oplConfig[key] = "0" // analog
             }
         }
-        if applicationMetadata?.appInfo.era == .er5 {
+        
+        switch configuration.device {
+        case .psionSeries3c:
+            break
+        case .psionSeries5, .psionRevo, .geofoxOne:
             let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s5", isDirectory: true)
+            self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
+        case .psionSeries7:
+            let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s7", isDirectory: true)
             self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
         }
     }
@@ -257,7 +295,17 @@ class Program {
     func startGetEventRequest(_ request: GetEventRequest) {
         scheduler.withLockHeld {
             precondition(self.geteventRequest == nil, "Duplicate geteventRequest!")
+            precondition(self.keyaRequest == nil, "GetEvent request after Keya!")
             self.geteventRequest = request
+        }
+        checkGetEventCompletion()
+    }
+
+    func startKeyaRequest(_ request: KeyaRequest) {
+        scheduler.withLockHeld {
+            precondition(self.keyaRequest == nil, "Duplicate keyaRequest!")
+            precondition(self.geteventRequest == nil, "Keya request after GetEvent!")
+            self.keyaRequest = request
         }
         checkGetEventCompletion()
     }
@@ -268,6 +316,20 @@ class Program {
                let event = eventQueue.tryTakeFirst() {
                 self.geteventRequest = nil
                 scheduler.completeLocked(request: request, response: event)
+            } else if let request = self.keyaRequest {
+                while true {
+                    // The docs for KEYA state that any non key event gets dropped
+                    // Note, only complete the event for keys with a charcode (ie not modifiers)
+                    if let event = eventQueue.tryTakeFirst() {
+                        if case .keypressevent(let k) = event, k.keycode.toCharcode() != nil {
+                            self.keyaRequest = nil
+                            scheduler.completeLocked(request: request, response: event)
+                            break
+                        }
+                    } else {
+                        break
+                    }
+                }
             }
         }
     }
@@ -324,6 +386,9 @@ class Program {
             let data = windowServer.peekLine(drawableId: drawableId, position: position, numPixels: numPixels, mode: mode)
             return .peekedData(data)
 
+        case .cursor(let cursor):
+            windowServer.cursor(cursor)
+            return .nothing
         }
     }
 
@@ -385,6 +450,8 @@ extension Program: InterpreterThreadDelegate {
         return fileSystem.guestPath(for: url)
     }
 
+    // TODO: Result might be better as an actual result. Oh. That's a Tom Thing.
+    // TODO: Unclear to me whether this would be the right place to handle the error or not.
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: Error?) {
         DispatchQueue.main.sync {
             interpreter.handler = nil
@@ -404,8 +471,8 @@ extension Program: OpoIoHandler {
         print(val)
     }
 
-    func editValue(_ op: EditOperation) -> Any? {
-        return delegate!.program(self, editValue: op)
+    func textEditor(_ info: TextFieldInfo?) {
+        // print("textEditor: \(String(describing: info))")
     }
 
     func beep(frequency: Double, duration: Double) -> Error? {
@@ -429,31 +496,34 @@ extension Program: OpoIoHandler {
         }
     }
 
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
-        return (configuration.device.screenSize, configuration.device.screenMode)
+    func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
+        let device = configuration.device
+        return (device.screenSize, device.screenMode, device.rawValue)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
         return fileSystem.perform(op)
     }
 
-    func asyncRequest(_ request: Async.Request) {
+    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType) {
         let req: Scheduler.Request
-        switch request.type {
+        switch type {
         case .getevent:
-            req = GetEventRequest(handle: request.handle, program: self)
+            req = GetEventRequest(handle: handle, program: self)
+        case .keya:
+            req = KeyaRequest(handle: handle, program: self)
         case .after(let interval):
-            req = TimerRequest(handle: request.handle, after: interval)
+            req = TimerRequest(handle: handle, after: interval)
         case .at(let date):
-            req = TimerRequest(handle: request.handle, at: date)
+            req = TimerRequest(handle: handle, at: date)
         case .playsound(let data):
-            req = PlaySoundRequest(handle: request.handle, data: data)
+            req = PlaySoundRequest(handle: handle, data: data)
         }
         scheduler.addPendingRequest(req)
     }
 
-    func cancelRequest(_ requestHandle: Async.RequestHandle) {
-        scheduler.cancelRequest(requestHandle)
+    func cancelRequest(handle: Async.RequestHandle) {
+        scheduler.cancelRequest(handle)
     }
 
     func waitForAnyRequest() -> Async.Response {
@@ -466,19 +536,6 @@ extension Program: OpoIoHandler {
 
     func testEvent() -> Bool {
         return !eventQueue.isEmpty()
-    }
-
-    func key() -> Async.KeyPressEvent? {
-        let responseValue = eventQueue.tryTakeFirst { responseValue in
-            if case .keypressevent(_) = responseValue {
-                return true
-            }
-            return false
-        }
-        guard case .keypressevent(let event) = responseValue else {
-            return nil
-        }
-        return event
     }
 
     func keysDown() -> Set<OplKeyCode> {

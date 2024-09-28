@@ -29,10 +29,27 @@ class SystemFileSystem: FileSystem {
         self.rootUrl = rootUrl
     }
 
+    var metadata: Metadata {
+        get {
+            return (try? Metadata(contentsOf: rootUrl.appendingPathComponent("manifest.json"))) ?? Metadata()
+        }
+        set {
+            do {
+                try newValue.write(to: rootUrl.appendingPathComponent("manifest.json"))
+            } catch {
+                print("Failed to save file system metadata with error \(error).")
+            }
+        }
+    }
+
     func prepare() throws {
         let fileManager = FileManager.default
         try fileManager.createDirectory(at: rootUrl, withIntermediateDirectories: true)
         try fileManager.createDirectory(at: rootUrl.appendingPathComponent("c"), withIntermediateDirectories: true)
+    }
+
+    func getSharedDrives() -> [String] {
+        return Array(sharedDrives.keys).sorted()
     }
 
     func set(sharedDrive: String, url: URL, readonly: Bool) {

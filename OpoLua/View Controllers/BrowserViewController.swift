@@ -20,10 +20,12 @@
 
 import UIKit
 
+import PsionSoftwareIndex
+
 class BrowserViewController: UICollectionViewController {
 
     internal lazy var addBarButtonItem: UIBarButtonItem = {
-        let softwareIndexAction = UIAction(title: "Software Index",
+        let softwareIndexAction = UIAction(title: "Psion Software Index",
                                            image: UIImage(systemName: "list.dash.header.rectangle")) { [weak self] action in
             self?.showSoftwareIndex()
         }
@@ -56,10 +58,21 @@ class BrowserViewController: UICollectionViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    static let blockedUIDs: Set<String> = [
+        "0x1000af86",  // Strip Poker
+    ]
+
     @objc func showSoftwareIndex() {
-        let softwareIndexViewController = SoftwareIndexViewController()
-        softwareIndexViewController.delegate = self
-        present(softwareIndexViewController, animated: true)
+        let indexViewController = PsionSoftwareIndexViewController { release in
+#if RELEASE
+            guard !Self.blockedUIDs.contains(release.uid) else {
+                return false
+            }
+#endif
+            return release.kind == .installer && release.hasDownload && release.tags.contains("opl")
+        }
+        indexViewController.delegate = self
+        present(indexViewController, animated: true)
     }
 
     func addFolder() {
@@ -114,15 +127,16 @@ extension BrowserViewController: UIDocumentPickerDelegate {
 
 }
 
-extension BrowserViewController: SoftwareIndexViewControllerDelegate {
+extension BrowserViewController: PsionSoftwareIndexViewControllerDelegate {
 
-    func softwareIndexViewCntrollerDidCancel(softwareIndexViewController: SoftwareIndexViewController) {
-        softwareIndexViewController.dismiss(animated: true)
+    func psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: PsionSoftwareIndexViewController) {
+        psionSoftwareIndexViewController.dismiss(animated: true)
     }
 
-    func softwareIndexViewCntroller(softwareIndexViewCntroller: SoftwareIndexViewController, didSelectURL url: URL) {
-        softwareIndexViewCntroller.dismiss(animated: true) {
-            AppDelegate.shared.install(url: url)
+    func psionSoftwareIndexViewController(psionSoftwareIndexViewController: PsionSoftwareIndexViewController,
+                                          didSelectItem item: SoftwareIndexView.Item) {
+        psionSoftwareIndexViewController.dismiss(animated: true) {
+            AppDelegate.shared.install(url: item.url, sourceUrl: item.sourceURL)
         }
     }
 

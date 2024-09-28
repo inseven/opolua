@@ -119,7 +119,8 @@ public struct Graphics {
             case color16 = 4 // ie 4bpp color
             case color256 = 5 // ie 8bpp color
             case color64K = 6 // 16bpp color
-            case color16M = 7 // 24bpp color
+            case color16M = 7 // 24bpp color?
+            case colorRGB = 8 // 32bpp?
             case color4K = 9 // ie 12bpp color
         }
 
@@ -317,6 +318,18 @@ public struct Graphics {
         case fourBit = 2
     }
 
+    public enum CursorFlag: Int, FlagEnum {
+        case notFlashing = 2
+        case grey = 4
+    }
+
+    public struct Cursor: Codable {
+        let id: DrawableId
+        let rect: Rect
+        let ascent: Int
+        let flags: FlagSet<CursorFlag>
+    }
+
     public enum Operation {
         case close(DrawableId)
         case createBitmap(DrawableId, Size, Bitmap.Mode)
@@ -330,6 +343,7 @@ public struct Graphics {
         case sprite(DrawableId, Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
         case clock(DrawableId, ClockInfo?)
         case peekline(DrawableId, Point, Int, PeekMode) // drawableId, pos, numPixels, peekMode
+        case cursor(Cursor?)
     }
 
     public enum Result {
@@ -359,8 +373,6 @@ extension Graphics.GreyMode {
 public struct Fs {
     public struct Operation {
         public enum OpType {
-            case exists // return notFound or none (any access issue should result in notFound)
-            case isdir // as per exists
             case delete // return none, notFound, accessDenied if readonly, notReady
             case mkdir // return none, alreadyExists, accessDenied if readonly, notReady
             case rmdir // return none, notFound, inUse if it isn't empty, pathNotFound if it's not a dir, accessDenied if readonly, notReady
@@ -369,6 +381,7 @@ public struct Fs {
             case dir // return .strings(paths)
             case rename(String) // return none, notFound, accessDenied if readonly, notReady, alreadyExists
             case stat // return stat, or notFound or notReady
+            case disks // return .strings(diskList)
         }
         public let path: String
         public let type: OpType
@@ -377,6 +390,7 @@ public struct Fs {
     public struct Stat {
         public let size: UInt64
         public let lastModified: Date
+        public let isDirectory: Bool
     }
 
     public enum Err: Int {
@@ -400,11 +414,10 @@ public struct Fs {
 extension Fs.Operation {
     public func isReadonlyOperation() -> Bool {
         switch type {
-        case .exists: return true
-        case .isdir: return true
         case .read: return true
         case .dir: return true
         case .stat: return true
+        case .disks: return true
         default: return false
         }
     }
@@ -420,8 +433,9 @@ typealias Modifiers = FlagSet<Modifier>
 
 public struct Async {
 
-    enum RequestType {
+    public enum RequestType {
         case getevent
+        case keya
         case playsound(Data)
         case after(TimeInterval)
         case at(Date)
@@ -522,83 +536,17 @@ public enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
 }
 
-public struct EditOperation {
+public struct TextFieldInfo: Codable {
     enum InputType: String, Codable {
         case text
-        case password
         case integer
         case float
-        case date
-        case time
     }
-    struct Raw: Codable {
-        let type: InputType
-        let initialValue: String
-        let prompt: String?
-        let allowCancel: Bool
-        let min: Double?
-        let max: Double?
-        let screenRect: Graphics.Rect?
-        let timeFlags: UInt32?
-    }
-    struct TextDetails {
-        let initialValue: String
-        let maxLen: Int
-    }
-    struct IntDetails {
-        let initialValue: Int
-        let min: Int
-        let max: Int
-    }
-    struct FloatDetails {
-        let initialValue: Double
-        let min: Double
-        let max: Double
-    }
-    struct DateDetails {
-        let initialValue: Date
-        let min: Date
-        let max: Date
-    }
-    enum TimeType {
-        case absolute
-        case duration
-    }
-    struct TimeDetails {
-        let initialValue: Int // in seconds (for timeType == .absolute, seconds since midnight)
-        let min: Int // ditto
-        let max: Int // ditto
-        let timeType: TimeType
-        let display24hour: Bool // Only for timeType == .absolute
-        let includeSeconds: Bool
-    }
-    enum Details {
-        case text(TextDetails)
-        case password(TextDetails)
-        case integer(IntDetails)
-        case float(FloatDetails)
-        case date(DateDetails)
-        case time(TimeDetails)
-    }
-
-    let prompt: String?
-    let allowCancel: Bool // Can only ever be false for text and integer types
-    let screenRect: Graphics.Rect?
-    let details: Details
-}
-
-extension EditOperation.Details {
-    // It's annoying there's no built-in way to get an untagged enum from a tagged one
-    var type: EditOperation.InputType {
-        switch self {
-        case .text(_): return .text
-        case .password(_): return .password
-        case .integer(_): return .integer
-        case .float(_): return .float
-        case .date(_): return .date
-        case .time(_): return .time
-        }
-    }
+    let id: Graphics.DrawableId
+    let type: InputType
+    let rect: Graphics.Rect
+    let contents: String
+    let cursorPos: Int
 }
 
 public protocol FileSystemIoHandler {
@@ -617,24 +565,23 @@ public protocol OpoIoHandler: FileSystemIoHandler {
 
     func printValue(_ val: String) -> Void
 
-    func editValue(_ op: EditOperation) -> Any?
+    func textEditor(_ info: TextFieldInfo?)
 
     func beep(frequency: Double, duration: Double) -> Error?
 
     func draw(operations: [Graphics.DrawCommand])
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode)
+    func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String)
 
-    func asyncRequest(_ request: Async.Request)
-    func cancelRequest( _ requestHandle: Async.RequestHandle)
+    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType)
+    func cancelRequest(handle: Async.RequestHandle)
     func waitForAnyRequest() -> Async.Response
     func anyRequest() -> Async.Response?
 
     // Return true if there is an event waiting
     func testEvent() -> Bool
 
-    func key() -> Async.KeyPressEvent?
     func keysDown() -> Set<OplKeyCode>
 
     func setConfig(key: ConfigName, value: String)
@@ -655,8 +602,7 @@ class DummyIoHandler : OpoIoHandler {
         print(val, terminator: "")
     }
 
-    func editValue(_ op: EditOperation) -> Any? {
-        return nil
+    func textEditor(_ info: TextFieldInfo?) {
     }
 
     func alert(lines: [String], buttons: [String]) -> Int {
@@ -679,18 +625,18 @@ class DummyIoHandler : OpoIoHandler {
         return .nothing
     }
 
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
-        return (Graphics.Size(width: 640, height: 240), .gray4)
+    func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
+        return (Graphics.Size(width: 640, height: 240), .gray4, "psion-series-5")
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
         return .err(.notReady)
     }
 
-    func asyncRequest(_ request: Async.Request) {
+    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType) {
     }
 
-    func cancelRequest(_ requestHandle: Async.RequestHandle) {
+    func cancelRequest(handle: Async.RequestHandle) {
     }
 
     func waitForAnyRequest() -> Async.Response {
@@ -703,10 +649,6 @@ class DummyIoHandler : OpoIoHandler {
 
     func testEvent() -> Bool {
         return false
-    }
-
-    func key() -> Async.KeyPressEvent? {
-        return nil
     }
 
     func keysDown() -> Set<OplKeyCode> {

@@ -27,8 +27,10 @@ _ENV = module()
 -- Constants
 
 local KTbWidth = 70
-local KTbBtTop = 24
-local KTbBtH = 37
+local KTbBtTop_s5 = 24
+local KTbBtTop_s7 = 48
+local KTbBtH_s5 = 37
+local KTbBtH_s7 = 48
 local KTbClockSize = 70
 local KTbNumComps = 6
 
@@ -44,7 +46,7 @@ local KTbClockPosX = 4
 local KTbClockHeight = 64
 
 -- Global vars
-local TbVis, TbMenuSym
+local TbVis, TbMenuSym, TbBtFlags
 
 -- Actual state
 local tbWinId
@@ -54,6 +56,8 @@ local title
 local buttons = {}
 local pressedButtonId
 local toolbarHeight
+local buttonHeight
+local appTitleHeight
 local fgColour = { 0, 0, 0 } -- black
 local bgColour = { 0xFF, 0xFF, 0xFF } -- white
 local defaultIcon
@@ -65,6 +69,18 @@ function TBarLink(appLink)
     TbVis(0)
     TbMenuSym = runtime:declareGlobal("TbMenuSym%")
     TbMenuSym(KMenuCheckBox)
+    local deviceName = runtime:getDeviceName()
+    local maxButtons
+    if deviceName == "psion-series-7" then
+        appTitleHeight = KTbBtTop_s7
+        buttonHeight = KTbBtH_s7
+        maxButtons = 7 -- By inspection it looks like 7 would fit, dunno what the actual limit was
+    else
+        appTitleHeight = KTbBtTop_s5
+        buttonHeight = KTbBtH_s5
+        maxButtons = 4
+    end
+    TbBtFlags = runtime:declareGlobal("TbBtFlags%", maxButtons)
     runtime:callProc(appLink:upper())
 end
 
@@ -74,24 +90,26 @@ local function drawButton(pos)
     if pos == pressedButtonId and button.isPushedDown then
         state = state + 1
     end
-    if button.flags & KTbFlgLatched > 0 then
+    if button.flags() & KTbFlgLatched > 0 then
         state = state + 1
     end
     gUSE(tbWinId)
     gFONT(KTbFont)
-    gAT(0, KTbBtTop + (pos - 1) * KTbBtH)
-    gBUTTON(button.text, 2, KTbWidth, KTbBtH + 1, state, button.bmp, button.mask)
+    gAT(0, appTitleHeight + (pos - 1) * buttonHeight)
+    gBUTTON(button.text, 2, KTbWidth, buttonHeight + 1, state, button.bmp, button.mask)
 end
 
 local function drawTitle()
     gUSE(tbWinId)
     gSTYLE(1) -- bold everything
     gAT(0, 0)
-    gFILL(KTbWidth, KTbBtTop, KgModeClear)
+    gFILL(KTbWidth, appTitleHeight, KgModeClear)
     gBOX(KTbWidth, toolbarHeight)
 
-    gAT(1, KTbBtTop - 8)
     gFONT(KTbTitleFont)
+    local _, _, ascent = gTWIDTH("")
+    local y = ((appTitleHeight - ascent) // 2) + ascent
+    gAT(1, y)
     local align = KgPrintBCentredAligned
     if gTWIDTH(title) > KTbWidth - 2 then
         align = KgPrintBLeftAligned
@@ -119,6 +137,10 @@ function TBarInitC(aTitle, screenWidth, screenHeight, winMode)
     local w = KTbWidth
     toolbarHeight = screenHeight
     gUPDATE(false)
+    if runtime:getDeviceName() == "psion-series-7" then
+        -- See https://github.com/inseven/opolua/issues/414 for why we do this
+        winMode = KgCreateRGBColorMode
+    end
     tbWinId = gCREATE(screenWidth - w, 0, w, toolbarHeight, false, winMode)
     gCOLOR(table.unpack(fgColour))
     gCOLORBACKGROUND(table.unpack(bgColour))
@@ -155,8 +177,9 @@ function TBarButt(shortcut, pos, text, state, bmp, mask, flags)
         state = state,
         bmp = bmp,
         mask = mask,
-        flags = flags
+        flags = TbBtFlags[pos]
     }
+    buttons[pos].flags(flags)
     drawButton(pos)
     gUSE(prevId)
 end
@@ -172,7 +195,7 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
     if ptrY >= toolbarHeight - KTbClockHeight then
         butId = KClockButtonId
     else
-        butId = 1 + ((ptrY - KTbBtTop) // KTbBtH)
+        butId = 1 + ((ptrY - appTitleHeight) // buttonHeight)
     end
 
     if winId ~= tbWinId or ptrY < 0 or ptrX < 0 or ptrX >= KTbWidth then
@@ -198,8 +221,8 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
             -- Note, already latched buttons don't get called (IF they actually are latchable)
             if butId == pressedButtonId then 
                 local button = buttons[butId]
-                local latched = button.flags & KTbFlgLatched ~= 0
-                local latchable = button.flags & KTbFlgLatchable ~= 0
+                local latched = button.flags() & KTbFlgLatched ~= 0
+                local latchable = button.flags() & KTbFlgLatchable ~= 0
                 if not latchable or not latched then
                     -- Call the shortcut
                     local shortcut = button.shortcut
@@ -247,8 +270,8 @@ end
 _ENV["TBarOffer%"] = TBarOffer
 
 local function unlatch(button)
-    if button.flags & KTbFlgLatched > 0 then
-        button.flags = button.flags & ~KTbFlgLatched
+    if button.flags() & KTbFlgLatched > 0 then
+        button.flags(button.flags() & ~KTbFlgLatched)
         drawButton(button.id)
     end
 end
@@ -258,9 +281,9 @@ function TBarLatch(butId)
     -- Apparently there's nothing to say you can't latch a button that doesn't have KTbFlgLatchable set...
     assert(button, "No button found!")
     -- Unlatch everything above that's in the same latch group
-    local buttonLatchGroup = button.flags & 0x30
+    local buttonLatchGroup = button.flags() & 0x30
     for id = butId - 1, 1, -1 do
-        local blg = buttons[id].flags & 0x30
+        local blg = buttons[id].flags() & 0x30
         if blg == 0 or blg > buttonLatchGroup then
             break
         end
@@ -268,15 +291,15 @@ function TBarLatch(butId)
     end
     -- And everything below
     for id = butId + 1, #buttons do
-        local blg = buttons[id].flags & 0x30
+        local blg = buttons[id].flags() & 0x30
         if blg == 0 or blg < buttonLatchGroup then
             break
         end
         unlatch(buttons[id])
     end
 
-    if button.flags & KTbFlgLatched == 0 then
-        button.flags = button.flags | KTbFlgLatched
+    if button.flags() & KTbFlgLatched == 0 then
+        button.flags(button.flags | KTbFlgLatched)
         drawButton(button.id)
     end
 end

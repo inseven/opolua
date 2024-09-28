@@ -339,12 +339,10 @@ public class PsiLuaEnv {
         }
         let op: Fs.Operation.OpType
         switch cmd {
-        case "exists":
-            op = .exists
         case "stat":
             op = .stat
-        case "isdir":
-            op = .isdir
+        case "disks":
+            op = .disks
         case "delete":
             op = .delete
         case "mkdir":
@@ -401,6 +399,7 @@ public class PsiLuaEnv {
             L.newtable()
             L.rawset(-1, key: "size", value: Int64(stat.size))
             L.rawset(-1, key: "lastModified", value: stat.lastModified.timeIntervalSince1970)
+            L.rawset(-1, key: "isDir", value: stat.isDirectory)
             return 1
         }
     }

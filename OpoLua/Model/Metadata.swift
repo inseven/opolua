@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Jason Morley
+// Copyright (c) 2021-2024 Jason Morley, Tom Sutcliffe
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,22 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import SwiftUI
+import Foundation
 
-struct SoftwareIndexView: View {
+struct Metadata: Codable {
 
-    @StateObject var model: LibraryModel
+    let sourceUrl: URL?
 
-    init(model: LibraryModel) {
-        _model = StateObject(wrappedValue: model)
+    init(sourceUrl: URL? = nil) {
+        self.sourceUrl = sourceUrl
     }
 
-    var body: some View {
-        NavigationView {
-            ProgramsView()
-                .environmentObject(model)
-        }
-        .navigationViewStyle(.stack)
+    init(contentsOf url: URL) throws {
+        let data = try Data(contentsOf: url)
+        let decoder = JSONDecoder()
+        self = try decoder.decode(Metadata.self, from: data)
+    }
+
+    func write(to url: URL) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        let data = try encoder.encode(self)
+        try data.write(to: url, options: .atomic)
     }
 
 }

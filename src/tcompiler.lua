@@ -574,6 +574,11 @@ checkCode('DELETE "foo", "bar"', {
     op"ZeroReturnFloat"
 })
 
+checkCode("gVISIBLE ON", {
+    op"gVisible", 1,
+    op"ZeroReturnFloat"
+})
+
 checkSyntaxError("ALERT()", "1: Zero-argument calls should not have ()")
 
 checkSyntaxError("alert(a$, b$, c$, d$, e$, f$)", "1: Wrong number of arguments to ALERT")

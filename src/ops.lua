@@ -576,8 +576,6 @@ local function IPs8_dump(runtime)
     return fmt("%d (0x%s)", val, fmt("%02X", val):sub(-2))
 end
 
-IP8_dump = fns.IP8_dump
-
 local function IP16_dump(runtime)
     local index = runtime:IP16()
     return fmt("0x%04X", index)
@@ -596,6 +594,12 @@ end
 local function qualifier_dump(runtime)
     local qualifier = runtime:IP8()
     return fmt("qualifier=%d", qualifier)
+end
+
+local function IPflag_dump(runtime)
+    local flag = runtime:IP8()
+    assert(flag == 0 or flag == 1, "Unexpected IP8 value in dump!")
+    return flag == 0 and "OFF" or "ON"
 end
 
 local function logName_dump(runtime)
@@ -1468,7 +1472,14 @@ end
 
 function Cursor(stack, runtime) -- 0xA6
     local numParams = runtime:IP8()
-    printf("CURSOR numParams=%d\n", numParams) -- TODO
+    if numParams == 0 then
+        runtime:CURSOR(false)
+    elseif numParams == 1 then
+        runtime:CURSOR(true)
+    else
+        local id, asc, w, h, t = stack:pop(numParams - 1)
+        runtime:CURSOR(id, asc, w, h, t)
+    end
 end
 
 Cursor_dump = qualifier_dump
@@ -1495,9 +1506,7 @@ function Escape(stack, runtime) -- 0xA9
     -- We don't care
 end
 
-function Escape_dump(runtime)
-    return fmt("state=%d", runtime:IP8())
-end
+Escape_dump = IPflag_dump
 
 function First(stack, runtime) -- 0xAA
     local db = runtime:getDb()
@@ -1753,7 +1762,7 @@ function gVisible(stack, runtime) -- 0xC9
     runtime:gVISIBLE(show)
 end
 
-gVisible_dump = IP8_dump
+gVisible_dump = IPflag_dump
 
 function gFont(stack, runtime) -- 0xCA
     local id = stack:pop()
@@ -2132,7 +2141,7 @@ function dItem(stack, runtime) -- 0xED
             end
         end
         -- Have to resolve default choice here, and _not_ at the point of the DIALOG call!
-        item.value = math.min(math.max(item.variable(), 1), #item.choices)
+        item.index = math.min(math.max(item.variable(), 1), #item.choices)
     elseif itemType == dItemTypes.dLONG or itemType == dItemTypes.dFLOAT or itemType == dItemTypes.dDATE or itemType == dItemTypes.dTIME then
         item.max = stack:pop()
         item.min = stack:pop()
@@ -2169,6 +2178,38 @@ function dItem(stack, runtime) -- 0xED
         end
     elseif itemType == dItemTypes.dPOSITION then
         dialog.xpos, dialog.ypos = stack:popXY()
+        shouldAdd = false
+    elseif itemType == dItemTypes.dFILE then
+        local var, prompt, flags, uid1, uid2, uid3 = stack:pop(6)
+        local prompts = {}
+        for p in prompt:gmatch("[^,]+") do
+            table.insert(prompts, p)
+        end
+
+        local fileItem = {
+            type = (flags & KDFileEditBox == 0) and dItemTypes.dFILECHOOSER or dItemTypes.dFILEEDIT,
+            variable = var,
+            path = var(),
+            prompt = prompts[1] or prompt,
+            uid1 = uid1,
+            uid2 = uid2,
+            uid3 = uid3,
+            flags = flags,
+        }
+        local folderItem = {
+            type = dItemTypes.dFILEFOLDER,
+            fileItem = fileItem,
+            prompt = prompts[2] or "",
+        }
+        local diskItem = {
+            type = dItemTypes.dFILEDISK,
+            fileItem = fileItem,
+            folderItem = folderItem,
+            prompt = prompts[3] or "",
+        }
+        table.insert(dialog.items, fileItem)
+        table.insert(dialog.items, folderItem)
+        table.insert(dialog.items, diskItem)
         shouldAdd = false
     else
         error("Unsupported dItem type "..itemType)
@@ -2211,7 +2252,7 @@ function Lock(stack, runtime) -- 0xF1
     -- Don't care
 end
 
-Lock_dump = IPs8_dump
+Lock_dump = IPflag_dump
 
 function gInvert(stack, runtime) -- 0xF2
     local w, h = stack:popXY()
@@ -2476,11 +2517,14 @@ function DeleteTable(stack, runtime) -- 0x11E
 end
 
 function GotoMark(stack, runtime) -- 0x11F
-    unimplemented("GotoMark")
+    local db = runtime:getDb()
+    local bookmark = stack:pop()
+    db:setPos(bookmark)
 end
 
 function KillMark(stack, runtime) -- 0x120
-    unimplemented("KillMark")
+    local bookmark = stack:pop()
+    -- Since bookmarks are just position integers, nothing required here    
 end
 
 function ReturnFromEval(stack, runtime) -- 0x121
@@ -2595,7 +2639,8 @@ function IoWaitStat32(stack, runtime) -- 0x129
 end
 
 function Compact(stack, runtime) -- 0x12A
-    unimplemented("Compact")
+    local path = stack:pop()
+    printf("COMPACT(%s)\n", path)
 end
 
 function BeginTrans(stack, runtime) -- 0x12B

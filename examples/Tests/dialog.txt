@@ -1,3 +1,8 @@
+DECLARE EXTERNAL
+INCLUDE "const.oph"
+
+EXTERNAL loop%:
+
 PROC main:
 	GLOBAL choice%
 	LOCAL cont%
@@ -7,8 +12,218 @@ PROC main:
 	ENDWH
 ENDP
 
+PROC buttonDlg:
+	LOCAL result%
+	dINIT "Buttons"
+	dBUTTONS "OK", 13, "Cancel", -27, "Tab", 9, "A", %a, "B", -%b
+	result% = DIALOG
+	IF result% = 13:
+		PRINT "OK"
+	ELSEIF result% = 9
+		PRINT "Tab"
+	ELSEIF result% = %a
+		PRINT "A"
+	ELSEIF result% = %b
+		PRINT "B"
+	ELSEIF result% = 0
+		PRINT "Dialog Cancelled (result = 0)"
+	ENDIF
+	GET
+ENDP
+
+PROC bareButtonDlg:
+	LOCAL result%
+	dINIT "Buttons"
+	dBUTTONS "No", $34E, "Yes", $359
+	result% = DIALOG
+	PRINT "Dialog returned", result%
+	GET
+ENDP
+
+PROC longDlg:
+	LOCAL val&
+	dINIT "Long input"
+	dLONG val&, "Long", -1, 50
+	dTEXT "Another", "Option", KDTextAllowSelection%
+	dBUTTONS "OK", 13
+	DIALOG
+	PRINT "Entered:", val&
+	GET
+ENDP
+
+PROC floatDlg:
+	LOCAL fval
+	fval = 2.0
+	dINIT "Float input"
+	dFLOAT fval, "Float", -1.1, 5.0
+	dTEXT "Another", "Option", KDTextAllowSelection%
+	dBUTTONS "OK", 13
+	DIALOG
+	PRINT "Entered:", fval
+	GET
+ENDP
+
+PROC editDlg:
+	LOCAL val$(16)
+	val$ = "Hello"
+	dINIT "Text edit"
+	dEDIT val$, "Text"
+	dTEXT "Another", "Option", KDTextAllowSelection%
+	dBUTTONS "OK", 13
+	DIALOG
+	PRINT "Got >"; val$; "<"
+	GET
+ENDP
+
+PROC checkDlg:
+	LOCAL chk%
+	dINIT "Checkbox"
+	dCHECKBOX chk%, "check"
+	DIALOG
+	PRINT "check is", chk%
+	GET
+ENDP
+
+PROC textDlg:
+	LOCAL x%
+	dINIT "Text test"
+	dTEXT "", "Right aligned linebelow", $601
+	dTEXT "", "Full width text that isn't selectable"
+	dTEXT "", "", $800
+	dTEXT "Prompt", "Body text", $600
+	dTEXT "Another", "Option", $400
+	x% = DIALOG
+	PRINT "Selected", x%
+	GET
+ENDP
+
+PROC xDlg:
+	LOCAL x$(20)
+	x$ = "12345"
+	dINIT "Password test"
+	dXINPUT x$, "Pass"
+	DIALOG
+	PRINT "Entered:", x$
+	GET
+ENDP
+
+PROC emptyDlg:
+	dINIT "No items dialog"
+	PRINT DIALOG
+	GET
+ENDP
+
+PROC dateDlg:
+	LOCAL x&
+	x& = DAYS(DAY, MONTH, YEAR)
+	dINIT "Date test"
+	dDATE x&, "Date", x& - 1, x& + 6
+	dTEXT "Another", "Option", KDTextAllowSelection%
+	DIALOG
+	PRINT "Entered:", x&
+	GET
+ENDP
+
+PROC timeDlg:
+	LOCAL thms&, thm&, thms24&, dhm&, dhms&, dms&
+	thms& = HOUR * INT(3600) + MINUTE * 60 + SECOND
+	thm& = thms&
+	thms24& = thms&
+	dhm& = 65
+	dhms& = 65
+	dms& = 65
+	dINIT "Time test"
+	dTIME thm&, "Time H:M", 0, 0, &1517F
+	dTIME thms&, "Time H:M:S", 1, 0, &1517F
+	dTIME thms24&, "Time H:M:S 24", 9, 0, &1517F
+	dTIME dhm&, "Duration H:M", 2, 0, 600
+	dTIME dhms&, "Duration H:M:S", 3, 0, 600
+	dTIME dms&, "Duration M:S", 7, 0, 6000
+	DIALOG
+	PRINT "Entered:", thm&, thms&, thms24&, dhm&, dhms&, dms&
+	GET
+ENDP
+
+PROC cancelDlg:
+	LOCAL result%
+	dINIT "Doom"
+	dTEXT "", "EVERYTHING IS DOOMED"
+	dBUTTONS "Sob", 27
+	result% = DIALOG
+	PRINT "Dialog returned", result%
+	GET
+ENDP
+
+PROC editMultiDlg:
+	LOCAL result%, buf&(16), ptr&, text$(60), len&
+	ptr& = ADDR(buf&())
+	buf&(1) = 8
+	buf&(2) = &64636261
+	buf&(3) = &67666507
+	dINIT "Multi edit"
+	dEDITMULTI ptr&, "Prompt", 20, 5, 60
+	dTEXT "Another", "Option", KDTextAllowSelection%
+	dBUTTONS "OK", %o
+	result% = DIALOG
+	len& = PEEKL(ptr&)
+	POKEB ptr& + 3, len&
+	text$ = PEEK$(ptr& + 3)
+	PRINT "Dialog returned", text$
+	GET
+ENDP
+
+PROC fileDlg:
+	LOCAL f$(255), type%, showz%, onlydir%, allowEmpty%
+	LOCAL result%, flags%
+	result% = 1
+	allowEmpty% = 1
+	type% = 1
+
+	WHILE result%
+		flags% = 0
+		IF allowEmpty%
+			flags% = flags% OR KDFileAllowNullStrings%
+		ENDIF
+		IF type% = 1
+			REM open file
+		ELSEIF type% = 2
+			REM save file (+ query)
+			flags% = flags% OR KDFileEditBox% OR KDFileEditorQueryExisting%
+		ELSEIF type% = 3
+			REM save file (-query)
+			flags% = flags% OR KDFileEditBox%
+		ELSEIF type% = 4
+			REM New file
+			flags% = flags% OR KDFileEditBox% OR KDFileEditorDisallowExisting%
+		ENDIF
+		IF showz%
+			flags% = flags% OR KDFileSelectorWithRom%
+		ENDIF
+		IF onlydir%
+			REM these two flags appear too broken for me to figure out what they should do.
+			REM flags% = flags% OR KDFileAllowFolders% OR KDFileFoldersOnly%
+		ENDIF
+
+		dINIT "File dialog", KDlgButRight% OR KDlgDensePack%
+		dFILE f$, "File,Dir,Drive", flags%
+		REM dCHECKBOX edit%, "Allow text entry"
+		dCHOICE type%, "Type", "Open file,Save file (query),Save file (overwrite),New file"
+		dCHECKBOX showz%, "Show Z:"
+		REM dCHECKBOX onlydir%, "Only directories"
+		dCHECKBOX allowEmpty%, "Allow empty"
+		dBUTTONS "OK", KDButtonEnter% + KDButtonNoLabel%, "Cancel", -(KDButtonEsc% + KDButtonNoLabel%)
+		result% = DIALOG
+
+		CLS
+		PRINT "Result is", result%, f$
+	ENDWH
+
+	GET
+ENDP
+
 PROC loop%:
-	LOCAL dlg%	
+	LOCAL dlg%
+	EXTERNAL choice%
 	dINIT "Dialog test", 0
 	dTEXT "", "Pick a dialog type to test"
 	REM dTEXT "", "", $800
@@ -57,163 +272,3 @@ PROC loop%:
 	
 	RETURN 1
 ENDP
-
-PROC buttonDlg:
-	LOCAL result%
-	dINIT "Buttons"
-	dBUTTONS "OK", 13, "Cancel", -27, "Tab", 9, "A", %a, "B", -%b
-	result% = DIALOG
-	IF result% = 13:
-		PRINT "OK"
-	ELSEIF result% = 9
-		PRINT "Tab"
-	ELSEIF result% = %a
-		PRINT "A"
-	ELSEIF result% = %b
-		PRINT "B"
-	ELSEIF result% = 0
-		PRINT "Dialog Cancelled (result = 0)"
-	ENDIF
-	GET
-ENDP
-
-PROC bareButtonDlg:
-	LOCAL result%
-	dINIT "Buttons"
-	dBUTTONS "No", $34E, "Yes", $359
-	result% = DIALOG
-	PRINT "Dialog returned", result%
-	GET
-ENDP
-
-PROC longDlg:
-	LOCAL val&
-	dINIT "Long input"
-	dLONG val&, "Long", -1, 5
-	dBUTTONS "OK", 13
-	DIALOG
-	PRINT "Entered:", val&
-	GET
-ENDP
-
-PROC floatDlg:
-	LOCAL fval
-	fval = 2.0
-	dINIT "Float input"
-	dFLOAT fval, "Long", -1.1, 5.0
-	dBUTTONS "OK", 13
-	DIALOG
-	PRINT "Entered:", fval
-	GET
-ENDP
-
-PROC editDlg:
-	LOCAL val$(16)
-	dINIT "Text edit"
-	dEDIT val$, "Text"
-	dBUTTONS "OK", 13
-	DIALOG
-	PRINT "Got >", val$, "<"
-	GET
-ENDP
-
-PROC checkDlg:
-	LOCAL chk%
-	dINIT "Checkbox"
-	dCHECKBOX chk%, "check"
-	DIALOG
-	PRINT "check is", chk%
-	GET
-ENDP
-
-PROC textDlg:
-	LOCAL x%
-	dINIT "Text test"
-	dTEXT "", "Right aligned linebelow", $601
-	dTEXT "", "Full width text that isn't selectable"
-	dTEXT "", "", $800
-	dTEXT "Prompt", "Body text", $600
-	dTEXT "Another", "Option", $400
-	x% = DIALOG
-	PRINT "Selected", x%
-	GET
-ENDP
-
-PROC xDlg:
-	LOCAL x$(20)
-	x$ = "12345"
-	dINIT "Password test"
-	dXINPUT x$, "Pass"
-	DIALOG
-	PRINT "Entered:", x$
-	GET
-ENDP
-
-PROC emptyDlg:
-	dINIT "No items dialog"
-	PRINT DIALOG
-	GET
-ENDP
-
-PROC dateDlg:
-	LOCAL x&
-	x& = DAYS(DAY, MONTH, YEAR)
-	dINIT "Date test"
-	dDATE x&, "Date", x& - 1, x& + 6
-	DIALOG
-	PRINT "Entered:", x&
-	GET
-ENDP
-
-PROC timeDlg:
-	LOCAL thms&, thm&, thms24&, dhm&, dhms&
-	thms& = HOUR * INT(3600) + MINUTE * 60 + SECOND
-	thm& = thms&
-	thms24& = thms&
-	dhm& = 65
-	dhms& = 65
-	dINIT "Time test"
-	dTIME thm&, "Time H:M", 0, 0, &1517F
-	dTIME thms&, "Time H:M:S", 1, 0, &1517F
-	dTIME thms24&, "Time H:M:S 24", 9, 0, &1517F
-	dTIME dhm&, "Duration H:M", 2, 0, 600
-	dTIME dhms&, "Duration H:M:S", 3, 0, 600
-	REM dTIME dms&, "Duration M:S", 7, 0, 6000
-	DIALOG
-	PRINT "Entered:", thm&, thms&, thms24&, dhm&, dhms&
-	GET
-ENDP
-
-PROC cancelDlg:
-	LOCAL result%
-	dINIT "Doom"
-	dTEXT "", "EVERYTHING IS DOOMED"
-	dBUTTONS "Sob", 27
-	result% = DIALOG
-	PRINT "Dialog returned", result%
-	GET
-ENDP
-
-PROC editMultiDlg:
-	LOCAL result%, buf&(16), ptr&, text$(60), len&
-	ptr& = ADDR(buf&())
-	dINIT "Multi edit"
-	dEDITMULTI ptr&, "Prompt", 20, 5, 60
-	dBUTTONS "OK", %o
-	result% = DIALOG
-	len& = PEEKL(ptr&)
-	POKEB ptr& + 3, len&
-	text$ = PEEK$(ptr& + 3)
-	PRINT "Dialog returned", text$
-	GET
-ENDP
-
-PROC fileDlg:
-	LOCAL f$(255)
-	dINIT "File dialog"
-	dFILE f$, "File", 0
-	DIALOG
-	PRINT "Dialog returned", f$
-	GET
-ENDP
-

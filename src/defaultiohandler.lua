@@ -35,14 +35,7 @@ function print(val)
     printf("%s", val)
 end
 
-function editValue(params)
-    local line = io.stdin:read()
-    -- We don't support pressing esc to clear the line, oh well
-    if params.allowCancel and line:byte(1, 1) == 27 then
-        -- Close enough...
-        return nil
-    end
-    return line
+function textEditor(params)
 end
 
 function getch()
@@ -139,8 +132,8 @@ function graphicsop(cmd, ...)
     return 0 -- Pretend we succeed (probably)
 end
 
-function getScreenInfo()
-    return 640, 240, KgCreate4GrayMode
+function getDeviceInfo()
+    return 640, 240, KgCreate4GrayMode, "psion-series-5"
 end
 
 local fsmaps = {}
@@ -170,15 +163,21 @@ end
 
 function fsop(cmd, path, ...)
     local filename = mapDevicePath(path)
-    if cmd == "exists" then
-        -- printf("exists %s\n", filename)
+    if cmd == "stat" then
+        -- printf("stat %s\n", filename)
         local f = io.open(filename, "r")
         if f then
+            -- Note, seek will also returns something normal-looking if it's a directory...
+            local sz = f:seek("end")
+            local val, errStr, err = f:read(1)
+            local isDir = err == 21 -- EISDIR (at least on macos)
             f:close()
-            return KErrExists
+            return { size = sz, lastModified = 0, isDir = isDir }
         else
-            return KErrNotExists
+            return nil, KErrNotExists
         end
+    elseif cmd == "disks" then
+        return { "C", "Z" }
     elseif cmd == "delete" then
         printf("delete %s\n", filename)
         local ok, err, errno = os.remove(filename)
@@ -263,10 +262,6 @@ end
 
 function getTime()
     return os.time()
-end
-
-function key()
-    return 0
 end
 
 function opsync()
