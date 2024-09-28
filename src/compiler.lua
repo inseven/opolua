@@ -586,6 +586,7 @@ Callables = {
     SCREEN = SpecialOp({Int, Int, Int, Int, numParams = {2, 4}}),
     SCREENINFO = Op("ScreenInfo", {IntArrayArg}),
     SECOND = Fn("Second", {}, Int),
+    SECSTODATE = Op("SecsToDate", {Long, IntVarArg, IntVarArg, IntVarArg, IntVarArg, IntVarArg, IntVarArg, IntVarArg}),
     SETDOC = Op("SetDoc", {String}),
     SETFLAGS = Op("SetFlags", {Long}),
     SETPATH = Op("SetPath", {String}),
