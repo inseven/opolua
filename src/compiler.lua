@@ -567,6 +567,7 @@ Callables = {
     POKEB = Op("PokeB", {SiboInt, Int}),
     POKEF = Op("PokeD", {SiboInt, Float}),
     POKEL = Op("PokeL", {SiboInt, Long}),
+    ["POKE$"] = Op("PokeStr", {SiboInt, String}),
     POKEW = Op("PokeW", {SiboInt, Int}),
     POS = Fn("Pos", {}, Int),
     POSITION = Op("Position", {Int}),
