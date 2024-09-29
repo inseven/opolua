@@ -724,6 +724,14 @@ function Runtime:newOplModule(moduleName)
     return module
 end
 
+-- For requiring modules written using opl.lua, such as menu.lua or scrollbar.lua
+function Runtime:require(moduleName)
+    if self.luaModules[moduleName] == nil then
+        self.luaModules[moduleName] = self:newOplModule(moduleName)
+    end
+    return self.luaModules[moduleName]
+end
+
 function newModuleInstance(moduleName)
     -- Because opl.lua uses a shared upvalue for its runtime pointer, we need to
     -- give each runtime its own copy of the module, meaning we can't just
@@ -758,6 +766,7 @@ function newRuntime(handler, era)
             open = {},
         },
         modules = {},
+        luaModules = {}, -- modules that use opl.lua thus have to be tracked per-runtime
         files = {},
         ioh = handler or require("defaultiohandler"),
         resources = {}, -- keyed by string, anything that code wants to use to provide singleton/mutex/etc semantics

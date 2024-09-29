@@ -1,30 +1,12 @@
---[[
+-- Copyright (c) 2021-2024 Jason Morley, Tom Sutcliffe
+-- See LICENSE file for license information.
 
-Copyright (c) 2021-2024 Jason Morley, Tom Sutcliffe
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-]]
+-- Reminder: everything in this file is magically imported into the global namespace by _setRuntime() in opl.lua,
+-- and then into runtime by newRuntime() in runtime.lua.
 
 _ENV = module()
 
-View = class {}
+local View = class {}
 
 local kDialogFont = KFontArialNormal15
 local kButtonFont = KFontArialBold11
@@ -238,7 +220,7 @@ function View:updateVariable()
 end
 
 
-PlaceholderView = class { _super = View }
+local PlaceholderView = class { _super = View }
 
 function PlaceholderView:contentSize()
     return gTWIDTH("TODO dItem type 0"), self.heightHint
@@ -253,7 +235,7 @@ function PlaceholderView:draw()
     View.draw(self)
 end
 
-DialogTitleBar = class { _super = View }
+local DialogTitleBar = class { _super = View }
 
 function DialogTitleBar:contentSize()
     local h = self.heightHint
@@ -293,7 +275,7 @@ function DialogTitleBar:handlePointerEvent(x, y, type)
     return true
 end
 
-DialogItemText = class { _super = View }
+local DialogItemText = class { _super = View }
 
 function DialogItemText:contentSize()
     local h = self.heightHint
@@ -339,6 +321,7 @@ function DialogItemText:focussable()
 end
 
 DialogItemEdit = class {
+local DialogItemEdit = class {
     _super = View,
     cursorWidth = 2,
 }
@@ -508,7 +491,7 @@ function DialogItemEdit:updateVariable()
     self.variable(self.editor.value)
 end
 
-DialogItemEditLong = class { _super = DialogItemEdit }
+local DialogItemEditLong = class { _super = DialogItemEdit }
 
 function DialogItemEditLong:contentSize()
     -- The @ sign is an example of the widest character in the dialog font (we
@@ -564,7 +547,7 @@ function DialogItemEditLong:updateVariable()
     self.variable(tonumber(self.editor.value))
 end
 
-DialogItemEditFloat = class {
+local DialogItemEditFloat = class {
     _super = DialogItemEdit,
     maxChars = 17,
 }
@@ -612,7 +595,7 @@ function DialogItemEditFloat:updateVariable()
     self.variable(tonumber(self.editor.value))
 end
 
-DialogItemEditPass = class { _super = DialogItemEdit }
+local DialogItemEditPass = class { _super = DialogItemEdit }
 
 function DialogItemEditPass:init(lineHeight)
     DialogItemEditPass._super.init(self, lineHeight)
@@ -637,7 +620,7 @@ function DialogItemEditPass:getCursorPos()
     return self.x + self.promptWidth + kEditTextSpace + textw, self.y + kDialogLineTextYOffset - 1
 end
 
-DialogItemPartEditor = class { 
+local DialogItemPartEditor = class {
     _super = DialogItemEdit,
 }
 
@@ -858,7 +841,7 @@ function DialogItemPartEditor:handleKeyPress(k, modifiers)
     end
 end
 
-DialogItemEditDate = class {
+local DialogItemEditDate = class {
     _super = DialogItemPartEditor,
 }
 
@@ -933,7 +916,7 @@ function DialogItemEditDate:updateVariable()
     self.variable(t)
 end
 
-DialogItemEditTime = class {
+local DialogItemEditTime = class {
     _super = DialogItemPartEditor,
 }
 
@@ -1099,7 +1082,7 @@ function DialogItemEditTime:updateVariable()
     self.variable(self.value)
 end
 
-DialogItemEditMulti = class { _super = DialogItemEdit }
+local DialogItemEditMulti = class { _super = DialogItemEdit }
 
 function DialogItemEditMulti:contentSize()
     return gTWIDTH(string.rep("M", self.widthChars), kDialogFont) + 2 * kEditTextSpace, kDialogTightLineHeight * self.numLines
@@ -1317,7 +1300,7 @@ function DialogItemEditMulti:updateVariable()
     startOfData:write(self.editor.value)
 end
 
-DialogChoiceList = class {
+local DialogChoiceList = class {
     _super = View,
     choiceTextSpace = 3, -- Yep, really not the same as kEditTextSpace despite how similar the two look
     typeable = false,
@@ -1496,7 +1479,7 @@ function DialogChoiceList:updateVariable()
     self.variable(self.index)
 end
 
-DialogCheckbox = class {
+local DialogCheckbox = class {
     _super = DialogChoiceList,
     choiceFont = KFontEiksym15,
     choiceTextSpace = 1,
@@ -1521,7 +1504,7 @@ function DialogCheckbox:updateVariable()
     self.variable(self.index == 1 and KFalse or KTrue)
 end
 
-DialogItemFileChooser = class {
+local DialogItemFileChooser = class {
     _super = DialogChoiceList,
 }
 
@@ -1587,7 +1570,7 @@ function DialogItemFileChooser:setIndex(index)
     DialogChoiceList.setIndex(self, index)
 end
 
-DialogItemFileEdit = class {
+local DialogItemFileEdit = class {
     _super = DialogItemEdit,
 }
 
@@ -1657,7 +1640,7 @@ function DialogItemFileEdit:updateVariable()
     self.variable(oplpath.join(self.path, self.editor.value))
 end
 
-DialogItemFolder = class {
+local DialogItemFolder = class {
     _super = DialogChoiceList,
 }
 
@@ -1716,7 +1699,7 @@ end
 --     -- TODO the folder icon is Z:\System\Data\eikon.mbm index 4 (20x16)
 -- end
 
-DialogItemDisk = class {
+local DialogItemDisk = class {
     _super = DialogChoiceList,
 }
 
@@ -1748,7 +1731,7 @@ function DialogItemDisk:setIndex(index)
     end
 end
 
-DialogItemSeparator = class { _super = View }
+local DialogItemSeparator = class { _super = View }
 
 function DialogItemSeparator:contentSize()
     return 0, 1
@@ -1760,7 +1743,7 @@ function DialogItemSeparator:draw()
     View.draw(self)
 end
 
-Button = class { _super = View }
+local Button = class { _super = View }
 
 function Button:contentSize()
     local w = math.max(gTWIDTH(self.text, kButtonFont) + 8, kButtonMinWidth)
@@ -1874,7 +1857,7 @@ function Button:press()
     printf("Button %s pressed but unhandled\n", self:shortcut())
 end
 
-DialogButtonGroup = class { _super = View }
+local DialogButtonGroup = class { _super = View }
 
 function DialogButtonGroup:contentSize()
     -- All buttons are the same size, which can grow to fit the longest button text
@@ -1947,7 +1930,7 @@ function DialogButtonGroup:draw()
     gFONT(kDialogFont)
 end
 
-DialogWindow = class { _super = View }
+local DialogWindow = class { _super = View }
 
 function DialogWindow.new(items, x, y, w, h)
     local id = gCREATE(x, y, w, h, false, KgCreate256GrayMode | KgCreateHasShadow | 0x200)
