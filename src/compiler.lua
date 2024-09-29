@@ -2256,7 +2256,7 @@ function handleOp_CURSOR(procState)
     local cmdToken = tokens:current()
     tokens:advance()
     local qualifier, args
-    local firstArgType = tokens:expect("ON", "OFF", "identifier")
+    local firstArgType = tokens:current().type
 
     if firstArgType == "OFF" then
         qualifier = 0
@@ -2271,7 +2271,7 @@ function handleOp_CURSOR(procState)
         for i, arg in ipairs(args) do
             procState:emitExpression(arg, declArgs[i])
         end
-        qualifier = 1 + #args
+        qualifier = #args - 1
     end
     procState:emit("BB", opcodes.Cursor, qualifier)
     if args then

@@ -1477,7 +1477,14 @@ function Cursor(stack, runtime) -- 0xA6
     elseif numParams == 1 then
         runtime:CURSOR(true)
     else
-        local id, asc, w, h, t = stack:pop(numParams - 1)
+        local t = nil
+        if numParams == 4 then
+            t = stack:pop()
+        else
+            assert(numParams == 3, "Bad immediate after Cursor!")
+        end
+        -- numParams doesn't include id...
+        local id, asc, w, h = stack:pop(4)
         runtime:CURSOR(id, asc, w, h, t)
     end
 end

@@ -70,6 +70,14 @@ local function popTimeFromStack(stack)
     return t
 end
 
+function setDate(handle, val)
+    assert(handles[handle], "Bad date/time handle")
+    local tt = os.date("!*t", math.floor(val))
+    local _, micro = math.modf(val)
+    tt.micro = math.floor(micro * 1000000)
+    handles[handle] = tt
+end
+
 function DTNewDateTime(stack, runtime) -- 1
     local micro = stack:pop()
     local sec = stack:pop()
