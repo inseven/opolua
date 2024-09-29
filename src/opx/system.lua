@@ -268,7 +268,7 @@ function RunApp(stack, runtime) -- 31
                     }
                 },
                 buttons = {
-                    { key = KKeyEsc | KDButtonNoLabel, text = "OK" },
+                    { key = KKeyEnter | KDButtonNoLabel, text = "OK" },
                 },
             }
             runtime:DIALOG(dlg)
