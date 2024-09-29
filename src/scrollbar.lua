@@ -9,6 +9,7 @@ local kChoiceDownArrow = "-" -- in KFontEiksym15
 Scrollbar = class {}
 
 function Scrollbar:draw()
+    local state = runtime:saveGraphicsState()
     local x, y, w, h = self.x, self.y, self.w, self.h
     local widgetHeight = self:widgetHeight()
     gAT(x, y)
@@ -48,15 +49,20 @@ function Scrollbar:draw()
     gBUTTON(kChoiceUpArrow, KButtS5, w, w, 0)
     gMOVE(0, w - 1) -- -1 because the buttons overlap by a pixel so the border between them isn't so heavy
     gBUTTON(kChoiceDownArrow, KButtS5, w, w, 0)
+    runtime:restoreGraphicsState(state)
 end
 
 function Scrollbar:setContentOffset(offset)
     -- printf("setContentOffset(%d)\n", offset)
     self.contentOffset = math.min(math.max(offset, 0), self:maxContentOffset())
-    self:draw()
+end
+
+function Scrollbar:setContentHeight(h)
+    self.contentHeight = h
 end
 
 function Scrollbar:handlePointerEvent(x, y, type)
+    -- printf("Scrollbar:handlePointerEvent(%d, %d, %d)\n", x, y, type)
     local widgetHeight = self:widgetHeight()
     local barOffset = self:barOffset()
     local barAreaHeight = self:barAreaHeight()
@@ -101,6 +107,7 @@ function Scrollbar:handlePointerEvent(x, y, type)
 
     if barDelta ~= 0 then
         local contentDelta = (barDelta * self.contentHeight) // barAreaHeight
+        -- printf("barDelta = %d contentDelta = %d\n", barDelta, contentDelta)
         self:setContentOffset(self.contentOffset + contentDelta)
         if self.observer then
             self.observer:scrollbarContentOffsetChanged(self)

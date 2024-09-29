@@ -49,6 +49,10 @@ function MenuPane:draw()
         end
     end
 
+    if self.scrollbar then
+        self.scrollbar:draw()
+    end
+
     -- Draw border last so if items overflow, it gets covered up
     self:drawBorder()
 end
@@ -187,8 +191,8 @@ function MenuPane:moveSelectionTo(i)
         -- We're scrolling, have to redraw everything
         self.selected = i
         self.contentOffset = newContentOffset
-        self:draw()
         self:updateScrollbar()
+        self:draw()
     end
 end
 
@@ -466,6 +470,20 @@ local function runMenuEventLoop(bar, pane, shortcuts)
             elseif bar then
                 bar.moveSelectionTo(bar.selected + 1)
             end
+        elseif k == KKeyPageUp then
+            local newContentOffset = current.items[current.selected].contentOffset - current:visibleContentHeight()
+            local newIndex = current.selected
+            while newIndex > 1 and current.items[newIndex].contentOffset > newContentOffset do
+                newIndex = newIndex - 1
+            end
+            current:moveSelectionTo(newIndex)
+        elseif k == KKeyPageDown then
+            local newContentOffset = current.items[current.selected].contentOffset + current:visibleContentHeight()
+            local newIndex = current.selected
+            while newIndex < #current.items and current.items[newIndex].contentOffset < newContentOffset do
+                newIndex = newIndex + 1
+            end
+            current:moveSelectionTo(newIndex)
         elseif k == KKeyEsc then
             if pane.submenu then
                 pane:closeSubmenu()

@@ -80,6 +80,9 @@ function Editor:handleKeyPress(k, modifiers)
         end
     elseif k >= 0x20 and k <= 0x7F and k ~= 0x60 then
         self:insert(string.char(k))
+    elseif k == KTabCharacter then
+        -- We're not going to implement the entire tab stop logic but we can at least allow the character
+        self:insert(string.char(k))
     elseif k == KKeyLeftArrow then
         if hasSelection and not anchor then
             self:setCursorPos(math.min(self.anchor, self.cursorPos))

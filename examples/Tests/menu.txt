@@ -34,7 +34,7 @@ PROC bigmenu%:
 	mCASC "Create new", "File...", %n, "Folder...", %N
 	mCASC "Close", "File", %e, "Folder", %z, "All files", %E
 	mCASC "List", "List open files...", %j, "List recent files...", %J
-	mCARD "File", "Open", %o, "Create new>", 16, "Close>", -17, "Delete...", %d, "Rename...", %r, "Properties...", -%p, "List>", 18, "Browse folders...", %g
+	mCARD "File", "Open", %o, "Create new>", 16, "Close>", -17, "Delete...", %d, "Rename...", %r, "Properties...", -%p, "List>", 18, "Browse folders...", %g, "Doom", %d
 
 	mCASC "Find files", "Find files...", %f, "Find again...", %F
 	mCARD "Edit", "Cut (move)", %x, "Copy", %c, "Paste", %v, "Clear clipboard", %X, "Select all", -%a, "Set bookmark", %B, "Go to bookmark", -%b, "Find files>", 19

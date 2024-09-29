@@ -155,11 +155,17 @@ PROC cancelDlg:
 ENDP
 
 PROC editMultiDlg:
-	LOCAL result%, buf&(16), ptr&, text$(60), len&
+	LOCAL result%, buf&(16), ptr&, text$(60), len&, i%
+	i% = 0
+	WHILE i% < 20
+		text$ = text$ + NUM$(i%, 2) + CHR$(7)
+		i% = i% + 1
+	ENDWH
+
 	ptr& = ADDR(buf&())
-	buf&(1) = 8
-	buf&(2) = &64636261
-	buf&(3) = &67666507
+	POKE$ ptr& + 3, text$
+	POKEL ptr&, LEN(text$)
+
 	dINIT "Multi edit"
 	dEDITMULTI ptr&, "Prompt", 20, 5, 60
 	dTEXT "Another", "Option", KDTextAllowSelection%

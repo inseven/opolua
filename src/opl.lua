@@ -53,7 +53,7 @@ function _setRuntime(r)
         "dialog",
     }
     for _, module in ipairs(separateModules) do
-        for name, fn in pairs(runtime:newOplModule(module)) do
+        for name, fn in pairs(runtime:require(module)) do
             if type(fn) == "function" then
                 assert(_ENV[name] == nil, "Duplicate definition of "..name)
                 _ENV[name] = fn

@@ -320,7 +320,15 @@ function DialogItemText:focussable()
     return self.selectable
 end
 
-DialogItemEdit = class {
+function DialogItemText:handlePointerEvent(x, y, type)
+    if type == KEvPtrPenDown then
+        if not self.hasFocus and self:focussable() then
+            self:takeFocus()
+        end
+    end
+    return true
+end
+
 local DialogItemEdit = class {
     _super = View,
     cursorWidth = 2,
@@ -743,6 +751,9 @@ function DialogItemPartEditor:onEditorChanged(editor)
         end
     end
     self:setNeedsRedraw()
+    if self.hasFocus then
+        self:updateIohandler()
+    end
 end
 
 function DialogItemPartEditor:contentSize()
@@ -1084,25 +1095,50 @@ end
 
 local DialogItemEditMulti = class { _super = DialogItemEdit }
 
+function DialogItemEditMulti:init(lineHeight)
+    self.firstDrawnLine = 1
+    DialogItemEdit.init(self, lineHeight)
+end
+
+function DialogItemEditMulti:lineHeight()
+    return self.charh + 4
+end
+
 function DialogItemEditMulti:contentSize()
-    return gTWIDTH(string.rep("M", self.widthChars), kDialogFont) + 2 * kEditTextSpace, kDialogTightLineHeight * self.numLines
+    return gTWIDTH(string.rep("M", self.widthChars), kDialogFont) + 2 * kEditTextSpace, self:lineHeight() * self.numLines + 3
 end
 
 local function withoutNewline(line)
     return line:match("[^\x06\x07\x08]*")
 end
 
+function DialogItemEditMulti:scrollOffset()
+    if not self.lines then
+        return 0
+    end
+    local result = self.lines[self.firstDrawnLine].y - self.lines[1].y
+    assert(result == (self.firstDrawnLine - 1) * self:lineHeight())
+    return result
+end
+
 function DialogItemEditMulti:getCursorPos()
     local pos = self.editor.cursorPos
     local line, col = self:charPosToLineColumn(pos)
+    if line < self.firstDrawnLine or line >= self.firstDrawnLine + self.numLines then
+        return nil
+    end
     local lineInfo = self.lines[line]
     local textw = gTWIDTH(withoutNewline(lineInfo.text):sub(1, col - 1), kDialogFont)
     local x = lineInfo.x + textw
-    local y = lineInfo.y - 1
+    local y = lineInfo.y - self:scrollOffset() - 1
     return x, y
 end
 
 function DialogItemEditMulti:charPosToLineColumn(pos)
+    if self.lines == nil then
+        return 1, pos
+    end
+
     -- Work out which line pos is in
     for i, line in ipairs(self.lines) do
         if pos < line.charPos + #line.text or self.lines[i + 1] == nil then
@@ -1116,8 +1152,8 @@ end
 
 function DialogItemEditMulti:posToCharPos(x, y)
     local tx = x - self.x - kEditTextSpace - self.promptWidth
-    local ty = y - self.y - kDialogLineTextYOffset
-    local lineNumber = math.min(math.max(1, 1 + (ty // kDialogTightLineHeight)), #self.lines)
+    local ty = y - self.y - kDialogLineTextYOffset + self:scrollOffset()
+    local lineNumber = math.min(math.max(1, 1 + (ty // self:lineHeight())), #self.lines)
     local lineInfo = self.lines[lineNumber]
     local line = withoutNewline(lineInfo.text)
 
@@ -1195,12 +1231,47 @@ local function formatText(text, maxWidth)
     return lines
 end
 
-function DialogItemEditMulti:drawValue(val)
+function DialogItemEditMulti:getTextWidth()
+    local boxWidth = math.min(self:contentSize(), self.w - (self.x + self.promptWidth))
+    local textWidth = boxWidth - 2
+    if self:shouldDrawScrollbar() and self.scrollbar then
+        textWidth = textWidth - self.scrollbar.w - 1 -- Extra -1 for the line we draw to left of scrollbar
+    end
+    return textWidth
+end
+
+function DialogItemEditMulti:formatTextIntoLines()
+    local lines = formatText(self.editor.value, self:getTextWidth())
+    self.lines = {}
+
+    local texty = self.y + kDialogLineTextYOffset
+    local lineHeight = self:lineHeight()
+    local charPos = 1
+    for i, line in ipairs(lines) do
+        local lineInfo = {
+            text = line,
+            charPos = charPos,
+            x = self.x + self.promptWidth + kEditTextSpace,
+            y = texty + (i-1) * lineHeight,
+        }
+        local printableChars = withoutNewline(lineInfo.text)
+        self.lines[i] = lineInfo
+
+        charPos = charPos + #line
+    end
+end
+
+function DialogItemEditMulti:shouldDrawScrollbar()
+    return self.lines and #self.lines > self.numLines and self.numLines > 1
+end
+
+function DialogItemEditMulti:draw()
     local x = self:drawPrompt()
     local texty = self.y + kDialogLineTextYOffset
 
     local boxWidth = math.min(self:contentSize(), self.w - x)
-    local boxHeight = kDialogTightLineHeight * self.numLines
+    local lineHeight = self:lineHeight()
+    local boxHeight = lineHeight * self.numLines
     lightGrey()
     gAT(x, texty - 2)
     gBOX(boxWidth, boxHeight + 3)
@@ -1209,41 +1280,106 @@ function DialogItemEditMulti:drawValue(val)
     gFILL(boxWidth - 2, boxHeight + 1, KgModeClear)
     gAT(x + 1, texty)
 
-    local lines = formatText(val, boxWidth - 2)
-    self.lines = {}
+    local scrollbarWasVisible = self.scrollbar and self:shouldDrawScrollbar()
+    self:formatTextIntoLines()
+    local shouldDrawScrollbar = self:shouldDrawScrollbar()
 
-    local charPos = 1
-    for i, line in ipairs(lines) do
-        local lineInfo = {
-            text = line,
-            charPos = charPos,
-            x = x + kEditTextSpace,
-            y = texty + (i-1) * kDialogTightLineHeight,
-        }
-        local printableChars = withoutNewline(lineInfo.text)
-        drawText(printableChars, lineInfo.x, lineInfo.y)
-        self.lines[i] = lineInfo
+    if shouldDrawScrollbar and self.scrollbar == nil then
+        local Scrollbar = runtime:require("scrollbar").Scrollbar
+        self.scrollbar = Scrollbar.newVertical(0,
+            texty - 1,
+            boxHeight + 1,
+            boxHeight,
+            #self.lines * lineHeight)
+        self.scrollbar.x = x + boxWidth - 1 - self.scrollbar.w
+        self.scrollbar.observer = self
+        self:formatTextIntoLines()
+    elseif scrollbarWasVisible and not shouldDrawScrollbar then
+        -- Have to reformat
+        self:formatTextIntoLines()
+        self.firstDrawnLine = 1
+    end
 
-        charPos = charPos + #line
+    local scrollOffset = self:scrollOffset()
+    for i = self.firstDrawnLine, self.firstDrawnLine + self.numLines - 1 do
+        local line = self.lines[i]
+        if line == nil then
+            break
+        end
+        drawText(withoutNewline(line.text), line.x, line.y - scrollOffset)
+    end
+
+    if shouldDrawScrollbar then
+        darkGrey()
+        gAT(self.scrollbar.x - 1, self.scrollbar.y)
+        gLINEBY(0, self.scrollbar.h)
+        if not self.scrollbar.tracking then
+            self.scrollbar:setContentHeight(#self.lines * lineHeight)
+            self.scrollbar:setContentOffset(scrollOffset)
+        end
+        self.scrollbar:draw()
     end
 
     if self.hasFocus and self.editor:hasSelection() then
         local selStart, selEnd = self.editor:getSelectionRange()
         local startLine, startCol = self:charPosToLineColumn(selStart)
         local endLine, endCol = self:charPosToLineColumn(selEnd)
-        for i = startLine, endLine do
+        for i = math.max(startLine, self.firstDrawnLine), math.min(endLine, self.firstDrawnLine + self.numLines - 1) do
             local line = self.lines[i]
             local printableChars = withoutNewline(line.text)
             local lineSelStart = (i == startLine) and startCol or 1
             local lineSelEnd = (i == endLine) and endCol or #printableChars
             local selOffset = gTWIDTH(printableChars:sub(1, lineSelStart - 1))
             local selWidth = gTWIDTH(printableChars:sub(lineSelStart, lineSelEnd))
-            gAT(line.x + selOffset, line.y - 1)
-            gFILL(selWidth, kDialogTightLineHeight, KgModeInvert)
+            gAT(line.x + selOffset, line.y - scrollOffset - 1)
+            gFILL(selWidth, self:lineHeight(), KgModeInvert)
         end
     end
 
     self:updateCursorIfFocussed()
+    View.draw(self)
+end
+
+function DialogItemEditMulti:setFirstDrawnLine(newVal)
+    self.firstDrawnLine = math.min(math.max(1, newVal), #self.lines - self.numLines + 1)
+    self:setNeedsRedraw()
+end
+
+function DialogItemEditMulti:updateCursorIfFocussed()
+    if self.hasFocus then
+        local x, y = self:getCursorPos()
+        if x then
+            gAT(x, y)
+            local _, _, ascent = gTWIDTH("", kDialogFont)
+            CURSOR(gIDENTITY(), ascent + 1, self.cursorWidth, self:lineHeight())
+        else
+            -- Cursor not visible in the currently shown lines
+            CURSOR(false)
+        end
+    end
+end
+
+function DialogItemEditMulti:handlePointerEvent(x, y, type)
+    -- printf("DialogItemEditMulti:handlePointerEvent(%d, %d, %d)\n", x, y, type)
+    if self.scrollbar and (self.scrollbar.tracking or (x >= self.scrollbar.x)) then
+        self.scrollbar:handlePointerEvent(x, y, type)
+        if self.scrollbar.tracking and not self.capturing then
+            self:drawIfNeeded()
+            self:capturePointer()
+        end
+    elseif self.capturing then
+        self.editor:setCursorPos(self:posToCharPos(x, y), self.editor.anchor)
+    elseif type == KEvPtrPenDown then
+        if not self.hasFocus then
+            self:takeFocus()
+        end
+        if x >= self.x + self.promptWidth then
+            self.editor:setCursorPos(self:posToCharPos(x, y))
+            self:capturePointer()
+            self:setNeedsRedraw()
+        end
+    end
+    return true
 end
 
 function DialogItemEditMulti:handleKeyPress(k, modifiers)
@@ -1288,9 +1424,54 @@ function DialogItemEditMulti:handleKeyPress(k, modifiers)
         local line, col = self:charPosToLineColumn(self.editor.cursorPos)
         self.editor:setCursorPos(self.lines[line].charPos + #withoutNewline(self.lines[line].text), anchor)
         return true
+    elseif k == KKeyPageDown then
+        local line, col = self:charPosToLineColumn(self.editor.cursorPos)
+        local newLine = math.min(line + self.numLines, #self.lines)
+        -- Keep cursor in roughly the same place
+        self.firstDrawnLine = math.min(self.firstDrawnLine + (newLine - line), #self.lines - self.numLines)
+        local newCol = math.min(col, #withoutNewline(self.lines[newLine].text) + 1)
+        self.editor:setCursorPos(self.lines[newLine].charPos + newCol - 1, anchor)
+    elseif k == KKeyPageUp then
+        local line, col = self:charPosToLineColumn(self.editor.cursorPos)
+        local newLine = math.max(line - self.numLines, 1)
+        -- Keep cursor in roughly the same place
+        self.firstDrawnLine = math.max(self.firstDrawnLine + (newLine - line), 1)
+        local newCol = math.min(col, #withoutNewline(self.lines[newLine].text) + 1)
+        self.editor:setCursorPos(self.lines[newLine].charPos + newCol - 1, anchor)
     else
         return DialogItemEdit.handleKeyPress(self, k, modifiers)
     end
+end
+
+function DialogItemEditMulti:onEditorChanged()
+    -- Have to check whether we need to scroll to keep the cursor visible
+    if not self.lines then
+        return
+    end
+    self:formatTextIntoLines()
+    local line = self:charPosToLineColumn(self.editor.cursorPos)
+    if line < self.firstDrawnLine then
+        self:setFirstDrawnLine(line)
+    elseif line >= self.firstDrawnLine + self.numLines then
+        self:setFirstDrawnLine(line - self.numLines + 1)
+    end
+
+    DialogItemEditMulti._super.onEditorChanged(self)
+end
+
+function DialogItemEditMulti:scrollbarDidScroll(inc)
+    self:setFirstDrawnLine(self.firstDrawnLine + inc)
+end
+
+function DialogItemEditMulti:scrollbarContentOffsetChanged()
+    local newOffset = self.scrollbar.contentOffset
+    -- printf("DialogItemEditMulti:scrollbarContentOffsetChanged() newOffset=%d\n", newOffset)
+    self.firstDrawnLine = 1
+    while self.lines[self.firstDrawnLine].y - self.y + self:lineHeight() < newOffset do
+        self.firstDrawnLine = self.firstDrawnLine + 1
+    end
+    -- printf("new firstDrawnLine = %d offset=%d\n", self.firstDrawnLine, self.lines[self.firstDrawnLine].y)
+    self:setNeedsRedraw()
 end
 
 function DialogItemEditMulti:updateVariable()
@@ -1964,9 +2145,10 @@ end
 function DialogWindow:processEvent(ev)
     local k = ev[KEvAType]()
     local handled = false
+    local modifiers
     if k & KEvNotKeyMask == 0 then
         -- Key press event. Note, buttons shortcuts take precedence over the focussed control
-        local modifiers = ev[KEvAKMod]()
+        modifiers = ev[KEvAKMod]()
         if self.buttons then
             handled = self.buttons:handleKeyPress(k, modifiers)
         end
@@ -1980,7 +2162,7 @@ function DialogWindow:processEvent(ev)
 
     if k == KKeyEsc then
         return 0
-    elseif k == KKeyUpArrow and self.focussedItemIndex then
+    elseif k == KKeyUpArrow and modifiers == 0 and self.focussedItemIndex then
         local newIdx = self.focussedItemIndex
         repeat
             newIdx = wrapIndex(newIdx - 1, #self.items)
@@ -1988,7 +2170,7 @@ function DialogWindow:processEvent(ev)
         if newIdx ~= self.focussedItemIndex then
             self:moveFocusTo(self.items[newIdx])
         end
-    elseif k == KKeyDownArrow and self.focussedItemIndex then
+    elseif k == KKeyDownArrow and modifiers == 0 and self.focussedItemIndex then
         local newIdx = self.focussedItemIndex
         repeat
             newIdx = wrapIndex(newIdx + 1, #self.items)
