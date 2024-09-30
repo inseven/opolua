@@ -2271,7 +2271,12 @@ function handleOp_CURSOR(procState)
         for i, arg in ipairs(args) do
             procState:emitExpression(arg, declArgs[i])
         end
-        qualifier = #args - 1
+        -- This command is unusual in how qualifier is used...
+        if #args == 1 then
+            qualifier = 2
+        else
+            qualifier = #args - 1 -- ie 3 or 4
+        end
     end
     procState:emit("BB", opcodes.Cursor, qualifier)
     if args then

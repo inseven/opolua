@@ -1,0 +1,17 @@
+DECLARE EXTERNAL
+INCLUDE "const.oph"
+
+PROC main:
+    REM text cursor
+    PRINT "Hello";
+    CURSOR ON
+    GET
+
+    REM graphics cursor
+    gAT 50, 50
+    gFONT KFontArialNormal32&
+    gPRINT "Hello"
+    CURSOR gIDENTITY
+    gUPDATE
+    GET
+ENDP

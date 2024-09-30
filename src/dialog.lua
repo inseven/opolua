@@ -405,9 +405,8 @@ end
 
 function DialogItemEdit:updateCursorIfFocussed()
     if self.hasFocus then
-        gAT(self:getCursorPos())
-        local _, h, ascent = gTWIDTH("", kDialogFont)
-        CURSOR(gIDENTITY(), ascent + 1, self.cursorWidth, h + 1)
+        local x, y = self:getCursorPos()
+        CURSOR(gIDENTITY(), x, y, self.cursorWidth, self.charh + 1)
     end
 end
 
@@ -450,7 +449,7 @@ function DialogItemEdit:setFocus(flag)
         -- When focussed, the draw call triggered by View.setFocus takes care of calling CURSOR (via updateCursorIfFocussed)
         self:updateIohandler()
     else
-        CURSOR(false)
+        CURSOR(nil)
         runtime:iohandler().textEditor(nil)
     end
 end
@@ -467,19 +466,27 @@ function DialogItemEdit:onEditorChanged()
 end
 
 function DialogItemEdit:updateIohandler()
-    local origx, origy = gORIGINX(), gORIGINY()
     local rect = {
-        x = origx + self.x + self.promptWidth,
-        y = origy + self.y,
+        x = self.x + self.promptWidth,
+        y = self.y,
         w = self.w - self.promptWidth,
         h = self.h,
+    }
+    local cursorx, cursory = self:getCursorPos()
+    -- The cursor might not actually be showing at this point (eg when DialogItemPartEditor supresses the cursor) but
+    -- this is where it _should_ be.
+    local cursorRect = {
+        x = cursorx,
+        y = cursory,
+        w = self.cursorWidth,
+        h = self.charh + 1, --  This is not quite correct for DialogItemEditMulti but it doesn't really matter
     }
     runtime:iohandler().textEditor({
         id = gIDENTITY(),
         rect = rect,
         contents = self.editor.value,
         type = self:inputType(),
-        cursorPos = self.editor.cursorPos - 1, -- Zero based for native code
+        cursorRect = cursorRect,
     })
 end
 
@@ -801,7 +808,7 @@ function DialogItemPartEditor:updateCursorIfFocussed()
         if self.editor:hasSelection() then
             -- We don't show a cursor when there's a selection (because a selection is used to indicate the entry is
             -- complete).
-            CURSOR(false)
+            CURSOR(nil)
         else
             DialogItemEdit.updateCursorIfFocussed(self)
         end
@@ -1349,12 +1356,10 @@ function DialogItemEditMulti:updateCursorIfFocussed()
     if self.hasFocus then
         local x, y = self:getCursorPos()
         if x then
-            gAT(x, y)
-            local _, _, ascent = gTWIDTH("", kDialogFont)
-            CURSOR(gIDENTITY(), ascent + 1, self.cursorWidth, self:lineHeight())
+            CURSOR(gIDENTITY(), x, y, self.cursorWidth, self:lineHeight())
         else
             -- Cursor not visible in the currently shown lines
-            CURSOR(false)
+            CURSOR(nil)
         end
     end
 end
@@ -1543,8 +1548,8 @@ function DialogChoiceList:draw()
     black()
 
     if self.typeable and self.hasFocus then
-        gAT(x + self.choiceTextSpace + gTWIDTH(text:sub(1, self.cursorPos - 1)), texty)
-        CURSOR(gIDENTITY(), nil, gTWIDTH(text:sub(self.cursorPos, self.cursorPos)))
+        local cursorx = x + self.choiceTextSpace + gTWIDTH(text:sub(1, self.cursorPos - 1))
+        CURSOR(gIDENTITY(), cursorx, texty, gTWIDTH(text:sub(self.cursorPos, self.cursorPos)))
     end
 
     View.draw(self)

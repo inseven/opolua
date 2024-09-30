@@ -695,46 +695,27 @@ function BUSY(text, corner, delay)
     runtime:restoreGraphicsState(state)
 end
 
-function CURSOR(id, asc, w, h, t)
-    -- printf("CURSOR id=%s, asc=%s, w=%s, h=%s, t=%s\n", id, asc, w, h, t)
+-- Unlike the OPL CURSOR command, the x and y coordinates are explicit and indicate the top left of the cursor.
+-- Therefore, no ascent parameter is necessary.
+function CURSOR(id, x, y, w, h, t)
+    -- printf("CURSOR id=%s, x=%s, y=%s, w=%s, h=%s, t=%s\n", id, x, y, w, h, t)
     runtime:flushGraphicsOps()
     local cursor = runtime:getResource("cursor")
-    if id == false then
+    if id == nil then
         if cursor then
             cursor.shown = false
         end
         runtime:iohandler().graphicsop("cursor", nil)
-    elseif id == true then
-        if cursor == nil then
-            -- What happens if you get a CURSOR ON without any previous config?
-            return
-        end
-        if not cursor.shown then
-            cursor.shown = true
-            runtime:iohandler().graphicsop("cursor", cursor)
-        end
     else
-        local fontw, fonth, fontAscent
-        if not h or not asc then
-            fontw, fonth, fontAscent = runtime:gTWIDTH("0")
-        end
-        if not asc then
-            asc = fontAscent
-        end
-        if not w then
-            w = 2
-        end
-        if not h then
-            h = fonth
-        end
-        if not t then
-            t = 0
-        end
         local win = assert(runtime:getGraphicsContext(id), "Bad id for CURSOR")
         assert(win.isWindow, "Cannot call CURSOR on a bitmap")
 
-        if cursor and cursor.shown and id == cursor.id and asc == cursor.ascent
-            and win.pos.x == cursor.rect.x and win.pos.y == cursor.rect.y
+        if t == nil then
+            t = 0
+        end
+
+        if cursor and cursor.shown and id == cursor.id
+            and x == cursor.rect.x and y == cursor.rect.y
             and w == cursor.rect.w and h == cursor.rect.h and t == cursor.flags then
             -- Cursor has not moved or changed, don't interrupt the timing
             return
@@ -745,14 +726,14 @@ function CURSOR(id, asc, w, h, t)
             runtime:setResource("cursor", cursor)
         end
         cursor.id = id
-        cursor.ascent = asc or fontAscent
+        cursor.shown = true
         cursor.rect = {
-            x = win.pos.x,
-            y = win.pos.y,
-            w = w or 2,
-            h = h or fonth,
+            x = x,
+            y = y,
+            w = w,
+            h = h,
         }
-        cursor.flags = t or 0
+        cursor.flags = t
         runtime:iohandler().graphicsop("cursor", cursor)
     end
 end
