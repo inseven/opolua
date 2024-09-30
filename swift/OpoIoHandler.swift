@@ -326,7 +326,6 @@ public struct Graphics {
     public struct Cursor: Codable {
         let id: DrawableId
         let rect: Rect
-        let ascent: Int
         let flags: FlagSet<CursorFlag>
     }
 
@@ -544,9 +543,9 @@ public struct TextFieldInfo: Codable {
     }
     let id: Graphics.DrawableId
     let type: InputType
-    let rect: Graphics.Rect
+    let rect: Graphics.Rect? // bounding rect of the whole text field, in id's coords, if available
     let contents: String
-    let cursorPos: Int
+    let cursorRect: Graphics.Rect // location of cursor, in coords of id
 }
 
 public protocol FileSystemIoHandler {

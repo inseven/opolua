@@ -227,6 +227,15 @@ PROC fileDlg:
 	GET
 ENDP
 
+PROC emptyChoiceDlg:
+	LOCAL ch%
+	dINIT "Empty choice list dialog"
+	dCHOICE ch%, "Choose", ""
+	PRINT DIALOG
+	GET
+ENDP
+
+
 PROC loop%:
 	LOCAL dlg%
 	EXTERNAL choice%
@@ -236,7 +245,7 @@ PROC loop%:
 	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
 	dCHOICE choice%, "", "password,empty,date,time,..."
 	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg,..."
-	dCHOICE choice%, "", "editmulti,file"
+	dCHOICE choice%, "", "editmulti,file,emptychoice"
 	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
 	choice% = 2
 	dlg% = DIALOG
@@ -274,6 +283,8 @@ PROC loop%:
 		editMultiDlg:
 	ELSEIF choice% = 14
 		fileDlg:
+	ELSEIF choice% = 15
+		emptyChoiceDlg:
 	ENDIF
 	
 	RETURN 1

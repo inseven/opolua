@@ -1471,21 +1471,37 @@ function Create_dump(runtime)
 end
 
 function Cursor(stack, runtime) -- 0xA6
-    local numParams = runtime:IP8()
-    if numParams == 0 then
-        runtime:CURSOR(false)
-    elseif numParams == 1 then
-        runtime:CURSOR(true)
+    local immediate = runtime:IP8()
+    if immediate == 0 then
+        -- CURSOR OFF
+        runtime:CURSOR(nil)
+    elseif immediate == 1 then
+        -- CURSOR ON means text cursor, in the default window
+        local screen = runtime:getGraphics().screen
+        local x = screen.x + (screen.cursorx * screen.charw)
+        local y = screen.y + (screen.cursory * screen.charh)
+        runtime:CURSOR(KDefaultWin, x, y, screen.charw, screen.charh)
     else
+        -- CURSOR <window> [, ascent, width, height [, type]
         local t = nil
-        if numParams == 4 then
+        if immediate == 4 then
             t = stack:pop()
-        else
-            assert(numParams == 3, "Bad immediate after Cursor!")
         end
-        -- numParams doesn't include id...
-        local id, asc, w, h = stack:pop(4)
-        runtime:CURSOR(id, asc, w, h, t)
+        local asc, w, h
+        if immediate >= 3 then
+            asc, w, h = stack:pop(3)
+        end
+        local id = stack:pop()
+
+        if asc == nil then
+            local _
+            _, h, asc = runtime:gTWIDTH("")
+            w = 2
+        end
+        local context = runtime:getGraphicsContext(id)
+        local x = context.pos.x
+        local y = context.pos.y - asc
+        runtime:CURSOR(id, x, y, w, h, t)
     end
 end
 
