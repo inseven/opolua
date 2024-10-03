@@ -59,6 +59,7 @@ function Editor:handleKeyPress(k, modifiers)
         anchor = self.anchor
     end
     local hasSelection = self:hasSelection()
+    -- For simplicity's sake, we will accept either 16-bit or 32-bit event keycodes here
     if k == KKeyDel then -- backspace
         local from, to
         if hasSelection then
@@ -83,22 +84,22 @@ function Editor:handleKeyPress(k, modifiers)
     elseif k == KTabCharacter then
         -- We're not going to implement the entire tab stop logic but we can at least allow the character
         self:insert(string.char(k))
-    elseif k == KKeyLeftArrow then
+    elseif k == KKeyLeftArrow or k == KKeyLeftArrow32 then
         if hasSelection and not anchor then
             self:setCursorPos(math.min(self.anchor, self.cursorPos))
         else
             self:setCursorPos(self.cursorPos - 1, anchor)
         end
-    elseif k == KKeyRightArrow then
+    elseif k == KKeyRightArrow or k == KKeyRightArrow32 then
         if hasSelection and not anchor then
             self:setCursorPos(math.max(self.anchor, self.cursorPos))
         else
             self:setCursorPos(self.cursorPos + 1, anchor)
         end
-    elseif k == KKeyPageLeft then
+    elseif k == KKeyPageLeft or k == KKeyPageLeft32 then
         -- Yes this really is what the home key is called in const.oph...
         self:setCursorPos(1, anchor)
-    elseif k == KKeyPageRight then
+    elseif k == KKeyPageRight or k == KKeyPageRight32 then
         -- Ditto...
         self:setCursorPos(#self.value + 1, anchor)
     else

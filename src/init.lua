@@ -219,6 +219,7 @@ KUidAppDllDoc8 = 0x1000006D -- generic uid2 for various apps (check uid3)
 KMultiBitmapRomImageUid = 0x10000041 -- uid1
 KUidMultiBitmapFileImage = 0x10000042
 KUidOplInterpreter = 0x10000168
+KUidDirectFileStore = 0x10000037
 
 KUidSisFileEr6 = 0x10003A12 -- ER6 SIS uid2, allegedly
 KUidInstallApp = 0x10000419 -- SIS file uid3 (all versions)
@@ -312,19 +313,26 @@ FontAliases = {
     [0x9A] = KFontArialNormal15,
 }
 
+-- These aren't defined in the const.oph version we're using as our baseline
+KColorgCreate64KColorMode = 0x0006
+KColorgCreate16MColorMode = 0x0007
+KColorgCreateRGBColorMode = 0x0008
+KColorgCreate4KColorMode = 0x0009
+
 local GrayBppToMode = {
-    [1] = KgCreate2GrayMode,
-    [2] = KgCreate4GrayMode,
-    [4] = KgCreate16GrayMode,
-    [8] = KgCreate256GrayMode,
+    [1] = KColorgCreate2GrayMode,
+    [2] = KColorgCreate4GrayMode,
+    [4] = KColorgCreate16GrayMode,
+    [8] = KColorgCreate256GrayMode,
 }
 
 local ColorBppToMode = {
-    [4] = KgCreate16ColorMode,
-    [8] = KgCreate256ColorMode,
-    [12] = KgCreate4KColorMode,
-    [16] = KgCreate64KColorMode,
-    [24] = KgCreate16MColorMode,
+    [4] = KColorgCreate16ColorMode,
+    [8] = KColorgCreate256ColorMode,
+    [12] = KColorgCreate4KColorMode,
+    [16] = KColorgCreate64KColorMode,
+    [24] = KColorgCreate16MColorMode,
+    [32] = KColorgCreateRGBColorMode,
 }
 
 function bppColorToMode(bpp, color)
@@ -429,15 +437,15 @@ function hexUnescape(str)
 end
 
 local charCodeMap = {
-    [4098] = 262, -- Home
-    [4099] = 263, -- End
-    [4100] = 260, -- PgUp
-    [4101] = 261, -- PgDn
-    [4103] = 259, -- LeftArrow
-    [4104] = 258, -- RightArrow
-    [4105] = 256, -- UpArrow
-    [4106] = 257, -- DownArrow
-    [4150] = 290, -- Menu
+    [KKeyPageLeft32] = KKeyPageLeft, -- Home
+    [KKeyPageRight32] = KKeyPageRight, -- End
+    [KKeyPageUp32] = KKeyPageUp, -- PgUp
+    [KKeyPageDown32] = KKeyPageDown, -- PgDn
+    [KKeyLeftArrow32] = KKeyLeftArrow, -- LeftArrow
+    [KKeyRightArrow32] = KKeyRightArrow, -- RightArrow
+    [KKeyUpArrow32] = KKeyUpArrow, -- UpArrow
+    [KKeyDownArrow32] = KKeyDownArrow, -- DownArrow
+    [KKeyMenu32] = KGetMenu, -- Menu (note different naming convention on charcode)
 }
 
 function keycodeToCharacterCode(keycode)

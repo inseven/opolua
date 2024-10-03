@@ -133,7 +133,7 @@ function graphicsop(cmd, ...)
 end
 
 function getDeviceInfo()
-    return 640, 240, KgCreate4GrayMode, "psion-series-5"
+    return 640, 240, KColorgCreate4GrayMode, "psion-series-5"
 end
 
 local fsmaps = {}
