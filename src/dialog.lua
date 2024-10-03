@@ -1584,7 +1584,7 @@ function DialogChoiceList:handleKeyPress(k, modifiers)
     elseif k == KKeyTab then
         self:displayPopupMenu()
         return true
-    elseif k >= string.byte("a") and k <= string.byte("z") then
+    elseif k >= 0x20 and k <= 0x7E then
         local ch = string.char(k)
         if self.typeable then
             local prefix = string.lower(self.choices[self.index]:sub(1, self.cursorPos - 1) .. ch)

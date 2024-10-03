@@ -484,6 +484,18 @@ local function runMenuEventLoop(bar, pane, shortcuts)
                 newIndex = newIndex + 1
             end
             current:moveSelectionTo(newIndex)
+        elseif k == KKeyPageLeft then
+            if bar then
+                bar.moveSelectionTo(1)
+            else
+                current:moveSelectionTo(1)
+            end
+        elseif k == KKeyPageRight then
+            if bar then
+                bar.moveSelectionTo(#bar.items)
+            else
+                current:moveSelectionTo(#current.items)
+            end
         elseif k == KKeyEsc then
             if pane.submenu then
                 pane:closeSubmenu()
