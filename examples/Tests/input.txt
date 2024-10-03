@@ -1,0 +1,71 @@
+PROC main:
+    LOCAL k%, i%, ll&, f, str$(16)
+    WHILE 1
+        REM PRINT "Press (i) to input int, (l) for long, (f) for float, (s) for string or (e) to edit string"
+        PRINT "Input (i)nt, (l)ong, (f)loat, (s)tring, or (e)dit string. Use uppercase letter to trap."
+        k% = GET
+        IF k% = %q
+            BREAK
+        ELSEIF k% = %i
+            PRINT "Input int:",
+            INPUT i%
+            PRINT "Got int", i%
+        ELSEIF k% = %l
+            PRINT "Input long:",
+            INPUT ll&
+            PRINT "Got long", ll&
+        ELSEIF k% = %f
+            PRINT "Input float:",
+            INPUT f
+            PRINT "Got float", f
+        ELSEIF k% = %s
+            PRINT "Input string:",
+            INPUT str$
+            PRINT "Got string", str$
+        ELSEIF k% = %e
+            PRINT "Edit string:",
+            EDIT str$
+            PRINT "Got string", str$
+        ELSEIF k% = %I
+            PRINT "Trap input int:",
+            TRAP INPUT i%
+            IF ERR <> 0
+                PRINT "Trap returned error", ERR
+            ELSE
+                PRINT "Got int", i%
+            ENDIF
+        ELSEIF k% = %L
+            PRINT "Trap input long:",
+            TRAP INPUT ll&
+            IF ERR <> 0
+                PRINT "Trap returned error", ERR
+            ELSE
+                PRINT "Got long", ll&
+            ENDIF
+        ELSEIF k% = %F
+            PRINT "Trap input float:",
+            TRAP INPUT f
+            IF ERR <> 0
+                PRINT "Trap returned error", ERR
+            ELSE
+                PRINT "Got float", f
+            ENDIF
+        ELSEIF k% = %S
+            PRINT "Trap input string:",
+            TRAP INPUT str$
+            IF ERR <> 0
+                PRINT "Trap returned error", ERR
+            ELSE
+                PRINT "Got string", str$
+            ENDIF
+        ELSEIF k% = %E
+            PRINT "Trap edit string:",
+            TRAP EDIT str$
+            IF ERR <> 0
+                PRINT "Trap returned error", ERR
+            ELSE
+                PRINT "Got string", str$
+            ENDIF
+        ENDIF
+    ENDWH
+ENDP
