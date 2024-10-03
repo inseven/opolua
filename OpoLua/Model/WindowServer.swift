@@ -65,7 +65,8 @@ class WindowServer {
     private var spriteTimer: Timer?
     private var clockTimer: Timer?
     private var cursorTimer: Timer?
-    private var cursorWindow: Graphics.DrawableId?
+    private var cursorDrawCmd: Graphics.DrawCommand?
+    private var cursorCurrentlyDrawn = false
 
     // We run the timer at a fixed 0.05 (ie, 20Hz) interval on the basis that
     // the series 5 probably couldn't render anything faster than that anyway.
@@ -155,7 +156,7 @@ class WindowServer {
         let view = self.window(for: drawableId)
         self.drawablesById[drawableId] = nil
         self.windows[drawableId] = nil
-        if drawableId == cursorWindow {
+        if drawableId == cursorDrawCmd?.drawableId {
             cancelCursorTimer()
         }
         if let view = view {
@@ -195,17 +196,26 @@ class WindowServer {
     }
 
     func cursor(_ cursor: Graphics.Cursor?) {
+        if let cursorDrawCmd {
+            if cursorCurrentlyDrawn {
+                // Hopefully this will un-draw it
+                window(for: cursorDrawCmd.drawableId)?.draw(cursorDrawCmd, provider: self)
+                cursorCurrentlyDrawn = false
+            }
+        }
+
         cancelCursorTimer()
         if let cursor {
             let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
-            let cmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert, origin: cursor.rect.origin, color: .black, bgcolor: .white, penWidth: 1, greyMode: .normal)
-            window(for: cursor.id)?.draw(cmd, provider: self)
-            cursorWindow = cursor.id
+            cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert, origin: cursor.rect.origin, color: .black, bgcolor: .white, penWidth: 1, greyMode: .normal)
+            window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
+            cursorCurrentlyDrawn = true
             cursorTimer = Timer.scheduledTimer(withTimeInterval: kCursorFlashTime, repeats: true, block: { timer in
-                guard let window = self.window(for: cmd.drawableId) else {
+                guard let cmd = self.cursorDrawCmd, let window = self.window(for: cmd.drawableId) else {
                     self.cancelCursorTimer()
                     return
                 }
+                self.cursorCurrentlyDrawn = !self.cursorCurrentlyDrawn
                 window.draw(cmd, provider: self)
             })
         }
@@ -338,7 +348,7 @@ class WindowServer {
     func cancelCursorTimer() {
         cursorTimer?.invalidate()
         cursorTimer = nil
-        cursorWindow = nil
+        cursorDrawCmd = nil
     }
 
     @objc func showBusyWindow() {

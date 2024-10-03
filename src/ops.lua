@@ -1309,59 +1309,22 @@ function LPrintSpace(stack, runtime) -- 0x91
 end
 
 function PrintCarriageReturn(stack, runtime) -- 0x92
-    runtime:PRINT("\n")
+    runtime:PRINT(KLineBreakStr)
 end
 
 function LPrintCarriageReturn(stack, runtime) -- 0x93
-    stack:push("\n")
+    stack:push(KLineBreakStr)
     LPrintString(stack, runtime)
 end
 
 function InputInt(stack, runtime) -- 0x94
     local var = stack:pop()
-    local trapped = runtime:getTrap()
-    local result
-    while result == nil do
-        local line = runtime:iohandler().editValue({
-            type = "integer",
-            initialValue = "",
-            prompt = "?",
-            allowCancel = trapped,
-        })
-        if not line then
-            error(KErrEsc)
-        end
-        result = tonumber(line)
-        if result == nil then
-            if trapped then
-                -- We can error and the trap check in runtime will deal with it
-                error(KErrGenFail)
-            else
-                -- iohandler is responsible for outputting a linefeed after reading the line
-                runtime:iohandler().print("?")
-                -- And go round again
-            end
-        end
-    end
-    var(result)
-    runtime:setTrap(false)
+    runtime:INPUT(var)
 end
 
 InputLong = InputInt -- 0x95
 InputFloat = InputInt -- 0x96
-
-function InputString(stack, runtime) -- 0x97
-    local var = stack:pop()
-    local trapped = runtime:getTrap()
-    local line = runtime:iohandler().editValue({
-        type = "text",
-        initialValue = "",
-        prompt = "?",
-        allowCancel = trapped,
-    })
-    var(line)
-    runtime:setTrap(false)
-end
+InputString = InputInt -- 0x97
 
 function PokeW(stack, runtime) -- 0x98
     local data = string.pack("<i2", stack:pop())
@@ -1476,11 +1439,7 @@ function Cursor(stack, runtime) -- 0xA6
         -- CURSOR OFF
         runtime:CURSOR(nil)
     elseif immediate == 1 then
-        -- CURSOR ON means text cursor, in the default window
-        local screen = runtime:getGraphics().screen
-        local x = screen.x + (screen.cursorx * screen.charw)
-        local y = screen.y + (screen.cursory * screen.charh)
-        runtime:CURSOR(KDefaultWin, x, y, screen.charw, screen.charh)
+        runtime:CURSOR(true)
     else
         -- CURSOR <window> [, ascent, width, height [, type]
         local t = nil
@@ -1726,8 +1685,8 @@ function UnLoadM(stack, runtime) -- 0xC1
 end
 
 function Edit(stack, runtime) -- 0xC2
-    unimplemented("Edit")
-    runtime:setTrap(false)
+    local var = stack:pop()
+    runtime:INPUT(var, var())
 end
 
 function Screen2(stack, runtime) -- 0xC3

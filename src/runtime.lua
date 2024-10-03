@@ -457,6 +457,12 @@ function Runtime:getGraphics()
     return self.graphics
 end
 
+-- Since there's no text equivalent to gX, gY
+function Runtime:getTextCursorXY()
+    local screen = self:getGraphics().screen
+    return screen.cursorx + 1, screen.cursory + 1
+end
+
 function Runtime:getScreenInfo()
     local graphics = self:getGraphics()
     return graphics.screenWidth, graphics.screenHeight, graphics.screenMode

@@ -695,13 +695,150 @@ function BUSY(text, corner, delay)
     runtime:restoreGraphicsState(state)
 end
 
+function INPUT(var, initVal)
+    local trapped = runtime:getTrap()
+    local isint = var:type() == DataTypes.EWord
+    local islong = var:type() == DataTypes.ELong
+    local isfloat = var:type() == DataTypes.EReal
+    local maxChars
+    if isint then
+        maxChars = 6
+    elseif islong then
+        maxChars = 11
+    elseif isfloat then
+        maxChars = 23 -- Or something like that
+    else
+        maxChars = var:stringMaxLen()
+    end
+
+    -- Special case for defaultiohandler
+    local iohandlerInput = runtime:iohandler().input
+    if iohandlerInput then
+        while true do
+            local result = iohandlerInput(initVal)
+            if result == nil and trapped then
+                error(KErrEsc)
+            elseif isint or islong or isfloat then
+                local n = tonumber(result)
+                if n then
+                    var(n)
+                    break
+                elseif trapped then
+                    error(KErrGenFail)
+                end
+            elseif result then
+                var(result)
+                break
+            else
+                printf("? ")
+            end
+        end
+        runtime:setTrap(false)
+        return
+    end
+
+    local screen = runtime:getGraphics().screen
+    local origx, origy = runtime:getTextCursorXY()
+    local editor = require("editor").Editor()
+    local lastLen = 0
+    local function onEditorChanged()
+        CURSOR(nil)
+        AT(origx, origy)
+        if #editor.value < lastLen then
+            PRINT(string.rep(" ", lastLen))
+            AT(origx, origy)
+        end
+        -- Easiest way to figure out where the cursor should be is to print up to the cursor, then check where we are,
+        -- then print the rest (this handles the printed text wrapping onto a new line).
+        PRINT(editor.value:sub(1, editor.cursorPos - 1))
+        local cursorx, cursory = runtime:getTextCursorXY()
+        PRINT(editor.value:sub(editor.cursorPos))
+        local finalx, finaly = runtime:getTextCursorXY()
+        -- Well, nearly anyway
+        if cursorx == screen.w + 1 then
+            cursorx = 1
+            cursory = math.min(cursory + 1, screen.h)
+        end
+        AT(cursorx, cursory)
+        CURSOR(true)
+        AT(finalx, finaly)
+        lastLen = #editor.value
+    end
+    editor.view = {
+        canUpdate = function(_, newVal)
+            return #newVal <= maxChars
+        end,
+        onEditorChanged = onEditorChanged,
+    }
+    CURSOR(true)
+    if initVal then
+        editor:setValue(initVal)
+    end
+    while true do
+        local k = GET()
+        if k == KKeyEnter then
+            CURSOR(nil)
+            PRINT(KLineBreakStr)
+            if isint or islong then
+                local n = tonumber(editor.value, 10)
+                if n and ((islong and n >= KMinLong and n <= KMaxLong) or (isint and n >= KMinInt and n <= KMaxInt)) then
+                    break
+                end
+            elseif isfloat then
+                if tonumber(editor.value) then
+                    break
+                end
+            else
+                break
+            end
+            -- Only reach here if input was not valid
+            if trapped then
+                error(KErrGenFail)
+            else
+                PRINT("?")
+                origx, origy = runtime:getTextCursorXY()
+                editor:setValue("")
+            end
+        elseif k == KKeyEsc then
+            if editor.value == "" and trapped then
+                CURSOR(nil)
+                error(KErrEsc)
+            else
+                editor:setValue("")
+            end
+        else
+            editor:handleKeyPress(k, 0)
+        end
+    end
+
+    if isint or islong then
+        var(tonumber(editor.value, 10))
+    elseif isfloat then
+        var(tonumber(editor.value))
+    else
+        var(editor.value)
+    end
+    runtime:setTrap(false)
+end
+
 -- Unlike the OPL CURSOR command, the x and y coordinates are explicit and indicate the top left of the cursor.
 -- Therefore, no ascent parameter is necessary.
 function CURSOR(id, x, y, w, h, t)
     -- printf("CURSOR id=%s, x=%s, y=%s, w=%s, h=%s, t=%s\n", id, x, y, w, h, t)
     runtime:flushGraphicsOps()
+
+    if id == true then
+        -- CURSOR(true) means text cursor, in the default window, at the current text cursor position
+        local screen = runtime:getGraphics().screen
+        id = KDefaultWin
+        x = screen.x + (screen.cursorx * screen.charw)
+        y = screen.y + (screen.cursory * screen.charh)
+        w = screen.charw
+        h = screen.charh
+    end
+
     local cursor = runtime:getResource("cursor")
-    if id == nil then
+    if not id then
         if cursor then
             cursor.shown = false
         end
@@ -834,7 +971,7 @@ function PRINT(str)
     local maxX = screen.w
     local maxY = screen.h
     while strPos <= strLen do
-        local lineEnd = str:find("\n", strPos, true)
+        local lineEnd = str:find(KLineBreakStr, strPos, true)
         local endPos = lineEnd
         if not endPos then
             endPos = #str + 1
@@ -949,6 +1086,12 @@ end
 function GET()
     -- GET() is the synchronous version of KEYA(). KEY(), by comparison, is a non-blocking poll function
     -- which returns 0 if no key has been pressed since the last event fetch.
+
+    -- Special case for defaultiohandler
+    local getch = runtime:iohandler().getch
+    if getch then
+        return getch()
+    end
 
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
     local k = runtime:makeTemporaryVar(DataTypes.EWordArray, 2)

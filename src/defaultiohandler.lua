@@ -32,7 +32,7 @@ local fmt = string.format
 local statusRequests = {}
 
 function print(val)
-    printf("%s", val)
+    printf("%s", val:gsub("[\x00-\x1F]", textReplacements))
 end
 
 function textEditor(params)
@@ -41,7 +41,7 @@ end
 function getch()
     -- Can't really do this with what Lua's io provides, as stdin is always in line mode
     printf("defaultiohandler: GET called:")
-    local ch = io.stdin:read(1)
+    local ch = io.stdin:read()
     return ch:byte(1, 1)
 end
 
@@ -105,6 +105,17 @@ function menu(m)
     end
     printf("---END MENU---\n")
     return 0, 0 -- ie cancelled
+end
+
+function input(initVal)
+    local line = io.stdin:read()
+    -- We don't support pressing esc to clear the line, oh well
+    if line:byte(1, 1) == 27 then
+        -- Close enough...
+        return nil
+    else
+        return line
+    end
 end
 
 local function describeOp(op)
