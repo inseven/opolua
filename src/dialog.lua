@@ -1497,6 +1497,10 @@ local kChoiceArrowSpace = 2
 local kChoiceArrowSize = 12 + kChoiceArrowSpace
 
 function DialogChoiceList:init(lineHeight)
+    if #self.choices == 0 then
+        print("Empty choices list in dCHOICE!")
+        error(KErrInvalidArgs)
+    end
     DialogChoiceList._super.init(self, lineHeight)
 end
 
@@ -1672,9 +1676,9 @@ local DialogCheckbox = class {
 }
 
 function DialogCheckbox:init(lineHeight)
-    DialogCheckbox._super.init(self, lineHeight)
     self.choices = { "", kTickMark }
     self.index = self.value == KFalse and 1 or 2
+    DialogCheckbox._super.init(self, lineHeight)
 end
 
 function DialogCheckbox:getChoicesWidth()
@@ -1696,14 +1700,13 @@ local DialogItemFileChooser = class {
 
 function DialogItemFileChooser:init(lineHeight)
     self.typeable = true
-
-    self._super.init(self, lineHeight)
     if self.path == "" then
         self.path = "C:\\"
     end
     local dir, name = oplpath.split(self.path)
     assert(dir ~= "", "Bad path for DialogItemFileChooser")
     self:update(dir, name)
+    self._super.init(self, lineHeight)
 end
 
 function DialogItemFileChooser:getChoicesWidth()
@@ -1831,8 +1834,8 @@ local DialogItemFolder = class {
 }
 
 function DialogItemFolder:init(lineHeight)
-    DialogItemFolder._super.init(self, lineHeight)
     self:updateFolders()
+    DialogItemFolder._super.init(self, lineHeight)
 end
 
 function DialogItemFolder:getChoicesWidth()
@@ -1890,7 +1893,6 @@ local DialogItemDisk = class {
 }
 
 function DialogItemDisk:init(lineHeight)
-    DialogItemDisk._super.init(self, lineHeight)
     self.choices = runtime:getDisks()
     local showZ = self.fileItem.flags & KDFileSelectorWithRom ~= 0
     if not showZ and self.choices[#self.choices] == "Z" then
@@ -1903,6 +1905,7 @@ function DialogItemDisk:init(lineHeight)
             break
         end
     end
+    DialogItemDisk._super.init(self, lineHeight)
 end
 
 function DialogItemDisk:updateVariable()

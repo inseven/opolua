@@ -106,6 +106,10 @@ function recognize(data, verbose)
         if sndData then
             return { type = "sound", data = require("sound").parseWveFile(data) }
         end
+
+        if uid2 == KUidAppDllDoc8 and uid3 == KEikUidWordApp then
+            return { type = "word" }
+        end
     end
 
     if uid1 == KPermanentFileStoreLayoutUid then
