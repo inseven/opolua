@@ -26,8 +26,10 @@ _ENV = module()
 
 SectionUids = enum {
     KUidPrintSetupStream = 0x10000105,
+    KUidWordStream = 0x10000106, -- Don't know what this uid is officially called, can't find a reference...
     KUidSoundData = 0x10000052, -- Not sure what this uid is officially called, can't find a reference...
     KUidTextEdSection = KUidTextEdApp, -- It's called TextEd but it's basically the OPL editor
+    KUidAppIdentifierStream = 0x10000089,
 }
 
 function parse(data)

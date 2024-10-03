@@ -227,6 +227,7 @@ KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
 KUidOplFile = 0x1000008A -- DB file UID2
 KUidTextEdApp = 0x10000085 -- OPL file UID3
 KUidRecordApp = 0x1000007E -- WAV file UID3
+KEikUidWordApp = 0x1000007F
 
 KIoOpenModeMask = 0xF
 
