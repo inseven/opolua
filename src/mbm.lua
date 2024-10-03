@@ -449,7 +449,7 @@ function parseMbmHeader(data)
                 height = height,
                 bpp = 1,
                 isColor = false,
-                mode = KgCreate2GrayMode,
+                mode = KColorgCreate2GrayMode,
                 stride = stride,
                 paletteSz = 0,
                 compression = ENoBitmapCompression,

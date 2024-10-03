@@ -478,7 +478,7 @@ function gCREATE(x, y, w, h, visible, flags)
     -- printf("gCREATE w=%d h=%d flags=%X", w, h, flags or 0)
     local ctx = runtime:newGraphicsContext(w, h, true, (flags or 0) & 0xF)
     local id = ctx.id
-    runtime:iohandler().createWindow(id, x, y, w, h, flags or KgCreate2GrayMode)
+    runtime:iohandler().createWindow(id, x, y, w, h, flags or KColorgCreate2GrayMode)
     -- printf(" id=%d\n", id)
     ctx.winX = x
     ctx.winY = y
@@ -650,7 +650,7 @@ function gIPRINT(text, corner)
     local state = runtime:saveGraphicsState()
     local infoWinId = runtime:getResource("infowin")
     if not infoWinId then
-        infoWinId = gCREATE(0, 0, 1, 1, false, KgCreate4GrayMode)
+        infoWinId = gCREATE(0, 0, 1, 1, false, KColorgCreate4GrayMode)
         runtime:setResource("infowin", infoWinId)
     end
     drawInfoPrint(infoWinId, text, corner or KBusyBottomRight)
@@ -671,13 +671,13 @@ function BUSY(text, corner, delay)
     end
 
     local state = runtime:saveGraphicsState()
-    busyWinId = gCREATE(0, 0, 1, 1, false, KgCreate4GrayMode)
+    busyWinId = gCREATE(0, 0, 1, 1, false, KColorgCreate4GrayMode)
     runtime:setResource("busy", busyWinId)
     local textRect = drawInfoPrint(busyWinId, text, corner or KBusyBottomLeft)
 
     local bmp = require("opx.bmp")
     local sprite = bmp.SPRITECREATE(runtime, busyWinId, textRect.x, textRect.y, 0)
-    local blackBmp = gCREATEBIT(textRect.w, textRect.h, KgCreate2GrayMode)
+    local blackBmp = gCREATEBIT(textRect.w, textRect.h, KColorgCreate2GrayMode)
     gCOLOR(0, 0, 0)
     gFILL(gWIDTH(), gHEIGHT())
     gUSE(busyWinId)

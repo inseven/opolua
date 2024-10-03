@@ -1,14 +1,31 @@
--- CONST.OPH version 1.10
+-- CONST.OPH version 1.02
 -- Constants for OPL
--- Last edited on 19 May 1997
--- (C) Copyright Psion PLC 1997
+-- Copyright (c) 1997-1999 Symbian Ltd. All rights reserved.
+
+-- Changes in 1.02:
+--   Added subscripts for gCOLORINFO keyword
+--   Added new colour modes for DEFAULTWIN and gCREATE
+--   Added MIME priority values.
+-- Changes in 1.01:
+-- - some language codes added
+-- - consts for KKeyUpArrow%,KKeyDownArrow%,... apply to 16-bit
+--   keywords GET, GETEVENT, KEY
+--   KKeyUpArrow32%,KKeyDownArrow32%,... added for 32-bit
+--   keywords GETEVENT32 etc. 
+
+-- 2024-10-03: Formatting and minor modifications by tomsci
+ 
 -- General constants
-
--- 2022-01-18: Formatting and minor modifications by tomsci
-
 KTrue = -1
 KFalse = 0
 
+-- Data type ranges
+KMaxStringLen = 255
+KMaxFloat = 1.7976931348623157E+308
+KMinFloat = 2.2250738585072015E-308 -- Minimum with full precision in mantissa
+KMinFloatDenorm = 5e-324  -- Denormalised (just one bit of precision left)
+KMinInt = -32768
+KMaxInt = 32767
 KMinLong = -2147483648
 KMaxLong = 2147483647
 
@@ -18,15 +35,33 @@ KKeySpace = 32
 KKeyDel = 8
 KKeyTab = 9
 KKeyEnter = 13
-KGetMenu = 4150
-KKeyUpArrow = 4105
-KKeyDownArrow = 4106
-KKeyLeftArrow = 4103
-KKeyRightArrow = 4104
-KKeyPageUp = 4100
-KKeyPageDown = 4101
-KKeyPageLeft = 4098
-KKeyPageRight = 4099
+-- Key constants for 16-bit keywords GETEVENT etc.
+KGetMenu = 290    -- unfortunately must be named KGetMenu% because KKeyMenu% clashes with badly-named other constant which cannot be changed for compatibility reasons
+KKeyUpArrow = 256
+KKeyDownArrow = 257
+KKeyLeftArrow = 259
+KKeyRightArrow = 258
+KKeyPageUp = 260
+KKeyPageDown = 261
+KKeyPageLeft = 262
+KKeyPageRight = 263
+
+KKeyMenu = 4150         -- const kept for compatibility
+KKeySidebarMenu = 10000 -- const kept for compatibility
+
+-- Key constants for 32-bit keywords GETEVENT32 etc.
+KKeyMenu32 = 4150
+KKeySidebarMenu32 = 10000
+KKeyPageLeft32 = 4098
+KKeyPageRight32 = 4099
+KKeyPageUp32 = 4100
+KKeyPageDown32 = 4101
+KKeyLeftArrow32 = 4103
+KKeyRightArrow32 = 4104
+KKeyUpArrow32 = 4105
+KKeyDownArrow32 = 4106
+
+
 
 -- Month numbers
 KJanuary = 1
@@ -62,7 +97,7 @@ KgStyleItalic = 32
 
 -- For 32-bit status words IOWAIT and IOWAITSTAT32
 -- Use KErrFilePending (-46) for 16-bit status words
--- KStatusPending32 = 0x80000001
+KStatusPending32 = 0x80000001
 
 -- Error codes
 KErrGenFail = -1
@@ -107,7 +142,7 @@ KErrInvalidIO = -45
 KErrFilePending = -46
 KErrVolume = -47
 KErrIOCancelled = -48
--- OPL specific errors
+-- OPL specific error
 KErrSyntax = -77
 KOplStructure = -85
 KErrIllegal = -96
@@ -145,7 +180,7 @@ KAlertEsc = 1
 KAlertEnter = 2
 KAlertSpace = 3
 
- -- For BUSY and GIPRINT
+-- For BUSY and GIPRINT
 KBusyTopLeft = 0
 KBusyBottomLeft = 1
 KBusyTopRight = 2
@@ -195,9 +230,17 @@ KNonBreakingSpace = 0x10
 KPictureCharacter = 0x0e
 KVisibleSpaceCharacter = 0x0f
 
- -- For DEFAULTWIN
+-- For DEFAULTWIN
+-- Old consts retained for compatibility:
 KDefWin4ColourMode = 1
 KDefWin16ColourMode = 2
+-- New color mode constants:
+KColorDefWin2GrayMode = 0
+KColorDefWin4GrayMode = 1
+KColorDefWin16GrayMode = 2
+KColorDefWin256GrayMode = 3
+KColorDefWin16ColorMode = 4
+KColorDefWin256ColorMode = 5
 
 -- For dFILE
 KDFileNameLen = 255
@@ -279,6 +322,7 @@ KFindForwardsFromStart = 3
 KFlagsAppFileBased = 1
 KFlagsAppIsHidden = 2
 
+
 -- For gBORDER and gXBORDER
 KBordSglShadow = 1
 KBordSglGap = 2
@@ -300,6 +344,7 @@ KButtS5 = 2
 KButtS5Raised = 0
 KButtS5SemiPressed = 1
 KButtS5Sunken = 2
+
 KButtLayoutTextRightPictureLeft = 0
 KButtLayoutTextBottomPictureTop = 1
 KButtLayoutTextTopPictureBottom = 2
@@ -323,24 +368,42 @@ KgClockS5Formatted = 11
 KgCreateInvisible = 0
 KgCreateVisible = 1
 KgCreateHasShadow = 0x0010
--- tomsci: updated
--- Color mode constants
-KgCreate2GrayMode = 0x0000
-KgCreate4GrayMode = 0x0001
-KgCreate16GrayMode = 0x0002
-KgCreate256GrayMode = 0x0003
-KgCreate16ColorMode = 0x0004
-KgCreate256ColorMode = 0x0005
-KgCreate64KColorMode = 0x0006
-KgCreate16MColorMode = 0x0007
-KgCreateRGBColorMode = 0x0008
-KgCreate4KColorMode = 0x0009
+-- Old constants retained for compatibility:
+KgCreate2ColourMode = 0x0000
+KgCreate4ColourMode = 0x0001
+KgCreate16ColourMode = 0x0002
+-- Color mode constants:
+KColorgCreate2GrayMode = 0x0000
+KColorgCreate4GrayMode = 0x0001
+KColorgCreate16GrayMode = 0x0002
+KColorgCreate256GrayMode = 0x0003
+KColorgCreate16ColorMode = 0x0004
+KColorgCreate256ColorMode = 0x0005
+
+-- For gCOLORINFO - array subscripts
+gColorInfoADisplayMode = 1
+gColorInfoANumColors = 2
+gColorInfoANumGreys = 3
+-- DisplayMode constants:
+KDisplayModeNone = 0
+KDisplayModeGray2 = 1
+KDisplayModeGray4 = 2
+KDisplayModeGray16 = 3
+KDisplayModeGray256 = 4
+KDisplayModeColor16 = 5
+KDisplayModeColor256 = 6
+KDisplayModeColor64K = 7
+KDisplayModeColor16M = 8
+KDisplayModeRGB = 9
+KDisplayModeColor4K = 10
 
 -- For GETCMD$
 KGetCmdLetterCreate = "C"
 KGetCmdLetterOpen = "O"
 KGetCmdLetterExit = "X"
 KGetCmdLetterUnknown = "U"
+KGetCmdLetterBackup = "S"
+KGetCmdLetterRestart = "R"
 
 -- For gLOADBIT
 KgLoadBitReadOnly = 0
@@ -357,7 +420,7 @@ KgPolyANumPairs = 3
 KgPolyANumDx1 = 4
 KgPolyANumDy1 = 5
 
- -- For gPRINTB
+-- For gPRINTB
 KgPrintBRightAligned = 1
 KgPrintBLeftAligned = 2
 KgPrintBCentredAligned = 3
@@ -371,6 +434,7 @@ KgPrintBDefMargin = 0
 KgXBorderS3Type = 0
 KgXBorderS3aType = 1
 KgXBorderS5Type = 2
+
 -- For gXPRINT
 KgXPrintNormal = 0
 KgXPrintInverse = 1
@@ -439,7 +503,7 @@ KSendSwitchOnMessage = 0x010000
 KEvAType = 1
 KEvATime = 2
 
--- Event array keypress subscripts
+-- event array keypress subscripts
 KEvAKMod = 4
 KEvAKRep = 5
 
@@ -479,15 +543,13 @@ KEvPtrDrag = 6
 KEvPtrMove = 7
 KEvPtrButtonRepeat = 8
 KEvPtrSwitchOn = 9
-KKeyMenu = 4150
-KKeySidebarMenu = 10000
 
 -- For PointerFilter
 KPointerFilterEnterExit = 0x1
 KPointerFilterMove = 0x2
 KPointerFilterDrag = 0x4
 
--- Code page 1252 ellipsis (“windows latin 1")
+-- code page 1252 ellipsis ("windows latin 1")
 KScreenEllipsis = 133
 KScreenLineFeed = 10
 
@@ -497,7 +559,7 @@ KClockSystemSetting = KClockLocaleConformant
 KClockAnalog = 7
 KClockDigital = 8
 KClockLargeAnalog = 9
--- GClock 10 no longer supported (use slightly changed gCLOCK 11)
+-- gClock 10 no longer supported (use slightly changed gCLOCK 11)
 KClockFormattedDigital = 11
 
 -- For gFONT
@@ -547,9 +609,11 @@ KIoOpenModeCreate = 0x0001
 KIoOpenModeReplace = 0x0002
 KIoOpenModeAppend = 0x0003
 KIoOpenModeUnique = 0x0004
+
 -- Mode category 2
 KIoOpenFormatBinary = 0x0000
 KIoOpenFormatText = 0x0020
+
 -- Mode category 3
 KIoOpenAccessUpdate = 0x0100
 KIoOpenAccessRandom = 0x0200
@@ -587,3 +651,39 @@ KLangBelgianFrench = 21
 KLangAustrian = 22
 KLangNewZealand = 23
 KLangInternationalFrench = 24
+
+-- RGB color masking:
+kRgbRedPosition = 0x10000
+kRgbGreenPosition = 0x100
+kRgbBluePosition = 0x1
+kRgbColorMask = 0xff
+
+-- RGB color values:
+KRgbBlack = 0x000000
+KRgbDarkGray = 0x555555
+KRgbDarkRed = 0x800000
+KRgbDarkGreen = 0x008000
+KRgbDarkYellow = 0x808000
+KRgbDarkBlue = 0x000080
+KRgbDarkMagenta = 0x800080
+KRgbDarkCyan = 0x008080
+KRgbRed = 0xff0000
+KRgbGreen = 0x00ff00
+KRgbYellow = 0xffff00
+KRgbBlue = 0x0000ff
+KRgbMagenta = 0xff00ff
+KRgbCyan = 0x00ffff
+KRgbGray = 0xaaaaaa
+KRgbDitheredLightGray = 0xcccccc
+KRgb1in4DitheredGray = 0xededed
+KRgbWhite = 0xffffff
+
+-- MIME priority values:
+KDataTypePriorityUserSpecified = KMaxInt
+KDataTypePriorityHigh = 10000
+KDataTypePriorityNormal = 0
+KDataTypePriorityLow = -10000
+KDataTypePriorityLastResort = -20000
+KDataTypePriorityNotSupported = KMinInt
+
+-- End of Const.oph

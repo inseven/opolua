@@ -841,17 +841,17 @@ function DialogItemPartEditor:handlePointerEvent(x, y, type)
 end
 
 function DialogItemPartEditor:handleKeyPress(k, modifiers)
-    if k == KKeyLeftArrow then
+    if k == KKeyLeftArrow32 then
         if self.currentPart > 1 then
             self:setPart(self.currentPart - 1)
         end
         return true
-    elseif k == KKeyRightArrow then
+    elseif k == KKeyRightArrow32 then
         if self.currentPart < #self.parts then
             self:setPart(self.currentPart + 1)
         end
         return true
-    elseif k == KKeyPageLeft or k == KKeyPageRight then
+    elseif k == KKeyPageLeft32 or k == KKeyPageRight32 then
         -- These shouldn't do anything in a date editor
         return true
     else
@@ -1397,9 +1397,9 @@ function DialogItemEditMulti:handleKeyPress(k, modifiers)
             self.editor:insert(KLineBreakStr)
         end
         return true
-    elseif k == KKeyUpArrow or k == KKeyDownArrow then
+    elseif k == KKeyUpArrow32 or k == KKeyDownArrow32 then
         local line, col = self:charPosToLineColumn(self.editor.cursorPos)
-        if k == KKeyUpArrow and line == 1 then
+        if k == KKeyUpArrow32 and line == 1 then
             if col == 1 then
                 -- Allow the keypress to move the focus
                 return false
@@ -1407,7 +1407,7 @@ function DialogItemEditMulti:handleKeyPress(k, modifiers)
                 line = 2
                 col = 1
             end
-        elseif k == KKeyDownArrow and line == #self.lines then
+        elseif k == KKeyDownArrow32 and line == #self.lines then
             if col > #self.lines[line].text then
                 -- Allow the keypress to move the focus
                 return false
@@ -1416,27 +1416,27 @@ function DialogItemEditMulti:handleKeyPress(k, modifiers)
                 line = line - 1
             end
         end
-        local lineInfo = self.lines[line + (k == KKeyUpArrow and -1 or 1)]
+        local lineInfo = self.lines[line + (k == KKeyUpArrow32 and -1 or 1)]
         if lineInfo then
             self.editor:setCursorPos(lineInfo.charPos + col - 1, anchor)
         end
         return true
-    elseif k == KKeyPageLeft then
+    elseif k == KKeyPageLeft32 then
         local line, col = self:charPosToLineColumn(self.editor.cursorPos)
         self.editor:setCursorPos(self.lines[line].charPos, anchor)
         return true
-    elseif k == KKeyPageRight then
+    elseif k == KKeyPageRight32 then
         local line, col = self:charPosToLineColumn(self.editor.cursorPos)
         self.editor:setCursorPos(self.lines[line].charPos + #withoutNewline(self.lines[line].text), anchor)
         return true
-    elseif k == KKeyPageDown then
+    elseif k == KKeyPageDown32 then
         local line, col = self:charPosToLineColumn(self.editor.cursorPos)
         local newLine = math.min(line + self.numLines, #self.lines)
         -- Keep cursor in roughly the same place
         self.firstDrawnLine = math.min(self.firstDrawnLine + (newLine - line), #self.lines - self.numLines)
         local newCol = math.min(col, #withoutNewline(self.lines[newLine].text) + 1)
         self.editor:setCursorPos(self.lines[newLine].charPos + newCol - 1, anchor)
-    elseif k == KKeyPageUp then
+    elseif k == KKeyPageUp32 then
         local line, col = self:charPosToLineColumn(self.editor.cursorPos)
         local newLine = math.max(line - self.numLines, 1)
         -- Keep cursor in roughly the same place
@@ -1579,10 +1579,10 @@ function DialogChoiceList:handleKeyPress(k, modifiers)
     if modifiers ~= 0 then
         return false
     end
-    if k == KKeyLeftArrow then
+    if k == KKeyLeftArrow32 then
         self:setIndex(wrapIndex(self.index - 1, #self.choices))
         return true
-    elseif k == KKeyRightArrow then
+    elseif k == KKeyRightArrow32 then
         self:setIndex(wrapIndex(self.index + 1, #self.choices))
         return true
     elseif k == KKeyTab then
@@ -2122,7 +2122,7 @@ end
 local DialogWindow = class { _super = View }
 
 function DialogWindow.new(items, x, y, w, h)
-    local id = gCREATE(x, y, w, h, false, KgCreate256GrayMode | KgCreateHasShadow | 0x200)
+    local id = gCREATE(x, y, w, h, false, KColorgCreate256GrayMode | KgCreateHasShadow | 0x200)
     return DialogWindow {
         x = x,
         y = y,
@@ -2170,7 +2170,7 @@ function DialogWindow:processEvent(ev)
 
     if k == KKeyEsc then
         return 0
-    elseif k == KKeyUpArrow and modifiers == 0 and self.focussedItemIndex then
+    elseif k == KKeyUpArrow32 and modifiers == 0 and self.focussedItemIndex then
         local newIdx = self.focussedItemIndex
         repeat
             newIdx = wrapIndex(newIdx - 1, #self.items)
@@ -2178,7 +2178,7 @@ function DialogWindow:processEvent(ev)
         if newIdx ~= self.focussedItemIndex then
             self:moveFocusTo(self.items[newIdx])
         end
-    elseif k == KKeyDownArrow and modifiers == 0 and self.focussedItemIndex then
+    elseif k == KKeyDownArrow32 and modifiers == 0 and self.focussedItemIndex then
         local newIdx = self.focussedItemIndex
         repeat
             newIdx = wrapIndex(newIdx + 1, #self.items)

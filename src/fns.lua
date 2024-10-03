@@ -559,7 +559,7 @@ function IoOpenUnique(stack, runtime) -- 0x25
 end
 
 function gCreate(stack, runtime) -- 0x26
-    stack:push(KgCreate2GrayMode)
+    stack:push(KColorgCreate2GrayMode)
     gCreateEnhanced(stack, runtime)
 end
 
@@ -752,7 +752,7 @@ function gCreateEnhanced(stack, runtime) -- 0x39
 
     if runtime:getDeviceName() == "psion-series-7" then
         -- See https://github.com/inseven/opolua/issues/414 for why we do this
-        flags = (flags & ~0xF) | KgCreateRGBColorMode
+        flags = (flags & ~0xF) | KColorgCreateRGBColorMode
     end
     
     local id = runtime:gCREATE(x, y, w, h, visible ~= 0, flags)

@@ -391,7 +391,7 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         y = math.max(0, screenHeight - h - shadowHeight)
     end
 
-    local win = gCREATE(x, y, w, h, false, KgCreate4GrayMode | KgCreateHasShadow | 0x400)
+    local win = gCREATE(x, y, w, h, false, KColorgCreate4GrayMode | KgCreateHasShadow | 0x400)
     if scrollbar then
         darkGrey()
         gAT(scrollbar.x - 1, scrollbar.y)
@@ -454,43 +454,43 @@ local function runMenuEventLoop(bar, pane, shortcuts)
         local k = ev[KEvAType]()
         if k == KKeyMenu then
             result = 0
-        elseif k == KKeyUpArrow then
+        elseif k == KKeyUpArrow32 then
             current:moveSelectionTo(current.selected - 1)
-        elseif k == KKeyDownArrow then
+        elseif k == KKeyDownArrow32 then
             current:moveSelectionTo(current.selected + 1)
-        elseif k == KKeyLeftArrow then
+        elseif k == KKeyLeftArrow32 then
             if pane.submenu then
                 pane:closeSubmenu()
             elseif bar then
                 bar.moveSelectionTo(bar.selected - 1)
             end
-        elseif k == KKeyRightArrow then
+        elseif k == KKeyRightArrow32 then
             if pane.submenu == nil and pane.items[pane.selected].submenu then
                 pane:openSubmenu()
             elseif bar then
                 bar.moveSelectionTo(bar.selected + 1)
             end
-        elseif k == KKeyPageUp then
+        elseif k == KKeyPageUp32 then
             local newContentOffset = current.items[current.selected].contentOffset - current:visibleContentHeight()
             local newIndex = current.selected
             while newIndex > 1 and current.items[newIndex].contentOffset > newContentOffset do
                 newIndex = newIndex - 1
             end
             current:moveSelectionTo(newIndex)
-        elseif k == KKeyPageDown then
+        elseif k == KKeyPageDown32 then
             local newContentOffset = current.items[current.selected].contentOffset + current:visibleContentHeight()
             local newIndex = current.selected
             while newIndex < #current.items and current.items[newIndex].contentOffset < newContentOffset do
                 newIndex = newIndex + 1
             end
             current:moveSelectionTo(newIndex)
-        elseif k == KKeyPageLeft then
+        elseif k == KKeyPageLeft32 then
             if bar then
                 bar.moveSelectionTo(1)
             else
                 current:moveSelectionTo(1)
             end
-        elseif k == KKeyPageRight then
+        elseif k == KKeyPageRight32 then
             if bar then
                 bar.moveSelectionTo(#bar.items)
             else
@@ -662,7 +662,7 @@ function MENU(menubar)
     end
     
     local barWidth = textx + borderWidth
-    local barWin = gCREATE(2, 2, barWidth, barHeight, false, KgCreate4GrayMode | KgCreateHasShadow | 0x200)
+    local barWin = gCREATE(2, 2, barWidth, barHeight, false, KColorgCreate4GrayMode | KgCreateHasShadow | 0x200)
     lightGrey()
     gFILL(barWidth, barHeight)
     black()
@@ -703,7 +703,7 @@ function MENU(menubar)
 
     local function drawBarSelection()
         if not bar.selectionWin then
-            bar.selectionWin = gCREATE(-1, -1, 1, 1, true, KgCreate4GrayMode | KgCreateHasShadow | 0x200)
+            bar.selectionWin = gCREATE(-1, -1, 1, 1, true, KColorgCreate4GrayMode | KgCreateHasShadow | 0x200)
         end
         gUSE(bar.selectionWin)
         gFONT(kMenuFont)
