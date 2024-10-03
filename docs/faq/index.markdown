@@ -5,8 +5,7 @@ title: Frequently Asked Questions
 # FAQ
 
 1. [How do I install OPL programs?](#installing-programs)
-1. [Where can I find OPL programs to try out?](#finding-programs)
-2. [Why aren't databases supported?](#database-support)
+2. [Where can I find OPL programs to try out?](#finding-programs)
 3. [How should I go about reporting problems?](#reporting-issues)
 4. [What OPX libraries are supported?](#opx-support)
 5. [Why do the graphics sometimes look wrong?](#invert-draw-mode)
@@ -68,14 +67,6 @@ Here are some we've found useful:
 Needless to say, this isn't a comprehensive list and we would love to hear about sites we've missed.
 
 _Fortunately, most OPL software was shareware and many authors have made license codes freely available after-the-fact, but please remember that downloading copies of commercial software you have not purchased is illegal. We do not encourage or condone the use of illegally obtained software._
-
-<a id="database-support"></a>
-
-## Why aren't databases supported?
-
-The Psion database format is complex and unfriendly so we've decided not to try adding support for it just yet--there are a lot of programs that don't require database support and we'd like to improve our support for those before tackling this mammoth task. We're tracking this as issue [#203](https://github.com/inseven/opolua/issues/203).
-
-If you're a developer interested in taking on the challenge, please feel free to get in touch; we [welcome contributions and pull requests](https://github.com/inseven/opolua#contributing).
 
 <a id="reporting-issues"></a>
 
