@@ -499,11 +499,18 @@ function Runtime:closeGraphicsContext(id)
     end
     graphics[id] = nil
     self:flushGraphicsOps()
-    self.ioh.graphicsop("close", id)
+    -- Clean up any native resources dependant on this window
     local cursor = self:getResource("cursor")
     if cursor and cursor.id == id then
         self:setResource("cursor", nil)
+        self.ioh.graphicsop("cursor", nil)
     end
+    local textfield = self:getResource("textfield")
+    if textfield and textfield.id == id then
+        self:setResource("textfield", nil)
+        self.ioh.textEditor(nil)
+    end
+    self.ioh.graphicsop("close", id)
 end
 
 function Runtime:saveGraphicsState()
@@ -596,6 +603,41 @@ end
 
 function Runtime:getGraphicsAutoFlush()
     return self:getGraphics().buffer == nil
+end
+
+function Runtime:declareTextEditor(windowId, editorType, controlRect, cursorRect)
+    if windowId == nil then
+        self:setResource("textfield", nil)
+        self.ioh.textEditor(nil)
+        return
+    end
+
+    local win = self:getGraphicsContext(windowId)
+
+    local info = {
+        id = windowId,
+        controlRect = {
+            x = win.winX + controlRect.x,
+            y = win.winY + controlRect.y,
+            w = controlRect.w,
+            h = controlRect.h,
+        },
+        type = editorType,
+        cursorRect = {
+            x = win.winX + cursorRect.x,
+            y = win.winY + cursorRect.y,
+            w = cursorRect.w,
+            h = cursorRect.h,
+        },
+        windowRect = {
+            x = win.winX,
+            y = win.winY,
+            w = win.width,
+            h = win.height,
+        },
+    }
+    self:setResource("textfield", info)
+    self.ioh.textEditor(info)
 end
 
 -- op==nil is used for dbase.opx functions like DbGetFieldCount which take a database path but the file is allowed to
