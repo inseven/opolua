@@ -60,10 +60,30 @@ public struct Graphics {
 
         public let origin: Point
         public let size: Size
-        public var minX: Int { return origin.x }
-        public var minY: Int { return origin.y }
-        public var width: Int { return size.width }
-        public var height: Int { return size.height }
+        
+        public var minX: Int {
+            return origin.x
+        }
+        
+        public var minY: Int {
+            return origin.y
+        }
+        
+        public var midX: Float {
+            return Float(origin.x) + Float(width) / 2
+        }
+        
+        public var midY: Float {
+            return Float(origin.y) + Float(height) / 2
+        }
+        
+        public var width: Int {
+            return size.width
+        }
+        
+        public var height: Int {
+            return size.height
+        }
 
         public init(origin: Point, size: Size) {
             self.origin = origin
