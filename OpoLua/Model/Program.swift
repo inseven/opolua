@@ -40,6 +40,7 @@ protocol ProgramDelegate: AnyObject {
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
     func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32?
+    func program(_ program: Program, didSetCursorPosition cursorPosition: CGPoint?)
 
 }
 
@@ -124,8 +125,8 @@ class Program {
     private var observers: [ProgramLifecycleObserver] = []
     weak var delegate: ProgramDelegate?
 
-    var title: String
-    var icon: Icon
+    var title: String  // main
+    var icon: Icon  // main  TODO: let?
 
     var rootView: UIView {
         return windowServer.rootView
@@ -219,6 +220,7 @@ class Program {
     }
 
     func toggleOnScreenKeyboard() {
+        dispatchPrecondition(condition: .onQueue(.main))
         if windowServer.rootView.isFirstResponder {
             windowServer.rootView.resignFirstResponder()
         } else {
@@ -470,9 +472,21 @@ extension Program: OpoIoHandler {
     func printValue(_ val: String) {
         print(val)
     }
-
+        
     func textEditor(_ info: TextFieldInfo?) {
-        // print("textEditor: \(String(describing: info))")
+        if let textFieldInfo = info {
+            delegate?.program(self,
+                              didSetCursorPosition: CGPoint(x: CGFloat(textFieldInfo.cursorRect.midX),
+                                                            y: CGFloat(textFieldInfo.cursorRect.midY)))
+            DispatchQueue.main.sync {
+                _ = windowServer.rootView.becomeFirstResponder()
+            }
+        } else {
+            delegate?.program(self, didSetCursorPosition: nil)
+            DispatchQueue.main.sync {
+                _ = windowServer.rootView.resignFirstResponder()
+            }
+        }
     }
 
     func beep(frequency: Double, duration: Double) -> Error? {

@@ -243,6 +243,8 @@ class ProgramViewController: UIViewController {
 
         return scaleView
     }()
+    
+    var bottomConstraint: NSLayoutConstraint!
 
     init(settings: Settings, taskManager: TaskManager, program: Program) {
         self.settings = settings
@@ -251,17 +253,21 @@ class ProgramViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
+        navigationItem.compactAppearance?.configureWithOpaqueBackground()
+        navigationItem.standardAppearance?.configureWithOpaqueBackground()
         view.backgroundColor = UIColor(named: "ProgramBackground")
 
         title = program.title
         view.clipsToBounds = true
+        
+        bottomConstraint = scaleView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
 
         view.addSubview(scaleView)
         NSLayoutConstraint.activate([
             scaleView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scaleView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scaleView.topAnchor.constraint(equalTo: view.topAnchor),
-            scaleView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            bottomConstraint,
         ])
 
         if traitCollection.horizontalSizeClass == .compact {
@@ -277,6 +283,7 @@ class ProgramViewController: UIViewController {
         }
 
         observeGameControllers()
+        observeKeyboard()
     }
 
     required init?(coder: NSCoder) {
@@ -359,10 +366,34 @@ class ProgramViewController: UIViewController {
         notificationCenter.addObserver(forName: NSNotification.Name.GCControllerDidConnect,
                                        object: nil,
                                        queue: .main) { [weak self] notification in
-            guard let self = self else {
-                return
-            }
-            self.configureControllers()
+            self?.configureControllers()
+        }
+    }
+    
+    func observeKeyboard() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(forName: UIResponder.keyboardWillShowNotification,
+                                       object: nil,
+                                       queue: .main) { [weak self] notification in
+            self?.adjustForKeyboard(notification: notification, keyboardShowing: true)
+        }
+        notificationCenter.addObserver(forName: UIResponder.keyboardWillHideNotification,
+                                       object: nil,
+                                       queue: .main) { [weak self] notification in
+            self?.adjustForKeyboard(notification: notification, keyboardShowing: false)
+        }
+    }
+    
+    func adjustForKeyboard(notification: Notification, keyboardShowing: Bool) {
+        guard let userInfo = notification.userInfo,
+              let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
+            return
+        }
+        UIView.animate(withDuration: 0.3) {
+            self.scaleView.isShowingKeyboard = keyboardShowing
+            self.bottomConstraint.constant = -(keyboardShowing ? keyboardFrame.height : 0)
+            self.view.layoutIfNeeded()
         }
     }
 
@@ -565,7 +596,19 @@ extension ProgramViewController: ProgramDelegate {
             return AppDelegate.shared.runApplication(applicationIdentifier, url: url)
         }
     }
-
+    
+    func program(_ program: Program, didSetCursorPosition cursorPosition: CGPoint?) {
+        DispatchQueue.main.async {
+            UIView.animate(withDuration: 0.3) {
+                if let cursorPosition {
+                    self.scaleView.focus = CGPoint(x: 0, y: cursorPosition.y)
+                } else {
+                    self.scaleView.focus = nil
+                }
+            }
+        }
+    }
+    
 }
 
 extension ProgramViewController: ProgramLifecycleObserver {
