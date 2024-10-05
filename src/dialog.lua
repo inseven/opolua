@@ -271,6 +271,12 @@ function DialogTitleBar:handlePointerEvent(x, y, type)
         self.pressedX = nil
         self.pressedY = nil
         self:setNeedsRedraw()
+
+        -- Make sure any move of the window updates the native text editor tracking (since it works in screen coords)
+        local focussed = self.parent:focussedItem()
+        if focussed and focussed.updateIohandler then
+            focussed:updateIohandler()
+        end
     end
     return true
 end
@@ -370,6 +376,10 @@ function DialogItemEdit:drawPromptAndBox()
 end
 
 function DialogItemEdit:drawValue(val)
+    if self.hasFocus then
+        -- So it doesn't get drawn by native side while we're drawing ourselves
+        CURSOR(nil)
+    end
     local x, texty = self:drawPromptAndBox()
     drawText(val, x + kEditTextSpace, texty)
     if self.hasFocus and self.editor and self.editor:hasSelection() then
@@ -407,6 +417,7 @@ function DialogItemEdit:updateCursorIfFocussed()
     if self.hasFocus then
         local x, y = self:getCursorPos()
         CURSOR(gIDENTITY(), x, y, self.cursorWidth, self.charh + 1)
+        self:updateIohandler()
     end
 end
 
@@ -445,10 +456,7 @@ end
 
 function DialogItemEdit:setFocus(flag)
     DialogItemEdit._super.setFocus(self, flag)
-    if flag then
-        -- When focussed, the draw call triggered by View.setFocus takes care of calling CURSOR (via updateCursorIfFocussed)
-        self:updateIohandler()
-    else
+    if not flag then
         CURSOR(nil)
         runtime:iohandler().textEditor(nil)
     end
@@ -460,13 +468,10 @@ function DialogItemEdit:onEditorChanged()
     else
         self:setNeedsRedraw()
     end
-    if self.hasFocus then
-        self:updateIohandler()
-    end
 end
 
 function DialogItemEdit:updateIohandler()
-    local rect = {
+    local controlRect = {
         x = self.x + self.promptWidth,
         y = self.y,
         w = self.w - self.promptWidth,
@@ -481,13 +486,7 @@ function DialogItemEdit:updateIohandler()
         w = self.cursorWidth,
         h = self.charh + 1, --  This is not quite correct for DialogItemEditMulti but it doesn't really matter
     }
-    runtime:iohandler().textEditor({
-        id = gIDENTITY(),
-        rect = rect,
-        contents = self.editor.value,
-        type = self:inputType(),
-        cursorRect = cursorRect,
-    })
+    runtime:declareTextEditor(gIDENTITY(), self:inputType(), controlRect, cursorRect)
 end
 
 -- returning false from canUpdate() should only be if newVal cannot _become_
@@ -758,9 +757,6 @@ function DialogItemPartEditor:onEditorChanged(editor)
         end
     end
     self:setNeedsRedraw()
-    if self.hasFocus then
-        self:updateIohandler()
-    end
 end
 
 function DialogItemPartEditor:contentSize()
@@ -1129,6 +1125,9 @@ function DialogItemEditMulti:scrollOffset()
 end
 
 function DialogItemEditMulti:getCursorPos()
+    if self.lines == nil then
+        return nil
+    end
     local pos = self.editor.cursorPos
     local line, col = self:charPosToLineColumn(pos)
     if line < self.firstDrawnLine or line >= self.firstDrawnLine + self.numLines then
@@ -1142,10 +1141,6 @@ function DialogItemEditMulti:getCursorPos()
 end
 
 function DialogItemEditMulti:charPosToLineColumn(pos)
-    if self.lines == nil then
-        return 1, pos
-    end
-
     -- Work out which line pos is in
     for i, line in ipairs(self.lines) do
         if pos < line.charPos + #line.text or self.lines[i + 1] == nil then
@@ -1273,6 +1268,10 @@ function DialogItemEditMulti:shouldDrawScrollbar()
 end
 
 function DialogItemEditMulti:draw()
+    if self.hasFocus then
+        -- So it doesn't get drawn by native side while we're drawing ourselves
+        CURSOR(nil)
+    end
     local x = self:drawPrompt()
     local texty = self.y + kDialogLineTextYOffset
 
@@ -1357,9 +1356,11 @@ function DialogItemEditMulti:updateCursorIfFocussed()
         local x, y = self:getCursorPos()
         if x then
             CURSOR(gIDENTITY(), x, y, self.cursorWidth, self:lineHeight())
+            self:updateIohandler()
         else
             -- Cursor not visible in the currently shown lines
             CURSOR(nil)
+            runtime:declareTextEditor(nil)
         end
     end
 end
@@ -2231,6 +2232,10 @@ function DialogWindow:moveFocusTo(newView)
     end
     self.focussedItemIndex = assert(newView.focusOrderIndex)
     newView:setFocus(true)
+end
+
+function DialogWindow:focussedItem()
+    return self.focussedItemIndex and self.items[self.focussedItemIndex]
 end
 
 local itemTypes = {

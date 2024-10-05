@@ -156,9 +156,6 @@ class WindowServer {
         let view = self.window(for: drawableId)
         self.drawablesById[drawableId] = nil
         self.windows[drawableId] = nil
-        if drawableId == cursorDrawCmd?.drawableId {
-            cancelCursorTimer()
-        }
         if let view = view {
             view.removeFromSuperview()
         }
