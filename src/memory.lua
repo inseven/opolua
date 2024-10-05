@@ -68,6 +68,7 @@ function Chunk:checkRange(addr)
     if addr < self.address or addr >= max then
         error(fmt("Address 0x%08X out of bounds %08X-%08X", addr, self.address, max), 2)
     end
+    return addr - self.address
 end
 
 local function word(self, idx)
@@ -236,6 +237,7 @@ end
 function Chunk:alloc(len)
     -- printf("alloc(%d) ", len)
     -- printf("freeCellList before: %s ", self:freeCellListStr())
+    -- printf("\n")
 
     len = (len + 3) & ~3
     local freeCellPtrIdx = 0
@@ -305,7 +307,7 @@ function Chunk:freeCellListStr()
     local list = self:freeCellList()
     local parts = {}
     for i, idx in ipairs(self:freeCellList()) do
-        parts[i] = string.format("%d+%d", idx * 4, self:getCellLen(idx))
+        parts[i] = string.format("%X+%d", idx * 4, self:getCellLen(idx))
     end
     return table.concat(parts, ",")
 end
@@ -344,7 +346,7 @@ function Chunk:declareFreeCell(cellIdx, cellLen)
     end
 
     local nextCell = self[prev + 1]
-    -- printf("free(%X): prev=%X next=%X\n", cellIdx << strideshift, prev << strideshift, nextCell << strideshift)
+    -- printf("declareFreeCell(%X): prev=%X next=%X\n", cellIdx << strideshift, prev << strideshift, nextCell << strideshift)
     self[prev + 1] = cellIdx -- prev->next = cellIdx
     self[cellIdx + 1] = nextCell -- cell->next = nextCell
 
@@ -365,6 +367,7 @@ function Chunk:declareFreeCell(cellIdx, cellLen)
 end
 
 function Chunk:realloc(offset, sz)
+    -- printf("realloc(0x%X, %d) freeCellList before: %s \n", offset, sz, self:freeCellListStr())
     if sz == 0 then
         self:free(offset)
         return nil
@@ -384,14 +387,34 @@ function Chunk:realloc(offset, sz)
         return offset
     else
         local newOffset = self:alloc(sz)
-        local oldIdx = offset >> strideshift
-        local newIdx = newOffset >> strideshift
-        -- This is a little more optimised than doing a read() followed by a write()
-        for i = 0, (allocLen >> strideshift) - 1 do
-            self[newIdx + i] = self[oldIdx + i]
-        end
+        self:aligned_memcpy(newOffset, offset, allocLen)
         self:free(offset)
         return newOffset
+    end
+end
+
+local function inrange(min, val, rangeLen)
+    return val >= min and val < min + rangeLen
+end
+
+-- must be non-overlapping, src, dest and len must all be a multiple of chunkstride
+function Chunk:aligned_memcpy(dest, src, len)
+    local srcIdx = src >> strideshift
+    local destIdx = dest >> strideshift
+    for i = 0, (len >> strideshift) - 1 do
+        self[destIdx + i] = self[srcIdx + i]
+    end
+end
+
+function Chunk:memmove(dest, src, len)
+    if inrange(src, dest, src + len) or inrange(src, dest + len, src + len) then
+        -- overlapping just do it the dumb way
+        self:write(dest, self:read(src, len))
+    elseif dest % chunkstride ~= 0 or src % chunkstride ~= 0 or len % chunkstride ~= 0 then
+        -- unaligned, ditto
+        self:write(dest, self:read(src, len))
+    else
+        self:aligned_memcpy(dest, src, len)
     end
 end
 

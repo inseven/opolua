@@ -856,11 +856,16 @@ function ReAlloc(stack, runtime) -- 0x4C
 end
 
 function AdjustAlloc(stack, runtime) -- 0x4D
-    unimplemented("fns.AdjustAlloc")
+    -- This API is a weird combo of realloc and memcpy
+    local addr, offset, sz = stack:pop(3)
+    local result = runtime:adjustAlloc(addr, offset, sz)
+    stack:push(result)
 end
 
 function LenAlloc(stack, runtime) -- 0x4E
-    unimplemented("fns.LenAlloc")
+    local ptr = stack:pop()
+    local result = runtime:allocLen(ptr)
+    stack:push(result)
 end
 
 function Ioc(stack, runtime) -- 0x4F

@@ -1257,8 +1257,8 @@ end
 function Runtime:addrFromInt(addr)
     -- if type(addr) == "number" then
     if ~addr then
-        self.chunk:checkRange(addr)
-        addr = Addr { chunk = self.chunk, offset = addr - self.chunk.address }
+        local offset = self.chunk:checkRange(addr)
+        addr = Addr { chunk = self.chunk, offset = offset }
     end
     return addr
 end
@@ -1270,8 +1270,7 @@ end
 function Runtime:realloc(addr, sz)
     -- printf("Runtime:realloc(%s, %d)\n", addr, sz) --, self:getOpoStacktrace())
     if addr ~= 0 then
-        self.chunk:checkRange(addr)
-        local offset = addr - self.chunk.address
+        local offset = self.chunk:checkRange(addr)
         local newOffset = self.chunk:realloc(offset, sz)
         if newOffset then
             return self.chunk.address + newOffset
@@ -1282,6 +1281,38 @@ function Runtime:realloc(addr, sz)
         local offset = self.chunk:alloc(sz)
         assert(offset, KErrNoMemory)
         return self.chunk.address + offset
+    end
+end
+
+function Runtime:allocLen(addr)
+    local offset = self.chunk:checkRange(addr)
+    return self.chunk:getAllocLen(offset)
+end
+
+function Runtime:adjustAlloc(addr, offset, sz)
+    local chunk = self.chunk
+    local cell = chunk:checkRange(addr)
+    local allocLen = chunk:getAllocLen(cell)
+    -- printf("adjustAlloc(0x%X, %X, %d)\n", cell, offset, sz)
+    assert(offset >= 0, "Bad offset to adjustAlloc")
+    if sz == 0 then
+        -- nothing to do?
+        return addr
+    elseif sz < 0 then
+        sz = -sz -- Makes logic easier to understand below
+        assert(offset - sz < allocLen)
+        -- close gap at offset, ie copy everything from offset+sz to offset
+        chunk:memmove(cell + offset, cell + offset + sz, allocLen - offset - sz)
+        return chunk.address + chunk:realloc(cell, allocLen - sz)
+    else
+        -- Add gap at offset
+        local newCell = chunk:realloc(cell, allocLen + sz)
+        if newCell then
+            chunk:memmove(newCell + offset + sz, newCell + offset, allocLen - offset)
+            return chunk.address + newCell
+        else
+            return 0
+        end
     end
 end
 
