@@ -2321,8 +2321,8 @@ function DIALOG(dialog)
     local promptGap = 22 -- Must be at least as big as kChoiceArrowSize because the lefthand arrow goes in the prompt gap
     local lineHeight = (dialog.flags & KDlgDensePack) == 0 and kDialogLineHeight or kDialogTightLineHeight
 
-    local _, charh = gTWIDTH("0", kDialogFont)
-    View.charh = charh
+    gFONT(kDialogFont)
+    View.charh = gINFO().fontHeight
     local titleBar
     local h = borderWidth
     if dialog.title and (dialog.flags & KDlgNoTitle) == 0 then

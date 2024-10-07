@@ -437,6 +437,7 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
     graphics[id] = newCtx
     -- Creating a new drawable always seems to update current
     graphics.current = newCtx
+    self:setResource("ginfo", nil)
     return newCtx
 end
 
