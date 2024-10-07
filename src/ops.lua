@@ -1690,8 +1690,8 @@ function Edit(stack, runtime) -- 0xC2
 end
 
 function Screen2(stack, runtime) -- 0xC3
-    local w, h = stack:popXY()
-    runtime:SCREEN(w, h)
+    local w, h = stack:pop(2)
+    runtime:SCREEN(w, h, 0, 0)
 end
 
 function OpenR(stack, runtime) -- 0xC4
@@ -2012,8 +2012,7 @@ function gPeekLine(stack, runtime) -- 0xE6
 end
 
 function Screen4(stack, runtime) -- 0xE7
-    local x, y = stack:popXY()
-    local w, h = stack:popXY()
+    local w, h, x, y = stack:pop(4)
     runtime:SCREEN(w, h, x, y)
 end
 

@@ -921,19 +921,38 @@ end
 
 function SCREEN(widthInChars, heightInChars, xInChars, yInChars)
     -- printf("SCREEN %d %d %s %s\n", widthInChars, heightInChars, xInChars, yInChars)
+
+    -- (x,y) being (0,0) means centre the screen, whereas 1,1 means put it in top left (well, the top left char pos
+    -- if the screen were full width)
+    
     local screen = runtime:getGraphics().screen
-    local defaultWin = runtime:getGraphicsContext(1)
+    local defaultWin = runtime:getGraphicsContext(KDefaultWin)
+
+    -- Both of these are in chars too
+    local maxScreenWidth = defaultWin.width // screen.charw
+    local maxScreenHeight = defaultWin.height // screen.charh
+
+    if xInChars == 0 and yInChars == 0 then
+        xInChars = ((maxScreenWidth - widthInChars) // 2) + 1
+        yInChars = ((maxScreenHeight - heightInChars) // 2) + 1
+    end
+
+    if xInChars < 1 or yInChars < 1 or widthInChars < 1 or heightInChars < 1
+        or xInChars - 1 + widthInChars > maxScreenWidth
+        or yInChars - 1 + heightInChars > maxScreenHeight then
+        error(KErrInvalidArgs)
+    end
     screen.w = widthInChars
     screen.h = heightInChars
+
     local marginx = (defaultWin.width % screen.charw) // 2
     local marginy = (defaultWin.height % screen.charh) // 2
+    screen.x = marginx + (xInChars - 1) * screen.charw
+    screen.y = marginy + (yInChars - 1) * screen.charh
 
-    -- TODO the logic around x and y params needs fixing...
-    xInChars = 0
-    yInChars = 0
-
-    screen.x = marginx + xInChars * screen.charw
-    screen.y = marginy + yInChars * screen.charh
+    -- Note, calling SCREEN does not modify cursor position (other than to cap it if necessary...)
+    screen.cursorx = math.min(screen.cursorx, screen.w - 1)
+    screen.cursory = math.min(screen.cursory, screen.h - 1)
 end
 
 function AT(x, y)
