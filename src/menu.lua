@@ -284,10 +284,11 @@ end
 function MenuPane.new(x, y, pos, values, selected, cutoutLen)
     -- Get required font metrics
     gFONT(kMenuFont)
-    local _, textHeight, ascent = gTWIDTH("0")
+    local textHeight = gINFO().fontHeight
+    local ascent = gINFO().fontAscent
     local lineHeight = textHeight + MenuPane.textYPad * 2
     gFONT(kShortcutFont)
-    local _, _, shortcutAscent = gTWIDTH("0")
+    local shortcutAscent = gINFO().fontAscent
     local shortcutTextYOffset = ascent - shortcutAscent
 
     -- Work out content and window size
@@ -644,7 +645,7 @@ function MENU(menubar)
     local barItems = {}
     local textx = borderWidth + barGap
     gFONT(kMenuFont)
-    local _, textHeight, ascent = gTWIDTH("0")
+    local textHeight = gINFO().fontHeight
     local textYPad = 2
     local barHeight = borderWidth * 2 + textHeight + textYPad * 2
     for i, card in ipairs(menubar) do

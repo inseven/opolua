@@ -566,6 +566,7 @@ public struct TextFieldInfo: Codable {
     let controlRect: Graphics.Rect // bounding rect of the whole text field, in screen coords
     let cursorRect: Graphics.Rect // location of cursor, in screen coords
     let windowRect: Graphics.Rect // for convenience, in screen coords
+    let userFocusRequested: Bool // true if user tapped in the text field
 }
 
 public protocol FileSystemIoHandler {

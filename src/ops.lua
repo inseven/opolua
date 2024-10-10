@@ -1446,20 +1446,20 @@ function Cursor(stack, runtime) -- 0xA6
         if immediate == 4 then
             t = stack:pop()
         end
-        local asc, w, h
+        local ascent, w, h
         if immediate >= 3 then
-            asc, w, h = stack:pop(3)
+            ascent, w, h = stack:pop(3)
         end
         local id = stack:pop()
 
-        if asc == nil then
-            local _
-            _, h, asc = runtime:gTWIDTH("")
+        if ascent == nil then
+            ascent = runtime:gINFO().fontAscent
             w = 2
+            h = runtime:gINFO().fontHeight
         end
         local context = runtime:getGraphicsContext(id)
         local x = context.pos.x
-        local y = context.pos.y - asc
+        local y = context.pos.y - ascent
         runtime:CURSOR(id, x, y, w, h, t)
     end
 end
@@ -1690,8 +1690,8 @@ function Edit(stack, runtime) -- 0xC2
 end
 
 function Screen2(stack, runtime) -- 0xC3
-    local w, h = stack:popXY()
-    runtime:SCREEN(w, h)
+    local w, h = stack:pop(2)
+    runtime:SCREEN(w, h, 0, 0)
 end
 
 function OpenR(stack, runtime) -- 0xC4
@@ -1778,18 +1778,17 @@ end
 function gInfo(stack, runtime) -- 0xD0 (SIBO only)
     local addr = runtime:addrFromInt(stack:pop())
 
-    local context = runtime:getGraphicsContext()
-    local w, h, ascent = runtime:gTWIDTH("0")
+    local ginfo = runtime:gINFO()
 
     local data = {
         0, -- 1 lowest character code (??)
         255, -- 2 highest character code (??)
-        h, -- 3 font height
-        h - ascent, -- 4 font descent
-        ascent, -- 5 font ascent
-        w, -- 6 width of '0' (really?)
-        17, -- 7 max character width
-        17, -- 8 font flags TODO CHECK
+        ginfo.fontHeight, -- 3 font height
+        ginfo.fontDescent, -- 4 font descent
+        ginfo.fontAscent, -- 5 font ascent
+        ginfo.fontZeroWidth, -- 6 width of '0' (really?)
+        ginfo.fontMaxWidth, -- 7 max character width
+        17, -- 8 font flags
         0, -- 9-11 font name TODO
         0, -- 10
         0, -- 11
@@ -1799,18 +1798,18 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
         0, -- 15
         0, -- 16
         0, -- 17
-        context.mode, -- 18 gMode
-        context.tmode, -- 19 gTMode
-        context.style, -- 20 gStyle
-        0, -- 21 cursor state
-        -1, -- 22 ID of window containing cursor
-        0, -- 23 cursor width
-        0, -- 24 cursor height
-        0, -- 25 cursor ascent
-        0, -- 26 cursor x
-        0, -- 27 cursor y
-        context.isWindow and 0 or 1, -- 28 drawableIsBitmap
-        6, -- 29 cursor effects
+        ginfo.gmode, -- 18 gMode
+        ginfo.tmode, -- 19 gTMode
+        ginfo.style, -- 20 gStyle
+        ginfo.cursorVisible and 1 or 0, -- 21 cursor state
+        ginfo.cursorWindow, -- 22 ID of window containing cursor
+        ginfo.cursorWidth or 0, -- 23 cursor width
+        ginfo.cursorHeight or 0, -- 24 cursor height
+        ginfo.cursorAscent or 0, -- 25 cursor ascent
+        ginfo.cursorX or 0, -- 26 cursor x
+        ginfo.cursorY or 0, -- 27 cursor y
+        ginfo.isWindow and 0 or 1, -- 28 drawableIsBitmap
+        ginfo.cursorFlags, -- 29 cursor effects
         0, -- 30 gGREY setting (TODO...)
         0, -- 31 reserved
         0, -- 32 reserved
@@ -2013,8 +2012,7 @@ function gPeekLine(stack, runtime) -- 0xE6
 end
 
 function Screen4(stack, runtime) -- 0xE7
-    local x, y = stack:popXY()
-    local w, h = stack:popXY()
+    local w, h, x, y = stack:pop(4)
     runtime:SCREEN(w, h, x, y)
 end
 
@@ -2417,7 +2415,6 @@ gXBorder_dump = qualifier_dump
 function ScreenInfo(stack, runtime) -- 0x114
     local addr = runtime:addrFromInt(stack:pop())
     local screen = runtime:getGraphics().screen
-    local screenFontUid = KFontCourierNormal11
     local result = {
         [1] = screen.x, -- Left margin in pixels
         [2] = screen.y, -- Top margin in pixels
@@ -2566,18 +2563,18 @@ end
 function gInfo32(stack, runtime) -- 0x128
     local addr = runtime:addrFromInt(stack:pop())
 
+    local ginfo = runtime:gINFO()
     local context = runtime:getGraphicsContext()
-    local w, h, ascent = runtime:gTWIDTH("0")
 
     local data = {
         0, -- 1 reserved
         0, -- 2 reserved
-        h, -- 3 font height
-        h - ascent, -- 4 font descent
-        ascent, -- 5 font ascent
-        w, -- 6 width of '0' (really?)
-        17, -- 7 max character width
-        17, -- 8 font flags
+        ginfo.fontHeight, -- 3 font height
+        ginfo.fontDescent, -- 4 font descent
+        ginfo.fontAscent, -- 5 font ascent
+        ginfo.fontZeroWidth, -- 6 width of '0' (really?)
+        ginfo.fontMaxWidth, -- 7 max character width
+        17, -- 8 in theory font flags, but in practice appears to always be 17, so who knows 
         context.font.uid, -- 9 font uid
         0, -- 10
         0, -- 11
@@ -2587,19 +2584,19 @@ function gInfo32(stack, runtime) -- 0x128
         0, -- 15
         0, -- 16
         0, -- 17
-        context.mode, -- 18 gMode
-        context.tmode, -- 19 gTMode
-        context.style, -- 20 gStyle
-        0, -- 21 cursor state
-        -1, -- 22 ID of window containing cursor
-        0, -- 23 cursor width
-        0, -- 24 cursor height
-        0, -- 25 cursor ascent
-        0, -- 26 cursor x
-        0, -- 27 cursor y
-        0, -- 28 drawableIsBitmap
-        6, -- 29 cursor effects
-        0, -- 30 color mode of current window
+        ginfo.gmode, -- 18 gMode
+        ginfo.tmode, -- 19 gTMode
+        ginfo.style, -- 20 gStyle
+        ginfo.cursorVisible and 1 or 0, -- 21 cursor state
+        ginfo.cursorWindow or -1, -- 22 ID of window containing cursor
+        ginfo.cursorWidth or 0, -- 23 cursor width
+        ginfo.cursorHeight or 0, -- 24 cursor height
+        ginfo.cursorAscent or 0, -- 25 cursor ascent
+        ginfo.cursorX or 0, -- 26 cursor x
+        ginfo.cursorY or 0, -- 27 cursor y
+        ginfo.isWindow and 0 or 1, -- 28 drawableIsBitmap
+        ginfo.cursorFlags, -- 29 cursor effects
+        ginfo.displayMode, -- 30 color mode of current window
         context.color.r, -- 31 fg r
         context.color.g, -- 32 fg g
         context.color.b, -- 33 fg b
