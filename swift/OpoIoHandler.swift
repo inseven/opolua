@@ -125,8 +125,13 @@ public struct Graphics {
         let g: UInt8
         let b: UInt8
 
+        var greyValue: UInt8 {
+            return UInt8((Int(r) + Int(g) + Int(b)) / 3)
+        }
+
         static let black = Self(r: 0, g: 0, b: 0)
         static let white = Self(r: 255, g: 255, b: 255)
+        static let midGray = Self(r: 0x80, g: 0x80, b: 0x80)
     }
 
     public struct Bitmap: Codable {
