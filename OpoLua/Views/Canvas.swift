@@ -109,11 +109,12 @@ class Canvas: Drawable {
 
     // Only supported when using 8bpp greyscale backing data
     func drawInverted(operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
+        let byteVal = ~operation.color.greyValue
         switch operation.type {
         case .fill(let size):
             for y in 0 ..< size.height {
                 for x in 0 ..< size.width {
-                    xorPixel(operation.origin.x + x, operation.origin.y + y, 0xFF)
+                    xorPixel(operation.origin.x + x, operation.origin.y + y, byteVal)
                 }
             }
         case .invert(let size):
@@ -122,7 +123,7 @@ class Canvas: Drawable {
                     if (x == 0 || x == size.width - 1) && (y == 0 || y == size.height - 1) {
                         // gINVERT doesn't draw corner pixels
                     } else {
-                        xorPixel(operation.origin.x + x, operation.origin.y + y, 0xFF)
+                        xorPixel(operation.origin.x + x, operation.origin.y + y, byteVal)
                     }
                 }
             }
@@ -158,13 +159,13 @@ class Canvas: Drawable {
                 }
             }
         case .line(let endPoint):
-            drawLineInverted(x0: operation.origin.x, y0: operation.origin.y, x1: endPoint.x, y1: endPoint.y)
+            drawLineInverted(x0: operation.origin.x, y0: operation.origin.y, x1: endPoint.x, y1: endPoint.y, value: byteVal)
         case .box(let size):
             let topLeft = operation.origin
-            drawLineInverted(x0: topLeft.x, y0: topLeft.y, x1: topLeft.x + size.width, y1: topLeft.y) // top
-            drawLineInverted(x0: topLeft.x + size.width, y0: topLeft.y, x1: topLeft.x + size.width, y1: topLeft.y + size.height) // right
-            drawLineInverted(x0: topLeft.x + size.width, y0: topLeft.y + size.height, x1: topLeft.x, y1: topLeft.y + size.height) // bottom
-            drawLineInverted(x0: topLeft.x, y0: topLeft.y + size.height, x1: topLeft.x, y1: topLeft.y) // bottom
+            drawLineInverted(x0: topLeft.x, y0: topLeft.y, x1: topLeft.x + size.width, y1: topLeft.y, value: byteVal) // top
+            drawLineInverted(x0: topLeft.x + size.width, y0: topLeft.y, x1: topLeft.x + size.width, y1: topLeft.y + size.height, value: byteVal) // right
+            drawLineInverted(x0: topLeft.x + size.width, y0: topLeft.y + size.height, x1: topLeft.x, y1: topLeft.y + size.height, value: byteVal) // bottom
+            drawLineInverted(x0: topLeft.x, y0: topLeft.y + size.height, x1: topLeft.x, y1: topLeft.y, value: byteVal) // bottom
         default:
             print("TODO: drawInverted \(operation.type)")
             context.draw(operation, provider: provider)
@@ -187,7 +188,7 @@ class Canvas: Drawable {
     }
 
     // From bitmap_drawLine() in https://github.com/tomsci/lupi/blob/master/modules/bitmap/bitmap.c
-    func drawLineInverted(x0: Int, y0: Int, x1: Int, y1: Int) {
+    func drawLineInverted(x0: Int, y0: Int, x1: Int, y1: Int, value: UInt8) {
         let dx = x1 - x0
         let dy = y1 - y0
         // "scan" is the axis we iterate over (x in quadrant 0)
@@ -203,7 +204,7 @@ class Canvas: Drawable {
         let drawXY: () -> Void
         if abs(dx) > abs(dy) {
             drawXY = {
-                self.xorPixel(scan, inc, 0xFF)
+                self.xorPixel(scan, inc, value)
             }
             dscan = dx
             dinc = dy
@@ -212,7 +213,7 @@ class Canvas: Drawable {
             scanEnd = x1
         } else {
             drawXY = {
-                self.xorPixel(inc, scan, 0xFF)
+                self.xorPixel(inc, scan, value)
             }
             dscan = dy
             dinc = dx

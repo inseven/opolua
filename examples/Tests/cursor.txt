@@ -11,7 +11,18 @@ PROC main:
     gAT 50, 50
     gFONT KFontArialNormal32&
     gPRINT "Hello"
+    gAT gX - 10, gY
     CURSOR gIDENTITY
     gUPDATE
     GET
+
+    REM grey non flashing cursor
+    gAT 50, 100
+    gFONT KFontArialNormal32&
+    gPRINT "Hello"
+    gAT gX - 10, gY
+    CURSOR gIDENTITY, 28, 2, 32, 6
+    gUPDATE
+    GET
+
 ENDP

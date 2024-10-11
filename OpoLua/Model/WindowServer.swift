@@ -204,17 +204,21 @@ class WindowServer {
         cancelCursorTimer()
         if let cursor {
             let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
-            cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert, origin: cursor.rect.origin, color: .black, bgcolor: .white, penWidth: 1, greyMode: .normal)
+            let col: Graphics.Color = cursor.flags.contains(.grey) ? .midGray : .black
+            cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert, origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
+            print(cursorDrawCmd!)
             window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
             cursorCurrentlyDrawn = true
-            cursorTimer = Timer.scheduledTimer(withTimeInterval: kCursorFlashTime, repeats: true, block: { timer in
-                guard let cmd = self.cursorDrawCmd, let window = self.window(for: cmd.drawableId) else {
-                    self.cancelCursorTimer()
-                    return
-                }
-                self.cursorCurrentlyDrawn = !self.cursorCurrentlyDrawn
-                window.draw(cmd, provider: self)
-            })
+            if !cursor.flags.contains(.notFlashing) {
+                cursorTimer = Timer.scheduledTimer(withTimeInterval: kCursorFlashTime, repeats: true, block: { timer in
+                    guard let cmd = self.cursorDrawCmd, let window = self.window(for: cmd.drawableId) else {
+                        self.cancelCursorTimer()
+                        return
+                    }
+                    self.cursorCurrentlyDrawn = !self.cursorCurrentlyDrawn
+                    window.draw(cmd, provider: self)
+                })
+            }
         }
     }
 
