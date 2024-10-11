@@ -32,7 +32,7 @@ function main()
         "output",
         dump = true, d = "dump",
         include = table, i = "include",
-        source = string,
+        source = string, s = "source",
         help = true, h = "help"
     })
 
