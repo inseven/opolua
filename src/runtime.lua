@@ -437,6 +437,7 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
     graphics[id] = newCtx
     -- Creating a new drawable always seems to update current
     graphics.current = newCtx
+    self:setResource("ginfo", nil)
     return newCtx
 end
 
@@ -605,7 +606,7 @@ function Runtime:getGraphicsAutoFlush()
     return self:getGraphics().buffer == nil
 end
 
-function Runtime:declareTextEditor(windowId, editorType, controlRect, cursorRect)
+function Runtime:declareTextEditor(windowId, editorType, controlRect, cursorRect, userFocusRequested)
     if windowId == nil then
         self:setResource("textfield", nil)
         self.ioh.textEditor(nil)
@@ -635,7 +636,21 @@ function Runtime:declareTextEditor(windowId, editorType, controlRect, cursorRect
             w = win.width,
             h = win.height,
         },
+        userFocusRequested = userFocusRequested,
     }
+    local current = self:getResource("textfield")
+    local function rectEqual(a, b)
+        return a.x == b.x and a.y == b.y and a.w == b.w and a.h == b.h
+    end
+    if current and current.windowId == info.windowId and current.type == info.type
+        and current.userFocusRequested == info.userFocusRequested
+        and rectEqual(current.controlRect, info.controlRect)
+        and rectEqual(current.cursorRect, info.cursorRect)
+        and rectEqual(current.windowRect, info.windowRect) then
+        -- no changes
+        return
+    end
+
     self:setResource("textfield", info)
     self.ioh.textEditor(info)
 end

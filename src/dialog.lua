@@ -189,6 +189,8 @@ function View:capturePointer()
     local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
     local evAddr = ev:addressOf()
     while true do
+        self:drawIfNeeded()
+        gUPDATE()
         GETEVENTA32(stat, evAddr)
         runtime:waitForRequest(stat)
         local k = ev[KEvAType]()
@@ -202,8 +204,6 @@ function View:capturePointer()
             local y = ev[KEvAPtrScreenPosY]() - winY
             -- printf("Captured: x=%d y=%d t=%d\n", x, y, ptrType)
             self:handlePointerEvent(x, y, ptrType)
-            self:drawIfNeeded()
-            gUPDATE()
             if ptrType == KEvPtrPenUp then
                 break
             end
@@ -442,6 +442,7 @@ function DialogItemEdit:handlePointerEvent(x, y, type)
             self:takeFocus()
         end
         if x >= self.x + self.promptWidth then
+            self.nextIoHandlerUpdateUserRequested = true
             self.editor:setCursorPos(self:posToCharPos(x, y))
             self:capturePointer()
             self:setNeedsRedraw()
@@ -463,11 +464,7 @@ function DialogItemEdit:setFocus(flag)
 end
 
 function DialogItemEdit:onEditorChanged()
-    if self.capturing then
-        self:draw()
-    else
-        self:setNeedsRedraw()
-    end
+    self:setNeedsRedraw()
 end
 
 function DialogItemEdit:updateIohandler()
@@ -486,7 +483,12 @@ function DialogItemEdit:updateIohandler()
         w = self.cursorWidth,
         h = self.charh + 1, --  This is not quite correct for DialogItemEditMulti but it doesn't really matter
     }
-    runtime:declareTextEditor(gIDENTITY(), self:inputType(), controlRect, cursorRect)
+    local userFocusRequested = false
+    if self.nextIoHandlerUpdateUserRequested then
+        userFocusRequested = true
+        self.nextIoHandlerUpdateUserRequested = false
+    end
+    runtime:declareTextEditor(gIDENTITY(), self:inputType(), controlRect, cursorRect, userFocusRequested)
 end
 
 -- returning false from canUpdate() should only be if newVal cannot _become_
@@ -1380,6 +1382,7 @@ function DialogItemEditMulti:handlePointerEvent(x, y, type)
             self:takeFocus()
         end
         if x >= self.x + self.promptWidth then
+            self.nextIoHandlerUpdateUserRequested = true
             self.editor:setCursorPos(self:posToCharPos(x, y))
             self:capturePointer()
             self:setNeedsRedraw()
@@ -1523,6 +1526,11 @@ function DialogChoiceList:focussable()
 end
 
 function DialogChoiceList:draw()
+    if self.typeable and self.hasFocus then
+        -- So it doesn't get drawn by native side while we're drawing ourselves
+        CURSOR(nil)
+    end
+
     local x = self:drawPrompt()
     local texty = self.y + kDialogLineTextYOffset
     self.leftArrowX = x - kChoiceArrowSize -- Left arrow draws before content area
@@ -1553,11 +1561,48 @@ function DialogChoiceList:draw()
     black()
 
     if self.typeable and self.hasFocus then
-        local cursorx = x + self.choiceTextSpace + gTWIDTH(text:sub(1, self.cursorPos - 1))
+        local cursorx, cursory = self:getCursorPos()
         CURSOR(gIDENTITY(), cursorx, texty, gTWIDTH(text:sub(self.cursorPos, self.cursorPos)))
+        self:updateIohandler()
     end
 
     View.draw(self)
+end
+
+function DialogChoiceList:getCursorPos()
+    if self.typeable then
+        local texty = self.y + kDialogLineTextYOffset
+        local text = self.choices[self.index]
+        local cursorx = self.x + self.promptWidth + self.choiceTextSpace + gTWIDTH(text:sub(1, self.cursorPos - 1))
+        local cursory = self.y + kDialogLineTextYOffset
+        return cursorx, cursory
+    else
+        return nil
+    end
+end
+
+function DialogChoiceList:updateIohandler()
+    if self.typeable then
+        local controlRect = {
+            x = self.x + self.promptWidth,
+            y = self.y,
+            w = self.w - self.promptWidth,
+            h = self.h,
+        }
+        local cursorx, cursory = self:getCursorPos()
+        local cursorRect = {
+            x = cursorx,
+            y = cursory,
+            w = 2,
+            h = self.charh + 1, --  This is not quite correct for DialogItemEditMulti but it doesn't really matter
+        }
+        local userFocusRequested = false
+        if self.nextIoHandlerUpdateUserRequested then
+            userFocusRequested = true
+            self.nextIoHandlerUpdateUserRequested = false
+        end
+        runtime:declareTextEditor(gIDENTITY(), "text", controlRect, cursorRect, userFocusRequested)
+    end
 end
 
 function DialogChoiceList:handlePointerEvent(x, y, type)
@@ -1634,10 +1679,7 @@ end
 
 function DialogChoiceList:setFocus(flag)
     DialogChoiceList._super.setFocus(self, flag)
-    if flag then
-        -- When focussed, the draw call triggered by View.setFocus takes care of calling CURSOR (via updateCursorIfFocussed)
-        -- self:updateIohandler()
-    else
+    if not flag then
         CURSOR(false)
         runtime:iohandler().textEditor(nil)
     end
@@ -2279,8 +2321,8 @@ function DIALOG(dialog)
     local promptGap = 22 -- Must be at least as big as kChoiceArrowSize because the lefthand arrow goes in the prompt gap
     local lineHeight = (dialog.flags & KDlgDensePack) == 0 and kDialogLineHeight or kDialogTightLineHeight
 
-    local _, charh = gTWIDTH("0", kDialogFont)
-    View.charh = charh
+    gFONT(kDialogFont)
+    View.charh = gINFO().fontHeight
     local titleBar
     local h = borderWidth
     if dialog.title and (dialog.flags & KDlgNoTitle) == 0 then

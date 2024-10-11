@@ -1,12 +1,96 @@
+DECLARE EXTERNAL
+INCLUDE "const.oph"
+
+EXTERNAL ginf:(desc$)
+
 PROC main:
-	ginf:
+	LOCAL win%
+	FONT KFontCourierNormal8&, 0
+	ginf:("Text win")
 	GET
+
+	win% = gCREATE(500, 0, 100, 100, 1)
+	gFILL 100, 100, 1
+	gFONT KFontArialNormal8&
+	ginf:("gFONT KFontArialNormal8")
+	GET
+
+	gFONT KFontArialBold13&
+	ginf:("gFONT KFontArialBold13")
+	GET
+
+	gFONT KFontTimesNormal15&
+	ginf:("gFONT KFontTimesNormal15")
+	GET
+
+	REM FONT KFontArialNormal11&, 0
+	REM ginf:("FONT KFontArialNormal11")
+	REM GET
 ENDP
 
-PROC ginf:
+PROC ginf:(desc$)
 	LOCAL i&(48)
 	LOCAL x%
+	REM check for overflows on writing i
 	x% = 1234
 	gINFO32 i&()
-	PRINT i&(3), x%
+	IF x% <> 1234
+		PRINT "Stack corruption on x%!"
+		RETURN
+	ENDIF
+	
+	SCREEN 53, 30, 1, 1
+	CLS
+	PRINT desc$
+	PRINT "Info[1] (reserved):", i&(1)
+	PRINT "Info[2] (reserved):", i&(2)
+	PRINT "Info[3] (font height):", i&(3)
+	PRINT "Info[4] (reserved):", i&(4)
+	PRINT "Info[5] (reserved):", i&(5)
+	PRINT "Info[6] (reserved):", i&(6)
+	PRINT "Info[7] (reserved):", i&(7)
+	PRINT "Info[8] (font flags):", i&(8)
+	PRINT "Info[9] (font uid):", HEX$(i&(9))
+	PRINT "Info[10] (unused):", i&(10)
+	PRINT "Info[11] (unused):", i&(11)
+	PRINT "Info[12] (unused):", i&(12)
+	PRINT "Info[13] (unused):", i&(13)
+	PRINT "Info[14] (unused):", i&(14)
+	PRINT "Info[15] (unused):", i&(15)
+	PRINT "Info[16] (unused):", i&(16)
+	PRINT "Info[17] (unused):", i&(17)
+	PRINT "Info[18] (gmode):", i&(18)
+	PRINT "Info[19] (tmode):", i&(19)
+	PRINT "Info[20] (style):", i&(20)
+	PRINT "Info[21] (cursor visible):", i&(21)
+	PRINT "Info[22] (cursor window):", i&(22)
+	PRINT "Info[23] (cursor width):", i&(23)
+	PRINT "Info[24] (cursor height):", i&(24)
+	SCREEN 53, 30, 54, 1
+	CLS
+	PRINT ""
+	PRINT "Info[25] (cursor ascent):", i&(25)
+	PRINT "Info[26] (cursor x):", i&(26)
+	PRINT "Info[27] (cursor y):", i&(27)
+	PRINT "Info[28] (drawable is bitmap):", i&(28)
+	PRINT "Info[29] (cursor flags):", i&(29)
+	PRINT "Info[30] (graphics mode):", i&(30)
+	PRINT "Info[31] (fg red):", i&(31)
+	PRINT "Info[32] (fg green):", i&(32)
+	PRINT "Info[33] (fg blue):", i&(33)
+	PRINT "Info[34] (bg red):", i&(34)
+	PRINT "Info[35] (bg green):", i&(35)
+	PRINT "Info[36] (bg blue):", i&(36)
+	PRINT "Info[37] (unused):", i&(37)
+	PRINT "Info[38] (unused):", i&(38)
+	PRINT "Info[39] (unused):", i&(39)
+	PRINT "Info[40] (unused):", i&(40)
+	PRINT "Info[41] (unused):", i&(41)
+	PRINT "Info[42] (unused):", i&(42)
+	PRINT "Info[43] (unused):", i&(43)
+	PRINT "Info[44] (unused):", i&(44)
+	PRINT "Info[45] (unused):", i&(45)
+	PRINT "Info[46] (unused):", i&(46)
+	PRINT "Info[47] (unused):", i&(47)
+	PRINT "Info[48] (unused):", i&(48)
 ENDP

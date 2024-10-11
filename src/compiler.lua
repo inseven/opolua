@@ -1638,7 +1638,7 @@ function handleFn_GCREATE(exp, procState)
     for i, arg in ipairs(exp.args) do
         procState:emitExpression(arg, Callables.GCREATE.args[i])
     end
-    if #exp.args == 5 then
+    if #exp.args == 6 then
         procState:emit("BB", opcodes.CallFunction, fncodes.gCreateEnhanced)
     else
         procState:emit("BB", opcodes.CallFunction, fncodes.gCreate)

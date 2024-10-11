@@ -46,6 +46,7 @@ function Stack:push(val)
     assert(self.n < kMaxStackSize, "Stack has too many items!")
     self.n = self.n + 1
     self[self.n] = val
+    -- printf("Stack push %s n=%d\n", val, self.n)
 end
 
 function Stack:pop(num)
@@ -54,6 +55,7 @@ function Stack:pop(num)
         local result = self[self.n]
         self[self.n] = nil
         self.n = self.n - 1
+        -- printf("Stack pop %s n=%d\n", result, self.n)
         return result
     else
         local results = {}

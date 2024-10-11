@@ -92,6 +92,7 @@ end
 function gUSE(id)
     -- printf("gUSE(%d)\n", id)
     runtime:setGraphicsContext(id)
+    runtime:setResource("ginfo", nil)
 end
 
 function gVISIBLE(show)
@@ -107,18 +108,22 @@ function gFONT(id)
         error(KErrFontNotLoaded)
     end
     runtime:getGraphicsContext().font = font
+    runtime:setResource("ginfo", nil)
 end
 
 function gGMODE(mode)
     runtime:getGraphicsContext().mode = mode
+    runtime:setResource("ginfo", nil)
 end
 
 function gTMODE(tmode)
     runtime:getGraphicsContext().tmode = tmode
+    runtime:setResource("ginfo", nil)
 end
 
 function gSTYLE(style)
     runtime:getGraphicsContext().style = style
+    runtime:setResource("ginfo", nil)
 end
 
 function gORDER(id, pos)
@@ -455,10 +460,12 @@ end
 function gCOLOR(red, green, blue)
     -- printf("gCOLOR(id=%d, r=%x, g=%x, b=%x)\n", gIDENTITY(), red, green, blue) 
     runtime:getGraphicsContext().color = { r = red, g = green, b = blue }
+    runtime:setResource("ginfo", nil)
 end
 
 function gCOLORBACKGROUND(red, green, blue)
     runtime:getGraphicsContext().bgcolor = { r = red, g = green, b = blue }
+    runtime:setResource("ginfo", nil)
 end
 
 function gSETWIN(x, y, w, h)
@@ -826,7 +833,9 @@ end
 function CURSOR(id, x, y, w, h, t)
     -- printf("CURSOR id=%s, x=%s, y=%s, w=%s, h=%s, t=%s\n", id, x, y, w, h, t)
     runtime:flushGraphicsOps()
+    runtime:setResource("ginfo", nil)
 
+    local isTextCursor = false
     if id == true then
         -- CURSOR(true) means text cursor, in the default window, at the current text cursor position
         local screen = runtime:getGraphics().screen
@@ -835,14 +844,13 @@ function CURSOR(id, x, y, w, h, t)
         y = screen.y + (screen.cursory * screen.charh)
         w = screen.charw
         h = screen.charh
+        isTextCursor = true
     end
 
     local cursor = runtime:getResource("cursor")
     if not id then
-        if cursor then
-            cursor.shown = false
-        end
         runtime:iohandler().graphicsop("cursor", nil)
+        runtime:setResource("cursor", nil)
     else
         local win = assert(runtime:getGraphicsContext(id), "Bad id for CURSOR")
         assert(win.isWindow, "Cannot call CURSOR on a bitmap")
@@ -851,7 +859,9 @@ function CURSOR(id, x, y, w, h, t)
             t = 0
         end
 
-        if cursor and cursor.shown and id == cursor.id
+        t = t & ~1 -- Explicitly ignore obloid cursor flag
+
+        if cursor and id == cursor.id
             and x == cursor.rect.x and y == cursor.rect.y
             and w == cursor.rect.w and h == cursor.rect.h and t == cursor.flags then
             -- Cursor has not moved or changed, don't interrupt the timing
@@ -863,7 +873,6 @@ function CURSOR(id, x, y, w, h, t)
             runtime:setResource("cursor", cursor)
         end
         cursor.id = id
-        cursor.shown = true
         cursor.rect = {
             x = x,
             y = y,
@@ -871,6 +880,7 @@ function CURSOR(id, x, y, w, h, t)
             h = h,
         }
         cursor.flags = t
+        cursor.isText = isTextCursor
         runtime:iohandler().graphicsop("cursor", cursor)
     end
 end
@@ -911,19 +921,38 @@ end
 
 function SCREEN(widthInChars, heightInChars, xInChars, yInChars)
     -- printf("SCREEN %d %d %s %s\n", widthInChars, heightInChars, xInChars, yInChars)
+
+    -- (x,y) being (0,0) means centre the screen, whereas 1,1 means put it in top left (well, the top left char pos
+    -- if the screen were full width)
+    
     local screen = runtime:getGraphics().screen
-    local defaultWin = runtime:getGraphicsContext(1)
+    local defaultWin = runtime:getGraphicsContext(KDefaultWin)
+
+    -- Both of these are in chars too
+    local maxScreenWidth = defaultWin.width // screen.charw
+    local maxScreenHeight = defaultWin.height // screen.charh
+
+    if xInChars == 0 and yInChars == 0 then
+        xInChars = ((maxScreenWidth - widthInChars) // 2) + 1
+        yInChars = ((maxScreenHeight - heightInChars) // 2) + 1
+    end
+
+    if xInChars < 1 or yInChars < 1 or widthInChars < 1 or heightInChars < 1
+        or xInChars - 1 + widthInChars > maxScreenWidth
+        or yInChars - 1 + heightInChars > maxScreenHeight then
+        error(KErrInvalidArgs)
+    end
     screen.w = widthInChars
     screen.h = heightInChars
+
     local marginx = (defaultWin.width % screen.charw) // 2
     local marginy = (defaultWin.height % screen.charh) // 2
+    screen.x = marginx + (xInChars - 1) * screen.charw
+    screen.y = marginy + (yInChars - 1) * screen.charh
 
-    -- TODO the logic around x and y params needs fixing...
-    xInChars = 0
-    yInChars = 0
-
-    screen.x = marginx + xInChars * screen.charw
-    screen.y = marginy + yInChars * screen.charh
+    -- Note, calling SCREEN does not modify cursor position (other than to cap it if necessary...)
+    screen.cursorx = math.min(screen.cursorx, screen.w - 1)
+    screen.cursory = math.min(screen.cursory, screen.h - 1)
 end
 
 function AT(x, y)
@@ -1009,6 +1038,43 @@ function PRINT(str)
     runtime:restoreGraphicsState(state)
     -- and switch back to prev
     gUSE(prevId)
+end
+
+function gINFO()
+    local ginfo = runtime:getResource("ginfo")
+    if ginfo then
+        return ginfo
+    end
+
+    local context = runtime:getGraphicsContext()
+    local fontWidth, fontHeight, fontAscent, fontDescent = runtime:iohandler().graphicsop("textsize", "0", context.font, context.style)
+    local maxCharWidth = gTWIDTH("@") -- Close enough for now
+    local cursor = runtime:getResource("cursor")
+
+    ginfo = {
+        fontHeight = fontHeight,
+        fontDescent = fontDescent,
+        fontAscent = fontAscent,
+        fontZeroWidth = fontWidth,
+        fontMaxWidth = maxCharWidth,
+        fontUid = context.font.uid,
+        gmode = context.mode,
+        tmode = context.tmode,
+        style = context.style,
+        cursorVibible = cursor ~= nil,
+        cursorWidth = cursor and cursor.rect.w,
+        cursorHeight = cursor and cursor.rect.h,
+        cursorAscent = cursor and cursor.rect.h, -- We will say the ascent is always the height
+        cursorWindow = cursor and (cursor.isText and -1 or cursor.id),
+        cursorX = cursor and cursor.rect.x,
+        cursorY = cursor and (cursor.rect.y + cursor.rect.h),
+        isWindow = context.isWindow,
+        cursorFlags = cursor and cursor.flags,
+        displayMode = context.displayMode,
+    }
+
+    runtime:setResource("ginfo", ginfo)
+    return ginfo
 end
 
 function TESTEVENT()
