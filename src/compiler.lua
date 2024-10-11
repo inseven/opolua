@@ -1486,11 +1486,17 @@ function ProcState:emitVarLhs(var, token)
     self:pushStack(VarArgPrefix)
 end
 
-function ProcState:emitAddressOfVar(var, token)
+function ProcState:emitAddressOfVar(var, token, arraySubscriptExpression)
     if var.array then
-        -- The addressof(<array>) op is implemented as addressof(<array>[1])
-        self:emit("BB", opcodes.StackByteAsWord, 1)
-        self:pushStack(Int)
+        if arraySubscriptExpression == nil then
+            -- The addressof(<array>) op is implemented as addressof(<array>[1])
+            self:emit("BB", opcodes.StackByteAsWord, 1)
+            self:pushStack(Int)
+        else
+            self:emitExpression(arraySubscriptExpression, Int)
+        end
+    else
+        assert(arraySubscriptExpression == nil)
     end
     self:emitVarLhs(var, token)
     if var.valType == String then
@@ -1627,11 +1633,13 @@ function handleFn_ADDR(exp, procState)
         "Expected 1 variable argument")
     local varExp = exp.args[1]
     local isArray = varExp.args ~= nil
+    local arraySubscriptExpression = nil
     if isArray then
-        synassert(#varExp.args == 0, exp, "Bad variable expression")
+        synassert(#varExp.args <= 1, exp, "Bad array subscript expression")
+        arraySubscriptExpression = varExp.args[1]
     end
     local var = procState:getVar(varExp, isArray)
-    procState:emitAddressOfVar(var, varExp)
+    procState:emitAddressOfVar(var, varExp, arraySubscriptExpression)
 end
 
 function handleFn_GCREATE(exp, procState)

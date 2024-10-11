@@ -1128,6 +1128,46 @@ checkProg(eval, {
     },
 })
 
+addr = [[
+PROC main:
+    LOCAL l&
+    LOCAL buf&(10)
+
+    REM I think these are both valid (and behave the same)...
+    l& = ADDR(buf&)
+    l& = ADDR(buf&())
+    
+    l& = ADDR(buf&(2))
+ENDP
+]]
+checkProg(addr, {
+    {
+        arrays = {
+            [0x16] = 10,
+        },
+        iDataSize = 64,
+
+        op"SimpleDirectLeftSideLong", h(0x12),
+        op"StackByteAsWord", 1,
+        op"ArrayDirectLeftSideLong", h(0x18),
+        fn"Addr",
+        op"AssignLong",
+
+        op"SimpleDirectLeftSideLong", h(0x12),
+        op"StackByteAsWord", 1,
+        op"ArrayDirectLeftSideLong", h(0x18),
+        fn"Addr",
+        op"AssignLong",
+
+        op"SimpleDirectLeftSideLong", h(0x12),
+        op"StackByteAsWord", 2,
+        op"ArrayDirectLeftSideLong", h(0x18),
+        fn"Addr",
+        op"AssignLong",
+        op"ZeroReturnFloat",
+    }
+})
+
 dow = [[
 PROC main:
     PRINT "Today is", DAYNAME$(DOW(DAY, MONTH, YEAR))
