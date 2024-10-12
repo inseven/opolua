@@ -1091,8 +1091,15 @@ function Std(stack, runtime) -- 0x96
 end
 
 function Sum(stack, runtime) -- 0x97
-    unimplemented("fns.Sum")
+    local vals = valList(stack, runtime)
+    local sum = 0
+    for _, val in ipairs(vals) do
+        sum = sum + val
+    end
+    stack:push(sum)
 end
+
+Sum_dump = numParams_dump
 
 function Var(stack, runtime) -- 0x98
     unimplemented("fns.Var")
