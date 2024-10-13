@@ -42,7 +42,7 @@ function getch()
     -- Can't really do this with what Lua's io provides, as stdin is always in line mode
     printf("defaultiohandler: GET called:")
     local ch = io.stdin:read()
-    return ch:byte(1, 1)
+    return ch:byte(1, 1) or KKeyEnter
 end
 
 function beep(freq, duration)
