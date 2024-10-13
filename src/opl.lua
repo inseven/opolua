@@ -1534,7 +1534,13 @@ function PlaySoundA(var, path)
         return
     end
 
-    local sndData = require("sound").parseWveFile(data)
+    local sndData, err = require("sound").parseWveFile(data)
+    if not sndData then
+        print("Failed to decode sound data, not playing anything!")
+        var(err)
+        runtime:requestSignal()
+        return
+    end
     runtime:setResource("sound", var)
     local function completion()
         runtime:setResource("sound", nil)
