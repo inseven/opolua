@@ -1,10 +1,32 @@
+INCLUDE "dbase.oxh"
+
 PROC main:
-    LOCAL tbl$(16), i%
+
+    LOCAL dbase$(32), tbl$(16), i%
 
     PRINT "Deleting databases..."
     DELETE "D:\db\*.db"
 
     PRINT "Creating databases..."
+
+    CREATE "D:\db\sorted.db FIELDS str", A, str$
+    CLOSE
+    OPEN "D:\db\sorted.db SELECT str FROM Table1 ORDER BY str ASC", A, str$
+
+    BEGINTRANS
+    INSERT
+    A.str$ = "c"
+    PUT
+    INSERT
+    A.str$ = "a"
+    PUT
+    INSERT
+    A.str$ = "b"
+    PUT
+    COMMITTRANS
+    FIRST
+    PRINT "First record is", A.str$
+    CLOSE
 
     CREATE "D:\db\emptyint.db", A, inta%
     CLOSE
@@ -118,4 +140,17 @@ PROC main:
     COMPACT "D:\db\manytables-compacted.db"
 
     PRINT "Done"
+    GET
+ENDP
+
+PROC testGetFieldType:
+    LOCAL dbase$(32), tbl$(16)
+    dbase$ = "D:\db\alltypes.db"
+    tbl$ = "Table1"
+    CREATE dbase$, A, inta%, longb&, floatc, strd$
+    CLOSE
+    PRINT "Int type", DBGETFIELDTYPE&:(dbase$, tbl$, 0)
+    PRINT "Long type", DBGETFIELDTYPE&:(dbase$, tbl$, 1)
+    PRINT "Float type", DBGETFIELDTYPE&:(dbase$, tbl$, 2)
+    PRINT "String type", DBGETFIELDTYPE&:(dbase$, tbl$, 3)
 ENDP
