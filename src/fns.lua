@@ -506,7 +506,11 @@ function SAddr(stack, runtime) -- 0x1F
 end
 
 function Week(stack, runtime) -- 0x20
-    unimplemented("fns.Week")
+    local dd, mm, yy = stack:pop(3)
+    local t = os.time({ day = dd, month = mm, year = yy })
+    -- %V matches LCSTARTOFWEEK which always returns Monday
+    local week = assert(tonumber(os.date("%V", t)))
+    stack:push(week)
 end
 
 function IoSeek(stack, runtime) -- 0x21
