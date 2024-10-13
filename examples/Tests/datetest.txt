@@ -3,6 +3,7 @@ INCLUDE "DATE.OXH"
 PROC main:
 	LOCAL d&, dh&, epoch&, s&
 	LOCAL year%, month%, day%, hour%, min%, sec%, yday%
+	LOCAL week%
 
 	d& = DATETOSECS(1970, 1, 1, 0, 0, 0)
 	PRINT "DATETOSECS(1970, 1, 1, 0, 0, 0) = "; d&
@@ -36,6 +37,12 @@ PROC main:
 	SECSTODATE s&, year%, month%, day%, hour%, min%, sec%, yday%
 	PRINT "SECSTODATE", s&, "=", year%, month%, day%, hour%, min%, sec%, yday%
 	IF year% <> 2024 OR month% <> 9 OR day% <> 27 OR hour% <> 8 OR min% <> 29 OR sec% <> 5 OR yday% <> 271
+		RAISE -1
+	ENDIF
+
+	week% = WEEK(30, 9, 2024)
+	PRINT "WEEK(30, 9, 2024) = "; week%
+	IF week% <> 40
 		RAISE -1
 	ENDIF
 
