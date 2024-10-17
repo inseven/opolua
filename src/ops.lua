@@ -2169,7 +2169,7 @@ function dItem(stack, runtime) -- 0xED
         local fileItem = {
             type = (flags & KDFileEditBox == 0) and dItemTypes.dFILECHOOSER or dItemTypes.dFILEEDIT,
             variable = var,
-            path = var(),
+            path = oplpath.abs(var(), "C:\\"),
             prompt = prompts[1] or prompt,
             uid1 = uid1,
             uid2 = uid2,
