@@ -1743,9 +1743,6 @@ local DialogItemFileChooser = class {
 
 function DialogItemFileChooser:init(lineHeight)
     self.typeable = true
-    if self.path == "" then
-        self.path = "C:\\"
-    end
     local dir, name = oplpath.split(self.path)
     assert(dir ~= "", "Bad path for DialogItemFileChooser")
     self:update(dir, name)
@@ -1808,9 +1805,6 @@ local DialogItemFileEdit = class {
 
 function DialogItemFileEdit:init(lineHeight)
     self._super.init(self, lineHeight)
-    if self.path == "" then
-        self.path = "C:\\"
-    end
     local dir, name = oplpath.split(self.path)
     assert(dir ~= "", "Bad path for DialogItemFileEdit")
     self:update(dir, name)
