@@ -968,7 +968,7 @@ function parseApp(tokens, consts)
             table.insert(aif.icons, evalConstExpr(String, parseExpression(tokens), consts))
         elseif token.type == "FLAGS" then
             tokens:advance()
-            synassert(aif.flags == nil, "Duplicate FLAGS")
+            synassert(aif.flags == nil, token, "Duplicate FLAGS")
             aif.flags = evalConstExpr(Int, parseExpression(tokens), consts)
         else
             synerror(token, "Unhandled")
@@ -1191,7 +1191,7 @@ end
 
 function ProcState:getVar(token, isArray)
     synassert(token.type == "identifier" or token.type == "call", token, "Expected identifier")
-    synassert(fieldFromIdentifier(token.val) == nil, "Expected non-field identifier")
+    synassert(fieldFromIdentifier(token.val) == nil, token, "Expected non-field identifier")
 
     local localVar = self.locals[token.val]
     if localVar then
@@ -2111,7 +2111,7 @@ function ProcState:parse()
             tokens:advance()
         elseif tokenType == "label" then
             local labelName = assert(token.val:match("(.+)::"))
-            synassert(#labelName <= 32, "Label name is too long")
+            synassert(#labelName <= 32, token, "Label name is too long")
             self.labels[labelName] = self.code.sz
             tokens:advance()
         elseif tokenType == "GOTO" then
