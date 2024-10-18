@@ -243,9 +243,9 @@ class Canvas: Drawable {
         let TwoDincMinusTwoDscan = 2 * dinc - 2 * dscan
 
         var D = TwoDinc - dscan
-        xorPixel(x0, y0, 0xFF)
+        xorPixel(x0, y0, value)
         // OPL does not draw the end pixel of a line
-        // xorPixel(x1, y1, 0xFF)
+        // xorPixel(x1, y1, value)
 
         scan = scanStart
         while scan != scanEnd {
