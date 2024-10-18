@@ -191,8 +191,12 @@ private func draw(_ L: LuaState!) -> CInt {
         ops.append(Graphics.DrawCommand(drawableId: id, type: optype, mode: mode, origin: origin, color: color,
                                         bgcolor: bgcolor, penWidth: penWidth, greyMode: greyMode))
     }
-    iohandler.draw(operations: ops)
-    return 0
+    if let err = iohandler.draw(operations: ops) {
+        L.push(err.rawValue)
+        return 1
+    } else {
+        return 0
+    }
 }
 
 func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Operation) -> CInt {
@@ -208,6 +212,9 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
         return 4
     case .peekedData(let data):
         L.push(data)
+        return 1
+    case .error(let error):
+        L.push(error.rawValue)
         return 1
     }
 }
@@ -474,7 +481,8 @@ private func createBitmap(_ L: LuaState!) -> CInt {
           let modeVal = L.toint(4),
           let mode = Graphics.Bitmap.Mode(rawValue: modeVal) else {
         print("Bad parameters to createBitmap")
-        return 0
+        L.push(Graphics.Error.invalidArguments.rawValue)
+        return 1
     }
     let drawableId = Graphics.DrawableId(value: id)
     let size = Graphics.Size(width: width, height: height)
@@ -488,7 +496,9 @@ private func createWindow(_ L: LuaState!) -> CInt {
           let width = L.toint(4), let height = L.toint(5),
           let flags = L.toint(6),
           let mode = Graphics.Bitmap.Mode(rawValue: flags & 0xF) else {
-        return 0
+        print("Bad parameters to createWindow")
+        L.push(Graphics.Error.invalidArguments.rawValue)
+        return 1
     }
 
     var shadow = 0

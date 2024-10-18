@@ -61,20 +61,27 @@ class CanvasView : UIView, Drawable {
         }
     }
 
-    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) -> Graphics.Error? {
+        defer {
+            self.image = nil
+            setNeedsDisplay()
+        }
         if operation.greyMode.drawGreyPlane {
             precondition(self.mode == .gray4, "Bad window mode for a grey plane operation!")
             if self.greyPlane == nil {
-                // The grey plan canvas's mode doesn't really matter here so long as it translates to 8bpp greyscale
+                // The grey plane canvas's mode doesn't really matter here so long as it translates to 8bpp greyscale
                 self.greyPlane = Canvas(id: self.canvas.id, size: self.canvas.size, mode: .gray2)
             }
-            self.greyPlane?.draw(operation, provider: provider)
+            if let err = self.greyPlane?.draw(operation, provider: provider) {
+                return err
+            }
         }
         if operation.greyMode.drawNormalPlane {
-            canvas.draw(operation, provider: provider)
+            if let err = canvas.draw(operation, provider: provider) {
+                return err
+            }
         }
-        self.image = nil
-        setNeedsDisplay()
+        return nil
     }
 
     func setSprite(_ sprite: CanvasSprite?, for id: Int) {

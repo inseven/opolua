@@ -485,7 +485,11 @@ function gCREATE(x, y, w, h, visible, flags)
     -- printf("gCREATE w=%d h=%d flags=%X", w, h, flags or 0)
     local ctx = runtime:newGraphicsContext(w, h, true, (flags or 0) & 0xF)
     local id = ctx.id
-    runtime:iohandler().createWindow(id, x, y, w, h, flags or KColorgCreate2GrayMode)
+    local err = runtime:iohandler().createWindow(id, x, y, w, h, flags or KColorgCreate2GrayMode) or KErrNone
+    if err ~= KErrNone then
+        runtime:closeGraphicsContext(id)
+        error(err)
+    end
     -- printf(" id=%d\n", id)
     ctx.winX = x
     ctx.winY = y
@@ -497,9 +501,15 @@ end
 
 function gCREATEBIT(w, h, mode)
     -- printf("gCREATEBIT w=%d h=%d mode=%X", w, h, mode or 0)
+    -- Mask mode here because some apps incorrectly include shadow flags as per gCREATE
+    mode = (mode or 0) & 0xF
     local ctx = runtime:newGraphicsContext(w, h, false, mode)
     local id = ctx.id
-    runtime:iohandler().createBitmap(id, w, h, mode)
+    local err = runtime:iohandler().createBitmap(id, w, h, mode) or KErrNone
+    if err ~= KErrNone then
+        runtime:closeGraphicsContext(id)
+        error(err)
+    end
     -- printf(" id=%d\n", id)
     return id
 end

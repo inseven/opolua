@@ -498,7 +498,7 @@ extension Program: OpoIoHandler {
         }
     }
 
-    func draw(operations: [Graphics.DrawCommand]) {
+    func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {
         return DispatchQueue.main.sync {
             return windowServer.draw(operations: operations)
         }

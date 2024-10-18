@@ -578,15 +578,21 @@ function Runtime:drawCmd(type, op)
     if graphics.buffer then
         table.insert(graphics.buffer, op)
     else
-        self.ioh.draw({ op })
+        local err = self.ioh.draw({ op }) or KErrNone
+        if err ~= KErrNone then
+            error(err)
+        end
     end
 end
 
 function Runtime:flushGraphicsOps()
     local graphics = self.graphics
     if graphics and graphics.buffer and graphics.buffer[1] then
-        self.ioh.draw(graphics.buffer)
+        local err = self.ioh.draw(graphics.buffer) or KErrNone
         graphics.buffer = {}
+        if err ~= KErrNone then
+            error(err)
+        end
     end
 end
 

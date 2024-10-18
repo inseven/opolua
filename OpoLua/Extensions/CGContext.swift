@@ -28,7 +28,7 @@ extension CGContext {
         return CGAffineTransform(scaleX: 1.0, y: -1.0).translatedBy(x: 0.0, y: -CGFloat(self.height))
     }
 
-    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) -> Graphics.Error? {
         let col: CGColor
         if operation.mode == .clear {
             col = operation.bgcolor.cgColor()
@@ -76,7 +76,7 @@ extension CGContext {
         case .copy(let src, let mask):
             guard let srcImage = provider.getImageFor(drawable: src.drawableId) else {
                 print("Failed to get image for .copy operation!")
-                return
+                return .badDrawable
             }
 
             // Clip the rect to the source size to make sure we don't inadvertently stretch it
@@ -113,7 +113,7 @@ extension CGContext {
             }
             guard let srcImage = srcImage else {
                 print("Failed to get image for .pattern operation id=\(info.drawableId.value))!")
-                return
+                return .badDrawable
             }
             drawUnflippedImage(srcImage, in: info.rect.cgRect(), mode: operation.mode, tile: true)
         case .scroll(let dx, let dy, let rect):
@@ -206,7 +206,7 @@ extension CGContext {
 
                 if x <= operation.origin.x {
                     // There's nothing to underline (either text was empty or all spaces)
-                    return
+                    return nil
                 }
 
                 if fontInfo.flags.contains(.underlined) {
@@ -250,6 +250,7 @@ extension CGContext {
             self.restoreGState()
             */
         }
+        return nil
     }
 
     func draw(image: CGImage) {
