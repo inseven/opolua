@@ -79,7 +79,7 @@ function Editor:handleKeyPress(k, modifiers)
         if from and to then
             self:setValue(self.value:sub(1, from - 1) .. self.value:sub(to + 1), from)
         end
-    elseif k >= 0x20 and k <= 0x7F and k ~= 0x60 then
+    elseif k >= 0x20 and k <= 0xFF then
         self:insert(string.char(k))
     elseif k == KTabCharacter then
         -- We're not going to implement the entire tab stop logic but we can at least allow the character
