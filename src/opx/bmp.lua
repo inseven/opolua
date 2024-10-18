@@ -93,6 +93,7 @@ end
 
 function SPRITECREATE(runtime, winId, x, y, flags)
     local graphics = runtime:getGraphics()
+    -- printf("SPRITECREATE(winId=%d, x=%d, y=%d, flags=%X", winId, x, y, flags)
     assert(graphics[winId] and graphics[winId].isWindow, "id is not a window")
     local spriteId = #graphics.sprites + 1
     local sprite = {
@@ -103,6 +104,7 @@ function SPRITECREATE(runtime, winId, x, y, flags)
     }
     graphics.sprites[spriteId] = sprite
     graphics.currentSprite = sprite
+    -- printf(" = %d\n", spriteId)
     return spriteId
 end
 
@@ -211,10 +213,17 @@ function SPRITEPOS(runtime, spriteId, x, y)
 end
 
 function SpriteDelete(stack, runtime)
-    -- printf("SpriteDelete\n")
+    local id = stack:pop()
+    -- printf("SpriteDelete %d\n", id)
     local graphics = runtime:getGraphics()
-    local sprite = graphics.sprites[stack:pop()]
-    assert(sprite, "Bad sprite ID!")
+    local sprite = graphics.sprites[id]
+
+    if sprite == nil then
+        -- It seems like this isn't an error on the Psion 5?
+        printf("Bad sprite ID %d in SpriteDelete!\n", id)
+        stack:push(0)
+        return
+    end
     for _, frame in ipairs(sprite.frames) do
         decRefcount(runtime, frame.bitmap)
         decRefcount(runtime, frame.mask)

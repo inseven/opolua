@@ -374,6 +374,13 @@ public struct Graphics {
         case nothing
         case textMetrics(TextMetrics)
         case peekedData(Data)
+        case error(Error)
+    }
+
+    public enum Error: Int {
+        case invalidArguments = -2
+        case badDrawable = -118
+        case invalidWindow = -119
     }
 }
 
@@ -594,7 +601,7 @@ public protocol OpoIoHandler: FileSystemIoHandler {
 
     func beep(frequency: Double, duration: Double) -> Error?
 
-    func draw(operations: [Graphics.DrawCommand])
+    func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error?
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
     func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String)
@@ -643,7 +650,8 @@ class DummyIoHandler : OpoIoHandler {
         return nil
     }
 
-    func draw(operations: [Graphics.DrawCommand]) {
+    func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {
+        return nil
     }
 
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {

@@ -33,7 +33,7 @@ protocol Drawable: AnyObject {
     var id: Graphics.DrawableId { get }
     var mode: Graphics.Bitmap.Mode { get }
 
-    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider)
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) -> Graphics.Error?
     func getImage() -> CGImage?
 
 }
@@ -83,15 +83,18 @@ class Canvas: Drawable {
         context.fill(CGRect(x: 0, y: 0, width: context.width, height: context.height))
     }
 
-    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
-        if data != nil && operation.mode == .invert {
-            drawInverted(operation: operation, provider: provider)
-        } else if data != nil, case .invert(_) = operation.type {
-            drawInverted(operation: operation, provider: provider)
-        } else {
-            context.draw(operation, provider: provider)
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) -> Graphics.Error? {
+        defer {
+            self.image = nil
         }
-        self.image = nil
+
+        if data != nil && operation.mode == .invert {
+            return drawInverted(operation: operation, provider: provider)
+        } else if data != nil, case .invert(_) = operation.type {
+            return drawInverted(operation: operation, provider: provider)
+        } else {
+            return context.draw(operation, provider: provider)
+        }
     }
 
     func draw(image: CGImage) {
@@ -108,7 +111,7 @@ class Canvas: Drawable {
     }
 
     // Only supported when using 8bpp greyscale backing data
-    func drawInverted(operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
+    func drawInverted(operation: Graphics.DrawCommand, provider: DrawableImageProvider) -> Graphics.Error? {
         let byteVal = ~operation.color.greyValue
         switch operation.type {
         case .fill(let size):
@@ -130,7 +133,7 @@ class Canvas: Drawable {
         case .copy(let src, _): // Mask is never used in gCOPY, only in gBUTTON impl which doesn't use invert
             guard let srcImg = provider.getImageFor(drawable: src.drawableId) else {
                 print("Failed to get image for .copy operation!")
-                return
+                return .badDrawable
             }
             // Hopefully don't have to deal with downscaling a colour bitmap into a greyscale canvas...
             assert(srcImg.bitsPerPixel == 8)
@@ -168,8 +171,9 @@ class Canvas: Drawable {
             drawLineInverted(x0: topLeft.x, y0: topLeft.y + size.height, x1: topLeft.x, y1: topLeft.y, value: byteVal) // bottom
         default:
             print("TODO: drawInverted \(operation.type)")
-            context.draw(operation, provider: provider)
+            return context.draw(operation, provider: provider)
         }
+        return nil
     }
 
     func getImage() -> CGImage? {

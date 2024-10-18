@@ -196,7 +196,7 @@ class WindowServer {
         if let cursorDrawCmd {
             if cursorCurrentlyDrawn {
                 // Hopefully this will un-draw it
-                window(for: cursorDrawCmd.drawableId)?.draw(cursorDrawCmd, provider: self)
+                let _ = window(for: cursorDrawCmd.drawableId)?.draw(cursorDrawCmd, provider: self)
                 cursorCurrentlyDrawn = false
             }
         }
@@ -207,7 +207,7 @@ class WindowServer {
             let col: Graphics.Color = cursor.flags.contains(.grey) ? .midGray : .black
             cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert, origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
             print(cursorDrawCmd!)
-            window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
+            let _ = window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
             cursorCurrentlyDrawn = true
             if !cursor.flags.contains(.notFlashing) {
                 cursorTimer = Timer.scheduledTimer(withTimeInterval: kCursorFlashTime, repeats: true, block: { timer in
@@ -216,7 +216,7 @@ class WindowServer {
                         return
                     }
                     self.cursorCurrentlyDrawn = !self.cursorCurrentlyDrawn
-                    window.draw(cmd, provider: self)
+                    let _ = window.draw(cmd, provider: self)
                 })
             }
         }
@@ -313,14 +313,17 @@ class WindowServer {
         window.setSprite(canvasSprite, for: id)
     }
 
-    func draw(operations: [Graphics.DrawCommand]) {
+    func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {
         for op in operations {
             guard let drawable = self.drawable(for: op.drawableId) else {
                 print("No drawable for drawableId \(op.drawableId)!")
-                continue
+                return .badDrawable
             }
-            drawable.draw(op, provider: self)
+            if let err = drawable.draw(op, provider: self) {
+                return err
+            }
         }
+        return nil
     }
 
     private func bringInfoWindowToFront() {
