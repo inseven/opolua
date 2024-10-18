@@ -47,7 +47,16 @@ class RootView : UIView {
     }
 
     override var canBecomeFirstResponder: Bool {
+#if targetEnvironment(macCatalyst)
+        // This is a hack; the reason we refuse first responder status on catalyst is because this prevents the
+        // UIKeyInput support from kicking in when we call becomeFirstResponder from Program.textEditor(_:). And the
+        // reason we do _that_ is because in that mode, hardware cursor keys events are not passed in. Ideally we'd
+        // also want to prevent this on the iPad when a hardware keyboard is being used (which has the same problem)
+        // but that's more complicated to achieve -- hence why this is a hack.
+        return false
+#else
         return true
+#endif
     }
 
     override var intrinsicContentSize: CGSize {
