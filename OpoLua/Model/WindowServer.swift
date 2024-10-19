@@ -134,21 +134,55 @@ class WindowServer {
     }
 
     /**
-     N.B. In OPL terms position=1 means the front, whereas subviews[1] is at the back.
+     N.B. In OPL terms position=1 means the front and position=n means the back, whereas subviews[0] is at the back and
+     subviews[n-1] the front.
      */
     func order(drawableId: Graphics.DrawableId, position: Int) {
         dispatchPrecondition(condition: .onQueue(.main))
-        guard let view = self.window(for: drawableId) else {
+        guard let view = self.window(for: drawableId),
+              let currentPos = getWindowRank(for: drawableId) else {
             return
         }
-        let views = self.rootView.subviews
-        let uipos = views.count - position
-        if views.count == 0 || uipos < 0 {
-            self.rootView.sendSubviewToBack(view)
-        } else {
-            self.rootView.insertSubview(view, aboveSubview: views[uipos])
+        let windows = getWindows()
+        let uipos = max(min(windows.count - position, windows.count - 1), 0)
+        if position < currentPos {
+            // Shift others back, so insertAbove
+            rootView.insertSubview(view, aboveSubview: windows[uipos])
+        } else if position > currentPos {
+            // Shift others forward, so insert below
+            rootView.insertSubview(view, belowSubview: windows[uipos])
         }
-        bringInfoWindowToFront()
+
+        // bringInfoWindowToFront() is not necessary here because the info win doesn't appear in windows, therefore
+        // we'll never mess its position up with this logic.
+    }
+
+    // Returns the views representing windows, ordered back to front, excluding the info window if it exists
+    private func getWindows() -> [UIView] {
+        var views = rootView.subviews
+        if let infoDrawableHandle,
+           let infoWin = window(for: infoDrawableHandle),
+           let idx = views.firstIndex(of: infoWin) {
+            views.remove(at: idx)
+        }
+        return views
+    }
+
+    func getWindowRank(for drawableId: Graphics.DrawableId) -> Int? {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard let view = self.window(for: drawableId) else {
+            // drawableId is a bitmap not a window, presumably
+            return nil
+        }
+        if drawableId == infoDrawableHandle {
+            // Info window is special, has a not-actually-valid-in-OPL window rank
+            return 0
+        }
+        let views = getWindows()
+        guard let idx = views.firstIndex(of: view) else {
+            fatalError("view not found in subview!?")
+        }
+        return views.count - idx
     }
 
     func close(drawableId: Graphics.DrawableId) {
@@ -206,7 +240,6 @@ class WindowServer {
             let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
             let col: Graphics.Color = cursor.flags.contains(.grey) ? .midGray : .black
             cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert, origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
-            print(cursorDrawCmd!)
             let _ = window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
             cursorCurrentlyDrawn = true
             if !cursor.flags.contains(.notFlashing) {
@@ -340,8 +373,8 @@ class WindowServer {
             return
         }
         setVisiblity(handle: infoDrawableHandle, visible: false)
-        self.infoDrawableHandle = nil
         infoWindowDismissTimer?.invalidate()
+        infoWindowDismissTimer = nil
     }
 
     func cancelBusyTimer() {

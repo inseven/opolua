@@ -359,6 +359,7 @@ public struct Graphics {
         case createBitmap(DrawableId, Size, Bitmap.Mode)
         case createWindow(DrawableId, Rect, Bitmap.Mode, Int) // Int is shadow size in pixels
         case order(DrawableId, Int) // drawableId, position
+        case rank(DrawableId)
         case show(DrawableId, Bool) // drawableId, visible flag
         case textSize(String, FontInfo) // returns TextMetrics
         case busy(DrawableId, Int) // drawableId, delay (in ms)
@@ -374,6 +375,7 @@ public struct Graphics {
         case nothing
         case textMetrics(TextMetrics)
         case peekedData(Data)
+        case rank(Int)
         case error(Error)
     }
 

@@ -416,6 +416,27 @@ end
 
 function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
     local graphics = self:getGraphics()
+
+    -- Enforce the max 64 windows limit
+    if isWindow then
+        local limit = self:isSibo() and 8 or 64
+        if self:getResource("infowin") then
+            -- I don't think that the info window counts towards the window limit, since on the Psion it's not
+            -- implemented as an OPL window (but it is in our impl).
+            limit = limit + 1
+        end
+        local count = 0
+        for k, v in pairs(graphics) do
+            if type(k) == "number" and v.isWindow then
+                count = count + 1
+            end
+        end
+        if count >= limit then
+            print("Max number of open windows exceeded")
+            error(KErrMaxDraw)
+        end
+    end
+
     -- #graphics+1 will always be the first free id, which is the same
     -- strategy as the Series 5 appears to use.
     local id = #graphics + 1
@@ -834,6 +855,7 @@ function newRuntime(handler, era)
         dbs = {
             open = {},
         },
+        era = era,
         modules = {},
         luaModules = {}, -- modules that use opl.lua thus have to be tracked per-runtime
         files = {},
@@ -862,10 +884,15 @@ function newRuntime(handler, era)
     return rt
 end
 
+-- Returns true when emulating SIBO (Series 3c)
+function Runtime:isSibo()
+    return self.era == "sibo"
+end
+
 -- Returns the datatype for parameters to opcodes that deal with addresses
 -- eg IoSeek's addr parameter is an int on SIBO and a long on ER5
 function Runtime:addressType()
-    if self.opcodes == ops.codes_sibo then
+    if self:isSibo() then
         return DataTypes.EWord
     else
         return DataTypes.ELong
