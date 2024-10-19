@@ -85,6 +85,39 @@ KDateFormatAmerican = 0
 KDateFormatEuropean = 1
 KDateFormatJapanese = 2
 
+KTimeFormat12Hour = 0
+KTimeFormat24Hour = 1
+
+KDaylightSavingZoneHome = 0
+KDaylightSavingZoneEuropean = 1
+KDaylightSavingZoneNorthern = 2
+KDaylightSavingZoneSouthern = 4
+
+KUnitsImperial = 0
+KUnitsMetric = 1
+
+KSwitchOffDisabled = 0
+KSwitchOffEnabledOnBatteries = 1
+KSwitchOffEnabledAlways = 2
+
+KBacklightBehaviorTimed = 0
+KBacklightBehaviorUntimed = 1
+
+KRemoteLinkDisabled = 0
+KRemoteLinkDisconnected = 1 
+KRemoteLinkConnected = 2
+
+KLinkTypeUnknown = 0
+KLinkTypeCable = 1
+KLinkTypeIrDA = 2
+
+KLinkBpsUnknown = 0
+KLinkBps9600 = 1
+KLinkBps19200 = 2
+KLinkBps38400 = 3
+KLinkBps57600 = 4
+KLinkBps115200 = 5
+
 function SISystemVisible(stack, runtime) -- 1
     unimplemented("opx.systinfo.SISystemVisible")
 end
@@ -226,7 +259,7 @@ function SISoundEnabled(stack, runtime) -- 30
 end
 
 function SIAutoSwitchOffBehaviour(stack, runtime) -- 31
-    unimplemented("opx.systinfo.SIAutoSwitchOffBehaviour")
+    stack:push(KSwitchOffDisabled)
 end
 
 function SIAutoSwitchOffTime(stack, runtime) -- 32
