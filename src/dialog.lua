@@ -1329,6 +1329,7 @@ function DialogItemEditMulti:draw()
     end
 
     if self.hasFocus and self.editor:hasSelection() then
+        black()
         local selStart, selEnd = self.editor:getSelectionRange()
         local startLine, startCol = self:charPosToLineColumn(selStart)
         local endLine, endCol = self:charPosToLineColumn(selEnd)
