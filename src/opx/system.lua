@@ -126,7 +126,9 @@ function IsBacklightPresent(stack, runtime) -- 5
 end
 
 function SetAutoSwitchOffBehavior(stack, runtime) -- 6
-    unimplemented("opx.system.SetAutoSwitchOffBehavior")
+    local behavior = stack:pop()
+    printf("SetAutoSwitchOffBehavior(%d)\n", behavior)
+    stack:push(0)
 end
 
 function SetAutoSwitchOffTime(stack, runtime) -- 7
