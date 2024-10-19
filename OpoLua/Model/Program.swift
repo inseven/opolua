@@ -356,6 +356,13 @@ class Program {
             windowServer.order(drawableId: drawableId, position: position)
             return .nothing
 
+        case .rank(let drawableId):
+            if let rank = windowServer.getWindowRank(for: drawableId) {
+                return .rank(rank)
+            } else {
+                return .error(.invalidWindow)
+            }
+
         case .show(let drawableId, let flag):
             windowServer.setVisiblity(handle: drawableId, visible: flag)
             return .nothing

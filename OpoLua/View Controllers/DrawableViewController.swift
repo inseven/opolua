@@ -164,7 +164,12 @@ extension DrawableViewController: UITableViewDataSource {
         let drawable = windowServer.drawables[indexPath.row]
         let cgImage = drawable.getImage()!
         cell.drawableView.image = UIImage(cgImage: cgImage)
-        cell.identifierLabel.text = "#\(drawable.id.value)"
+        let rank = windowServer.getWindowRank(for: drawable.id)
+        if let rank {
+            cell.identifierLabel.text = "Window id: \(drawable.id.value) rank: \(rank)"
+        } else {
+            cell.identifierLabel.text = "Bitmap id: \(drawable.id.value)"
+        }
         cell.sizeLabel.text = "\(cgImage.width) x \(cgImage.height)"
         cell.modeLabel.text = drawable.mode.localizedDescription
         cell.selectionStyle = .none

@@ -601,7 +601,8 @@ function gLoadFont(stack, runtime) -- 0x29
 end
 
 function gRank(stack, runtime) -- 0x2A
-    unimplemented("fns.gRank")
+    local result = runtime:gRANK()
+    stack:push(result)
 end
 
 function gIdentity(stack, runtime) -- 0x2B

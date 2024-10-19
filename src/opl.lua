@@ -132,6 +132,16 @@ function gORDER(id, pos)
     runtime:iohandler().graphicsop("order", id, pos)
 end
 
+function gRANK(id)
+    local ctx = runtime:getGraphicsContext()
+    assert(ctx and ctx.isWindow, KErrInvalidWindow)
+    local result = runtime:iohandler().graphicsop("rank", ctx.id)
+    if result < 0 then
+        error(result)
+    end
+    return result
+end
+
 function gCLS()
     -- printf("gCLS\n")
     local context = runtime:getGraphicsContext()

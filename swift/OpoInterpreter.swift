@@ -213,6 +213,9 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
     case .peekedData(let data):
         L.push(data)
         return 1
+    case .rank(let rank):
+        L.push(rank)
+        return 1
     case .error(let error):
         L.push(error.rawValue)
         return 1
@@ -258,6 +261,15 @@ private func graphicsop(_ L: LuaState!) -> CInt {
             return doGraphicsOp(L, iohandler, .order(drawableId, position))
         } else {
             print("order graphicsop missing arguments!")
+        }
+    case "rank":
+        if let id = L.toint(2) {
+            let drawableId = Graphics.DrawableId(value: id)
+            return doGraphicsOp(L, iohandler, .rank(drawableId))
+        } else {
+            print("Bad drawableId to rank graphicsop!")
+            L.push(Graphics.Error.invalidArguments.rawValue)
+            return 1
         }
     case "textsize":
         let str = L.tostring(2) ?? ""
