@@ -4,6 +4,34 @@ title: Release Notes
 
 # Release Notes
 
+## 1.1.2
+
+**Fixes**
+
+- Show about screen build date on devices with manually disabled 24h time (#244)
+- Build using macOS Ventura (#249)
+- Update copyright notice to 2023 (#251)
+- Update the App Store provisioning profile and certificate (#254)
+- Update to latest LuaSwift (#260)
+- impl of NotFloat operator. fixes #262 (#263)
+- Thank Lukas Fittl 🙏🏻 (#266)
+- Update about screen website link (#267)
+- Update copyright to 2024 (#268)
+- Update TestFlight build (#273)
+- Include the version number in support emails (#274)
+- memory leak due to autoreleased objects (#280)
+- "Close Program" was not setting GETCMD=X correctly (#281)
+- Colour toolbar button in Welcome app is now a toggle (fixes #218) (#282)
+- typo in install dialog (#284)
+- Don't error on SetForegroundByThread or LogonToThread(0) (#285)
+- Support non-extended gamepads and virtual controllers (#279)
+
+## 1.1.1
+
+**Fixes**
+
+- Add copyright notice to the about screen (#243)
+
 ## 1.1.0
 
 **Changes**
