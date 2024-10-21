@@ -346,7 +346,7 @@ TrappableCommands = enum {
     "DELETE", "MODIFY", "INSERT", "PUT", "CANCEL",
     "COPY", "ERASE", "RENAME", "LOPEN", "LCLOSE", "LOADM", "UNLOADM", "MKDIR", "RMDIR",
     "EDIT", "INPUT",
-    "gSAVEBIT", "gCLOSE", "gUSE", "gUNLOADFONT", "gFONT", "gPATT", "gCOPY",
+    "GSAVEBIT", "GCLOSE", "GUSE", "GUNLOADFONT", "GFONT", "GPATT", "GCOPY",
     "RAISE",
 }
 
@@ -444,6 +444,7 @@ Callables = {
     GCLOSE = Op("gClose", {Int}),
     GCLS = Op("gCls", {}),
     GCOLOR = Op("gColor", {Int, Int, Int}),
+    GCOLORBACKGROUND = Op("gColorBackground", {Int, Int, Int}),
     GCOPY = Op("gCopy", {Int, Int, Int, Int, Int, Int}),
     GCREATE = SpecialFn({Int, Int, Int, Int, Int, Int, numParams = {5, 6}}, Int),
     GCREATEBIT = Fn("gCreateBit", {Int, Int, Int, numParams = {2, 3}}, Int),
