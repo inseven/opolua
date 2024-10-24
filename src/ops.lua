@@ -2424,8 +2424,8 @@ function ScreenInfo(stack, runtime) -- 0x114
         [6] = 0, -- unused
         [7] = screen.charw, -- screen font char width
         [8] = screen.charh, -- screen font char height
-        [9] = screen.fontid & 0xFFFF,
-        [10] = (screen.fontid >> 16) & 0xFFFF,
+        [9] = screen.fontUid & 0xFFFF,
+        [10] = (screen.fontUid >> 16) & 0xFFFF,
     }
     addr:writeArray(result, DataTypes.EWord)
 end
@@ -2534,10 +2534,10 @@ function GetEventA32(stack, runtime) -- 0x123
 end
 
 function gColor(stack, runtime) -- 0x124
-    local blue = stack:pop()
-    local green = stack:pop()
-    local red = stack:pop()
-    runtime:gCOLOR(red, green, blue)
+    -- OPL casts to a uint8_t so some progs get away with passing in negative
+    -- numbers, which our native impl doesn't like
+    local r, g, b = stack:pop(3)
+    runtime:gCOLOR(r % 256, g % 256, b % 256)
 end
 
 function SetFlags(stack, runtime) -- 0x125
@@ -2575,7 +2575,7 @@ function gInfo32(stack, runtime) -- 0x128
         ginfo.fontZeroWidth, -- 6 width of '0' (really?)
         ginfo.fontMaxWidth, -- 7 max character width
         17, -- 8 in theory font flags, but in practice appears to always be 17, so who knows 
-        context.font.uid, -- 9 font uid
+        ginfo.fontUid, -- 9 font uid
         0, -- 10
         0, -- 11
         0, -- 12
@@ -2729,10 +2729,8 @@ function mCardX(stack, runtime) -- 0x137
 end
 
 function gColorBackground(stack, runtime) -- ER5: 0x137, ER6: 0x136
-    local blue = stack:pop()
-    local green = stack:pop()
-    local red = stack:pop()
-    runtime:gCOLORBACKGROUND(red, green, blue)
+    local r, g, b = stack:pop(3)
+    runtime:gCOLORBACKGROUND(r % 256, g % 256, b % 256)
 end
 
 function gColorInfo(stack, runtime) -- ER5: 0x136, ER6: 0x135

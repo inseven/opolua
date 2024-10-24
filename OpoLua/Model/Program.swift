@@ -348,6 +348,12 @@ class Program {
             windowServer.createWindow(id: id, rect: rect, mode: mode, shadowSize: shadowSize)
             return .nothing
 
+        case .loadFont(let drawableId, let fontUid):
+            if let metrics = windowServer.load(font: fontUid, into: drawableId) {
+                return .fontMetrics(metrics)
+            } else {
+                return .error(.invalidArguments)
+            }
         case .close(let drawableId):
             windowServer.close(drawableId: drawableId)
             return .nothing
@@ -366,10 +372,6 @@ class Program {
         case .show(let drawableId, let flag):
             windowServer.setVisiblity(handle: drawableId, visible: flag)
             return .nothing
-
-        case .textSize(let string, let fontInfo):
-            let metrics = WindowServer.textSize(string: string, fontInfo: fontInfo)
-            return .textMetrics(metrics)
 
         case .busy(let drawableId, let delay):
             windowServer.busy(drawableId: drawableId, delay: delay)

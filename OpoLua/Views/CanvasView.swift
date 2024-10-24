@@ -38,9 +38,14 @@ class CanvasView : UIView, Drawable {
         return canvas.mode
     }
 
+    var size: Graphics.Size {
+        return canvas.size
+    }
+
     private var canvas: Canvas
     private var greyPlane: Canvas?
     private var image: CGImage?
+    private var invertedMask: CGImage?
     var clockView: ClockView?
     weak var delegate: CanvasViewDelegate?
     private var sprites: [Int: CanvasSprite] = [:]
@@ -64,6 +69,7 @@ class CanvasView : UIView, Drawable {
     func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) -> Graphics.Error? {
         defer {
             self.image = nil
+            self.invertedMask = nil
             setNeedsDisplay()
         }
         if operation.greyMode.drawGreyPlane {
@@ -185,7 +191,17 @@ class CanvasView : UIView, Drawable {
         let image = context.makeImage()
         self.image = image
         return image
+    }
 
+    func getInvertedMask() -> CGImage? {
+        if self.invertedMask == nil {
+            self.invertedMask = getImage()?.inverted()?.masking(componentRange: 0, to: 0)
+        }
+        return self.invertedMask
+    }
+
+    func getData() -> UnsafeBufferPointer<UInt32> {
+        return getImage()!.getPixelData()
     }
 
     override var intrinsicContentSize: CGSize {

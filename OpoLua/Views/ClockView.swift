@@ -98,9 +98,9 @@ class ClockView: UIView {
                 let rect = CGRect(x: x, y: self.bounds.height - CGFloat(h) - y, width: CGFloat(img.width), height: CGFloat(img.height))
                 context.clip(to: rect, mask: img)
                 context.fill(rect)
-                context.restoreGState()
                 x = x + CGFloat(img.width)
             }
+            context.restoreGState()
         }
     }
 

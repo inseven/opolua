@@ -104,16 +104,16 @@ function MenuPane:drawItem(i, style)
     if item.key & (KMenuSymbolOn|KMenuCheckBox) == (KMenuSymbolOn|KMenuCheckBox) then
         gAT(inset, y + textYPad)
         gFONT(KFontEiksym15)
-        runtime:drawCmd("text", { string = "." })
+        runtime:drawText(".")
     end
     gAT(inset + leftMargin, y + textYPad)
     gFONT(kMenuFont)
-    runtime:drawCmd("text", { string = item.text })
+    runtime:drawText(item.text)
     if item.shortcutText then
         local tx = inset + leftMargin + self.maxTextWidth + textGap
         local ty = y + textYPad + self.shortcutTextYOffset
         gFONT(kShortcutFont)
-        runtime:drawCmd("text", { string = item.shortcutText, x = tx, y = ty })
+        runtime:drawText(item.shortcutText, tx, ty)
     end
     if item.submenu then
         gFONT(KFontEiksym15)
@@ -123,7 +123,7 @@ function MenuPane:drawItem(i, style)
         end
         local ty = y + textYPad
         item.submenuXPos = tx + gTWIDTH('"')
-        runtime:drawCmd("text", { string = '"', x = tx, y = ty })
+        runtime:drawText('"', tx, ty)
     end
 end
 
@@ -672,7 +672,7 @@ function MENU(menubar)
     gXBORDER(2, 0x94, barWidth - 2, barHeight - 2)
     for _, item in ipairs(barItems) do
         gAT(item.textx, item.y)
-        runtime:drawCmd("text", { string = item.text })
+        runtime:drawText(item.text)
     end
     gVISIBLE(true)
 
@@ -718,7 +718,7 @@ function MENU(menubar)
         gBOX(w, h + 5)
         gAT(1, 1)
         gXBORDER(2, 0x94, w - 2, h + 5)
-        runtime:drawCmd("text", { string = item.text, x = item.textx - item.x, y = item.y })
+        runtime:drawText(item.text, item.textx - item.x, item.y)
     end
 
     bar.moveSelectionTo = function(i)

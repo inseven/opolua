@@ -93,7 +93,7 @@ private func draw(_ L: LuaState!) -> CInt {
             print("missing bgcolor")
             continue
         }
-        var mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
+        let mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
         let penWidth = L.toint(-1, key: "penwidth") ?? 1
         let greyMode: Graphics.GreyMode = L.getdecodable(-1, key: "greyMode") ?? .normal
         let optype: Graphics.DrawCommand.OpType
@@ -143,6 +143,21 @@ private func draw(_ L: LuaState!) -> CInt {
                 print("Missing params in copy!")
                 continue
             }
+        case "mcopy":
+            if let srcid = L.toint(-1, key: "srcid"),
+               let params = L.tovalue(-1, type: Array<Int>.self) {
+                let drawable = Graphics.DrawableId(value: srcid)
+                var rects: [Graphics.Rect] = []
+                var points: [Graphics.Point] = []
+                for i in stride(from: 0, to: params.count, by: 6) {
+                    rects.append(Graphics.Rect(x: params[i], y: params[i+1], width: params[i+2], height: params[i+3]))
+                    points.append(Graphics.Point(x: params[i+4], y: params[i+5]))
+                }
+                optype = .mcopy(drawable, rects, points)
+            } else {
+                print("Missing params in mcopy!")
+                continue
+            }
         case "scroll":
             let dx = L.toint(-1, key: "dx") ?? 0
             let dy = L.toint(-1, key: "dy") ?? 0
@@ -162,16 +177,6 @@ private func draw(_ L: LuaState!) -> CInt {
                 optype = .pattern(info)
             } else {
                 print("Missing params in patt!")
-                continue
-            }
-        case "text":
-            let str = L.tostring(-1, key: "string") ?? ""
-            mode = Graphics.Mode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
-            let xstyle: Graphics.XStyle? = L.getdecodable(-1, key: "xflags")
-            if let fontInfo: Graphics.FontInfo = L.getdecodable(-1, key: "fontinfo") {
-                optype = .text(str, fontInfo, xstyle)
-            } else {
-                print("Bad text params!")
                 continue
             }
         case "border":
@@ -204,12 +209,6 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
     switch result {
     case .nothing:
         return 0
-    case .textMetrics(let metrics):
-        L.push(metrics.size.width)
-        L.push(metrics.size.height)
-        L.push(metrics.ascent)
-        L.push(metrics.descent)
-        return 4
     case .peekedData(let data):
         L.push(data)
         return 1
@@ -217,7 +216,21 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
         L.push(rank)
         return 1
     case .error(let error):
-        L.push(error.rawValue)
+        if case .loadFont(_, _) = op {
+            L.pushnil()
+            L.push(error.rawValue)
+            return 2
+        } else {
+            L.push(error.rawValue)
+            return 1
+        }
+    case .fontMetrics(let metrics):
+        L.newtable()
+        L.rawset(-1, key: "height", value: metrics.height)
+        L.rawset(-1, key: "ascent", value: metrics.ascent)
+        L.rawset(-1, key: "descent", value: metrics.descent)
+        L.rawset(-1, key: "widths", value: metrics.widths)
+        L.rawset(-1, key: "maxwidth", value: metrics.maxwidth)
         return 1
     }
 }
@@ -226,7 +239,6 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("close", drawableId)
 // graphicsop("show", drawableId, flag)
 // graphicsop("order", drawableId, pos)
-// graphicsop("textsize", str, font, style)
 // graphicsop("busy", drawableId, delay)
 // graphicsop("cursor", [cursor])
 // graphicsop("giprint", drawableId)
@@ -235,6 +247,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("title", appTitle)
 // graphicsop("clock", drawableId, [{mode=, x=, y=}])
 // graphicsop("peekline", drawableId, x, y, numPixels, mode)
+// graphicsop("loadfont", drawableId, uid)
 private func graphicsop(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""
@@ -270,21 +283,6 @@ private func graphicsop(_ L: LuaState!) -> CInt {
             print("Bad drawableId to rank graphicsop!")
             L.push(Graphics.Error.invalidArguments.rawValue)
             return 1
-        }
-    case "textsize":
-        let str = L.tostring(2) ?? ""
-        var flags = Graphics.FontFlags(rawValue: L.toint(4) ?? 0)
-        if L.toboolean(3, key: "bold") {
-            flags.insert(.boldHint)
-        }
-        if let fontName = L.tostring(3, key: "face"),
-           let face = Graphics.FontFace(rawValue: fontName),
-           let size = L.toint(3, key: "size"),
-           let uid = L.toint(3, key: "uid") {
-            let info = Graphics.FontInfo(uid: UInt32(uid), face: face, size: size, flags: flags)
-            return doGraphicsOp(L, iohandler, .textSize(str, info))
-        } else {
-            print("Bad args to textsize!")
         }
     case "busy":
         let id = L.toint(2) ?? 0
@@ -346,6 +344,15 @@ private func graphicsop(_ L: LuaState!) -> CInt {
             return doGraphicsOp(L, iohandler, .peekline(drawableId, pos, numPixels, mode))
         } else {
             print("Missing peekline params!")
+            break
+        }
+    case "loadfont":
+        if let id = L.toint(2),
+           let fontUid = L.tovalue(3, type: UInt32.self) {
+            let drawableId = Graphics.DrawableId(value: id)
+            return doGraphicsOp(L, iohandler, .loadFont(drawableId, fontUid))
+        } else {
+            print("Missing loadfont params!")
             break
         }
     default:

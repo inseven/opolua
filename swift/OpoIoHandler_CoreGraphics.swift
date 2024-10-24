@@ -42,4 +42,15 @@ extension Graphics.Rect {
     func cgRect() -> CGRect {
         return CGRect(x: self.origin.x, y: self.origin.y, width: self.width, height: self.height)
     }
+
+    // Returns nil if there is no overlap between the rects
+    public func intersection(_ rect: Graphics.Rect) -> Graphics.Rect? {
+        let result = self.cgRect().intersection(rect.cgRect())
+        if result.isNull {
+            return nil
+        }
+        return Graphics.Rect(x: Int(result.minX), y: Int(result.minY),
+            width: Int(result.width), height: Int(result.height))
+    }
+
 }
