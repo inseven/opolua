@@ -85,6 +85,14 @@ public struct Graphics {
             return size.height
         }
 
+        public var maxX: Int {
+            return origin.x + size.width
+        }
+
+        public var maxY: Int {
+            return origin.y + size.height
+        }
+
         public init(origin: Point, size: Size) {
             self.origin = origin
             self.size = size
@@ -125,13 +133,19 @@ public struct Graphics {
         let g: UInt8
         let b: UInt8
 
+        static let black = Self(r: 0, g: 0, b: 0)
+        static let white = Self(r: 255, g: 255, b: 255)
+        static let midGray = Self(r: 0x80, g: 0x80, b: 0x80)
+        static let alphaMask: UInt32 = 0xFF000000
+
         var greyValue: UInt8 {
             return UInt8((Int(r) + Int(g) + Int(b)) / 3)
         }
 
-        static let black = Self(r: 0, g: 0, b: 0)
-        static let white = Self(r: 255, g: 255, b: 255)
-        static let midGray = Self(r: 0x80, g: 0x80, b: 0x80)
+        var pixelValue: UInt32 {
+            return UInt32(r) | (UInt32(g) << 8) | (UInt32(b) << 16) | Self.alphaMask
+        }
+
     }
 
     public struct Bitmap: Codable {
@@ -291,9 +305,9 @@ public struct Graphics {
             case box(Size)
             case bitblt(Bitmap)
             case copy(CopySource, CopySource?) // second arg is optional mask
+            case mcopy(DrawableId, [Rect], [Point])
             case pattern(CopySource)
             case scroll(Int, Int, Rect) // dx, dy, rect
-            case text(String, FontInfo, XStyle?)
             case border(Rect, BorderType)
             case invert(Size)
         }
@@ -354,14 +368,22 @@ public struct Graphics {
         let flags: FlagSet<CursorFlag>
     }
 
+    public struct FontMetrics: Codable {
+        let height: Int
+        let maxwidth: Int
+        let ascent: Int
+        let descent: Int
+        let widths: [Int] // Always 256 elements
+    }
+
     public enum Operation {
         case close(DrawableId)
         case createBitmap(DrawableId, Size, Bitmap.Mode)
         case createWindow(DrawableId, Rect, Bitmap.Mode, Int) // Int is shadow size in pixels
+        case loadFont(DrawableId, UInt32) // returns .fontMetrics or .error
         case order(DrawableId, Int) // drawableId, position
         case rank(DrawableId)
         case show(DrawableId, Bool) // drawableId, visible flag
-        case textSize(String, FontInfo) // returns TextMetrics
         case busy(DrawableId, Int) // drawableId, delay (in ms)
         case giprint(DrawableId)
         case setwin(DrawableId, Point, Size?) // drawableId, pos, size
@@ -373,10 +395,10 @@ public struct Graphics {
 
     public enum Result {
         case nothing
-        case textMetrics(TextMetrics)
         case peekedData(Data)
         case rank(Int)
         case error(Error)
+        case fontMetrics(FontMetrics)
     }
 
     public enum Error: Int {

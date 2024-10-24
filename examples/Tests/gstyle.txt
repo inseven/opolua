@@ -6,15 +6,31 @@ PROC main:
 	gFILL gWidth, gHEIGHT, 0
 	gCOLOR 0, 0, 0
 
+	gTMODE KtModeSet%
 	gAT 0,40
-	drawLine:
+	drawLine:("set")
+
+	gAT 0, 70
+	gTMODE KtModeClear%
+	drawLine:("clear")
+
+	gAT 0, 95
+	gTMODE KtModeInvert%
+	gFILL 500, 5, KtModeSet%
+	gAT 0, 100
+	drawLine:("invert")
+
+	gAT 0, 130
+	gTMODE KtModeReplace%
+	drawLine:("replace")
 
 	gSAVEBIT "D:\gstyle.mbm"
 	GET
 ENDP
 
-PROC drawLine:
+PROC drawLine:(desc$)
 	gSTYLE 0
+	gPRINT desc$,
 	gPRINT "Quick ly "
 	gSTYLE KgStyleBold%
 	gPRINT "Quick ly "

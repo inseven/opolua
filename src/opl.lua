@@ -43,6 +43,8 @@ Boolean parameters should be actual bools - ie pass true or false, not -1 or 0.
 
 _ENV = module()
 
+local string_byte = string.byte
+
 local mbm = require("mbm")
 
 function _setRuntime(r)
@@ -78,11 +80,6 @@ function white()
     gCOLOR(0xFF, 0xFF, 0xFF)
 end
 
--- convenience
-function drawText(text, x, y)
-    runtime:drawCmd("text", { string = text, x = x, y = y })
-end
-
 -- Graphics APIs
 
 function gCLOSE(id)
@@ -102,12 +99,12 @@ function gVISIBLE(show)
 end
 
 function gFONT(id)
-    local font = FontIds[FontAliases[id] or id]
+    local font = runtime:getFont(id)
     if not font then
         printf("No font found for 0x%08X\n", id)
         error(KErrFontNotLoaded)
     end
-    runtime:getGraphicsContext().font = font
+    runtime:getGraphicsContext().fontUid = font.uid
     runtime:setResource("ginfo", nil)
 end
 
@@ -170,7 +167,7 @@ function gPRINT(val)
     -- the baseline rather than the top left or bottom left corners; all our
     -- native operations assume text coords are for the top-left of the text.
     -- Since we always have to ask about the text size anyway, fix it up here.
-    runtime:drawCmd("text", { string = str, y = context.pos.y - ascent })
+    runtime:drawText(str, context.pos.x, context.pos.y - ascent)
     context.pos.x = context.pos.x + w
 end
 
@@ -200,12 +197,7 @@ function gPRINTB(text, width, align, top, bottom, margin)
         textX = context.pos.x + margin
     end
 
-    runtime:drawCmd("text", {
-        x = textX,
-        y = context.pos.y - fontAscent,
-        mode = KgModeSet,
-        string = text,
-    })
+    runtime:drawText(text, textX, context.pos.y - fontAscent, KgModeSet)
 end
 
 function gPRINTCLIP(text, width)
@@ -218,8 +210,9 @@ end
 
 function gXPRINT(text, flags)
     local context = runtime:getGraphicsContext()
-    local w, h, ascent = gTWIDTH(text)
-    runtime:drawCmd("text", { string = text, y = context.pos.y - ascent, xflags = flags })
+    local ascent = runtime:getFont().ascent
+    -- gXPRINT always behaves like mode is replace
+    runtime:drawText(text, context.pos.x, context.pos.y - ascent, KtModeReplace, flags)
     -- Note, doesn't increment context.pos.x
 end
 
@@ -228,16 +221,24 @@ function gTWIDTH(text, fontId, style)
     -- fontId and style param are an opolua extension
     local font
     if fontId then
-        font = assert(FontIds[FontAliases[fontId] or fontId], "Bad font id!")
+        font = assert(runtime:getFont(fontId), "Bad font id!")
         if style == nil then
             style = 0
         end
     else
-        font = context.font
+        font = runtime:getFont()
         style = context.style
     end
-    local width, height, ascent, descent = runtime:iohandler().graphicsop("textsize", text, font, style)
-    return width, height, ascent, descent
+    local bold = (style & KgStyleBold) ~= 0
+    local width = 0
+    for i = 1, #text do
+        local chw = font.widths[1 + string_byte(text, i)]
+        width = width + chw
+        if bold and chw > 0 then
+            width = width + 1
+        end
+    end
+    return width, font.height, font.ascent, font.descent
 end
 
 function gLINEBY(dx, dy)
@@ -386,10 +387,10 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
                 srcy = 0,
                 width = bmpWidth,
                 height = bmpHeight,
-                mode = 3,
+                mode = KtModeReplace,
             })
         else
-            gCOPY(bmpId, 0, 0, bmpWidth, bmpHeight, 3)
+            gCOPY(bmpId, 0, 0, bmpWidth, bmpHeight, KtModeReplace)
         end
         textX = textX + bmpWidth + 1
     end
@@ -406,7 +407,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     local textY = s.pos.y + ((height - texth + descent) // 2) + state
     black()
     for line in text:gmatch("[^\n]*") do
-        runtime:drawCmd("text", { string = line, x = textX, y = textY })
+        runtime:drawText(line, textX, textY, KgModeSet)
         textY = textY + lineh
     end
 
@@ -506,6 +507,7 @@ function gCREATE(x, y, w, h, visible, flags)
     if visible then
         runtime:iohandler().graphicsop("show", id, true)
     end
+    gUSE(id) -- Creating new window sets it as current
     return id
 end
 
@@ -521,6 +523,7 @@ function gCREATEBIT(w, h, mode)
         error(err)
     end
     -- printf(" id=%d\n", id)
+    gUSE(id) -- Creating new bitmap sets it as current
     return id
 end
 
@@ -549,7 +552,7 @@ function gLOADBIT(path, writable, index)
     -- printf(" %dx%d drawableid=%d\n", bitmap.width, bitmap.height, id)
     -- (3)
     bitmap.imgData = bitmap:getImageData()
-    runtime:drawCmd("bitblt", { bitmap = bitmap })
+    runtime:drawCmd("bitblt", { bitmap = bitmap, mode = KtModeReplace })
     -- runtime:flushGraphicsOps()
     return id
 end
@@ -614,6 +617,7 @@ function gINVERT(w, h)
 end
 
 function gSETPENWIDTH(width)
+    -- printf("gSETPENWIDTH %d\n", width)
     runtime:getGraphicsContext().penwidth = width
 end
 
@@ -908,11 +912,13 @@ end
 function FONT(id, style)
     -- printf("FONT(0x%08X, %d)\n", id, style)
     local screen = runtime:getGraphics().screen
-    local defaultWin = runtime:getGraphicsContext(1)
-    local font = FontIds[FontAliases[id] or id]
+    local defaultWin = runtime:getGraphicsContext(KDefaultWin)
+    local font = runtime:getFont(id)
     assert(font, KErrFontNotLoaded)
+
     -- Font keyword always resets text window size, position and text pos
-    local charw, charh = runtime:iohandler().graphicsop("textsize", "0", font, style)
+    local charw = font.widths[1 + string.byte("0")]
+    local charh = font.height
     local numcharsx = defaultWin.width // charw
     local numcharsy = defaultWin.height // charh
     runtime:getGraphics().screen = {
@@ -924,7 +930,7 @@ function FONT(id, style)
         cursory = 0,
         charh = charh,
         charw = charw,
-        fontid = font.uid,
+        fontUid = font.uid,
         style = 0,
     }
     STYLE(style)
@@ -1010,7 +1016,7 @@ function PRINT(str)
     gUPDATE(false)
     local screen = runtime:getGraphics().screen
     gCOLOR(0, 0, 0)
-    gFONT(screen.fontid)
+    gFONT(screen.fontUid)
     gSTYLE(screen.style)
     gTMODE(KtModeReplace)
     local strPos = 1
@@ -1042,7 +1048,7 @@ function PRINT(str)
                 gSCROLL(0, -screen.charh, screen.x, screen.y, screen.w * screen.charw, screen.h * screen.charh)
                 charY = charY - 1
             end
-            runtime:drawCmd("text", { string = frag, x = screen.x + charX * screen.charw, y = screen.y + charY * screen.charh })
+            drawText(frag, screen.x + charX * screen.charw, screen.y + charY * screen.charh, KtModeReplace)
             charX = charX + #frag
         end
         if lineEnd and strPos == lineEnd then
@@ -1060,6 +1066,158 @@ function PRINT(str)
     gUSE(prevId)
 end
 
+function drawText(str, x, y, mode, xflags)
+    local s = runtime:saveGraphicsState()
+    gUPDATE(false)
+    local ctx = runtime:getGraphicsContext()
+    local font = runtime:getFont(ctx.fontUid)
+    if x == nil then
+        x = ctx.pos.x
+    end
+    if y == nil then
+        y = ctx.pos.y
+    end
+    if mode == nil then
+        mode = ctx.tmode
+    end
+    local bold = (ctx.style & KgStyleBold) ~= 0
+    local underlined = (ctx.style & KgStyleUnder) ~= 0
+    local italic = (ctx.style & KgStyleItalic) ~= 0
+    local inverse = (ctx.style & KgStyleInverse) ~= 0 -- Note, different to KtModeInvert
+    local xflagsInverse = xflags and xflags >= KgXPrintInverse and xflags <= KgXPrintThinInverseRound
+    local thin = xflags == KgXPrintThinInverse or xflags == KgXPrintThinInverseRound or xflags == KgXPrintThinUnderlined
+
+    if xflagsInverse then
+        -- Yes, if both gSTYLE inverse and gXPRINT inverse are set, they cancel each other out
+        inverse = not inverse
+    end
+
+    if xflags == KgXPrintThinUnderlined then
+        -- This smells like a bug, but gSTYLE inverse doesn't apply on KgXPrintThinUnderlined, despite the fact that it
+        -- does with KgXPrintUnderlined and normal...
+        inverse = false
+    end
+
+    local fgcol, bgcol = ctx.color, ctx.bgcolor
+    if inverse then
+        -- The inverse style appears to completely override the mode.
+        mode = KtModeReplace
+        fgcol, bgcol = bgcol, fgcol
+    end
+
+    gCOLOR(fgcol.r, fgcol.g, fgcol.b)
+    gCOLORBACKGROUND(bgcol.r, bgcol.g, bgcol.b)
+
+    -- In order to support drawing in something other than black we cannot just do a plain KgModeSet or KtModeReplace
+    -- gCOPY here. We have to exploit KgModeClear which fills with the background colour only the pixels that were
+    -- black in the src image. And fix up the actual background if necessary. KtModeInvert is just baffling in behaviour
+    -- so we're going to ignore that for now.
+
+    if mode == KtModeReplace then
+        local function drawRoundedRect(w, h)
+            gMOVE(1, 0)
+            gLINEBY(w - 2, 0)
+            gMOVE(0, 1)
+            gLINEBY(0, h - 2)
+            gMOVE(-1, 0)
+            gLINEBY(-(w - 2), 0)
+            gMOVE(0, -1)
+            gLINEBY(0, -(h - 2))
+            gMOVE(0, -1)
+        end
+
+        local bx, by, bw, bh = x, y, gTWIDTH(str), font.height
+
+        gGMODE(KgModeClear)
+        -- Non-thin gXPRINT styles draw an extra pixel all round (except for underlined which for padding purposes also
+        -- counts as thin...)
+        if xflags == KgXPrintThinInverseRound then
+            gAT(bx, by)
+            drawRoundedRect(bw, bh)
+            gAT(bx + 1, by + 1)
+            gFILL(bw - 2, bh - 2, KgModeClear)
+        elseif xflags == KgXPrintNormal or xflags == KgXPrintInverseRound then
+            -- +1 pixel, with rounded corners
+            gAT(bx - 1, by - 1)
+            drawRoundedRect(bw + 2, bh + 2)
+            gAT(bx, by)
+            gFILL(bw, bh, KgModeClear)
+        elseif xflags == KgXPrintInverse then
+            -- +1 pixel, not rounded
+            gAT(bx - 1, by - 1)
+            gFILL(bw + 2, bh + 2, KgModeClear)
+        elseif xflags == nil or xflags == KgXPrintUnderlined or xflags == KgXPrintThinUnderlined or xflags == KgXPrintThinInverse then
+            gAT(bx, by)
+            gFILL(bw, bh, KgModeClear)
+        end
+    end
+    gGMODE(mode)
+
+    local opcol = (mode == KgModeClear) and bgcol or fgcol
+    local startx = x
+    local h, maxwidth, widths = font.height, font.maxwidth, font.widths
+
+    local op = {
+        srcid = font.id,
+        mode = mode == KgModeInvert and KgModeInvert or KgModeClear,
+        bgcolor = opcol,
+        x = x,
+        y = y,
+    }        
+
+    local function opadd(srcx, srcy, w, h, x, y)
+        local n = #op
+        op[n + 1] = srcx
+        op[n + 2] = srcy
+        op[n + 3] = w
+        op[n + 4] = h
+        op[n + 5] = x
+        op[n + 6] = y
+        -- runtime:drawCmd("copy", {
+        --     x = x,
+        --     y = y,
+        --     srcid = font.id,
+        --     srcx = srcx,
+        --     srcy = srcy,
+        --     width = w,
+        --     height = h,
+        --     mode = op.mode,
+        --     bgcolor = opcol,
+        -- })
+    end
+    for i = 1, #str do
+        local ch = string_byte(str, i)
+        local bmpx = (ch % 32) * maxwidth
+        local bmpy = (ch // 32) * h
+        local chw = font.widths[1 + ch]
+        if chw > 0 then
+            opadd(bmpx, bmpy, chw, h, x, y)
+            if bold then
+                opadd(bmpx, bmpy, chw, h, x + 1, y)
+                x = x + 1
+            end
+            x = x + chw
+        end
+    end
+    runtime:drawCmd("mcopy", op)
+
+    if underlined then
+        gAT(startx, y + font.ascent + 1)
+        gLINEBY(x - startx, 0)
+    end
+
+    -- Yes these stack with gSTYLE underlined, and are drawn in a slightly different y offset
+    if xflags == KgXPrintUnderlined then
+        gAT(startx, y + font.height)
+        gLINEBY(x - startx, 0)
+    elseif xflags == KgXPrintThinUnderlined then
+        -- local uy = y + font.height - 1
+        gAT(startx, y + font.height - 1)
+        gLINEBY(x - startx, 0)
+    end
+    runtime:restoreGraphicsState(s)
+end
+
 function gINFO()
     local ginfo = runtime:getResource("ginfo")
     if ginfo then
@@ -1067,17 +1225,16 @@ function gINFO()
     end
 
     local context = runtime:getGraphicsContext()
-    local fontWidth, fontHeight, fontAscent, fontDescent = runtime:iohandler().graphicsop("textsize", "0", context.font, context.style)
-    local maxCharWidth = gTWIDTH("@") -- Close enough for now
+    local font = runtime:getFont()
     local cursor = runtime:getResource("cursor")
 
     ginfo = {
-        fontHeight = fontHeight,
-        fontDescent = fontDescent,
-        fontAscent = fontAscent,
-        fontZeroWidth = fontWidth,
-        fontMaxWidth = maxCharWidth,
-        fontUid = context.font.uid,
+        fontHeight = font.height,
+        fontDescent = font.descent,
+        fontAscent = font.ascent,
+        fontZeroWidth = font.widths[1 + string.byte("0")],
+        fontMaxWidth = font.maxwidth,
+        fontUid = font.uid,
         gmode = context.mode,
         tmode = context.tmode,
         style = context.style,

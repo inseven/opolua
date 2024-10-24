@@ -33,25 +33,6 @@ protocol WindowServerDelegate: CanvasViewDelegate {
 
 class WindowServer {
 
-    static func textSize(string: String, fontInfo: Graphics.FontInfo) -> Graphics.TextMetrics {
-        if let font = fontInfo.toBitmapFont() {
-            let bold = fontInfo.flags.contains(.bold)
-            let renderer = BitmapFontCache.shared.getRenderer(font: font, embolden: bold)
-            let (w, h) = renderer.getTextSize(string)
-            return Graphics.TextMetrics(size: Graphics.Size(width: w, height: h), ascent: font.ascent, descent: font.descent)
-        } else {
-            let font = fontInfo.toUiFont()! // One or other has to return non-nil
-            let attribStr = NSAttributedString(string: string, attributes: [.font: font])
-            let sz = attribStr.size()
-            // This is not really the right definition for ascent but it seems to work for where epoc expects
-            // the text to be, so...
-            let ascent = Int(ceil(sz.height) + font.descender)
-            let descent = Int(ceil(font.descender))
-            return Graphics.TextMetrics(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
-                                        ascent: ascent, descent: descent)
-        }
-    }
-
     weak var delegate: WindowServerDelegate?
 
     private var device: Device
@@ -239,7 +220,8 @@ class WindowServer {
         if let cursor {
             let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
             let col: Graphics.Color = cursor.flags.contains(.grey) ? .midGray : .black
-            cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert, origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
+            cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert,
+                origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
             let _ = window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
             cursorCurrentlyDrawn = true
             if !cursor.flags.contains(.notFlashing) {
@@ -491,6 +473,23 @@ class WindowServer {
         return result
     }
 
+    func load(font fontUid: UInt32, into drawableId: Graphics.DrawableId) -> Graphics.FontMetrics? {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard let font = BitmapFontInfo(uid: fontUid) else {
+            return nil
+        }
+        let bmpSize = Graphics.Size(width: font.charw * 32, height: font.charh * 8)
+        let canvas = Canvas(id: drawableId, size: bmpSize, mode: .gray2)
+        drawablesById[canvas.id] = canvas
+
+        let img = UIImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!
+        // Note this won't work for the digit font which is (currently) the only one which doesn't use a 32x8 character
+        // bitmap for its characters.
+        canvas.draw(image: img)
+
+        return Graphics.FontMetrics(height: font.charh, maxwidth: font.charw, ascent: font.ascent, descent: font.descent, widths: font.widths)
+    }
+
 }
 
 extension WindowServer: CanvasViewDelegate {
@@ -527,11 +526,12 @@ extension WindowServer: RootViewDelegate {
 
 extension WindowServer: DrawableImageProvider {
 
-    func getImageFor(drawable: Graphics.DrawableId) -> CGImage? {
-        guard let canvas = self.drawable(for: drawable) else {
-            return nil
-        }
-        return canvas.getImage()
+    func getDrawable(_ id: Graphics.DrawableId) -> Drawable? {
+        return self.drawable(for: id)
+    }
+
+    func getDitherImage() -> CGImage {
+        return UIImage.ditherPattern().cgImage!
     }
 
 }

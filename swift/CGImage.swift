@@ -477,4 +477,13 @@ extension CGImage {
         return context.makeImage()
     }
 
+    func getPixelData() -> UnsafeBufferPointer<UInt32> {
+        // This is only valid for images created from Canvases (or otherwise are guaranteed to be using 32bpp)
+        precondition(self.bitsPerPixel == 32)
+        let data = self.dataProvider!.data!
+        let count = CFDataGetLength(data) / 4
+        let ptr = UnsafeRawPointer(CFDataGetBytePtr(data)).bindMemory(to: UInt32.self, capacity: count)
+        return UnsafeBufferPointer(start: ptr, count: count)
+    }
+
 }

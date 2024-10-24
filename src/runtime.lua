@@ -451,13 +451,11 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
         height = height,
         pos = { x = 0, y = 0 },
         isWindow = isWindow,
-        font = FontIds[KDefaultFontUid],
+        fontUid = KDefaultFontUid,
         style = 0, -- normal text style
         penwidth = 1,
     }
     graphics[id] = newCtx
-    -- Creating a new drawable always seems to update current
-    graphics.current = newCtx
     self:setResource("ginfo", nil)
     return newCtx
 end
@@ -544,7 +542,7 @@ function Runtime:saveGraphicsState()
         color = ctx.color,
         bgcolor = ctx.bgcolor,
         pos = { x = ctx.pos.x, y = ctx.pos.y },
-        font = ctx.font,
+        fontUid = ctx.fontUid,
         style = ctx.style,
         flush = self:getGraphicsAutoFlush(),
     }
@@ -557,10 +555,40 @@ function Runtime:restoreGraphicsState(state)
     ctx.color = state.color
     ctx.bgcolor = state.bgcolor
     ctx.pos = { x = state.pos.x, y = state.pos.y }
-    ctx.font = state.font
+    ctx.fontUid = state.fontUid
     ctx.style = state.style
     self:setGraphicsContext(state.id)
     self:setGraphicsAutoFlush(state.flush)
+end
+
+function Runtime:getFont(fontId)
+    if fontId == nil then
+        fontId = self:getGraphicsContext().fontUid
+    end
+    local uid = FontAliases[fontId] or fontId
+    local fonts = self:getResource("fonts")
+    if not fonts then
+        fonts = {}
+        self:setResource("fonts", fonts)
+    end
+    if fonts[uid] then
+        return fonts[uid]
+    end
+
+    local ctx = self:newGraphicsContext(1, 1, false, KColorgCreate2GrayMode)
+    local metrics, err = self:iohandler().graphicsop("loadfont", ctx.id, uid)
+    if metrics == nil then
+        self:closeGraphicsContext(ctx.id)
+        return nil
+    end
+
+    ctx.width = metrics.maxwidth * 32
+    ctx.height = metrics.height * 8
+    metrics.id = ctx.id
+    metrics.uid = uid
+
+    fonts[uid] = metrics
+    return metrics
 end
 
 function Runtime:drawCmd(type, op)
@@ -572,8 +600,12 @@ function Runtime:drawCmd(type, op)
     if not op.mode then
         op.mode = context.mode
     end
-    op.color = context.color
-    op.bgcolor = context.bgcolor
+    if not op.color then
+        op.color = context.color
+    end
+    if not op.bgcolor then
+        op.bgcolor = context.bgcolor
+    end
     if not op.x then
         op.x = context.pos.x
     end

@@ -257,48 +257,6 @@ dItemTypes = enum {
 
 KDefaultFontUid = KFontArialNormal15
 
-FontIds = {
-    [KFontTiny4] = { face = "tiny", size = 4 },
-    [KFontArialBold8] = { face = "arial", size = 8, bold = true },
-    [KFontArialBold11] = { face = "arial", size = 11, bold = true },
-    [KFontArialBold13] = { face = "arial", size = 13, bold = true },
-    [KFontArialNormal8] = { face = "arial", size = 8 },
-    [KFontArialNormal11] = { face = "arial", size = 11 },
-    [KFontArialNormal13] = { face = "arial", size = 13 },
-    [KFontArialNormal15] = { face = "arial", size = 15 },
-    [KFontArialNormal18] = { face = "arial", size = 18 },
-    [KFontArialNormal22] = { face = "arial", size = 22 },
-    [KFontArialNormal27] = { face = "arial", size = 27 },
-    [KFontArialNormal32] = { face = "arial", size = 32 },
-    [KFontTimesBold8] = { face = "times", size = 8, bold = true },
-    [KFontTimesBold11] = { face = "times", size = 11, bold = true },
-    [KFontTimesBold13] = { face = "times", size = 13, bold = true },
-    [KFontTimesNormal8] = { face = "times", size = 8 },
-    [KFontTimesNormal11] = { face = "times", size = 11 },
-    [KFontTimesNormal13] = { face = "times", size = 13 },
-    [KFontTimesNormal15] = { face = "times", size = 15 },
-    [KFontTimesNormal18] = { face = "times", size = 18 },
-    [KFontTimesNormal22] = { face = "times", size = 22 },
-    [KFontTimesNormal27] = { face = "times", size = 27 },
-    [KFontTimesNormal32] = { face = "times", size = 32 },
-    [KFontCourierBold8] = { face = "courier", size = 8, bold = true },
-    [KFontCourierBold11] = { face = "courier", size = 11, bold = true },
-    [KFontCourierBold13] = { face = "courier", size = 13, bold = true },
-    [KFontCourierNormal8] = { face = "courier", size = 8 },
-    [KFontCourierNormal11] = { face = "courier", size = 11 },
-    [KFontCourierNormal13] = { face = "courier", size = 13 },
-    [KFontCourierNormal15] = { face = "courier", size = 15 },
-    [KFontCourierNormal18] = { face = "courier", size = 18 },
-    [KFontCourierNormal22] = { face = "courier", size = 22 },
-    [KFontCourierNormal27] = { face = "courier", size = 27 },
-    [KFontCourierNormal32] = { face = "courier", size = 32 },
-    [KFontEiksym15] = { face = "eiksym", size = 15 },
-    [KFontSquashed] = { face = "squashed", size = 11, bold = true },
-    [KFontDigital35] = { face = "digit", size = 35 },
-}
-
-for uid, font in pairs(FontIds) do font.uid = uid end
-
 FontAliases = {
     [4] = KFontCourierNormal8,
     [5] = KFontTimesNormal8,
