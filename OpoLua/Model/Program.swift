@@ -402,57 +402,6 @@ class Program {
             return .nothing
         }
     }
-
-    private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
-        var location = touch.location(in: view)
-        let screenView = windowServer.rootView
-        var screenLocation = touch.location(in: screenView)
-
-        // Is there a better way of doing this?
-        let screenSize = screenView.bounds.size
-        var xdelta = 0.0
-        var ydelta = 0.0
-        if screenLocation.x < 0 {
-            xdelta = -screenLocation.x
-        } else if screenLocation.x > screenSize.width {
-            xdelta = screenSize.width - screenLocation.x
-        }
-        if screenLocation.y < 0 {
-            ydelta = -screenLocation.y
-        } else if screenLocation.y > screenSize.height {
-            ydelta = screenSize.height - screenLocation.y
-        }
-        location = location.move(x: xdelta, y: ydelta)
-        screenLocation = screenLocation.move(x: xdelta, y: ydelta)
-
-        if type == .down {
-            sendEvent(.pendownevent(.init(timestamp: event.timestamp, windowId: view.id)))
-        }
-        sendEvent(.penevent(.init(timestamp: event.timestamp,
-                                  windowId: view.id,
-                                  type: type,
-                                  modifiers: event.modifierFlags.oplModifiers(),
-                                  x: Int(location.x),
-                                  y: Int(location.y),
-                                  screenx: Int(screenLocation.x),
-                                  screeny: Int(screenLocation.y))))
-        // .penupevent is only sent when the pen is dragged into non-screen area
-        // (ie the softkeys) which we don't have, so we basically never need to send it
-    }
-
-    func screenshot() -> UIImage {
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1.0
-        let renderer = UIGraphicsImageRenderer(size: rootView.frame.size, format: format)
-        let uiImage = renderer.image { rendererContext in
-            let context = rendererContext.cgContext
-            context.setAllowsAntialiasing(false)
-            context.interpolationQuality = .none
-            rootView.layer.render(in: context)
-        }
-        return uiImage
-    }
-
 }
 
 extension Program: InterpreterThreadDelegate {
@@ -635,16 +584,13 @@ extension Program: WindowServerDelegate {
         return self.oplConfig[.clockFormat] == "1"
     }
 
-    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .down)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .drag)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .up)
+    func canvasView(_ canvasView: CanvasView, penEvent: Async.PenEvent) {
+        if penEvent.type == .down {
+            sendEvent(.pendownevent(.init(timestamp: penEvent.timestamp, windowId: penEvent.windowId)))
+        }
+        sendEvent(.penevent(penEvent))
+        // .penupevent is only sent when the pen is dragged into non-screen area
+        // (ie the softkeys) which we don't have, so we basically never need to send it
     }
 
     func windowServer(_ windowServer: WindowServer, insertCharacter character: Character) {

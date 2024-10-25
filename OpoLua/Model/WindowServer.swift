@@ -494,16 +494,8 @@ class WindowServer {
 
 extension WindowServer: CanvasViewDelegate {
 
-    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
-        delegate?.canvasView(canvasView, touchBegan: touch, with: event)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
-        delegate?.canvasView(canvasView, touchMoved: touch, with: event)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
-        delegate?.canvasView(canvasView, touchEnded: touch, with: event)
+    func canvasView(_ canvasView: CanvasView, penEvent: Async.PenEvent) {
+        delegate?.canvasView(canvasView, penEvent: penEvent)
     }
 
 }
