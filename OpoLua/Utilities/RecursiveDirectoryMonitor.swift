@@ -39,7 +39,7 @@ class RecursiveDirectoryMonitor {
         }
 
         func notify() {
-            stateLock.perform {
+            stateLock.withLock {
                 guard !self.isCancelled else {
                     return
                 }
@@ -48,7 +48,7 @@ class RecursiveDirectoryMonitor {
         }
 
         func cancelWithError(_ error: Error) {
-            stateLock.perform {
+            stateLock.withLock {
                 guard !self.isCancelled else {
                     return
                 }
@@ -58,7 +58,7 @@ class RecursiveDirectoryMonitor {
         }
 
         func cancel() {
-            stateLock.perform {
+            stateLock.withLock {
                 isCancelled = true
             }
         }

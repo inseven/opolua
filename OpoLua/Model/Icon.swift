@@ -18,8 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
-import SwiftUI
+import Foundation
 
 struct Icon: Hashable {
 
@@ -33,12 +32,12 @@ struct Icon: Hashable {
         return true
     }
 
-    var grayscaleImage: UIImage
-    var colorImage: UIImage
+    var grayscaleImage: Image
+    var colorImage: Image
     private var grayscaleImagePngData: Data
     private var colorImagePngData: Data
 
-    init(grayscaleImage: UIImage, colorImage: UIImage) {
+    init(grayscaleImage: Image, colorImage: Image) {
         self.grayscaleImage = grayscaleImage
         self.colorImage = colorImage
         self.grayscaleImagePngData = grayscaleImage.pngData()!
@@ -54,7 +53,7 @@ struct Icon: Hashable {
 
 extension Icon {
 
-    func image(for theme: Settings.Theme) -> UIImage {
+    func image(for theme: Settings.Theme) -> Image {
         switch theme {
         case .series5:
             return grayscaleImage

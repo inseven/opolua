@@ -325,7 +325,7 @@ class ProgramViewController: UIViewController {
     }
 
     private func shareScreenshot() {
-        let screenshot = self.program.screenshot()
+        let screenshot = self.program.rootView.screenshot()
 
         // We write the screenshot to a file to allow us to set a filename.
         let fileManager = FileManager.default
@@ -623,7 +623,7 @@ extension ProgramViewController: ProgramLifecycleObserver {
         }
 
         // Capture a screenshot before fading out the view.
-        let screenshot = program.screenshot()
+        let screenshot = program.rootView.screenshot()
 
         // Disable and fade out the view to indicate that the program has terminated.
         UIView.animate(withDuration: 0.3) {

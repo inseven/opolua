@@ -18,7 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#if canImport(UIKit)
+
 import UIKit
+
+#else
+
+import AppKit
+
+#endif
 
 protocol CanvasViewDelegate: AnyObject {
 
@@ -26,7 +34,7 @@ protocol CanvasViewDelegate: AnyObject {
 
 }
 
-class CanvasView : UIView, Drawable {
+class CanvasView : ViewBase, Drawable {
 
     var id: Graphics.DrawableId {
         return canvas.id
@@ -56,11 +64,19 @@ class CanvasView : UIView, Drawable {
         self.canvas = canvas
         super.init(frame: .zero)
         clipsToBounds = false
+#if canImport(UIKit)
         isMultipleTouchEnabled = false
+        let layer = self.layer
+#else
+        self.wantsLayer = true
+        guard let layer = self.layer else {
+            fatalError("wantsLayer didn't lead to layer being set?")
+        }
+#endif
         if shadowSize > 0 {
-            self.layer.shadowRadius = 0
-            self.layer.shadowOffset = CGSize(width: shadowSize, height: shadowSize)
-            self.layer.shadowOpacity = 0.3
+            layer.shadowRadius = 0
+            layer.shadowOffset = CGSize(width: shadowSize, height: shadowSize)
+            layer.shadowOpacity = 0.3
         }
     }
 
@@ -206,6 +222,7 @@ class CanvasView : UIView, Drawable {
         return canvas.size.cgSize()
     }
 
+#if canImport(UIKit) // TODO AppKit version
     override func draw(_ rect: CGRect) {
         guard let image = getImage(),
               let context = UIGraphicsGetCurrentContext()
@@ -251,6 +268,7 @@ class CanvasView : UIView, Drawable {
                                       screeny: Int(screenPos.y))
         delegate?.canvasView(self, penEvent: penEvent)
     }
+#endif
 
     func resize(to newSize: Graphics.Size) {
         let oldCanvas = self.canvas

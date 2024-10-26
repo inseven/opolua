@@ -19,7 +19,10 @@
 // SOFTWARE.
 
 import Foundation
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 extension URL {
 
@@ -77,9 +80,11 @@ _Please provide details of the program you were running, and what you were doing
     }
 
     var localizedName: String {
+#if canImport(UIKit)
         if self == FileManager.default.documentsUrl {
             return UIDevice.current.localizedDocumentsName
         }
+#endif
         return FileManager.default.displayName(atPath: path)
     }
 

@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import GameController
-import UIKit
+import Foundation
+import CoreGraphics
 
 protocol WindowServerDelegate: CanvasViewDelegate {
 
@@ -139,8 +139,8 @@ class WindowServer {
     }
 
     // Returns the views representing windows, ordered back to front, excluding the info window if it exists
-    private func getWindows() -> [UIView] {
-        var views = rootView.subviews
+    private func getWindows() -> [CanvasView] {
+        var views = rootView.windows
         if let infoDrawableHandle,
            let infoWin = window(for: infoDrawableHandle),
            let idx = views.firstIndex(of: infoWin) {
@@ -482,9 +482,7 @@ class WindowServer {
         let canvas = Canvas(id: drawableId, size: bmpSize, mode: .gray2)
         drawablesById[canvas.id] = canvas
 
-        let img = UIImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!
-        // Note this won't work for the digit font which is (currently) the only one which doesn't use a 32x8 character
-        // bitmap for its characters.
+        let img = Image(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!
         canvas.draw(image: img)
 
         return Graphics.FontMetrics(height: font.charh, maxwidth: font.charw, ascent: font.ascent, descent: font.descent, widths: font.widths)
@@ -523,7 +521,7 @@ extension WindowServer: DrawableImageProvider {
     }
 
     func getDitherImage() -> CGImage {
-        return UIImage.ditherPattern().cgImage!
+        return Image.ditherPattern().cgImage!
     }
 
 }

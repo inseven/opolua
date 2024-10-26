@@ -314,7 +314,7 @@ extension CGImage {
         return CGSize(width: width, height: height)
     }
 
-    // TODO: This should be a convenience constructor
+    // This can't be a convenience constructor because that is not allowed in extensions to CFTypes (apparently).
     public static func from(bitmap: Graphics.Bitmap) -> CGImage {
         switch bitmap.mode {
         case .gray2, .gray4, .gray16:

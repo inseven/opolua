@@ -87,8 +87,6 @@
 		D8C679BA27483B5600BD8720 /* DirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C679B927483B5600BD8720 /* DirectoryViewController.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */; };
-		D8CCACAE27B2FE3D008C8122 /* NSLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CCACAD27B2FE3D008C8122 /* NSLock.swift */; };
-		D8CCACB027B2FE59008C8122 /* NSRecursiveLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */; };
 		D8D184F527BACAB5004DDFFD /* SoundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D184F427BACAB5004DDFFD /* SoundViewController.swift */; };
 		D8D22C1F2CA4E6B1003E2D5E /* Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D22C1E2CA4E6AF003E2D5E /* Metadata.swift */; };
 		D8D44C49279A0B87007340B5 /* TaskManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */; };
@@ -125,6 +123,8 @@
 		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
 		DBE291822795F86200EE824B /* UIKeyModifierFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */; };
 		DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE91524276D25A900BDB8F5 /* UIKey.swift */; };
+		DBEBA4462CCCF039009335CA /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBEBA4452CCCF033009335CA /* Image.swift */; };
+		DBEBA4482CCCF7EA009335CA /* ViewBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBEBA4472CCCF7E7009335CA /* ViewBase.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -215,8 +215,6 @@
 		D8C679B927483B5600BD8720 /* DirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryViewController.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		D8C712A3275AF50D00D83A3E /* ConcurrentQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentQueue.swift; sourceTree = "<group>"; };
-		D8CCACAD27B2FE3D008C8122 /* NSLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSLock.swift; sourceTree = "<group>"; };
-		D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRecursiveLock.swift; sourceTree = "<group>"; };
 		D8D184F427BACAB5004DDFFD /* SoundViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundViewController.swift; sourceTree = "<group>"; };
 		D8D22C1E2CA4E6AF003E2D5E /* Metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metadata.swift; sourceTree = "<group>"; };
 		D8D44C48279A0B87007340B5 /* TaskManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerViewController.swift; sourceTree = "<group>"; };
@@ -257,6 +255,8 @@
 		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
 		DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKeyModifierFlags.swift; sourceTree = "<group>"; };
 		DBE91524276D25A900BDB8F5 /* UIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKey.swift; sourceTree = "<group>"; };
+		DBEBA4452CCCF033009335CA /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
+		DBEBA4472CCCF7E7009335CA /* ViewBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewBase.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -308,6 +308,7 @@
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
 				D884A3D22778E335008954A0 /* FileSystem.swift */,
 				D80D65A7279DD2060020F994 /* Icon.swift */,
+				DBEBA4452CCCF033009335CA /* Image.swift */,
 				D884A3D6277914CF008954A0 /* Installer.swift */,
 				D86724F12771672A009C7246 /* InterpreterThread.swift */,
 				D8FE6D902C92251B0058CE2E /* Legal.swift */,
@@ -360,6 +361,7 @@
 				D8F4835C278D3D31008AF80C /* PixelView.swift */,
 				DB6B438327A55D1200625788 /* RootView.swift */,
 				D8553767278F535A00ED67C0 /* SettingsView.swift */,
+				DBEBA4472CCCF7E7009335CA /* ViewBase.swift */,
 				D85F597027ACB682006AAF3B /* WizardFooterView.swift */,
 			);
 			path = Views;
@@ -376,9 +378,7 @@
 				D8EB6FF9275995DB00FC139F /* Dictionary.swift */,
 				D89A60792756A2CC00C9757F /* FileManager.swift */,
 				D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */,
-				D8CCACAD27B2FE3D008C8122 /* NSLock.swift */,
 				D84ADB172771DAB9001ABFB4 /* NSNotification.swift */,
-				D8CCACAF27B2FE59008C8122 /* NSRecursiveLock.swift */,
 				D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */,
 				D8BA096F275196CA00F4730D /* String.swift */,
 				D80A9CBF27A4AF9200E49AD8 /* TaskManager+UIKit.swift */,
@@ -622,6 +622,7 @@
 				D8F4835D278D3D31008AF80C /* PixelView.swift in Sources */,
 				D8FE60032757106300711717 /* SecureLocation.swift in Sources */,
 				D82D2FCC27AB4FBC001A4283 /* RecursiveDirectoryMonitor.swift in Sources */,
+				DBEBA4482CCCF7EA009335CA /* ViewBase.swift in Sources */,
 				D8632832279C240600B63625 /* UID.swift in Sources */,
 				D8891353274C186E00794D55 /* Canvas.swift in Sources */,
 				D82A37B827A9B43F00D8F5F4 /* DirectoryMonitor.swift in Sources */,
@@ -640,7 +641,6 @@
 				D884A3D7277914CF008954A0 /* Installer.swift in Sources */,
 				D8B2757527B6840D00DAAFC0 /* RateLimiter.swift in Sources */,
 				D8C3BD632774BEA1003B1AD0 /* ErrorViewController.swift in Sources */,
-				D8CCACAE27B2FE3D008C8122 /* NSLock.swift in Sources */,
 				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				D884A3D32778E335008954A0 /* FileSystem.swift in Sources */,
 				D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */,
@@ -667,7 +667,6 @@
 				D81C12A8279EF0C0000E70D0 /* AllProgramsViewController.swift in Sources */,
 				D84ADB162771D937001ABFB4 /* Device.swift in Sources */,
 				D89A60802756AE8800C9757F /* LibraryViewController.swift in Sources */,
-				D8CCACB027B2FE59008C8122 /* NSRecursiveLock.swift in Sources */,
 				D80D65B0279E31220020F994 /* Configuration.swift in Sources */,
 				D8D95506279B7B100049A3C3 /* UIColor.swift in Sources */,
 				D8891351274C184C00794D55 /* UIImage.swift in Sources */,
@@ -683,6 +682,7 @@
 				D85F597127ACB682006AAF3B /* WizardFooterView.swift in Sources */,
 				D89F8CEA27AEC48B009F25E5 /* UIViewController.swift in Sources */,
 				D8D6701527A72B2100D12E96 /* DestinationPickerViewController.swift in Sources */,
+				DBEBA4462CCCF039009335CA /* Image.swift in Sources */,
 				D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */,
 				DBE2917E27932C5400EE824B /* ClockView.swift in Sources */,
 				D80A9CC227A4B66400E49AD8 /* SourceViewController.swift in Sources */,

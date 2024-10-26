@@ -18,9 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
+
+#if canImport(UIKit)
+
 import UIKit
 
-class ClockView: UIView {
+#endif
+
+class ClockView: ViewBase {
     var clockInfo: Graphics.ClockInfo
 
     var systemClockDigital: Bool {
@@ -29,20 +35,29 @@ class ClockView: UIView {
         }
     }
     
-    private let analogClockImage: UIImage
+    private let analogClockImage: Image
 
-    init(analogClockImage: UIImage, clockInfo: Graphics.ClockInfo, systemClockDigital: Bool) {
+    init(analogClockImage: Image, clockInfo: Graphics.ClockInfo, systemClockDigital: Bool) {
         self.clockInfo = clockInfo
         self.systemClockDigital = systemClockDigital
         self.analogClockImage = analogClockImage
         super.init(frame: CGRect(origin: clockInfo.position.cgPoint(), size: CGSize(width: 61.0, height: 61.0)))
+#if canImport(UIKit)
         self.isOpaque = false
+#endif
     }
+
+#if !canImport(UIKit)
+    override var isOpaque: Bool {
+        return false
+    }
+#endif
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
+#if canImport(UIKit) // TODO AppKit version
     override func draw(_ rect: CGRect) {
         guard let context = UIGraphicsGetCurrentContext() else {
             return
@@ -103,6 +118,7 @@ class ClockView: UIView {
             context.restoreGState()
         }
     }
+#endif
 
     func clockChanged() {
         self.frame = CGRect(origin: clockInfo.position.cgPoint(), size: analogClockImage.size)

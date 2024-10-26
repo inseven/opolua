@@ -18,9 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
 import Combine
-import UIKit
-import GameController
 
 /**
  Called on the main queue.
@@ -128,7 +127,7 @@ class Program {
     var title: String  // main
     var icon: Icon  // main  TODO: let?
 
-    var rootView: UIView {
+    var rootView: RootView {
         return windowServer.rootView
     }
 
@@ -219,6 +218,7 @@ class Program {
         sendBackgroundEvent()
     }
 
+#if canImport(UIKit)
     func toggleOnScreenKeyboard() {
         dispatchPrecondition(condition: .onQueue(.main))
         if windowServer.rootView.isFirstResponder {
@@ -227,6 +227,7 @@ class Program {
             windowServer.rootView.becomeFirstResponder()
         }
     }
+#endif
 
     func sendQuit() {
         sendEvent(.quitevent)
