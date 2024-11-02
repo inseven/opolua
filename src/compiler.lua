@@ -383,7 +383,7 @@ Callables = {
     CANCEL = Op("Cancel", {}),
     ["CHR$"] = Fn("ChrStr", {Int}, String),
     CLOSE = Op("Close", {}),
-    CLEARFLAGS = Op("ClearFlags", {}),
+    CLEARFLAGS = Op("ClearFlags", {Long}),
     CLS = Op("Cls", {}),
     ["CMD$"] = Fn("CmdStr", {Int}, String),
     COMMITTRANS = Op("CommitTrans", {}),
@@ -394,7 +394,7 @@ Callables = {
     CREATE = SpecialOp(),
     CURSOR = SpecialOp(),
     DATETOSECS = Fn("DateToSecs", {Int, Int, Int, Int, Int, Int}, Long),
-    ["DATIM$"] = Fn("DatimStr", {String}, String),
+    ["DATIM$"] = Fn("DatimStr", {}, String),
     DAY = Fn("Day", {}, Int),
     ["DAYNAME$"] = Fn("DayNameStr", {Int}, String),
     DAYS = Fn("Days", {Int, Int, Int}, Long),
@@ -404,7 +404,7 @@ Callables = {
     DCHOICE = SpecialOp({IntVarArg, String, String}),
     DDATE = SpecialOp({LongVarArg, String, Long, Long}),
     DEDIT = SpecialOp({StringVarArg, String, Int, numParams = {2, 3}}),
-    DEDITMULTI = Op("dEditMulti", {Long, String, Int, Int, Long}),
+    DEDITMULTI = Op("dEditMulti", {Long, String, Int, Int, Long}), -- last param IS a long no matter what docs say
     DEFAULTWIN = Op("DefaultWin", {Int}),
     DEG = Fn("Deg", {Float}, Float),
     DELETE = SpecialOp({String, String, numParams = {1, 2}}),
@@ -561,11 +561,11 @@ Callables = {
     OPENR = SpecialOp(),
     ["PARSE$"] = Fn("ParseStr", {String, String, IntArrayArg}, String),
     PAUSE = Op("Pause", {Int}),
-    PEEKB = Fn("PeekB", {SiboInt}, SiboInt),
+    PEEKB = Fn("PeekB", {SiboInt}, Int),
     PEEKF = Fn("PeekF", {SiboInt}, Float),
     PEEKL = Fn("PeekL", {SiboInt}, Long),
     ["PEEK$"] = Fn("PeekStr", {SiboInt}, String),
-    PEEKW = Fn("PeekW", {SiboInt}, SiboInt),
+    PEEKW = Fn("PeekW", {SiboInt}, Int),
     PI = Fn("Pi", {}, Float),
     POINTERFILTER = Op("PointerFilter", {Int, Int}),
     POKEB = Op("PokeB", {SiboInt, Int}),
@@ -1661,7 +1661,7 @@ end
 
 local function handleFloatOp(exp, procState, fncode)
     -- MIN(a, b, c, ...) or MIN(a(), count%)
-    if #exp.args > 1 and exp.args[1].type == "call" and #exp.args[1].args == 0 then
+    if exp.args and #exp.args == 2 and exp.args[1].type == "call" and #exp.args[1].args == 0 then
         local declArgs = { FloatArrayArg, Int }
         checkExpressionArguments(exp.args, declArgs, exp)
         local var = procState:getVar(exp.args[1], true)
@@ -1671,6 +1671,7 @@ local function handleFloatOp(exp, procState, fncode)
         procState:emitExpression(exp.args[2], Int)
         procState:emit("BBB", opcodes.CallFunction, fncode, 0)
     else
+        synassert(exp.args and #exp.args > 0, exp, "Wrong number of arguments to %s", exp.val)
         for i, arg in ipairs(exp.args) do
             procState:emitExpression(arg, Float)
         end
@@ -1707,6 +1708,7 @@ end
 
 function handleFn_MPOPUP(exp, procState)
     -- (x%,y%,posType%,item1$,key1%,item2$,key2%,...)
+    synassert(exp.args and #exp.args >= 5 and (#exp.args & 1) == 1, exp, "Wrong number of arguments to mPOPUP")
     local declArgs = { Int, Int, Int }
     while #declArgs < #exp.args do
         table.insert(declArgs, String)

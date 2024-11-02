@@ -251,6 +251,7 @@ local function checkSyntaxError(statement, expectedError)
     local prog = string.format(checkCodeWrapper, statement)
     local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {})
     assert(not ok, "Compile unexpectedly succeeded!")
+    assert(err.src, "Error didn't include src!? "..tostring(err))
     -- Line number should always be 4 because that's where checkCodeWrapper puts statement
     local expectedErrWithPrefix = "C:\\module:4:" .. expectedError
     local errStr = string.format("%s:%d:%d: %s", err.src.path, err.src.line, err.src.column, err.msg)
@@ -590,6 +591,16 @@ checkCode("CURSOR 1, 2, 3, 4, 5", {
     op"Cursor", 4,
 })
 
+checkCode('mPOPUP(1, 2, 0, "a", 0)', {
+    op"StackByteAsWord", 1,
+    op"StackByteAsWord", 2,
+    op"StackByteAsWord", 0,
+    ConstantString("a"),
+    op"StackByteAsWord", 0,
+    fn"mPopup", 5,
+    op"DropInt",
+})
+
 checkSyntaxError("ALERT()", "1: Zero-argument calls should not have ()")
 
 checkSyntaxError("alert(a$, b$, c$, d$, e$, f$)", "1: Wrong number of arguments to ALERT")
@@ -610,6 +621,12 @@ checkSyntaxError("a12345678901234567890123456789012 = 1", "1: Variable name is t
 checkSyntaxError("LOCAL f$(256)", "10: String is too long")
 
 checkSyntaxError("LOCAL a&(30000)", "7: Procedure variables exceed maximum size")
+
+checkSyntaxError("MAX", "1: Wrong number of arguments to MAX")
+
+checkSyntaxError('mPOPUP(1, 2, 0, "a")', "1: Wrong number of arguments to mPOPUP")
+-- Cannot have an additional item without another key arg
+checkSyntaxError('mPOPUP(1, 2, 0, "a", 0, "b")', "1: Wrong number of arguments to mPOPUP")
 
 callbystr = [[
 PROC main:
