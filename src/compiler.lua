@@ -509,7 +509,7 @@ Callables = {
     INTF = Fn("Intf", {Float}, Float),
     INTRANS = Fn("InTrans", {}, Int),
     IOA = Fn("Ioa", {Int, Int, IntVarArg, AnyVarArg, AnyVarArg}, Int),
-    IOC = Fn("Ioc", {Int, Int, IntVarArg, AnyVarArg, AnyVarArg, numParams = {4, 5}}, Int),
+    IOC = Fn("Ioc", {Int, Int, IntVarArg, AnyVarArg, AnyVarArg, numParams = {3, 4, 5}}, Int),
     IOCANCEL = Fn("IoCancel", {Int}, Int),
     IOCLOSE = Fn("IoClose", {Int}, Int),
     IOOPEN = SpecialFn(nil, Int),
