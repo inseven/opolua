@@ -307,18 +307,18 @@ Int = "%"
 Long = "&"
 Float = ""
 String = "$"
-SiboInt = Long -- Would be Int on sibo, if we ever support that in the compiler
+IntPtr = Long -- Like intptr_t - would be Int on the 16-bit sibo, if we ever support that in the compiler
 
 -- Only used by args in Callables. Values are arbitrary as these should be considered opaque.
-VarArgPrefix = "_Var_"
-AnyVarArg = "_Var_Any"
-IntVarArg = "_Var_Int"
-LongVarArg = "_Var_Long"
-FloatVarArg = "_Var_Float"
-StringVarArg = "_Var_String"
-IntArrayArg = "_Var_IntArray"
-LongArrayArg = "_Var_LongArray"
-FloatArrayArg = "_Var_FloatArray"
+VariablePrefix = "_Var_"
+AnyVariable = "_Var_Any"
+IntVariable = "_Var_Int"
+LongVariable = "_Var_Long"
+FloatVariable = "_Var_Float"
+StringVariable = "_Var_String"
+IntArrayVariable = "_Var_IntArray"
+LongArrayVariable = "_Var_LongArray"
+FloatArrayVariable = "_Var_FloatArray"
 
 TypeToDataType = enum {
     [Int] = DataTypes.EWord,
@@ -366,10 +366,10 @@ local function SpecialOp(optArgs) return { type = "op", args = optArgs } end
 Callables = {
     ABS = Fn("Abs", {Float}, Float),
     ACOS = Fn("ACos", {Float}, Float),
-    ADDR = SpecialFn(nil, SiboInt),
-    ADJUSTALLOC = Fn("AdjustAlloc", {SiboInt, SiboInt, SiboInt}, SiboInt),
+    ADDR = SpecialFn(nil, IntPtr),
+    ADJUSTALLOC = Fn("AdjustAlloc", {IntPtr, IntPtr, IntPtr}, IntPtr),
     ALERT = Fn("Alert", {String, String, String, String, String, numParams = {1, 2, 3, 4, 5}}, Int),
-    ALLOC = Fn("Alloc", {SiboInt}, SiboInt),
+    ALLOC = Fn("Alloc", {IntPtr}, IntPtr),
     APPEND = Op("Append", {}),
     ASC = Fn("Asc", {String}, Int),
     ASIN = Fn("ASin", {Float}, Float),
@@ -398,27 +398,27 @@ Callables = {
     DAY = Fn("Day", {}, Int),
     ["DAYNAME$"] = Fn("DayNameStr", {Int}, String),
     DAYS = Fn("Days", {Int, Int, Int}, Long),
-    DAYSTODATE = Op("DaysToDate", {Long, IntVarArg, IntVarArg, IntVarArg}),
+    DAYSTODATE = Op("DaysToDate", {Long, IntVariable, IntVariable, IntVariable}),
     DBUTTONS = SpecialOp(),
-    DCHECKBOX = SpecialOp({IntVarArg, String}),
-    DCHOICE = SpecialOp({IntVarArg, String, String}),
-    DDATE = SpecialOp({LongVarArg, String, Long, Long}),
-    DEDIT = SpecialOp({StringVarArg, String, Int, numParams = {2, 3}}),
-    DEDITMULTI = Op("dEditMulti", {Long, String, Int, Int, Long}), -- last param IS a long no matter what docs say
+    DCHECKBOX = SpecialOp({IntVariable, String}),
+    DCHOICE = SpecialOp({IntVariable, String, String}),
+    DDATE = SpecialOp({LongVariable, String, Long, Long}),
+    DEDIT = SpecialOp({StringVariable, String, Int, numParams = {2, 3}}),
+    DEDITMULTI = Op("dEditMulti", {IntPtr, String, Int, Int, Long}), -- last param IS a long no matter what docs say
     DEFAULTWIN = Op("DefaultWin", {Int}),
     DEG = Fn("Deg", {Float}, Float),
     DELETE = SpecialOp({String, String, numParams = {1, 2}}),
-    DFILE = SpecialOp({StringVarArg, String, Int, Long, Long, Long, numParams = {3, 6}}),
-    DFLOAT = SpecialOp({FloatVarArg, String, Float, Float}),
+    DFILE = SpecialOp({StringVariable, String, Int, Long, Long, Long, numParams = {3, 6}}),
+    DFLOAT = SpecialOp({FloatVariable, String, Float, Float}),
     DIALOG = Fn("Dialog", {}, Int),
     DINIT = Op("dInit", {String, Int, numParams = {0, 1, 2}, numFixedParams = 0}),
     ["DIR$"] = Fn("DirStr", {String}, String),
-    DLONG = SpecialOp({LongVarArg, String, Long, Long}),
+    DLONG = SpecialOp({LongVariable, String, Long, Long}),
     DOW = Fn("Dow", {Int, Int, Int}, Int),
     DPOSITION = SpecialOp({Int, Int}),
     DTEXT = SpecialOp({String, String, Int, numParams = {2, 3}}),
-    DTIME = SpecialOp({LongVarArg, String, Int, Long, Long}),
-    DXINPUT = SpecialOp({StringVarArg, String}),
+    DTIME = SpecialOp({LongVariable, String, Int, Long, Long}),
+    DXINPUT = SpecialOp({StringVariable, String}),
     EDIT = SpecialOp(),
     EOF = Fn("Eof", {}, Int),
     ERASE = Op("Erase", {}),
@@ -433,9 +433,9 @@ Callables = {
     FINDFIELD = Fn("FindField", {String, Int, Int, Int}, Int),
     FIRST = Op("First", {}),
     ["FIX$"] = Fn("FixStr", {Float, Int, Int}, String),
-    FONT = Op("Font", {SiboInt, Int}),
+    FONT = Op("Font", {IntPtr, Int}),
     FLT = Fn("Flt", {Long}, Float),
-    FREEALLOC = Op("FreeAlloc", {SiboInt}),
+    FREEALLOC = Op("FreeAlloc", {IntPtr}),
     GAT = Op("gAt", {Int, Int}),
     GBORDER = Op("gBorder", {Int, Int, Int, numParams = {1, 3}, numFixedParams = 0}),
     GBOX = Op("gBox", {Int, Int}),
@@ -454,18 +454,18 @@ Callables = {
     GET = Fn("Get", {}, Int),
     ["GETCMD$"] = Fn("WCmd", {}, String),
     ["GETDOC$"] = Fn("GetDocStr", {}, String),
-    GETEVENT = Op("GetEvent", {IntArrayArg}),
-    GETEVENTA32 = Op("GetEventA32", {IntVarArg, LongArrayArg}),
-    GETEVENT32 = Op("GetEvent32", {LongArrayArg}),
-    GETEVENTC = Fn("GetEventC", {IntVarArg}, Int),
+    GETEVENT = Op("GetEvent", {IntArrayVariable}),
+    GETEVENTA32 = Op("GetEventA32", {IntVariable, LongArrayVariable}),
+    GETEVENT32 = Op("GetEvent32", {LongArrayVariable}),
+    GETEVENTC = Fn("GetEventC", {IntVariable}, Int),
     ["GET$"] = Fn("GetStr", {}, String),
     GFILL = Op("gFill", {Int, Int, Int}),
-    GFONT = Op("gFont", {SiboInt}),
+    GFONT = Op("gFont", {IntPtr}),
     GGMODE = Op("gGMode", {Int}),
     GGREY = Op("gGrey_epoc", {Int}),
     GHEIGHT = Fn("gHeight", {}, Int),
     GIDENTITY = Fn("gIdentity", {}, Int),
-    GINFO32 = Op("gInfo32", {LongArrayArg}),
+    GINFO32 = Op("gInfo32", {LongArrayVariable}),
     GINVERT = Op("gInvert", {Int, Int}),
     GIPRINT = Op("gIPrint", {String, Int, numParams = {1, 2}, numFixedParams = 1}),
     GLINEBY = Op("gLineBy", {Int, Int}),
@@ -478,8 +478,8 @@ Callables = {
     GORIGINY = Fn("gOriginY", {}, Int),
     GOTOMARK = Op("GotoMark", {Int}),
     GPATT = Op("gPatt", {Int, Int, Int, Int}),
-    GPEEKLINE = SpecialOp({Int, Int, Int, IntArrayArg, Int, Int, numParams = {5, 6}}),
-    GPOLY = Op("gPoly", {IntArrayArg}),
+    GPEEKLINE = SpecialOp({Int, Int, Int, IntArrayVariable, Int, Int, numParams = {5, 6}}),
+    GPOLY = Op("gPoly", {IntArrayVariable}),
     GPRINT = SpecialOp(),
     GPRINTB = Op("gPrintBoxText", {String, Int, Int, Int, Int, Int, numParams = {2, 3, 4, 5, 6}, numFixedParams = 1}),
     GPRINTCLIP = Fn("gPrintClip", {String, Int}, Int),
@@ -508,23 +508,23 @@ Callables = {
     INT = Fn("IntLong", {Float}, Long),
     INTF = Fn("Intf", {Float}, Float),
     INTRANS = Fn("InTrans", {}, Int),
-    IOA = Fn("Ioa", {Int, Int, IntVarArg, AnyVarArg, AnyVarArg}, Int),
-    IOC = Fn("Ioc", {Int, Int, IntVarArg, AnyVarArg, AnyVarArg, numParams = {3, 4, 5}}, Int),
+    IOA = Fn("Ioa", {Int, Int, IntVariable, AnyVariable, AnyVariable}, Int),
+    IOC = Fn("Ioc", {Int, Int, IntVariable, AnyVariable, AnyVariable, numParams = {3, 4, 5}}, Int),
     IOCANCEL = Fn("IoCancel", {Int}, Int),
     IOCLOSE = Fn("IoClose", {Int}, Int),
     IOOPEN = SpecialFn(nil, Int),
-    IOREAD = Fn("IoRead", {Int, SiboInt, Int}, Int),
-    IOSEEK = Fn("IoSeek", {Int, Int, LongVarArg}, Int),
+    IOREAD = Fn("IoRead", {Int, IntPtr, Int}, Int),
+    IOSEEK = Fn("IoSeek", {Int, Int, LongVariable}, Int),
     IOSIGNAL = Op("IoSignal", {}),
-    IOW = Fn("Iow", {Int, Int, AnyVarArg, AnyVarArg}, Int),
+    IOW = Fn("Iow", {Int, Int, AnyVariable, AnyVariable}, Int),
     IOWAIT = Fn("IoWait", {}, Int),
-    IOWAITSTAT = Op("IoWaitStat", {IntVarArg}),
-    IOWAITSTAT32 = Op("IoWaitStat32", {LongVarArg}),
-    IOWRITE = Fn("IoWrite", {Int, SiboInt, Int}, Int),
+    IOWAITSTAT = Op("IoWaitStat", {IntVariable}),
+    IOWAITSTAT32 = Op("IoWaitStat32", {LongVariable}),
+    IOWRITE = Fn("IoWrite", {Int, IntPtr, Int}, Int),
     IOYIELD = Op("IoYield", {}),
     KEY = Fn("Key", {}, Int),
-    KEYA = Fn("KeyA", {IntVarArg, IntArrayArg}, Int),
-    KEYC = Fn("KeyC", {IntVarArg}, Int),
+    KEYA = Fn("KeyA", {IntVariable, IntArrayVariable}, Int),
+    KEYC = Fn("KeyC", {IntVariable}, Int),
     ["KEY$"] = Fn("KeyStr", {}, String),
     KILLMARK = Op("KillMark", {Int}),
     KMOD = Fn("Kmod", {}, Int),
@@ -532,7 +532,7 @@ Callables = {
     LCLOSE = Op("LClose", {}),
     ["LEFT$"] = Fn("LeftStr", {String, Int}, String),
     LEN = Fn("Len", {String}, Int),
-    LENALLOC = Fn("LenAlloc", {SiboInt}, SiboInt),
+    LENALLOC = Fn("LenAlloc", {IntPtr}, IntPtr),
     LN = Fn("Ln", {Float}, Float),
     LOADM = Op("LoadM", {String}),
     LOC = Fn("Loc", {String, String}, Int),
@@ -545,7 +545,7 @@ Callables = {
     MCARD = SpecialOp(),
     MCASC = SpecialOp(),
     MEAN = SpecialFn(nil, Float),
-    MENU = SpecialFn({IntVarArg, numParams = {0, 1}}, Int),
+    MENU = SpecialFn({IntVariable, numParams = {0, 1}}, Int),
     ["MID$"] = Fn("MidStr", {String, Int, Int}, String),
     MIN = SpecialFn(nil, Float),
     MINIT = Op("mInit", {}),
@@ -559,20 +559,20 @@ Callables = {
     ["NUM$"] = Fn("NumStr", {Float, Int}, String),
     OPEN = SpecialOp(),
     OPENR = SpecialOp(),
-    ["PARSE$"] = Fn("ParseStr", {String, String, IntArrayArg}, String),
+    ["PARSE$"] = Fn("ParseStr", {String, String, IntArrayVariable}, String),
     PAUSE = Op("Pause", {Int}),
-    PEEKB = Fn("PeekB", {SiboInt}, Int),
-    PEEKF = Fn("PeekF", {SiboInt}, Float),
-    PEEKL = Fn("PeekL", {SiboInt}, Long),
-    ["PEEK$"] = Fn("PeekStr", {SiboInt}, String),
-    PEEKW = Fn("PeekW", {SiboInt}, Int),
+    PEEKB = Fn("PeekB", {IntPtr}, Int),
+    PEEKF = Fn("PeekF", {IntPtr}, Float),
+    PEEKL = Fn("PeekL", {IntPtr}, Long),
+    ["PEEK$"] = Fn("PeekStr", {IntPtr}, String),
+    PEEKW = Fn("PeekW", {IntPtr}, Int),
     PI = Fn("Pi", {}, Float),
     POINTERFILTER = Op("PointerFilter", {Int, Int}),
-    POKEB = Op("PokeB", {SiboInt, Int}),
-    POKEF = Op("PokeD", {SiboInt, Float}),
-    POKEL = Op("PokeL", {SiboInt, Long}),
-    ["POKE$"] = Op("PokeStr", {SiboInt, String}),
-    POKEW = Op("PokeW", {SiboInt, Int}),
+    POKEB = Op("PokeB", {IntPtr, Int}),
+    POKEF = Op("PokeD", {IntPtr, Float}),
+    POKEL = Op("PokeL", {IntPtr, Long}),
+    ["POKE$"] = Op("PokeStr", {IntPtr, String}),
+    POKEW = Op("PokeW", {IntPtr, Int}),
     POS = Fn("Pos", {}, Int),
     POSITION = Op("Position", {Int}),
     PRINT = SpecialOp(),
@@ -580,7 +580,7 @@ Callables = {
     RAD = Fn("Rad", {Float}, Float),
     RANDOMIZE = Op("Randomize", {Long}),
     RAISE = Op("Raise", {Int}),
-    REALLOC = Fn("ReAlloc", {SiboInt, SiboInt}, SiboInt),
+    REALLOC = Fn("ReAlloc", {IntPtr, IntPtr}, IntPtr),
     RENAME = Op("Rename", {String, String}),
     ["REPT$"] = Fn("ReptStr", {String, Int}, String),
     ["RIGHT$"] = Fn("RightStr", {String, Int}, String),
@@ -589,9 +589,9 @@ Callables = {
     RND = Fn("Rnd", {}, Float),
     ["SCI$"] = Fn("SciStr", {Float, Int, Int}, String),
     SCREEN = SpecialOp({Int, Int, Int, Int, numParams = {2, 4}}),
-    SCREENINFO = Op("ScreenInfo", {IntArrayArg}),
+    SCREENINFO = Op("ScreenInfo", {IntArrayVariable}),
     SECOND = Fn("Second", {}, Int),
-    SECSTODATE = Op("SecsToDate", {Long, IntVarArg, IntVarArg, IntVarArg, IntVarArg, IntVarArg, IntVarArg, IntVarArg}),
+    SECSTODATE = Op("SecsToDate", {Long, IntVariable, IntVariable, IntVariable, IntVariable, IntVariable, IntVariable, IntVariable}),
     SETDOC = Op("SetDoc", {String}),
     SETFLAGS = Op("SetFlags", {Long}),
     SETPATH = Op("SetPath", {String}),
@@ -1054,7 +1054,7 @@ function parseProcDeclaration(declType, tokens, procDecls)
             argToken.valType = valTypeFromName(argToken.val)
             if byref then
                 -- Don't think OPX API supports array var type
-                argToken.valType = VarArgPrefix .. TypeToStr[argToken.valType]
+                argToken.valType = VariablePrefix .. TypeToStr[argToken.valType]
             end
             table.insert(argExps, argToken)
             table.insert(argValTypes, argToken.valType)
@@ -1112,21 +1112,21 @@ function checkExpressionArguments(args, declArgs, token)
         synassert(numParams == #declArgs, token, "Expected %d args to %s, not %d", #declArgs, token.val, numParams)
     end
     for i, arg in ipairs(args or {}) do
-        if declArgs[i] == AnyVarArg then
+        if declArgs[i] == AnyVariable then
             synassert(arg.type == "identifier" or (arg.type == "call" and arg.args and #arg.args == 0), arg, "Expected variable")
-        elseif declArgs[i] == IntArrayArg then
+        elseif declArgs[i] == IntArrayVariable then
             synassert(arg.type == "call" and arg.valType == Int and arg.args and #arg.args == 0, arg, "Expected Int array var")
-        elseif declArgs[i] == LongArrayArg then
+        elseif declArgs[i] == LongArrayVariable then
             synassert(arg.type == "call" and arg.valType == Long and arg.args and #arg.args == 0, arg, "Expected Long array var")
-        elseif declArgs[i] == FloatArrayArg then
+        elseif declArgs[i] == FloatArrayVariable then
             synassert(arg.type == "call" and arg.valType == Float and arg.args and #arg.args == 0, arg, "Expected Float array var")
-        elseif declArgs[i] == IntVarArg then
+        elseif declArgs[i] == IntVariable then
             synassert(arg.type == "identifier" and arg.valType == Int, arg, "Expected Int var")
-        elseif declArgs[i] == LongVarArg then
+        elseif declArgs[i] == LongVariable then
             synassert(arg.type == "identifier" and arg.valType == Long, arg, "Expected Long var")
-        elseif declArgs[i] == FloatVarArg then
+        elseif declArgs[i] == FloatVariable then
             synassert(arg.type == "identifier" and arg.valType == Float, arg, "Expected Float var")
-        elseif declArgs[i] == StringVarArg then
+        elseif declArgs[i] == StringVariable then
             synassert(arg.type == "identifier" and arg.valType == String, arg, "Expected String var")
         else
             local expType = TypeToDataType[arg.valType]
@@ -1165,7 +1165,7 @@ function ProcState:pushStack(...)
     for i = 1, select("#", ...) do
         local val = select(i, ...)
         local sz
-        if val:match("^"..VarArgPrefix) then
+        if val:match("^"..VariablePrefix) then
             sz = 6 -- Apparently...
         elseif val == String then
             sz = 0 -- Apparently...
@@ -1271,7 +1271,7 @@ The rule for number type coercion in OPL is:
 function ProcState:emitExpression(exp, requiredType)
     assert(requiredType)
 
-    if requiredType:match("^"..VarArgPrefix) then
+    if requiredType:match("^"..VariablePrefix) then
         -- Special case, only used by ops which take the address of a variable
         local isArray = exp.args ~= nil
         local var = self:getVar(exp, isArray)
@@ -1487,7 +1487,7 @@ function ProcState:emitVarLhs(var, token)
     if var.array then
         self:popStack(1) -- The array index
     end
-    self:pushStack(VarArgPrefix)
+    self:pushStack(VariablePrefix)
 end
 
 function ProcState:emitAddressOfVar(var, token, arraySubscriptExpression)
@@ -1662,7 +1662,7 @@ end
 local function handleFloatOp(exp, procState, fncode)
     -- MIN(a, b, c, ...) or MIN(a(), count%)
     if exp.args and #exp.args == 2 and exp.args[1].type == "call" and #exp.args[1].args == 0 then
-        local declArgs = { FloatArrayArg, Int }
+        local declArgs = {FloatArrayVariable, Int}
         checkExpressionArguments(exp.args, declArgs, exp)
         local var = procState:getVar(exp.args[1], true)
         procState:emit("BB", opcodes.StackByteAsWord, 1)
@@ -1725,15 +1725,15 @@ end
 
 function handleFn_IOOPEN(exp, procState)
     synassert(exp.args and #exp.args == 3, exp, "Expected 3 arguments")
-    if exp.args[2].valType == SiboInt then
-        checkExpressionArguments(exp.args, {IntVarArg, SiboInt, Int}, exp)
-        procState:emitExpression(exp.args[1], IntVarArg)
-        procState:emitExpression(exp.args[2], SiboInt)
+    if exp.args[2].valType == IntPtr then
+        checkExpressionArguments(exp.args, {IntVariable, IntPtr, Int}, exp)
+        procState:emitExpression(exp.args[1], IntVariable)
+        procState:emitExpression(exp.args[2], IntPtr)
         procState:emitExpression(exp.args[3], Int)
         procState:emit("BB", opcodes.CallFunction, fncodes.IoOpenUnique)
     else
-        checkExpressionArguments(exp.args, {IntVarArg, String, Int}, exp)
-        procState:emitExpression(exp.args[1], IntVarArg)
+        checkExpressionArguments(exp.args, {IntVariable, String, Int}, exp)
+        procState:emitExpression(exp.args[1], IntVariable)
         procState:emitExpression(exp.args[2], String)
         procState:emitExpression(exp.args[3], Int)
         procState:emit("BB", opcodes.CallFunction, fncodes.IoOpen)
@@ -1967,7 +1967,7 @@ function ProcState:parse()
                     local typeStr = TypeToStr[valType]
                     self:emit("BB", opcodes["FieldLeftSide" .. typeStr], log)
                     self:popStack(1)
-                    self:pushStack(VarArgPrefix)
+                    self:pushStack(VariablePrefix)
                 else
                     local isArray = nextToken.type == "oparen"
                     local var = self:getVar(token, isArray)
@@ -2474,7 +2474,7 @@ function handleOp_GCLOCK(procState)
         if tokens:current().type == "comma" then
             tokens:advance()
             args = parseExpressionList(tokens)
-            local declArgs = {Int, SiboInt, String, SiboInt, Int, numParams = {1, 2, 3, 4, 5}}
+            local declArgs = {Int, IntPtr, String, IntPtr, Int, numParams = {1, 2, 3, 4, 5}}
             checkExpressionArguments(args, declArgs, cmdToken)
             for i, arg in ipairs(args) do
                 procState:emitExpression(arg, declArgs[i])
