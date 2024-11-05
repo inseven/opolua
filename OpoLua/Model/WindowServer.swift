@@ -482,7 +482,7 @@ class WindowServer {
         let canvas = Canvas(id: drawableId, size: bmpSize, mode: .gray2)
         drawablesById[canvas.id] = canvas
 
-        let img = Image(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!
+        let img = CommonImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!
         canvas.draw(image: img)
 
         return Graphics.FontMetrics(height: font.charh, maxwidth: font.charw, ascent: font.ascent, descent: font.descent, widths: font.widths)
@@ -521,7 +521,7 @@ extension WindowServer: DrawableImageProvider {
     }
 
     func getDitherImage() -> CGImage {
-        return Image.ditherPattern().cgImage!
+        return CommonImage.ditherPattern().cgImage!
     }
 
 }

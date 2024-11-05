@@ -100,7 +100,7 @@ class BitmapFontRenderer {
     init(font: BitmapFontInfo, embolden: Bool = false) {
         self.font = font
         self.boldWeight = embolden ? 1 : 0
-        self.img = Image(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!.inverted()!
+        self.img = CommonImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!.inverted()!
         self.imagew = self.img.width
         self.imageh = self.img.height
     }
@@ -145,7 +145,7 @@ class BitmapFontRenderer {
 
     private func individualImageForChar(_ char: Character) -> CGImage? {
         let charName = Self.getCharName(char)
-        return Image(named: "fonts/\(font.bitmapName)/\(charName)")?.cgImage?.inverted()
+        return CommonImage(named: "fonts/\(font.bitmapName)/\(charName)")?.cgImage?.inverted()
     }
 
     func getCharWidth(_ char: Character) -> Int {

@@ -377,7 +377,7 @@ extension Settings.Theme {
     }
 #endif
 
-    var wallpaper: Image {
+    var wallpaper: CommonImage {
         switch self {
         case .series5:
             return .epocLogo()

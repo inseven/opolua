@@ -35,9 +35,9 @@ class ClockView: ViewBase {
         }
     }
     
-    private let analogClockImage: Image
+    private let analogClockImage: CommonImage
 
-    init(analogClockImage: Image, clockInfo: Graphics.ClockInfo, systemClockDigital: Bool) {
+    init(analogClockImage: CommonImage, clockInfo: Graphics.ClockInfo, systemClockDigital: Bool) {
         self.clockInfo = clockInfo
         self.systemClockDigital = systemClockDigital
         self.analogClockImage = analogClockImage

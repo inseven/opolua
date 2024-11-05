@@ -64,7 +64,7 @@ struct ApplicationMetadata {
         return Icon(grayscaleImage: appIcon, colorImage: appIcon)
     }
 
-    private func image(for size: Graphics.Size) -> Image? {
+    private func image(for size: Graphics.Size) -> CommonImage? {
         var bitmap: Graphics.MaskedBitmap? = nil
         for icon in icons {
             guard icon.bitmap.size <= size && (icon.mask == nil || icon.bitmap.size == icon.mask?.size) else {
@@ -82,7 +82,7 @@ struct ApplicationMetadata {
             return nil
         }
         if let cgImg = bitmap.cgImage {
-            return Image(cgImage: cgImg)
+            return CommonImage(cgImage: cgImg)
         }
         return nil
     }

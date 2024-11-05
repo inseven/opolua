@@ -30,7 +30,7 @@ extension CGContext {
             print("No resource found for border type \(type) (\(filename).png)")
             return
         }
-        let image = Image(contentsOfFile: url.path)!
+        let image = CommonImage(contentsOfFile: url.path)!
         // I don't really understand why we have to limit the inset size so agressively here, but
         // limiting to half the frame size is not sufficient to avoid some weird artifacts
         let inset = min(min(frame.width, frame.height) / 3, 10)
@@ -41,7 +41,7 @@ extension CGContext {
         button.capInsets = NSEdgeInsets(top: inset, left: inset, bottom: inset, right: inset)
         button.resizingMode = .stretch
 #endif
-        let view = ImageView(image: button)
+        let view = CommonImageView(image: button)
 
 #if canImport(UIKit)
         let layer = view.layer

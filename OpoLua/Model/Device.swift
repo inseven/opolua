@@ -75,7 +75,7 @@ extension Device {
         }
     }
 
-    var analogClockImage: Image {
+    var analogClockImage: CommonImage {
         switch self {
         case .psionSeries3c:
             return .clockMedium()

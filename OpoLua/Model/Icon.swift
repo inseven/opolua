@@ -32,12 +32,12 @@ struct Icon: Hashable {
         return true
     }
 
-    var grayscaleImage: Image
-    var colorImage: Image
+    var grayscaleImage: CommonImage
+    var colorImage: CommonImage
     private var grayscaleImagePngData: Data
     private var colorImagePngData: Data
 
-    init(grayscaleImage: Image, colorImage: Image) {
+    init(grayscaleImage: CommonImage, colorImage: CommonImage) {
         self.grayscaleImage = grayscaleImage
         self.colorImage = colorImage
         self.grayscaleImagePngData = grayscaleImage.pngData()!
@@ -53,7 +53,7 @@ struct Icon: Hashable {
 
 extension Icon {
 
-    func image(for theme: Settings.Theme) -> Image {
+    func image(for theme: Settings.Theme) -> CommonImage {
         switch theme {
         case .series5:
             return grayscaleImage

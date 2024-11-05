@@ -123,7 +123,7 @@
 		DBE2917E27932C5400EE824B /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2917D27932C5300EE824B /* ClockView.swift */; };
 		DBE291822795F86200EE824B /* UIKeyModifierFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */; };
 		DBE91525276D25AA00BDB8F5 /* UIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE91524276D25A900BDB8F5 /* UIKey.swift */; };
-		DBEBA4462CCCF039009335CA /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBEBA4452CCCF033009335CA /* Image.swift */; };
+		DBEBA4462CCCF039009335CA /* CommonImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBEBA4452CCCF033009335CA /* CommonImage.swift */; };
 		DBEBA4482CCCF7EA009335CA /* ViewBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBEBA4472CCCF7E7009335CA /* ViewBase.swift */; };
 /* End PBXBuildFile section */
 
@@ -255,7 +255,7 @@
 		DBE2917D27932C5300EE824B /* ClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
 		DBE291812795F86100EE824B /* UIKeyModifierFlags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKeyModifierFlags.swift; sourceTree = "<group>"; };
 		DBE91524276D25A900BDB8F5 /* UIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKey.swift; sourceTree = "<group>"; };
-		DBEBA4452CCCF033009335CA /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
+		DBEBA4452CCCF033009335CA /* CommonImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonImage.swift; sourceTree = "<group>"; };
 		DBEBA4472CCCF7E7009335CA /* ViewBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewBase.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -308,7 +308,7 @@
 				D861E8DC274A81B4003C8D3D /* Directory.swift */,
 				D884A3D22778E335008954A0 /* FileSystem.swift */,
 				D80D65A7279DD2060020F994 /* Icon.swift */,
-				DBEBA4452CCCF033009335CA /* Image.swift */,
+				DBEBA4452CCCF033009335CA /* CommonImage.swift */,
 				D884A3D6277914CF008954A0 /* Installer.swift */,
 				D86724F12771672A009C7246 /* InterpreterThread.swift */,
 				D8FE6D902C92251B0058CE2E /* Legal.swift */,
@@ -682,7 +682,7 @@
 				D85F597127ACB682006AAF3B /* WizardFooterView.swift in Sources */,
 				D89F8CEA27AEC48B009F25E5 /* UIViewController.swift in Sources */,
 				D8D6701527A72B2100D12E96 /* DestinationPickerViewController.swift in Sources */,
-				DBEBA4462CCCF039009335CA /* Image.swift in Sources */,
+				DBEBA4462CCCF039009335CA /* CommonImage.swift in Sources */,
 				D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */,
 				DBE2917E27932C5400EE824B /* ClockView.swift in Sources */,
 				D80A9CC227A4B66400E49AD8 /* SourceViewController.swift in Sources */,
