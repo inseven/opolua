@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import Foundation
 
 fileprivate let appInfoCache = FileMetadataCache<ApplicationMetadata>()
 fileprivate let fileTypeCache = FileMetadataCache<PsiLuaEnv.FileType>()
@@ -34,7 +34,15 @@ struct ApplicationMetadata {
 
     var caption: String {
         for language in Locale.preferredLanguages {
-            if let caption = captions.first(where: { $0.locale.languageCode == language }) {
+            // This conditional only exists because locale.languageCode deprecation on iOS is different to when it was
+            // deprecated on macos (or our target platform versions are a bit different). Eventually both platforms
+            // should use the (newer) macos definition below.
+#if os(iOS)
+            let predicate: (PsiLuaEnv.LocalizedString) -> Bool = { $0.locale.languageCode == language }
+#else
+            let predicate: (PsiLuaEnv.LocalizedString) -> Bool = { $0.locale.language.languageCode?.identifier == language }
+#endif
+            if let caption = captions.first(where: predicate) {
                 return caption.value
             }
         }
@@ -56,7 +64,7 @@ struct ApplicationMetadata {
         return Icon(grayscaleImage: appIcon, colorImage: appIcon)
     }
 
-    private func image(for size: Graphics.Size) -> UIImage? {
+    private func image(for size: Graphics.Size) -> CommonImage? {
         var bitmap: Graphics.MaskedBitmap? = nil
         for icon in icons {
             guard icon.bitmap.size <= size && (icon.mask == nil || icon.bitmap.size == icon.mask?.size) else {
@@ -74,7 +82,7 @@ struct ApplicationMetadata {
             return nil
         }
         if let cgImg = bitmap.cgImage {
-            return UIImage(cgImage: cgImg)
+            return CommonImage(cgImage: cgImg)
         }
         return nil
     }

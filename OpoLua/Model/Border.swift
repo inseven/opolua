@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import Foundation
+import CoreGraphics
 
 extension CGContext {
 
@@ -29,16 +30,29 @@ extension CGContext {
             print("No resource found for border type \(type) (\(filename).png)")
             return
         }
-        let image = UIImage(contentsOfFile: url.path)!
+        let image = CommonImage(contentsOfFile: url.path)!
         // I don't really understand why we have to limit the inset size so agressively here, but
         // limiting to half the frame size is not sufficient to avoid some weird artifacts
         let inset = min(min(frame.width, frame.height) / 3, 10)
-        let button = image.resizableImage(withCapInsets: UIEdgeInsets(top: inset, left: inset, bottom: inset, right: inset), resizingMode: .stretch)
-        let view = UIImageView(image: button)
+#if canImport(UIKit)
+        let button = image.resizableImage(withCapInsets: .init(top: inset, left: inset, bottom: inset, right: inset), resizingMode: .stretch)
+#else
+        let button = image
+        button.capInsets = NSEdgeInsets(top: inset, left: inset, bottom: inset, right: inset)
+        button.resizingMode = .stretch
+#endif
+        let view = CommonImageView(image: button)
+
+#if canImport(UIKit)
+        let layer = view.layer
+#else
+        view.wantsLayer = true
+        let layer = view.layer!
+#endif
         saveGState()
         self.translateBy(x: frame.origin.x, y: frame.origin.y)
         view.frame = CGRect(origin: .zero, size: frame.size)
-        view.layer.render(in: self)
+        layer.render(in: self)
         restoreGState()
     }
 

@@ -18,7 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 protocol RootViewDelegate: AnyObject {
 
@@ -28,9 +32,11 @@ protocol RootViewDelegate: AnyObject {
 
 }
 
-class RootView : UIView {
+class RootView : ViewBase {
 
+#if canImport(UIKit)
     var keyboardType: UIKeyboardType = .asciiCapable
+#endif
 
     let screenSize: CGSize
     weak var delegate: RootViewDelegate?
@@ -46,6 +52,7 @@ class RootView : UIView {
         self.clipsToBounds = true
     }
 
+#if canImport(UIKit)
     override var canBecomeFirstResponder: Bool {
 #if targetEnvironment(macCatalyst)
         // This is a hack; the reason we refuse first responder status on catalyst is because this prevents the
@@ -58,11 +65,19 @@ class RootView : UIView {
         return true
 #endif
     }
+#endif
 
     override var intrinsicContentSize: CGSize {
         return screenSize
     }
 
+    var windows: [CanvasView] {
+        return self.subviews.compactMap { view in
+            return view as? CanvasView
+        }
+    }
+
+#if canImport(UIKit)
     private func makeKeyButton(imageName: String, key: OplKeyCode) -> UIButton {
         var config: UIButton.Configuration = .plain()
         config.image = UIImage(systemName: imageName)
@@ -142,7 +157,22 @@ class RootView : UIView {
         return view
     }
 
+    func screenshot() -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+        let renderer = UIGraphicsImageRenderer(size: self.frame.size, format: format)
+        let uiImage = renderer.image { rendererContext in
+            let context = rendererContext.cgContext
+            context.setAllowsAntialiasing(false)
+            context.interpolationQuality = .none
+            self.layer.render(in: context)
+        }
+        return uiImage
+    }
+#endif
 }
+
+#if canImport(UIKit)
 
 extension RootView: UIKeyInput {
 
@@ -161,3 +191,5 @@ extension RootView: UIKeyInput {
     }
 
 }
+
+#endif

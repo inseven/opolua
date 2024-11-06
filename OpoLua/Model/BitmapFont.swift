@@ -20,7 +20,6 @@
 
 import Foundation
 import CoreGraphics
-import UIKit
 
 struct BitmapFontInfo {
     struct MetadataJson: Codable {
@@ -101,7 +100,7 @@ class BitmapFontRenderer {
     init(font: BitmapFontInfo, embolden: Bool = false) {
         self.font = font
         self.boldWeight = embolden ? 1 : 0
-        self.img = UIImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!.inverted()!
+        self.img = CommonImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!.inverted()!
         self.imagew = self.img.width
         self.imageh = self.img.height
     }
@@ -146,7 +145,7 @@ class BitmapFontRenderer {
 
     private func individualImageForChar(_ char: Character) -> CGImage? {
         let charName = Self.getCharName(char)
-        return UIImage(named: "fonts/\(font.bitmapName)/\(charName)")?.cgImage?.inverted()
+        return CommonImage(named: "fonts/\(font.bitmapName)/\(charName)")?.cgImage?.inverted()
     }
 
     func getCharWidth(_ char: Character) -> Int {
@@ -213,9 +212,9 @@ class BitmapFontRenderer {
             // The resulting image needs to be black with white text so we can
             // use the clip mask trick for drawing it, hence why we use these
             // colours.
-            context.setFillColor(UIColor.black.cgColor)
+            context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1)) // black
             context.fill(CGRect(x: 0, y: 0, width: context.width, height: context.height))
-            context.setFillColor(UIColor.white.cgColor)
+            context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1)) // white
             for i in 0...boldWeight {
                 let rect = CGRect(x: i, y: 0, width: img.width, height: context.height)
                 context.saveGState()

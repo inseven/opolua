@@ -18,16 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import Foundation
+#if canImport(UIKit)
 
-extension NSRecursiveLock {
+import UIKit
+typealias ViewBase = UIView
 
-    func perform<T>(_ block: () -> T) -> T {
-        lock()
-        defer {
-            unlock()
-        }
-        return block()
+#else
+
+import AppKit
+typealias ViewBase = NSView
+
+// Some helpers to make it look more like the UIView API
+extension NSView {
+
+    func setNeedsDisplay() {
+        self.needsDisplay = true
+    }
+
+    func insertSubview(_ view: NSView, aboveSubview: NSView) {
+        self.addSubview(view, positioned: .above, relativeTo: aboveSubview)
+    }
+
+    func insertSubview(_ view: NSView, belowSubview: NSView) {
+        self.addSubview(view, positioned: .below, relativeTo: belowSubview)
+    }
+
+    func bringSubviewToFront(_ view: NSView) {
+        self.addSubview(view, positioned: .above, relativeTo: nil)
     }
 
 }
+
+#endif

@@ -18,17 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#if canImport(UIKit)
+
 import UIKit
+
+#else
+
+import AppKit
+
+#endif
 
 protocol CanvasViewDelegate: AnyObject {
 
-    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent)
-    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent)
-    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent)
+    func canvasView(_ canvasView: CanvasView, penEvent: Async.PenEvent)
 
 }
 
-class CanvasView : UIView, Drawable {
+class CanvasView : ViewBase, Drawable {
 
     var id: Graphics.DrawableId {
         return canvas.id
@@ -58,11 +64,19 @@ class CanvasView : UIView, Drawable {
         self.canvas = canvas
         super.init(frame: .zero)
         clipsToBounds = false
+#if canImport(UIKit)
         isMultipleTouchEnabled = false
+        let layer = self.layer
+#else
+        self.wantsLayer = true
+        guard let layer = self.layer else {
+            fatalError("wantsLayer didn't lead to layer being set?")
+        }
+#endif
         if shadowSize > 0 {
-            self.layer.shadowRadius = 0
-            self.layer.shadowOffset = CGSize(width: shadowSize, height: shadowSize)
-            self.layer.shadowOpacity = 0.3
+            layer.shadowRadius = 0
+            layer.shadowOffset = CGSize(width: shadowSize, height: shadowSize)
+            layer.shadowOpacity = 0.3
         }
     }
 
@@ -208,6 +222,7 @@ class CanvasView : UIView, Drawable {
         return canvas.size.cgSize()
     }
 
+#if canImport(UIKit) // TODO AppKit version
     override func draw(_ rect: CGRect) {
         guard let image = getImage(),
               let context = UIGraphicsGetCurrentContext()
@@ -221,29 +236,39 @@ class CanvasView : UIView, Drawable {
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let event = event,
-              let touch = touches.first else {
-            return
-        }
-
-        delegate?.canvasView(self, touchBegan: touch, with: event)
+        handleTouch(touches, event: event, type: .down)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let event = event,
-              let touch = touches.first else {
-            return
-        }
-        delegate?.canvasView(self, touchMoved: touch, with: event)
+        handleTouch(touches, event: event, type: .drag)
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        handleTouch(touches, event: event, type: .up)
+    }
+
+    private func handleTouch(_ touches: Set<UITouch>, event: UIEvent?, type: Async.PenEventType) {
         guard let event = event,
               let touch = touches.first else {
             return
         }
-        delegate?.canvasView(self, touchEnded: touch, with: event)
+
+        let location = touch.location(in: self)
+        let x = max(0, location.x)
+        let y = max(0, location.y)
+        let screenPos = self.superview!.convert(CGPoint(x: x, y: y), from: self)
+
+        let penEvent = Async.PenEvent(timestamp: event.timestamp,
+                                      windowId: self.id,
+                                      type: type,
+                                      modifiers: event.modifierFlags.oplModifiers(),
+                                      x: Int(x),
+                                      y: Int(y),
+                                      screenx: Int(screenPos.x),
+                                      screeny: Int(screenPos.y))
+        delegate?.canvasView(self, penEvent: penEvent)
     }
+#endif
 
     func resize(to newSize: Graphics.Size) {
         let oldCanvas = self.canvas

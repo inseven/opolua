@@ -18,9 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import Foundation
-import UIKit
-
 enum Device: String, CaseIterable, Codable {
 
     case psionSeries3c = "psion-series-3c"
@@ -78,7 +75,7 @@ extension Device {
         }
     }
 
-    var analogClockImage: UIImage {
+    var analogClockImage: CommonImage {
         switch self {
         case .psionSeries3c:
             return .clockMedium()
