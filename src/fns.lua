@@ -1361,7 +1361,7 @@ function Size(stack, runtime) -- 0xDA
 end
 
 function GetDocStr(stack, runtime) -- 0xD9
-    unimplemented("fns.GetDocStr")
+    stack:push(runtime:getResource("docstr") or "")
 end
 
 return _ENV
