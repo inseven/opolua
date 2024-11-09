@@ -1666,8 +1666,11 @@ function UnLoadRsc(handle)
     table.remove(loadedResources, resourceFileIdx)
 end
 
+local eikonRscStart = 0x00F3B001
+local eikonRscEnd = 0x00F3B1B3
+
 function ReadRsc(id)
-    local loadedResources = runtime:getResource("rsc")
+    local loadedResources = runtime:getResource("rsc") or {}
     for i, resourceFile in ipairs(loadedResources) do
         local result
         if resourceFile.idOffset then
@@ -1680,6 +1683,12 @@ function ReadRsc(id)
         if result then
             return result
         end
+    end
+
+    -- Some apps try to read eikon resources on the assumption that it's always loaded (#457)
+    if id >= eikonRscStart and id <= eikonRscEnd then
+        LoadRsc([[Z:\System\Data\Eikon.rsc]])
+        return ReadRsc(id)
     end
 
     printf("ReadRsc 0x%x not found\n", id)
