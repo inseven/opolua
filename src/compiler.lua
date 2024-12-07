@@ -722,6 +722,11 @@ function parseUntypedExpression(tokens)
                 addOperand({})
             end
 
+            -- There should always be two operands at this point (ie at the point of encountering opb in the below
+            -- comments, the current expression should always have A and B), otherwise we have multiple operators in a
+            -- row.
+            synassert(#expression == 2, token, "Expected operand")
+
             local prec = precedences[expression.op]
             -- Since unary operators are treated like <nil> <operator> <val>, all unary operators are considered
             -- right-associative.

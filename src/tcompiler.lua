@@ -633,6 +633,10 @@ checkSyntaxError('mPOPUP(1, 2, 0, "a")', "1: Wrong number of arguments to mPOPUP
 -- Cannot have an additional item without another key arg
 checkSyntaxError('mPOPUP(1, 2, 0, "a", 0, "b")', "1: Wrong number of arguments to mPOPUP")
 
+checkSyntaxError("PRINT AND 1", "7: Expected operand")
+checkSyntaxError("PRINT 1 AND AND 1", "13: Expected operand")
+checkSyntaxError("PRINT 1 == 1", "10: Expected operand")
+
 callbystr = [[
 PROC main:
     @("woop"):(1)
