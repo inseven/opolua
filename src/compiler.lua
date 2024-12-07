@@ -1690,15 +1690,15 @@ function handleFn_MEAN(exp, procState)
 end
 
 function handleFn_MENU(exp, procState)
-    for i, arg in ipairs(exp.args) do
-        procState:emitExpression(arg, Callables.MENU.args[i])
-    end
-    if #exp.args == 0 then
-        procState:emit("BB", opcodes.CallFunction, fncodes.Menu)
-    else
+    if exp.args and #exp.args > 0 then
+        for i, arg in ipairs(exp.args) do
+            procState:emitExpression(arg, Callables.MENU.args[i])
+        end
         procState:emit("BB", opcodes.CallFunction, fncodes.MenuWithMemory)
+        procState:popStack(#exp.args)
+    else
+        procState:emit("BB", opcodes.CallFunction, fncodes.Menu)
     end
-    procState:popStack(#exp.args)
     procState:pushStack(Int)
 end
 

@@ -601,6 +601,11 @@ checkCode('mPOPUP(1, 2, 0, "a", 0)', {
     op"DropInt",
 })
 
+checkCode('MENU', {
+    fn"Menu",
+    op"DropInt",
+})
+
 checkSyntaxError("ALERT()", "1: Zero-argument calls should not have ()")
 
 checkSyntaxError("alert(a$, b$, c$, d$, e$, f$)", "1: Wrong number of arguments to ALERT")
