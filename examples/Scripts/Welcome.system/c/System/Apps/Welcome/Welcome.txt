@@ -36,11 +36,11 @@ PROC go:
 
 	WHILE 1
 		GETEVENT32 ev&()
-		k& = ev&(1)
-		IF k& = &408
-			x% = ev&(6)
-			y% = ev&(7)
-			IF TBarOffer%:(ev&(3), ev&(4), x%, y%)
+		k& = ev&(KEvAType%)
+		IF k& = KEvPtr&
+			x% = ev&(KEvAPtrPositionX%)
+			y% = ev&(KEvAPtrPositionY%)
+			IF TBarOffer%:(ev&(KEvAPtrWindowId%), ev&(KEvAPtrType%), x%, y%)
 				REM handled
 			ELSEIF y% >= butY% AND y% < butY% + buttonHeight%
 				IF x% >= buttonHInset% AND x% < buttonHInset% + buttonWidth%
@@ -51,7 +51,7 @@ PROC go:
 			ENDIF
 		ELSEIF k& = KKeyMenu% OR k& = KKeySidebarMenu%
 			showMenu:
-		ELSEIF k& < 32
+		ELSEIF k& < 32 AND ev&(KEvAKMod%) = KKmodControl%
 			k& = k& + %A - 1
 			IF k& = %A
 				CmdA%:
@@ -62,11 +62,11 @@ PROC go:
 			ELSEIF k& = %S
 				CmdS%:
 			ENDIF
-		ELSEIF k& = 4103 REM KKeyLeftArrow%
+		ELSEIF k& = KKeyLeftArrow32%
 			prevPage:
-		ELSEIF k& = 4104 REM KKeyRightArrow%
+		ELSEIF k& = KKeyRightArrow32%
 			nextPage:
-		ELSEIF k& = $404
+		ELSEIF k& = KEvCommand&
 			IF GETCMD$ = "X"
 				STOP
 			ENDIF
@@ -121,7 +121,7 @@ ENDP
 
 PROC CmdS%:
 	ONERR nope
-	RunApp&:("TextEd", drv$ + ":\System\Apps\Welcome\Welcome.opl", "", 0)
+	RunApp&:("TextEd", drv$ + ":\System\Apps\Welcome\Welcome.txt", "", 0)
 	RETURN
 	
 	REM RunApp doesn't actually error on the Series 5 but
