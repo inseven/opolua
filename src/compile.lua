@@ -65,8 +65,8 @@ Options:
         will be set to <filename>.
 
     --aif
-        If specified, and the file being compiled has a "APP .. ENDA" section,
-        an AIF file will be written alongside <output>.
+        If specified, an AIF file will be written alongside <output>.
+        The file being compiled must have a "APP .. ENDA" section.
 ]])
         os.exit(false)
     end
@@ -90,6 +90,8 @@ Options:
         return
     end
 
+    assert(not args.aif or aif, "No APP section found in OPL source")
+
     if args.dump then
         opofile = require("opofile")
         runtime = require("runtime")
@@ -107,7 +109,6 @@ Options:
         writeFile(outName, result)
         if args.aif then
             local aifName = oplpath.splitext(outName)..".aif"
-            assert(aif)
             writeFile(aifName, aif)
         end
     end
