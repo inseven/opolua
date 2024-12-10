@@ -33,7 +33,8 @@ function main()
         dump = true, d = "dump",
         include = table, i = "include",
         source = string, s = "source",
-        help = true, h = "help"
+        help = true, h = "help",
+        aif = true,
     })
 
     if args.help then
@@ -62,6 +63,10 @@ Options:
     --source <path>, -s <path>
         Override the source file path included in the output. If not specified,
         will be set to <filename>.
+
+    --aif
+        If specified, and the file being compiled has a "APP .. ENDA" section,
+        an AIF file will be written alongside <output>.
 ]])
         os.exit(false)
     end

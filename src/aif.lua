@@ -106,4 +106,60 @@ function parseAif(data, verbose)
     }
 end
 
+function makeAif(info)
+    local sis = require("sis")
+
+    local parts = { n = 0 }
+    local function add(data)
+        table.insert(parts, data)
+        n = n + #data
+    end
+    local function addf(fmt, ...)
+        local data = string.pack(fmt, ...)
+        add(data)
+    end
+
+    local chk = require("crc").getUidsChecksum(KUidDirectFileStore, KUidAppInfoFile8, info.uid3)
+    addf("<I4I4I4I4I4", KUidDirectFileStore, KUidAppInfoFile8, info.uid3, chk)
+
+    addf("<I4", 0) -- parts[2] = trailerOffset, will be replaced at end
+
+    -- MBM icons would go here
+
+    local sortedCaptionIds = {}
+    for k in pairs(info.captions) do
+        local langId = sis.Locales[k]
+        assert(langId, "No langId found for caption language "..k)
+        table.insert(sortedCaptionIds, langId)
+    end
+    table.sort(sortedCaptionIds)
+    local nCaptions = #sortedCaptionIds * 2
+
+    local captionOffsets = {}
+    for _, captionId in ipairs(sortedCaptionIds) do
+        table.insert(captionOffsets, parts.n)
+        local caption = info.captions[sis.Locales[captionId]]
+        addf("B", #caption * 4 + 2) -- I don't know why the length is stored like this, but it is...
+        add(caption)
+    end
+
+    parts[2] = string.pack("<I4", parts.n) -- trailerOffset
+
+    add("B", #sortedCaptionIds * 2) -- Again, unsure why nCaptions is doubled here
+    for i, captionId in ipairs(sortedCaptionIds) do
+        addf("<I4I2", captionOffsets[i], captionId)
+    end
+
+    addf("B", 0) -- nIcons
+
+    addf("<I4I4I4I4",
+        1, -- (Unknown),
+        0, -- KAppNotEmbeddable
+        0, -- KAppDoesNotSupportNewFile
+        0, -- KAppNotHidden
+    )
+
+    return table.concat(parts, "")
+end
+
 return _ENV
