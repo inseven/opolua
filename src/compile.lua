@@ -77,7 +77,7 @@ Options:
         -- Assume it's a .opl file
         progText = require("recognizer").getOplText(progText)
     end
-    local ok, result = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText, args.include)
+    local ok, result, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText, args.include)
     if not ok then
         if type(result) == "string" then
             print(result)
@@ -103,7 +103,13 @@ Options:
         end
     end
     if args.output or not args.dump then
-        writeFile(args.output or (args.filename .. ".opo"), result)
+        local outName = args.output or (args.filename .. ".opo")
+        writeFile(outName, result)
+        if args.aif then
+            local aifName = oplpath.splitext(outName)..".aif"
+            assert(aif)
+            writeFile(aifName, aif)
+        end
     end
 end
 

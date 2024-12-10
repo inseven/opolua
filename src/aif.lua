@@ -112,7 +112,7 @@ function makeAif(info)
     local parts = { n = 0 }
     local function add(data)
         table.insert(parts, data)
-        n = n + #data
+        parts.n = parts.n + #data
     end
     local function addf(fmt, ...)
         local data = string.pack(fmt, ...)
@@ -120,43 +120,38 @@ function makeAif(info)
     end
 
     local chk = require("crc").getUidsChecksum(KUidDirectFileStore, KUidAppInfoFile8, info.uid3)
-    addf("<I4I4I4I4I4", KUidDirectFileStore, KUidAppInfoFile8, info.uid3, chk)
+    addf("<I4I4I4I4", KUidDirectFileStore, KUidAppInfoFile8, info.uid3, chk)
 
     addf("<I4", 0) -- parts[2] = trailerOffset, will be replaced at end
 
     -- MBM icons would go here
 
-    local sortedCaptionIds = {}
-    for k in pairs(info.captions) do
-        local langId = sis.Locales[k]
-        assert(langId, "No langId found for caption language "..k)
-        table.insert(sortedCaptionIds, langId)
-    end
-    table.sort(sortedCaptionIds)
-    local nCaptions = #sortedCaptionIds * 2
-
     local captionOffsets = {}
-    for _, captionId in ipairs(sortedCaptionIds) do
+    for _, cap in ipairs(info.captions) do
         table.insert(captionOffsets, parts.n)
-        local caption = info.captions[sis.Locales[captionId]]
+        local caption = cap[2]
         addf("B", #caption * 4 + 2) -- I don't know why the length is stored like this, but it is...
         add(caption)
     end
 
     parts[2] = string.pack("<I4", parts.n) -- trailerOffset
 
-    add("B", #sortedCaptionIds * 2) -- Again, unsure why nCaptions is doubled here
-    for i, captionId in ipairs(sortedCaptionIds) do
-        addf("<I4I2", captionOffsets[i], captionId)
+    local nCaptions = #info.captions * 2 -- Again, unsure why nCaptions is doubled here
+    addf("B", nCaptions) 
+    for i, cap in ipairs(info.captions) do
+        local langId = cap[1]
+        addf("<I4I2", captionOffsets[i], langId)
     end
 
     addf("B", 0) -- nIcons
 
-    addf("<I4I4I4I4",
-        1, -- (Unknown),
+    addf("<I4I4I4I4I4B",
+        1, -- (unknown),
         0, -- KAppNotEmbeddable
         0, -- KAppDoesNotSupportNewFile
         0, -- KAppNotHidden
+        1, -- (unknown)
+        0  -- (unknown)
     )
 
     return table.concat(parts, "")

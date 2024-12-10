@@ -971,7 +971,7 @@ function parseApp(tokens, consts)
             tokens:advance()
             local exps = parseExpressionList(tokens)
             synassert(#exps == 2, token, "Expected CAPTION name, lang")
-            aif.captions[evalConstExpr(Int, exps[2], consts)] = evalConstExpr(String, exps[1], consts)
+            table.insert(aif.captions, { evalConstExpr(Int, exps[2], consts), evalConstExpr(String, exps[1], consts) })
         elseif token.type == "ICON" then
             tokens:advance()
             table.insert(aif.icons, evalConstExpr(String, parseExpression(tokens), consts))
@@ -2785,7 +2785,10 @@ function docompile(path, realPath, programText, includePaths)
 end
 
 function compile(path, realPath, programText, includePaths)
-    return require("opofile").makeOpo(docompile(path, realPath, programText, includePaths))
+    local compileResult = docompile(path, realPath, programText, includePaths)
+    local opo = require("opofile").makeOpo(compileResult)
+    local aif = compileResult.aif and require("aif").makeAif(compileResult.aif)
+    return opo, aif
 end
 
 return _ENV
