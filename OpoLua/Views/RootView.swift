@@ -18,7 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 protocol RootViewDelegate: AnyObject {
 
@@ -28,9 +32,11 @@ protocol RootViewDelegate: AnyObject {
 
 }
 
-class RootView : UIView {
+class RootView : ViewBase {
 
+#if canImport(UIKit)
     var keyboardType: UIKeyboardType = .asciiCapable
+#endif
 
     let screenSize: CGSize
     weak var delegate: RootViewDelegate?
@@ -46,12 +52,43 @@ class RootView : UIView {
         self.clipsToBounds = true
     }
 
+#if canImport(UIKit)
     override var canBecomeFirstResponder: Bool {
+#if targetEnvironment(macCatalyst)
+        // This is a hack; the reason we refuse first responder status on catalyst is because this prevents the
+        // UIKeyInput support from kicking in when we call becomeFirstResponder from Program.textEditor(_:). And the
+        // reason we do _that_ is because in that mode, hardware cursor keys events are not passed in. Ideally we'd
+        // also want to prevent this on the iPad when a hardware keyboard is being used (which has the same problem)
+        // but that's more complicated to achieve -- hence why this is a hack.
+        return false
+#else
         return true
+#endif
     }
+#endif
 
     override var intrinsicContentSize: CGSize {
         return screenSize
+    }
+
+    var windows: [CanvasView] {
+        return self.subviews.compactMap { view in
+            return view as? CanvasView
+        }
+    }
+
+#if canImport(UIKit)
+    private func makeKeyButton(imageName: String, key: OplKeyCode) -> UIButton {
+        var config: UIButton.Configuration = .plain()
+        config.image = UIImage(systemName: imageName)
+        let button = UIButton(configuration: config, primaryAction: UIAction { [weak self] action in
+            guard let self else {
+                return
+            }
+            self.delegate?.rootView(self, sendKey: key)
+        })
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }
 
     override var inputAccessoryView: UIView? {
@@ -64,25 +101,25 @@ class RootView : UIView {
         var doneButtonConfiguration: UIButton.Configuration = .plain()
         doneButtonConfiguration.title = "Done"
         let doneButton = UIButton(configuration: doneButtonConfiguration, primaryAction: UIAction(handler: { [weak self] action in
-            guard let self = self else {
+            guard let self else {
                 return
             }
             self.resignFirstResponder()
         }))
         doneButton.translatesAutoresizingMaskIntoConstraints = false
 
-        var escapeButtonConfiguration: UIButton.Configuration = .plain()
-        escapeButtonConfiguration.image = UIImage(systemName: "escape")
-        let escapeButton = UIButton(configuration: escapeButtonConfiguration, primaryAction: UIAction { [weak self] action in
-            guard let self = self else {
-                return
-            }
-            self.delegate?.rootView(self, sendKey: .escape)
-        })
-        escapeButton.translatesAutoresizingMaskIntoConstraints = false
+        let escapeButton = makeKeyButton(imageName: "escape", key: .escape)
+        let leftButton = makeKeyButton(imageName: "arrowtriangle.left", key: .leftArrow)
+        let upButton = makeKeyButton(imageName: "arrowtriangle.up", key: .upArrow)
+        let downButton = makeKeyButton(imageName: "arrowtriangle.down", key: .downArrow)
+        let rightButton = makeKeyButton(imageName: "arrowtriangle.right", key: .rightArrow)
 
         view.addSubview(effectView)
         view.addSubview(escapeButton)
+        view.addSubview(leftButton)
+        view.addSubview(upButton)
+        view.addSubview(downButton)
+        view.addSubview(rightButton)
         view.addSubview(doneButton)
         NSLayoutConstraint.activate([
 
@@ -95,6 +132,22 @@ class RootView : UIView {
             escapeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             escapeButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
 
+            leftButton.leadingAnchor.constraint(equalTo: escapeButton.trailingAnchor),
+            leftButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            leftButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+            upButton.leadingAnchor.constraint(equalTo: leftButton.trailingAnchor),
+            upButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            upButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+            downButton.leadingAnchor.constraint(equalTo: upButton.trailingAnchor),
+            downButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            downButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
+            rightButton.leadingAnchor.constraint(equalTo: downButton.trailingAnchor),
+            rightButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            rightButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+
             doneButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
             doneButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             doneButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
@@ -104,7 +157,22 @@ class RootView : UIView {
         return view
     }
 
+    func screenshot() -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+        let renderer = UIGraphicsImageRenderer(size: self.frame.size, format: format)
+        let uiImage = renderer.image { rendererContext in
+            let context = rendererContext.cgContext
+            context.setAllowsAntialiasing(false)
+            context.interpolationQuality = .none
+            self.layer.render(in: context)
+        }
+        return uiImage
+    }
+#endif
 }
+
+#if canImport(UIKit)
 
 extension RootView: UIKeyInput {
 
@@ -123,3 +191,5 @@ extension RootView: UIKeyInput {
     }
 
 }
+
+#endif

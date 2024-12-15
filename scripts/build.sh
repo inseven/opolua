@@ -27,17 +27,20 @@ set -u
 
 SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-ROOT_DIRECTORY="${SCRIPTS_DIRECTORY}/.."
-BUILD_DIRECTORY="${ROOT_DIRECTORY}/build"
-TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
-APP_DIRECTORY="${ROOT_DIRECTORY}"
+ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
+SRC_DIRECTORY="$ROOT_DIRECTORY/src"
+APP_DIRECTORY="$ROOT_DIRECTORY"
 
-KEYCHAIN_PATH="${TEMPORARY_DIRECTORY}/temporary.keychain"
-ARCHIVE_PATH="${BUILD_DIRECTORY}/OpoLua.xcarchive"
-ENV_PATH="${APP_DIRECTORY}/.env"
-RELEASE_SCRIPT_PATH="${SCRIPTS_DIRECTORY}/release.sh"
+BUILD_DIRECTORY="$ROOT_DIRECTORY/build"
+TEMPORARY_DIRECTORY="$ROOT_DIRECTORY/temp"
 
-source "${SCRIPTS_DIRECTORY}/environment.sh"
+KEYCHAIN_PATH="$TEMPORARY_DIRECTORY/temporary.keychain"
+MACOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-macOS.xcarchive"
+IOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-iOS.xcarchive"
+ENV_PATH="$APP_DIRECTORY/.env"
+RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/release.sh"
+
+source "$SCRIPTS_DIRECTORY/environment.sh"
 
 # Check that the GitHub command is available on the path.
 which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
@@ -73,19 +76,9 @@ if [ -f "$ENV_PATH" ] ; then
     source "$ENV_PATH"
 fi
 
-function xcode_project {
-    xcodebuild \
-        -project OpoLua.xcodeproj "$@"
-}
-
-function build_scheme {
-    # Disable code signing for the build server.
-    xcode_project \
-        -scheme "$1" \
-        CODE_SIGN_IDENTITY="" \
-        CODE_SIGNING_REQUIRED=NO \
-        CODE_SIGNING_ALLOWED=NO "${@:2}"
-}
+# Ensure the Lua source compiles.
+cd "$SRC_DIRECTORY"
+luac -p *.lua
 
 cd "$APP_DIRECTORY"
 
@@ -94,7 +87,9 @@ IOS_XCODE_PATH=${IOS_XCODE_PATH:-/Applications/Xcode.app}
 sudo xcode-select --switch "$IOS_XCODE_PATH"
 
 # List the available schemes.
-xcode_project -list
+xcodebuild \
+        -project OpoLua.xcodeproj \
+        -list
 
 # Clean up the build directory.
 if [ -d "$BUILD_DIRECTORY" ] ; then
@@ -131,28 +126,51 @@ BUILD_NUMBER=`build-tools generate-build-number`
 
 # Import the certificates into our dedicated keychain.
 echo "$APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$APPLE_DISTRIBUTION_CERTIFICATE_BASE64"
+echo "$MACOS_DEVELOPER_INSTALLER_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$MACOS_DEVELOPER_INSTALLER_CERTIFICATE_BASE64"
 
 # Install the provisioning profiles.
-build-tools install-provisioning-profile "${APP_DIRECTORY}/OpoLua_App_Store_Profile.mobileprovision"
+build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_App_Store_Profile.mobileprovision"
+build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_Mac_Catalyst_App_Store_Profile.provisionprofile"
 
 # Build and archive the iOS project.
-xcode_project \
+sudo xcode-select --switch "$IOS_XCODE_PATH"
+xcodebuild \
+    -project OpoLua.xcodeproj \
     -scheme "OpoLua" \
     -config Release \
-    -archivePath "$ARCHIVE_PATH" \
+    -archivePath "$IOS_ARCHIVE_PATH" \
+    -destination "generic/platform=iOS" \
     OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
-    BUILD_NUMBER=$BUILD_NUMBER \
+    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
     MARKETING_VERSION=$VERSION_NUMBER \
     clean archive
 xcodebuild \
-    -archivePath "$ARCHIVE_PATH" \
+    -archivePath "$IOS_ARCHIVE_PATH" \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
-    -exportOptionsPlist "${APP_DIRECTORY}/ExportOptions.plist"
+    -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-iOS.plist"
+IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
+
+# Builds the macOS project.
+sudo xcode-select --switch "$MACOS_XCODE_PATH"
+xcodebuild \
+    -project OpoLua.xcodeproj \
+    -scheme "OpoLua" \
+    -config Release \
+    -archivePath "$MACOS_ARCHIVE_PATH" \
+    -destination "generic/platform=macOS,variant=Mac Catalyst" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+    MARKETING_VERSION=$VERSION_NUMBER \
+    clean archive
+xcodebuild \
+    -archivePath "$MACOS_ARCHIVE_PATH" \
+    -exportArchive \
+    -exportPath "$BUILD_DIRECTORY" \
+    -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-macCatalyst.plist"
+PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
 
 if $RELEASE ; then
-
-    IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
 
     # Archive the build directory.
     ZIP_BASENAME="build-${VERSION_NUMBER}-${BUILD_NUMBER}.zip"
@@ -170,7 +188,6 @@ if $RELEASE ; then
         --pre-release \
         --push \
         --exec "${RELEASE_SCRIPT_PATH}" \
-        "${IPA_PATH}" "${ZIP_PATH}"
-
+        "$IPA_PATH" "$PKG_PATH" "$ZIP_PATH"
 
 fi

@@ -26,11 +26,16 @@ jobs:
     - name: Install dependencies
       run: scripts/install-dependencies.sh
 
+    - name: Test Lua
+      run: scripts/test.sh
+
     - name: Build, test, and release
       env:
 
         APPLE_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.PERSONAL_APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
         APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.PERSONAL_APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+        MACOS_DEVELOPER_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.PERSONAL_MACOS_DEVELOPER_INSTALLER_CERTIFICATE_BASE64 }}
+        MACOS_DEVELOPER_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.PERSONAL_MACOS_DEVELOPER_INSTALLER_CERTIFICATE_PASSWORD }}
 
         APPLE_API_KEY_BASE64: ${{ secrets.PERSONAL_APPLE_API_KEY_BASE64 }}
         APPLE_API_KEY_ISSUER_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ISSUER_ID }}
@@ -67,6 +72,11 @@ jobs:
     - name: Install pipenv
       run: |
         python -m pip install --upgrade pipenv wheel
+
+    - uses: jdx/mise-action@v2
+      with:
+        install: true
+        cache: true
 
     - name: Install dependencies
       run: scripts/install-dependencies.sh

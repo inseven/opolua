@@ -51,11 +51,19 @@ fns = {
 }
 
 function DBFind(stack, runtime) -- 1
-    unimplemented("opx.sysram1.DBFind")
+    local text = stack:pop()
+    local db = runtime:getDb()
+    stack:push(db:findField(text, 1, nil, KFindForwards))
 end
 
 function DBFindField(stack, runtime) -- 2
-    unimplemented("opx.sysram1.DBFindField")
+    local flags = stack:pop()
+    local num = stack:pop()
+    local start = stack:pop()
+    local text = stack:pop()
+
+    local db = runtime:getDb()
+    stack:push(db:findField(text, start, num, flags))
 end
 
 function GetThreadIdFromCaption(stack, runtime) -- 3

@@ -1,0 +1,156 @@
+INCLUDE "dbase.oxh"
+
+PROC main:
+
+    LOCAL dbase$(32), tbl$(16), i%
+
+    PRINT "Deleting databases..."
+    DELETE "D:\db\*.db"
+
+    PRINT "Creating databases..."
+
+    CREATE "D:\db\sorted.db FIELDS str", A, str$
+    CLOSE
+    OPEN "D:\db\sorted.db SELECT str FROM Table1 ORDER BY str ASC", A, str$
+
+    BEGINTRANS
+    INSERT
+    A.str$ = "c"
+    PUT
+    INSERT
+    A.str$ = "a"
+    PUT
+    INSERT
+    A.str$ = "b"
+    PUT
+    COMMITTRANS
+    FIRST
+    PRINT "First record is", A.str$
+    CLOSE
+
+    CREATE "D:\db\emptyint.db", A, inta%
+    CLOSE
+
+    CREATE "D:\db\emptyintint.db", A, inta%, intb%
+    CLOSE
+
+    CREATE "D:\db\oneint.db", A, inta%
+    A.inta% = 42
+    APPEND
+    CLOSE
+
+    CREATE "D:\db\twoint.db", A, inta%
+    A.inta% = 42
+    APPEND
+    A.inta% = 420
+    APPEND
+    CLOSE
+
+    CREATE "D:\db\threeint.db", A, inta%
+    A.inta% = 42
+    APPEND
+    A.inta% = 420
+    APPEND
+    A.inta% = 24000
+    APPEND
+    CLOSE
+
+    CREATE "D:\db\oneintint.db", A, inta%, intb%
+    A.inta% = 42
+    A.intb% = 420
+    APPEND
+    CLOSE
+
+    CREATE "D:\db\twointint.db", A, inta%, intb%
+    A.inta% = 42
+    A.intb% = 420
+    APPEND
+    A.inta% = $69
+    A.intb% = $0BB0
+    APPEND
+    CLOSE
+
+    CREATE "D:\db\string.db", A, stra$, floatyb
+    A.stra$ = "fourty-two"
+    A.floatyb = 3.141592
+    APPEND
+    CLOSE
+
+    REM A.longboy not specified (which is in middle)
+    CREATE "D:\db\missingmid.db", A, stra$, longboy&, floatyb
+    A.stra$ = "fourty-two"
+    A.floatyb = 3.141592
+    APPEND
+    CLOSE
+
+    REM A.longboy not specified (which is at end)
+    CREATE "D:\db\missingend.db", A, stra$, floatyb, longboy&
+    A.stra$ = "fourty-two"
+    A.floatyb = 3.141592
+    APPEND
+    CLOSE
+
+    CREATE "D:\db\twostring.db", A, stra$, longboy&, floatyb
+    A.stra$ = "fourty-two"
+    A.floatyb = 3.141592
+    A.longboy& = &CAFEBABE
+    APPEND
+    A.stra$ = "woop"
+    A.floatyb = 9
+    A.longboy& = &DEADBEEF
+    APPEND
+    CLOSE
+
+    CREATE "D:\db\onetable.db FIELDS inta, intb TO Table1", A, inta%, intb%
+    A.inta% = 42
+    A.intb% = 420
+    APPEND
+    A.inta% = $69
+    A.intb% = $0BB0
+    APPEND
+    CLOSE
+
+    COPY "D:\db\onetable.db", "D:\db\twotables.db"
+
+    CREATE "D:\db\twotables.db FIELDS txt(40) TO AnotherTbl", A, txt$
+    A.txt$ = "Woop"
+    APPEND
+    A.txt$ = "Wooooooop"
+    APPEND
+    A.txt$ = "Wooooooooooooop"
+    APPEND
+    CLOSE
+
+    i% = 1
+    WHILE i% < 20
+        tbl$ = "Table" + NUM$(i%, 3)
+        CREATE "D:\db\manytables.db FIELDS txt(40) TO " + tbl$, A, txt$
+        A.txt$ = "FieldForTable" + NUM$(i%, 3)
+        APPEND
+        CLOSE
+        i% = i% + 1
+    ENDWH
+
+    PRINT "Compacting..."
+    COPY "D:\db\onetable.db", "D:\db\onetable-compacted.db"
+    COMPACT "D:\db\onetable-compacted.db"
+    COPY "D:\db\twotables.db", "D:\db\twotables-compacted.db"
+    COMPACT "D:\db\twotables-compacted.db"
+    COPY "D:\db\manytables.db", "D:\db\manytables-compacted.db"
+    COMPACT "D:\db\manytables-compacted.db"
+
+    PRINT "Done"
+    GET
+ENDP
+
+PROC testGetFieldType:
+    LOCAL dbase$(32), tbl$(16)
+    dbase$ = "D:\db\alltypes.db"
+    tbl$ = "Table1"
+    CREATE dbase$, A, inta%, longb&, floatc, strd$
+    CLOSE
+    PRINT "Int type", DBGETFIELDTYPE&:(dbase$, tbl$, 0)
+    PRINT "Long type", DBGETFIELDTYPE&:(dbase$, tbl$, 1)
+    PRINT "Float type", DBGETFIELDTYPE&:(dbase$, tbl$, 2)
+    PRINT "String type", DBGETFIELDTYPE&:(dbase$, tbl$, 3)
+ENDP

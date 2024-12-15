@@ -35,8 +35,10 @@ public class PsiLuaEnv {
         L = LuaState(libraries: [.package, .table, .io, .os, .string, .math, .utf8, .debug])
         L.setDefaultStringEncoding(kDefaultEpocEncoding)
 
-        L.setRequireRoot(nil)
-        L.addModules(lua_sources)
+        let srcRoot = Bundle.main.url(forResource: "init",
+                                      withExtension: "lua",
+                                      subdirectory: "src")!.deletingLastPathComponent()
+        L.setRequireRoot(srcRoot.path)
 
         // Finally, run init.lua
         require("init")
@@ -98,7 +100,7 @@ public class PsiLuaEnv {
         }
         require("aif")
         L.rawget(-1, utf8Key: "parseAif")
-        lua_remove(L, -2) // aif module
+        L.remove(-2) // aif module
         L.push(data)
         guard logpcall(1, 1) else { return nil }
 
@@ -115,7 +117,7 @@ public class PsiLuaEnv {
         }
         require("recognizer")
         L.rawget(-1, key: "getMbmBitmaps")
-        lua_remove(L, -2) // recognizer module
+        L.remove(-2) // recognizer module
         L.push(data)
         guard logpcall(1, 1) else { return nil }
         // top of stack should now be bitmap array
@@ -141,21 +143,52 @@ public class PsiLuaEnv {
         public let data: Data
     }
 
+    public struct OpaFile {
+        public let uid3: UInt32
+        public let appInfo: AppInfo? // For SIBO-era apps
+        public let era: AppEra
+    }
+
+    public struct OpoFile : Codable {
+        public let era: AppEra
+    }
+
+    public struct ResourceFile: Codable {
+        public let idOffset: UInt32?
+    }
+
+    public struct SisFile: Codable {
+        public let name: [String: String]
+        public let uid: UInt32
+        public let version: String
+        public let languages: [String]
+    }
+
     public enum FileType: String, Codable {
         case unknown
         case aif
+        case database
         case mbm
         case opl
+        case opa
+        case opo
+        case resource
         case sound
+        case sis
     }
 
     public enum FileInfo {
         case unknown
         case unknownEpoc(UnknownEpocFile)
         case aif(AppInfo)
+        case database
         case mbm(MbmFile)
         case opl(OplFile)
+        case opa(OpaFile)
+        case opo(OpoFile)
+        case resource(ResourceFile)
         case sound(SoundFile)
+        case sis(SisFile)
     }
 
     public func recognize(path: String) -> FileType {
@@ -163,19 +196,17 @@ public class PsiLuaEnv {
         defer {
             L.settop(top)
         }
-        // We don't actually need the whole file data here, oh well
         guard let data = FileManager.default.contents(atPath: path) else {
             return .unknown
         }
         require("recognizer")
         L.rawget(-1, key: "recognize")
-        lua_remove(L, -2) // recognizer module
+        L.remove(-2) // recognizer module
         L.push(data)
-        L.push(false) // allData
-        guard logpcall(2, 1) else {
+        guard logpcall(1, 1) else {
             return .unknown
         }
-        guard let type = L.tostring(-1) else {
+        guard let type = L.tostring(-1, key: "type") else {
             return .unknown
         }
         return FileType(rawValue: type) ?? .unknown
@@ -191,39 +222,63 @@ public class PsiLuaEnv {
         }
         require("recognizer")
         L.rawget(-1, key: "recognize")
-        lua_remove(L, -2) // recognizer module
+        L.remove(-2) // recognizer module
         L.push(data)
-        L.push(true) // allData
-        guard logpcall(2, 2) else {
+        guard logpcall(1, 1) else {
             return .unknown
         }
-        guard let type = L.tostring(-2) else {
+        guard let typeStr = L.tostring(-1, key: "type") else {
             return .unknown
+        }
+        guard let type = FileType(rawValue: typeStr) else {
+            fatalError("Unhandled type \(typeStr)")
         }
 
         switch type {
-        case "aif":
+        case .aif:
             if let info = L.toAppInfo(-1) {
                 return .aif(info)
             }
-        case "mbm":
+        case .database:
+            return .database
+        case .mbm:
             if let info: MbmFile = L.todecodable(-1) {
                 return .mbm(info)
             }
-        case "opl":
+        case .opl:
             if let info: OplFile = L.todecodable(-1) {
                 return .opl(info)
             }
-        case "sound":
+        case .opa:
+            if let appInfo: AppInfo = L.toAppInfo(-1) {
+                let opa = OpaFile(uid3: appInfo.uid3, appInfo: appInfo, era: appInfo.era)
+                return .opa(opa)
+            } else if let eraString = L.tostring(-1, key: "era"),
+                      let era = AppEra(rawValue: eraString),
+                      let uid3Int = L.toint(-1, key: "uid3"),
+                      let uid3 = UInt32(exactly: uid3Int) {
+                return .opa(OpaFile(uid3: uid3, appInfo: nil, era: era))
+            }
+        case .opo:
+            if let info: OpoFile = L.todecodable(-1) {
+                return .opo(info)
+            }
+        case .resource:
+            if let info: ResourceFile = L.todecodable(-1) {
+                return .resource(info)
+            }
+        case .sis:
+            if let info: SisFile = L.todecodable(-1) {
+                return .sis(info)
+            }
+        case .sound:
             if let info: SoundFile = L.todecodable(-1) {
                 return .sound(info)
             }
-        case "unknown":
+        case .unknown:
             if let info: UnknownEpocFile = L.todecodable(-1) {
                 return .unknownEpoc(info)
             }
-        default:
-            break
         }
         return .unknown
     }
@@ -250,7 +305,7 @@ public class PsiLuaEnv {
         }
         require("opofile")
         L.rawget(-1, key: "parseOpo")
-        lua_remove(L, -2) // opofile
+        L.remove(-2) // opofile
         L.push(data)
         guard logpcall(1, 1) else {
             return nil
@@ -284,12 +339,10 @@ public class PsiLuaEnv {
         }
         let op: Fs.Operation.OpType
         switch cmd {
-        case "exists":
-            op = .exists
         case "stat":
             op = .stat
-        case "isdir":
-            op = .isdir
+        case "disks":
+            op = .disks
         case "delete":
             op = .delete
         case "mkdir":
@@ -337,15 +390,16 @@ public class PsiLuaEnv {
             L.push(data)
             return 1
         case .strings(let strings):
-            lua_createtable(L, CInt(strings.count), 0)
+            L.newtable(narr: CInt(strings.count), nrec: 0)
             for (i, string) in strings.enumerated() {
                 L.rawset(-1, key: i + 1, value: string)
             }
             return 1
         case .stat(let stat):
-            lua_newtable(L)
+            L.newtable()
             L.rawset(-1, key: "size", value: Int64(stat.size))
             L.rawset(-1, key: "lastModified", value: stat.lastModified.timeIntervalSince1970)
+            L.rawset(-1, key: "isDir", value: stat.isDirectory)
             return 1
         }
     }
@@ -359,14 +413,14 @@ public class PsiLuaEnv {
             throw LuaArgumentError(errorString: "Couldn't read \(path)")
         }
         require("runtime")
-        lua_getfield(L, -1, "installSis")
+        L.rawget(-1, utf8Key: "installSis")
         L.push(data)
         makeFsIoHandlerBridge(handler)
         try L.pcall(nargs: 2, nret: 0)
     }
 
     internal func makeFsIoHandlerBridge(_ handler: FileSystemIoHandler) {
-        lua_newtable(L)
+        L.newtable()
         L.push(FsHandlerWrapper(iohandler: handler))
         let fns: [String: lua_CFunction] = [
             "fsop": { L in return autoreleasepool { return PsiLuaEnv.fsop(L) } },

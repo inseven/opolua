@@ -1,0 +1,12 @@
+PROC main:
+    gSETPENWIDTH 1
+    gLINEBY 40, 20
+    gSETPENWIDTH 2
+    gLINEBY 40, 0
+    gLINEBY 40, 20
+    gSETPENWIDTH 5
+    gLINEBY 40, 0
+    gLINEBY 40, 20
+
+    GET
+ENDP

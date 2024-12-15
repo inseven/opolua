@@ -26,7 +26,7 @@ class RaiseGitHubIssueActivity: UIActivity {
         return .action
     }
 
-    let error: Error
+    let url: URL
     var activityItems = [Any]()
 
     override var activityTitle: String? {
@@ -41,8 +41,8 @@ class RaiseGitHubIssueActivity: UIActivity {
         return UIActivity.ActivityType(rawValue: "org.opolua.action.raise-github-issue")
     }
 
-    init(error: Error) {
-        self.error = error
+    init(url: URL) {
+        self.url = url
         super.init()
     }
 
@@ -61,9 +61,6 @@ class RaiseGitHubIssueActivity: UIActivity {
     override func perform() {
         defer {
             activityDidFinish(true)
-        }
-        guard let url = error.gitHubIssueUrl else {
-            return
         }
         UIApplication.shared.open(url)
     }

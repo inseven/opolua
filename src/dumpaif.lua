@@ -29,32 +29,64 @@ dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 function main()
     local args = getopt({
         "filename",
-        extract = true, e = "extract"
+        extract = true, e = "extract",
+        json = true, j = "json",
+        verbose = true, v = "verbose",
     })
 
     local aif = require("aif")
     local mbm = require("mbm")
     local data = readFile(args.filename)
-    local info = aif.parseAif(data)
-    printf("UID3: 0x%08X\n", info.uid3)
-    for lang, caption in pairs(info.captions) do
-        printf("Caption[%s]: %s\n", lang, caption)
-    end
-    for i, icon in ipairs(info.icons) do
-        printf("Icon %dx%d bpp=%d", icon.width, icon.height, icon.bpp)
-        local mask = icon.mask
-        if mask then
-            printf(" mask %dx%d bpp=%d", mask.width, mask.height, mask.bpp)
+    local info = aif.parseAif(data, args.verbose)
+    local cp1252 = require("cp1252")
+
+    if not args.json then
+        printf("UID3: 0x%08X\n", info.uid3)
+        for lang, caption in pairs(info.captions) do
+            printf("Caption[%s]: %s\n", lang, cp1252.toUtf8(caption))
         end
-        printf("\n")
-        if args.extract then
+        for i, icon in ipairs(info.icons) do
+            printf("Icon %dx%d bpp=%d compression=%s", icon.width, icon.height, icon.bpp, mbm.compressionToString(icon.compression))
+            local mask = icon.mask
+            if mask then
+                printf(" mask %dx%d bpp=%d compression=%s", mask.width, mask.height, mask.bpp, mbm.compressionToString(icon.compression))
+            end
+            printf("\n")
+        end
+    end
+
+    if args.extract then
+        for i, icon in ipairs(info.icons) do
             local iconName = string.format("%s_%d_%dx%d_%dbpp.bmp", args.filename, i, icon.width, icon.height, icon.bpp)
+            -- printf("toBmp icon %s\n", iconName)
             writeFile(iconName, icon:toBmp())
+            local mask = icon.mask
             if mask then
                 local maskName = string.format("%s_%d_mask_%dx%d_%dbpp.bmp", args.filename, i, mask.width, mask.height, mask.bpp)
+                -- printf("toBmp icon %s\n", maskName)
                 writeFile(maskName, mask:toBmp())
             end
         end
+    end
+
+    if args.json then
+        local icons = {}
+        -- There's a lot of stuff in icons that isn't relevant to the JSON output
+        for i, icon in ipairs(info.icons) do
+            icons[i] = info.icons[i]:getMetadata()
+        end
+        local utf8Captions = {}
+        for lang, caption in pairs(info.captions) do
+            utf8Captions[lang] = cp1252.toUtf8(caption)
+        end
+        local jsonResult = {
+            type = info.type,
+            uid3 = info.uid3,
+            era = info.era,
+            icons = icons,
+            captions = utf8Captions,
+        }
+        print(json.encode(jsonResult))
     end
 end
 

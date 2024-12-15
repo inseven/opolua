@@ -37,14 +37,14 @@ class DirectoryMonitor {
     static var count = 0
 
     static func incrementCount() {
-        countLock.perform {
+        countLock.withLock {
             count = count + 1
             print("open directory count = \(count)")
         }
     }
 
     static func decrementCount() {
-        countLock.perform {
+        countLock.withLock {
             count = count - 1
             print("open directory count = \(count)")
 
@@ -91,12 +91,12 @@ class DirectoryMonitor {
 
     var delegate: DirectoryMonitorDelegate? {
         get {
-            lock.perform {
+            lock.withLock {
                 return _delegate
             }
         }
         set {
-            lock.perform {
+            lock.withLock {
                 _delegate = newValue
             }
         }
@@ -121,7 +121,7 @@ class DirectoryMonitor {
     }
 
     func start() {
-        lock.perform {
+        lock.withLock {
             guard _state == .idle else {
                 return
             }
@@ -131,7 +131,7 @@ class DirectoryMonitor {
     }
 
     func cancel() {
-        lock.perform {
+        lock.withLock {
             guard _state == .running else {
                 return
             }
@@ -142,7 +142,7 @@ class DirectoryMonitor {
 
     private func queue_update() {
         dispatchPrecondition(condition: .onQueue(queue))
-        lock.perform {
+        lock.withLock {
             guard _state == .running else {
                 return
             }

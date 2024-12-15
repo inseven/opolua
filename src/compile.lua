@@ -32,8 +32,9 @@ function main()
         "output",
         dump = true, d = "dump",
         include = table, i = "include",
-        source = string,
-        help = true, h = "help"
+        source = string, s = "source",
+        help = true, h = "help",
+        aif = true,
     })
 
     if args.help then
@@ -62,6 +63,10 @@ Options:
     --source <path>, -s <path>
         Override the source file path included in the output. If not specified,
         will be set to <filename>.
+
+    --aif
+        If specified, an AIF file will be written alongside <output>.
+        The file being compiled must have a "APP .. ENDA" section.
 ]])
         os.exit(false)
     end
@@ -72,7 +77,7 @@ Options:
         -- Assume it's a .opl file
         progText = require("recognizer").getOplText(progText)
     end
-    local ok, result = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText, args.include)
+    local ok, result, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText, args.include)
     if not ok then
         if type(result) == "string" then
             print(result)
@@ -84,6 +89,8 @@ Options:
         os.exit(false)
         return
     end
+
+    assert(not args.aif or aif, "No APP section found in OPL source")
 
     if args.dump then
         opofile = require("opofile")
@@ -98,7 +105,12 @@ Options:
         end
     end
     if args.output or not args.dump then
-        writeFile(args.output or (args.filename .. ".opo"), result)
+        local outName = args.output or (args.filename .. ".opo")
+        writeFile(outName, result)
+        if args.aif then
+            local aifName = oplpath.splitext(outName)..".aif"
+            writeFile(aifName, aif)
+        end
     end
 end
 

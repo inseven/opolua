@@ -22,7 +22,7 @@ import Combine
 import Foundation
 import UIKit
 
-class RunningProgramsViewController : UICollectionViewController {
+class RunningProgramsViewController : BrowserViewController {
 
     enum Section {
         case none
@@ -68,7 +68,6 @@ class RunningProgramsViewController : UICollectionViewController {
 
     static var cell = "Cell"
 
-    var settings: Settings
     var taskManager: TaskManager
     var installer: Installer?
     var settingsSink: AnyCancellable?
@@ -115,15 +114,14 @@ class RunningProgramsViewController : UICollectionViewController {
     }()
 
     init(settings: Settings, taskManager: TaskManager) {
-        self.settings = settings
         self.taskManager = taskManager
-        super.init(collectionViewLayout: IconCollectionViewLayout())
-        collectionView.backgroundColor = UIColor(named: "DirectoryBackground")
+        super.init(collectionViewLayout: IconCollectionViewLayout(), settings: settings)
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.dataSource = dataSource
         collectionView.backgroundView = placeholderView
         title = "Running Programs"
+        navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.largeTitleDisplayMode = .never
         update(animated: false)
     }

@@ -1,0 +1,439 @@
+REM This is the source for the welcome app. It was originally compiled and
+REM tested on a Series 5 R1, but now is compiled using compiler.lua. This isn't
+REM yet integrated into the app, so you can't modify this file. Sorry!
+
+INCLUDE "const.oph"
+INCLUDE "system.oxh"
+INCLUDE "toolbar.oph"
+
+APP Welcome, &10286F9C
+	CAPTION "Welcome", 1
+ENDA
+
+CONST numCards% = 3
+CONST buttonWidth% = 100
+CONST buttonHeight% = 25
+CONST buttonHInset% = 5
+CONST buttonVInset% = 5
+
+PROC main:
+	DEFAULTWIN 5
+	LOADM "Z:\System\OPL\TOOLBAR.OPO"
+	TBarLink:("go")
+ENDP
+
+PROC go:
+	GLOBAL colour%, card%, drv$(1), menustate%
+	LOCAL ev&(16), k&, butY%, nextButX%, x%, y%
+	colour% = 0
+	card% = 0
+	drv$ = LEFT$(CMD$(1), 1)
+	TBarInit:("Welcome", gWIDTH, gHEIGHT)
+	gSETWIN 0, 0, gWIDTH - TbWidth%, gHEIGHT
+	drawCurrentPage:
+	butY% = gHEIGHT - buttonHeight% - buttonVInset%
+	nextButX% = gWIDTH - buttonWidth% - buttonHInset%
+
+	WHILE 1
+		GETEVENT32 ev&()
+		k& = ev&(KEvAType%)
+		IF k& = KEvPtr&
+			x% = ev&(KEvAPtrPositionX%)
+			y% = ev&(KEvAPtrPositionY%)
+			IF TBarOffer%:(ev&(KEvAPtrWindowId%), ev&(KEvAPtrType%), x%, y%)
+				REM handled
+			ELSEIF y% >= butY% AND y% < butY% + buttonHeight%
+				IF x% >= buttonHInset% AND x% < buttonHInset% + buttonWidth%
+					captureButton:(0)
+				ELSEIF x% >= nextButX% AND x% < nextButX% + buttonWidth%
+					captureButton:(1)
+				ENDIF
+			ENDIF
+		ELSEIF k& = KKeyMenu% OR k& = KKeySidebarMenu%
+			showMenu:
+		ELSEIF k& < 32 AND ev&(KEvAKMod%) = KKmodControl%
+			k& = k& + %A - 1
+			IF k& = %A
+				CmdA%:
+			ELSEIF k& = %C
+				CmdC%:
+			ELSEIF k& = %E
+				CmdE%:
+			ELSEIF k& = %S
+				CmdS%:
+			ENDIF
+		ELSEIF k& = KKeyLeftArrow32%
+			prevPage:
+		ELSEIF k& = KKeyRightArrow32%
+			nextPage:
+		ELSEIF k& = KEvCommand&
+			IF GETCMD$ = "X"
+				STOP
+			ENDIF
+		ELSE
+			REM PRINT k&
+		ENDIF
+	ENDWH
+ENDP
+
+PROC CmdA%:
+	dINIT "About Welcome"
+	dTEXT "", "An example OPL script demonstrating"
+	dTEXT "", "some of the features supported by"
+	dTEXT "", "OpoLua, including toolbars,"
+	dTEXT "", "menus, dialogs and audio."
+	dBUTTONS "OK", 13 + $100
+	DIALOG
+ENDP
+
+PROC CmdB%:
+	beep:
+ENDP
+
+PROC CmdC%:
+	colour% = NOT colour%
+	IF colour%
+		gIPRINT "Colour mode on"
+	ELSE
+		gIPRINT "Colour mode off"
+	ENDIF
+	drawToolbar:
+	drawCurrentPage:
+ENDP
+
+PROC CmdE%:
+	STOP
+ENDP
+
+PROC CmdG%:
+	greensleeves:
+ENDP
+
+PROC CmdK%:
+	ONERR doom
+	PLAYSOUND:(drv$ + ":\System\Apps\Welcome\Scream", 3)
+	RETURN
+
+doom::
+	ONERR OFF
+	gIPRINT "TODO!"
+ENDP
+
+PROC CmdS%:
+	ONERR nope
+	RunApp&:("TextEd", drv$ + ":\System\Apps\Welcome\Welcome.txt", "", 0)
+	RETURN
+	
+	REM RunApp doesn't actually error on the Series 5 but
+	REM it's convenient for our impl to.
+nope::
+	ONERR OFF
+	IF ERR = -1
+		ALERT("Editor not found.")
+	ELSE
+		RAISE ERR
+	ENDIF
+ENDP
+
+PROC CmdW%:
+	card% = 0
+	drawCurrentPage:
+ENDP
+
+PROC CmdX%:
+ENDP
+
+PROC drawToolbar:
+	LOCAL colstate%
+
+	IF colour%
+		colstate% = KButtS5SemiPressed%
+		TBarColor:(0, 0, 0, 192, 192, 255)
+	ELSE
+		colstate% = 0
+		TBarColor:(0, 0, 0, 255, 255, 255)
+	ENDIF
+
+	IF card% = 0
+		TBarButt:("a", 1, "About", 0, 0, 0, 0)
+		TBarButt:("c", 2, "Colour", colstate%, 0, 0, 0)
+		TBarButt:("s", 3, "View" + CHR$(10) + "Source", 0, 0, 0, 0)
+		TBarButt:("e", 4, "Close", 0, 0, 0, 0)
+	ELSEIF card% = 1
+		TBarButt:("x", 1, "", 0, 0, 0, 0)
+		TBarButt:("x", 2, "", 0, 0, 0, 0)
+		TBarButt:("x", 3, "", 0, 0, 0, 0)
+		TBarButt:("e", 4, "Close", 0, 0, 0, 0)
+	ELSEIF card% = 2
+		TBarButt:("b", 1, "Beep", 0, 0, 0, 0)
+		TBarButt:("g", 2, "Green" + CHR$(10) + "sleeves", 0, 0, 0, 0)
+		TBarButt:("k", 3, "Scream", 0, 0, 0, 0)
+		TBarButt:("e", 4, "Close", 0, 0, 0, 0)
+	ENDIF
+ENDP
+
+CONST dotsSep% = 10
+
+PROC drawCurrentPage:
+	LOCAL i%, x%, y%
+	gUPDATE OFF
+	gCLS
+
+	drawButton:(0, 0)
+	drawButton:(1, 0)
+	
+	y% = gHEIGHT - 7
+	x% = (gWIDTH - ((numCards% - 1) * dotsSep%)) / 2
+	i% = 0
+	WHILE i% < numCards%
+		gAT x%, y%
+		IF i% = card%
+			gCIRCLE 3, 1
+		ELSE
+			gCIRCLE 1, 1
+		ENDIF
+		x% = x% + dotsSep%
+		i% = i% + 1
+	ENDWH
+
+	gCOLOR 0, 0, 0
+	IF card% = 0
+		drawWelcome:
+	ELSEIF card% = 1
+		drawImgs:
+	ELSEIF card% = 2
+		drawAudio:
+	ENDIF
+
+	drawToolbar:
+	TBarShow:
+	gUPDATE ON
+ENDP
+
+PROC drawButton:(id%, state%)
+	LOCAL str$(16), x%
+	gCOLOR 0, 0, 0
+	gSTYLE 0
+	gFONT KFontArialNormal15&
+	IF id% = 1
+		str$ = "Next"
+		x% = gWIDTH - buttonWidth% - buttonHInset%
+	ELSE
+		str$ = "Back"
+		x% = buttonHInset%
+	ENDIF
+	gAT x%, gHEIGHT - buttonHeight% - buttonVInset%
+	gBUTTON str$, 2, buttonWidth%, buttonHeight%, state%
+ENDP
+
+PROC captureButton:(id%)
+	LOCAL ev&(16), butx%, buty%, x%, y%, k&, state%, inside%
+	IF id% = 1
+		butx% = gWIDTH - buttonHInset% - buttonWidth%
+	ELSE
+		butx% = buttonHInset%
+	ENDIF
+	buty% = gHEIGHT - buttonVInset% - buttonHeight%
+	state% = -1
+	drawButton:(id%, state% AND 1)
+	WHILE 1
+		GETEVENT32 ev&()
+		k& = ev&(1)
+		IF k& = &408
+			x% = ev&(6)
+			y% = ev&(7)
+			inside% = x% >= butx% AND x% < butx% + buttonWidth% AND y% >= buty% AND y% < buty% + buttonHeight%
+			IF inside% <> state%
+				state% = inside%
+				drawButton:(id%, state% AND 1)
+			ENDIF
+			IF ev&(4) = KEvPtrPenUp&
+				IF inside%
+					IF id%
+						nextPage:
+					ELSE
+						prevPage:
+					ENDIF
+				ENDIF
+				RETURN
+			ENDIF
+		ENDIF
+	ENDWH
+ENDP
+
+CONST numIcons% = 4
+CONST iconWidth% = 48
+CONST iconSpace% = 12
+
+PROC drawWelcome:
+	LOCAL x%, id%, bit%, i%, iconsPath$(255)
+	gCOLOR 128, 128, 128
+	gAT 0, 16
+	gFONT KFontEiksym15&
+	gSTYLE KgStyleNormal%
+	gPRINT "#"
+	gAT 15, 16
+	gFONT KFontSquashed&
+	gPRINT "Press this to simulate the Menu key"
+
+	gCOLOR 0, 0, 0
+	gSTYLE KgStyleBold%
+	gFONT KFontArialNormal32&
+	x% = (gWIDTH - gTWIDTH("Welcome")) / 2
+	gAT x%, 70 REM gHEIGHT / 2
+	gPRINT "Welcome"
+	gFONT KFontArialNormal22&
+	x% = (gWIDTH - gTWIDTH("OpoLua")) / 2
+	gAT x%, 100
+	gPRINT "OpoLua"
+
+	x% = (gWIDTH - numIcons% * iconWidth% - (numIcons%-1) * iconSpace%) / 2
+	IF colour%
+		iconsPath$ = drv$ + ":\System\Apps\Welcome\icons_color.mbm"
+	ELSE
+		iconsPath$ = drv$ + ":\System\Apps\Welcome\icons_grayscale.mbm"
+	ENDIF
+	
+	i% = 0
+	id% = gIDENTITY
+	WHILE i% < numIcons%
+		bit% = gLOADBIT(iconsPath$, 0, i%)
+		gUSE id%
+		gAT x%, 135
+		gCOPY bit%, 0, 0, 48, 48, 0
+		i% = i% + 1
+		x% = x% + iconWidth% + iconSpace%
+		gCLOSE bit%
+	ENDWH
+ENDP
+
+PROC showMenu:
+	LOCAL m%, colflag%
+	IF colour%
+		colflag% = $2800
+	ELSE
+		colflag% = 0
+	ENDIF
+	mINIT
+	mCARD "File", "About", %a, "Close", %e
+	mCARD "View", "Use Colour", %c + colflag%, "View source...", %s
+	mCARD "Pages", "Welcome", 1 OR ((card% = 0) AND $2800), "Images", 2 OR ((card% = 1) AND $2800), "Audio", 3 OR ((card% = 2) AND $2800)
+	m% = MENU(menustate%)
+	IF m% = %a
+		CmdA%:
+	ELSEIF m% = %e
+		CmdE%:
+	ELSEIF m% = %c
+		CmdC%:
+	ELSEIF m% = %s
+		CmdS%:
+	ELSEIF m% < 31 AND m% > 0
+		card% = m% - 1
+		drawCurrentPage:
+	ENDIF
+ENDP
+
+PROC nextPage:
+	card% = MOD&:(card% + 1, numCards%)
+	drawCurrentPage:
+ENDP
+
+PROC prevPage:
+	IF card% = 0
+		card% = numCards% - 1
+	ELSE
+		card% = card% - 1
+	ENDIF
+	drawCurrentPage:
+ENDP
+
+PROC pitch:(frequency)
+   RETURN (512.0 / (frequency / 1000.0)) - 1.0
+ENDP
+
+PROC note:(duration, pitch)
+  BEEP duration * 16, pitch
+ENDP
+
+PROC greensleeves:
+  LOCAL d4,e4,fs4,g4,a4,b4,c5
+  d4=pitch:(293.6648)
+  e4=pitch:(329.6276)
+  fs4=pitch:(369.9944)
+  g4=pitch:(391.9954)
+  a4=pitch:(440.0000)
+  b4=pitch:(493.8833)
+  c5=pitch:(523.2511)
+  note:(1.0, e4)
+  note:(2.0, g4)
+  note:(1.0, a4)
+  note:(1.5, b4)
+  note:(0.5, c5)
+  note:(1.0, b4)
+  note:(2.0, a4)
+  note:(1.0, fs4)
+  note:(1.5, d4)
+  note:(0.5, e4)
+  note:(1.0, fs4)
+  note:(2.0, g4)
+  note:(1.0, e4)
+  note:(1.5, e4)
+ENDP
+
+PROC beep:
+  BEEP 5, 300
+  BEEP 10, 400
+ENDP
+
+PROC scale:
+  LOCAL freq,n%
+  n%=3
+  WHILE n%<16
+    freq=440*2**(n%/12.0)
+    BEEP 8,512000/freq-1.0
+    n%=n%+1
+    IF n%=4 OR n%=6 OR n%=9 OR n%=11 OR n%=13
+        n%=n%+1
+    ENDIF
+  ENDWH
+ENDP
+
+PROC drawAudio:
+	gAT 0, 20
+	gFONT KFontArialNormal18&
+	gSTYLE KgStyleBold%
+	gPRINTB "Audio", gWIDTH, KgPrintBCentredAligned%
+	gSTYLE KgStyleNormal%
+	gFONT KFontTimesNormal15&
+	gAT 0, 50
+	gPRINT "Audio is supported, including basic tone-based audio and Psion sound files."
+	gAT 0, 70
+	gPRINT "Try it out by pressing the toolbar buttons on the right."
+	gAT 0, 100
+	gPRINT "You may have to take your iPhone off silent mode by flicking the hardware switch!"
+ENDP
+
+PROC drawImgs:
+	LOCAL bit%, id%, w%, h%
+	gAT 0, 20
+	gFONT KFontArialNormal18&
+	gSTYLE KgStyleBold%
+	gPRINTB "Images", gWIDTH, KgPrintBCentredAligned%
+	gSTYLE KgStyleNormal%
+	gFONT KFontTimesNormal15&
+	gAT 0, 50
+	gPRINT "OpoLua can render Psion format MBM files, including colour in programs"
+	gAT 0, 70
+	gPRINT "that support it. Sprite animation via the bmp.opx APIs is also supported."
+	
+	id% = gIDENTITY
+	bit% = gLOADBIT(drv$ + ":\System\Apps\Welcome\psionstyle.mbm", 0)
+	w% = gWIDTH
+	h% = gHEIGHT
+	gUSE id%
+	gAT (gWIDTH - w%) / 2, 90
+	gCOPY bit%, 0, 0, w%, h%, 3
+	gCLOSE bit%
+ENDP
+
+

@@ -198,7 +198,7 @@ class ProgramViewController: UIViewController {
 
     lazy var scaleView: AutoOrientView = {
 
-        let screenView = UIView(frame: CGRect(origin: .zero, size: program.getScreenInfo().0.cgSize()))
+        let screenView = UIView(frame: CGRect(origin: .zero, size: program.getDeviceInfo().0.cgSize()))
         screenView.translatesAutoresizingMaskIntoConstraints = false
         screenView.addSubview(program.rootView)
         screenView.addSubview(menuButton)
@@ -243,6 +243,8 @@ class ProgramViewController: UIViewController {
 
         return scaleView
     }()
+    
+    var bottomConstraint: NSLayoutConstraint!
 
     init(settings: Settings, taskManager: TaskManager, program: Program) {
         self.settings = settings
@@ -251,32 +253,37 @@ class ProgramViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         program.delegate = self
         navigationItem.largeTitleDisplayMode = .never
+        navigationItem.compactAppearance?.configureWithOpaqueBackground()
+        navigationItem.standardAppearance?.configureWithOpaqueBackground()
         view.backgroundColor = UIColor(named: "ProgramBackground")
 
         title = program.title
         view.clipsToBounds = true
+        
+        bottomConstraint = scaleView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
 
         view.addSubview(scaleView)
         NSLayoutConstraint.activate([
             scaleView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scaleView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scaleView.topAnchor.constraint(equalTo: view.topAnchor),
-            scaleView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            bottomConstraint,
         ])
 
         if traitCollection.horizontalSizeClass == .compact {
             navigationItem.rightBarButtonItems = [optionsBarButtonItem]
             toolbarItems = [.flexibleSpace(), keyboardBarButtonItem, .fixedSpace(16.0), controllerBarButtonItem, .flexibleSpace()]
         } else {
-            if ProcessInfo.processInfo.isiOSAppOnMac {
-                navigationItem.rightBarButtonItems = [optionsBarButtonItem]
-            } else {
-                navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
-            }
+#if targetEnvironment(macCatalyst)
+            navigationItem.rightBarButtonItems = [optionsBarButtonItem]
+#else
+            navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
+#endif
             toolbarItems = []
         }
 
         observeGameControllers()
+        observeKeyboard()
     }
 
     required init?(coder: NSCoder) {
@@ -318,7 +325,7 @@ class ProgramViewController: UIViewController {
     }
 
     private func shareScreenshot() {
-        let screenshot = self.program.screenshot()
+        let screenshot = self.program.rootView.screenshot()
 
         // We write the screenshot to a file to allow us to set a filename.
         let fileManager = FileManager.default
@@ -359,10 +366,34 @@ class ProgramViewController: UIViewController {
         notificationCenter.addObserver(forName: NSNotification.Name.GCControllerDidConnect,
                                        object: nil,
                                        queue: .main) { [weak self] notification in
-            guard let self = self else {
-                return
-            }
-            self.configureControllers()
+            self?.configureControllers()
+        }
+    }
+    
+    func observeKeyboard() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(forName: UIResponder.keyboardWillShowNotification,
+                                       object: nil,
+                                       queue: .main) { [weak self] notification in
+            self?.adjustForKeyboard(notification: notification, keyboardShowing: true)
+        }
+        notificationCenter.addObserver(forName: UIResponder.keyboardWillHideNotification,
+                                       object: nil,
+                                       queue: .main) { [weak self] notification in
+            self?.adjustForKeyboard(notification: notification, keyboardShowing: false)
+        }
+    }
+    
+    func adjustForKeyboard(notification: Notification, keyboardShowing: Bool) {
+        guard let userInfo = notification.userInfo,
+              let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
+            return
+        }
+        UIView.animate(withDuration: 0.3) {
+            self.scaleView.isShowingKeyboard = keyboardShowing
+            self.bottomConstraint.constant = -(keyboardShowing ? keyboardFrame.height : 0)
+            self.view.layoutIfNeeded()
         }
     }
 
@@ -376,10 +407,14 @@ class ProgramViewController: UIViewController {
                              .flexibleSpace()],
                             animated: animated)
         } else {
+#if targetEnvironment(macCatalyst)
+            navigationItem.setRightBarButtonItems([optionsBarButtonItem], animated: animated)
+#else
             navigationItem.setRightBarButtonItems([optionsBarButtonItem,
                                                    keyboardBarButtonItem,
                                                    controllerBarButtonItem],
                                                   animated: animated)
+#endif
             setToolbarItems([], animated: animated)
         }
     }
@@ -462,7 +497,7 @@ class ProgramViewController: UIViewController {
 
                 let (keydownCode, keypressCode) = key.toOplCodes()
 
-                // The could be no legitimate keydownCode if we're inputting say
+                // There could be no legitimate keydownCode if we're inputting say
                 // a tilde which is not on a key that the Psion 5 keyboard has
                 if let code = keydownCode {
                     program.sendEvent(.keydownevent(.init(timestamp: press.timestamp,
@@ -556,75 +591,24 @@ extension ProgramViewController: ProgramDelegate {
         }
     }
 
-    func program(_ program: Program, editValue op: EditOperation) -> Any? {
-        let semaphore = DispatchSemaphore(value: 0)
-        let showTextAlert = { (value: String, keyboardType: UIKeyboardType?, isPassword: Bool) -> String? in
-            var textResult: String? = nil
-            DispatchQueue.main.async {
-                let alertController = UIAlertController(title: op.prompt ?? "Enter Text", message: nil, preferredStyle: .alert)
-                alertController.addTextField { textField in
-                    textField.text = value
-                    if let keyboardType {
-                        textField.keyboardType = keyboardType
-                    }
-                    if isPassword {
-                        textField.isSecureTextEntry = true
-                    }
-                }
-                alertController.addAction(UIAlertAction(title: "OK", style: .default) { [weak alertController] _ in
-                    defer {
-                        semaphore.signal()
-                    }
-                    guard let alertController = alertController else {
-                        return
-                    }
-                    textResult = alertController.textFields![0].text!
-                })
-                if op.allowCancel {
-                    alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-                        semaphore.signal()
-                    })
-                }
-                self.present(alertController, animated: true)
-            }
-            semaphore.wait()
-            return textResult
-        }
-
-        switch op.details {
-        case .text(let details):
-            return showTextAlert(details.initialValue, nil, false)
-        case .password(let details):
-            return showTextAlert(details.initialValue, nil, true)
-        case .integer(let details):
-            if let text = showTextAlert("\(details.initialValue)", .numberPad, false) {
-                return Int(text)
-            }
-        case .float(let details):
-            if let text = showTextAlert("\(details.initialValue)", .decimalPad, false) {
-                return Double(text)
-            }
-        default:
-            DispatchQueue.main.async {
-                let alertController = UIAlertController(title: "Not implemented",
-                    message: "Support for \(op.details.type) editors has not been implemented yet.", preferredStyle: .alert)
-                alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-                    semaphore.signal()
-                })
-                self.present(alertController, animated: true)
-            }
-            semaphore.wait()
-            return nil
-        }
-        return nil
-    }
-
     func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32? {
         return DispatchQueue.main.sync {
             return AppDelegate.shared.runApplication(applicationIdentifier, url: url)
         }
     }
-
+    
+    func program(_ program: Program, didSetCursorPosition cursorPosition: CGPoint?) {
+        DispatchQueue.main.async {
+            UIView.animate(withDuration: 0.3) {
+                if let cursorPosition {
+                    self.scaleView.focus = CGPoint(x: 0, y: cursorPosition.y)
+                } else {
+                    self.scaleView.focus = nil
+                }
+            }
+        }
+    }
+    
 }
 
 extension ProgramViewController: ProgramLifecycleObserver {
@@ -639,7 +623,7 @@ extension ProgramViewController: ProgramLifecycleObserver {
         }
 
         // Capture a screenshot before fading out the view.
-        let screenshot = program.screenshot()
+        let screenshot = program.rootView.screenshot()
 
         // Disable and fade out the view to indicate that the program has terminated.
         UIView.animate(withDuration: 0.3) {
@@ -653,8 +637,18 @@ extension ProgramViewController: ProgramLifecycleObserver {
         zoomInButton.isEnabled = false
         zoomOutButton.isEnabled = false
 
+        // Generate the GitHub issue URL and sharing activities.
+        let gitHubIssueUrl = URL.gitHubIssueURL(for: error,
+                                                title: program.title,
+                                                sourceUrl: program.metadata.sourceUrl)
+        let activities: [UIActivity] = if let gitHubIssueUrl {
+            [RaiseGitHubIssueActivity(url: gitHubIssueUrl)]
+        } else {
+            []
+        }
+
         let showErrorDetails: () -> Void = {
-            let viewController = ErrorViewController(error: error, screenshot: screenshot)
+            let viewController = ErrorViewController(error: error, screenshot: screenshot, activities: activities)
             viewController.delegate = self
             let navigationController = UINavigationController(rootViewController: viewController)
             self.present(navigationController, animated: true)
@@ -666,19 +660,19 @@ extension ProgramViewController: ProgramLifecycleObserver {
         }
 
         let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: { action in
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel) { action in
             self.navigationController?.popViewController(animated: true)
-        }))
-        alert.addAction(UIAlertAction(title: "Show Details", style: .default, handler: { action in
+        })
+        alert.addAction(UIAlertAction(title: "Show Details", style: .default) { action in
             showErrorDetails()
-        }))
-        if let gitHubIssueUrl = error.gitHubIssueUrl {
-            alert.addAction(UIAlertAction(title: "Raise GitHub Issue", style: .default, handler: { action in
+        })
+        if let gitHubIssueUrl {
+            alert.addAction(UIAlertAction(title: "Raise GitHub Issue", style: .default) { action in
                 UIApplication.shared.open(gitHubIssueUrl)
                 self.navigationController?.popViewController(animated: true)
-            }))
+            })
         }
-        present(alert, animated: true, completion: nil)
+        present(alert, animated: true)
     }
 
     func program(_ program: Program, didUpdateTitle title: String) {

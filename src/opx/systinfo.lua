@@ -81,6 +81,43 @@ fns = {
     [54] = "SIRemoteLinkConfig",
 }
 
+KDateFormatAmerican = 0
+KDateFormatEuropean = 1
+KDateFormatJapanese = 2
+
+KTimeFormat12Hour = 0
+KTimeFormat24Hour = 1
+
+KDaylightSavingZoneHome = 0
+KDaylightSavingZoneEuropean = 1
+KDaylightSavingZoneNorthern = 2
+KDaylightSavingZoneSouthern = 4
+
+KUnitsImperial = 0
+KUnitsMetric = 1
+
+KSwitchOffDisabled = 0
+KSwitchOffEnabledOnBatteries = 1
+KSwitchOffEnabledAlways = 2
+
+KBacklightBehaviorTimed = 0
+KBacklightBehaviorUntimed = 1
+
+KRemoteLinkDisabled = 0
+KRemoteLinkDisconnected = 1 
+KRemoteLinkConnected = 2
+
+KLinkTypeUnknown = 0
+KLinkTypeCable = 1
+KLinkTypeIrDA = 2
+
+KLinkBpsUnknown = 0
+KLinkBps9600 = 1
+KLinkBps19200 = 2
+KLinkBps38400 = 3
+KLinkBps57600 = 4
+KLinkBps115200 = 5
+
 function SISystemVisible(stack, runtime) -- 1
     unimplemented("opx.systinfo.SISystemVisible")
 end
@@ -94,7 +131,18 @@ function SICurrencyFormat(stack, runtime) -- 3
 end
 
 function SIDateFormat(stack, runtime) -- 4
-    unimplemented("opx.systinfo.SIDateFormat")
+    local dateSep3 = stack:pop():asVariable(DataTypes.EWord)
+    local dateSep2 = stack:pop():asVariable(DataTypes.EWord)
+    local dateSep1 = stack:pop():asVariable(DataTypes.EWord)
+    local dateSep0 = stack:pop():asVariable(DataTypes.EWord)
+    local dateFormat = stack:pop():asVariable(DataTypes.ELong)
+
+    dateFormat(KDateFormatEuropean)
+    dateSep0(0)
+    dateSep1(string.byte('/'))
+    dateSep2(string.byte('/'))
+    dateSep3(0)
+    stack:push(0)
 end
 
 function SITimeFormat(stack, runtime) -- 5
@@ -211,7 +259,7 @@ function SISoundEnabled(stack, runtime) -- 30
 end
 
 function SIAutoSwitchOffBehaviour(stack, runtime) -- 31
-    unimplemented("opx.systinfo.SIAutoSwitchOffBehaviour")
+    stack:push(KSwitchOffDisabled)
 end
 
 function SIAutoSwitchOffTime(stack, runtime) -- 32

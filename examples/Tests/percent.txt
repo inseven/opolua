@@ -1,0 +1,20 @@
+CONST c% = 3
+
+PROC main:
+    print 60 + 5%, 63
+    print 60 - 5%, 57
+    print 60 * 5%, 3
+    print 60 / 5%, 1200
+    print 105 > 5%, 100
+    print 105 < 5%, 5
+    precedence:
+    print 101.7 < 17e-1%, 1.7
+    print 100 + c% %, 103
+    print 100 + (9+3.3)%, 112.3
+    print 98 + 2 + 3%, 103
+    GET
+ENDP
+
+PROC precedence:
+	print 2 ** 2 + 50%, 6
+ENDP

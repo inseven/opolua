@@ -43,6 +43,8 @@ Boolean parameters should be actual bools - ie pass true or false, not -1 or 0.
 
 _ENV = module()
 
+local string_byte = string.byte
+
 local mbm = require("mbm")
 
 function _setRuntime(r)
@@ -53,7 +55,7 @@ function _setRuntime(r)
         "dialog",
     }
     for _, module in ipairs(separateModules) do
-        for name, fn in pairs(runtime:newOplModule(module)) do
+        for name, fn in pairs(runtime:require(module)) do
             if type(fn) == "function" then
                 assert(_ENV[name] == nil, "Duplicate definition of "..name)
                 _ENV[name] = fn
@@ -78,11 +80,6 @@ function white()
     gCOLOR(0xFF, 0xFF, 0xFF)
 end
 
--- convenience
-function drawText(text, x, y)
-    runtime:drawCmd("text", { string = text, x = x, y = y })
-end
-
 -- Graphics APIs
 
 function gCLOSE(id)
@@ -92,6 +89,7 @@ end
 function gUSE(id)
     -- printf("gUSE(%d)\n", id)
     runtime:setGraphicsContext(id)
+    runtime:setResource("ginfo", nil)
 end
 
 function gVISIBLE(show)
@@ -101,30 +99,44 @@ function gVISIBLE(show)
 end
 
 function gFONT(id)
-    local font = FontIds[FontAliases[id] or id]
+    local font = runtime:getFont(id)
     if not font then
         printf("No font found for 0x%08X\n", id)
         error(KErrFontNotLoaded)
     end
-    runtime:getGraphicsContext().font = font
+    runtime:getGraphicsContext().fontUid = font.uid
+    runtime:setResource("ginfo", nil)
 end
 
 function gGMODE(mode)
     runtime:getGraphicsContext().mode = mode
+    runtime:setResource("ginfo", nil)
 end
 
 function gTMODE(tmode)
     runtime:getGraphicsContext().tmode = tmode
+    runtime:setResource("ginfo", nil)
 end
 
 function gSTYLE(style)
     runtime:getGraphicsContext().style = style
+    runtime:setResource("ginfo", nil)
 end
 
 function gORDER(id, pos)
     local graphics = runtime:getGraphics()
     assert(graphics[id] and graphics[id].isWindow, KErrInvalidWindow)
     runtime:iohandler().graphicsop("order", id, pos)
+end
+
+function gRANK(id)
+    local ctx = runtime:getGraphicsContext()
+    assert(ctx and ctx.isWindow, KErrInvalidWindow)
+    local result = runtime:iohandler().graphicsop("rank", ctx.id)
+    if result < 0 then
+        error(result)
+    end
+    return result
 end
 
 function gCLS()
@@ -155,7 +167,7 @@ function gPRINT(val)
     -- the baseline rather than the top left or bottom left corners; all our
     -- native operations assume text coords are for the top-left of the text.
     -- Since we always have to ask about the text size anyway, fix it up here.
-    runtime:drawCmd("text", { string = str, y = context.pos.y - ascent })
+    runtime:drawText(str, context.pos.x, context.pos.y - ascent)
     context.pos.x = context.pos.x + w
 end
 
@@ -185,12 +197,7 @@ function gPRINTB(text, width, align, top, bottom, margin)
         textX = context.pos.x + margin
     end
 
-    runtime:drawCmd("text", {
-        x = textX,
-        y = context.pos.y - fontAscent,
-        mode = KgModeSet,
-        string = text,
-    })
+    runtime:drawText(text, textX, context.pos.y - fontAscent, KgModeSet)
 end
 
 function gPRINTCLIP(text, width)
@@ -203,15 +210,35 @@ end
 
 function gXPRINT(text, flags)
     local context = runtime:getGraphicsContext()
-    local w, h, ascent = gTWIDTH(text)
-    runtime:drawCmd("text", { string = text, y = context.pos.y - ascent, xflags = flags })
+    local ascent = runtime:getFont().ascent
+    -- gXPRINT always behaves like mode is replace
+    runtime:drawText(text, context.pos.x, context.pos.y - ascent, KtModeReplace, flags)
     -- Note, doesn't increment context.pos.x
 end
 
-function gTWIDTH(text)
+function gTWIDTH(text, fontId, style)
     local context = runtime:getGraphicsContext()
-    local width, height, ascent, descent = runtime:iohandler().graphicsop("textsize", text, context.font, context.style)
-    return width, height, ascent, descent
+    -- fontId and style param are an opolua extension
+    local font
+    if fontId then
+        font = assert(runtime:getFont(fontId), "Bad font id!")
+        if style == nil then
+            style = 0
+        end
+    else
+        font = runtime:getFont()
+        style = context.style
+    end
+    local bold = (style & KgStyleBold) ~= 0
+    local width = 0
+    for i = 1, #text do
+        local chw = font.widths[1 + string_byte(text, i)]
+        width = width + chw
+        if bold and chw > 0 then
+            width = width + 1
+        end
+    end
+    return width, font.height, font.ascent, font.descent
 end
 
 function gLINEBY(dx, dy)
@@ -306,7 +333,12 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         lineh = h
     end
 
-    lightGrey()
+    local series7 = runtime:getDeviceName() == "psion-series-7"
+    if series7 then
+        gCOLOR(0x99, 0x99, 0xCC)
+    else
+        lightGrey()
+    end
     gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
 
     if state == 0 then
@@ -316,8 +348,16 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     elseif state == 1 then
         gXBORDER(2, 0x42, width, height)
         gMOVE(2, 2)
-        gFILL(width - 4, height - 4, KgModeClear)
+        if series7 then
+            gCOLOR(0x88, 0x88, 0x88)
+        else
+            white()
+        end
+        gFILL(width - 4, height - 4)
     elseif state == 2 then
+        if series7 then
+            gCOLOR(0x66, 0x66, 0x99)
+        end
         gXBORDER(2, 0x54, width, height)
         gMOVE(3, 3)
         gFILL(width - 5, height - 5)
@@ -347,10 +387,10 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
                 srcy = 0,
                 width = bmpWidth,
                 height = bmpHeight,
-                mode = 3,
+                mode = KtModeReplace,
             })
         else
-            gCOPY(bmpId, 0, 0, bmpWidth, bmpHeight, 3)
+            gCOPY(bmpId, 0, 0, bmpWidth, bmpHeight, KtModeReplace)
         end
         textX = textX + bmpWidth + 1
     end
@@ -367,7 +407,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     local textY = s.pos.y + ((height - texth + descent) // 2) + state
     black()
     for line in text:gmatch("[^\n]*") do
-        runtime:drawCmd("text", { string = line, x = textX, y = textY })
+        runtime:drawText(line, textX, textY, KgModeSet)
         textY = textY + lineh
     end
 
@@ -429,11 +469,14 @@ function gLINETO(x, y)
 end
 
 function gCOLOR(red, green, blue)
+    -- printf("gCOLOR(id=%d, r=%x, g=%x, b=%x)\n", gIDENTITY(), red, green, blue) 
     runtime:getGraphicsContext().color = { r = red, g = green, b = blue }
+    runtime:setResource("ginfo", nil)
 end
 
 function gCOLORBACKGROUND(red, green, blue)
     runtime:getGraphicsContext().bgcolor = { r = red, g = green, b = blue }
+    runtime:setResource("ginfo", nil)
 end
 
 function gSETWIN(x, y, w, h)
@@ -453,22 +496,34 @@ function gCREATE(x, y, w, h, visible, flags)
     -- printf("gCREATE w=%d h=%d flags=%X", w, h, flags or 0)
     local ctx = runtime:newGraphicsContext(w, h, true, (flags or 0) & 0xF)
     local id = ctx.id
-    runtime:iohandler().createWindow(id, x, y, w, h, flags or KgCreate2GrayMode)
+    local err = runtime:iohandler().createWindow(id, x, y, w, h, flags or KColorgCreate2GrayMode) or KErrNone
+    if err ~= KErrNone then
+        runtime:closeGraphicsContext(id)
+        error(err)
+    end
     -- printf(" id=%d\n", id)
     ctx.winX = x
     ctx.winY = y
     if visible then
         runtime:iohandler().graphicsop("show", id, true)
     end
+    gUSE(id) -- Creating new window sets it as current
     return id
 end
 
 function gCREATEBIT(w, h, mode)
     -- printf("gCREATEBIT w=%d h=%d mode=%X", w, h, mode or 0)
+    -- Mask mode here because some apps incorrectly include shadow flags as per gCREATE
+    mode = (mode or 0) & 0xF
     local ctx = runtime:newGraphicsContext(w, h, false, mode)
     local id = ctx.id
-    runtime:iohandler().createBitmap(id, w, h, mode)
+    local err = runtime:iohandler().createBitmap(id, w, h, mode) or KErrNone
+    if err ~= KErrNone then
+        runtime:closeGraphicsContext(id)
+        error(err)
+    end
     -- printf(" id=%d\n", id)
+    gUSE(id) -- Creating new bitmap sets it as current
     return id
 end
 
@@ -497,7 +552,7 @@ function gLOADBIT(path, writable, index)
     -- printf(" %dx%d drawableid=%d\n", bitmap.width, bitmap.height, id)
     -- (3)
     bitmap.imgData = bitmap:getImageData()
-    runtime:drawCmd("bitblt", { bitmap = bitmap })
+    runtime:drawCmd("bitblt", { bitmap = bitmap, mode = KtModeReplace })
     -- runtime:flushGraphicsOps()
     return id
 end
@@ -562,6 +617,7 @@ function gINVERT(w, h)
 end
 
 function gSETPENWIDTH(width)
+    -- printf("gSETPENWIDTH %d\n", width)
     runtime:getGraphicsContext().penwidth = width
 end
 
@@ -625,7 +681,7 @@ function gIPRINT(text, corner)
     local state = runtime:saveGraphicsState()
     local infoWinId = runtime:getResource("infowin")
     if not infoWinId then
-        infoWinId = gCREATE(0, 0, 1, 1, false, KgCreate4GrayMode)
+        infoWinId = gCREATE(0, 0, 1, 1, false, KColorgCreate4GrayMode)
         runtime:setResource("infowin", infoWinId)
     end
     drawInfoPrint(infoWinId, text, corner or KBusyBottomRight)
@@ -646,13 +702,13 @@ function BUSY(text, corner, delay)
     end
 
     local state = runtime:saveGraphicsState()
-    busyWinId = gCREATE(0, 0, 1, 1, false, KgCreate4GrayMode)
+    busyWinId = gCREATE(0, 0, 1, 1, false, KColorgCreate4GrayMode)
     runtime:setResource("busy", busyWinId)
     local textRect = drawInfoPrint(busyWinId, text, corner or KBusyBottomLeft)
 
     local bmp = require("opx.bmp")
     local sprite = bmp.SPRITECREATE(runtime, busyWinId, textRect.x, textRect.y, 0)
-    local blackBmp = gCREATEBIT(textRect.w, textRect.h, KgCreate2GrayMode)
+    local blackBmp = gCREATEBIT(textRect.w, textRect.h, KColorgCreate2GrayMode)
     gCOLOR(0, 0, 0)
     gFILL(gWIDTH(), gHEIGHT())
     gUSE(busyWinId)
@@ -670,14 +726,199 @@ function BUSY(text, corner, delay)
     runtime:restoreGraphicsState(state)
 end
 
+function INPUT(var, initVal)
+    local trapped = runtime:getTrap()
+    local isint = var:type() == DataTypes.EWord
+    local islong = var:type() == DataTypes.ELong
+    local isfloat = var:type() == DataTypes.EReal
+    local maxChars
+    if isint then
+        maxChars = 6
+    elseif islong then
+        maxChars = 11
+    elseif isfloat then
+        maxChars = 23 -- Or something like that
+    else
+        maxChars = var:stringMaxLen()
+    end
+
+    -- Special case for defaultiohandler
+    local iohandlerInput = runtime:iohandler().input
+    if iohandlerInput then
+        while true do
+            local result = iohandlerInput(initVal)
+            if result == nil and trapped then
+                error(KErrEsc)
+            elseif isint or islong or isfloat then
+                local n = tonumber(result)
+                if n then
+                    var(n)
+                    break
+                elseif trapped then
+                    error(KErrGenFail)
+                end
+            elseif result then
+                var(result)
+                break
+            else
+                printf("? ")
+            end
+        end
+        runtime:setTrap(false)
+        return
+    end
+
+    local screen = runtime:getGraphics().screen
+    local origx, origy = runtime:getTextCursorXY()
+    local editor = require("editor").Editor()
+    local lastLen = 0
+    local function onEditorChanged()
+        CURSOR(nil)
+        AT(origx, origy)
+        if #editor.value < lastLen then
+            PRINT(string.rep(" ", lastLen))
+            AT(origx, origy)
+        end
+        -- Easiest way to figure out where the cursor should be is to print up to the cursor, then check where we are,
+        -- then print the rest (this handles the printed text wrapping onto a new line).
+        PRINT(editor.value:sub(1, editor.cursorPos - 1))
+        local cursorx, cursory = runtime:getTextCursorXY()
+        PRINT(editor.value:sub(editor.cursorPos))
+        local finalx, finaly = runtime:getTextCursorXY()
+        -- Well, nearly anyway
+        if cursorx == screen.w + 1 then
+            cursorx = 1
+            cursory = math.min(cursory + 1, screen.h)
+        end
+        AT(cursorx, cursory)
+        CURSOR(true)
+        AT(finalx, finaly)
+        lastLen = #editor.value
+    end
+    editor.view = {
+        canUpdate = function(_, newVal)
+            return #newVal <= maxChars
+        end,
+        onEditorChanged = onEditorChanged,
+    }
+    CURSOR(true)
+    if initVal then
+        editor:setValue(initVal)
+    end
+    while true do
+        local k = GET()
+        if k == KKeyEnter then
+            CURSOR(nil)
+            PRINT(KLineBreakStr)
+            if isint or islong then
+                local n = tonumber(editor.value, 10)
+                if n and ((islong and n >= KMinLong and n <= KMaxLong) or (isint and n >= KMinInt and n <= KMaxInt)) then
+                    break
+                end
+            elseif isfloat then
+                if tonumber(editor.value) then
+                    break
+                end
+            else
+                break
+            end
+            -- Only reach here if input was not valid
+            if trapped then
+                error(KErrGenFail)
+            else
+                PRINT("?")
+                origx, origy = runtime:getTextCursorXY()
+                editor:setValue("")
+            end
+        elseif k == KKeyEsc then
+            if editor.value == "" and trapped then
+                CURSOR(nil)
+                error(KErrEsc)
+            else
+                editor:setValue("")
+            end
+        else
+            editor:handleKeyPress(k, 0)
+        end
+    end
+
+    if isint or islong then
+        var(tonumber(editor.value, 10))
+    elseif isfloat then
+        var(tonumber(editor.value))
+    else
+        var(editor.value)
+    end
+    runtime:setTrap(false)
+end
+
+-- Unlike the OPL CURSOR command, the x and y coordinates are explicit and indicate the top left of the cursor.
+-- Therefore, no ascent parameter is necessary.
+function CURSOR(id, x, y, w, h, t)
+    -- printf("CURSOR id=%s, x=%s, y=%s, w=%s, h=%s, t=%s\n", id, x, y, w, h, t)
+    runtime:flushGraphicsOps()
+    runtime:setResource("ginfo", nil)
+
+    local isTextCursor = false
+    if id == true then
+        -- CURSOR(true) means text cursor, in the default window, at the current text cursor position
+        local screen = runtime:getGraphics().screen
+        id = KDefaultWin
+        x = screen.x + (screen.cursorx * screen.charw)
+        y = screen.y + (screen.cursory * screen.charh)
+        w = screen.charw
+        h = screen.charh
+        isTextCursor = true
+    end
+
+    local cursor = runtime:getResource("cursor")
+    if not id then
+        runtime:iohandler().graphicsop("cursor", nil)
+        runtime:setResource("cursor", nil)
+    else
+        local win = assert(runtime:getGraphicsContext(id), "Bad id for CURSOR")
+        assert(win.isWindow, "Cannot call CURSOR on a bitmap")
+
+        if t == nil then
+            t = 0
+        end
+
+        t = t & ~1 -- Explicitly ignore obloid cursor flag
+
+        if cursor and id == cursor.id
+            and x == cursor.rect.x and y == cursor.rect.y
+            and w == cursor.rect.w and h == cursor.rect.h and t == cursor.flags then
+            -- Cursor has not moved or changed, don't interrupt the timing
+            return
+        end
+
+        if not cursor then
+            cursor = {}
+            runtime:setResource("cursor", cursor)
+        end
+        cursor.id = id
+        cursor.rect = {
+            x = x,
+            y = y,
+            w = w,
+            h = h,
+        }
+        cursor.flags = t
+        cursor.isText = isTextCursor
+        runtime:iohandler().graphicsop("cursor", cursor)
+    end
+end
+
 function FONT(id, style)
     -- printf("FONT(0x%08X, %d)\n", id, style)
     local screen = runtime:getGraphics().screen
-    local defaultWin = runtime:getGraphicsContext(1)
-    local font = FontIds[FontAliases[id] or id]
+    local defaultWin = runtime:getGraphicsContext(KDefaultWin)
+    local font = runtime:getFont(id)
     assert(font, KErrFontNotLoaded)
+
     -- Font keyword always resets text window size, position and text pos
-    local charw, charh = runtime:iohandler().graphicsop("textsize", "0", font, style)
+    local charw = font.widths[1 + string.byte("0")]
+    local charh = font.height
     local numcharsx = defaultWin.width // charw
     local numcharsy = defaultWin.height // charh
     runtime:getGraphics().screen = {
@@ -689,7 +930,7 @@ function FONT(id, style)
         cursory = 0,
         charh = charh,
         charw = charw,
-        fontid = font.uid,
+        fontUid = font.uid,
         style = 0,
     }
     STYLE(style)
@@ -706,19 +947,38 @@ end
 
 function SCREEN(widthInChars, heightInChars, xInChars, yInChars)
     -- printf("SCREEN %d %d %s %s\n", widthInChars, heightInChars, xInChars, yInChars)
+
+    -- (x,y) being (0,0) means centre the screen, whereas 1,1 means put it in top left (well, the top left char pos
+    -- if the screen were full width)
+    
     local screen = runtime:getGraphics().screen
-    local defaultWin = runtime:getGraphicsContext(1)
+    local defaultWin = runtime:getGraphicsContext(KDefaultWin)
+
+    -- Both of these are in chars too
+    local maxScreenWidth = defaultWin.width // screen.charw
+    local maxScreenHeight = defaultWin.height // screen.charh
+
+    if xInChars == 0 and yInChars == 0 then
+        xInChars = ((maxScreenWidth - widthInChars) // 2) + 1
+        yInChars = ((maxScreenHeight - heightInChars) // 2) + 1
+    end
+
+    if xInChars < 1 or yInChars < 1 or widthInChars < 1 or heightInChars < 1
+        or xInChars - 1 + widthInChars > maxScreenWidth
+        or yInChars - 1 + heightInChars > maxScreenHeight then
+        error(KErrInvalidArgs)
+    end
     screen.w = widthInChars
     screen.h = heightInChars
+
     local marginx = (defaultWin.width % screen.charw) // 2
     local marginy = (defaultWin.height % screen.charh) // 2
+    screen.x = marginx + (xInChars - 1) * screen.charw
+    screen.y = marginy + (yInChars - 1) * screen.charh
 
-    -- TODO the logic around x and y params needs fixing...
-    xInChars = 0
-    yInChars = 0
-
-    screen.x = marginx + xInChars * screen.charw
-    screen.y = marginy + yInChars * screen.charh
+    -- Note, calling SCREEN does not modify cursor position (other than to cap it if necessary...)
+    screen.cursorx = math.min(screen.cursorx, screen.w - 1)
+    screen.cursory = math.min(screen.cursory, screen.h - 1)
 end
 
 function AT(x, y)
@@ -736,6 +996,8 @@ function CLS()
     local screen = runtime:getGraphics().screen
     gAT(screen.x, screen.y)
     gFILL(screen.w * screen.charw, screen.h * screen.charh, KgModeClear)
+    screen.cursorx = 0
+    screen.cursory = 0
     runtime:restoreGraphicsState(state)
     gUSE(prev)
     runtime:flushGraphicsOps()
@@ -754,7 +1016,7 @@ function PRINT(str)
     gUPDATE(false)
     local screen = runtime:getGraphics().screen
     gCOLOR(0, 0, 0)
-    gFONT(screen.fontid)
+    gFONT(screen.fontUid)
     gSTYLE(screen.style)
     gTMODE(KtModeReplace)
     local strPos = 1
@@ -764,7 +1026,7 @@ function PRINT(str)
     local maxX = screen.w
     local maxY = screen.h
     while strPos <= strLen do
-        local lineEnd = str:find("\n", strPos, true)
+        local lineEnd = str:find(KLineBreakStr, strPos, true)
         local endPos = lineEnd
         if not endPos then
             endPos = #str + 1
@@ -786,7 +1048,7 @@ function PRINT(str)
                 gSCROLL(0, -screen.charh, screen.x, screen.y, screen.w * screen.charw, screen.h * screen.charh)
                 charY = charY - 1
             end
-            runtime:drawCmd("text", { string = frag, x = screen.x + charX * screen.charw, y = screen.y + charY * screen.charh })
+            drawText(frag, screen.x + charX * screen.charw, screen.y + charY * screen.charh, KtModeReplace)
             charX = charX + #frag
         end
         if lineEnd and strPos == lineEnd then
@@ -804,10 +1066,244 @@ function PRINT(str)
     gUSE(prevId)
 end
 
+function drawText(str, x, y, mode, xflags)
+    local s = runtime:saveGraphicsState()
+    gUPDATE(false)
+    local ctx = runtime:getGraphicsContext()
+    local font = runtime:getFont(ctx.fontUid)
+    if x == nil then
+        x = ctx.pos.x
+    end
+    if y == nil then
+        y = ctx.pos.y
+    end
+    if mode == nil then
+        mode = ctx.tmode
+    end
+    local bold = (ctx.style & KgStyleBold) ~= 0
+    local underlined = (ctx.style & KgStyleUnder) ~= 0
+    local italic = (ctx.style & KgStyleItalic) ~= 0
+    local inverse = (ctx.style & KgStyleInverse) ~= 0 -- Note, different to KtModeInvert
+    local xflagsInverse = xflags and xflags >= KgXPrintInverse and xflags <= KgXPrintThinInverseRound
+    local thin = xflags == KgXPrintThinInverse or xflags == KgXPrintThinInverseRound or xflags == KgXPrintThinUnderlined
+
+    if xflagsInverse then
+        -- Yes, if both gSTYLE inverse and gXPRINT inverse are set, they cancel each other out
+        inverse = not inverse
+    end
+
+    if xflags == KgXPrintThinUnderlined then
+        -- This smells like a bug, but gSTYLE inverse doesn't apply on KgXPrintThinUnderlined, despite the fact that it
+        -- does with KgXPrintUnderlined and normal...
+        inverse = false
+    end
+
+    local fgcol, bgcol = ctx.color, ctx.bgcolor
+    if inverse then
+        -- The inverse style appears to completely override the mode.
+        mode = KtModeReplace
+        fgcol, bgcol = bgcol, fgcol
+    end
+
+    gCOLOR(fgcol.r, fgcol.g, fgcol.b)
+    gCOLORBACKGROUND(bgcol.r, bgcol.g, bgcol.b)
+
+    -- In order to support drawing in something other than black we cannot just do a plain KgModeSet or KtModeReplace
+    -- gCOPY here. We have to exploit KgModeClear which fills with the background colour only the pixels that were
+    -- black in the src image. And fix up the actual background if necessary. KtModeInvert is just baffling in behaviour
+    -- so we're going to ignore that for now.
+
+    if mode == KtModeReplace then
+        local function drawRoundedRect(w, h)
+            gMOVE(1, 0)
+            gLINEBY(w - 2, 0)
+            gMOVE(0, 1)
+            gLINEBY(0, h - 2)
+            gMOVE(-1, 0)
+            gLINEBY(-(w - 2), 0)
+            gMOVE(0, -1)
+            gLINEBY(0, -(h - 2))
+            gMOVE(0, -1)
+        end
+
+        local bx, by, bw, bh = x, y, gTWIDTH(str), font.height
+
+        gGMODE(KgModeClear)
+        -- Non-thin gXPRINT styles draw an extra pixel all round (except for underlined which for padding purposes also
+        -- counts as thin...)
+        if xflags == KgXPrintThinInverseRound then
+            gAT(bx, by)
+            drawRoundedRect(bw, bh)
+            gAT(bx + 1, by + 1)
+            gFILL(bw - 2, bh - 2, KgModeClear)
+        elseif xflags == KgXPrintNormal or xflags == KgXPrintInverseRound then
+            -- +1 pixel, with rounded corners
+            gAT(bx - 1, by - 1)
+            drawRoundedRect(bw + 2, bh + 2)
+            gAT(bx, by)
+            gFILL(bw, bh, KgModeClear)
+        elseif xflags == KgXPrintInverse then
+            -- +1 pixel, not rounded
+            gAT(bx - 1, by - 1)
+            gFILL(bw + 2, bh + 2, KgModeClear)
+        elseif xflags == nil or xflags == KgXPrintUnderlined or xflags == KgXPrintThinUnderlined or xflags == KgXPrintThinInverse then
+            gAT(bx, by)
+            gFILL(bw, bh, KgModeClear)
+        end
+    end
+    gGMODE(mode)
+
+    local opcol = (mode == KgModeClear) and bgcol or fgcol
+    local startx = x
+    local h, maxwidth, widths = font.height, font.maxwidth, font.widths
+
+    local op = {
+        srcid = font.id,
+        mode = mode == KgModeInvert and KgModeInvert or KgModeClear,
+        bgcolor = opcol,
+        x = x,
+        y = y,
+    }        
+
+    local function opadd(srcx, srcy, w, h, x, y)
+        local n = #op
+        op[n + 1] = srcx
+        op[n + 2] = srcy
+        op[n + 3] = w
+        op[n + 4] = h
+        op[n + 5] = x
+        op[n + 6] = y
+        -- runtime:drawCmd("copy", {
+        --     x = x,
+        --     y = y,
+        --     srcid = font.id,
+        --     srcx = srcx,
+        --     srcy = srcy,
+        --     width = w,
+        --     height = h,
+        --     mode = op.mode,
+        --     bgcolor = opcol,
+        -- })
+    end
+    for i = 1, #str do
+        local ch = string_byte(str, i)
+        local bmpx = (ch % 32) * maxwidth
+        local bmpy = (ch // 32) * h
+        local chw = font.widths[1 + ch]
+        if chw > 0 then
+            opadd(bmpx, bmpy, chw, h, x, y)
+            if bold then
+                opadd(bmpx, bmpy, chw, h, x + 1, y)
+                x = x + 1
+            end
+            x = x + chw
+        end
+    end
+    runtime:drawCmd("mcopy", op)
+
+    if underlined then
+        gAT(startx, y + font.ascent + 1)
+        gLINEBY(x - startx, 0)
+    end
+
+    -- Yes these stack with gSTYLE underlined, and are drawn in a slightly different y offset
+    if xflags == KgXPrintUnderlined then
+        gAT(startx, y + font.height)
+        gLINEBY(x - startx, 0)
+    elseif xflags == KgXPrintThinUnderlined then
+        -- local uy = y + font.height - 1
+        gAT(startx, y + font.height - 1)
+        gLINEBY(x - startx, 0)
+    end
+    runtime:restoreGraphicsState(s)
+end
+
+function gINFO()
+    local ginfo = runtime:getResource("ginfo")
+    if ginfo then
+        return ginfo
+    end
+
+    local context = runtime:getGraphicsContext()
+    local font = runtime:getFont()
+    local cursor = runtime:getResource("cursor")
+
+    ginfo = {
+        fontHeight = font.height,
+        fontDescent = font.descent,
+        fontAscent = font.ascent,
+        fontZeroWidth = font.widths[1 + string.byte("0")],
+        fontMaxWidth = font.maxwidth,
+        fontUid = font.uid,
+        gmode = context.mode,
+        tmode = context.tmode,
+        style = context.style,
+        cursorVibible = cursor ~= nil,
+        cursorWidth = cursor and cursor.rect.w,
+        cursorHeight = cursor and cursor.rect.h,
+        cursorAscent = cursor and cursor.rect.h, -- We will say the ascent is always the height
+        cursorWindow = cursor and (cursor.isText and -1 or cursor.id),
+        cursorX = cursor and cursor.rect.x,
+        cursorY = cursor and (cursor.rect.y + cursor.rect.h),
+        isWindow = context.isWindow,
+        cursorFlags = cursor and cursor.flags,
+        displayMode = context.displayMode,
+    }
+
+    runtime:setResource("ginfo", ginfo)
+    return ginfo
+end
+
+function TESTEVENT()
+    return runtime:iohandler().testEvent()
+end
+
 function KEY()
-    local charcode, modifiers = runtime:iohandler().key()
-    runtime:setResource("kmod", modifiers)
-    return charcode
+    -- It's annoying that calling TESTEVENT() then GET() doesn't _quite_ have the right semantics (because that will
+    -- still block if there's say a keydown event and no keypress events in the queue)
+
+    local eventsWaiting = TESTEVENT()
+    if not eventsWaiting then
+        return 0
+    end
+
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
+    local evAddr = ev:addressOf()
+    while eventsWaiting do
+        GETEVENTA32(stat, evAddr)
+        runtime:waitForRequest(stat)
+        if ev[KEvAType]() & KEvNotKeyMask == 0 then
+            runtime:setResource("kmod", ev[KEvAKMod]())
+            return keycodeToCharacterCode(ev[KEvAType]())
+        end
+        eventsWaiting = TESTEVENT()
+    end
+    return 0
+end
+
+function KEYA(stat, keyArrayAddr)
+    -- This is similar to GETEVENTA32 except for the actual async call
+
+    local existingEvent = runtime:getResource("getevent")
+    if existingEvent then
+        -- printf("Outstanding getevent request, cancelling\n")
+        runtime:iohandler().cancelRequest(existingEvent.var)
+        runtime:waitForRequest(existingEvent.var)
+        assert(runtime:getResource("getevent") == nil, "cancelRequest did not release getevent resource!")
+    end
+
+    stat(KErrFilePending)
+    local function completion()
+        runtime:setResource("getevent", nil)
+    end
+    local requestTable = {
+        var = stat,
+        ev = keyArrayAddr,
+        completion = completion,
+    }
+    runtime:setResource("getevent", requestTable)
+    runtime:iohandler().asyncRequest("keya", requestTable)
 end
 
 function KEYSTR()
@@ -831,16 +1327,23 @@ function PAUSE(val)
 end
 
 function GET()
-    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
-    local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
-    local evAddr = ev:addressOf()
-    repeat
-        GETEVENTA32(stat, evAddr)
-        runtime:waitForRequest(stat)
-    until ev[KEvAType]() & KEvNotKeyMask == 0
+    -- GET() is the synchronous version of KEYA(). KEY(), by comparison, is a non-blocking poll function
+    -- which returns 0 if no key has been pressed since the last event fetch.
 
-    runtime:setResource("kmod", ev[KEvAKMod]())
-    return keycodeToCharacterCode(ev[KEvAType]())
+    -- Special case for defaultiohandler
+    local getch = runtime:iohandler().getch
+    if getch then
+        return getch()
+    end
+
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local k = runtime:makeTemporaryVar(DataTypes.EWordArray, 2)
+    KEYA(stat, k:addressOf())
+    runtime:waitForRequest(stat)
+
+    local modifiers = k[2]() & 0xFF
+    runtime:setResource("kmod", modifiers)
+    return k[1]()
 end
 
 function GETSTR()
@@ -899,8 +1402,8 @@ end
 -- File APIs
 
 function EXIST(path)
-    local ret = runtime:iohandler().fsop("exists", runtime:abs(path))
-    return ret == KErrNone
+    local ret = runtime:iohandler().fsop("stat", runtime:abs(path))
+    return ret ~= nil
 end
 
 function MKDIR(path)
@@ -946,10 +1449,8 @@ function IOOPEN(path, mode)
             return nil, err, nil
         end
     elseif openMode == KIoOpenModeCreate then
-        local err = runtime:iohandler().fsop("exists", path)
-        if err ~= KErrNotExists then
-            printf("IOOPEN(%s) failed: %d\n", path, err)
-            return nil, err
+        if EXIST(path) then
+            return nil, KErrExists
         end
         mode = mode | KIoOpenAccessUpdate -- Not sure about this...
     elseif openMode == KIoOpenModeReplace then
@@ -972,6 +1473,10 @@ function IOREAD(h, maxLen)
     end
     assert(f.pos, "Cannot IOREAD a non-file handle!")
 
+    if f.pos > #f.data then
+        return nil, KErrEof
+    end
+
     if f.mode & KIoOpenFormatText > 0 then
         local startPos, endPos = f.data:find("\r?\n", f.pos)
         if startPos then
@@ -990,7 +1495,11 @@ function IOREAD(h, maxLen)
     else
         local data = f.data:sub(f.pos, f.pos + maxLen - 1)
         -- printf("IOREAD pos=%d len=%d data=%s\n", f.pos, #data, hexEscape(data))
-        f.pos = f.pos + #data
+        if #data == 0 then
+            f.pos = #f.data + 1 -- So we error next read
+        else
+            f.pos = f.pos + #data
+        end
         return data
     end
 end
@@ -1202,7 +1711,13 @@ function PlaySoundA(var, path)
         return
     end
 
-    local sndData = require("sound").parseWveFile(data)
+    local sndData, err = require("sound").parseWveFile(data)
+    if not sndData then
+        print("Failed to decode sound data, not playing anything!")
+        var(err)
+        runtime:requestSignal()
+        return
+    end
     runtime:setResource("sound", var)
     local function completion()
         runtime:setResource("sound", nil)
@@ -1247,6 +1762,12 @@ function DAYS(day, month, year)
     -- Result needs to be days since 1900. Only the old sibo-era APIs use 1900, date.opx uses 1970. Ugh.
     t = (t + kSecsFrom1900to1970) // (24 * 60 * 60)
     return t
+end
+
+function DAYSTODATE(days)
+    local t = (days * 24 * 60 * 60) - kSecsFrom1900to1970
+    local result = os.date("!*t", t)
+    return result.year, result.month, result.day
 end
 
 return _ENV

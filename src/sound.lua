@@ -36,7 +36,10 @@ function parseWveFile(data)
     local sndDataOffset = toc[dfs.SectionUids.KUidSoundData]
     assert(sndDataOffset, "No sound data found in directfilestore TOC!")
     local uncompressedLen, compression, repeatCount, vol, wat, gap, compressedLen, pos = string.unpack("<I4I4I2BBI4I4", data, 1 + sndDataOffset)
-    assert(compression == 0, "No support for compressed sound data!")
+    if compression ~= 0 then
+        printf("No support for compressed sound data of type=%d\n", compression)
+        return nil, KErrNotSupported
+    end
     assert(uncompressedLen == compressedLen)
     local sndData = data:sub(pos, pos + compressedLen - 1)
     return sndData

@@ -26,6 +26,13 @@ class IconCollectionViewCell: UICollectionViewCell {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.backgroundColor = .clear
+
+        imageView.layer.shadowColor = CGColor(gray: 1.0, alpha: 1.0)
+        imageView.layer.shadowOpacity = 1.0
+        imageView.layer.shadowRadius = 0.0
+        imageView.clipsToBounds = false
+        imageView.layer.shadowOffset = CGSize(width: 0.5, height: 0.5)
+
         return imageView
     }()
 

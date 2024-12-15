@@ -21,6 +21,18 @@
 import UIKit
 
 class AutoOrientView: UIView {
+        
+    var focus: CGPoint? {
+        didSet {
+            layoutSubviews()
+        }
+    }
+    
+    var isShowingKeyboard: Bool = false {
+        didSet {
+            layoutSubviews()
+        }
+    }
 
     private var contentView: UIView
 
@@ -57,22 +69,37 @@ class AutoOrientView: UIView {
     }
 
     private func transformForSize(size: CGSize) -> CGAffineTransform {
+#if targetEnvironment(macCatalyst)
+        return .identity
+#else
         var transform = CGAffineTransform.identity
         var screenSize = contentView.systemLayoutSizeFitting(.zero)
-
+        let center = CGPoint(x: screenSize.width / 2, y: screenSize.height / 2)
+        let focus =  focus ?? center
+        
+        if isShowingKeyboard {
+            // If the keyboard is visible, never scale the view but instead prioritise the cursor position / focus.
+            // TODO: Pick sensible scales and defaults based on the focus.
+            transform = transform.concatenating(CGAffineTransform(translationX: 0, y: -(focus.y - center.y)))
+            return transform
+        }
+            
         if size.contains(size: screenSize) {
             // The screen fits and there's nothing to do.
             return transform
         }
-
-        if size.isPortrait {
+        
+        // Only rotate the screen on the iPhone.
+        if (UIDevice.current.userInterfaceIdiom == .phone &&
+            UIDevice.current.orientation == .portrait &&
+            !isShowingKeyboard) {
             // If our screen size is portrait, then we first apply rotation if the device screen doesn't fit.
             // We construct the transform, and then apply that effective transform to the screen size for further
             // layout operations.
             transform = transform.concatenating(CGAffineTransform(rotationAngle:  -.pi / 2))
             screenSize = CGSize(width: screenSize.height, height: screenSize.width)
         }
-
+        
         if !size.contains(size: screenSize) {
             // If the screen still doesn't fit then we need to scale it.
             let scale = screenSize.scaleThatFits(in: size)
@@ -80,6 +107,7 @@ class AutoOrientView: UIView {
         }
 
         return transform
+#endif
     }
 
 }

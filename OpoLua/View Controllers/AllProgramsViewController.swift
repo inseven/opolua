@@ -19,10 +19,9 @@
 // SOFTWARE.
 
 import Combine
-import Foundation
 import UIKit
 
-class AllProgramsViewController : UICollectionViewController {
+class AllProgramsViewController : BrowserViewController {
 
     enum Section {
         case none
@@ -38,7 +37,6 @@ class AllProgramsViewController : UICollectionViewController {
     typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
     typealias Cell = IconCollectionViewCell
 
-    private var settings: Settings
     private var taskManager: TaskManager
     private var detector: ProgramDetector
     private var items: [Directory.Item] = []
@@ -82,16 +80,15 @@ class AllProgramsViewController : UICollectionViewController {
     }()
 
     init(settings: Settings, taskManager: TaskManager, detector: ProgramDetector) {
-        self.settings = settings
         self.taskManager = taskManager
         self.detector = detector
-        super.init(collectionViewLayout: IconCollectionViewLayout())
-        collectionView.backgroundColor = UIColor(named: "DirectoryBackground")
+        super.init(collectionViewLayout: IconCollectionViewLayout(), settings: settings)
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
         title = "All Programs"
+        navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.largeTitleDisplayMode = .never
         configureRefreshControl()
     }
@@ -101,9 +98,11 @@ class AllProgramsViewController : UICollectionViewController {
     }
 
     private func configureRefreshControl() {
+#if !targetEnvironment(macCatalyst)
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refreshControlDidChange(_:)), for: .valueChanged)
         collectionView.refreshControl = refreshControl
+#endif
     }
 
     override func viewWillAppear(_ animated: Bool) {

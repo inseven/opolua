@@ -31,6 +31,14 @@ local function lit(val)
     return { type = val:sub(1,1) == '"' and "string" or "number", val = val }
 end
 
+local function percent(val)
+    if type(val) ~= "table" then
+        val = lit(val)
+    end
+    val.isPercentage = true
+    return val
+end
+
 local function call(name, ...)
     return { type = "call", val = name, args = { ... } }
 end
@@ -128,9 +136,14 @@ local function stripTokenSources(expression)
                 args[i] = stripTokenSources(arg)
             end
         end
-        return { type = expression.type, val = expression.val, args = args }
+        return { type = expression.type, val = expression.val, args = args, isPercentage = expression.isPercentage }
     else
-        return { op = expression.op, stripTokenSources(expression[1]), stripTokenSources(expression[2]) }
+        return {
+            op = expression.op,
+            isPercentage = expression.isPercentage,
+            stripTokenSources(expression[1]),
+            stripTokenSources(expression[2]),
+        }
     end
 end
 
@@ -152,7 +165,11 @@ end
 
 local function checkProg(prog, expected)
     local dummyPath = "C:\\module"
-    local progObj = compiler.docompile(dummyPath, nil, prog, {})
+    local ok, progObj = xpcall(compiler.docompile, debug.traceback, dummyPath, nil, prog, {})
+    if not ok then
+        error(dump(progObj))
+    end
+
     local opoData = opofile.makeOpo(progObj)
     local procTable, opxTable = opofile.parseOpo(opoData)
     assertEquals(#procTable, #expected)
@@ -218,17 +235,23 @@ local checkCodeWrapper = [[
     ENDP
 ]]
 
-local function checkCode(statement, expectedCode)
+local function checkCodeRet(statement, expectedCode)
     local prog = string.format(checkCodeWrapper, statement)
     expectedCode.iTotalTableSize = 0
     expectedCode.iDataSize = 24 -- 18 + sizeof(i%) + sizeof(l&)
     checkProg(prog, { expectedCode })
 end
 
+local function checkCode(statement, expectedCode)
+    table.insert(expectedCode, op"ZeroReturnFloat")
+    checkCodeRet(statement, expectedCode)
+end
+
 local function checkSyntaxError(statement, expectedError)
     local prog = string.format(checkCodeWrapper, statement)
     local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {})
     assert(not ok, "Compile unexpectedly succeeded!")
+    assert(err.src, "Error didn't include src!? "..tostring(err))
     -- Line number should always be 4 because that's where checkCodeWrapper puts statement
     local expectedErrWithPrefix = "C:\\module:4:" .. expectedError
     local errStr = string.format("%s:%d:%d: %s", err.src.path, err.src.line, err.src.column, err.msg)
@@ -241,6 +264,7 @@ checklex("( woop + &300", { "oparen", id"WOOP", "add", lit"&300", "eos" })
 checklex("Rem comment:\nREMnot a comment", { "eos", id"REMNOT", id"a", id"comment", "eos"})
 checklex('@%("name")', { { type="dyncall", val="@%" }, "oparen", lit'"name"', "cloparen", "eos" })
 checklex("a1: a1:: a1%::", { id"a1:", {type="label", val="A1::"}, id"A1%:", {type="colon", val=":"}, "eos" })
+checklex("1+2%", { lit"1", "add", lit"2", "percent", "eos"})
 
 -- Check all callables resolve
 for cmd, callable in pairs(compiler.Callables) do
@@ -302,6 +326,12 @@ checkExpression("proccall:(1+1, woop)", call("PROCCALL:", { lit"1", op="add", li
 
 checkExpression('a + @%("name"):(b, c)', { id"a", op="add", dyncall("@%", lit'"name"', id"b", id"c") })
 
+checkExpression("1 + 2%", { lit"1", op="add", percent"2" })
+
+checkExpression("1 + 2 + 3%", {{ lit"1", op="add", lit"2" }, op="add", percent"3" })
+
+checkExpression("1 + (2 + 3)%", { lit"1", op="add", percent{ lit"2", op="add", lit"3" } })
+
 -- checkExpression("a b", {})
 
 checkNumber("123", Int, 123)
@@ -317,7 +347,6 @@ checkCode("CHR$(&7)", {
     op"LongToInt",
     fn"ChrStr",
     op"DropString",
-    op"ZeroReturnFloat"
 })
 
 checkCode('PRINT "wat", i%', {
@@ -327,7 +356,6 @@ checkCode('PRINT "wat", i%', {
     op"SimpleDirectRightSideInt", H(0x12),
     op"PrintInt",
     op"PrintCarriageReturn",
-    op"ZeroReturnFloat"
 })
 
 checkCode('PRINT 1;2;', {
@@ -335,25 +363,23 @@ checkCode('PRINT 1;2;', {
     op"PrintInt",
     op"StackByteAsWord", 2,
     op"PrintInt",
-    op"ZeroReturnFloat"
 })
 
 checkCode("i% = ci%", {
     op"SimpleDirectLeftSideInt", H(0x12),
     op"StackByteAsWord", b(-123),
     op"AssignInt",
+})
+
+checkCodeRet("", {
     op"ZeroReturnFloat"
 })
 
-checkCode("", {
+checkCodeRet("RETURN", {
     op"ZeroReturnFloat"
 })
 
-checkCode("RETURN", {
-    op"ZeroReturnFloat"
-})
-
-checkCode("RETURN 0", {
+checkCodeRet("RETURN 0", {
     op"StackByteAsWord", 0,
     op"IntToFloat",
     op"Return"
@@ -370,7 +396,6 @@ checkCode("CHR$(1+2*&3)", {
     op"LongToInt",
     fn"ChrStr",
     op"DropString",
-    op"ZeroReturnFloat",
 })
 
 -- This is horrible, but that really is what OPL does. INT really shouldn't be the thing to use here, since it really
@@ -384,10 +409,9 @@ checkCode("CHR$(INT(4))", {
     op"LongToInt",
     fn"ChrStr",
     op"DropString",
-    op"ZeroReturnFloat",
 })
 
-checkCode("RETURN 1.0/3", {
+checkCodeRet("RETURN 1.0/3", {
     ConstantFloat(1.0),
     op"StackByteAsWord", 3,
     op"IntToFloat",
@@ -395,7 +419,7 @@ checkCode("RETURN 1.0/3", {
     op"Return",
 })
 
-checkCode("RETURN 1/3.0", {
+checkCodeRet("RETURN 1/3.0", {
     op"StackByteAsWord", 1,
     op"IntToFloat",
     ConstantFloat(3.0),
@@ -409,7 +433,6 @@ checkCode('@%("foo"):("bar")', {
     op"StackByteAsWord", DataTypes.EString,
     op"CallProcByStringExpr", 1, "%",
     op"DropInt",
-    op"ZeroReturnFloat"
 })
 
 -- Check we handle >256 opcodes
@@ -419,13 +442,11 @@ checkCode("DEFAULTWIN 5", {
     -- op"DefaultWin",
     0xFF,
     1,
-    op"ZeroReturnFloat",
 })
 
 checkCode([[LOADM "Z:\System\OPL\TOOLBAR.OPO"]], {
     ConstantString([[Z:\System\OPL\TOOLBAR.OPO]]),
     op"LoadM",
-    op"ZeroReturnFloat",
 })
 
 checkCode('ALERT("single")', {
@@ -433,7 +454,6 @@ checkCode('ALERT("single")', {
     fn"Alert",
     1,
     op"DropInt",
-    op"ZeroReturnFloat"
 })
 
 checkCode('dBUTTONS "OK", 13, "Cancel", -27, "Tab", 9, "A", %a, "B", -%b', {
@@ -450,7 +470,6 @@ checkCode('dBUTTONS "OK", 13, "Cancel", -27, "Tab", 9, "A", %a, "B", -%b', {
     op"StackByteAsWord", 98,
     op"UnaryMinusInt",
     op"dItem", 10, 5,
-    op"ZeroReturnFloat"
 })
 
 -- numParams/qualifier on Ops is so inconsistent...
@@ -462,7 +481,6 @@ checkCode("gBORDER 0 : gBORDER 0, 1, 2", {
     op"StackByteAsWord", 1,
     op"StackByteAsWord", 2,
     op"gBorder", 3,
-    op"ZeroReturnFloat"
 })
 
 checkCode('gPRINTB "Wat", 11, 22', {
@@ -470,13 +488,11 @@ checkCode('gPRINTB "Wat", 11, 22', {
     op"StackByteAsWord", 11,
     op"StackByteAsWord", 22,
     op"gPrintBoxText", 2,
-    op"ZeroReturnFloat"
 })
 
 checkCode("gUPDATE OFF", {
     op"gUpdate",
     0,
-    op"ZeroReturnFloat",
 })
 
 checkCode("PRINT A.Foo& + R.Bar%;", {
@@ -488,7 +504,6 @@ checkCode("PRINT A.Foo& + R.Bar%;", {
     op"IntToLong",
     op"AddLong",
     op"PrintLong",
-    op"ZeroReturnFloat",
 })
 
 checkCode("B.foo = A.bar", {
@@ -497,21 +512,18 @@ checkCode("B.foo = A.bar", {
     ConstantString("BAR"),
     op"FieldRightSideFloat", 0,
     op"AssignFloat",
-    op"ZeroReturnFloat",
 })
 
 checkCode("ADDR(i%)", {
     op"SimpleDirectLeftSideInt", h(0x12),
     fn"Addr",
     op"DropLong",
-    op"ZeroReturnFloat",
 })
 
 checkCode("ADDR(l&)", {
     op"SimpleDirectLeftSideLong", h(0x14),
     fn"Addr",
     op"DropLong",
-    op"ZeroReturnFloat",
 })
 
 checkCode("IOC(0, 1, i%, l&)", {
@@ -523,13 +535,75 @@ checkCode("IOC(0, 1, i%, l&)", {
     fn"Addr",
     fn"Ioc", 4,
     op"DropInt",
-    op"ZeroReturnFloat",
 })
 
 checkCode("USE z", {
     op"Use",
     25,
-    op"ZeroReturnFloat",
+})
+
+checkCodeRet("RETURN 1 + 2%", {
+    op"StackByteAsWord", 1,
+    op"IntToFloat",
+    op"StackByteAsWord", 2,
+    op"IntToFloat",
+    op"PercentAdd",
+    op"Return",
+})
+
+checkCode('DELETE "foo"', {
+    ConstantString("foo"),
+    op"Delete",
+})
+
+checkCode('DELETE "foo", "bar"', {
+    ConstantString("foo"),
+    ConstantString("bar"),
+    op"DeleteTable",
+})
+
+checkCode("gVISIBLE ON", {
+    op"gVisible", 1,
+})
+
+checkCode("CURSOR OFF", {
+    op"Cursor", 0,
+})
+
+checkCode("CURSOR ON", {
+    op"Cursor", 1,
+})
+
+checkCode("CURSOR 1, 2, 3, 4", {
+    op"StackByteAsWord", 1,
+    op"StackByteAsWord", 2,
+    op"StackByteAsWord", 3,
+    op"StackByteAsWord", 4,
+    op"Cursor", 3,
+})
+
+checkCode("CURSOR 1, 2, 3, 4, 5", {
+    op"StackByteAsWord", 1,
+    op"StackByteAsWord", 2,
+    op"StackByteAsWord", 3,
+    op"StackByteAsWord", 4,
+    op"StackByteAsWord", 5,
+    op"Cursor", 4,
+})
+
+checkCode('mPOPUP(1, 2, 0, "a", 0)', {
+    op"StackByteAsWord", 1,
+    op"StackByteAsWord", 2,
+    op"StackByteAsWord", 0,
+    ConstantString("a"),
+    op"StackByteAsWord", 0,
+    fn"mPopup", 5,
+    op"DropInt",
+})
+
+checkCode('MENU', {
+    fn"Menu",
+    op"DropInt",
 })
 
 checkSyntaxError("ALERT()", "1: Zero-argument calls should not have ()")
@@ -552,6 +626,16 @@ checkSyntaxError("a12345678901234567890123456789012 = 1", "1: Variable name is t
 checkSyntaxError("LOCAL f$(256)", "10: String is too long")
 
 checkSyntaxError("LOCAL a&(30000)", "7: Procedure variables exceed maximum size")
+
+checkSyntaxError("MAX", "1: Wrong number of arguments to MAX")
+
+checkSyntaxError('mPOPUP(1, 2, 0, "a")', "1: Wrong number of arguments to mPOPUP")
+-- Cannot have an additional item without another key arg
+checkSyntaxError('mPOPUP(1, 2, 0, "a", 0, "b")', "1: Wrong number of arguments to mPOPUP")
+
+checkSyntaxError("PRINT AND 1", "7: Expected operand")
+checkSyntaxError("PRINT 1 AND AND 1", "13: Expected operand")
+checkSyntaxError("PRINT 1 == 1", "10: Expected operand")
 
 callbystr = [[
 PROC main:
@@ -744,7 +828,7 @@ checkProg(aiftest, {
     aif = {
         uid3 = 0x10286F9C,
         captions = {
-            [2] = "Welcome",
+            { 2, "Welcome" },
         },
         icons = {
             "welc.mbm",
@@ -1070,6 +1154,46 @@ checkProg(eval, {
     },
 })
 
+addr = [[
+PROC main:
+    LOCAL l&
+    LOCAL buf&(10)
+
+    REM I think these are both valid (and behave the same)...
+    l& = ADDR(buf&)
+    l& = ADDR(buf&())
+    
+    l& = ADDR(buf&(2))
+ENDP
+]]
+checkProg(addr, {
+    {
+        arrays = {
+            [0x16] = 10,
+        },
+        iDataSize = 64,
+
+        op"SimpleDirectLeftSideLong", h(0x12),
+        op"StackByteAsWord", 1,
+        op"ArrayDirectLeftSideLong", h(0x18),
+        fn"Addr",
+        op"AssignLong",
+
+        op"SimpleDirectLeftSideLong", h(0x12),
+        op"StackByteAsWord", 1,
+        op"ArrayDirectLeftSideLong", h(0x18),
+        fn"Addr",
+        op"AssignLong",
+
+        op"SimpleDirectLeftSideLong", h(0x12),
+        op"StackByteAsWord", 2,
+        op"ArrayDirectLeftSideLong", h(0x18),
+        fn"Addr",
+        op"AssignLong",
+        op"ZeroReturnFloat",
+    }
+})
+
 dow = [[
 PROC main:
     PRINT "Today is", DAYNAME$(DOW(DAY, MONTH, YEAR))
@@ -1130,3 +1254,5 @@ prog = compiler.docompile("D:\\globals.opl", nil, globals, {})
 -- rt:loadModule(prog.path)
 -- opofile.printProc(rt:findProc("MAIN"))
 -- rt:dumpProc("MAIN")
+
+print("All tests passed.")

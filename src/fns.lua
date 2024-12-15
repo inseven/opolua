@@ -368,7 +368,9 @@ function Exist(stack, runtime) -- 0x08
 end
 
 function Find(stack, runtime) -- 0x09
-    unimplemented("fns.Find")
+    local text = stack:pop()
+    local db = runtime:getDb()
+    stack:push(db:findField(text, 1, nil, KFindForwards))
 end
 
 function Get(stack, runtime) -- 0x0A
@@ -504,7 +506,11 @@ function SAddr(stack, runtime) -- 0x1F
 end
 
 function Week(stack, runtime) -- 0x20
-    unimplemented("fns.Week")
+    local dd, mm, yy = stack:pop(3)
+    local t = os.time({ day = dd, month = mm, year = yy })
+    -- %V matches LCSTARTOFWEEK which always returns Monday
+    local week = assert(tonumber(os.date("%V", t)))
+    stack:push(week)
 end
 
 function IoSeek(stack, runtime) -- 0x21
@@ -524,11 +530,18 @@ function Kmod(stack, runtime) -- 0x22
 end
 
 function KeyA(stack, runtime) -- 0x23
-    unimplemented("fns.KeyA")
+    local keyArrayAddr = runtime:addrFromInt(stack:pop())
+    local stat = stack:pop():asVariable(DataTypes.EWord)
+    runtime:KEYA(stat, keyArrayAddr)
+    stack:push(KErrNone)
 end
 
 function KeyC(stack, runtime) -- 0x24
-    unimplemented("fns.KeyC")
+    -- As with GetEventC, this includes the waitForRequest
+    local stat = stack:pop():asVariable(DataTypes.EWord)
+    runtime:iohandler().cancelRequest(stat)
+    runtime:waitForRequest(stat)
+    stack:push(KErrNone)
 end
 
 function IoOpenUnique(stack, runtime) -- 0x25
@@ -550,7 +563,7 @@ function IoOpenUnique(stack, runtime) -- 0x25
 end
 
 function gCreate(stack, runtime) -- 0x26
-    stack:push(KgCreate2GrayMode)
+    stack:push(KColorgCreate2GrayMode)
     gCreateEnhanced(stack, runtime)
 end
 
@@ -588,7 +601,8 @@ function gLoadFont(stack, runtime) -- 0x29
 end
 
 function gRank(stack, runtime) -- 0x2A
-    unimplemented("fns.gRank")
+    local result = runtime:gRANK()
+    stack:push(result)
 end
 
 function gIdentity(stack, runtime) -- 0x2B
@@ -632,7 +646,7 @@ function gPrintClip(stack, runtime) -- 0x33
 end
 
 function TestEvent(stack, runtime) -- 0x34
-    stack:push(runtime:iohandler().testEvent())
+    stack:push(runtime:TESTEVENT())
 end
 
 local syscallPackFmt = "<I2I2I2I2I2I2"
@@ -677,6 +691,7 @@ end
 function Dialog(stack, runtime) -- 0x37
     local dialog = runtime:getDialog()
     runtime:setDialog(nil)
+    dialog.frame = nil -- Simplifies dumping dialog structure
     local result = runtime:DIALOG(dialog)
     -- Be bug compatible with Psion 5 and return 0 if a negative-keycode or escape button was pressed
     if result < 0 or result == 27 then
@@ -739,6 +754,12 @@ function gCreateEnhanced(stack, runtime) -- 0x39
     local visible = stack:pop()
     local x, y, w, h = stack:popRect()
     -- printf("gCreate x=%d y=%d w=%d h=%d flags=%d", x, y, w, h, flags)
+
+    if runtime:getDeviceName() == "psion-series-7" then
+        -- See https://github.com/inseven/opolua/issues/414 for why we do this
+        flags = (flags & ~0xF) | KColorgCreateRGBColorMode
+    end
+    
     local id = runtime:gCREATE(x, y, w, h, visible ~= 0, flags)
     -- printf(" -> %d\n", id)
     stack:push(id)
@@ -840,11 +861,16 @@ function ReAlloc(stack, runtime) -- 0x4C
 end
 
 function AdjustAlloc(stack, runtime) -- 0x4D
-    unimplemented("fns.AdjustAlloc")
+    -- This API is a weird combo of realloc and memcpy
+    local addr, offset, sz = stack:pop(3)
+    local result = runtime:adjustAlloc(addr, offset, sz)
+    stack:push(result)
 end
 
 function LenAlloc(stack, runtime) -- 0x4E
-    unimplemented("fns.LenAlloc")
+    local ptr = stack:pop()
+    local result = runtime:allocLen(ptr)
+    stack:push(result)
 end
 
 function Ioc(stack, runtime) -- 0x4F
@@ -891,11 +917,19 @@ function IoCancel(stack, runtime) -- 0x52
 end
 
 function FindField(stack, runtime) -- 0x54
-    unimplemented("fns.FindField")
+    local flags = stack:pop()
+    local num = stack:pop()
+    local start = stack:pop()
+    local text = stack:pop()
+
+    local db = runtime:getDb()
+    stack:push(db:findField(text, start, num, flags))
 end
 
 function Bookmark(stack, runtime) -- 0x55
-    unimplemented("fns.Bookmark")
+    -- Since we have a very simple model for databases, the bookmark identifier can just be the same as the position
+    local db = runtime:getDb()
+    stack:push(db:getPos())
 end
 
 function GetEventC(stack, runtime) -- 0x56
@@ -907,7 +941,7 @@ function GetEventC(stack, runtime) -- 0x56
 end
 
 function InTrans(stack, runtime) -- 0x57
-    local db = self:getDb()
+    local db = runtime:getDb()
     stack:push(db:inTransaction())
 end
 
@@ -1041,8 +1075,15 @@ end
 Max_dump = numParams_dump
 
 function Mean(stack, runtime) -- 0x94
-    unimplemented("fns.Mean")
+    local vals = valList(stack, runtime)
+    local sum = 0
+    for _, val in ipairs(vals) do
+        sum = sum + val
+    end
+    stack:push(sum / #vals)
 end
+
+Mean_dump = numParams_dump
 
 function Min(stack, runtime) -- 0x95
     stack:push(math.min(table.unpack(valList(stack, runtime))))
@@ -1055,8 +1096,15 @@ function Std(stack, runtime) -- 0x96
 end
 
 function Sum(stack, runtime) -- 0x97
-    unimplemented("fns.Sum")
+    local vals = valList(stack, runtime)
+    local sum = 0
+    for _, val in ipairs(vals) do
+        sum = sum + val
+    end
+    stack:push(sum)
 end
+
+Sum_dump = numParams_dump
 
 function Var(stack, runtime) -- 0x98
     unimplemented("fns.Var")

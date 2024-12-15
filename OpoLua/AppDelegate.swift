@@ -85,10 +85,38 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
-    func install(url: URL, preferredDestinationUrl: URL? = nil) {
+    override func buildMenu(with builder: any UIMenuBuilder) {
+
+        // This is apparently required to ensure we only modify the system menu.
+        guard builder.system == UIMenuSystem.main else {
+            return
+        }
+
+        let aboutCommand = UICommand(title: "About OpoLua", action: #selector(showAbout))
+        let aboutMenu = UIMenu(title: "", options: .displayInline, children: [aboutCommand])
+        builder.replace(menu: .about, with: aboutMenu)
+
+        let settingsCommand = UIKeyCommand(title: "Settings...",
+                                           action: #selector(showSettings),
+                                           input: ",",
+                                           modifierFlags: [.command])
+        let settingsMenu = UIMenu(title: "", options: .displayInline, children: [settingsCommand])
+        builder.replace(menu: .preferences, with: settingsMenu)
+    }
+
+    @objc func showAbout() {
+        rootViewController.showAbout()
+    }
+
+    @objc func showSettings() {
+        rootViewController.showSettings()
+    }
+
+    func install(url: URL, preferredDestinationUrl: URL? = nil, sourceUrl: URL? = nil) {
         let installerViewController = InstallerViewController(settings: settings,
                                                               url: url,
-                                                              preferredDestinationUrl: preferredDestinationUrl)
+                                                              preferredDestinationUrl: preferredDestinationUrl,
+                                                              sourceUrl: sourceUrl)
         installerViewController.installerDelegate = self
         rootViewController.present(installerViewController, animated: true)
     }

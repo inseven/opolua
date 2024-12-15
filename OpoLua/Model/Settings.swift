@@ -20,7 +20,10 @@
 
 import Foundation
 import SwiftUI
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 protocol SettingsObserver: NSObject {
 
@@ -238,6 +241,7 @@ class Settings: ObservableObject {
         }
     }
 
+#if canImport(UIKit)
     func showWallpaper(in userInterfaceStyle: UIUserInterfaceStyle) -> Bool {
         switch userInterfaceStyle {
         case .light:
@@ -248,6 +252,7 @@ class Settings: ObservableObject {
             return false
         }
     }
+#endif
 
     var clockType: ClockType {
         get {
@@ -361,6 +366,7 @@ class Settings: ObservableObject {
 
 extension Settings.Theme {
 
+#if canImport(UIKit)
     var color: UIColor {
         switch self {
         case .series5:
@@ -369,8 +375,9 @@ extension Settings.Theme {
             return .series7
         }
     }
+#endif
 
-    var wallpaper: UIImage {
+    var wallpaper: CommonImage {
         switch self {
         case .series5:
             return .epocLogo()

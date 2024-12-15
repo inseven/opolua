@@ -22,7 +22,7 @@ import Combine
 import Foundation
 import UIKit
 
-class DirectoryViewController : UICollectionViewController {
+class DirectoryViewController : BrowserViewController {
 
     private enum Section {
         case none
@@ -39,7 +39,6 @@ class DirectoryViewController : UICollectionViewController {
     private typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
     private typealias Cell = IconCollectionViewCell
 
-    private var settings: Settings
     private var taskManager: TaskManager
     var directory: Directory
     private var installer: Installer?
@@ -85,17 +84,16 @@ class DirectoryViewController : UICollectionViewController {
     }()
 
     init(settings: Settings, taskManager: TaskManager, directory: Directory) {
-        self.settings = settings
         self.taskManager = taskManager
         self.directory = directory
-        super.init(collectionViewLayout: IconCollectionViewLayout())
+        super.init(collectionViewLayout: IconCollectionViewLayout(), settings: settings)
         self.directory.delegate = self
-        collectionView.backgroundColor = UIColor(named: "DirectoryBackground")
         collectionView.preservesSuperviewLayoutMargins = true
         collectionView.insetsLayoutMarginsFromSafeArea = true
         collectionView.backgroundView = wallpaperView
         collectionView.dataSource = dataSource
         title = directory.localizedName
+        navigationItem.rightBarButtonItem = addBarButtonItem
         navigationItem.largeTitleDisplayMode = .never
         configureRefreshControl()
         update(animated: false)
@@ -106,9 +104,11 @@ class DirectoryViewController : UICollectionViewController {
     }
 
     private func configureRefreshControl() {
+#if !targetEnvironment(macCatalyst)
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refreshControlDidChange(_:)), for: .valueChanged)
         collectionView.refreshControl = refreshControl
+#endif
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -123,7 +123,7 @@ class DirectoryViewController : UICollectionViewController {
             }
             self.directory.refresh()
         }
-        installerObserver = notificationCenter.addObserver(forName: Installer.didCompleteInstall,
+        installerObserver = notificationCenter.addObserver(forName: .libraryDidUpdate,
                                                            object: nil,
                                                            queue: nil) { [weak self] notification in
             guard let self = self else {
@@ -180,6 +180,9 @@ class DirectoryViewController : UICollectionViewController {
         alertController.addAction(UIAlertAction(title: "Delete", style: .destructive) { action in
             do {
                 try FileManager.default.removeItem(at: item.url)
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .libraryDidUpdate, object: self)
+                }
             } catch {
                 self.present(error: error)
             }
@@ -250,23 +253,34 @@ class DirectoryViewController : UICollectionViewController {
         guard item.isWriteable else {
             return []
         }
+
+        let attributes: UIMenuElement.Attributes = if isRunning(item: item) {
+            [.destructive, .disabled]
+        } else {
+            [.destructive]
+        }
+
         let deleteAction = UIAction(title: "Delete",
                                     image: UIImage(systemName: "trash"),
-                                    attributes: .destructive) { action in
+                                    attributes: attributes) { action in
             self.delete(item: item)
         }
+
         return [UIMenu(options: [.displayInline], children: [deleteAction])]
+    }
+
+    private func isRunning(item: Directory.Item) -> Bool {
+        guard let programUrl = item.programUrl else {
+            return false
+        }
+        return taskManager.isRunning(programUrl)
     }
 
     private func update(animated: Bool) {
         var snapshot = Snapshot()
         snapshot.appendSections([.none])
         let items = directory.items.map { item -> Item in
-            var isRunning = false
-            if let programUrl = item.programUrl, taskManager.isRunning(programUrl) {
-                isRunning = true
-            }
-            return Item(directoryItem: item, icon: item.icon, isRunning: isRunning, theme: settings.theme)
+            return Item(directoryItem: item, icon: item.icon, isRunning: isRunning(item: item), theme: settings.theme)
         }
         snapshot.appendItems(items, toSection: Section.none)
         dataSource.apply(snapshot, animatingDifferences: animated)

@@ -21,6 +21,7 @@
 import AudioUnit
 import AVFoundation
 import Combine
+import CoreAudio
 import Foundation
 
 class PlaySoundRequest: Scheduler.Request {
@@ -71,13 +72,13 @@ class Sound {
         private var _isCancelled = false
 
         var isCancelled: Bool {
-            return lock.perform {
+            return lock.withLock {
                 return _isCancelled
             }
         }
 
         func cancel() {
-            lock.perform {
+            lock.withLock {
                 _isCancelled = true
             }
         }
@@ -88,12 +89,18 @@ class Sound {
 
     }
 
+#if os(iOS)
+    static let AudioOutSubType = kAudioUnitSubType_RemoteIO
+#else
+    static let AudioOutSubType = kAudioUnitSubType_DefaultOutput
+#endif
+
     static func beep(frequency: Double, duration: Double, sampleRate: Double = 44100.0) throws {
         let tone = Tone(sampleRate: sampleRate, frequency: frequency, duration: duration)
 
         let semaphore = DispatchSemaphore(value: 0)
         let audioComponentDescription = AudioComponentDescription(componentType: kAudioUnitType_Output,
-                                                                  componentSubType: kAudioUnitSubType_RemoteIO,
+                                                                  componentSubType: AudioOutSubType,
                                                                   componentManufacturer: kAudioUnitManufacturer_Apple,
                                                                   componentFlags: 0,
                                                                   componentFlagsMask: 0)
@@ -167,7 +174,7 @@ class Sound {
         var iterator = data.makeIterator()
         let semaphore = DispatchSemaphore(value: 0)
         let audioComponentDescription = AudioComponentDescription(componentType: kAudioUnitType_Output,
-                                                                  componentSubType: kAudioUnitSubType_RemoteIO,
+                                                                  componentSubType: AudioOutSubType,
                                                                   componentManufacturer: kAudioUnitManufacturer_Apple,
                                                                   componentFlags: 0,
                                                                   componentFlagsMask: 0)

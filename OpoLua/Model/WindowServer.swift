@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import GameController
-import UIKit
+import Foundation
+import CoreGraphics
 
 protocol WindowServerDelegate: CanvasViewDelegate {
 
@@ -33,25 +33,6 @@ protocol WindowServerDelegate: CanvasViewDelegate {
 
 class WindowServer {
 
-    static func textSize(string: String, fontInfo: Graphics.FontInfo) -> Graphics.TextMetrics {
-        if let font = fontInfo.toBitmapFont() {
-            let bold = fontInfo.flags.contains(.bold)
-            let renderer = BitmapFontCache.shared.getRenderer(font: font, embolden: bold)
-            let (w, h) = renderer.getTextSize(string)
-            return Graphics.TextMetrics(size: Graphics.Size(width: w, height: h), ascent: font.ascent, descent: font.descent)
-        } else {
-            let font = fontInfo.toUiFont()! // One or other has to return non-nil
-            let attribStr = NSAttributedString(string: string, attributes: [.font: font])
-            let sz = attribStr.size()
-            // This is not really the right definition for ascent but it seems to work for where epoc expects
-            // the text to be, so...
-            let ascent = Int(ceil(sz.height) + font.descender)
-            let descent = Int(ceil(font.descender))
-            return Graphics.TextMetrics(size: Graphics.Size(width: Int(ceil(sz.width)), height: Int(ceil(sz.height))),
-                                        ascent: ascent, descent: descent)
-        }
-    }
-
     weak var delegate: WindowServerDelegate?
 
     private var device: Device
@@ -64,6 +45,9 @@ class WindowServer {
     private var busyWindowShowTimer: Timer?
     private var spriteTimer: Timer?
     private var clockTimer: Timer?
+    private var cursorTimer: Timer?
+    private var cursorDrawCmd: Graphics.DrawCommand?
+    private var cursorCurrentlyDrawn = false
 
     // We run the timer at a fixed 0.05 (ie, 20Hz) interval on the basis that
     // the series 5 probably couldn't render anything faster than that anyway.
@@ -71,6 +55,8 @@ class WindowServer {
     // Some games ask for an unreasonably small interval that the series 5
     // absolutely isn't able to honour - emperically this looks about right.
     private let kMinSpriteTime: TimeInterval = 0.1
+
+    private let kCursorFlashTime: TimeInterval = 0.5
 
     public var drawables: [Drawable] {
         return Array(drawablesById.values).sorted { $0.id.value < $1.id.value }
@@ -129,21 +115,55 @@ class WindowServer {
     }
 
     /**
-     N.B. In OPL terms position=1 means the front, whereas subviews[1] is at the back.
+     N.B. In OPL terms position=1 means the front and position=n means the back, whereas subviews[0] is at the back and
+     subviews[n-1] the front.
      */
     func order(drawableId: Graphics.DrawableId, position: Int) {
         dispatchPrecondition(condition: .onQueue(.main))
-        guard let view = self.window(for: drawableId) else {
+        guard let view = self.window(for: drawableId),
+              let currentPos = getWindowRank(for: drawableId) else {
             return
         }
-        let views = self.rootView.subviews
-        let uipos = views.count - position
-        if views.count == 0 || uipos < 0 {
-            self.rootView.sendSubviewToBack(view)
-        } else {
-            self.rootView.insertSubview(view, aboveSubview: views[uipos])
+        let windows = getWindows()
+        let uipos = max(min(windows.count - position, windows.count - 1), 0)
+        if position < currentPos {
+            // Shift others back, so insertAbove
+            rootView.insertSubview(view, aboveSubview: windows[uipos])
+        } else if position > currentPos {
+            // Shift others forward, so insert below
+            rootView.insertSubview(view, belowSubview: windows[uipos])
         }
-        bringInfoWindowToFront()
+
+        // bringInfoWindowToFront() is not necessary here because the info win doesn't appear in windows, therefore
+        // we'll never mess its position up with this logic.
+    }
+
+    // Returns the views representing windows, ordered back to front, excluding the info window if it exists
+    private func getWindows() -> [CanvasView] {
+        var views = rootView.windows
+        if let infoDrawableHandle,
+           let infoWin = window(for: infoDrawableHandle),
+           let idx = views.firstIndex(of: infoWin) {
+            views.remove(at: idx)
+        }
+        return views
+    }
+
+    func getWindowRank(for drawableId: Graphics.DrawableId) -> Int? {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard let view = self.window(for: drawableId) else {
+            // drawableId is a bitmap not a window, presumably
+            return nil
+        }
+        if drawableId == infoDrawableHandle {
+            // Info window is special, has a not-actually-valid-in-OPL window rank
+            return 0
+        }
+        let views = getWindows()
+        guard let idx = views.firstIndex(of: view) else {
+            fatalError("view not found in subview!?")
+        }
+        return views.count - idx
     }
 
     func close(drawableId: Graphics.DrawableId) {
@@ -164,6 +184,7 @@ class WindowServer {
         }
         self.setVisiblity(handle: canvas.id, visible: true)
         infoDrawableHandle = canvas.id
+        bringInfoWindowToFront()
 
         infoWindowDismissTimer = Timer.scheduledTimer(timeInterval: 2.0,
                                                       target: self,
@@ -184,6 +205,36 @@ class WindowServer {
                                                    selector: #selector(showBusyWindow),
                                                    userInfo: nil,
                                                    repeats: false)
+    }
+
+    func cursor(_ cursor: Graphics.Cursor?) {
+        if let cursorDrawCmd {
+            if cursorCurrentlyDrawn {
+                // Hopefully this will un-draw it
+                let _ = window(for: cursorDrawCmd.drawableId)?.draw(cursorDrawCmd, provider: self)
+                cursorCurrentlyDrawn = false
+            }
+        }
+
+        cancelCursorTimer()
+        if let cursor {
+            let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
+            let col: Graphics.Color = cursor.flags.contains(.grey) ? .midGray : .black
+            cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert,
+                origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
+            let _ = window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
+            cursorCurrentlyDrawn = true
+            if !cursor.flags.contains(.notFlashing) {
+                cursorTimer = Timer.scheduledTimer(withTimeInterval: kCursorFlashTime, repeats: true, block: { timer in
+                    guard let cmd = self.cursorDrawCmd, let window = self.window(for: cmd.drawableId) else {
+                        self.cancelCursorTimer()
+                        return
+                    }
+                    self.cursorCurrentlyDrawn = !self.cursorCurrentlyDrawn
+                    let _ = window.draw(cmd, provider: self)
+                })
+            }
+        }
     }
 
     func setWin(drawableId: Graphics.DrawableId, position: Graphics.Point, size: Graphics.Size?) {
@@ -277,14 +328,17 @@ class WindowServer {
         window.setSprite(canvasSprite, for: id)
     }
 
-    func draw(operations: [Graphics.DrawCommand]) {
+    func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {
         for op in operations {
             guard let drawable = self.drawable(for: op.drawableId) else {
                 print("No drawable for drawableId \(op.drawableId)!")
-                continue
+                return .badDrawable
             }
-            drawable.draw(op, provider: self)
+            if let err = drawable.draw(op, provider: self) {
+                return err
+            }
         }
+        return nil
     }
 
     private func bringInfoWindowToFront() {
@@ -301,13 +355,19 @@ class WindowServer {
             return
         }
         setVisiblity(handle: infoDrawableHandle, visible: false)
-        self.infoDrawableHandle = nil
         infoWindowDismissTimer?.invalidate()
+        infoWindowDismissTimer = nil
     }
 
     func cancelBusyTimer() {
         busyWindowShowTimer?.invalidate()
         busyWindowShowTimer = nil
+    }
+
+    func cancelCursorTimer() {
+        cursorTimer?.invalidate()
+        cursorTimer = nil
+        cursorDrawCmd = nil
     }
 
     @objc func showBusyWindow() {
@@ -335,11 +395,16 @@ class WindowServer {
 
     func shutdown() {
         cancelBusyTimer()
+        cancelCursorTimer()
         hideInfoWindow()
         spriteTimer?.invalidate()
         spriteTimer = nil
         clockTimer?.invalidate()
         clockTimer = nil
+    }
+
+    deinit {
+        shutdown()
     }
 
     @objc func clocksChanged() {
@@ -408,20 +473,27 @@ class WindowServer {
         return result
     }
 
+    func load(font fontUid: UInt32, into drawableId: Graphics.DrawableId) -> Graphics.FontMetrics? {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard let font = BitmapFontInfo(uid: fontUid) else {
+            return nil
+        }
+        let bmpSize = Graphics.Size(width: font.charw * 32, height: font.charh * 8)
+        let canvas = Canvas(id: drawableId, size: bmpSize, mode: .gray2)
+        drawablesById[canvas.id] = canvas
+
+        let img = CommonImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!
+        canvas.draw(image: img)
+
+        return Graphics.FontMetrics(height: font.charh, maxwidth: font.charw, ascent: font.ascent, descent: font.descent, widths: font.widths)
+    }
+
 }
 
 extension WindowServer: CanvasViewDelegate {
 
-    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
-        delegate?.canvasView(canvasView, touchBegan: touch, with: event)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
-        delegate?.canvasView(canvasView, touchMoved: touch, with: event)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
-        delegate?.canvasView(canvasView, touchEnded: touch, with: event)
+    func canvasView(_ canvasView: CanvasView, penEvent: Async.PenEvent) {
+        delegate?.canvasView(canvasView, penEvent: penEvent)
     }
 
 }
@@ -444,11 +516,12 @@ extension WindowServer: RootViewDelegate {
 
 extension WindowServer: DrawableImageProvider {
 
-    func getImageFor(drawable: Graphics.DrawableId) -> CGImage? {
-        guard let canvas = self.drawable(for: drawable) else {
-            return nil
-        }
-        return canvas.getImage()
+    func getDrawable(_ id: Graphics.DrawableId) -> Drawable? {
+        return self.drawable(for: id)
+    }
+
+    func getDitherImage() -> CGImage {
+        return CommonImage.ditherPattern().cgImage!
     }
 
 }

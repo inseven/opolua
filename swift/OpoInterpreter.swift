@@ -64,53 +64,18 @@ private func beep(_ L: LuaState!) -> CInt {
     }
 }
 
-private let kDaysFrom1900to1970: Double = 25567
-
-private func editValue(_ L: LuaState!) -> CInt {
+private func textEditor(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
-    let raw: EditOperation.Raw = L.todecodable(1)!
-    let details: EditOperation.Details
-    switch raw.type {
-    case .text:
-        details = .text(EditOperation.TextDetails(initialValue: raw.initialValue, maxLen: Int(raw.max!)))
-    case .password:
-        details = .password(EditOperation.TextDetails(initialValue: raw.initialValue, maxLen: Int(raw.max!)))
-    case .integer:
-        details = .integer(EditOperation.IntDetails(initialValue: Int(raw.initialValue)!,
-                                                    min: Int(raw.min!),
-                                                    max: Int(raw.max!)))
-    case .float:
-        details = .float(EditOperation.FloatDetails(initialValue: Double(raw.initialValue)!,
-                                                    min: raw.min!,
-                                                    max: raw.max!))
-    case .date:
-        let date = Date(timeIntervalSince1970: (Double(raw.initialValue)! - kDaysFrom1900to1970) * 86400)
-        let min = Date(timeIntervalSince1970: (raw.min! - kDaysFrom1900to1970) * 86400)
-        let max = Date(timeIntervalSince1970: (raw.max! - kDaysFrom1900to1970) * 86400)
-        details = .date(EditOperation.DateDetails(initialValue: date, min: min, max: max))
-    case .time:
-        let flags = raw.timeFlags!
-        let timeType: EditOperation.TimeType = (flags & 2) != 0 ? .duration : .absolute
-        details = .time(EditOperation.TimeDetails(initialValue: Int(raw.initialValue)!,
-                                                  min: Int(raw.min!),
-                                                  max: Int(raw.max!),
-                                                  timeType: timeType,
-                                                  display24hour: (flags & 8) != 0,
-                                                  includeSeconds: (flags & 1) != 0))
+    if L.isnoneornil(1) {
+        iohandler.textEditor(nil)
+    } else {
+        guard let info: TextFieldInfo = L.todecodable(1) else {
+            print("Failed to decode TextFieldInfo!")
+            return 0
+        }
+        iohandler.textEditor(info)
     }
-    let op = EditOperation(prompt: raw.prompt,
-                           allowCancel: raw.allowCancel,
-                           screenRect: raw.screenRect,
-                           details: details)
-
-    var result = iohandler.editValue(op)
-
-    if raw.type == .date, let date = result as? Date {
-        // Convert from Date back to seconds since 1900
-        result = Int((date.timeIntervalSince1970 / 86400) + kDaysFrom1900to1970)
-    }
-    L.push(any: result)
-    return 1
+    return 0
 }
 
 private func draw(_ L: LuaState!) -> CInt {
@@ -128,7 +93,7 @@ private func draw(_ L: LuaState!) -> CInt {
             print("missing bgcolor")
             continue
         }
-        var mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
+        let mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
         let penWidth = L.toint(-1, key: "penwidth") ?? 1
         let greyMode: Graphics.GreyMode = L.getdecodable(-1, key: "greyMode") ?? .normal
         let optype: Graphics.DrawCommand.OpType
@@ -178,6 +143,21 @@ private func draw(_ L: LuaState!) -> CInt {
                 print("Missing params in copy!")
                 continue
             }
+        case "mcopy":
+            if let srcid = L.toint(-1, key: "srcid"),
+               let params = L.tovalue(-1, type: Array<Int>.self) {
+                let drawable = Graphics.DrawableId(value: srcid)
+                var rects: [Graphics.Rect] = []
+                var points: [Graphics.Point] = []
+                for i in stride(from: 0, to: params.count, by: 6) {
+                    rects.append(Graphics.Rect(x: params[i], y: params[i+1], width: params[i+2], height: params[i+3]))
+                    points.append(Graphics.Point(x: params[i+4], y: params[i+5]))
+                }
+                optype = .mcopy(drawable, rects, points)
+            } else {
+                print("Missing params in mcopy!")
+                continue
+            }
         case "scroll":
             let dx = L.toint(-1, key: "dx") ?? 0
             let dy = L.toint(-1, key: "dy") ?? 0
@@ -199,16 +179,6 @@ private func draw(_ L: LuaState!) -> CInt {
                 print("Missing params in patt!")
                 continue
             }
-        case "text":
-            let str = L.tostring(-1, key: "string") ?? ""
-            mode = Graphics.Mode(rawValue: L.toint(-1, key: "tmode") ?? 0) ?? .set
-            let xstyle: Graphics.XStyle? = L.getdecodable(-1, key: "xflags")
-            if let fontInfo: Graphics.FontInfo = L.getdecodable(-1, key: "fontinfo") {
-                optype = .text(str, fontInfo, xstyle)
-            } else {
-                print("Bad text params!")
-                continue
-            }
         case "border":
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             let rect = Graphics.Rect(origin: origin, size: size)
@@ -226,8 +196,12 @@ private func draw(_ L: LuaState!) -> CInt {
         ops.append(Graphics.DrawCommand(drawableId: id, type: optype, mode: mode, origin: origin, color: color,
                                         bgcolor: bgcolor, penWidth: penWidth, greyMode: greyMode))
     }
-    iohandler.draw(operations: ops)
-    return 0
+    if let err = iohandler.draw(operations: ops) {
+        L.push(err.rawValue)
+        return 1
+    } else {
+        return 0
+    }
 }
 
 func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Operation) -> CInt {
@@ -235,14 +209,28 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
     switch result {
     case .nothing:
         return 0
-    case .textMetrics(let metrics):
-        L.push(metrics.size.width)
-        L.push(metrics.size.height)
-        L.push(metrics.ascent)
-        L.push(metrics.descent)
-        return 4
     case .peekedData(let data):
         L.push(data)
+        return 1
+    case .rank(let rank):
+        L.push(rank)
+        return 1
+    case .error(let error):
+        if case .loadFont(_, _) = op {
+            L.pushnil()
+            L.push(error.rawValue)
+            return 2
+        } else {
+            L.push(error.rawValue)
+            return 1
+        }
+    case .fontMetrics(let metrics):
+        L.newtable()
+        L.rawset(-1, key: "height", value: metrics.height)
+        L.rawset(-1, key: "ascent", value: metrics.ascent)
+        L.rawset(-1, key: "descent", value: metrics.descent)
+        L.rawset(-1, key: "widths", value: metrics.widths)
+        L.rawset(-1, key: "maxwidth", value: metrics.maxwidth)
         return 1
     }
 }
@@ -251,14 +239,15 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("close", drawableId)
 // graphicsop("show", drawableId, flag)
 // graphicsop("order", drawableId, pos)
-// graphicsop("textsize", str, font, style)
 // graphicsop("busy", drawableId, delay)
+// graphicsop("cursor", [cursor])
 // graphicsop("giprint", drawableId)
 // graphicsop("setwin", drawableId, x, y, [w, h])
 // graphicsop("sprite", windowId, id, [sprite])
 // graphicsop("title", appTitle)
 // graphicsop("clock", drawableId, [{mode=, x=, y=}])
 // graphicsop("peekline", drawableId, x, y, numPixels, mode)
+// graphicsop("loadfont", drawableId, uid)
 private func graphicsop(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let cmd = L.tostring(1) ?? ""
@@ -286,26 +275,29 @@ private func graphicsop(_ L: LuaState!) -> CInt {
         } else {
             print("order graphicsop missing arguments!")
         }
-    case "textsize":
-        let str = L.tostring(2) ?? ""
-        var flags = Graphics.FontFlags(rawValue: L.toint(4) ?? 0)
-        if L.toboolean(3, key: "bold") {
-            flags.insert(.boldHint)
-        }
-        if let fontName = L.tostring(3, key: "face"),
-           let face = Graphics.FontFace(rawValue: fontName),
-           let size = L.toint(3, key: "size"),
-           let uid = L.toint(3, key: "uid") {
-            let info = Graphics.FontInfo(uid: UInt32(uid), face: face, size: size, flags: flags)
-            return doGraphicsOp(L, iohandler, .textSize(str, info))
+    case "rank":
+        if let id = L.toint(2) {
+            let drawableId = Graphics.DrawableId(value: id)
+            return doGraphicsOp(L, iohandler, .rank(drawableId))
         } else {
-            print("Bad args to textsize!")
+            print("Bad drawableId to rank graphicsop!")
+            L.push(Graphics.Error.invalidArguments.rawValue)
+            return 1
         }
     case "busy":
         let id = L.toint(2) ?? 0
         let drawableId = Graphics.DrawableId(value: id)
         let delay = (L.toint(3) ?? 0) * 500
         return doGraphicsOp(L, iohandler, .busy(drawableId, delay))
+    case "cursor":
+        if L.isnil(2) {
+            return doGraphicsOp(L, iohandler, .cursor(nil))
+        }
+        guard let cursor: Graphics.Cursor = L.todecodable(2) else {
+            print("Bad cursor arg!")
+            return 0
+        }
+        return doGraphicsOp(L, iohandler, .cursor(cursor))
     case "giprint":
         let id = L.toint(2) ?? 0
         let drawableId = Graphics.DrawableId(value: id)
@@ -354,23 +346,34 @@ private func graphicsop(_ L: LuaState!) -> CInt {
             print("Missing peekline params!")
             break
         }
+    case "loadfont":
+        if let id = L.toint(2),
+           let fontUid = L.tovalue(3, type: UInt32.self) {
+            let drawableId = Graphics.DrawableId(value: id)
+            return doGraphicsOp(L, iohandler, .loadFont(drawableId, fontUid))
+        } else {
+            print("Missing loadfont params!")
+            break
+        }
     default:
         print("Unknown graphicsop \(cmd)!")
     }
     return 0
 }
 
-private func getScreenInfo(_ L: LuaState!) -> CInt {
+private func getDeviceInfo(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
-    let (sz, mode) = iohandler.getScreenInfo()
+    let (sz, mode, deviceName) = iohandler.getDeviceInfo()
     L.push(sz.width)
     L.push(sz.height)
     L.push(mode.rawValue)
-    return 3
+    L.push(deviceName)
+    return 4
 }
 
 // asyncRequest(requestName, requestTable)
 // asyncRequest("getevent", { var = ..., ev = ... })
+// asyncRequest("keya", { var = ..., k = ... })
 // asyncRequest("after", { var = ..., period = ... })
 // asyncRequest("at", { var = ..., time = ...})
 // asyncRequest("playsound", { var = ..., data = ... })
@@ -386,6 +389,8 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
     switch name {
     case "getevent":
         type = .getevent
+    case "keya":
+        type = .keya
     case "after":
         guard let period = L.toint(1, key: "period") else {
             print("Bad param to after asyncRequest")
@@ -424,9 +429,7 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
     lua_pushvalue(L, 1) // dup requestTable
     L.rawset(LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = requestTable
 
-    let req = Async.Request(type: type, handle: requestHandle)
-
-    iohandler.asyncRequest(req)
+    iohandler.asyncRequest(handle: requestHandle, type: type)
     return 0
 }
 
@@ -476,7 +479,7 @@ private func cancelRequest(_ L: LuaState!) -> CInt {
     }
     L.rawget(2, key: "ref")
     if let requestHandle = L.toint(-1) {
-        iohandler.cancelRequest(Int32(requestHandle))
+        iohandler.cancelRequest(handle: Int32(requestHandle))
     } else {
         print("Bad type for requestTable.ref!")
     }
@@ -497,7 +500,8 @@ private func createBitmap(_ L: LuaState!) -> CInt {
           let modeVal = L.toint(4),
           let mode = Graphics.Bitmap.Mode(rawValue: modeVal) else {
         print("Bad parameters to createBitmap")
-        return 0
+        L.push(Graphics.Error.invalidArguments.rawValue)
+        return 1
     }
     let drawableId = Graphics.DrawableId(value: id)
     let size = Graphics.Size(width: width, height: height)
@@ -511,7 +515,9 @@ private func createWindow(_ L: LuaState!) -> CInt {
           let width = L.toint(4), let height = L.toint(5),
           let flags = L.toint(6),
           let mode = Graphics.Bitmap.Mode(rawValue: flags & 0xF) else {
-        return 0
+        print("Bad parameters to createWindow")
+        L.push(Graphics.Error.invalidArguments.rawValue)
+        return 1
     }
 
     var shadow = 0
@@ -527,18 +533,6 @@ private func getTime(_ L: LuaState!) -> CInt {
     let dt = Date()
     L.push(dt.timeIntervalSince1970)
     return 1
-}
-
-private func key(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    if let event = iohandler.key(), let charcode = event.keycode.toCharcode() {
-        L.push(charcode)
-        L.push(event.modifiers.rawValue)
-    } else {
-        L.push(0)
-        L.push(0)
-    }
-    return 2
 }
 
 private func keysDown(_ L: LuaState!) -> CInt {
@@ -712,18 +706,12 @@ public class OpoInterpreter: PsiLuaEnv {
                 detail = "\(detail)\n\(luaStack)"
             }
             print(detail)
-            let error: InterpreterError
-            if let operation = L.tostring(-1, key: "unimplemented") {
-                if operation == "database.loadBinary" {
-                    // Special case as it's such a significant issue
-                    error = BinaryDatabaseError(message: msg, detail: detail, operation: operation)
-                } else {
-                    error = UnimplementedOperationError(message: msg, detail: detail, operation: operation)
-                }
+            let error = if let operation = L.tostring(-1, key: "unimplemented") {
+                UnimplementedOperationError(message: msg, detail: detail, operation: operation)
             } else if L.toboolean(-1, key: "notOpl") {
-                error = NativeBinaryError(message: msg, detail: detail)
+                NativeBinaryError(message: msg, detail: detail)
             } else {
-                error = InterpreterError(message: msg, detail: detail)
+                InterpreterError(message: msg, detail: detail)
             }
             L.pop() // the error object
             throw error
@@ -747,12 +735,12 @@ public class OpoInterpreter: PsiLuaEnv {
         let val = Unmanaged<OpoInterpreter>.passUnretained(self)
         lua_pushlightuserdata(L, val.toOpaque())
         let fns: [String: lua_CFunction] = [
-            "editValue": { L in return autoreleasepool { return editValue(L) } },
+            "textEditor": { L in return autoreleasepool { return textEditor(L) } },
             // "print": { L in return autoreleasepool { return print_lua(L) } },
             "beep": { L in return autoreleasepool { return beep(L) } },
             "draw": { L in return autoreleasepool { return draw(L) } },
             "graphicsop": { L in return autoreleasepool { return graphicsop(L) } },
-            "getScreenInfo": { L in return autoreleasepool { return getScreenInfo(L) } },
+            "getDeviceInfo": { L in return autoreleasepool { return getDeviceInfo(L) } },
             "asyncRequest": { L in return autoreleasepool { return asyncRequest(L) } },
             "waitForAnyRequest": { L in return autoreleasepool { return waitForAnyRequest(L) } },
             "checkCompletions": { L in return autoreleasepool { return checkCompletions(L) } },
@@ -761,7 +749,6 @@ public class OpoInterpreter: PsiLuaEnv {
             "createBitmap": { L in return autoreleasepool { return createBitmap(L) } },
             "createWindow": { L in return autoreleasepool { return createWindow(L) } },
             "getTime": { L in return autoreleasepool { return getTime(L) } },
-            "key": { L in return autoreleasepool { return key(L) } },
             "keysDown": { L in return autoreleasepool { return keysDown(L) } },
             "opsync": { L in return autoreleasepool { return opsync(L) } },
             "getConfig": { L in return autoreleasepool { return getConfig(L) } },
@@ -820,14 +807,6 @@ public class OpoInterpreter: PsiLuaEnv {
 
         override var errorDescription: String? {
             return "The program attempted to use the unimplemented operation '\(operation)'."
-        }
-
-    }
-
-    class BinaryDatabaseError: UnimplementedOperationError {
-
-        override var errorDescription: String? {
-            return "Database operations are currently unsupported."
         }
 
     }
@@ -937,6 +916,8 @@ public class OpoInterpreter: PsiLuaEnv {
                 ev[0] = 0x402
                 ev[1] = timestampToInt32(event.timestamp)
             case .quitevent:
+                // 0x404 is actually just the generic "cmd" event, but since we don't support changing files, quit
+                // is the only thing it can be and doesn't require further elaboration.
                 ev[0] = 0x404
             case .cancelled, .completed, .interrupt:
                 break // No completion data for these
@@ -947,6 +928,23 @@ public class OpoInterpreter: PsiLuaEnv {
             L.push(ev) // ev as a table
             L.push(1) // DataTypes.ELong
             let _ = logpcall(3, 0)
+        case "keya":
+            switch response.value {
+            case .keypressevent(let event):
+                var k = Array<Int>(repeating: 0, count: 2)
+                k[0] = event.keycode.toCharcode()!
+                k[1] = event.modifiers.rawValue | (event.isRepeat ? 0x100 : 0)
+                lua_getfield(L, 1, "ev") // Pushes eventArray (as an Addr)
+                luaL_getmetafield(L, -1, "writeArray") // Addr:writeArray
+                lua_insert(L, -2) // put writeArray below eventArray
+                L.push(k) // k as a table
+                L.push(0) // DataTypes.EWord
+                let _ = logpcall(3, 0)
+            case .cancelled, .interrupt:
+                break
+            default:
+                print("Warning unhandled response type for keya \(response.value)")
+            }
         default:
             break // No data for these
         }

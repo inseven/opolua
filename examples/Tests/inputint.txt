@@ -1,5 +1,0 @@
-PROC main:
-	LOCAL x%
-	INPUT x%
-	PRINT "x is", x%
-ENDP

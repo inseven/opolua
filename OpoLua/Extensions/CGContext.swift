@@ -20,7 +20,6 @@
 
 import Foundation
 import CoreGraphics
-import UIKit
 
 extension CGContext {
 
@@ -28,19 +27,74 @@ extension CGContext {
         return CGAffineTransform(scaleX: 1.0, y: -1.0).translatedBy(x: 0.0, y: -CGFloat(self.height))
     }
 
-    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
+    func draw(_ operation: Graphics.DrawCommand, buffer: UnsafeMutableBufferPointer<UInt32>, provider: DrawableImageProvider) -> Graphics.Error? {
         let col: CGColor
+        let colVal: UInt32
         if operation.mode == .clear {
             col = operation.bgcolor.cgColor()
+            colVal = operation.bgcolor.pixelValue
         } else {
             col = operation.color.cgColor()
+            colVal = operation.color.pixelValue
         }
+
+        let drawSinglePixel: (Int, Int) -> Void
+        switch operation.mode {
+        case .set, .clear, .replace:
+            drawSinglePixel = { x, y in
+                if x >= 0 && x < self.width && y >= 0 && y < self.height {
+                    buffer[y * self.width + x] = colVal
+                }
+            }
+        case .invert:
+            let xorVal = ~colVal & ~Graphics.Color.alphaMask
+            drawSinglePixel = { x, y in
+                if x >= 0 && x < self.width && y >= 0 && y < self.height {
+                    let pos = y * self.width + x
+                    buffer[pos] = buffer[pos] ^ xorVal
+                }
+            }
+        }
+        let drawPixel: (Int, Int) -> Void
+        // I'm not sure how to do invert with a pen width... for now, just don't.
+        if operation.penWidth <= 1 || operation.mode == .invert {
+            drawPixel = drawSinglePixel
+        } else {
+            let sub = operation.penWidth / 2
+            let add = (operation.penWidth - 1) - sub
+            drawPixel = { x, y in
+                for yy in y - sub ... y + add {
+                    for xx in x - sub ... x + add {
+                        drawSinglePixel(xx, yy)
+                    }
+                }
+            }
+        }
+
         setStrokeColor(col)
         setFillColor(col)
         setLineWidth(CGFloat(operation.penWidth))
         switch operation.type {
         case .fill(let size):
-            fill(CGRect(origin: operation.origin.cgPoint(), size: size.cgSize()))
+            if operation.mode == .invert {
+                for y in 0 ..< size.height {
+                    for x in 0 ..< size.width {
+                        drawSinglePixel(operation.origin.x + x, operation.origin.y + y)
+                    }
+                }
+            } else {
+                fill(CGRect(origin: operation.origin.cgPoint(), size: size.cgSize()))
+            }
+        case .invert(let size):
+            for y in 0 ..< size.height {
+                for x in 0 ..< size.width {
+                    if (x == 0 || x == size.width - 1) && (y == 0 || y == size.height - 1) {
+                        // gINVERT doesn't draw corner pixels
+                    } else {
+                        drawSinglePixel(operation.origin.x + x, operation.origin.y + y)
+                    }
+                }
+            }
         case .circle(let radius, let fill):
             let rect = CGRect(x: operation.origin.x - radius,
                               y: operation.origin.y - radius,
@@ -64,56 +118,71 @@ extension CGContext {
                 strokePath()
             }
         case .line(let endPoint):
-            drawPixelLine(from: operation.origin.cgPoint(), to: endPoint.cgPoint())
+            drawLine(x0: operation.origin.x, y0: operation.origin.y, x1: endPoint.x, y1: endPoint.y, drawPixel: drawPixel)
         case .box(let size):
-            let rect = CGRect(origin: operation.origin.cgPoint().move(x: 0.5, y: 0.5),
-                              size: size.cgSize().adding(dx: -1, dy: -1))
-            addPath(CGPath(rect: rect, transform: nil))
-            strokePath()
+            let x = operation.origin.x
+            let y = operation.origin.y
+            let w = size.width - 1
+            let h = size.height - 1
+            drawLine(x0: x, y0: y, x1: x + w, y1: y, drawPixel: drawPixel) // top
+            drawLine(x0: x + w, y0: y, x1: x + w, y1: y + h, drawPixel: drawPixel) // right
+            drawLine(x0: x + w, y0: y + h, x1: x, y1: y + h, drawPixel: drawPixel) // bottom
+            drawLine(x0: x, y0: y + h, x1: x, y1: y, drawPixel: drawPixel) // left
         case .bitblt(let pxInfo):
+            precondition(operation.mode == .replace)
             let cgImg = CGImage.from(bitmap: pxInfo)
             drawUnflippedImage(cgImg, in: CGRect(origin: operation.origin.cgPoint(), size: pxInfo.size.cgSize()))
         case .copy(let src, let mask):
-            guard let srcImage = provider.getImageFor(drawable: src.drawableId) else {
+            precondition(mask == nil || operation.mode == .replace) // mask only supported with replace mode
+
+            guard let srcDrawable = provider.getDrawable(src.drawableId) else {
                 print("Failed to get image for .copy operation!")
-                return
+                return .badDrawable
             }
 
-            // Clip the rect to the source size to make sure we don't inadvertently stretch it
-            let rect = src.rect.cgRect().intersection(CGRect(x: 0, y: 0, width: srcImage.width, height: srcImage.height))
-
-            // OPL lets your src rect extend beyond the top and left of the
-            // image, in which case we need to adjust the dest pos
-            var destX = operation.origin.cgPoint().x
-            var destY = operation.origin.cgPoint().y
-            if src.rect.minX < 0 {
-                destX = destX + CGFloat(-src.rect.minX)
-            }
-            if src.rect.minY < 0 {
-                destY = destY + CGFloat(-src.rect.minY)
+            guard let (srcRect, dest) = adjustBounds(srcRect: src.rect, dest: operation.origin, srcSize: srcDrawable.size) else {
+                return nil
             }
 
-            let maskImg: CGImage?
+            if operation.mode == .clear || operation.mode == .invert {
+                doClearInvertCopy(buffer: buffer, mode: operation.mode, srcDrawable: srcDrawable, srcRect: srcRect, dest: dest)
+                return nil
+            }
+
+            let maskDrawable: Drawable?
             if let mask = mask {
-                maskImg = provider.getImageFor(drawable: mask.drawableId)
+                maskDrawable = provider.getDrawable(mask.drawableId)
             } else {
-                maskImg = nil
+                maskDrawable = nil
             }
 
-            if let img = srcImage.cropping(to: rect) {
-                let imgRect = CGRect(origin: CGPoint(x: destX, y: destY), size: rect.size)
-                drawUnflippedImage(img, in: imgRect, mode: operation.mode, mask: maskImg)
+            // drawUnflippedImage code path only used for .set and .replace
+            let srcCgRect = srcRect.cgRect()
+            if let img = srcDrawable.getImage()?.cropping(to: srcCgRect) {
+                let imgRect = CGRect(origin: dest.cgPoint(), size: srcCgRect.size)
+                drawUnflippedImage(img, in: imgRect, mode: operation.mode, mask: maskDrawable)
+            }
+        case .mcopy(let src, let rects, let points):
+            precondition(operation.mode == .clear || operation.mode == .invert, "Invalid mode for mcopy operation!")
+            guard let srcDrawable = provider.getDrawable(src) else {
+                print("Failed to get image for .mcopy operation!")
+                return .badDrawable
+            }
+            for i in 0 ..< min(rects.count, points.count) {
+                if let (src, dest) = adjustBounds(srcRect: rects[i], dest: points[i], srcSize: srcDrawable.size) {
+                    doClearInvertCopy(buffer: buffer, mode: operation.mode, srcDrawable: srcDrawable, srcRect: src, dest: dest)
+                }
             }
         case .pattern(let info):
             let srcImage: CGImage?
             if info.drawableId.value == -1 {
-                srcImage = UIImage.ditherPattern().cgImage
+                srcImage = provider.getDitherImage()
             } else {
-                srcImage = provider.getImageFor(drawable: info.drawableId)
+                srcImage = provider.getDrawable(info.drawableId)?.getImage()
             }
             guard let srcImage = srcImage else {
                 print("Failed to get image for .pattern operation id=\(info.drawableId.value))!")
-                return
+                return .badDrawable
             }
             drawUnflippedImage(srcImage, in: info.rect.cgRect(), mode: operation.mode, tile: true)
         case .scroll(let dx, let dy, let rect):
@@ -132,123 +201,67 @@ extension CGContext {
                 fill(clearRect)
                 drawUnflippedImage(img, in: newRect)
             }
-        case .text(let str, let fontInfo, let xstyle):
-            let pt = operation.origin.cgPoint()
-            var bgcolor = operation.bgcolor.cgColor()
-            var fgcolor = operation.color.cgColor()
-            var inverse = fontInfo.flags.contains(.inverse)
-            let xstyleInverse = xstyle == .inverse || xstyle == .inverseNoCorner || xstyle == .thinInverse || xstyle == .thinInverseNoCorner
-            if  xstyleInverse {
-                // Yes, gSTYLE inverse and gXPRINT inverse stack
-                inverse = !inverse
-            }
-            if xstyle == .thinUnderlined {
-                // This smells like a bug, but gSTYLE inverse doesn't apply on
-                // thinUnderlined, despite the fact that it does with underlined
-                // and normal...
-                inverse = false
-            }
-            if inverse {
-                swap(&bgcolor, &fgcolor)
-            }
-            self.setStrokeColor(fgcolor)
-            self.setFillColor(fgcolor)
-            if let font = fontInfo.toBitmapFont() {
-                let bold = fontInfo.flags.contains(.bold)
-                let renderer = BitmapFontCache.shared.getRenderer(font: font, embolden: bold)
-                var x = operation.origin.x
-                let y = operation.origin.y
-                let (textWidth, textHeight) = renderer.getTextSize(str)
-                if operation.mode == .replace || inverse || xstyle != nil {
-                    // gXPRINT always draws background, despite what the docs
-                    // say about how it interacts with gTMODE. Likewise gSTYLE
-                    // inverse always behaves like gTMODE is replace.
-                    var bgRect = CGRect(x: x, y: y, width: textWidth, height: textHeight)
-                    // From the point of view of the background size, underlined counts as "thin"
-                    // even though that's really not obvious
-                    let thin = xstyle == .thinInverse || xstyle == .thinInverseNoCorner || xstyle == .underlined || xstyle == .thinUnderlined
-                    if xstyle != nil && !thin {
-                        // Non-thin gXPRINT styles draw an extra pixel all round
-                        bgRect = bgRect.insetBy(dx: -1, dy: -1)
-                    }
-                    self.saveGState()
-                    self.setFillColor(bgcolor)
-                    if xstyle == .normal || xstyle == .inverseNoCorner || xstyle == .thinInverseNoCorner {
-                        self.clipToCornerlessBox(bgRect)
-                    }
-                    self.fill(bgRect)
-                    restoreGState()
-                }
-                for ch in str {
-                    if let img = renderer.getImageForChar(ch) {
-                        let rect = CGRect(x: x, y: y, width: img.width, height: img.height)
-                        self.saveGState()
-                        self.concatenate(self.coordinateFlipTransform.inverted())
-                        let unflippedRect = CGRect(x: rect.minX, y: CGFloat(self.height) - rect.minY - rect.height, width: rect.width, height: rect.height)
-                        self.clip(to: unflippedRect, mask: img)
-                        self.fill(unflippedRect)
-                        self.restoreGState()
-                        x = x + img.width
-                    }
-                }
-
-                if xstyle == nil {
-                    // gPRINT doesn't draw underlines in trailing space, but gXPRINT does (!)
-                    var s = str
-                    var numSpace = 0
-                    var ch = s.popLast()
-                    while ch == " " {
-                        numSpace = numSpace + 1
-                        ch = s.popLast()
-                    }
-                    x = x - numSpace * renderer.getTextSize(" ").0
-                }
-
-                if x <= operation.origin.x {
-                    // There's nothing to underline (either text was empty or all spaces)
-                    return
-                }
-
-                if fontInfo.flags.contains(.underlined) {
-                    let lineStart = CGPoint(x: operation.origin.x, y: y + font.ascent + 1)
-                    let lineEnd = CGPoint(x: CGFloat(x), y: lineStart.y)
-                    drawPixelLine(from: lineStart, to: lineEnd)
-                }
-
-                if xstyle == .underlined {
-                    // Yes this stacks with fontInfo underlined, and is drawn in a slightly different y offset
-                    let lineStart = CGPoint(x: operation.origin.x, y: y + font.charh)
-                    let lineEnd = CGPoint(x: CGFloat(x), y: lineStart.y)
-                    drawPixelLine(from: lineStart, to: lineEnd)
-                } else if xstyle == .thinUnderlined {
-                    let lineStart = CGPoint(x: operation.origin.x, y: y + font.charh - 1)
-                    let lineEnd = CGPoint(x: CGFloat(x), y: lineStart.y)
-                    drawPixelLine(from: lineStart, to: lineEnd)
-                }
-            } else {
-                let uifont = fontInfo.toUiFont()!
-                UIGraphicsPushContext(self)
-                let attribStr = NSAttributedString(string: str, attributes: [
-                    .font: uifont,
-                    .foregroundColor: UIColor(cgColor: col)
-                ])
-                attribStr.draw(at: CGPoint(x: pt.x, y: pt.y))
-                UIGraphicsPopContext()
-            }
         case .border(let rect, let type):
             gXBorder(type: type, frame: rect.cgRect())
-        case .invert(_ /*let size*/):
-            fatalError("Shouldn't reach here") // Handled by Canvas
-            /*
-            let rect = Graphics.Rect(origin: operation.origin, size: size).cgRect()
-            let flippedRect = rect.flipped(forHeight: CGFloat(self.height))
-            let img = CIImage(cgImage: makeImage()!).cropped(to: flippedRect).applyingFilter("CIColorInvert")
-            let cgImg = CIContext().createCGImage(img, from: img.extent)!
-            self.saveGState()
-            self.clipToCornerlessBox(rect)
-            drawUnflippedImage(cgImg, in: rect)
-            self.restoreGState()
-            */
+        }
+        return nil
+    }
+
+    private func adjustBounds(srcRect: Graphics.Rect, dest: Graphics.Point, srcSize: Graphics.Size) -> (Graphics.Rect, Graphics.Point)? {
+        // Both source and dest are allowed to be beyond the drawable bounds - copying from out of bounds is a no-op,
+        // and writing to a destination out of bounds is ignored, so adjust srcRect and dest to be only the portion
+        // that is fully in bounds for both.
+        let destRect = Graphics.Rect(origin: dest, size: srcRect.size)
+        let destBounds = Graphics.Rect(x: 0, y: 0, width: self.width, height: self.height)
+        guard let destClipped = destRect.intersection(destBounds) else {
+            // If no part of the destination is within the bounds of the Canvas then this operation is a no-op
+            return nil
+        }
+
+        // Reduce src to match destClipped
+        let srcAdjustedX = srcRect.minX + (destClipped.minX - destRect.minX)
+        let srcAdjustedY = srcRect.minY + (destClipped.minY - destRect.minY)
+        let srcAdjustedMaxX = srcRect.maxX + (destClipped.maxX - destRect.maxX)
+        let srcAdjustedMaxY = srcRect.maxY + (destClipped.maxY - destRect.maxY)
+
+        let srcAdjusted = Graphics.Rect(x: srcAdjustedX, y: srcAdjustedY, width: srcAdjustedMaxX - srcAdjustedX, height: srcAdjustedMaxY - srcAdjustedY)
+        guard let srcClipped = srcAdjusted.intersection(Graphics.Rect(origin: .zero, size: srcSize)) else {
+            // Likewise a no-op
+            return nil
+        }
+
+        let destX = destClipped.minX + (srcClipped.minX - srcAdjusted.minX)
+        let destY = destClipped.minY + (srcClipped.minY - srcAdjusted.minY)
+        return (srcClipped, Graphics.Point(x: destX, y: destY))
+    }
+
+    private func doClearInvertCopy(buffer: UnsafeMutableBufferPointer<UInt32>, mode: Graphics.Mode, srcDrawable: Drawable, srcRect: Graphics.Rect, dest: Graphics.Point) {
+        if mode == .clear {
+            // A bit more optimised than drawImageUnflipped()
+            let rect = srcRect.cgRect()
+            let mask = srcDrawable.getInvertedMask()!.cropping(to: rect)!
+            let destRect = CGRect(origin: dest.cgPoint(), size: rect.size)
+            saveGState()
+            defer {
+                restoreGState()
+            }
+            self.concatenate(self.coordinateFlipTransform.inverted())
+            let unflippedRect = destRect.flipped(forHeight: CGFloat(self.height))
+            self.clip(to: unflippedRect, mask: mask)
+            self.fill(unflippedRect)
+        } else if mode == .invert {
+            let srcPtr = srcDrawable.getData()
+            let w = srcDrawable.size.width
+            for y in 0 ..< srcRect.height {
+                for x in 0 ..< srcRect.width {
+                    let srcPx = srcPtr[w * (srcRect.minY + y) + srcRect.minX + x]
+                    // Mode invert still only operates on non-white source pixels
+                    if srcPx != Graphics.Color.white.pixelValue {
+                        let pos = (dest.y + y) * self.width + dest.x + x
+                        buffer[pos] = buffer[pos] ^ ~srcPx
+                    }
+                }
+            }
         }
     }
 
@@ -257,7 +270,7 @@ extension CGContext {
         drawUnflippedImage(image, in: imgRect)
     }
 
-    private func drawUnflippedImage(_ img: CGImage, in rect: CGRect, mode: Graphics.Mode = .replace, mask: CGImage? = nil, tile: Bool = false) {
+    private func drawUnflippedImage(_ img: CGImage, in rect: CGRect, mode: Graphics.Mode = .replace, mask: Drawable? = nil, tile: Bool = false) {
         // Need to make sure the image draws the right way up so we have to flip back to normal coords, and
         // apply the y coordinate conversion ourselves
         saveGState()
@@ -266,12 +279,12 @@ extension CGContext {
         }
         self.concatenate(self.coordinateFlipTransform.inverted())
         let unflippedRect = rect.flipped(forHeight: CGFloat(self.height))
-        if let mask = mask {
+        if let maskImg = mask?.getImage() {
             // Annoyingly, clip() expects the mask to be the inverse of how epoc
             // expects it (ie 0xFF meaning opaque whereas epoc uses 0x00 for
             // opaque), so we have to invert it ourselves. Probably should do
             // something more efficient here...
-            clip(to: unflippedRect, mask: mask.inverted()!)
+            clip(to: unflippedRect, mask: maskImg.stripAlpha(grayscale: true).inverted()!)
         }
 
         var imgToDraw = img
@@ -302,47 +315,74 @@ extension CGContext {
         }
     }
 
-    private func drawPixelLine(from: CGPoint, to: CGPoint) {
-        beginPath()
-        var lineStart = from
-        var lineEnd = to
-        if lineStart.y == lineEnd.y && lineStart.x != lineEnd.x {
-            // This is suprising, but seems to be needed to get clean ends
-            lineStart = lineStart.move(x: 0, y: 0.5)
-            lineEnd = lineEnd.move(x: 0, y: 0.5)
-        } else if lineStart.x < lineEnd.x {
-            lineStart = lineStart.move(x: 0.5, y: 0.5)
-            lineEnd = lineEnd.move(x: -0.5, y: 0.5)
-        } else if lineStart.x > lineEnd.x {
-            lineStart = lineStart.move(x: -0.5, y: 0.5)
-            lineEnd = lineEnd.move(x: 0.5, y: 0.5)
-        } else {
-            // Vertical line
-            lineStart = lineStart.move(x: 0.5, y: 0.5)
-            lineEnd = lineEnd.move(x: 0.5, y: 0.5)
-        }
-        move(to: lineStart)
-        addLine(to: lineEnd)
-        strokePath()
-    }
+    private func drawLine(x0: Int, y0: Int, x1: Int, y1: Int, drawPixel: @escaping (Int, Int) -> Void) {
+        // drawPixel really shouldn't need to be declared escaping, because it isn't, but the compiler is being dumb.
 
-    private func clipToCornerlessBox(_ rect: CGRect) {
-        self.beginPath()
-        self.addLines(between: [
-            CGPoint(x: rect.minX + 1, y: rect.minY),
-            CGPoint(x: rect.maxX - 1, y: rect.minY),
-            CGPoint(x: rect.maxX - 1, y: rect.minY + 1),
-            CGPoint(x: rect.maxX, y: rect.minY + 1),
-            CGPoint(x: rect.maxX, y: rect.maxY - 1),
-            CGPoint(x: rect.maxX - 1, y: rect.maxY - 1),
-            CGPoint(x: rect.maxX - 1, y: rect.maxY),
-            CGPoint(x: rect.minX + 1, y: rect.maxY),
-            CGPoint(x: rect.minX + 1, y: rect.maxY - 1),
-            CGPoint(x: rect.minX, y: rect.maxY - 1),
-            CGPoint(x: rect.minX, y: rect.minY + 1),
-            CGPoint(x: rect.minX + 1, y: rect.minY + 1),
-            CGPoint(x: rect.minX + 1, y: rect.minY)
-        ])
-        self.clip()
+        let dx = x1 - x0
+        let dy = y1 - y0
+        // "scan" is the axis we iterate over (x in quadrant 0)
+        // "inc" is the axis we conditionally add to (y in quadrant 0)
+        var inc: Int = 0
+        var scan: Int = 0
+        let incr: Int
+        let scanStart: Int
+        let scanEnd: Int
+        let scanIncr: Int
+        var dscan: Int
+        var dinc: Int
+        let drawXY: () -> Void
+        if abs(dx) > abs(dy) {
+            drawXY = {
+                drawPixel(scan, inc)
+            }
+            dscan = dx
+            dinc = dy
+            inc = y0
+            scanStart = x0
+            scanEnd = x1
+        } else {
+            drawXY = {
+                drawPixel(inc, scan)
+            }
+            dscan = dy
+            dinc = dx
+            inc = x0
+            scanStart = y0
+            scanEnd = y1
+        }
+
+        if (dinc < 0) {
+            incr = -1
+            dinc = -dinc
+        } else {
+            incr = 1
+        }
+        if (dscan < 0) {
+            scanIncr = -1
+            dscan = -dscan
+        } else {
+            scanIncr = 1
+        }
+        // Hoist these as they're constants
+        let TwoDinc = 2 * dinc
+        let TwoDincMinusTwoDscan = 2 * dinc - 2 * dscan
+
+        var D = TwoDinc - dscan
+        drawPixel(x0, y0)
+        // OPL does not draw the end pixel of a line
+        // drawPixel(x1, y1)
+
+        scan = scanStart
+        while scan != scanEnd {
+            if (D > 0) {
+                inc = inc + incr
+                drawXY()
+                D = D + TwoDincMinusTwoDscan
+            } else {
+                drawXY()
+                D = D + TwoDinc
+            }
+            scan = scan + scanIncr
+        }
     }
 }

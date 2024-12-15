@@ -311,6 +311,7 @@ local ENoBitmapCompression = 0
 local EByteRLECompression = 1
 local ETwelveBitRLECompression = 2
 local ESixteenBitRLECompression = 3
+local ETwentyFourBitRLECompression = 4
 
 Bitmap = class {
     -- See parseSEpocBitmapHeader for members
@@ -344,8 +345,11 @@ local function byteWidth(pixelWidth, bpp)
 end
 
 function Bitmap:getImageData(expandToBitDepth, resultStride)
-    local imgData = decodeBitmap(self, self.data)
+    local imgData = decodeBitmap(self)
     if expandToBitDepth == 8 then
+        if resultStride == nil then
+            resultStride = self.width
+        end
         local stride = self.stride
         assert(self.bpp <= 8, "Cannot expand to a smaller bit depth")
         if self.bpp < 8 then
@@ -354,13 +358,14 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
         end
         local wdata = widenTo8bpp(imgData, self.bpp, self.isColor)
         local rowWidth = self.width -- since it's now 8bpp
-        local rowPad = string.rep("\0", (resultStride or 0) - rowWidth)
+        local rowPad = string.rep("\0", resultStride - rowWidth)
         local trimmed = {}
         for y = 0, self.height - 1 do
             local row = wdata:sub(1 + y * stride, y * stride + rowWidth)
             trimmed[1 + y] = row..rowPad
         end
         imgData = table.concat(trimmed)
+        assert(#imgData == resultStride * self.height, "getImageData did not return expected size")
     elseif expandToBitDepth == 24 then
         local bytes
         if self.bpp == 12 or self.bpp == 16 or self.bpp == 24 then
@@ -444,7 +449,7 @@ function parseMbmHeader(data)
                 height = height,
                 bpp = 1,
                 isColor = false,
-                mode = KgCreate2GrayMode,
+                mode = KColorgCreate2GrayMode,
                 stride = stride,
                 paletteSz = 0,
                 compression = ENoBitmapCompression,
@@ -523,44 +528,33 @@ function parseRomBitmap(data, offset)
     return bitmap
 end
 
-function decodeBitmap(bitmap, data)
+function decodeBitmap(bitmap)
+    local data = bitmap.data
     local imgData
     local pos = 1 + bitmap.imgStart
     local len = bitmap.imgLen
     if bitmap.compression == ENoBitmapCompression then
-        return data:sub(pos, pos + len)
+        local expectedImgSize = bitmap.stride * bitmap.height
+        if len < expectedImgSize then
+            -- Workaround: Some AIFs appear to have an incorrectly-calculated length in the header (failing to include
+            -- headerLen) so we will allow this (on uncompressed bitmaps only) and just hope the data is otherwise
+            -- correct.
+            len = expectedImgSize
+        end
+
+        return data:sub(pos, pos + len - 1)
     elseif bitmap.compression == EByteRLECompression then
-        imgData = rle8decode(data, pos, len)
+        imgData = rleDecode(data, pos, len, 1)
     elseif bitmap.compression == ETwelveBitRLECompression then
         imgData = rle12decode(data, pos, len)
     elseif bitmap.compression == ESixteenBitRLECompression then
-        imgData = rle16decode(data, pos, len)
+        imgData = rleDecode(data, pos, len, 2)
+    elseif bitmap.compression == ETwentyFourBitRLECompression then
+        imgData = rleDecode(data, pos, len, 3)
     else
         error("Unknown compression scheme "..tostring(bitmap.compression))
     end
     return imgData
-end
-
-function rle8decode(data, pos, len)
-    local bytes = {}
-    local i = 1
-    local endPos = pos + len
-    while pos+1 <= endPos do
-        local b = string_byte(data, pos)
-        if b < 0x80 then
-            -- b+1 repeats of byte pos+1
-            bytes[i] = string_rep(string_sub(data, pos + 1, pos + 1), b + 1)
-            pos = pos + 2
-        else
-            -- 256-b bytes of raw data follow
-            local n = 256 - b
-            bytes[i] = string_sub(data, pos + 1, pos + n)
-            pos = pos + 1 + n
-        end
-        i = i + 1
-    end
-    local result = table.concat(bytes)
-    return result
 end
 
 function rle12decode(data, pos, len)
@@ -579,26 +573,38 @@ function rle12decode(data, pos, len)
     return result
 end
 
-function rle16decode(data, pos, len)
+function rleDecode(data, pos, len, pixelSize)
     local bytes = {}
     local i = 1
     local endPos = pos + len
     while pos+1 <= endPos do
         local b = string_byte(data, pos)
         if b < 0x80 then
-            -- b+1 repeats of word pos+1
-            bytes[i] = string_rep(string_sub(data, pos + 1, pos + 2), b + 1)
-            pos = pos + 3
+            -- b+1 repeats of pixel pos+1
+            bytes[i] = string_rep(string_sub(data, pos + 1, pos + pixelSize), b + 1)
+            pos = pos + 1 + pixelSize
         else
-            -- 256-b words of raw data follow
+            -- 256-b pixels of raw data follow
             local n = 256 - b
-            bytes[i] = string_sub(data, pos + 1, pos + (n * 2))
-            pos = pos + 1 + (n * 2)
+            bytes[i] = string_sub(data, pos + 1, pos + (n * pixelSize))
+            pos = pos + 1 + (n * pixelSize)
         end
         i = i + 1
     end
     local result = table.concat(bytes)
     return result
+end
+
+local compressionNames = {
+    [ENoBitmapCompression] = "none",
+    [EByteRLECompression] = "rle",
+    [ETwelveBitRLECompression] = "rle12",
+    [ESixteenBitRLECompression] = "rle16",
+    [ETwentyFourBitRLECompression] = "rle24",
+}
+
+function compressionToString(c)
+    return compressionNames[c] or string.format("Unknown compression scheme %d", c)
 end
 
 local function scale2bpp(val)
@@ -695,6 +701,19 @@ function Bitmap:toBmp()
     local pixels = self:getImageData(24, byteWidth)
     local pad = string.rep("\0", destLength - #pixels)
     return fileHeader..bmpHeader..pixels..pad
+end
+
+function Bitmap:getMetadata()
+    local result = {
+        width = self.width,
+        height = self.height,
+        bpp = self.bpp,
+        compression = compressionToString(self.compression),
+    }
+    if self.mask then
+        result.mask = self.mask:getMetadata()
+    end
+    return result
 end
 
 return _ENV

@@ -576,8 +576,6 @@ local function IPs8_dump(runtime)
     return fmt("%d (0x%s)", val, fmt("%02X", val):sub(-2))
 end
 
-IP8_dump = fns.IP8_dump
-
 local function IP16_dump(runtime)
     local index = runtime:IP16()
     return fmt("0x%04X", index)
@@ -596,6 +594,12 @@ end
 local function qualifier_dump(runtime)
     local qualifier = runtime:IP8()
     return fmt("qualifier=%d", qualifier)
+end
+
+local function IPflag_dump(runtime)
+    local flag = runtime:IP8()
+    assert(flag == 0 or flag == 1, "Unexpected IP8 value in dump!")
+    return flag == 0 and "OFF" or "ON"
 end
 
 local function logName_dump(runtime)
@@ -1159,31 +1163,48 @@ end
 function CallProcByStringExpr_dump(runtime)
     local numParams = runtime:IP8()
     local type = runtime:IP8()
-    return fmt("nargs=%d type=%c", numParams, type)
+    local typeStr = type == 0 and "" or string.format("%c", type)
+    return fmt("nargs=%d type=%s", numParams, typeStr)
 end
 
 function PercentLessThan(stack, runtime) -- 0x6C
-    unimplemented("PercentLessThan")
+    local right = stack:pop()
+    local left = stack:pop()
+    -- "how much of lhs is a rhs% increase?"
+    -- I _think_ this is just the remainder of the PercentGreaterThan operator, but who knows...
+    local geResult = left / (1 + (right / 100))
+    stack:push(left - geResult)
 end
 
 function PercentGreaterThan(stack, runtime) -- 0x6D
-    unimplemented("PercentGreaterThan")
+    local right = stack:pop()
+    local left = stack:pop()
+    -- "what number, when increased by rhs%, becomes lhs?"
+    stack:push(left / (1 + (right / 100)))
 end
 
 function PercentAdd(stack, runtime) -- 0x6E
-    unimplemented("PercentAdd")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left + (right / 100) * left)
 end
 
 function PercentSubtract(stack, runtime) -- 0x6F
-    unimplemented("PercentSubtract")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left - (right / 100) * left)
 end
 
 function PercentMultiply(stack, runtime) -- 0x70
-    unimplemented("PercentMultiply")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left * (right / 100))
 end
 
 function PercentDivide(stack, runtime) -- 0x71
-    unimplemented("PercentDivide")
+    local right = stack:pop()
+    local left = stack:pop()
+    stack:push(left / (right / 100))
 end
 
 function ZeroReturn(stack, runtime)
@@ -1288,59 +1309,22 @@ function LPrintSpace(stack, runtime) -- 0x91
 end
 
 function PrintCarriageReturn(stack, runtime) -- 0x92
-    runtime:PRINT("\n")
+    runtime:PRINT(KLineBreakStr)
 end
 
 function LPrintCarriageReturn(stack, runtime) -- 0x93
-    stack:push("\n")
+    stack:push(KLineBreakStr)
     LPrintString(stack, runtime)
 end
 
 function InputInt(stack, runtime) -- 0x94
     local var = stack:pop()
-    local trapped = runtime:getTrap()
-    local result
-    while result == nil do
-        local line = runtime:iohandler().editValue({
-            type = "integer",
-            initialValue = "",
-            prompt = "?",
-            allowCancel = trapped,
-        })
-        if not line then
-            error(KErrEsc)
-        end
-        result = tonumber(line)
-        if result == nil then
-            if trapped then
-                -- We can error and the trap check in runtime will deal with it
-                error(KErrGenFail)
-            else
-                -- iohandler is responsible for outputting a linefeed after reading the line
-                runtime:iohandler().print("?")
-                -- And go round again
-            end
-        end
-    end
-    var(result)
-    runtime:setTrap(false)
+    runtime:INPUT(var)
 end
 
 InputLong = InputInt -- 0x95
 InputFloat = InputInt -- 0x96
-
-function InputString(stack, runtime) -- 0x97
-    local var = stack:pop()
-    local trapped = runtime:getTrap()
-    local line = runtime:iohandler().editValue({
-        type = "text",
-        initialValue = "",
-        prompt = "?",
-        allowCancel = trapped,
-    })
-    var(line)
-    runtime:setTrap(false)
-end
+InputString = InputInt -- 0x97
 
 function PokeW(stack, runtime) -- 0x98
     local data = string.pack("<i2", stack:pop())
@@ -1450,8 +1434,34 @@ function Create_dump(runtime)
 end
 
 function Cursor(stack, runtime) -- 0xA6
-    local numParams = runtime:IP8()
-    printf("CURSOR numParams=%d\n", numParams) -- TODO
+    local immediate = runtime:IP8()
+    if immediate == 0 then
+        -- CURSOR OFF
+        runtime:CURSOR(nil)
+    elseif immediate == 1 then
+        runtime:CURSOR(true)
+    else
+        -- CURSOR <window> [, ascent, width, height [, type]
+        local t = nil
+        if immediate == 4 then
+            t = stack:pop()
+        end
+        local ascent, w, h
+        if immediate >= 3 then
+            ascent, w, h = stack:pop(3)
+        end
+        local id = stack:pop()
+
+        if ascent == nil then
+            ascent = runtime:gINFO().fontAscent
+            w = 2
+            h = runtime:gINFO().fontHeight
+        end
+        local context = runtime:getGraphicsContext(id)
+        local x = context.pos.x
+        local y = context.pos.y - ascent
+        runtime:CURSOR(id, x, y, w, h, t)
+    end
 end
 
 Cursor_dump = qualifier_dump
@@ -1478,9 +1488,7 @@ function Escape(stack, runtime) -- 0xA9
     -- We don't care
 end
 
-function Escape_dump(runtime)
-    return fmt("state=%d", runtime:IP8())
-end
+Escape_dump = IPflag_dump
 
 function First(stack, runtime) -- 0xAA
     local db = runtime:getDb()
@@ -1677,13 +1685,13 @@ function UnLoadM(stack, runtime) -- 0xC1
 end
 
 function Edit(stack, runtime) -- 0xC2
-    unimplemented("Edit")
-    runtime:setTrap(false)
+    local var = stack:pop()
+    runtime:INPUT(var, var())
 end
 
 function Screen2(stack, runtime) -- 0xC3
-    local w, h = stack:popXY()
-    runtime:SCREEN(w, h)
+    local w, h = stack:pop(2)
+    runtime:SCREEN(w, h, 0, 0)
 end
 
 function OpenR(stack, runtime) -- 0xC4
@@ -1736,7 +1744,7 @@ function gVisible(stack, runtime) -- 0xC9
     runtime:gVISIBLE(show)
 end
 
-gVisible_dump = IP8_dump
+gVisible_dump = IPflag_dump
 
 function gFont(stack, runtime) -- 0xCA
     local id = stack:pop()
@@ -1770,18 +1778,17 @@ end
 function gInfo(stack, runtime) -- 0xD0 (SIBO only)
     local addr = runtime:addrFromInt(stack:pop())
 
-    local context = runtime:getGraphicsContext()
-    local w, h, ascent = runtime:gTWIDTH("0")
+    local ginfo = runtime:gINFO()
 
     local data = {
         0, -- 1 lowest character code (??)
         255, -- 2 highest character code (??)
-        h, -- 3 font height
-        h - ascent, -- 4 font descent
-        ascent, -- 5 font ascent
-        w, -- 6 width of '0' (really?)
-        17, -- 7 max character width
-        17, -- 8 font flags TODO CHECK
+        ginfo.fontHeight, -- 3 font height
+        ginfo.fontDescent, -- 4 font descent
+        ginfo.fontAscent, -- 5 font ascent
+        ginfo.fontZeroWidth, -- 6 width of '0' (really?)
+        ginfo.fontMaxWidth, -- 7 max character width
+        17, -- 8 font flags
         0, -- 9-11 font name TODO
         0, -- 10
         0, -- 11
@@ -1791,18 +1798,18 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
         0, -- 15
         0, -- 16
         0, -- 17
-        context.mode, -- 18 gMode
-        context.tmode, -- 19 gTMode
-        context.style, -- 20 gStyle
-        0, -- 21 cursor state
-        -1, -- 22 ID of window containing cursor
-        0, -- 23 cursor width
-        0, -- 24 cursor height
-        0, -- 25 cursor ascent
-        0, -- 26 cursor x
-        0, -- 27 cursor y
-        context.isWindow and 0 or 1, -- 28 drawableIsBitmap
-        6, -- 29 cursor effects
+        ginfo.gmode, -- 18 gMode
+        ginfo.tmode, -- 19 gTMode
+        ginfo.style, -- 20 gStyle
+        ginfo.cursorVisible and 1 or 0, -- 21 cursor state
+        ginfo.cursorWindow, -- 22 ID of window containing cursor
+        ginfo.cursorWidth or 0, -- 23 cursor width
+        ginfo.cursorHeight or 0, -- 24 cursor height
+        ginfo.cursorAscent or 0, -- 25 cursor ascent
+        ginfo.cursorX or 0, -- 26 cursor x
+        ginfo.cursorY or 0, -- 27 cursor y
+        ginfo.isWindow and 0 or 1, -- 28 drawableIsBitmap
+        ginfo.cursorFlags, -- 29 cursor effects
         0, -- 30 gGREY setting (TODO...)
         0, -- 31 reserved
         0, -- 32 reserved
@@ -2005,8 +2012,7 @@ function gPeekLine(stack, runtime) -- 0xE6
 end
 
 function Screen4(stack, runtime) -- 0xE7
-    local x, y = stack:popXY()
-    local w, h = stack:popXY()
+    local w, h, x, y = stack:pop(4)
     runtime:SCREEN(w, h, x, y)
 end
 
@@ -2115,7 +2121,7 @@ function dItem(stack, runtime) -- 0xED
             end
         end
         -- Have to resolve default choice here, and _not_ at the point of the DIALOG call!
-        item.value = math.min(math.max(item.variable(), 1), #item.choices)
+        item.index = math.min(math.max(item.variable(), 1), #item.choices)
     elseif itemType == dItemTypes.dLONG or itemType == dItemTypes.dFLOAT or itemType == dItemTypes.dDATE or itemType == dItemTypes.dTIME then
         item.max = stack:pop()
         item.min = stack:pop()
@@ -2152,6 +2158,38 @@ function dItem(stack, runtime) -- 0xED
         end
     elseif itemType == dItemTypes.dPOSITION then
         dialog.xpos, dialog.ypos = stack:popXY()
+        shouldAdd = false
+    elseif itemType == dItemTypes.dFILE then
+        local var, prompt, flags, uid1, uid2, uid3 = stack:pop(6)
+        local prompts = {}
+        for p in prompt:gmatch("[^,]+") do
+            table.insert(prompts, p)
+        end
+
+        local fileItem = {
+            type = (flags & KDFileEditBox == 0) and dItemTypes.dFILECHOOSER or dItemTypes.dFILEEDIT,
+            variable = var,
+            path = oplpath.abs(var(), "C:\\"),
+            prompt = prompts[1] or prompt,
+            uid1 = uid1,
+            uid2 = uid2,
+            uid3 = uid3,
+            flags = flags,
+        }
+        local folderItem = {
+            type = dItemTypes.dFILEFOLDER,
+            fileItem = fileItem,
+            prompt = prompts[2] or "",
+        }
+        local diskItem = {
+            type = dItemTypes.dFILEDISK,
+            fileItem = fileItem,
+            folderItem = folderItem,
+            prompt = prompts[3] or "",
+        }
+        table.insert(dialog.items, fileItem)
+        table.insert(dialog.items, folderItem)
+        table.insert(dialog.items, diskItem)
         shouldAdd = false
     else
         error("Unsupported dItem type "..itemType)
@@ -2194,7 +2232,7 @@ function Lock(stack, runtime) -- 0xF1
     -- Don't care
 end
 
-Lock_dump = IPs8_dump
+Lock_dump = IPflag_dump
 
 function gInvert(stack, runtime) -- 0xF2
     local w, h = stack:popXY()
@@ -2263,7 +2301,16 @@ function SetPath(stack, runtime) -- 0xFA
 end
 
 function SecsToDate(stack, runtime) -- 0xFB
-    unimplemented("SecsToDate")
+    local s, year, month, day, hour, min, sec, yday = stack:pop(8)
+
+    local d = os.date("!*t", s)
+    runtime:addrAsVariable(year, DataTypes.EWord)(d.year)
+    runtime:addrAsVariable(month, DataTypes.EWord)(d.month)
+    runtime:addrAsVariable(day, DataTypes.EWord)(d.day)
+    runtime:addrAsVariable(hour, DataTypes.EWord)(d.hour)
+    runtime:addrAsVariable(min, DataTypes.EWord)(d.min)
+    runtime:addrAsVariable(sec, DataTypes.EWord)(d.sec)
+    runtime:addrAsVariable(yday, DataTypes.EWord)(d.yday)
 end
 
 function gIPrint(stack, runtime) -- 0xFC
@@ -2368,7 +2415,6 @@ gXBorder_dump = qualifier_dump
 function ScreenInfo(stack, runtime) -- 0x114
     local addr = runtime:addrFromInt(stack:pop())
     local screen = runtime:getGraphics().screen
-    local screenFontUid = KFontCourierNormal11
     local result = {
         [1] = screen.x, -- Left margin in pixels
         [2] = screen.y, -- Top margin in pixels
@@ -2378,8 +2424,8 @@ function ScreenInfo(stack, runtime) -- 0x114
         [6] = 0, -- unused
         [7] = screen.charw, -- screen font char width
         [8] = screen.charh, -- screen font char height
-        [9] = screen.fontid & 0xFFFF,
-        [10] = (screen.fontid >> 16) & 0xFFFF,
+        [9] = screen.fontUid & 0xFFFF,
+        [10] = (screen.fontUid >> 16) & 0xFFFF,
     }
     addr:writeArray(result, DataTypes.EWord)
 end
@@ -2387,11 +2433,11 @@ end
 function CallOpxFunc(stack, runtime) -- 0x118
     local opxNo = runtime:IP8()
     local fnIdx = runtime:IP16()
-    local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
+    local opx = runtime:currentProc().module.opxTable[1 + opxNo]
     assert(opx, "Bad opx id?")
+    local modName = "opx." .. opx.name:lower()
     if not opx.module then
         local ok
-        local modName = "opx." .. opx.name:lower()
         ok, opx.module = pcall(require, modName)
         if not ok then
             unimplemented(modName)
@@ -2399,11 +2445,11 @@ function CallOpxFunc(stack, runtime) -- 0x118
     end
     local fnName = opx.module.fns[fnIdx]
     if not fnName then
-        unimplemented(fmt("opx.%s.%d", opx.name, fnIdx))
+        unimplemented(fmt("%s.%d", modName, fnIdx))
     end
     local fn = opx.module[fnName]
     if not fn then
-        unimplemented(fmt("opx.%s.%s", opx.name, fnName))
+        unimplemented(fmt("%s.%s", modName, fnName))
     end
     fn(stack, runtime)
 end
@@ -2411,16 +2457,17 @@ end
 function CallOpxFunc_dump(runtime)
     local opxNo = runtime:IP8()
     local fnIdx = runtime:IP16()
-    local opx = runtime:moduleForProc(runtime:currentProc()).opxTable[1 + opxNo]
+    local opx = runtime:currentProc().module.opxTable[1 + opxNo]
     local fnName
     if opx then
-        local ok, module = pcall(require, fmt("opx.%s", opx.filename))
+        local modName = "opx." .. opx.name:lower()
+        local ok, module = pcall(require, modName)
         if ok then
             fnName = module.fns[fnIdx]
         end
     end
 
-    return fmt("%d %d (%s %s)", opxNo, fnIdx, opx and opx.filename or "?", fnName or "?")
+    return fmt("%d %d (%s %s)", opxNo, fnIdx, opx and opx.name or "?", fnName or "?")
 end
 
 function Statement32(stack, runtime) -- 0x119
@@ -2450,15 +2497,22 @@ function Put(stack, runtime) -- 0x11D
 end
 
 function DeleteTable(stack, runtime) -- 0x11E
-    unimplemented("DeleteTable")
+    local tableName = stack:pop()
+    local path = stack:pop()
+    local db = runtime:newDb(path, "Open")
+    db:deleteTable(tableName)
+    runtime:saveDb(db)
 end
 
 function GotoMark(stack, runtime) -- 0x11F
-    unimplemented("GotoMark")
+    local db = runtime:getDb()
+    local bookmark = stack:pop()
+    db:setPos(bookmark)
 end
 
 function KillMark(stack, runtime) -- 0x120
-    unimplemented("KillMark")
+    local bookmark = stack:pop()
+    -- Since bookmarks are just position integers, nothing required here    
 end
 
 function ReturnFromEval(stack, runtime) -- 0x121
@@ -2480,10 +2534,10 @@ function GetEventA32(stack, runtime) -- 0x123
 end
 
 function gColor(stack, runtime) -- 0x124
-    local blue = stack:pop()
-    local green = stack:pop()
-    local red = stack:pop()
-    runtime:gCOLOR(red, green, blue)
+    -- OPL casts to a uint8_t so some progs get away with passing in negative
+    -- numbers, which our native impl doesn't like
+    local r, g, b = stack:pop(3)
+    runtime:gCOLOR(r % 256, g % 256, b % 256)
 end
 
 function SetFlags(stack, runtime) -- 0x125
@@ -2496,25 +2550,32 @@ function SetDoc(stack, runtime) -- 0x126
 end
 
 function DaysToDate(stack, runtime) -- 0x127
-    unimplemented("DaysToDate")
+    local dayVar = stack:pop():asVariable(DataTypes.EWord)
+    local monthVar = stack:pop():asVariable(DataTypes.EWord)
+    local yearVar = stack:pop():asVariable(DataTypes.EWord)
+    local days = stack:pop()
+    local y, m, d = runtime:DAYSTODATE(days)
+    yearVar(y)
+    monthVar(m)
+    dayVar(d)
 end
 
 function gInfo32(stack, runtime) -- 0x128
     local addr = runtime:addrFromInt(stack:pop())
 
+    local ginfo = runtime:gINFO()
     local context = runtime:getGraphicsContext()
-    local w, h, ascent = runtime:gTWIDTH("0")
 
     local data = {
         0, -- 1 reserved
         0, -- 2 reserved
-        h, -- 3 font height
-        h - ascent, -- 4 font descent
-        ascent, -- 5 font ascent
-        w, -- 6 width of '0' (really?)
-        17, -- 7 max character width
-        17, -- 8 font flags
-        context.font.uid, -- 9 font uid
+        ginfo.fontHeight, -- 3 font height
+        ginfo.fontDescent, -- 4 font descent
+        ginfo.fontAscent, -- 5 font ascent
+        ginfo.fontZeroWidth, -- 6 width of '0' (really?)
+        ginfo.fontMaxWidth, -- 7 max character width
+        17, -- 8 in theory font flags, but in practice appears to always be 17, so who knows 
+        ginfo.fontUid, -- 9 font uid
         0, -- 10
         0, -- 11
         0, -- 12
@@ -2523,19 +2584,19 @@ function gInfo32(stack, runtime) -- 0x128
         0, -- 15
         0, -- 16
         0, -- 17
-        context.mode, -- 18 gMode
-        context.tmode, -- 19 gTMode
-        context.style, -- 20 gStyle
-        0, -- 21 cursor state
-        -1, -- 22 ID of window containing cursor
-        0, -- 23 cursor width
-        0, -- 24 cursor height
-        0, -- 25 cursor ascent
-        0, -- 26 cursor x
-        0, -- 27 cursor y
-        0, -- 28 drawableIsBitmap
-        6, -- 29 cursor effects
-        0, -- 30 color mode of current window
+        ginfo.gmode, -- 18 gMode
+        ginfo.tmode, -- 19 gTMode
+        ginfo.style, -- 20 gStyle
+        ginfo.cursorVisible and 1 or 0, -- 21 cursor state
+        ginfo.cursorWindow or -1, -- 22 ID of window containing cursor
+        ginfo.cursorWidth or 0, -- 23 cursor width
+        ginfo.cursorHeight or 0, -- 24 cursor height
+        ginfo.cursorAscent or 0, -- 25 cursor ascent
+        ginfo.cursorX or 0, -- 26 cursor x
+        ginfo.cursorY or 0, -- 27 cursor y
+        ginfo.isWindow and 0 or 1, -- 28 drawableIsBitmap
+        ginfo.cursorFlags, -- 29 cursor effects
+        ginfo.displayMode, -- 30 color mode of current window
         context.color.r, -- 31 fg r
         context.color.g, -- 32 fg g
         context.color.b, -- 33 fg b
@@ -2566,7 +2627,8 @@ function IoWaitStat32(stack, runtime) -- 0x129
 end
 
 function Compact(stack, runtime) -- 0x12A
-    unimplemented("Compact")
+    local path = stack:pop()
+    printf("COMPACT(%s)\n", path)
 end
 
 function BeginTrans(stack, runtime) -- 0x12B
@@ -2667,10 +2729,8 @@ function mCardX(stack, runtime) -- 0x137
 end
 
 function gColorBackground(stack, runtime) -- ER5: 0x137, ER6: 0x136
-    local blue = stack:pop()
-    local green = stack:pop()
-    local red = stack:pop()
-    runtime:gCOLORBACKGROUND(red, green, blue)
+    local r, g, b = stack:pop(3)
+    runtime:gCOLORBACKGROUND(r % 256, g % 256, b % 256)
 end
 
 function gColorInfo(stack, runtime) -- ER5: 0x136, ER6: 0x135

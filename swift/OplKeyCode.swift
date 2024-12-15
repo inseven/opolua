@@ -126,6 +126,7 @@ public enum OplKeyCode: Int, CaseIterable {
     case leftCurlyBracket = 123
     case rightCurlyBracket = 125
     case tilde = 126
+    case euro = 128
     case pound = 163
     case multiply = 215
     case divide = 247
@@ -156,7 +157,7 @@ extension OplKeyCode {
         "f": .f,
         "g": .g,
         "h": .h,
-        "i": .j,
+        "i": .i,
         "j": .j,
         "k": .k,
         "l": .l,
@@ -242,6 +243,7 @@ extension OplKeyCode {
         ">": .greaterThan,
         "/": .slash,
         "?": .questionMark,
+        "€": .euro,
         "\n": .enter,
     ]
 
@@ -259,7 +261,7 @@ extension OplKeyCode {
             return self.rawValue
         case .num1, .exclamationMark, .underscore:
             return OplKeyCode.num1.rawValue
-        case .num2, .doubleQuote, .hash:
+        case .num2, .doubleQuote, .hash, .euro:
             return OplKeyCode.num2.rawValue
         case .num3, .pound, .backslash:
             return OplKeyCode.num3.rawValue

@@ -314,7 +314,7 @@ extension CGImage {
         return CGSize(width: width, height: height)
     }
 
-    // TODO: This should be a convenience constructor
+    // This can't be a convenience constructor because that is not allowed in extensions to CFTypes (apparently).
     public static func from(bitmap: Graphics.Bitmap) -> CGImage {
         switch bitmap.mode {
         case .gray2, .gray4, .gray16:
@@ -403,7 +403,7 @@ extension CGImage {
                 intent: .defaultIntent)!
         case .color64K:
             fatalError("Don't know how to CGImage 16bpp!")
-        case .color16M:
+        case .color16M, .colorRGB:
             let provider = CGDataProvider(data: bitmap.imgData as CFData)!
             let sp = CGColorSpaceCreateDeviceRGB()
             let inf = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
@@ -475,6 +475,15 @@ extension CGImage {
         }
         context.draw(self, in: CGRect(origin: .zero, size: cgSize))
         return context.makeImage()
+    }
+
+    func getPixelData() -> UnsafeBufferPointer<UInt32> {
+        // This is only valid for images created from Canvases (or otherwise are guaranteed to be using 32bpp)
+        precondition(self.bitsPerPixel == 32)
+        let data = self.dataProvider!.data!
+        let count = CFDataGetLength(data) / 4
+        let ptr = UnsafeRawPointer(CFDataGetBytePtr(data)).bindMemory(to: UInt32.self, capacity: count)
+        return UnsafeBufferPointer(start: ptr, count: count)
     }
 
 }

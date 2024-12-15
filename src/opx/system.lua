@@ -102,6 +102,7 @@ fns = {
     [75] = "OpenFileDialog",
     [76] = "CreateFileDialog",
     [77] = "SaveAsFileDialog",
+    [78] = "IsExternalPowerPresent"
 }
 
 function BackLightOn(stack, runtime) -- 1
@@ -125,7 +126,9 @@ function IsBacklightPresent(stack, runtime) -- 5
 end
 
 function SetAutoSwitchOffBehavior(stack, runtime) -- 6
-    unimplemented("opx.system.SetAutoSwitchOffBehavior")
+    local behavior = stack:pop()
+    printf("SetAutoSwitchOffBehavior(%d)\n", behavior)
+    stack:push(0)
 end
 
 function SetAutoSwitchOffTime(stack, runtime) -- 7
@@ -267,7 +270,7 @@ function RunApp(stack, runtime) -- 31
                     }
                 },
                 buttons = {
-                    { key = KKeyEsc | KDButtonNoLabel, text = "OK" },
+                    { key = KKeyEnter | KDButtonNoLabel, text = "OK" },
                 },
             }
             runtime:DIALOG(dlg)
@@ -534,6 +537,10 @@ end
 
 function SaveAsFileDialog(stack, runtime) -- 77
     unimplemented("opx.system.SaveAsFileDialog")
+end
+
+function IsExternalPowerPresent(stack, runtime) -- 78
+    stack:push(0)
 end
 
 return _ENV

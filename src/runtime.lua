@@ -160,6 +160,7 @@ function Runtime:addModule(path, procTable, opxTable)
     }
     for _, proc in ipairs(procTable) do
         mod[proc.name] = proc
+        proc.module = mod
         if proc.globals then
             -- runtime expects to be able to do by name lookups in globals...
             for _, global in ipairs(proc.globals) do
@@ -182,8 +183,9 @@ function Runtime:addModule(path, procTable, opxTable)
 end
 
 function Runtime:unloadModule(path)
+    local canonPath = oplpath.canon(path)
     for i, mod in ipairs(self.modules) do
-        if mod.path == path then
+        if oplpath.canon(mod.path) == canonPath then
             table.remove(self.modules, i)
             return
         end
@@ -201,17 +203,6 @@ function Runtime:findProc(procName)
         end
     end
     error("No proc named "..procName.." found in loaded modules")
-end
-
-function Runtime:moduleForProc(proc)
-    for _, mod in ipairs(self.modules) do
-        for k, v in pairs(mod) do
-            if v == proc then
-                return mod
-            end
-        end
-    end
-    return nil
 end
 
 local function quoteVal(val)
@@ -290,7 +281,7 @@ function Runtime:pushNewFrame(stack, proc, numParams)
             local parentProc = parentFrame.proc
             found = parentFrame.globals[nameForLookup]
         end
-        assert(found.type == external.type, "Mismatching types on resolved external!")
+        assert(found.type == external.type, "Mismatching types on resolved external "..nameForLookup)
         table.insert(frame.indirects, self:getLocalVar(found.offset, found.type, parentFrame))
         -- DEBUG
         -- printf("Fixed up external offset=0x%04X to indirect #%d\n", found.offset, #frame.indirects)
@@ -425,6 +416,27 @@ end
 
 function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
     local graphics = self:getGraphics()
+
+    -- Enforce the max 64 windows limit
+    if isWindow then
+        local limit = self:isSibo() and 8 or 64
+        if self:getResource("infowin") then
+            -- I don't think that the info window counts towards the window limit, since on the Psion it's not
+            -- implemented as an OPL window (but it is in our impl).
+            limit = limit + 1
+        end
+        local count = 0
+        for k, v in pairs(graphics) do
+            if type(k) == "number" and v.isWindow then
+                count = count + 1
+            end
+        end
+        if count >= limit then
+            print("Max number of open windows exceeded")
+            error(KErrMaxDraw)
+        end
+    end
+
     -- #graphics+1 will always be the first free id, which is the same
     -- strategy as the Series 5 appears to use.
     local id = #graphics + 1
@@ -439,25 +451,25 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
         height = height,
         pos = { x = 0, y = 0 },
         isWindow = isWindow,
-        font = FontIds[KDefaultFontUid],
+        fontUid = KDefaultFontUid,
         style = 0, -- normal text style
         penwidth = 1,
     }
     graphics[id] = newCtx
-    -- Creating a new drawable always seems to update current
-    graphics.current = newCtx
+    self:setResource("ginfo", nil)
     return newCtx
 end
 
 function Runtime:getGraphics()
     if not self.graphics then
-        local w, h, mode = self.ioh.getScreenInfo()
+        local w, h, mode, device = self.ioh.getDeviceInfo()
         self.graphics = {
             screenWidth = w,
             screenHeight = h,
             screenMode = mode,
             sprites = {},
         }
+        self.deviceName = device
         local id = self:gCREATE(0, 0, w, h, true, mode)
         assert(id == KDefaultWin)
         self:FONT(KFontCourierNormal11, 0)
@@ -465,9 +477,22 @@ function Runtime:getGraphics()
     return self.graphics
 end
 
+-- Since there's no text equivalent to gX, gY
+function Runtime:getTextCursorXY()
+    local screen = self:getGraphics().screen
+    return screen.cursorx + 1, screen.cursory + 1
+end
+
 function Runtime:getScreenInfo()
     local graphics = self:getGraphics()
     return graphics.screenWidth, graphics.screenHeight, graphics.screenMode
+end
+
+function Runtime:getDeviceName()
+    if not self.graphics then
+        self:getGraphics()
+    end
+    return self.deviceName
 end
 
 function Runtime:getGraphicsContext(id)
@@ -494,6 +519,17 @@ function Runtime:closeGraphicsContext(id)
     end
     graphics[id] = nil
     self:flushGraphicsOps()
+    -- Clean up any native resources dependant on this window
+    local cursor = self:getResource("cursor")
+    if cursor and cursor.id == id then
+        self:setResource("cursor", nil)
+        self.ioh.graphicsop("cursor", nil)
+    end
+    local textfield = self:getResource("textfield")
+    if textfield and textfield.id == id then
+        self:setResource("textfield", nil)
+        self.ioh.textEditor(nil)
+    end
     self.ioh.graphicsop("close", id)
 end
 
@@ -506,7 +542,7 @@ function Runtime:saveGraphicsState()
         color = ctx.color,
         bgcolor = ctx.bgcolor,
         pos = { x = ctx.pos.x, y = ctx.pos.y },
-        font = ctx.font,
+        fontUid = ctx.fontUid,
         style = ctx.style,
         flush = self:getGraphicsAutoFlush(),
     }
@@ -519,10 +555,40 @@ function Runtime:restoreGraphicsState(state)
     ctx.color = state.color
     ctx.bgcolor = state.bgcolor
     ctx.pos = { x = state.pos.x, y = state.pos.y }
-    ctx.font = state.font
+    ctx.fontUid = state.fontUid
     ctx.style = state.style
     self:setGraphicsContext(state.id)
     self:setGraphicsAutoFlush(state.flush)
+end
+
+function Runtime:getFont(fontId)
+    if fontId == nil then
+        fontId = self:getGraphicsContext().fontUid
+    end
+    local uid = FontAliases[fontId] or fontId
+    local fonts = self:getResource("fonts")
+    if not fonts then
+        fonts = {}
+        self:setResource("fonts", fonts)
+    end
+    if fonts[uid] then
+        return fonts[uid]
+    end
+
+    local ctx = self:newGraphicsContext(1, 1, false, KColorgCreate2GrayMode)
+    local metrics, err = self:iohandler().graphicsop("loadfont", ctx.id, uid)
+    if metrics == nil then
+        self:closeGraphicsContext(ctx.id)
+        return nil
+    end
+
+    ctx.width = metrics.maxwidth * 32
+    ctx.height = metrics.height * 8
+    metrics.id = ctx.id
+    metrics.uid = uid
+
+    fonts[uid] = metrics
+    return metrics
 end
 
 function Runtime:drawCmd(type, op)
@@ -534,8 +600,12 @@ function Runtime:drawCmd(type, op)
     if not op.mode then
         op.mode = context.mode
     end
-    op.color = context.color
-    op.bgcolor = context.bgcolor
+    if not op.color then
+        op.color = context.color
+    end
+    if not op.bgcolor then
+        op.bgcolor = context.bgcolor
+    end
     if not op.x then
         op.x = context.pos.x
     end
@@ -561,15 +631,21 @@ function Runtime:drawCmd(type, op)
     if graphics.buffer then
         table.insert(graphics.buffer, op)
     else
-        self.ioh.draw({ op })
+        local err = self.ioh.draw({ op }) or KErrNone
+        if err ~= KErrNone then
+            error(err)
+        end
     end
 end
 
 function Runtime:flushGraphicsOps()
     local graphics = self.graphics
     if graphics and graphics.buffer and graphics.buffer[1] then
-        self.ioh.draw(graphics.buffer)
+        local err = self.ioh.draw(graphics.buffer) or KErrNone
         graphics.buffer = {}
+        if err ~= KErrNone then
+            error(err)
+        end
     end
 end
 
@@ -589,60 +665,125 @@ function Runtime:getGraphicsAutoFlush()
     return self:getGraphics().buffer == nil
 end
 
-function Runtime:openDb(logName, tableSpec, variables, op)
-    assert(self.dbs[logName] == nil, KErrOpen)
-    local path, tableName, fields = database.parseTableSpec(tableSpec)
-    path = self:abs(path)
-    if fields == nil then
-        -- SIBO-style call where field names are derived from the variable names
-        fields = {}
-        for i, var in ipairs(variables) do
-            local fieldName = var.name:gsub("[%%&$]$", {
-                ["%"] = "i",
-                ["&"] = "a",
-                ["$"] = "s",
-            })
-            fields[i] = {
-                name = fieldName,
-                type = var.type,
-                -- TODO string maxlen?
-            }
-        end
+function Runtime:declareTextEditor(windowId, editorType, controlRect, cursorRect, userFocusRequested)
+    if windowId == nil then
+        self:setResource("textfield", nil)
+        self.ioh.textEditor(nil)
+        return
     end
 
-    local readonly = op == "OpenR"
-    -- Check if there are already any other open handles to this db
-    local cpath = oplpath.canon(path)
-    for _, db in pairs(self.dbs) do
-        if oplpath.canon(db:getPath()) == cpath then
-            if not readonly or db:isWriteable() then
-                error(KErrInUse)
-            end
-        end
+    local win = self:getGraphicsContext(windowId)
+
+    local info = {
+        id = windowId,
+        controlRect = {
+            x = win.winX + controlRect.x,
+            y = win.winY + controlRect.y,
+            w = controlRect.w,
+            h = controlRect.h,
+        },
+        type = editorType,
+        cursorRect = {
+            x = win.winX + cursorRect.x,
+            y = win.winY + cursorRect.y,
+            w = cursorRect.w,
+            h = cursorRect.h,
+        },
+        windowRect = {
+            x = win.winX,
+            y = win.winY,
+            w = win.width,
+            h = win.height,
+        },
+        userFocusRequested = userFocusRequested,
+    }
+    local current = self:getResource("textfield")
+    local function rectEqual(a, b)
+        return a.x == b.x and a.y == b.y and a.w == b.w and a.h == b.h
     end
+    if current and current.windowId == info.windowId and current.type == info.type
+        and current.userFocusRequested == info.userFocusRequested
+        and rectEqual(current.controlRect, info.controlRect)
+        and rectEqual(current.cursorRect, info.cursorRect)
+        and rectEqual(current.windowRect, info.windowRect) then
+        -- no changes
+        return
+    end
+
+    self:setResource("textfield", info)
+    self.ioh.textEditor(info)
+end
+
+-- op==nil is used for dbase.opx functions like DbGetFieldCount which take a database path but the file is allowed to
+-- be open with any mode
+function Runtime:newDb(path, op)
+    local readonly = op == nil or op == "OpenR"
+    local isCreate = op == "Create"
+
+    -- TODO make this check at table granularity not file, AND share self.tables if already open
+
+    -- Check if there are already any other open handles to this db
+    -- if op then
+    --     local cpath = oplpath.canon(path)
+    --     for _, db in pairs(self.dbs.open) do
+    --         if oplpath.canon(db:getPath()) == cpath then
+    --             if not readonly or db:isWriteable() then
+    --                 error(KErrInUse)
+    --             end
+    --         end
+    --     end
+    -- end
 
     local db = database.new(path, readonly)
     -- See if db already exists
     local dbData, err = self.ioh.fsop("read", path)
     if dbData then
         db:load(dbData)
-    elseif err == KErrNotExists and op == "Create" then
+    elseif err == KErrNotExists and isCreate then
         -- This is fine
     else
         error(err)
     end
+    return db
+end
+
+function Runtime:openDb(logName, tableSpec, variables, op)
+    assert(self.dbs.open[logName] == nil, KErrOpen)
+    printf("parseTableSpec: %s\n", tableSpec)
+    local path, tableName, fieldNames, filterPredicate, sortSpec = database.parseTableSpec(tableSpec)
+    path = self:abs(path)
+
+    local db = self:newDb(path, op)
 
     if op == "Create" then
-        db:createTable(tableName, fields)
+        if fieldNames == nil then
+            -- SIBO-style call where field names are derived from the variable names
+            fieldNames = {}
+            for i, var in ipairs(variables) do
+                fieldNames[i] = var.name:gsub("[%%&$]$", {
+                    ["%"] = "i",
+                    ["&"] = "a",
+                    ["$"] = "s",
+                })
+            end
+        end
+
+        -- "*" is not valid for create, only open
+        assert(not (#fieldNames == 1 and fieldNames[1] == "*"), KErrInvalidArgs)
+        local types = {}
+        for i, var in ipairs(variables) do
+            types[i] = var.type
+        end
+        db:createTable(tableName, fieldNames, types)
     end
 
-    db:setView(tableName, fields, variables)
-    self.dbs[logName] = db
+    db:setView(tableName, fieldNames, variables, filterPredicate, sortSpec)
+    self.dbs.open[logName] = db
     self.dbs.current = logName
 end
 
 function Runtime:getDb(logName)
-    local db = self.dbs[logName or self.dbs.current]
+    local db = self.dbs.open[logName or self.dbs.current]
     assert(db, KErrClosed)
     return db
 end
@@ -654,16 +795,20 @@ end
 
 function Runtime:closeDb()
     self:saveDbIfModified()
-    self.dbs[self.dbs.current] = nil
+    self.dbs.open[self.dbs.current] = nil
     self.dbs.current = nil
+end
+
+function Runtime:saveDb(db)
+    local data = db:save()
+    local err = self.ioh.fsop("write", db:getPath(), data)
+    assert(err == KErrNone, err)
 end
 
 function Runtime:saveDbIfModified()
     local db = self:getDb()
     if db:isModified() and not db:inTransaction() then
-        local data = db:save()
-        local err = self.ioh.fsop("write", db:getPath(), data)
-        assert(err == KErrNone, err)
+        self:saveDb(db)
     end
 end
 
@@ -701,6 +846,14 @@ function Runtime:newOplModule(moduleName)
     return module
 end
 
+-- For requiring modules written using opl.lua, such as menu.lua or scrollbar.lua
+function Runtime:require(moduleName)
+    if self.luaModules[moduleName] == nil then
+        self.luaModules[moduleName] = self:newOplModule(moduleName)
+    end
+    return self.luaModules[moduleName]
+end
+
 function newModuleInstance(moduleName)
     -- Because opl.lua uses a shared upvalue for its runtime pointer, we need to
     -- give each runtime its own copy of the module, meaning we can't just
@@ -731,8 +884,12 @@ function newRuntime(handler, era)
         opcodes = codes,
         frameBase = 0, -- Where in the chunk we start the stack frames' memory
         chunk = Chunk { address = 0 },
-        dbs = {},
+        dbs = {
+            open = {},
+        },
+        era = era,
         modules = {},
+        luaModules = {}, -- modules that use opl.lua thus have to be tracked per-runtime
         files = {},
         ioh = handler or require("defaultiohandler"),
         resources = {}, -- keyed by string, anything that code wants to use to provide singleton/mutex/etc semantics
@@ -759,10 +916,15 @@ function newRuntime(handler, era)
     return rt
 end
 
+-- Returns true when emulating SIBO (Series 3c)
+function Runtime:isSibo()
+    return self.era == "sibo"
+end
+
 -- Returns the datatype for parameters to opcodes that deal with addresses
 -- eg IoSeek's addr parameter is an int on SIBO and a long on ER5
 function Runtime:addressType()
-    if self.opcodes == ops.codes_sibo then
+    if self:isSibo() then
         return DataTypes.EWord
     else
         return DataTypes.ELong
@@ -906,15 +1068,15 @@ local function addStacktraceToError(self, err, callingFrame)
     -- In order to get instruction decode in the stacktrace we must swizzle
     -- frames around, but note we don't actually unwind them.
     while self.frame ~= callingFrame do
-        local mod = self:moduleForProc(self.frame.proc)
+        local modName = self.frame.proc.module.name
         local info
         if self.frame.proc.fn then
-            info = fmt("%s\\%s: [Lua] %s", mod.name, self.frame.proc.name, self.frame.lastPcallSite or "?")
+            info = fmt("%s\\%s: [Lua] %s", modName, self.frame.proc.name, self.frame.lastPcallSite or "?")
         elseif self.frame.lastIp then
             self.ip = self.frame.lastIp
-            info = fmt("%s\\%s:%s", mod.name, self.frame.proc.name, self:decodeNextInstruction())
+            info = fmt("%s\\%s:%s", modName, self.frame.proc.name, self:decodeNextInstruction())
         else
-            info = fmt("%s\\%s", mod.name, self.frame.proc.name)
+            info = fmt("%s\\%s", modName, self.frame.proc.name)
         end
         table.insert(frameDescs, info)
         self:setFrame(self.frame.prevFrame)
@@ -979,7 +1141,12 @@ function Runtime:pcallProc(procName, ...)
         if not ok then
             addStacktraceToError(self, err, callingFrame)
             -- print(err)
-            self.errorLocation = fmt("Error in %s\\%s", self:moduleForProc(self.frame.proc).name, self.frame.proc.name)
+            self.errorLocation = fmt("Error in %s\\%s", self.frame.proc.module.name, self.frame.proc.name)
+
+            if err.code and err.code == KStopErr then
+                printf("Interrupted!\n%s\n", err)
+            end
+
             if err.code and err.code ~= KStopErr then
                 self.errorValue = err.code
                 -- An error code that might potentially be handled by a Trap or OnErr
@@ -1087,6 +1254,7 @@ function Runtime:declareGlobal(name, arrayLen)
     local type = valType
     if arrayLen then
         type = valType | 0x80
+        name = name.."[]"
     end
 
     -- We define our indexes (which are how externals map to locals) as simply
@@ -1097,7 +1265,7 @@ function Runtime:declareGlobal(name, arrayLen)
 
     -- For simplicity we'll assume any strings should be 255 max len
     local var = self.chunk:allocVariable(type, 255, arrayLen)
-    frame.globals[name] = { offset = index, type = valType }
+    frame.globals[name] = { offset = index, type = type }
     frame.vars[index] = var
     table.insert(frame.frameAllocs, var)
 
@@ -1159,6 +1327,25 @@ local function globToMatch(glob)
     return m:upper()
 end
 
+function Runtime:ls(path)
+    local contents, err = self.ioh.fsop("dir", oplpath.join(path, ""))
+    if contents then
+        table.sort(contents, function(lhs, rhs) return oplpath.canon(lhs) < oplpath.canon(rhs) end)
+    end
+    return contents, err
+end
+
+function Runtime:isdir(path)
+    local stat = self.ioh.fsop("stat", path)
+    return stat and stat.isDir
+end
+
+function Runtime:getDisks()
+    local result = assert(self.ioh.fsop("disks", ""))
+    table.sort(result)
+    return result
+end
+
 function Runtime:dir(path)
     -- printf("dir: %s\n", path)
     if path == "" then
@@ -1170,10 +1357,7 @@ function Runtime:dir(path)
     end
 
     local dir, filenameFilter = oplpath.split(self:abs(path))
-    local contents, err = self.ioh.fsop("dir", oplpath.join(dir, ""))
-    if not contents then
-        error(err)
-    end
+    local contents = assert(self:ls(dir))
     if #filenameFilter > 0 then
         local filtered = {}
         local m = "^"..globToMatch(filenameFilter).."$"
@@ -1195,8 +1379,8 @@ end
 function Runtime:addrFromInt(addr)
     -- if type(addr) == "number" then
     if ~addr then
-        self.chunk:checkRange(addr)
-        addr = Addr { chunk = self.chunk, offset = addr - self.chunk.address }
+        local offset = self.chunk:checkRange(addr)
+        addr = Addr { chunk = self.chunk, offset = offset }
     end
     return addr
 end
@@ -1208,17 +1392,49 @@ end
 function Runtime:realloc(addr, sz)
     -- printf("Runtime:realloc(%s, %d)\n", addr, sz) --, self:getOpoStacktrace())
     if addr ~= 0 then
-        self.chunk:checkRange(addr)
-        local offset = addr - self.chunk.address
-        if sz ~= 0 then
-            error("TODO REALLOC")
+        local offset = self.chunk:checkRange(addr)
+        local newOffset = self.chunk:realloc(offset, sz)
+        if newOffset then
+            return self.chunk.address + newOffset
         else
-            self.chunk:free(offset)
+            return 0
         end
     else
         local offset = self.chunk:alloc(sz)
         assert(offset, KErrNoMemory)
         return self.chunk.address + offset
+    end
+end
+
+function Runtime:allocLen(addr)
+    local offset = self.chunk:checkRange(addr)
+    return self.chunk:getAllocLen(offset)
+end
+
+function Runtime:adjustAlloc(addr, offset, sz)
+    local chunk = self.chunk
+    local cell = chunk:checkRange(addr)
+    local allocLen = chunk:getAllocLen(cell)
+    -- printf("adjustAlloc(0x%X, %X, %d)\n", cell, offset, sz)
+    assert(offset >= 0, "Bad offset to adjustAlloc")
+    if sz == 0 then
+        -- nothing to do?
+        return addr
+    elseif sz < 0 then
+        sz = -sz -- Makes logic easier to understand below
+        assert(offset - sz < allocLen)
+        -- close gap at offset, ie copy everything from offset+sz to offset
+        chunk:memmove(cell + offset, cell + offset + sz, allocLen - offset - sz)
+        return chunk.address + chunk:realloc(cell, allocLen - sz)
+    else
+        -- Add gap at offset
+        local newCell = chunk:realloc(cell, allocLen + sz)
+        if newCell then
+            chunk:memmove(newCell + offset + sz, newCell + offset, allocLen - offset)
+            return chunk.address + newCell
+        else
+            return 0
+        end
     end
 end
 
@@ -1259,7 +1475,7 @@ function installSis(data, iohandler)
         if file.type == sis.FileType.File then
             local path = file.dest:gsub("^.:\\", "C:\\")
             local dir = oplpath.dirname(path)
-            if iohandler:fsop("isdir", dir) == KErrNotExists then
+            if iohandler.fsop("stat", dir) == nil then
                 local err = iohandler.fsop("mkdir", dir)
                 assert(err == KErrNone, "Failed to create dir "..dir)
             end

@@ -32,11 +32,16 @@ BUILD_TOOLS_DIRECTORY="${SCRIPTS_DIRECTORY}/build-tools"
 
 ENVIRONMENT_PATH="${SCRIPTS_DIRECTORY}/environment.sh"
 
+# Install tools.
+cd "$ROOT_DIRECTORY"
+mise install
+
+# Create directory for local tools.
 if [ -d "${ROOT_DIRECTORY}/.local" ] ; then
     rm -r "${ROOT_DIRECTORY}/.local"
 fi
 source "${ENVIRONMENT_PATH}"
 
-# Install the Python dependencies
+# Install the Python dependencies.
 PIPENV_PIPFILE="$CHANGES_DIRECTORY/Pipfile" pipenv install
 PIPENV_PIPFILE="$BUILD_TOOLS_DIRECTORY/Pipfile" pipenv install

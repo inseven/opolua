@@ -18,9 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Foundation
 import Combine
-import UIKit
-import GameController
 
 /**
  Called on the main queue.
@@ -37,10 +36,10 @@ protocol ProgramLifecycleObserver: NSObject {
  */
 protocol ProgramDelegate: AnyObject {
 
-    func program(_ program: Program, editValue op: EditOperation) -> Any?
     func programDidRequestBackground(_ program: Program)
     func programDidRequestTaskList(_ program: Program)
     func program(_ program: Program, runApplication applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32?
+    func program(_ program: Program, didSetCursorPosition cursorPosition: CGPoint?)
 
 }
 
@@ -75,16 +74,41 @@ class Program {
         }
     }
 
+    class KeyaRequest: Scheduler.Request {
+        weak var program: Program?
+
+        init(handle: Async.RequestHandle, program: Program) {
+            self.program = program
+            super.init(handle: handle)
+        }
+
+        override func cancel() {
+            if let prog = program {
+                prog.keyaRequest = nil
+            }
+        }
+
+        override func start() {
+            guard let program = self.program else {
+                print("Cannot start request if program isn't set!")
+                return
+            }
+            program.startKeyaRequest(self)
+        }
+    }
+
     private let settings: Settings
     let url: URL
     private let configuration: Configuration
     private let thread: InterpreterThread
     private let applicationMetadata: ApplicationMetadata?
+    // eventQueue is only for things which can be returned from GETEVENT32
     private let eventQueue = ConcurrentQueue<Async.ResponseValue>()
     private var currentKeys = Set<OplKeyCode>()
     let windowServer: WindowServer
     private let scheduler = Scheduler()
     private var geteventRequest: GetEventRequest?
+    private var keyaRequest: KeyaRequest?
     private var settingsSink: AnyCancellable?
 
     private var _state: State = .idle
@@ -100,15 +124,22 @@ class Program {
     private var observers: [ProgramLifecycleObserver] = []
     weak var delegate: ProgramDelegate?
 
-    var title: String
-    var icon: Icon
+    var title: String  // main
+    var icon: Icon  // main  TODO: let?
 
-    var rootView: UIView {
+    var rootView: RootView {
         return windowServer.rootView
     }
 
     var uid3: UID? {
         return applicationMetadata?.uid3
+    }
+
+    var metadata: Metadata {
+        guard let systemFileSystem = fileSystem as? SystemFileSystem else {
+            return Metadata()
+        }
+        return systemFileSystem.metadata
     }
 
     lazy private var fileSystem: FileSystem = {
@@ -139,8 +170,15 @@ class Program {
                 oplConfig[key] = "0" // analog
             }
         }
-        if applicationMetadata?.appInfo.era == .er5 {
+        
+        switch configuration.device {
+        case .psionSeries3c:
+            break
+        case .psionSeries5, .psionRevo, .geofoxOne:
             let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s5", isDirectory: true)
+            self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
+        case .psionSeries7:
+            let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s7", isDirectory: true)
             self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
         }
     }
@@ -180,13 +218,16 @@ class Program {
         sendBackgroundEvent()
     }
 
+#if canImport(UIKit)
     func toggleOnScreenKeyboard() {
+        dispatchPrecondition(condition: .onQueue(.main))
         if windowServer.rootView.isFirstResponder {
             windowServer.rootView.resignFirstResponder()
         } else {
             windowServer.rootView.becomeFirstResponder()
         }
     }
+#endif
 
     func sendQuit() {
         sendEvent(.quitevent)
@@ -257,7 +298,17 @@ class Program {
     func startGetEventRequest(_ request: GetEventRequest) {
         scheduler.withLockHeld {
             precondition(self.geteventRequest == nil, "Duplicate geteventRequest!")
+            precondition(self.keyaRequest == nil, "GetEvent request after Keya!")
             self.geteventRequest = request
+        }
+        checkGetEventCompletion()
+    }
+
+    func startKeyaRequest(_ request: KeyaRequest) {
+        scheduler.withLockHeld {
+            precondition(self.keyaRequest == nil, "Duplicate keyaRequest!")
+            precondition(self.geteventRequest == nil, "Keya request after GetEvent!")
+            self.keyaRequest = request
         }
         checkGetEventCompletion()
     }
@@ -268,6 +319,20 @@ class Program {
                let event = eventQueue.tryTakeFirst() {
                 self.geteventRequest = nil
                 scheduler.completeLocked(request: request, response: event)
+            } else if let request = self.keyaRequest {
+                while true {
+                    // The docs for KEYA state that any non key event gets dropped
+                    // Note, only complete the event for keys with a charcode (ie not modifiers)
+                    if let event = eventQueue.tryTakeFirst() {
+                        if case .keypressevent(let k) = event, k.keycode.toCharcode() != nil {
+                            self.keyaRequest = nil
+                            scheduler.completeLocked(request: request, response: event)
+                            break
+                        }
+                    } else {
+                        break
+                    }
+                }
             }
         }
     }
@@ -284,6 +349,12 @@ class Program {
             windowServer.createWindow(id: id, rect: rect, mode: mode, shadowSize: shadowSize)
             return .nothing
 
+        case .loadFont(let drawableId, let fontUid):
+            if let metrics = windowServer.load(font: fontUid, into: drawableId) {
+                return .fontMetrics(metrics)
+            } else {
+                return .error(.invalidArguments)
+            }
         case .close(let drawableId):
             windowServer.close(drawableId: drawableId)
             return .nothing
@@ -292,13 +363,16 @@ class Program {
             windowServer.order(drawableId: drawableId, position: position)
             return .nothing
 
+        case .rank(let drawableId):
+            if let rank = windowServer.getWindowRank(for: drawableId) {
+                return .rank(rank)
+            } else {
+                return .error(.invalidWindow)
+            }
+
         case .show(let drawableId, let flag):
             windowServer.setVisiblity(handle: drawableId, visible: flag)
             return .nothing
-
-        case .textSize(let string, let fontInfo):
-            let metrics = WindowServer.textSize(string: string, fontInfo: fontInfo)
-            return .textMetrics(metrics)
 
         case .busy(let drawableId, let delay):
             windowServer.busy(drawableId: drawableId, delay: delay)
@@ -324,59 +398,11 @@ class Program {
             let data = windowServer.peekLine(drawableId: drawableId, position: position, numPixels: numPixels, mode: mode)
             return .peekedData(data)
 
+        case .cursor(let cursor):
+            windowServer.cursor(cursor)
+            return .nothing
         }
     }
-
-    private func handleTouch(_ touch: UITouch, in view: CanvasView, with event: UIEvent, type: Async.PenEventType) {
-        var location = touch.location(in: view)
-        let screenView = windowServer.rootView
-        var screenLocation = touch.location(in: screenView)
-
-        // Is there a better way of doing this?
-        let screenSize = screenView.bounds.size
-        var xdelta = 0.0
-        var ydelta = 0.0
-        if screenLocation.x < 0 {
-            xdelta = -screenLocation.x
-        } else if screenLocation.x > screenSize.width {
-            xdelta = screenSize.width - screenLocation.x
-        }
-        if screenLocation.y < 0 {
-            ydelta = -screenLocation.y
-        } else if screenLocation.y > screenSize.height {
-            ydelta = screenSize.height - screenLocation.y
-        }
-        location = location.move(x: xdelta, y: ydelta)
-        screenLocation = screenLocation.move(x: xdelta, y: ydelta)
-
-        if type == .down {
-            sendEvent(.pendownevent(.init(timestamp: event.timestamp, windowId: view.id)))
-        }
-        sendEvent(.penevent(.init(timestamp: event.timestamp,
-                                  windowId: view.id,
-                                  type: type,
-                                  modifiers: event.modifierFlags.oplModifiers(),
-                                  x: Int(location.x),
-                                  y: Int(location.y),
-                                  screenx: Int(screenLocation.x),
-                                  screeny: Int(screenLocation.y))))
-        // .penupevent is only sent when the pen is dragged into non-screen area
-        // (ie the softkeys) which we don't have, so we basically never need to send it
-    }
-
-    func screenshot() -> UIImage {
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1.0
-        let renderer = UIGraphicsImageRenderer(size: rootView.frame.size, format: format)
-        let uiImage = renderer.image { rendererContext in
-            let context = rendererContext.cgContext
-            context.setAllowsAntialiasing(false)
-            context.interpolationQuality = .none
-            rootView.layer.render(in: context)
-        }
-        return uiImage
-    }
-
 }
 
 extension Program: InterpreterThreadDelegate {
@@ -385,6 +411,8 @@ extension Program: InterpreterThreadDelegate {
         return fileSystem.guestPath(for: url)
     }
 
+    // TODO: Result might be better as an actual result. Oh. That's a Tom Thing.
+    // TODO: Unclear to me whether this would be the right place to handle the error or not.
     func interpreter(_ interpreter: InterpreterThread, didFinishWithResult result: Error?) {
         DispatchQueue.main.sync {
             interpreter.handler = nil
@@ -403,9 +431,21 @@ extension Program: OpoIoHandler {
     func printValue(_ val: String) {
         print(val)
     }
-
-    func editValue(_ op: EditOperation) -> Any? {
-        return delegate!.program(self, editValue: op)
+        
+    func textEditor(_ info: TextFieldInfo?) {
+        if let textFieldInfo = info {
+            delegate?.program(self,
+                              didSetCursorPosition: CGPoint(x: CGFloat(textFieldInfo.cursorRect.midX),
+                                                            y: CGFloat(textFieldInfo.cursorRect.midY)))
+            DispatchQueue.main.sync {
+                _ = windowServer.rootView.becomeFirstResponder()
+            }
+        } else {
+            delegate?.program(self, didSetCursorPosition: nil)
+            DispatchQueue.main.sync {
+                _ = windowServer.rootView.resignFirstResponder()
+            }
+        }
     }
 
     func beep(frequency: Double, duration: Double) -> Error? {
@@ -417,7 +457,7 @@ extension Program: OpoIoHandler {
         }
     }
 
-    func draw(operations: [Graphics.DrawCommand]) {
+    func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {
         return DispatchQueue.main.sync {
             return windowServer.draw(operations: operations)
         }
@@ -429,31 +469,34 @@ extension Program: OpoIoHandler {
         }
     }
 
-    func getScreenInfo() -> (Graphics.Size, Graphics.Bitmap.Mode) {
-        return (configuration.device.screenSize, configuration.device.screenMode)
+    func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
+        let device = configuration.device
+        return (device.screenSize, device.screenMode, device.rawValue)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
         return fileSystem.perform(op)
     }
 
-    func asyncRequest(_ request: Async.Request) {
+    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType) {
         let req: Scheduler.Request
-        switch request.type {
+        switch type {
         case .getevent:
-            req = GetEventRequest(handle: request.handle, program: self)
+            req = GetEventRequest(handle: handle, program: self)
+        case .keya:
+            req = KeyaRequest(handle: handle, program: self)
         case .after(let interval):
-            req = TimerRequest(handle: request.handle, after: interval)
+            req = TimerRequest(handle: handle, after: interval)
         case .at(let date):
-            req = TimerRequest(handle: request.handle, at: date)
+            req = TimerRequest(handle: handle, at: date)
         case .playsound(let data):
-            req = PlaySoundRequest(handle: request.handle, data: data)
+            req = PlaySoundRequest(handle: handle, data: data)
         }
         scheduler.addPendingRequest(req)
     }
 
-    func cancelRequest(_ requestHandle: Async.RequestHandle) {
-        scheduler.cancelRequest(requestHandle)
+    func cancelRequest(handle: Async.RequestHandle) {
+        scheduler.cancelRequest(handle)
     }
 
     func waitForAnyRequest() -> Async.Response {
@@ -466,19 +509,6 @@ extension Program: OpoIoHandler {
 
     func testEvent() -> Bool {
         return !eventQueue.isEmpty()
-    }
-
-    func key() -> Async.KeyPressEvent? {
-        let responseValue = eventQueue.tryTakeFirst { responseValue in
-            if case .keypressevent(_) = responseValue {
-                return true
-            }
-            return false
-        }
-        guard case .keypressevent(let event) = responseValue else {
-            return nil
-        }
-        return event
     }
 
     func keysDown() -> Set<OplKeyCode> {
@@ -555,16 +585,13 @@ extension Program: WindowServerDelegate {
         return self.oplConfig[.clockFormat] == "1"
     }
 
-    func canvasView(_ canvasView: CanvasView, touchBegan touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .down)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchMoved touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .drag)
-    }
-
-    func canvasView(_ canvasView: CanvasView, touchEnded touch: UITouch, with event: UIEvent) {
-        handleTouch(touch, in: canvasView, with: event, type: .up)
+    func canvasView(_ canvasView: CanvasView, penEvent: Async.PenEvent) {
+        if penEvent.type == .down {
+            sendEvent(.pendownevent(.init(timestamp: penEvent.timestamp, windowId: penEvent.windowId)))
+        }
+        sendEvent(.penevent(penEvent))
+        // .penupevent is only sent when the pen is dragged into non-screen area
+        // (ie the softkeys) which we don't have, so we basically never need to send it
     }
 
     func windowServer(_ windowServer: WindowServer, insertCharacter character: Character) {

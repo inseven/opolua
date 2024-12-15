@@ -24,6 +24,9 @@ SOFTWARE.
 
 require("const")
 
+KLineBreakStr = string.char(KLineBreak)
+KParagraphDelimiterStr = string.char(KParagraphDelimiter)
+
 function module()
     return setmetatable({}, {__index=_G})
 end
@@ -211,16 +214,21 @@ assert(KRequestPending == -2147483647)
 -- OPL/OPO/AIF/MBM uid1 is KUidDirectFileStore
 KDynamicLibraryUid = 0x10000079 -- ie a native app
 KUidAppInfoFile8 = 0x1000006A -- AIF file uid2
--- KUidAppDllDoc8 = 0x1000006D
+KUidAppDllDoc8 = 0x1000006D -- generic uid2 for various apps (check uid3)
 -- KUidOPO = 0x10000073 -- pre-unicode OPO uid2
 KMultiBitmapRomImageUid = 0x10000041 -- uid1
 KUidMultiBitmapFileImage = 0x10000042
 KUidOplInterpreter = 0x10000168
+KUidDirectFileStore = 0x10000037
+
+KUidSisFileEr6 = 0x10003A12 -- ER6 SIS uid2, allegedly
+KUidInstallApp = 0x10000419 -- SIS file uid3 (all versions)
 
 KPermanentFileStoreLayoutUid = 0x10000050 -- DB file uid1
--- KUidOplFile = 0x1000008A -- DB file UID2
+KUidOplFile = 0x1000008A -- DB file UID2
 KUidTextEdApp = 0x10000085 -- OPL file UID3
 KUidRecordApp = 0x1000007E -- WAV file UID3
+KEikUidWordApp = 0x1000007F
 
 KIoOpenModeMask = 0xF
 
@@ -238,54 +246,16 @@ dItemTypes = enum {
     dBUTTONS = 10,
     dPOSITION = 11,
     dCHECKBOX = 12,
-    -- simulated types, not actually used by OPL
+    -- internal types, not actually used by OPL
     dSEPARATOR = 257,
     dEDITMULTI = 258,
+    dFILECHOOSER = 259,
+    dFILEEDIT = 260,
+    dFILEFOLDER = 261,
+    dFILEDISK = 262,
 }
 
 KDefaultFontUid = KFontArialNormal15
-
-FontIds = {
-    [KFontTiny4] = { face = "tiny", size = 4 },
-    [KFontArialBold8] = { face = "arial", size = 8, bold = true },
-    [KFontArialBold11] = { face = "arial", size = 11, bold = true },
-    [KFontArialBold13] = { face = "arial", size = 13, bold = true },
-    [KFontArialNormal8] = { face = "arial", size = 8 },
-    [KFontArialNormal11] = { face = "arial", size = 11 },
-    [KFontArialNormal13] = { face = "arial", size = 13 },
-    [KFontArialNormal15] = { face = "arial", size = 15 },
-    [KFontArialNormal18] = { face = "arial", size = 18 },
-    [KFontArialNormal22] = { face = "arial", size = 22 },
-    [KFontArialNormal27] = { face = "arial", size = 27 },
-    [KFontArialNormal32] = { face = "arial", size = 32 },
-    [KFontTimesBold8] = { face = "times", size = 8, bold = true },
-    [KFontTimesBold11] = { face = "times", size = 11, bold = true },
-    [KFontTimesBold13] = { face = "times", size = 13, bold = true },
-    [KFontTimesNormal8] = { face = "times", size = 8 },
-    [KFontTimesNormal11] = { face = "times", size = 11 },
-    [KFontTimesNormal13] = { face = "times", size = 13 },
-    [KFontTimesNormal15] = { face = "times", size = 15 },
-    [KFontTimesNormal18] = { face = "times", size = 18 },
-    [KFontTimesNormal22] = { face = "times", size = 22 },
-    [KFontTimesNormal27] = { face = "times", size = 27 },
-    [KFontTimesNormal32] = { face = "times", size = 32 },
-    [KFontCourierBold8] = { face = "courier", size = 8, bold = true },
-    [KFontCourierBold11] = { face = "courier", size = 11, bold = true },
-    [KFontCourierBold13] = { face = "courier", size = 13, bold = true },
-    [KFontCourierNormal8] = { face = "courier", size = 8 },
-    [KFontCourierNormal11] = { face = "courier", size = 11 },
-    [KFontCourierNormal13] = { face = "courier", size = 13 },
-    [KFontCourierNormal15] = { face = "courier", size = 15 },
-    [KFontCourierNormal18] = { face = "courier", size = 18 },
-    [KFontCourierNormal22] = { face = "courier", size = 22 },
-    [KFontCourierNormal27] = { face = "courier", size = 27 },
-    [KFontCourierNormal32] = { face = "courier", size = 32 },
-    [KFontEiksym15] = { face = "eiksym", size = 15 },
-    [KFontSquashed] = { face = "squashed", size = 11, bold = true },
-    [KFontDigital35] = { face = "digit", size = 35 },
-}
-
-for uid, font in pairs(FontIds) do font.uid = uid end
 
 FontAliases = {
     [4] = KFontCourierNormal8,
@@ -301,19 +271,27 @@ FontAliases = {
     [0x9A] = KFontArialNormal15,
 }
 
+-- These aren't defined in the const.oph version we're using as our baseline
+KColorgCreate64KColorMode = 0x0006
+KColorgCreate16MColorMode = 0x0007
+KColorgCreateRGBColorMode = 0x0008
+KColorgCreate4KColorMode = 0x0009
+
 local GrayBppToMode = {
-    [1] = KgCreate2GrayMode,
-    [2] = KgCreate4GrayMode,
-    [4] = KgCreate16GrayMode,
-    [8] = KgCreate256GrayMode,
+    [1] = KColorgCreate2GrayMode,
+    [2] = KColorgCreate4GrayMode,
+    [4] = KColorgCreate16GrayMode,
+    [8] = KColorgCreate256GrayMode,
 }
 
 local ColorBppToMode = {
-    [4] = KgCreate16ColorMode,
-    [8] = KgCreate256ColorMode,
-    [12] = KgCreate4KColorMode,
-    [16] = KgCreate64KColorMode,
-}    
+    [4] = KColorgCreate16ColorMode,
+    [8] = KColorgCreate256ColorMode,
+    [12] = KColorgCreate4KColorMode,
+    [16] = KColorgCreate64KColorMode,
+    [24] = KColorgCreate16MColorMode,
+    [32] = KColorgCreateRGBColorMode,
+}
 
 function bppColorToMode(bpp, color)
     local result = (color and ColorBppToMode or GrayBppToMode)[bpp]
@@ -417,15 +395,15 @@ function hexUnescape(str)
 end
 
 local charCodeMap = {
-    [4098] = 262, -- Home
-    [4099] = 263, -- End
-    [4100] = 260, -- PgUp
-    [4101] = 261, -- PgDn
-    [4103] = 259, -- LeftArrow
-    [4104] = 258, -- RightArrow
-    [4105] = 256, -- UpArrow
-    [4106] = 257, -- DownArrow
-    [4150] = 290, -- Menu
+    [KKeyPageLeft32] = KKeyPageLeft, -- Home
+    [KKeyPageRight32] = KKeyPageRight, -- End
+    [KKeyPageUp32] = KKeyPageUp, -- PgUp
+    [KKeyPageDown32] = KKeyPageDown, -- PgDn
+    [KKeyLeftArrow32] = KKeyLeftArrow, -- LeftArrow
+    [KKeyRightArrow32] = KKeyRightArrow, -- RightArrow
+    [KKeyUpArrow32] = KKeyUpArrow, -- UpArrow
+    [KKeyDownArrow32] = KKeyDownArrow, -- DownArrow
+    [KKeyMenu32] = KGetMenu, -- Menu (note different naming convention on charcode)
 }
 
 function keycodeToCharacterCode(keycode)
@@ -456,6 +434,20 @@ function readCardinality(data, pos)
     return val, pos
 end
 
+-- What https://frodo.looijaard.name/psifiles/Basic_Elements refers to as
+-- "Special encoding"
+function readSpecialEncoding(data, pos)
+    local b, pos = string.unpack("B", data, pos)
+    if b & 3 == 2 then
+        -- Single byte
+        return b >> 2, pos
+    else
+        assert(b & 7 == 6, "Bad variable length encoding!")
+        local b2, pos = string.unpack("B", data, pos)
+        return ((b >> 3) + (b2 << 8)) >> 3, pos
+    end
+end
+
 function unimplemented(opName)
     error({ msg = "Unimplemented operation "..opName, unimplemented = opName })
 end
@@ -465,3 +457,11 @@ function dump(...)
     -- Will replace dump fn, so re-call the new fn
     return dump(...)
 end
+
+textReplacements = {
+    [KParagraphDelimiterStr] = "\n\n",
+    [KLineBreakStr] = "\n",
+    [string.char(KNonBreakingSpace)] = " ", -- Close enough
+    [string.char(KNonBreakingTab)] = "\t", -- Close enough
+    [string.char(KNonBreakingHyphen)] = "-", -- Close enough
+}

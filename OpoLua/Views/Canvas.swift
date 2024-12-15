@@ -20,11 +20,11 @@
 
 import CoreGraphics
 import Foundation
-import UIKit
 
 protocol DrawableImageProvider {
 
-    func getImageFor(drawable: Graphics.DrawableId) -> CGImage?
+    func getDrawable(_ drawable: Graphics.DrawableId) -> Drawable?
+    func getDitherImage() -> CGImage
 
 }
 
@@ -32,9 +32,12 @@ protocol Drawable: AnyObject {
 
     var id: Graphics.DrawableId { get }
     var mode: Graphics.Bitmap.Mode { get }
+    var size: Graphics.Size { get }
 
-    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider)
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) -> Graphics.Error?
     func getImage() -> CGImage?
+    func getInvertedMask() -> CGImage?
+    func getData() -> UnsafeBufferPointer<UInt32>
 
 }
 
@@ -44,33 +47,24 @@ class Canvas: Drawable {
     let mode: Graphics.Bitmap.Mode
     let size: Graphics.Size
     private var image: CGImage?
+    private var mask: CGImage?
     private let context: CGContext
-    private var data: UnsafeMutableRawBufferPointer?
+    private var data: UnsafeMutableBufferPointer<UInt32>
 
     init(id: Graphics.DrawableId, size: Graphics.Size, mode: Graphics.Bitmap.Mode) {
         self.id = id
         self.size = size
         self.mode = mode
-        let colorSpace: CGColorSpace
-        let bytesPerPixel: Int
-        let bitmapInfo: UInt32
         // Apparently zero-width windows are allowed in OPL, who knows why...
         let intw = size.width == 0 ? 1 : size.width
         let inth = size.height == 0 ? 1 : size.height
-        if mode.isColor {
-            colorSpace = CGColorSpaceCreateDeviceRGB()
-            bytesPerPixel = 4
-            bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
-            self.data = nil
-        } else {
-            colorSpace = CGColorSpaceCreateDeviceGray()
-            bytesPerPixel = 1
-            bitmapInfo = 0
-            self.data = .allocate(byteCount: intw * inth, alignment: 8)
-        }
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bytesPerPixel = 4
+        let bitmapInfo: UInt32 = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        self.data = .allocate(capacity: intw * inth)
         let bytesPerRow = bytesPerPixel * intw
         let bitsPerComponent = 8
-        context = CGContext(data: self.data?.baseAddress,
+        context = CGContext(data: self.data.baseAddress,
                             width: intw,
                             height: inth,
                             bitsPerComponent: bitsPerComponent,
@@ -79,96 +73,27 @@ class Canvas: Drawable {
                             bitmapInfo: bitmapInfo)!
         context.concatenate(context.coordinateFlipTransform)
         // All drawables should start off filled with white
-        context.setFillColor(UIColor.white.cgColor)
+        context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
         context.fill(CGRect(x: 0, y: 0, width: context.width, height: context.height))
     }
 
-    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
-        if data != nil && operation.mode == .invert {
-            drawInverted(operation: operation, provider: provider)
-        } else if data != nil, case .invert(_) = operation.type {
-            drawInverted(operation: operation, provider: provider)
-        } else {
-            context.draw(operation, provider: provider)
+    func draw(_ operation: Graphics.DrawCommand, provider: DrawableImageProvider) -> Graphics.Error? {
+        defer {
+            self.image = nil
+            self.mask = nil
         }
-        self.image = nil
+
+        return context.draw(operation, buffer: data, provider: provider)
     }
 
     func draw(image: CGImage) {
         context.draw(image: image)
         self.image = nil
+        self.mask = nil
     }
 
-    func xorPixel(_ x: Int, _ y: Int, _ val: UInt8) {
-        if x >= 0 && x < size.width && y >= 0 && y < size.height {
-            let data = self.data!
-            let pos = size.width * y + x
-            data[pos] = data[pos] ^ val
-        }
-    }
-
-    // Only supported when using 8bpp backing data
-    func drawInverted(operation: Graphics.DrawCommand, provider: DrawableImageProvider) {
-        switch operation.type {
-        case .fill(let size):
-            for y in 0 ..< size.height {
-                for x in 0 ..< size.width {
-                    xorPixel(operation.origin.x + x, operation.origin.y + y, 0xFF)
-                }
-            }
-        case .invert(let size):
-            for y in 0 ..< size.height {
-                for x in 0 ..< size.width {
-                    if (x == 0 || x == size.width - 1) && (y == 0 || y == size.height - 1) {
-                        // gINVERT doesn't draw corner pixels
-                    } else {
-                        xorPixel(operation.origin.x + x, operation.origin.y + y, 0xFF)
-                    }
-                }
-            }
-        case .copy(let src, _): // Mask is never used in gCOPY, only in gBUTTON impl which doesn't use invert
-            guard let srcImg = provider.getImageFor(drawable: src.drawableId) else {
-                print("Failed to get image for .copy operation!")
-                return
-            }
-            // Hopefully don't have to deal with downscaling a colour bitmap into a greyscale canvas...
-            assert(srcImg.bitsPerPixel == 8)
-
-            let srcPtr = CFDataGetBytePtr(srcImg.dataProvider!.data!)!
-            let srcStride = srcImg.bytesPerRow
-
-            // OPL lets your src rect extend beyond the top and left of the
-            // image, in which case we need to adjust the dest pos
-            var srcRect = src.rect
-            var destX = operation.origin.x
-            var destY = operation.origin.y
-            if srcRect.minX < 0 {
-                destX = destX - src.rect.minX
-                srcRect = Graphics.Rect(x: 0, y: srcRect.minY, width: srcRect.width + srcRect.minX, height: srcRect.height)
-            }
-            if srcRect.minY < 0 {
-                destY = destY - src.rect.minY
-                srcRect = Graphics.Rect(x: srcRect.minX, y: 0, width: srcRect.width, height: srcRect.height + srcRect.minY)
-            }
-
-            for y in 0 ..< srcRect.height {
-                for x in 0 ..< srcRect.width {
-                    let srcPx = srcPtr[srcStride * (srcRect.minY + y) + srcRect.minX + x]
-                    xorPixel(destX + x, destY + y, ~srcPx)
-                }
-            }
-        case .line(let endPoint):
-            drawLineInverted(x0: operation.origin.x, y0: operation.origin.y, x1: endPoint.x, y1: endPoint.y)
-        case .box(let size):
-            let topLeft = operation.origin
-            drawLineInverted(x0: topLeft.x, y0: topLeft.y, x1: topLeft.x + size.width, y1: topLeft.y) // top
-            drawLineInverted(x0: topLeft.x + size.width, y0: topLeft.y, x1: topLeft.x + size.width, y1: topLeft.y + size.height) // right
-            drawLineInverted(x0: topLeft.x + size.width, y0: topLeft.y + size.height, x1: topLeft.x, y1: topLeft.y + size.height) // bottom
-            drawLineInverted(x0: topLeft.x, y0: topLeft.y + size.height, x1: topLeft.x, y1: topLeft.y) // bottom
-        default:
-            print("TODO: drawInverted \(operation.type)")
-            context.draw(operation, provider: provider)
-        }
+    func getData() -> UnsafeBufferPointer<UInt32> {
+        return UnsafeBufferPointer(data)
     }
 
     func getImage() -> CGImage? {
@@ -178,81 +103,19 @@ class Canvas: Drawable {
         return self.image
     }
 
+    func getInvertedMask() -> CGImage? {
+        if self.mask == nil {
+            self.mask = getImage()?.inverted()?.masking(componentRange: 0, to: 0)
+        }
+        return self.mask
+    }
+
     func invertCoordinates(point: Graphics.Point) -> Graphics.Point {
         return Graphics.Point(x: point.x, y: self.size.height - point.y)
     }
 
     deinit {
-        self.data?.deallocate()
+        self.data.deallocate()
     }
 
-    // From bitmap_drawLine() in https://github.com/tomsci/lupi/blob/master/modules/bitmap/bitmap.c
-    func drawLineInverted(x0: Int, y0: Int, x1: Int, y1: Int) {
-        let dx = x1 - x0
-        let dy = y1 - y0
-        // "scan" is the axis we iterate over (x in quadrant 0)
-        // "inc" is the axis we conditionally add to (y in quadrant 0)
-        var inc: Int = 0
-        var scan: Int = 0
-        let incr: Int
-        let scanStart: Int
-        let scanEnd: Int
-        let scanIncr: Int
-        var dscan: Int
-        var dinc: Int
-        let drawXY: () -> Void
-        if abs(dx) > abs(dy) {
-            drawXY = {
-                self.xorPixel(scan, inc, 0xFF)
-            }
-            dscan = dx
-            dinc = dy
-            inc = y0
-            scanStart = x0 + 1
-            scanEnd = x1
-        } else {
-            drawXY = {
-                self.xorPixel(inc, scan, 0xFF)
-            }
-            dscan = dy
-            dinc = dx
-            inc = x0
-            scanStart = y0 + 1
-            scanEnd = y1
-        }
-
-        if (dinc < 0) {
-            incr = -1
-            dinc = -dinc
-        } else {
-            incr = 1
-        }
-        if (dscan < 0) {
-            scanIncr = -1
-            dscan = -dscan
-        } else {
-            scanIncr = 1
-        }
-        // Hoist these as they're constants
-        let TwoDinc = 2 * dinc
-        let TwoDincMinusTwoDscan = 2 * dinc - 2 * dscan
-
-        var D = TwoDinc - dscan
-        xorPixel(x0, y0, 0xFF)
-        // OPL does not draw the end pixel of a line
-        // xorPixel(x1, y1, 0xFF)
-
-        scan = scanStart
-        while scan != scanEnd {
-            if (D > 0) {
-                inc = inc + incr
-                drawXY()
-                D = D + TwoDincMinusTwoDscan
-            } else {
-                drawXY()
-                D = D + TwoDinc
-            }
-            scan = scan + scanIncr
-        }
-    }
 }

@@ -23,33 +23,40 @@ import Foundation
 class ObjectFileSystem: FileSystem {
 
     var baseUrl: URL
-    var name: String
+    var sharedDrives: [String: (URL)] = [:]
 
     /**
-     This file system mapper simulates a C:\System\Apps\<app name>\ path.
+     This file system mapper simulates a C:\ path.
      */
     init(objectUrl: URL) {
         self.baseUrl = objectUrl.deletingLastPathComponent()
-        self.name = objectUrl.basename
     }
 
     var guestPrefix: String {
-        return "C:\\SYSTEM\\APPS\\" + name.uppercased() + "\\"
+        return "C:\\"
     }
 
     func prepare() throws {
     }
 
+    func getSharedDrives() -> [String] {
+        return Array(sharedDrives.keys).sorted()
+    }
+
     func set(sharedDrive: String, url: URL, readonly: Bool) {
-        // Don't care, we'll just return notReady for anything on a shared drive
+        sharedDrives[sharedDrive] = url
     }
 
     func hostUrl(for path: String) -> (URL, Bool)? {
-        if path.uppercased().starts(with: guestPrefix) {
-            let pathComponents = path
-                .split(separator: "\\")[4...]
-                .map { String($0) }
-            return (baseUrl.appendingCaseInsensitivePathComponents(pathComponents), true)
+        let components = path.split(separator: "\\").map { String($0) }
+        guard let drive = path.first?.uppercased() else {
+            return nil
+        }
+        if let sharedDriveUrl = sharedDrives[drive] {
+            let hostUrl = sharedDriveUrl.appendingCaseInsensitivePathComponents(Array(components[1...]))
+            return (hostUrl, true)
+        } else if path.uppercased().starts(with: guestPrefix) {
+            return (baseUrl.appendingCaseInsensitivePathComponents(Array(components[1...])), true)
         } else {
             return nil
         }

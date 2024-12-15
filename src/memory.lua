@@ -68,6 +68,7 @@ function Chunk:checkRange(addr)
     if addr < self.address or addr >= max then
         error(fmt("Address 0x%08X out of bounds %08X-%08X", addr, self.address, max), 2)
     end
+    return addr - self.address
 end
 
 local function word(self, idx)
@@ -236,6 +237,7 @@ end
 function Chunk:alloc(len)
     -- printf("alloc(%d) ", len)
     -- printf("freeCellList before: %s ", self:freeCellListStr())
+    -- printf("\n")
 
     len = (len + 3) & ~3
     local freeCellPtrIdx = 0
@@ -305,7 +307,7 @@ function Chunk:freeCellListStr()
     local list = self:freeCellList()
     local parts = {}
     for i, idx in ipairs(self:freeCellList()) do
-        parts[i] = string.format("%d+%d", idx * 4, self:getCellLen(idx))
+        parts[i] = string.format("%X+%d", idx * 4, self:getCellLen(idx))
     end
     return table.concat(parts, ",")
 end
@@ -325,9 +327,14 @@ function Chunk:free(offset)
     assert(offset & 3 == 0, "Bad offset to free!")
     -- self:write(offset, string.rep("\xDD", self:getAllocLen(offset)))
     local cellIdx = (offset >> strideshift) - 1
+    local cellLen = self:getCellLen(cellIdx)
+    self:declareFreeCell(cellIdx, cellLen)
+end
+
+function Chunk:declareFreeCell(cellIdx, cellLen)
+    self[cellIdx] = cellLen -- In the case of Chunk:free() this is already set, but do it here anyway to handle realloc
 
     -- Find the freeCell immediately before where this should go
-    local cellLen = self:getCellLen(cellIdx)
     local prev = -1
     local fc = self[prev + 1]
     while fc ~= 0 do
@@ -339,7 +346,7 @@ function Chunk:free(offset)
     end
 
     local nextCell = self[prev + 1]
-    -- printf("free(%X): prev=%X next=%X\n", cellIdx << strideshift, prev << strideshift, nextCell << strideshift)
+    -- printf("declareFreeCell(%X): prev=%X next=%X\n", cellIdx << strideshift, prev << strideshift, nextCell << strideshift)
     self[prev + 1] = cellIdx -- prev->next = cellIdx
     self[cellIdx + 1] = nextCell -- cell->next = nextCell
 
@@ -359,12 +366,65 @@ function Chunk:free(offset)
     -- printf("freeCellList after: %s\n", self:freeCellListStr())
 end
 
+function Chunk:realloc(offset, sz)
+    -- printf("realloc(0x%X, %d) freeCellList before: %s \n", offset, sz, self:freeCellListStr())
+    if sz == 0 then
+        self:free(offset)
+        return nil
+    end
+
+    -- Alloc lens are always rounded to a word size
+    sz = (sz + 3) & ~3
+
+    local allocLen = self:getAllocLen(offset)
+    if sz <= allocLen then
+        -- Shrink in place
+        local cellIdx = (offset - 4) >> strideshift
+        if allocLen - sz >= 8 then
+            self[cellIdx] = sz
+            self:declareFreeCell((offset + sz) >> strideshift, allocLen - sz)
+        end
+        return offset
+    else
+        local newOffset = self:alloc(sz)
+        self:aligned_memcpy(newOffset, offset, allocLen)
+        self:free(offset)
+        return newOffset
+    end
+end
+
+local function inrange(min, val, rangeLen)
+    return val >= min and val < min + rangeLen
+end
+
+-- must be non-overlapping, src, dest and len must all be a multiple of chunkstride
+function Chunk:aligned_memcpy(dest, src, len)
+    local srcIdx = src >> strideshift
+    local destIdx = dest >> strideshift
+    for i = 0, (len >> strideshift) - 1 do
+        self[destIdx + i] = self[srcIdx + i]
+    end
+end
+
+function Chunk:memmove(dest, src, len)
+    if inrange(src, dest, src + len) or inrange(src, dest + len, src + len) then
+        -- overlapping just do it the dumb way
+        self:write(dest, self:read(src, len))
+    elseif dest % chunkstride ~= 0 or src % chunkstride ~= 0 or len % chunkstride ~= 0 then
+        -- unaligned, ditto
+        self:write(dest, self:read(src, len))
+    else
+        self:aligned_memcpy(dest, src, len)
+    end
+end
+
 Variable = class {
     _type = nil,
     _chunk = nil,
     _offset = nil, -- relative to start of _chunk
     _arrayLen = nil,
     _stringMaxLen = nil,
+    __name = "Variable",
 }
 
 function Variable:__index(k)
@@ -410,6 +470,10 @@ function Variable:__newindex(k, v)
     end
 end
 
+function Variable:__tostring()
+    return string.format("<var %s>", DataTypes[self._type])
+end
+
 -- local sets = 0
 -- local gets = 0
 function Variable:__call(val)
@@ -444,6 +508,9 @@ function Variable:__call(val)
         -- Slow path
         local data
         if t == EString then
+            if type(val) ~= "string" then
+                error("Cannot assign a "..type(val).." value to a string variable")
+            end
             if #val > self:stringMaxLen() then
                 printf("String too long: maxlen=%d val='%s'\n", self:stringMaxLen(), hexEscape(val))
                 error(KErrStrTooLong)
@@ -603,6 +670,7 @@ end
 Addr = class {
     chunk = nil,
     offset = 0,
+    __name = "Addr",
 }
 
 local function getAddrAndOffset(lhs, rhs)
