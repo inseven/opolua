@@ -1,5 +1,6 @@
 .build
 .jekyll-cache
 .local
+.swiftpm
 _site
 build
