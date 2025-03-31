@@ -123,7 +123,7 @@ PROC CmdS%:
 	ONERR nope
 	RunApp&:("TextEd", drv$ + ":\System\Apps\Welcome\Welcome.txt", "", 0)
 	RETURN
-	
+
 	REM RunApp doesn't actually error on the Series 5 but
 	REM it's convenient for our impl to.
 nope::
@@ -181,7 +181,7 @@ PROC drawCurrentPage:
 
 	drawButton:(0, 0)
 	drawButton:(1, 0)
-	
+
 	y% = gHEIGHT - 7
 	x% = (gWIDTH - ((numCards% - 1) * dotsSep%)) / 2
 	i% = 0
@@ -293,7 +293,7 @@ PROC drawWelcome:
 	ELSE
 		iconsPath$ = drv$ + ":\System\Apps\Welcome\icons_grayscale.mbm"
 	ENDIF
-	
+
 	i% = 0
 	id% = gIDENTITY
 	WHILE i% < numIcons%
@@ -425,7 +425,7 @@ PROC drawImgs:
 	gPRINT "OpoLua can render Psion format MBM files, including colour in programs"
 	gAT 0, 70
 	gPRINT "that support it. Sprite animation via the bmp.opx APIs is also supported."
-	
+
 	id% = gIDENTITY
 	bit% = gLOADBIT(drv$ + ":\System\Apps\Welcome\psionstyle.mbm", 0)
 	w% = gWIDTH
