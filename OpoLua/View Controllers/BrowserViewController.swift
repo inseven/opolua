@@ -24,6 +24,8 @@ import PsionSoftwareIndex
 
 class BrowserViewController: UICollectionViewController {
 
+#if DEBUG
+
     internal lazy var addBarButtonItem: UIBarButtonItem = {
         let softwareIndexAction = UIAction(title: "Psion Software Index",
                                            image: UIImage(systemName: "list.dash.header.rectangle")) { [weak self] action in
@@ -46,6 +48,17 @@ class BrowserViewController: UICollectionViewController {
                                                menu: menu)
         return addBarButtonItem
     }()
+
+#else
+
+    internal lazy var addBarButtonItem: UIBarButtonItem = {
+        return UIBarButtonItem(image: UIImage(systemName: "plus"),
+                               style: .plain,
+                               target: self,
+                               action: #selector(addFolder))
+    }()
+
+#endif
 
     internal var settings: Settings
 
@@ -75,6 +88,7 @@ class BrowserViewController: UICollectionViewController {
         present(indexViewController, animated: true)
     }
 
+    @objc
     func addFolder() {
         let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
         documentPicker.delegate = self
