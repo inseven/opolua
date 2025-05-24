@@ -44,8 +44,8 @@ public struct Legal {
             Credit("Shawn Leedy")
         }
     } licenses: {
-        License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "Lua.txt")
-        License(name: "OpoLua", author: "Jason Morley, Tom Sutcliffe", filename: "License.txt")
+        License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "lua-license")
+        License(name: "OpoLua", author: "Jason Morley, Tom Sutcliffe", filename: "opolua-license")
     }
 
 }
