@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		D805F94D27A1BD9800DFBC20 /* AutoOrientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D805F94C27A1BD9800DFBC20 /* AutoOrientView.swift */; };
-		D805F95127A1D7FF00DFBC20 /* License.txt in Resources */ = {isa = PBXBuildFile; fileRef = D805F95027A1D7FF00DFBC20 /* License.txt */; };
 		D80925612772939A00121E12 /* Graphics+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */; };
 		D80A9CBC27A48BED00E49AD8 /* ApplicationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBB27A48BED00E49AD8 /* ApplicationSection.swift */; };
 		D80A9CBE27A4A35E00E49AD8 /* UIDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */; };
@@ -19,6 +18,8 @@
 		D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */; };
 		D80D65AE279DE0CE0020F994 /* RunningProgramsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */; };
 		D80D65B0279E31220020F994 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AF279E31220020F994 /* Configuration.swift */; };
+		D815C6602DE145CC009EABFE /* lua-license in Resources */ = {isa = PBXBuildFile; fileRef = D815C65E2DE145CC009EABFE /* lua-license */; };
+		D815C6612DE145CC009EABFE /* opolua-license in Resources */ = {isa = PBXBuildFile; fileRef = D815C65F2DE145CC009EABFE /* opolua-license */; };
 		D81B4A4927B5AA650051B092 /* IndexableLocationObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B4A4827B5AA650051B092 /* IndexableLocationObserver.swift */; };
 		D81B4A4D27B5CF650051B092 /* UbiquitousDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B4A4C27B5CF650051B092 /* UbiquitousDownloader.swift */; };
 		D81B875C2790D52C00E71960 /* DrawableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B875B2790D52C00E71960 /* DrawableViewController.swift */; };
@@ -49,7 +50,6 @@
 		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
 		D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724F12771672A009C7246 /* InterpreterThread.swift */; };
 		D86E428A2799C0CC00D5596D /* UISplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86E42892799C0CC00D5596D /* UISplitViewController.swift */; };
-		D86FBABA278C76FB003DF611 /* Lua.txt in Resources */ = {isa = PBXBuildFile; fileRef = D86FBAB9278C76FB003DF611 /* Lua.txt */; };
 		D87A62742752A67500075CB8 /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62732752A67500075CB8 /* CGSize.swift */; };
 		D87A9249274C517000254DE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB79FE6427428294005E904F /* Assets.xcassets */; };
 		D884A3D12778E2CB008954A0 /* ObjectFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */; };
@@ -141,7 +141,6 @@
 
 /* Begin PBXFileReference section */
 		D805F94C27A1BD9800DFBC20 /* AutoOrientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoOrientView.swift; sourceTree = "<group>"; };
-		D805F95027A1D7FF00DFBC20 /* License.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = License.txt; sourceTree = "<group>"; };
 		D80925602772939A00121E12 /* Graphics+CoreGraphics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Graphics+CoreGraphics.swift"; sourceTree = "<group>"; };
 		D80A9CBB27A48BED00E49AD8 /* ApplicationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationSection.swift; sourceTree = "<group>"; };
 		D80A9CBD27A4A35E00E49AD8 /* UIDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIDevice.swift; sourceTree = "<group>"; };
@@ -152,6 +151,8 @@
 		D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewLayout.swift; sourceTree = "<group>"; };
 		D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningProgramsViewController.swift; sourceTree = "<group>"; };
 		D80D65AF279E31220020F994 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
+		D815C65E2DE145CC009EABFE /* lua-license */ = {isa = PBXFileReference; lastKnownFileType = text; path = "lua-license"; sourceTree = "<group>"; };
+		D815C65F2DE145CC009EABFE /* opolua-license */ = {isa = PBXFileReference; lastKnownFileType = text; path = "opolua-license"; sourceTree = "<group>"; };
 		D81B4A4827B5AA650051B092 /* IndexableLocationObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexableLocationObserver.swift; sourceTree = "<group>"; };
 		D81B4A4C27B5CF650051B092 /* UbiquitousDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UbiquitousDownloader.swift; sourceTree = "<group>"; };
 		D81B875B2790D52C00E71960 /* DrawableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawableViewController.swift; sourceTree = "<group>"; };
@@ -178,7 +179,6 @@
 		D86724EF27715B88009C7246 /* Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Program.swift; sourceTree = "<group>"; };
 		D86724F12771672A009C7246 /* InterpreterThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterThread.swift; sourceTree = "<group>"; };
 		D86E42892799C0CC00D5596D /* UISplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISplitViewController.swift; sourceTree = "<group>"; };
-		D86FBAB9278C76FB003DF611 /* Lua.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Lua.txt; sourceTree = "<group>"; };
 		D87A62732752A67500075CB8 /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
 		D884A3D02778E2CB008954A0 /* ObjectFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFileSystem.swift; sourceTree = "<group>"; };
 		D884A3D22778E335008954A0 /* FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
@@ -333,8 +333,8 @@
 		D86FBAB8278C76E4003DF611 /* Licenses */ = {
 			isa = PBXGroup;
 			children = (
-				D86FBAB9278C76FB003DF611 /* Lua.txt */,
-				D805F95027A1D7FF00DFBC20 /* License.txt */,
+				D815C65E2DE145CC009EABFE /* lua-license */,
+				D815C65F2DE145CC009EABFE /* opolua-license */,
 			);
 			path = Licenses;
 			sourceTree = "<group>";
@@ -500,8 +500,8 @@
 				DB9533FD27AC06A1001CF58D /* FlagSet.swift */,
 				DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */,
 				DB79FFE52742E596005E904F /* OpoInterpreter.swift */,
-				DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */,
 				DB79001B2746B88F005E904F /* OpoIoHandler.swift */,
+				DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */,
 				DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */,
 			);
 			path = swift;
@@ -581,13 +581,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				D87A9249274C517000254DE9 /* Assets.xcassets in Resources */,
+				D815C6602DE145CC009EABFE /* lua-license in Resources */,
+				D815C6612DE145CC009EABFE /* opolua-license in Resources */,
 				D893EAD5276073CA00E64219 /* Borders in Resources */,
 				DB9F837127D3834000940D5C /* z-s5 in Resources */,
 				D82D76082C9142740040265E /* src in Resources */,
-				D805F95127A1D7FF00DFBC20 /* License.txt in Resources */,
 				D8C679BD27484BF400BD8720 /* examples in Resources */,
 				DB0B919327836E70006F5CD0 /* fonts in Resources */,
-				D86FBABA278C76FB003DF611 /* Lua.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

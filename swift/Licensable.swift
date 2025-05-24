@@ -24,9 +24,19 @@ import Licensable
 
 extension Licensable where Self == License {
 
+    public static var lua: License {
+        let licenseURL = Bundle.module.url(forResource: "lua-license", withExtension: nil)!
+        return License(id: "https://www.lua.org",
+                       name: "Lua",
+                       author: "Lua.org, PUC-Rio",
+                       text: try! String(contentsOf: licenseURL),
+                       attributes: [],
+                       licenses: [])
+    }
+
     public static var opolua: License {
-        let licenseURL = Bundle.module.url(forResource: "LICENSE", withExtension: nil)!
-        return License(id: "https://github.com/inseven/thoughts",
+        let licenseURL = Bundle.module.url(forResource: "opolua-license", withExtension: nil)!
+        return License(id: "https://github.com/inseven/opolua",
                        name: "OpoLua",
                        author: "Jason Morley, Tom Sutcliffe",
                        text: try! String(contentsOf: licenseURL),
@@ -34,7 +44,7 @@ extension Licensable where Self == License {
                         .url(URL(string: "https://opolua.org")!, title: "Website"),
                         .url(URL(string: "https://github.com/inseven/opolua")!, title: "GitHub"),
                        ],
-                       licenses: [])
+                       licenses: [.lua])
     }
 
 }

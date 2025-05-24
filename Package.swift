@@ -31,7 +31,7 @@ let package = Package(
                 "swift",
             ],
             resources: [
-                .process("swift-resources"),
+                .process("OpoLua/Licenses"),
             ],
             plugins: [
                 .plugin(name: "EmbedLuaPlugin", package: "LuaSwift")
