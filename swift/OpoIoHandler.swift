@@ -589,6 +589,7 @@ extension Async.KeyPressEvent {
 
 public enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
+    case locale // eg "en_GB"
 }
 
 public struct TextFieldInfo: Codable {
@@ -611,9 +612,17 @@ public protocol FileSystemIoHandler {
 
 }
 
+public enum InstallerQueryType: String {
+    case Continue // "Continue" button only
+    case Skip // "Yes"/"No" buttons, next install file skipped on "No"
+    case Abort // "Yes"/"No" buttons, abort install on "No"
+    case Exit // Same as abort but also do cleanup (?)
+}
+
 public protocol SisInstallIoHandler: FileSystemIoHandler {
 
-    // probably some extra stuff for prompting the user
+    // Return true to continue, false if user selected "No"
+    func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool
 
 }
 

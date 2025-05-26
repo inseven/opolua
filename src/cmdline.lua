@@ -29,10 +29,11 @@ SOFTWARE.
 local args = arg
 -- Have to redo the calculation of our base path here, which is a bit annoying
 local launchFile = args[0]
-_G.sep = nil -- Undo the temporary that the cmdline boilerplate created
 local sep = package.config:sub(1, 1)
 package.path = launchFile:sub(1, launchFile:match(sep.."?()[^" .. sep .. "]+$") - 1).."?.lua"
 require("init")
+
+local terminalCharMode = false
 
 local function printHelp(params)
     local positionalArgNames
@@ -242,9 +243,22 @@ function writeFile(filename, data)
     f:close()
 end
 
+function setTerminalCharMode(flag)
+    if flag then
+        assert(os.execute("/bin/stty cbreak -echo"))
+    else
+        os.execute("/bin/stty -cbreak echo")
+    end
+    terminalCharMode = flag
+end
+
+
 function pcallMain()
     local runtime = require("runtime")
     local ok, err = xpcall(main, runtime.traceback)
+    if terminalCharMode then
+        setTerminalCharMode(false)
+    end
     if not ok then
         if err.src then
             printf("%s:%d:%d: ", err.src.path, err.src.line, err.src.column)

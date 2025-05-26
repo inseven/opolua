@@ -168,6 +168,8 @@ class Program {
             switch key {
             case .clockFormat:
                 oplConfig[key] = "0" // analog
+            case .locale:
+                oplConfig[key] = "en_GB"
             }
         }
         
@@ -525,6 +527,8 @@ extension Program: OpoIoHandler {
             case .clockFormat:
                 let clockType: Settings.ClockType = value == "1" ? .digital : .analog
                 settings.clockType = clockType
+            case .locale:
+                break // TODO persist this? It's not currently settable, so...
             }
         }
     }

@@ -39,7 +39,7 @@ function main()
 
     if args.help then
         print([[
-Syntax: compile.lua [options] <filename> [<ouput>]
+Syntax: compile.lua [options] <filename> [<output>]
 
 Compile a Series 5 era OPL program. If neither <output> nor --dump are
 specified, the result is written to <filename>.opo alongside <filename>.

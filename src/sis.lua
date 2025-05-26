@@ -47,6 +47,13 @@ FileType = enum {
     FileMime = 5,
 }
 
+FileTextDetails = enum {
+    Continue = 0,
+    Skip = 1,
+    Abort = 2,
+    Exit = 3,
+}
+
 -- Codes from https://thoukydides.github.io/riscos-psifs/sis.html mapped into
 -- ICU Locale identifiers based on some guesswork and
 -- https://icu4c-demos.unicode.org/icu-bin/locexp?d_=en
@@ -219,14 +226,23 @@ function parseSisFile(data, verbose)
     return result
 end
 
-function getBestLangIdx(langs)
-    -- For now, just pick the first english-ish thing
+function getBestLangIdx(langs, preferred)
+    if preferred then
+        for i, lang in ipairs(langs) do
+            if lang == preferred then
+                return i
+            end
+        end
+    end
+
+    -- Otherwise, just pick the first english-ish thing
     for i, lang in ipairs(langs) do
         local locale = Locales[lang]
         if locale and locale:lower():match("^en") then
             return i
         end
     end
+    -- And if all else fails, go with the first one
     return 1
 end
 
@@ -270,7 +286,7 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
         dest = destName,
     }
 
-    if type ~= FileRecordType.FileNull then
+    if type ~= FileType.FileNull then
         local langData = {}
         for i, lang in ipairs(contents) do
             local filePtr = contents[i].ptr
@@ -289,18 +305,19 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
             file.data = langData[1]
         end
     end
-    if type == FileRecordType.FileText then
+    if type == FileType.FileText then
         file.details = details
     end
 
     return file, pos
 end
 
-function makeManifest(sisfile, includeLangs)
+function makeManifest(sisfile, singleLanguage)
     local langIdx
-    if not includeLangs then
-        langIdx = getBestLangIdx(sisfile.langs)
+    if singleLanguage then
+        langIdx = getBestLangIdx(sisfile.langs, singleLanguage)
     end
+    local includeLangs = singleLanguage == nil
 
     local function langListToLocaleMap(langs, list)
         local result = {}
@@ -357,13 +374,58 @@ function makeManifest(sisfile, includeLangs)
 
         if file.type == FileType.SisComponent and file.data then
             local componentSis = parseSisFile(file.data)
-            f.sis = makeManifest(componentSis, includeLangs)
+            f.sis = makeManifest(componentSis, singleLanguage)
         end
 
         result.files[i] = f
     end
 
     return result
+end
+
+function installSis(data, iohandler, verbose)
+    local sisfile = parseSisFile(data, verbose)
+
+    local preferredLang = Locales[iohandler.getConfig("locale")]
+    assert(preferredLang, "Bad locale config??")
+
+    local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
+    local skipNext = false
+    for _, file in ipairs(sisfile.files) do
+        if skipNext then
+            printf("Skipping file %s\n", file.dest)
+            skipNext = false
+        elseif file.type == FileType.File then
+            local path = file.dest:gsub("^.:\\", "C:\\")
+            local dir = oplpath.dirname(path)
+            if iohandler.fsop("stat", dir) == nil then
+                local err = iohandler.fsop("mkdir", dir)
+                assert(err == KErrNone, "Failed to create dir "..dir)
+            end
+            local data = file.data
+            if not data then
+                data = file.langData[langIdx]
+            end
+            local err = iohandler.fsop("write", path, data)
+            assert(err == KErrNone, "Failed to write to "..path)
+        elseif file.type == FileType.SisComponent then
+            installSis(file.data, iohandler)
+        elseif file.type == FileType.FileText then
+            local data = file.data or file.langData[langIdx]
+            local cp1252 = require("cp1252")
+            local text = cp1252.toUtf8(data):gsub("\x0D\x0A", "\n")
+            local queryType = FileTextDetails[file.details]
+            assert(queryType, "Unknown FileText details")
+            local shouldContinue = iohandler.sisInstallQuery(text, queryType)
+            if not shouldContinue then
+                if queryType == FileTextDetails.Skip then
+                    skipNext = true
+                else
+                    error("Aborting install due to user cancel")
+                end
+            end
+        end
+    end
 end
 
 return _ENV

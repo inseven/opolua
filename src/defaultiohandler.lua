@@ -31,8 +31,8 @@ local fmt = string.format
 
 local statusRequests = {}
 
-function print(val)
-    printf("%s", val:gsub("[\x00-\x1F]", textReplacements))
+function iohPrint(val)
+    printf("%s", val:gsub(textReplacementsMatch, textReplacements))
 end
 
 function textEditor(params)
@@ -278,12 +278,14 @@ end
 function opsync()
 end
 
+local config = { locale = "en_GB", clockFormat = "0" }
+
 function getConfig(key)
-    return ""
+    return config[key] or ""
 end
 
 function setConfig(key, val)
-    printf("setConfig(%q, %q)\n", key, val)
+    config[key] = val
 end
 
 function setAppTitle(title)
@@ -303,6 +305,11 @@ function runApp(prog, doc)
 end
 
 function setEra(era)
+end
+
+function sisInstallQuery(text, type)
+    print(text)
+    return true
 end
 
 return _ENV

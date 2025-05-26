@@ -1004,7 +1004,7 @@ function CLS()
 end
 
 function PRINT(str)
-    local handlerPrint = runtime:iohandler().print
+    local handlerPrint = runtime:iohandler().iohPrint
     if handlerPrint then
         handlerPrint(str)
         return
