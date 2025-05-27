@@ -386,8 +386,16 @@ end
 function installSis(data, iohandler, verbose)
     local sisfile = parseSisFile(data, verbose)
 
-    local preferredLang = Locales[iohandler.getConfig("locale")]
-    assert(preferredLang, "Bad locale config??")
+    local preferredLang = nil
+    if #sisfile.langs > 1 then
+        local preferredLangName = iohandler.sisInstallGetLanguage(sisfile.langs)
+        if preferredLangName then
+            preferredLang = assert(Locales[preferredLangName], "Bad result from sisInstallGetLanguage?")
+        else
+            -- Nil means abort
+            return
+        end
+    end
 
     local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
     local skipNext = false

@@ -312,4 +312,8 @@ function sisInstallQuery(text, type)
     return true
 end
 
+function sisInstallGetLanguage(candidates)
+    return getConfig("locale")
+end
+
 return _ENV

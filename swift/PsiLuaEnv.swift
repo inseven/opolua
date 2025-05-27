@@ -437,6 +437,7 @@ public class PsiLuaEnv {
         L.push(Wrapper<SisInstallIoHandler>(value: handler))
         let fns: [String: lua_CFunction] = [
             "sisInstallQuery": { L in return autoreleasepool { return PsiLuaEnv.sisInstallQuery(L) } },
+            "sisInstallGetLanguage": { L in return autoreleasepool { return PsiLuaEnv.sisInstallGetLanguage(L) } },
         ]
         L.setfuncs(fns, nup: 1)
     }
@@ -455,6 +456,18 @@ public class PsiLuaEnv {
             return 0
         }
         let result = iohandler.sisInstallQuery(text: text, type: queryType)
+        L.push(result)
+        return 1
+    }
+
+    internal static let sisInstallGetLanguage: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        guard let langs: [String] = L.tovalue(1) else {
+            print("Bad languages!")
+            return 0
+        }
+        let result = iohandler.sisInstallGetLanguage(langs)
         L.push(result)
         return 1
     }

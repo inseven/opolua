@@ -624,6 +624,9 @@ public protocol SisInstallIoHandler: FileSystemIoHandler {
     // Return true to continue, false if user selected "No"
     func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool
 
+    // Return nil to abort install, otherwise result should be one of languages
+    func sisInstallGetLanguage(_ languages: [String]) -> String?
+
 }
 
 public protocol OpoIoHandler: FileSystemIoHandler {

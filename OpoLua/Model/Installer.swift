@@ -81,4 +81,9 @@ extension Installer: SisInstallIoHandler {
         return true
     }
 
+    func sisInstallGetLanguage(_ languages: [String]) -> String? {
+        print("TODO sisInstallGetLanguage \(languages)")
+        return languages[0] // Whatever is first
+    }
+
 }
