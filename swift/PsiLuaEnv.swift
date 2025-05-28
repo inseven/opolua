@@ -445,7 +445,7 @@ public class PsiLuaEnv {
     internal static let sisInstallQuery: lua_CFunction = { (L: LuaState!) -> CInt in
         let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
         let iohandler = wrapper.value
-        guard let text = L.tostring(1) else {
+        guard let text = L.tostring(1, encoding: .utf8) else {
             print("Bad text!")
             return 0
         }
