@@ -446,6 +446,12 @@ public struct Fs {
         public let size: UInt64
         public let lastModified: Date
         public let isDirectory: Bool
+
+        public init(size: UInt64, lastModified: Date, isDirectory: Bool) {
+            self.size = size
+            self.lastModified = lastModified
+            self.isDirectory = isDirectory
+        }
     }
 
     public enum Err: Int {
