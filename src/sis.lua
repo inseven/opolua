@@ -388,7 +388,11 @@ function installSis(data, iohandler, verbose)
 
     local preferredLang = nil
     if #sisfile.langs > 1 then
-        local preferredLangName = iohandler.sisInstallGetLanguage(sisfile.langs)
+        local candidateLanguages = {}
+        for i, langId in ipairs(sisfile.langs) do
+            candidateLanguages[i] = assert(Locales[langId], "Bad langId "..tostring(langId))
+        end
+        local preferredLangName = iohandler.sisInstallGetLanguage(candidateLanguages)
         if preferredLangName then
             preferredLang = assert(Locales[preferredLangName], "Bad result from sisInstallGetLanguage?")
         else
@@ -399,7 +403,9 @@ function installSis(data, iohandler, verbose)
 
     local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
     local skipNext = false
-    for _, file in ipairs(sisfile.files) do
+    -- You're supposed to iterate the files list backwards when installing
+    for i = #sisfile.files, 1, -1 do
+        local file = sisfile.files[i]
         if skipNext then
             printf("Skipping file %s\n", file.dest)
             skipNext = false
