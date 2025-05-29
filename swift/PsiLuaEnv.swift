@@ -192,12 +192,16 @@ public class PsiLuaEnv {
     }
 
     public func recognize(path: String) -> FileType {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        return self.recognize(data: data)
+    }
+
+    public func recognize(data: Data) -> FileType {
         let top = L.gettop()
         defer {
             L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
         }
         require("recognizer")
         L.rawget(-1, key: "recognize")
@@ -213,12 +217,16 @@ public class PsiLuaEnv {
     }
 
     public func getFileInfo(path: String) -> FileInfo {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        return getFileInfo(data: data)
+    }
+
+    public func getFileInfo(data: Data) -> FileInfo {
         let top = L.gettop()
         defer {
             L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
         }
         require("recognizer")
         L.rawget(-1, key: "recognize")
