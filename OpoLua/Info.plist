@@ -15,7 +15,7 @@
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>org.opolua.sis</string>
+				<string>com.psion.sis</string>
 			</array>
 		</dict>
 	</array>
@@ -102,7 +102,7 @@
 			<key>UTTypeIconFiles</key>
 			<array/>
 			<key>UTTypeIdentifier</key>
-			<string>org.opolua.sis</string>
+			<string>com.psion.sis</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
