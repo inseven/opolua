@@ -456,6 +456,7 @@ public struct Fs {
 
     public enum Err: Int {
         case none = 0
+        case general = -1
         case inUse = -9
         case notFound = -33
         case alreadyExists = -32
