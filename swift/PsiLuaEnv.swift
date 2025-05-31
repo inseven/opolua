@@ -429,7 +429,7 @@ public class PsiLuaEnv {
         L.push(path)
         L.push(data)
         makeSisInstallIoHandlerBridge(handler)
-        try L.pcall(nargs: 2, nret: 0)
+        try L.pcall(nargs: 3, nret: 0)
     }
 
     internal func makeFsIoHandlerBridge(_ handler: FileSystemIoHandler) {
