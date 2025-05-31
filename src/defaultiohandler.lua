@@ -316,4 +316,8 @@ function sisInstallGetLanguage(candidates)
     return getConfig("locale")
 end
 
+function sisInstallGetDrive()
+    return "C"
+end
+
 return _ENV

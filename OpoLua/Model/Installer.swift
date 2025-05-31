@@ -86,4 +86,9 @@ extension Installer: SisInstallIoHandler {
         return languages[0] // Whatever is first
     }
 
+    func sisInstallGetDrive() -> String? {
+        print("TODO sisInstallGetDrive")
+        return "C"
+    }
+    
 }

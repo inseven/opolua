@@ -634,6 +634,8 @@ public protocol SisInstallIoHandler: FileSystemIoHandler {
     // Return nil to abort install, otherwise result should be one of languages
     func sisInstallGetLanguage(_ languages: [String]) -> String?
 
+    // Return nil to abort install. Otherwise should be a single character string, eg "C"
+    func sisInstallGetDrive() -> String?
 }
 
 public protocol OpoIoHandler: FileSystemIoHandler {

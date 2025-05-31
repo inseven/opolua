@@ -415,6 +415,23 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         end
     end
 
+    local hasDriveChoice = false
+    local drive = "C"
+    for _, file in ipairs(sisfile.files) do
+        if file.dest:match("^!") then
+            hasDriveChoice = true
+            break
+        end
+    end
+    if hasDriveChoice then
+        drive = iohandler.sisInstallGetDrive()
+        if not drive then
+            error("Aborting install due to user cancel")
+        end
+        drive = drive:upper()
+        assert(drive:match("^[A-Z]$"), "Bad drive returned!")
+    end
+
     local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
 
     if filename == nil then
@@ -430,7 +447,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             printf("Skipping file %s\n", file.dest)
             skipNext = false
         elseif file.type == FileType.File then
-            local path = file.dest:gsub("^.:\\", "C:\\")
+            local path = file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end)
             local dir = oplpath.dirname(path)
             if iohandler.fsop("stat", dir) == nil then
                 local err = iohandler.fsop("mkdir", dir)
@@ -462,7 +479,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
     end
 
     if includeStub then
-        local stub = makeStub(data, sisfile.langs[langIdx])
+        local stub = makeStub(data, sisfile.langs[langIdx], drive)
         local dir = [[C:\System\install\]]
         if iohandler.fsop("stat", dir) == nil then
             local err = iohandler.fsop("mkdir", dir)
@@ -474,7 +491,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
     end
 end
 
-function makeStub(sisData, installedLang)
+function makeStub(sisData, installedLang, drive)
     local sisfile = parseSisFile(sisData)
 
     -- The stub updates lang, instFiles and instDrv. instFiles should be the same as nFiles, not the number of files
@@ -483,7 +500,7 @@ function makeStub(sisData, installedLang)
     --
     -- In ER6 we'd have to also update the Installed Space field.
 
-    local newData = string.pack("<I2I2I2", installedLang, #sisfile.files, string.byte('c'))
+    local newData = string.pack("<I2I2I2", installedLang, #sisfile.files, string.byte(drive:lower()))
     local dataOffset = 0x18 -- position of lang
 
     local result = sisData:sub(1, dataOffset)..newData..sisData:sub(1 + dataOffset + #newData, sisfile.stubSize)
