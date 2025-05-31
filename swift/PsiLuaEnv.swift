@@ -416,16 +416,17 @@ public class PsiLuaEnv {
         guard let data = FileManager.default.contents(atPath: path) else {
             throw LuaArgumentError(errorString: "Couldn't read \(path)")
         }
-        try installSisFile(data: data, handler: handler)
+        try installSisFile(path: path, data: data, handler: handler)
     }
 
-    public func installSisFile(data: Data, handler: SisInstallIoHandler) throws {
+    public func installSisFile(path: String? = nil, data: Data, handler: SisInstallIoHandler) throws {
         let top = L.gettop()
         defer {
             L.settop(top)
         }
         require("runtime")
         L.rawget(-1, utf8Key: "installSis")
+        L.push(path)
         L.push(data)
         makeSisInstallIoHandlerBridge(handler)
         try L.pcall(nargs: 2, nret: 0)

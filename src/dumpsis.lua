@@ -31,6 +31,10 @@ local function path_join(path, component)
     return path..sep..component
 end
 
+local function path_basename(path)
+    return (path:match("/?([^/]+)$"))
+end
+
 function main()
     local args = getopt({
         "filename",
@@ -40,6 +44,7 @@ function main()
         quiet = true, q = "quiet",
         interactive = true, i = "interactive",
         language = string, l = "language",
+        stub = true, s = "stub",
         help = true, h = "help",
     })
 
@@ -48,7 +53,8 @@ function main()
 Syntax: dumpsis.lua [options] <filename> [<output>]
 
 If no <output> is supplied, list the contents of the SIS <filename> to stdout.
-If <output> is supplied, extract the SIS file to that location.
+If <output> is supplied, extract the SIS file to that location, treating that
+location as the root of a hypothetical C: drive.
 
 Options:
     --json, -j
@@ -70,6 +76,9 @@ Options:
     --interactive, -i
         Prompt after any show-on-install text files are printed. Cannot be
         combined with --quiet.
+
+    --stub, -s
+        If specified, also write an uninstall stub in C:\System\Install\.
 
     --verbose, -v
         When listing the SIS file, print extra debug information.
@@ -104,7 +113,7 @@ Options:
             iohandler.setConfig("locale", args.language)
         end
 
-        sis.installSis(data, iohandler, args.verbose)
+        sis.installSis(path_basename(args.filename), data, iohandler, args.stub, args.verbose)
     else
         local sisfile = sis.parseSisFile(data, args.verbose)
         if args.json then

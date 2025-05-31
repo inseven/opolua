@@ -160,7 +160,7 @@ Locales = enum {
 function parseSisFile(data, verbose)
     local uid1, uid2, uid3, uid4, checksum, nLangs, nFiles, pos = string.unpack("<I4I4I4I4I2I2I2", data)
     if verbose then
-        printf("uid1=0x%08X uid2=0x%08X nLangs=%d nFiles=%d\n", uid1, uid2, nLangs, nFiles)
+        printf("uid1=0x%08X uid2=0x%08X uid3=0x%08X uid4=0x%08X nLangs=%d nFiles=%d\n", uid1, uid2, uid3, uid4, nLangs, nFiles)
     end
 
     assert(uid2 == KUidAppDllDoc8 or uid2 == KUidSisFileEr6, "Bad uid2 in SIS file!")
@@ -183,6 +183,8 @@ function parseSisFile(data, verbose)
 
     assert(options & Options.IsUnicode == 0, "ER5U not supported!")
 
+    local endOfStrings = 0
+
     local result = {
         name = {},
         langs = {},
@@ -200,16 +202,17 @@ function parseSisFile(data, verbose)
 
     pos = 1 + filesPtr
     for i = 1, nFiles do
-        local recordType, file
+        local recordType, file, maxStringOffset
         recordType, pos = string.unpack("<I4", data, pos)
         if recordType == FileRecordType.SimpleFileRecord then
-            file, pos = parseSimpleFileRecord(data, pos, 1, verbose)
+            file, pos, maxStringOffset = parseSimpleFileRecord(data, pos, 1, verbose)
         elseif recordType == FileRecordType.MultiLangRecord then
-            file, pos = parseSimpleFileRecord(data, pos, nLangs, verbose)
+            file, pos, maxStringOffset = parseSimpleFileRecord(data, pos, nLangs, verbose)
         else
             error("Unknown record type "..tostring(recordType))
         end
         result.files[i] = file
+        endOfStrings = math.max(endOfStrings, maxStringOffset)
     end
 
     pos = 1 + namePtr
@@ -220,9 +223,15 @@ function parseSisFile(data, verbose)
     for i = 1, nLangs do
         local ptr
         ptr, pos = string.unpack("<I4", data, pos)
+        endOfStrings = math.max(endOfStrings, ptr + nameLens[i])
         result.name[i] = data:sub(1 + ptr, ptr + nameLens[i])
     end
 
+    result.stubSize = endOfStrings
+
+    if verbose then
+        printf("stubSize=%d\n", result.stubSize)
+    end
     return result
 end
 
@@ -273,6 +282,7 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
 
     local srcName = data:sub(1 + srcNamePtr, srcNamePtr + srcNameLen)
     local destName = data:sub(1 + destNamePtr, destNamePtr + destNameLen)
+    local maxStringOffset = math.max(srcNamePtr + srcNameLen, destNamePtr + destNameLen)
 
     if type == FileType.SisComponent and destName:match("[\x00-\x1F]") then
         -- SIS files created with Neuon's nSISUtil appear to put corrupt garbage data into the dest name for
@@ -309,7 +319,7 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
         file.details = details
     end
 
-    return file, pos
+    return file, pos, maxStringOffset
 end
 
 function makeManifest(sisfile, singleLanguage)
@@ -383,7 +393,11 @@ function makeManifest(sisfile, singleLanguage)
     return result
 end
 
-function installSis(data, iohandler, verbose)
+function installSis(filename, data, iohandler, includeStub, verbose)
+    if data == nil then
+        -- Assume filename is a psion path
+        data = assert(iohandler.fsop("read", filename))
+    end
     local sisfile = parseSisFile(data, verbose)
 
     local preferredLang = nil
@@ -402,6 +416,12 @@ function installSis(data, iohandler, verbose)
     end
 
     local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
+
+    if filename == nil then
+        -- Make something up from the only info we have
+        filename = string.format("%s.sis", sisfile.name[langIdx])
+    end
+
     local skipNext = false
     -- You're supposed to iterate the files list backwards when installing
     for i = #sisfile.files, 1, -1 do
@@ -423,7 +443,7 @@ function installSis(data, iohandler, verbose)
             local err = iohandler.fsop("write", path, data)
             assert(err == KErrNone, "Failed to write to "..path)
         elseif file.type == FileType.SisComponent then
-            installSis(file.data, iohandler)
+            installSis(file.src, file.data, iohandler, includeStub, verbose)
         elseif file.type == FileType.FileText then
             local data = file.data or file.langData[langIdx]
             local cp1252 = require("cp1252")
@@ -440,6 +460,34 @@ function installSis(data, iohandler, verbose)
             end
         end
     end
+
+    if includeStub then
+        local stub = makeStub(data, sisfile.langs[langIdx])
+        local dir = [[C:\System\install\]]
+        if iohandler.fsop("stat", dir) == nil then
+            local err = iohandler.fsop("mkdir", dir)
+            assert(err == KErrNone, "Failed to create dir "..dir)
+        end
+        local stubPath = oplpath.join(dir, oplpath.basename(filename))
+        local err = iohandler.fsop("write", stubPath, stub)
+        assert(err == KErrNone, "Failed to write stub to "..stubPath)
+    end
+end
+
+function makeStub(sisData, installedLang)
+    local sisfile = parseSisFile(sisData)
+
+    -- The stub updates lang, instFiles and instDrv. instFiles should be the same as nFiles, not the number of files
+    -- actually written (nFiles includes embedded SIS files, FileNull and FileText files), because it's used as a
+    -- progress indicator to indicate a partial or completed install.
+    --
+    -- In ER6 we'd have to also update the Installed Space field.
+
+    local newData = string.pack("<I2I2I2", installedLang, #sisfile.files, string.byte('c'))
+    local dataOffset = 0x18 -- position of lang
+
+    local result = sisData:sub(1, dataOffset)..newData..sisData:sub(1 + dataOffset + #newData, sisfile.stubSize)
+    return result
 end
 
 return _ENV
