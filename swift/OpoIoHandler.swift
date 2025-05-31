@@ -446,10 +446,17 @@ public struct Fs {
         public let size: UInt64
         public let lastModified: Date
         public let isDirectory: Bool
+
+        public init(size: UInt64, lastModified: Date, isDirectory: Bool) {
+            self.size = size
+            self.lastModified = lastModified
+            self.isDirectory = isDirectory
+        }
     }
 
     public enum Err: Int {
         case none = 0
+        case general = -1
         case inUse = -9
         case notFound = -33
         case alreadyExists = -32
@@ -589,6 +596,7 @@ extension Async.KeyPressEvent {
 
 public enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
+    case locale // eg "en_GB"
 }
 
 public struct TextFieldInfo: Codable {
@@ -611,10 +619,23 @@ public protocol FileSystemIoHandler {
 
 }
 
+public enum InstallerQueryType: String {
+    case Continue // "Continue" button only
+    case Skip // "Yes"/"No" buttons, next install file skipped on "No"
+    case Abort // "Yes"/"No" buttons, abort install on "No"
+    case Exit // Same as abort but also do cleanup (?)
+}
+
 public protocol SisInstallIoHandler: FileSystemIoHandler {
 
-    // probably some extra stuff for prompting the user
+    // Return true to continue, false if user selected "No"
+    func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool
 
+    // Return nil to abort install, otherwise result should be one of languages
+    func sisInstallGetLanguage(_ languages: [String]) -> String?
+
+    // Return nil to abort install. Otherwise should be a single character string, eg "C"
+    func sisInstallGetDrive() -> String?
 }
 
 public protocol OpoIoHandler: FileSystemIoHandler {

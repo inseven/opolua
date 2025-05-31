@@ -76,4 +76,19 @@ extension Installer: SisInstallIoHandler {
         return fileSystem.perform(op)
     }
 
+    func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool {
+        print("TODO sisInstallQuery \(text)")
+        return true
+    }
+
+    func sisInstallGetLanguage(_ languages: [String]) -> String? {
+        print("TODO sisInstallGetLanguage \(languages)")
+        return languages[0] // Whatever is first
+    }
+
+    func sisInstallGetDrive() -> String? {
+        print("TODO sisInstallGetDrive")
+        return "C"
+    }
+    
 }

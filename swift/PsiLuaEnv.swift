@@ -192,12 +192,16 @@ public class PsiLuaEnv {
     }
 
     public func recognize(path: String) -> FileType {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        return self.recognize(data: data)
+    }
+
+    public func recognize(data: Data) -> FileType {
         let top = L.gettop()
         defer {
             L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
         }
         require("recognizer")
         L.rawget(-1, key: "recognize")
@@ -213,12 +217,16 @@ public class PsiLuaEnv {
     }
 
     public func getFileInfo(path: String) -> FileInfo {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        return getFileInfo(data: data)
+    }
+
+    public func getFileInfo(data: Data) -> FileInfo {
         let top = L.gettop()
         defer {
             L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
         }
         require("recognizer")
         L.rawget(-1, key: "recognize")
@@ -328,8 +336,8 @@ public class PsiLuaEnv {
     }
 
     internal static let fsop: lua_CFunction = { (L: LuaState!) -> CInt in
-        let wrapper: FsHandlerWrapper = L.touserdata(lua_upvalueindex(1))!
-        let iohandler = wrapper.iohandler
+        let wrapper: Wrapper<FileSystemIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
 
         guard let cmd = L.tostring(1) else {
             return 0
@@ -405,38 +413,93 @@ public class PsiLuaEnv {
     }
 
     public func installSisFile(path: String, handler: SisInstallIoHandler) throws {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            throw LuaArgumentError(errorString: "Couldn't read \(path)")
+        }
+        try installSisFile(path: path, data: data, handler: handler)
+    }
+
+    public func installSisFile(path: String? = nil, data: Data, handler: SisInstallIoHandler) throws {
         let top = L.gettop()
         defer {
             L.settop(top)
         }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            throw LuaArgumentError(errorString: "Couldn't read \(path)")
-        }
         require("runtime")
         L.rawget(-1, utf8Key: "installSis")
+        L.push(path)
         L.push(data)
-        makeFsIoHandlerBridge(handler)
-        try L.pcall(nargs: 2, nret: 0)
+        makeSisInstallIoHandlerBridge(handler)
+        try L.pcall(nargs: 3, nret: 0)
     }
 
     internal func makeFsIoHandlerBridge(_ handler: FileSystemIoHandler) {
         L.newtable()
-        L.push(FsHandlerWrapper(iohandler: handler))
+        L.push(Wrapper<FileSystemIoHandler>(value: handler))
         let fns: [String: lua_CFunction] = [
             "fsop": { L in return autoreleasepool { return PsiLuaEnv.fsop(L) } },
         ]
         L.setfuncs(fns, nup: 1)
     }
 
+    internal func makeSisInstallIoHandlerBridge(_ handler: SisInstallIoHandler) {
+        makeFsIoHandlerBridge(handler)
+        L.push(Wrapper<SisInstallIoHandler>(value: handler))
+        let fns: [String: lua_CFunction] = [
+            "sisInstallQuery": { L in return autoreleasepool { return PsiLuaEnv.sisInstallQuery(L) } },
+            "sisInstallGetLanguage": { L in return autoreleasepool { return PsiLuaEnv.sisInstallGetLanguage(L) } },
+            "sisInstallGetDrive": { L in return autoreleasepool { return PsiLuaEnv.sisInstallGetDrive(L) } },
+        ]
+        L.setfuncs(fns, nup: 1)
+    }
+
+    internal static let sisInstallQuery: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        guard let text = L.tostring(1, encoding: .utf8) else {
+            print("Bad text!")
+            return 0
+        }
+        guard let queryString = L.tostring(2),
+              let queryType = InstallerQueryType(rawValue: queryString)
+        else {
+            print("Unknown queryType \(L.tostring(2, convert: true)!)")
+            return 0
+        }
+        let result = iohandler.sisInstallQuery(text: text, type: queryType)
+        L.push(result)
+        return 1
+    }
+
+    internal static let sisInstallGetLanguage: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        guard let langs: [String] = L.tovalue(1) else {
+            print("Bad languages!")
+            return 0
+        }
+        let result = iohandler.sisInstallGetLanguage(langs)
+        L.push(result)
+        return 1
+    }
+
+    internal static let sisInstallGetDrive: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        let result = iohandler.sisInstallGetDrive()
+        L.push(result)
+        return 1
+    }
 }
 
-fileprivate class FsHandlerWrapper: PushableWithMetatable {
-    init(iohandler: FileSystemIoHandler) {
-        self.iohandler = iohandler
+fileprivate class Wrapper<T>: PushableWithMetatable {
+    init(value: T) {
+        self.value = value
     }
-    static let metatable = Metatable<FsHandlerWrapper>()
+    static var metatable: Metatable<Wrapper<T>> {
+        return .init()
+    }
 
-    let iohandler: FileSystemIoHandler
+    let value: T
 }
 
 internal extension LuaState {
