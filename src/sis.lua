@@ -48,10 +48,10 @@ FileType = enum {
 }
 
 FileTextDetails = enum {
-    Continue = 0,
-    Skip = 1,
-    Abort = 2,
-    Exit = 3,
+    continue = 0,
+    skip = 1,
+    abort = 2,
+    exit = 3,
 }
 
 -- Codes from https://thoukydides.github.io/riscos-psifs/sis.html mapped into
@@ -517,7 +517,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             assert(queryType, "Unknown FileText details")
             local shouldContinue = iohandler.sisInstallQuery(text, queryType)
             if not shouldContinue then
-                if queryType == FileTextDetails.Skip then
+                if queryType == "skip" then
                     skipNext = true
                 else
                     return failInstall(i, "usercancel")

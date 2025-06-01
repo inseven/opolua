@@ -620,10 +620,10 @@ public protocol FileSystemIoHandler {
 }
 
 public enum InstallerQueryType: String {
-    case Continue // "Continue" button only
-    case Skip // "Yes"/"No" buttons, next install file skipped on "No"
-    case Abort // "Yes"/"No" buttons, abort install on "No"
-    case Exit // Same as abort but also do cleanup (?)
+    case `continue` // "Continue" button only
+    case skip // "Yes"/"No" buttons, next install file skipped on "No"
+    case abort // "Yes"/"No" buttons, abort install on "No"
+    case exit // Same as abort but also do cleanup (?)
 }
 
 public struct SisFile: Codable {
