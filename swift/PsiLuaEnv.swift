@@ -157,13 +157,6 @@ public class PsiLuaEnv {
         public let idOffset: UInt32?
     }
 
-    public struct SisFile: Codable {
-        public let name: [String: String]
-        public let uid: UInt32
-        public let version: String
-        public let languages: [String]
-    }
-
     public enum FileType: String, Codable {
         case unknown
         case aif
@@ -445,11 +438,33 @@ public class PsiLuaEnv {
         makeFsIoHandlerBridge(handler)
         L.push(Wrapper<SisInstallIoHandler>(value: handler))
         let fns: [String: lua_CFunction] = [
+            "sisInstallBegin": { L in return autoreleasepool { return PsiLuaEnv.sisInstallBegin(L) } },
+            "sisInstallComplete": { L in return autoreleasepool { return PsiLuaEnv.sisInstallComplete(L) } },
             "sisInstallQuery": { L in return autoreleasepool { return PsiLuaEnv.sisInstallQuery(L) } },
             "sisInstallGetLanguage": { L in return autoreleasepool { return PsiLuaEnv.sisInstallGetLanguage(L) } },
             "sisInstallGetDrive": { L in return autoreleasepool { return PsiLuaEnv.sisInstallGetDrive(L) } },
         ]
         L.setfuncs(fns, nup: 1)
+    }
+
+    internal static let sisInstallBegin: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        L.printStack()
+        guard let info: SisFile = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        let result = iohandler.sisInstallBegin(info: info)
+        L.push(result)
+        return 1
+    }
+
+    internal static let sisInstallComplete: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        iohandler.sisInstallComplete()
+        return 0
     }
 
     internal static let sisInstallQuery: lua_CFunction = { (L: LuaState!) -> CInt in

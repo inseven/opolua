@@ -307,6 +307,15 @@ end
 function setEra(era)
 end
 
+function sisInstallBegin(sisInfo)
+    -- print("sisInstallBegin", dump(sisInfo))
+    return true -- ie proceed with install
+end
+
+function sisInstallComplete()
+    -- print("sisInstallComplete")
+end
+
 function sisInstallQuery(text, type)
     print(text)
     return true
@@ -317,6 +326,7 @@ function sisInstallGetLanguage(candidates)
 end
 
 function sisInstallGetDrive()
+    -- print("sisInstallGetDrive")
     return "C"
 end
 

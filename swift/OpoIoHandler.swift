@@ -626,7 +626,17 @@ public enum InstallerQueryType: String {
     case Exit // Same as abort but also do cleanup (?)
 }
 
+public struct SisFile: Codable {
+    public let name: [String: String]
+    public let uid: UInt32
+    public let version: String
+    public let languages: [String]
+}
+
 public protocol SisInstallIoHandler: FileSystemIoHandler {
+
+    // Return false to not install this SIS (without erroring)
+    func sisInstallBegin(info: SisFile) -> Bool
 
     // Return true to continue, false if user selected "No"
     func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool
@@ -636,6 +646,8 @@ public protocol SisInstallIoHandler: FileSystemIoHandler {
 
     // Return nil to abort install. Otherwise should be a single character string, eg "C"
     func sisInstallGetDrive() -> String?
+
+    func sisInstallComplete()
 }
 
 public protocol OpoIoHandler: FileSystemIoHandler {

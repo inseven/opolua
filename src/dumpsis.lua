@@ -117,7 +117,7 @@ Options:
     else
         local sisfile = sis.parseSisFile(data, args.verbose)
         if args.json then
-            local manifest = manifestToUtf8(sis.makeManifest(sisfile, args.language))
+            local manifest = manifestToUtf8(sis.makeManifest(sisfile, args.language, true))
             print(json.encode(manifest))
         else
             describeSis(sisfile, "")

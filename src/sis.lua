@@ -322,7 +322,7 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
     return file, pos, maxStringOffset
 end
 
-function makeManifest(sisfile, singleLanguage)
+function makeManifest(sisfile, singleLanguage, includeFiles)
     local langIdx
     if singleLanguage then
         langIdx = getBestLangIdx(sisfile.langs, singleLanguage)
@@ -345,14 +345,19 @@ function makeManifest(sisfile, singleLanguage)
     local result = {
         type = "sis",
         name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name)) or sisfile.name[langIdx],
-        version = string.format("%d.%d", sisfile.version[1], sisfile.version[2]),
+        version = string.format("%d.%02d", sisfile.version[1], sisfile.version[2]),
         uid = sisfile.uid,
         languages = {},
-        files = {},
     }
     for _, lang in ipairs(sisfile.langs) do
         table.insert(result.languages, Locales[lang])
     end
+
+    if not includeFiles then
+        return result
+    end
+
+    result.files = {}
 
     for i, file in ipairs(sisfile.files) do
         local f = {
@@ -384,7 +389,7 @@ function makeManifest(sisfile, singleLanguage)
 
         if file.type == FileType.SisComponent and file.data then
             local componentSis = parseSisFile(file.data)
-            f.sis = makeManifest(componentSis, singleLanguage)
+            f.sis = makeManifest(componentSis, singleLanguage, includeFiles)
         end
 
         result.files[i] = f
@@ -399,6 +404,12 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         data = assert(iohandler.fsop("read", filename))
     end
     local sisfile = parseSisFile(data, verbose)
+    -- This is compatible with struct SisFile in Swift (plus some other stuff that doesn't matter)
+    local callbackContext = makeManifest(sisfile)
+
+    if not iohandler.sisInstallBegin(callbackContext) then
+        return
+    end
 
     local preferredLang = nil
     if #sisfile.langs > 1 then
@@ -414,6 +425,8 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             return
         end
     end
+
+    local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
 
     local hasDriveChoice = false
     local drive = "C"
@@ -432,7 +445,6 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         assert(drive:match("^[A-Z]$"), "Bad drive returned!")
     end
 
-    local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
 
     if filename == nil then
         -- Make something up from the only info we have
@@ -489,6 +501,8 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         local err = iohandler.fsop("write", stubPath, stub)
         assert(err == KErrNone, "Failed to write stub to "..stubPath)
     end
+
+    iohandler.sisInstallComplete()
 end
 
 function makeStub(sisData, installedLang, drive)
