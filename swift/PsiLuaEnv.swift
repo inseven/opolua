@@ -375,10 +375,11 @@ public class PsiLuaEnv {
 
         let result = iohandler.fsop(Fs.Operation(path: path, type: op))
         switch (result) {
+        case .success:
+            L.push(0)
+            return 1
         case .err(let err):
-            if err != .none {
-                print("Error \(err) for cmd \(op) path \(path)")
-            }
+            print("Error \(err) for cmd \(op) path \(path)")
             if cmd == "read" || cmd == "dir" || cmd == "stat" {
                 L.pushnil()
                 L.push(err.rawValue)
