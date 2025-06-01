@@ -308,8 +308,12 @@ function setEra(era)
 end
 
 function sisInstallBegin(sisInfo)
-    -- print("sisInstallBegin", dump(sisInfo))
+    printf("sisInstallBegin %s v%s\n", sisInfo.name[sisInfo.languages[1]], sisInfo.version)
     return true -- ie proceed with install
+end
+
+function sisInstallRollback()
+    return false -- We don't really need rollback on the command line?
 end
 
 function sisInstallComplete()
@@ -326,7 +330,6 @@ function sisInstallGetLanguage(candidates)
 end
 
 function sisInstallGetDrive()
-    -- print("sisInstallGetDrive")
     return "C"
 end
 

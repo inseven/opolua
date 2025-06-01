@@ -454,7 +454,7 @@ public struct Fs {
         }
     }
 
-    public enum Err: Int {
+    public enum Err: Int, Codable {
         case general = -1
         case inUse = -9
         case notFound = -33
@@ -633,6 +633,12 @@ public struct SisFile: Codable {
     public let languages: [String]
 }
 
+public enum SisInstallError: Error, Equatable {
+    case userCancelled
+    case fsError(Fs.Err, String)
+    case internalError(String)
+}
+
 public protocol SisInstallIoHandler: FileSystemIoHandler {
 
     // Return false to not install this SIS (without erroring)
@@ -641,11 +647,15 @@ public protocol SisInstallIoHandler: FileSystemIoHandler {
     // Return true to continue, false if user selected "No"
     func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool
 
-    // Return nil to abort install, otherwise result should be one of languages
-    func sisInstallGetLanguage(_ languages: [String]) -> String?
+    // Result should be one of languages. Throw a SisInstallError to cancel (installSis with rethrow it)
+    func sisInstallGetLanguage(_ languages: [String]) throws -> String
 
-    // Return nil to abort install. Otherwise should be a single character string, eg "C"
-    func sisInstallGetDrive() -> String?
+    // Should be a single character string, eg "C". Throw a SisInstallError to cancel (installSis with rethrow it)
+    func sisInstallGetDrive() throws -> String
+
+    // Called to indicate that an error occurred and the installation will now roll back. Return false to indicate
+    // rollback is unnecessary (because for eg, the native code will take care of it).
+    func sisInstallRollback() -> Bool
 
     func sisInstallComplete()
 }

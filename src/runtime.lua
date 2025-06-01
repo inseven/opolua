@@ -1466,7 +1466,7 @@ function runOpo(fileName, procName, iohandler, verbose)
 end
 
 function installSis(filename, data, iohandler)
-    require("sis").installSis(filename, data, iohandler, true, false)
+    return require("sis").installSis(filename, data, iohandler, true, false)
 end
 
 return _ENV

@@ -81,18 +81,22 @@ extension Installer: SisInstallIoHandler {
     }
 
     func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool {
-        // print("TODO sisInstallQuery \(text)")
+        print("TODO sisInstallQuery \(text)")
         return true
     }
 
-    func sisInstallGetLanguage(_ languages: [String]) -> String? {
+    func sisInstallGetLanguage(_ languages: [String]) -> String {
         // print("TODO sisInstallGetLanguage \(languages)")
         return languages[0] // Whatever is first
     }
 
-    func sisInstallGetDrive() -> String? {
-        // print("TODO sisInstallGetDrive")
+    func sisInstallGetDrive() -> String {
         return "C"
+    }
+
+    func sisInstallRollback() -> Bool {
+        print("sisInstallRollback")
+        return false // rollback not needed since we install to a sandbox.
     }
 
     func sisInstallComplete() {

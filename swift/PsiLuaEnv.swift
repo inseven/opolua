@@ -423,7 +423,23 @@ public class PsiLuaEnv {
         L.push(path)
         L.push(data)
         makeSisInstallIoHandlerBridge(handler)
-        try L.pcall(nargs: 3, nret: 0)
+        do {
+            try L.pcall(nargs: 3, nret: 1)
+        } catch {
+            throw SisInstallError.internalError(String(describing: error))
+        }
+        switch L.type(-1) {
+        case .table:
+            guard let err: SisInstallError = L.todecodable(-1) else {
+                throw SisInstallError.internalError("Failed to decode SisInstallError from installSis result")
+            }
+            throw err
+        case .none, .nil:
+            break
+        default:
+            throw SisInstallError.internalError(L.tostring(-1, convert: true) ?? "Bad error string")
+        }
+
     }
 
     internal func makeFsIoHandlerBridge(_ handler: FileSystemIoHandler) {
@@ -441,6 +457,7 @@ public class PsiLuaEnv {
         let fns: [String: lua_CFunction] = [
             "sisInstallBegin": { L in return autoreleasepool { return PsiLuaEnv.sisInstallBegin(L) } },
             "sisInstallComplete": { L in return autoreleasepool { return PsiLuaEnv.sisInstallComplete(L) } },
+            "sisInstallRollback": { L in return autoreleasepool { return PsiLuaEnv.sisInstallRollback(L) } },
             "sisInstallQuery": { L in return autoreleasepool { return PsiLuaEnv.sisInstallQuery(L) } },
             "sisInstallGetLanguage": { L in return autoreleasepool { return PsiLuaEnv.sisInstallGetLanguage(L) } },
             "sisInstallGetDrive": { L in return autoreleasepool { return PsiLuaEnv.sisInstallGetDrive(L) } },
@@ -451,12 +468,19 @@ public class PsiLuaEnv {
     internal static let sisInstallBegin: lua_CFunction = { (L: LuaState!) -> CInt in
         let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
         let iohandler = wrapper.value
-        L.printStack()
         guard let info: SisFile = L.todecodable(1) else {
             print("Bad SIS info!")
             return 0
         }
         let result = iohandler.sisInstallBegin(info: info)
+        L.push(result)
+        return 1
+    }
+
+    internal static let sisInstallRollback: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        let result = iohandler.sisInstallRollback()
         L.push(result)
         return 1
     }
@@ -493,17 +517,29 @@ public class PsiLuaEnv {
             print("Bad languages!")
             return 0
         }
-        let result = iohandler.sisInstallGetLanguage(langs)
-        L.push(result)
-        return 1
+        do {
+            let result = try iohandler.sisInstallGetLanguage(langs)
+            L.push(result)
+            return 1
+        } catch {
+            L.pushnil()
+            L.push(error: error)
+            return 2
+        }
     }
 
     internal static let sisInstallGetDrive: lua_CFunction = { (L: LuaState!) -> CInt in
         let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
         let iohandler = wrapper.value
-        let result = iohandler.sisInstallGetDrive()
-        L.push(result)
-        return 1
+        do {
+            let result = try iohandler.sisInstallGetDrive()
+            L.push(result)
+            return 1
+        } catch {
+            L.pushnil()
+            L.push(error: error)
+            return 2
+        }
     }
 }
 
@@ -557,5 +593,69 @@ internal extension LuaState {
         }
         L.pop() // icons
         return PsiLuaEnv.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons, era: era)
+    }
+}
+
+extension SisInstallError: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .userCancelled: return "SisInstallError.userCancelled"
+        case .fsError(let err, let path): return "SisInstallError.fsError(\(err), \(path))"
+        case .internalError(let err): return "SisInstallError.internalError(\(err))"
+        }
+    }
+}
+
+extension SisInstallError: LocalizedError {
+    public var errorDescription: String? { return self.description }
+}
+
+extension SisInstallError: Codable {
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case code
+        case context
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try values.decode(String.self, forKey: .type)
+        switch type {
+        case "usercancel":
+            self = .userCancelled
+        case "fserr":
+            let code: Fs.Err = try values.decode(Fs.Err.self, forKey: .code)
+            let path = try values.decode(String.self, forKey: .context)
+            self = .fsError(code, path)
+        case "internal":
+            let details = try values.decode(String.self, forKey: .context)
+            self = .internalError(details)
+        default:
+            throw DecodingError.dataCorrupted(.init(codingPath: [CodingKeys.type], debugDescription: "Unhandled type \(type)"))
+        }
+
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .userCancelled:
+            try container.encode("usercancel", forKey: .type)
+        case .fsError(let err, let path):
+            try container.encode("fserr", forKey: .type)
+            try container.encode(err, forKey: .code)
+            try container.encode(path, forKey: .context)
+        case .internalError(let details):
+            try container.encode("internal", forKey: .type)
+            try container.encode(details, forKey: .context)
+        }
+    }
+
+}
+
+extension SisInstallError: Pushable {
+    public func push(onto state: LuaState) {
+        try! state.push(encodable: self)
     }
 }

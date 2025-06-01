@@ -403,6 +403,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         -- Assume filename is a psion path
         data = assert(iohandler.fsop("read", filename))
     end
+
     local sisfile = parseSisFile(data, verbose)
     -- This is compatible with struct SisFile in Swift (plus some other stuff that doesn't matter)
     local callbackContext = makeManifest(sisfile)
@@ -411,25 +412,52 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         return
     end
 
+    local drive = "C"
+    local function getPath(file)
+        return file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end)
+    end
+
+    local function failInstallWithError(fileIdx, err)
+        printf("Install of %s failed: %s %s %s\n", filename, err.type, err.code or "", err.context or "")
+        if fileIdx and iohandler.sisInstallRollback() then
+            for i = fileIdx + 1, #sisfile.files do
+                local file = sisfile.files[i]
+                if file.type == FileType.File then
+                    local err = iohandler.fsop("delete", getPath(file))
+                    if err ~= KErrNone then
+                        print("Rollback failed")
+                        break
+                    end
+                elseif file.type == FileType.SisComponent then
+                    -- Should we try to roll back completed embedded SIS installs?
+                end
+            end
+        end
+
+        iohandler.sisInstallComplete()
+        return err
+    end
+    local function failInstall(fileIdx, reason, code, context)
+        return failInstallWithError(fileIdx, { type = reason, code = code, context = context })
+    end
+
     local preferredLang = nil
     if #sisfile.langs > 1 then
         local candidateLanguages = {}
         for i, langId in ipairs(sisfile.langs) do
             candidateLanguages[i] = assert(Locales[langId], "Bad langId "..tostring(langId))
         end
-        local preferredLangName = iohandler.sisInstallGetLanguage(candidateLanguages)
+        local preferredLangName, err = iohandler.sisInstallGetLanguage(candidateLanguages)
         if preferredLangName then
             preferredLang = assert(Locales[preferredLangName], "Bad result from sisInstallGetLanguage?")
         else
-            -- Nil means abort
-            return
+            return failInstallWithError(nil, err)
         end
     end
 
     local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
 
     local hasDriveChoice = false
-    local drive = "C"
     for _, file in ipairs(sisfile.files) do
         if file.dest:match("^!") then
             hasDriveChoice = true
@@ -437,9 +465,10 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         end
     end
     if hasDriveChoice then
-        drive = iohandler.sisInstallGetDrive()
+        local err
+        drive, err = iohandler.sisInstallGetDrive()
         if not drive then
-            error("Aborting install due to user cancel")
+            return failInstallWithError(nil, err)
         end
         drive = drive:upper()
         assert(drive:match("^[A-Z]$"), "Bad drive returned!")
@@ -459,20 +488,27 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             printf("Skipping file %s\n", file.dest)
             skipNext = false
         elseif file.type == FileType.File then
-            local path = file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end)
+            local path = getPath(file)
             local dir = oplpath.dirname(path)
             if iohandler.fsop("stat", dir) == nil then
                 local err = iohandler.fsop("mkdir", dir)
-                assert(err == KErrNone, "Failed to create dir "..dir)
+                if err ~= KErrNone then
+                    return failInstall(i, "fserr", err, dir)
+                end
             end
             local data = file.data
             if not data then
                 data = file.langData[langIdx]
             end
             local err = iohandler.fsop("write", path, data)
-            assert(err == KErrNone, "Failed to write to "..path)
+            if err ~= KErrNone then
+                return failInstall(i, "fserr", err, path)
+            end
         elseif file.type == FileType.SisComponent then
-            installSis(file.src, file.data, iohandler, includeStub, verbose)
+            local err = installSis(file.src, file.data, iohandler, includeStub, verbose)
+            if err then
+                return failInstallWithError(i, err)
+            end
         elseif file.type == FileType.FileText then
             local data = file.data or file.langData[langIdx]
             local cp1252 = require("cp1252")
@@ -484,7 +520,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
                 if queryType == FileTextDetails.Skip then
                     skipNext = true
                 else
-                    error("Aborting install due to user cancel")
+                    return failInstall(i, "usercancel")
                 end
             end
         end
@@ -499,10 +535,13 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         end
         local stubPath = oplpath.join(dir, oplpath.basename(filename))
         local err = iohandler.fsop("write", stubPath, stub)
-        assert(err == KErrNone, "Failed to write stub to "..stubPath)
+        if err ~= KErrNone then
+            return failInstall(0, err, stubPath)
+        end
     end
 
     iohandler.sisInstallComplete()
+    return nil -- ie no error
 end
 
 function makeStub(sisData, installedLang, drive)

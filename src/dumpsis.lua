@@ -113,7 +113,10 @@ Options:
             iohandler.setConfig("locale", args.language)
         end
 
-        sis.installSis(path_basename(args.filename), data, iohandler, args.stub, args.verbose)
+        local err = sis.installSis(path_basename(args.filename), data, iohandler, args.stub, args.verbose)
+        if err then
+            printf("Install failed, err=%s\n", err.type)
+        end
     else
         local sisfile = sis.parseSisFile(data, args.verbose)
         if args.json then
