@@ -636,14 +636,14 @@ public struct SisFile: Codable {
 
 public enum SisInstallError: Error, Equatable {
     case userCancelled
-    case epocError(Int, String)
+    case epocError(Int32, String?)
     case internalError(String)
 }
 
 public enum SisInstallBeginResult {
     case skipInstall // Not an error
     case userCancelled
-    case epocError(Int)
+    case epocError(Int32)
     case install(String, String) // language and drive
 }
 

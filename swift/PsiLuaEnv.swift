@@ -592,7 +592,7 @@ extension SisInstallError: CustomStringConvertible {
     public var description: String {
         switch self {
         case .userCancelled: return "SisInstallError.userCancelled"
-        case .epocError(let err, let path): return "SisInstallError.epocError(\(err), \(path))"
+        case .epocError(let err, let context): return "SisInstallError.epocError(\(err), \(context ?? "''"))"
         case .internalError(let err): return "SisInstallError.internalError(\(err))"
         }
     }
@@ -613,8 +613,8 @@ extension SisInstallError: Codable {
         case "usercancel":
             self = .userCancelled
         case "epocerr":
-            let code: Int = try values.decode(Int.self, forKey: .code)
-            let path = try values.decode(String.self, forKey: .context)
+            let code: Int32 = try values.decode(Int32.self, forKey: .code)
+            let path = try values.decode(String?.self, forKey: .context)
             self = .epocError(code, path)
         case "internal":
             let details = try values.decode(String.self, forKey: .context)
@@ -651,7 +651,7 @@ extension SisInstallBeginResult: Pushable {
         case .userCancelled:
             L.rawset(-1, key: "type", value: "usercancel")
         case .epocError(let err):
-            L.rawset(-1, key: "type", value: "err")
+            L.rawset(-1, key: "type", value: "epocerr")
             L.rawset(-1, key: "code", value: err)
         case .install(let lang, let drive):
             L.rawset(-1, key: "type", value: "install")
