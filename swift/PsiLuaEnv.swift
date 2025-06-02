@@ -598,10 +598,6 @@ extension SisInstallError: CustomStringConvertible {
     }
 }
 
-extension SisInstallError: LocalizedError {
-    public var errorDescription: String? { return self.description }
-}
-
 extension SisInstallError: Codable {
 
     private enum CodingKeys: String, CodingKey {
