@@ -309,7 +309,7 @@ end
 
 function sisInstallBegin(sisInfo)
     printf("sisInstallBegin %s v%s\n", sisInfo.name[sisInfo.languages[1]], sisInfo.version)
-    return true -- ie proceed with install
+    return { type = "install", drive = "C", lang = sisInfo.languages[1] }
 end
 
 function sisInstallRollback()
@@ -317,20 +317,12 @@ function sisInstallRollback()
 end
 
 function sisInstallComplete()
-    -- print("sisInstallComplete")
+    print("sisInstallComplete")
 end
 
 function sisInstallQuery(text, type)
     print(text)
     return true
-end
-
-function sisInstallGetLanguage(candidates)
-    return getConfig("locale")
-end
-
-function sisInstallGetDrive()
-    return "C"
 end
 
 return _ENV

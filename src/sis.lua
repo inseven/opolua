@@ -405,12 +405,6 @@ function installSis(filename, data, iohandler, includeStub, verbose)
     end
 
     local sisfile = parseSisFile(data, verbose)
-    -- This is compatible with struct SisFile in Swift (plus some other stuff that doesn't matter)
-    local callbackContext = makeManifest(sisfile)
-
-    if not iohandler.sisInstallBegin(callbackContext) then
-        return
-    end
 
     local drive = "C"
     local function getPath(file)
@@ -441,22 +435,8 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         return failInstallWithError(fileIdx, { type = reason, code = code, context = context })
     end
 
-    local preferredLang = nil
-    if #sisfile.langs > 1 then
-        local candidateLanguages = {}
-        for i, langId in ipairs(sisfile.langs) do
-            candidateLanguages[i] = assert(Locales[langId], "Bad langId "..tostring(langId))
-        end
-        local preferredLangName, err = iohandler.sisInstallGetLanguage(candidateLanguages)
-        if preferredLangName then
-            preferredLang = assert(Locales[preferredLangName], "Bad result from sisInstallGetLanguage?")
-        else
-            return failInstallWithError(nil, err)
-        end
-    end
-
-    local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
-
+    -- This is compatible with struct SisFile in Swift (plus some other stuff that doesn't matter)
+    local callbackContext = makeManifest(sisfile)
     local hasDriveChoice = false
     for _, file in ipairs(sisfile.files) do
         if file.dest:match("^!") then
@@ -464,16 +444,25 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             break
         end
     end
+    local ret = iohandler.sisInstallBegin(callbackContext, hasDriveChoice)
+
+    if ret.type == "skip" then
+        return nil -- No error
+    elseif ret.type == "usercancel" then
+        return failInstall(nil, "usercancel")
+    elseif ret.type == "epocerr" then
+        return failInstall(nil, "epocerr", ret.code)
+    else
+        assert(ret.type == "install", "Unexpected return type from sisInstallBegin")
+    end
+
     if hasDriveChoice then
-        local err
-        drive, err = iohandler.sisInstallGetDrive()
-        if not drive then
-            return failInstallWithError(nil, err)
-        end
-        drive = drive:upper()
+        drive = ret.drive:upper()
         assert(drive:match("^[A-Z]$"), "Bad drive returned!")
     end
 
+    local preferredLang = assert(Locales[ret.lang], "Bad lang returned from sisInstallBegin")
+    local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
 
     if filename == nil then
         -- Make something up from the only info we have
@@ -493,7 +482,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             if iohandler.fsop("stat", dir) == nil then
                 local err = iohandler.fsop("mkdir", dir)
                 if err ~= KErrNone then
-                    return failInstall(i, "fserr", err, dir)
+                    return failInstall(i, "epocerr", err, dir)
                 end
             end
             local data = file.data
@@ -502,7 +491,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             end
             local err = iohandler.fsop("write", path, data)
             if err ~= KErrNone then
-                return failInstall(i, "fserr", err, path)
+                return failInstall(i, "epocerr", err, path)
             end
         elseif file.type == FileType.SisComponent then
             local err = installSis(file.src, file.data, iohandler, includeStub, verbose)
@@ -531,12 +520,14 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         local dir = [[C:\System\install\]]
         if iohandler.fsop("stat", dir) == nil then
             local err = iohandler.fsop("mkdir", dir)
-            assert(err == KErrNone, "Failed to create dir "..dir)
+            if err ~= KErrNone then
+                return failInstall(0, "epocerr", err, dir)
+            end
         end
         local stubPath = oplpath.join(dir, oplpath.basename(filename))
         local err = iohandler.fsop("write", stubPath, stub)
         if err ~= KErrNone then
-            return failInstall(0, err, stubPath)
+            return failInstall(0, "epocerr", err, path)
         end
     end
 

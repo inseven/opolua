@@ -470,6 +470,7 @@ public struct Fs {
         case data(Data)
         case stat(Stat)
         case strings([String])
+        case epocerr(Int) // Not recommended to use this for OPL programs
     }
 }
 
@@ -635,23 +636,23 @@ public struct SisFile: Codable {
 
 public enum SisInstallError: Error, Equatable {
     case userCancelled
-    case fsError(Fs.Err, String)
+    case epocError(Int, String)
     case internalError(String)
+}
+
+public enum SisInstallBeginResult {
+    case skipInstall // Not an error
+    case userCancelled
+    case epocError(Int)
+    case install(String, String) // language and drive
 }
 
 public protocol SisInstallIoHandler: FileSystemIoHandler {
 
-    // Return false to not install this SIS (without erroring)
-    func sisInstallBegin(info: SisFile) -> Bool
+    func sisInstallBegin(info: SisFile, driveRequired: Bool) -> SisInstallBeginResult
 
     // Return true to continue, false if user selected "No"
     func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool
-
-    // Result should be one of languages. Throw a SisInstallError to cancel (installSis with rethrow it)
-    func sisInstallGetLanguage(_ languages: [String]) throws -> String
-
-    // Should be a single character string, eg "C". Throw a SisInstallError to cancel (installSis with rethrow it)
-    func sisInstallGetDrive() throws -> String
 
     // Called to indicate that an error occurred and the installation will now roll back. Return false to indicate
     // rollback is unnecessary (because for eg, the native code will take care of it).
