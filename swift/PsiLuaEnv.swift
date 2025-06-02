@@ -484,7 +484,7 @@ public class PsiLuaEnv {
             return 0
         }
         let driveRequired = L.toboolean(2)
-        let result = iohandler.sisInstallBegin(info: info, driveRequired: driveRequired)
+        let result = iohandler.sisInstallBegin(sis: info, driveRequired: driveRequired)
         L.push(result)
         return 1
     }
@@ -492,7 +492,11 @@ public class PsiLuaEnv {
     internal static let sisInstallRollback: lua_CFunction = { (L: LuaState!) -> CInt in
         let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
         let iohandler = wrapper.value
-        let result = iohandler.sisInstallRollback()
+        guard let info: SisFile = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        let result = iohandler.sisInstallRollback(sis: info)
         L.push(result)
         return 1
     }
@@ -500,24 +504,32 @@ public class PsiLuaEnv {
     internal static let sisInstallComplete: lua_CFunction = { (L: LuaState!) -> CInt in
         let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
         let iohandler = wrapper.value
-        iohandler.sisInstallComplete()
+        guard let info: SisFile = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        iohandler.sisInstallComplete(sis: info)
         return 0
     }
 
     internal static let sisInstallQuery: lua_CFunction = { (L: LuaState!) -> CInt in
         let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
         let iohandler = wrapper.value
-        guard let text = L.tostring(1, encoding: .utf8) else {
+        guard let info: SisFile = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        guard let text = L.tostring(2, encoding: .utf8) else {
             print("Bad text!")
             return 0
         }
-        guard let queryString = L.tostring(2),
+        guard let queryString = L.tostring(3),
               let queryType = InstallerQueryType(rawValue: queryString)
         else {
-            print("Unknown queryType \(L.tostring(2, convert: true)!)")
+            print("Unknown queryType \(L.tostring(3, convert: true)!)")
             return 0
         }
-        let result = iohandler.sisInstallQuery(text: text, type: queryType)
+        let result = iohandler.sisInstallQuery(sis: info, text: text, type: queryType)
         L.push(result)
         return 1
     }

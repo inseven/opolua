@@ -195,7 +195,7 @@ function manifestToUtf8(manifest)
     return result
 end
 
-function sisInstallQueryInteractive(text, type)
+function sisInstallQueryInteractive(info, text, type)
     print(text)
     if type == sis.FileTextDetails.Continue then
         print("-- Press any key to continue --")
@@ -214,7 +214,7 @@ function sisInstallQueryInteractive(text, type)
     end
 end
 
-function sisInstallQueryQuiet(text, type)
+function sisInstallQueryQuiet(info, text, type)
     return true
 end
 

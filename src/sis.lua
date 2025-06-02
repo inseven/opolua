@@ -405,6 +405,8 @@ function installSis(filename, data, iohandler, includeStub, verbose)
     end
 
     local sisfile = parseSisFile(data, verbose)
+    -- This is compatible with struct SisFile in Swift (plus some other stuff that doesn't matter)
+    local callbackContext = makeManifest(sisfile)
 
     local drive = "C"
     local function getPath(file)
@@ -413,7 +415,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
 
     local function failInstallWithError(fileIdx, err)
         printf("Install of %s failed: %s %s %s\n", filename, err.type, err.code or "", err.context or "")
-        if fileIdx and iohandler.sisInstallRollback() then
+        if fileIdx and iohandler.sisInstallRollback(callbackContext) then
             for i = fileIdx + 1, #sisfile.files do
                 local file = sisfile.files[i]
                 if file.type == FileType.File then
@@ -428,15 +430,13 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             end
         end
 
-        iohandler.sisInstallComplete()
+        iohandler.sisInstallComplete(callbackContext)
         return err
     end
     local function failInstall(fileIdx, reason, code, context)
         return failInstallWithError(fileIdx, { type = reason, code = code, context = context })
     end
 
-    -- This is compatible with struct SisFile in Swift (plus some other stuff that doesn't matter)
-    local callbackContext = makeManifest(sisfile)
     local hasDriveChoice = false
     for _, file in ipairs(sisfile.files) do
         if file.dest:match("^!") then
@@ -504,7 +504,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             local text = cp1252.toUtf8(data):gsub("\x0D\x0A", "\n")
             local queryType = FileTextDetails[file.details]
             assert(queryType, "Unknown FileText details")
-            local shouldContinue = iohandler.sisInstallQuery(text, queryType)
+            local shouldContinue = iohandler.sisInstallQuery(callbackContext, text, queryType)
             if not shouldContinue then
                 if queryType == "skip" then
                     skipNext = true
@@ -531,7 +531,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
         end
     end
 
-    iohandler.sisInstallComplete()
+    iohandler.sisInstallComplete(callbackContext)
     return nil -- ie no error
 end
 

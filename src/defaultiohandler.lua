@@ -312,15 +312,17 @@ function sisInstallBegin(sisInfo)
     return { type = "install", drive = "C", lang = sisInfo.languages[1] }
 end
 
-function sisInstallRollback()
+function sisInstallRollback(sisInfo)
+    -- printf("sisInstallRollback %s\n", sisInfo.name[sisInfo.languages[1]])
+    -- return true
     return false -- We don't really need rollback on the command line?
 end
 
-function sisInstallComplete()
-    print("sisInstallComplete")
+function sisInstallComplete(sisInfo)
+    printf("sisInstallComplete %s\n", sisInfo.name[sisInfo.languages[1]])
 end
 
-function sisInstallQuery(text, type)
+function sisInstallQuery(sisInfo, text, type)
     print(text)
     return true
 end

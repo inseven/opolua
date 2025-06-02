@@ -649,16 +649,16 @@ public enum SisInstallBeginResult {
 
 public protocol SisInstallIoHandler: FileSystemIoHandler {
 
-    func sisInstallBegin(info: SisFile, driveRequired: Bool) -> SisInstallBeginResult
+    func sisInstallBegin(sis: SisFile, driveRequired: Bool) -> SisInstallBeginResult
 
     // Return true to continue, false if user selected "No"
-    func sisInstallQuery(text: String, type: InstallerQueryType) -> Bool
+    func sisInstallQuery(sis: SisFile, text: String, type: InstallerQueryType) -> Bool
 
     // Called to indicate that an error occurred and the installation will now roll back. Return false to indicate
     // rollback is unnecessary (because for eg, the native code will take care of it).
-    func sisInstallRollback() -> Bool
+    func sisInstallRollback(sis: SisFile) -> Bool
 
-    func sisInstallComplete()
+    func sisInstallComplete(sis: SisFile)
 }
 
 public protocol OpoIoHandler: FileSystemIoHandler {
