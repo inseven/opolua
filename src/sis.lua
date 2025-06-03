@@ -455,7 +455,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
         stubs = getStubs(iohandler)
     end
     local existing = stubs[sisfile.uid]
-    local ret = iohandler.sisInstallBegin(callbackContext, hasDriveChoice, existing)
+    local ret = iohandler.sisInstallBegin(callbackContext, hasDriveChoice, existing and makeManifest(existing))
 
     if ret.type == "skip" then
         return nil -- No error

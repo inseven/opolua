@@ -229,7 +229,7 @@ function fsop(cmd, path, ...)
         if ok then
             local result = {}
             for line in data:gmatch("([^\n]+)") do
-                table.insert(result, oplpath.join(filename, line))
+                table.insert(result, oplpath.join(path, line))
             end
             return result
         else
@@ -311,8 +311,13 @@ function sisGetStubs()
     return "notimplemented"
 end
 
-function sisInstallBegin(sisInfo)
-    printf("sisInstallBegin %s v%s\n", sisInfo.name[sisInfo.languages[1]], sisInfo.version)
+function sisInstallBegin(sisInfo, hasDriveChoice, replacing)
+    printf("sisInstallBegin %s v%s", sisInfo.name[sisInfo.languages[1]], sisInfo.version)
+    if replacing then
+        printf(" replacing v%s", replacing.version)
+    end
+    printf("\n")
+
     return { type = "install", drive = "C", lang = sisInfo.languages[1] }
 end
 
