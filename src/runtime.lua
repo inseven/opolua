@@ -1469,4 +1469,10 @@ function installSis(filename, data, iohandler)
     return require("sis").installSis(filename, data, iohandler, true, false)
 end
 
+function uninstallSis(stubList, uid, iohandler)
+    local sis = require("sis")
+    local stubMap = sis.stubArrayToUidMap(stubList)
+    sis.uninstallSis(stubMap, uid, iohandler)
+end
+
 return _ENV

@@ -229,11 +229,11 @@ function fsop(cmd, path, ...)
         if ok then
             local result = {}
             for line in data:gmatch("([^\n]+)") do
-                table.insert(result, line)
+                table.insert(result, oplpath.join(filename, line))
             end
             return result
         else
-            printf("defaultiohandler: ls command failed (%d)\n", val, data)
+            -- printf("defaultiohandler: ls command failed (%d)\n", val, data)
             return nil, KErrNotReady
         end
     else
@@ -305,6 +305,10 @@ function runApp(prog, doc)
 end
 
 function setEra(era)
+end
+
+function sisGetStubs()
+    return "notimplemented"
 end
 
 function sisInstallBegin(sisInfo)

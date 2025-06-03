@@ -470,7 +470,7 @@ public struct Fs {
         case data(Data)
         case stat(Stat)
         case strings([String])
-        case epocerr(Int) // Not recommended to use this for OPL programs
+        case epocError(Int32) // Not recommended to use this for OPL programs
     }
 }
 
@@ -620,45 +620,60 @@ public protocol FileSystemIoHandler {
 
 }
 
-public enum InstallerQueryType: String {
-    case `continue` // "Continue" button only
-    case skip // "Yes"/"No" buttons, next install file skipped on "No"
-    case abort // "Yes"/"No" buttons, abort install on "No"
-    case exit // Same as abort but also do cleanup (?)
-}
+public struct Sis {
+    public struct File: Codable {
+        public let name: [String: String]
+        public let uid: UInt32
+        public let version: String
+        public let languages: [String]
+    }
 
-public struct SisFile: Codable {
-    public let name: [String: String]
-    public let uid: UInt32
-    public let version: String
-    public let languages: [String]
-}
+    public struct Stub: Codable {
+        public let path: String
+        public let contents: Data
+    }
 
-public enum SisInstallError: Error, Equatable {
-    case userCancelled
-    case epocError(Int32, String?)
-    case internalError(String)
-}
+    public enum GetStubsResult {
+        case notImplemented
+        case epocError(Int32)
+        case stubs([Sis.Stub])
+    }
 
-public enum SisInstallBeginResult {
-    case skipInstall // Not an error
-    case userCancelled
-    case epocError(Int32)
-    case install(String, String) // language and drive
+    public enum InstallError: Error, Equatable {
+        case userCancelled
+        case epocError(Int32, String?)
+        case internalError(String)
+    }
+
+    public enum BeginResult {
+        case skipInstall // Not an error
+        case userCancelled
+        case epocError(Int32)
+        case install(String, String) // language and drive
+    }
+
+    public enum QueryType: String {
+        case `continue` // "Continue" button only
+        case skip // "Yes"/"No" buttons, next install file skipped on "No"
+        case abort // "Yes"/"No" buttons, abort install on "No"
+        case exit // Same as abort but also do cleanup (?)
+    }
 }
 
 public protocol SisInstallIoHandler: FileSystemIoHandler {
 
-    func sisInstallBegin(sis: SisFile, driveRequired: Bool) -> SisInstallBeginResult
+    func sisGetStubs() -> Sis.GetStubsResult
+
+    func sisInstallBegin(sis: Sis.File, driveRequired: Bool, replacing: Sis.File?) -> Sis.BeginResult
 
     // Return true to continue, false if user selected "No"
-    func sisInstallQuery(sis: SisFile, text: String, type: InstallerQueryType) -> Bool
+    func sisInstallQuery(sis: Sis.File, text: String, type: Sis.QueryType) -> Bool
 
     // Called to indicate that an error occurred and the installation will now roll back. Return false to indicate
     // rollback is unnecessary (because for eg, the native code will take care of it).
-    func sisInstallRollback(sis: SisFile) -> Bool
+    func sisInstallRollback(sis: Sis.File) -> Bool
 
-    func sisInstallComplete(sis: SisFile)
+    func sisInstallComplete(sis: Sis.File)
 }
 
 public protocol OpoIoHandler: FileSystemIoHandler {

@@ -20,6 +20,6 @@
 
 import Foundation
 
-extension SisInstallError: LocalizedError {
+extension Sis.InstallError: LocalizedError {
     public var errorDescription: String? { return self.description }
 }

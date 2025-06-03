@@ -76,21 +76,25 @@ extension Installer: SisInstallIoHandler {
         return fileSystem.perform(op)
     }
 
-    func sisInstallBegin(sis: SisFile, driveRequired: Bool) -> SisInstallBeginResult  {
+    func sisGetStubs() -> Sis.GetStubsResult {
+        return .notImplemented
+    }
+
+    func sisInstallBegin(sis: Sis.File, driveRequired: Bool, replacing: Sis.File?) -> Sis.BeginResult {
         return .install(sis.languages[0], "C")
     }
 
-    func sisInstallQuery(sis: SisFile, text: String, type: InstallerQueryType) -> Bool {
+    func sisInstallQuery(sis: Sis.File, text: String, type: Sis.QueryType) -> Bool {
         print("TODO sisInstallQuery \(text)")
         return true
     }
 
-    func sisInstallRollback(sis: SisFile) -> Bool {
+    func sisInstallRollback(sis: Sis.File) -> Bool {
         print("sisInstallRollback")
         return false // rollback not needed since we install to a sandbox.
     }
 
-    func sisInstallComplete(sis: SisFile) {
+    func sisInstallComplete(sis: Sis.File) {
     }
 
 }

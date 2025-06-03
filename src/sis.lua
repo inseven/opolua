@@ -227,6 +227,13 @@ function parseSisFile(data, verbose)
         result.name[i] = data:sub(1 + ptr, ptr + nameLens[i])
     end
 
+    if instDrv ~= 0 then
+        local ch = string.char(instDrv)
+        if ch:match("[A-Za-z]") then
+            result.installedDrive = ch:upper()
+        end
+    end
+
     result.stubSize = endOfStrings
 
     if verbose then
@@ -398,7 +405,7 @@ function makeManifest(sisfile, singleLanguage, includeFiles)
     return result
 end
 
-function installSis(filename, data, iohandler, includeStub, verbose)
+function installSis(filename, data, iohandler, includeStub, verbose, stubs)
     if data == nil then
         -- Assume filename is a psion path
         data = assert(iohandler.fsop("read", filename))
@@ -410,7 +417,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
 
     local drive = "C"
     local function getPath(file)
-        return file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end)
+        return (file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end))
     end
 
     local function failInstallWithError(fileIdx, err)
@@ -444,7 +451,11 @@ function installSis(filename, data, iohandler, includeStub, verbose)
             break
         end
     end
-    local ret = iohandler.sisInstallBegin(callbackContext, hasDriveChoice)
+    if stubs == nil then
+        stubs = getStubs(iohandler)
+    end
+    local existing = stubs[sisfile.uid]
+    local ret = iohandler.sisInstallBegin(callbackContext, hasDriveChoice, existing)
 
     if ret.type == "skip" then
         return nil -- No error
@@ -464,9 +475,9 @@ function installSis(filename, data, iohandler, includeStub, verbose)
     local preferredLang = assert(Locales[ret.lang], "Bad lang returned from sisInstallBegin")
     local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
 
-    if filename == nil then
-        -- Make something up from the only info we have
-        filename = string.format("%s.sis", sisfile.name[langIdx])
+    if existing then
+        -- We need to uninstall existing
+        uninstallSis(stubs, existing.uid, iohandler, true)
     end
 
     local skipNext = false
@@ -494,7 +505,7 @@ function installSis(filename, data, iohandler, includeStub, verbose)
                 return failInstall(i, "epocerr", err, path)
             end
         elseif file.type == FileType.SisComponent then
-            local err = installSis(file.src, file.data, iohandler, includeStub, verbose)
+            local err = installSis(file.src, file.data, iohandler, includeStub, verbose, stubs)
             if err then
                 return failInstallWithError(i, err)
             end
@@ -524,10 +535,11 @@ function installSis(filename, data, iohandler, includeStub, verbose)
                 return failInstall(0, "epocerr", err, dir)
             end
         end
-        local stubPath = oplpath.join(dir, oplpath.basename(filename))
+        -- local stubPath = oplpath.join(dir, oplpath.basename(filename))
+        local stubPath = string.format("%s%08X.sis", dir, sisfile.uid)
         local err = iohandler.fsop("write", stubPath, stub)
         if err ~= KErrNone then
-            return failInstall(0, "epocerr", err, path)
+            return failInstall(0, "epocerr", err, stubPath)
         end
     end
 
@@ -548,6 +560,72 @@ function makeStub(sisData, installedLang, drive)
     local dataOffset = 0x18 -- position of lang
 
     local result = sisData:sub(1, dataOffset)..newData..sisData:sub(1 + dataOffset + #newData, sisfile.stubSize)
+    return result
+end
+
+
+function uninstallSis(stubMap, uid, iohandler, upgrading)
+    if not stubMap then
+        stubMap = getStubs(iohandler)
+    end
+    local sisfile = assert(stubMap[uid], "Can't find installer in stubs!")
+
+    local drive = sisfile.installedDrive --or "C"
+    local function getPath(file)
+        return (file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end))
+    end
+
+    for i = 1, #sisfile.files do
+        local file = sisfile.files[i]
+        if file.type == FileType.File or (file.type == FileType.FileNull and not upgrading) then
+            -- print("DELETE", getPath(file))
+            local path = getPath(file)
+            local err = iohandler.fsop("delete", path)
+            if err ~= KErrNone and err ~= KErrNotExists then
+                print("Uninstall failed to delete %s, err=%d\n", path, err)
+            end
+        elseif file.type == FileType.SisComponent then
+            -- See if anyone else is using it
+            -- local embeddedSis = parseSisFile(file.data)
+            -- if not stubMap[embeddedSis.uid] then
+            --     printf("Embedded sis %s not found in installer stubs!\n", embeddedSis.src)
+            -- else
+
+            --TODO
+        end
+    end
+
+    local err = iohandler.fsop("delete", sisfile.path)
+    if err ~= KErrNone and err ~= KErrNotExists then
+        print("Uninstall failed to delete %s, err=%d\n", sisfile.path, err)
+    end
+end
+
+function getStubs(iohandler)
+    local result, err = iohandler.sisGetStubs()
+    if result == "notimplemented" then
+        local installDir = [[C:\System\install\]]
+        local stubNames = iohandler.fsop("dir", installDir) or {}
+        result = {}
+        for _, path in ipairs(stubNames) do
+            if path:lower():match("%.sis$") then
+                local contents = assert(iohandler.fsop("read", path))
+                table.insert(result, { path = path, contents = contents })
+            end
+        end
+    else
+        assert(result, err)
+    end
+    return stubArrayToUidMap(result)
+end
+
+function stubArrayToUidMap(stubs)
+    local result = {}
+    for _, stub in ipairs(stubs) do
+        local sisfile = parseSisFile(stub.contents)
+        sisfile.path = stub.path
+        result[sisfile.uid] = sisfile
+    end
     return result
 end
 

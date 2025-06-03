@@ -46,9 +46,10 @@ function main()
         language = string, l = "language",
         stub = true, s = "stub",
         help = true, h = "help",
+        uninstall = true, u = "uninstall",
     })
 
-    if args.help or args.filename == nil then
+    if args.help or args.filename == nil or (args.uninstall and args.dest == nil) then
         print([[
 Syntax: dumpsis.lua [options] <filename> [<output>]
 
@@ -82,6 +83,10 @@ Options:
 
     --verbose, -v
         When listing the SIS file, print extra debug information.
+
+    --uninstall, -u
+        Uninstall the files referenced by the sis <filename> from <output>.
+        Requires that the SIS was installed with the --stub option.
 ]])
         os.exit(true)
     end
@@ -102,6 +107,13 @@ Options:
     if args.dest then
         local iohandler = require("defaultiohandler")
         iohandler.fsmap("C:\\", path_join(args.dest, ""))
+
+        if args.uninstall then
+            local sisfile = sis.parseSisFile(data)
+            sis.uninstallSis(nil, sisfile.uid, iohandler)
+            return
+        end
+
         if args.interactive then
             setTerminalCharMode(true)
             iohandler.sisInstallQuery = sisInstallQueryInteractive
