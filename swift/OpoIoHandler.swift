@@ -631,6 +631,11 @@ public struct Sis {
     public struct Stub: Codable {
         public let path: String
         public let contents: Data
+
+        public init(path: String, contents: Data) {
+            self.path = path
+            self.contents = contents
+        }
     }
 
     public enum GetStubsResult {
