@@ -452,7 +452,11 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
         end
     end
     if stubs == nil then
-        stubs = getStubs(iohandler)
+        local err
+        stubs, err = getStubs(iohandler)
+        if stubs == nil then
+            return failInstall(nil, "epocerr", err)
+        end
     end
     local existing = stubs[sisfile.uid]
     local ret = iohandler.sisInstallBegin(callbackContext, hasDriveChoice, existing and makeManifest(existing))
@@ -614,7 +618,7 @@ function getStubs(iohandler)
             end
         end
     else
-        assert(result, err)
+        return nil, err
     end
     return stubArrayToUidMap(result)
 end
