@@ -311,10 +311,10 @@ function sisGetStubs()
     return "notimplemented"
 end
 
-function sisInstallBegin(sisInfo, hasDriveChoice, replacing)
+function sisInstallBegin(sisInfo, context)
     printf("sisInstallBegin %s v%s", sisInfo.name[sisInfo.languages[1]], sisInfo.version)
-    if replacing then
-        printf(" replacing v%s", replacing.version)
+    if context.replacing then
+        printf(" replacing v%s", context.replacing.version)
     end
     printf("\n")
 

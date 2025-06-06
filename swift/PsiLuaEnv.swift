@@ -514,9 +514,11 @@ public class PsiLuaEnv {
             print("Bad SIS info!")
             return 0
         }
-        let driveRequired = L.toboolean(2)
-        let replacing: Sis.File? = L.todecodable(3)
-        let result = iohandler.sisInstallBegin(sis: info, driveRequired: driveRequired, replacing: replacing)
+        guard let context: Sis.BeginContext = L.todecodable(2) else {
+            print("Bad BeginContext!")
+            return 0
+        }
+        let result = iohandler.sisInstallBegin(sis: info, context: context)
         L.push(result)
         return 1
     }

@@ -80,7 +80,7 @@ extension Installer: SisInstallIoHandler {
         return .notImplemented
     }
 
-    func sisInstallBegin(sis: Sis.File, driveRequired: Bool, replacing: Sis.File?) -> Sis.BeginResult {
+    func sisInstallBegin(sis: Sis.File, context: Sis.BeginContext) -> Sis.BeginResult {
         return .install(sis.languages[0], "C")
     }
 

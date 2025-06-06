@@ -628,6 +628,14 @@ public struct Sis {
         public let languages: [String]
     }
 
+    public struct Installation: Codable {
+        public let name: String
+        public let uid: UInt32
+        public let version: String
+        public let language: String
+        public let drive: String
+    }
+
     public struct Stub: Codable {
         public let path: String
         public let contents: Data
@@ -650,6 +658,12 @@ public struct Sis {
         case internalError(String)
     }
 
+    public struct BeginContext: Codable {
+        let driveRequired: Bool
+        let replacing: Sis.Installation?
+        let isRoot: Bool
+    }
+
     public enum BeginResult {
         case skipInstall // Not an error
         case userCancelled
@@ -669,7 +683,7 @@ public protocol SisInstallIoHandler: FileSystemIoHandler {
 
     func sisGetStubs() -> Sis.GetStubsResult
 
-    func sisInstallBegin(sis: Sis.File, driveRequired: Bool, replacing: Sis.File?) -> Sis.BeginResult
+    func sisInstallBegin(sis: Sis.File, context: Sis.BeginContext) -> Sis.BeginResult
 
     // Return true to continue, false if user selected "No"
     func sisInstallQuery(sis: Sis.File, text: String, type: Sis.QueryType) -> Bool

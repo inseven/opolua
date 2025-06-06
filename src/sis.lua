@@ -234,6 +234,10 @@ function parseSisFile(data, verbose)
         end
     end
 
+    if lang ~= 0 then
+        result.language = lang
+    end
+
     result.stubSize = endOfStrings
 
     if verbose then
@@ -355,6 +359,8 @@ function makeManifest(sisfile, singleLanguage, includeFiles)
         version = string.format("%d.%02d", sisfile.version[1], sisfile.version[2]),
         uid = sisfile.uid,
         languages = {},
+        drive = sisfile.installedDrive, -- will be nil for non-stubs
+        language = sisfile.language and Locales[sisfile.language], -- likewise
     }
     for _, lang in ipairs(sisfile.langs) do
         table.insert(result.languages, Locales[lang])
@@ -451,6 +457,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
             break
         end
     end
+    local isRootInstall = (stubs == nil)
     if stubs == nil then
         local err
         stubs, err = getStubs(iohandler)
@@ -459,7 +466,12 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
         end
     end
     local existing = stubs[sisfile.uid]
-    local ret = iohandler.sisInstallBegin(callbackContext, hasDriveChoice, existing and makeManifest(existing))
+    local beginInfo = {
+        driveRequired = hasDriveChoice,
+        replacing = existing and makeManifest(existing, existing.language),
+        isRoot = isRootInstall,
+    }
+    local ret = iohandler.sisInstallBegin(callbackContext, beginInfo)
 
     if ret.type == "skip" then
         return nil -- No error
