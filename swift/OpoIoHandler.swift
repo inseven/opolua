@@ -659,9 +659,9 @@ public struct Sis {
     }
 
     public struct BeginContext: Codable {
-        let driveRequired: Bool
-        let replacing: Sis.Installation?
-        let isRoot: Bool
+        public let driveRequired: Bool
+        public let replacing: Sis.Installation?
+        public let isRoot: Bool
     }
 
     public enum BeginResult {
