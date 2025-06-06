@@ -356,7 +356,7 @@ function makeManifest(sisfile, singleLanguage, includeFiles)
     local result = {
         type = "sis",
         name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name)) or sisfile.name[langIdx],
-        version = string.format("%d.%02d", sisfile.version[1], sisfile.version[2]),
+        version = { major = sisfile.version[1], minor = sisfile.version[2] },
         uid = sisfile.uid,
         languages = {},
         drive = sisfile.installedDrive, -- will be nil for non-stubs

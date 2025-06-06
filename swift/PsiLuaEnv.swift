@@ -700,3 +700,19 @@ extension Sis.InstallError: Pushable {
         try! state.push(encodable: self)
     }
 }
+
+extension Sis.Version: Comparable {
+    public static func < (lhs: Sis.Version, rhs: Sis.Version) -> Bool {
+        return lhs.major < rhs.major || (lhs.major == rhs.major && lhs.minor < rhs.minor)
+    }
+
+    public static func == (lhs: Sis.Version, rhs: Sis.Version) -> Bool {
+        return lhs.major == rhs.major && lhs.minor == rhs.minor
+    }
+}
+
+extension Sis.Version: CustomStringConvertible {
+    public var description: String {
+        return String(format: "%d.%02d", major, minor)
+    }
+}

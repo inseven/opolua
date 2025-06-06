@@ -81,6 +81,7 @@ extension Installer: SisInstallIoHandler {
     }
 
     func sisInstallBegin(sis: Sis.File, context: Sis.BeginContext) -> Sis.BeginResult {
+        // print("Installing v\(sis.version)")
         return .install(sis.languages[0], "C")
     }
 

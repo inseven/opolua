@@ -621,17 +621,27 @@ public protocol FileSystemIoHandler {
 }
 
 public struct Sis {
+    public struct Version: Codable /* also Comparable, CustomStringConvertible */ {
+        public let major: Int
+        public let minor: Int
+
+        public init(major: Int, minor: Int) {
+            self.major = major
+            self.minor = minor
+        }
+    }
+
     public struct File: Codable {
         public let name: [String: String]
         public let uid: UInt32
-        public let version: String
+        public let version: Version
         public let languages: [String]
     }
 
     public struct Installation: Codable {
         public let name: String
         public let uid: UInt32
-        public let version: String
+        public let version: Version
         public let language: String
         public let drive: String
     }

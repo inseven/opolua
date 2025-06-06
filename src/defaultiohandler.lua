@@ -312,9 +312,10 @@ function sisGetStubs()
 end
 
 function sisInstallBegin(sisInfo, context)
-    printf("sisInstallBegin %s v%s", sisInfo.name[sisInfo.languages[1]], sisInfo.version)
+    printf("sisInstallBegin %s v%d.%02d", sisInfo.name[sisInfo.languages[1]], sisInfo.version.major, sisInfo.version.minor)
     if context.replacing then
-        printf(" replacing v%s", context.replacing.version)
+        local v = context.replacing.version
+        printf(" replacing v%d.%02d", v.major, v.minor)
     end
     printf("\n")
 
