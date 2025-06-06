@@ -617,7 +617,7 @@ function getStubs(iohandler)
                 table.insert(result, { path = path, contents = contents })
             end
         end
-    else
+    elseif result == nil then
         return nil, err
     end
     return stubArrayToUidMap(result)
