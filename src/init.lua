@@ -458,6 +458,8 @@ function dump(...)
     return dump(...)
 end
 
+textReplacementsMatch = "[\x06\x07\x0a\x0b\x10]"
+
 textReplacements = {
     [KParagraphDelimiterStr] = "\n\n",
     [KLineBreakStr] = "\n",

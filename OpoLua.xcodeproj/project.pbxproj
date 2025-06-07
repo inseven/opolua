@@ -18,6 +18,7 @@
 		D80D65AC279DDF6B0020F994 /* IconCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */; };
 		D80D65AE279DE0CE0020F994 /* RunningProgramsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */; };
 		D80D65B0279E31220020F994 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80D65AF279E31220020F994 /* Configuration.swift */; };
+		D811A3AC2DEE4D6B00E5CCF7 /* SisInstallError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D811A3AB2DEE4D6800E5CCF7 /* SisInstallError.swift */; };
 		D815C6602DE145CC009EABFE /* lua-license in Resources */ = {isa = PBXBuildFile; fileRef = D815C65E2DE145CC009EABFE /* lua-license */; };
 		D815C6612DE145CC009EABFE /* opolua-license in Resources */ = {isa = PBXBuildFile; fileRef = D815C65F2DE145CC009EABFE /* opolua-license */; };
 		D81B4A4927B5AA650051B092 /* IndexableLocationObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81B4A4827B5AA650051B092 /* IndexableLocationObserver.swift */; };
@@ -151,6 +152,7 @@
 		D80D65AB279DDF6B0020F994 /* IconCollectionViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCollectionViewLayout.swift; sourceTree = "<group>"; };
 		D80D65AD279DE0CE0020F994 /* RunningProgramsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningProgramsViewController.swift; sourceTree = "<group>"; };
 		D80D65AF279E31220020F994 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
+		D811A3AB2DEE4D6800E5CCF7 /* SisInstallError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SisInstallError.swift; sourceTree = "<group>"; };
 		D815C65E2DE145CC009EABFE /* lua-license */ = {isa = PBXFileReference; lastKnownFileType = text; path = "lua-license"; sourceTree = "<group>"; };
 		D815C65F2DE145CC009EABFE /* opolua-license */ = {isa = PBXFileReference; lastKnownFileType = text; path = "opolua-license"; sourceTree = "<group>"; };
 		D81B4A4827B5AA650051B092 /* IndexableLocationObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexableLocationObserver.swift; sourceTree = "<group>"; };
@@ -370,6 +372,7 @@
 		D889134B274C17F300794D55 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				D811A3AB2DEE4D6800E5CCF7 /* SisInstallError.swift */,
 				DB3FAC2D27C2CA49004155C1 /* CGRect.swift */,
 				D8FE60062757201600711717 /* Bundle.swift */,
 				D889134C274C17FF00794D55 /* CGContext.swift */,
@@ -698,6 +701,7 @@
 				D8D184F527BACAB5004DDFFD /* SoundViewController.swift in Sources */,
 				DB5AC974275681510043FE5C /* CanvasView.swift in Sources */,
 				DB79FFE62742E596005E904F /* OpoInterpreter.swift in Sources */,
+				D811A3AC2DEE4D6B00E5CCF7 /* SisInstallError.swift in Sources */,
 				D8C712A4275AF50D00D83A3E /* ConcurrentQueue.swift in Sources */,
 				DB79FFDF2742DEBE005E904F /* AppDelegate.swift in Sources */,
 				D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */,

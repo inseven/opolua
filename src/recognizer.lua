@@ -120,7 +120,7 @@ function recognize(data, verbose)
         local sis = require("sis")
         local info = sis.parseSisFile(data)
         if info then
-            info = sis.makeManifest(info, true)
+            info = sis.makeManifest(info)
             info.files = nil
         end
         return info
@@ -148,7 +148,7 @@ function getOplText(data)
             local len, pos = readCardinality(data, pos)
             -- 06 means "new paragraph" in TextEd land... everything else likely
             -- to appear in an OPL script is ASCII
-            local text = data:sub(pos, pos + len - 1):gsub("[\x06\x10]", textReplacements)
+            local text = data:sub(pos, pos + len - 1):gsub(textReplacementsMatch, textReplacements)
             return text
         else
             pos = pos + 4 -- Skip over offset of section we don't care about

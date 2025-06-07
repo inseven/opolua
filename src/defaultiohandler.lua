@@ -31,8 +31,8 @@ local fmt = string.format
 
 local statusRequests = {}
 
-function print(val)
-    printf("%s", val:gsub("[\x00-\x1F]", textReplacements))
+function iohPrint(val)
+    printf("%s", val:gsub(textReplacementsMatch, textReplacements))
 end
 
 function textEditor(params)
@@ -229,11 +229,11 @@ function fsop(cmd, path, ...)
         if ok then
             local result = {}
             for line in data:gmatch("([^\n]+)") do
-                table.insert(result, line)
+                table.insert(result, oplpath.join(path, line))
             end
             return result
         else
-            printf("defaultiohandler: ls command failed (%d)\n", val, data)
+            -- printf("defaultiohandler: ls command failed (%d)\n", val, data)
             return nil, KErrNotReady
         end
     else
@@ -278,12 +278,14 @@ end
 function opsync()
 end
 
+local config = { locale = "en_GB", clockFormat = "0" }
+
 function getConfig(key)
-    return ""
+    return config[key] or ""
 end
 
 function setConfig(key, val)
-    printf("setConfig(%q, %q)\n", key, val)
+    config[key] = val
 end
 
 function setAppTitle(title)
@@ -303,6 +305,36 @@ function runApp(prog, doc)
 end
 
 function setEra(era)
+end
+
+function sisGetStubs()
+    return "notimplemented"
+end
+
+function sisInstallBegin(sisInfo, context)
+    printf("sisInstallBegin %s v%d.%02d", sisInfo.name[sisInfo.languages[1]], sisInfo.version.major, sisInfo.version.minor)
+    if context.replacing then
+        local v = context.replacing.version
+        printf(" replacing v%d.%02d", v.major, v.minor)
+    end
+    printf("\n")
+
+    return { type = "install", drive = "C", lang = sisInfo.languages[1] }
+end
+
+function sisInstallRollback(sisInfo)
+    -- printf("sisInstallRollback %s\n", sisInfo.name[sisInfo.languages[1]])
+    -- return true
+    return false -- We don't really need rollback on the command line?
+end
+
+function sisInstallComplete(sisInfo)
+    printf("sisInstallComplete %s\n", sisInfo.name[sisInfo.languages[1]])
+end
+
+function sisInstallQuery(sisInfo, text, type)
+    print(text)
+    return true
 end
 
 return _ENV
