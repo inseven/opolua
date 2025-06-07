@@ -492,7 +492,8 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
     local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
 
     if existing then
-        -- We need to uninstall existing
+        -- We need to uninstall existing. Note this will not uninstall embedded SIS files at this point. That happens
+        -- as part of the installSis() call in the FileType.SisComponent clause below.
         uninstallSis(stubs, existing.uid, iohandler, true)
     end
 
@@ -551,8 +552,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
                 return failInstall(0, "epocerr", err, dir)
             end
         end
-        -- local stubPath = oplpath.join(dir, oplpath.basename(filename))
-        local stubPath = string.format("%s%08X.sis", dir, sisfile.uid)
+        local stubPath = oplpath.join(dir, oplpath.basename(filename))
         local err = iohandler.fsop("write", stubPath, stub)
         if err ~= KErrNone then
             return failInstall(0, "epocerr", err, stubPath)
@@ -585,6 +585,7 @@ function uninstallSis(stubMap, uid, iohandler, upgrading)
         stubMap = getStubs(iohandler)
     end
     local sisfile = assert(stubMap[uid], "Can't find installer in stubs!")
+    printf("uninstalling %s\n", sisfile.path)
 
     local drive = sisfile.installedDrive --or "C"
     local function getPath(file)
@@ -600,14 +601,31 @@ function uninstallSis(stubMap, uid, iohandler, upgrading)
             if err ~= KErrNone and err ~= KErrNotExists then
                 print("Uninstall failed to delete %s, err=%d\n", path, err)
             end
-        elseif file.type == FileType.SisComponent then
-            -- See if anyone else is using it
+        elseif file.type == FileType.SisComponent and not upgrading then
+            -- See if anyone else is using it. If we're upgrading, then the 
             -- local embeddedSis = parseSisFile(file.data)
-            -- if not stubMap[embeddedSis.uid] then
-            --     printf("Embedded sis %s not found in installer stubs!\n", embeddedSis.src)
-            -- else
+            local inUserBySomethingElse = false
+            local name = oplpath.basename(file.src):lower()
+            local foundStubUid
+            for uid, stub in pairs(stubMap) do
+                if oplpath.basename(stub.path):lower() == name then
+                    printf("Found stub for %s - %s\n", name, stub.path)
+                    foundStubUid = stub.uid
+                end
 
-            --TODO
+                for _, file in ipairs(stub.files) do
+                    if file.type == FileType.SisComponent and oplpath.basename(file.src):lower() == name then
+                        printf("%s in use by %s\n", name, stub.path)
+                        if stub.path ~= sisfile.path then
+                            inUserBySomethingElse = true
+                        end
+                    end
+                end
+            end
+
+            if not inUserBySomethingElse then
+                uninstallSis(stubMap, foundStubUid, iohandler, false)
+            end
         end
     end
 
