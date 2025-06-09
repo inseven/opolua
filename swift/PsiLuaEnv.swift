@@ -157,13 +157,6 @@ public class PsiLuaEnv {
         public let idOffset: UInt32?
     }
 
-    public struct SisFile: Codable {
-        public let name: [String: String]
-        public let uid: UInt32
-        public let version: String
-        public let languages: [String]
-    }
-
     public enum FileType: String, Codable {
         case unknown
         case aif
@@ -188,16 +181,20 @@ public class PsiLuaEnv {
         case opo(OpoFile)
         case resource(ResourceFile)
         case sound(SoundFile)
-        case sis(SisFile)
+        case sis(Sis.File)
     }
 
     public func recognize(path: String) -> FileType {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        return self.recognize(data: data)
+    }
+
+    public func recognize(data: Data) -> FileType {
         let top = L.gettop()
         defer {
             L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
         }
         require("recognizer")
         L.rawget(-1, key: "recognize")
@@ -213,12 +210,16 @@ public class PsiLuaEnv {
     }
 
     public func getFileInfo(path: String) -> FileInfo {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return .unknown
+        }
+        return getFileInfo(data: data)
+    }
+
+    public func getFileInfo(data: Data) -> FileInfo {
         let top = L.gettop()
         defer {
             L.settop(top)
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return .unknown
         }
         require("recognizer")
         L.rawget(-1, key: "recognize")
@@ -268,7 +269,7 @@ public class PsiLuaEnv {
                 return .resource(info)
             }
         case .sis:
-            if let info: SisFile = L.todecodable(-1) {
+            if let info: Sis.File = L.todecodable(-1) {
                 return .sis(info)
             }
         case .sound:
@@ -328,8 +329,8 @@ public class PsiLuaEnv {
     }
 
     internal static let fsop: lua_CFunction = { (L: LuaState!) -> CInt in
-        let wrapper: FsHandlerWrapper = L.touserdata(lua_upvalueindex(1))!
-        let iohandler = wrapper.iohandler
+        let wrapper: Wrapper<FileSystemIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
 
         guard let cmd = L.tostring(1) else {
             return 0
@@ -337,6 +338,9 @@ public class PsiLuaEnv {
         guard let path = L.tostring(2) else {
             return 0
         }
+
+        let cmdReturnsResult = cmd == "read" || cmd == "dir" || cmd == "stat"
+
         let op: Fs.Operation.OpType
         switch cmd {
         case "stat":
@@ -374,16 +378,27 @@ public class PsiLuaEnv {
 
         let result = iohandler.fsop(Fs.Operation(path: path, type: op))
         switch (result) {
+        case .success:
+            L.push(0)
+            return 1
         case .err(let err):
-            if err != .none {
-                print("Error \(err) for cmd \(op) path \(path)")
-            }
-            if cmd == "read" || cmd == "dir" || cmd == "stat" {
+            print("Error \(err) for cmd \(op) path \(path)")
+            if cmdReturnsResult {
                 L.pushnil()
                 L.push(err.rawValue)
                 return 2
             } else {
                 L.push(err.rawValue)
+                return 1
+            }
+        case .epocError(let err):
+            print("Error \(err) for cmd \(op) path \(path)")
+            if cmdReturnsResult {
+                L.pushnil()
+                L.push(err)
+                return 2
+            } else {
+                L.push(err)
                 return 1
             }
         case .data(let data):
@@ -405,38 +420,164 @@ public class PsiLuaEnv {
     }
 
     public func installSisFile(path: String, handler: SisInstallIoHandler) throws {
+        guard let data = FileManager.default.contents(atPath: path) else {
+            throw LuaArgumentError(errorString: "Couldn't read \(path)")
+        }
+        try installSisFile(path: path, data: data, handler: handler)
+    }
+
+    public func installSisFile(path: String? = nil, data: Data, handler: SisInstallIoHandler) throws {
         let top = L.gettop()
         defer {
             L.settop(top)
         }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            throw LuaArgumentError(errorString: "Couldn't read \(path)")
-        }
         require("runtime")
         L.rawget(-1, utf8Key: "installSis")
+        L.push(path)
         L.push(data)
+        makeSisInstallIoHandlerBridge(handler)
+        do {
+            try L.pcall(nargs: 3, nret: 1)
+        } catch {
+            throw Sis.InstallError.internalError(String(describing: error))
+        }
+        switch L.type(-1) {
+        case .table:
+            guard let err: Sis.InstallError = L.todecodable(-1) else {
+                throw Sis.InstallError.internalError("Failed to decode SisInstallError from installSis result")
+            }
+            throw err
+        case .none, .nil:
+            break
+        default:
+            throw Sis.InstallError.internalError(L.tostring(-1, convert: true) ?? "Bad error string")
+        }
+    }
+
+    public func uninstallSisFile(stubs: [Sis.Stub], uid: UInt32, handler: FileSystemIoHandler) throws {
+        let top = L.gettop()
+        defer {
+            L.settop(top)
+        }
+        require("runtime")
+        L.rawget(-1, utf8Key: "uninstallSis")
+        try! L.push(encodable: stubs)
+        L.push(uid)
         makeFsIoHandlerBridge(handler)
-        try L.pcall(nargs: 2, nret: 0)
+        try L.pcall(nargs: 3, nret: 0)
     }
 
     internal func makeFsIoHandlerBridge(_ handler: FileSystemIoHandler) {
         L.newtable()
-        L.push(FsHandlerWrapper(iohandler: handler))
+        L.push(Wrapper<FileSystemIoHandler>(value: handler))
         let fns: [String: lua_CFunction] = [
             "fsop": { L in return autoreleasepool { return PsiLuaEnv.fsop(L) } },
         ]
         L.setfuncs(fns, nup: 1)
     }
 
+    internal func makeSisInstallIoHandlerBridge(_ handler: SisInstallIoHandler) {
+        makeFsIoHandlerBridge(handler)
+        L.push(Wrapper<SisInstallIoHandler>(value: handler))
+        let fns: [String: lua_CFunction] = [
+            "sisGetStubs": { L in return autoreleasepool { return PsiLuaEnv.sisGetStubs(L) } },
+            "sisInstallBegin": { L in return autoreleasepool { return PsiLuaEnv.sisInstallBegin(L) } },
+            "sisInstallComplete": { L in return autoreleasepool { return PsiLuaEnv.sisInstallComplete(L) } },
+            "sisInstallRollback": { L in return autoreleasepool { return PsiLuaEnv.sisInstallRollback(L) } },
+            "sisInstallQuery": { L in return autoreleasepool { return PsiLuaEnv.sisInstallQuery(L) } },
+        ]
+        L.setfuncs(fns, nup: 1)
+    }
+
+    internal static let sisGetStubs: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        let result = iohandler.sisGetStubs()
+        switch result {
+        case .stubs(let stubs):
+            try! L.push(encodable: stubs)
+            return 1
+        case .epocError(let err):
+            L.pushnil()
+            L.push(err)
+            return 2
+        case .notImplemented:
+            L.push("notimplemented")
+            return 1
+        }
+    }
+
+    internal static let sisInstallBegin: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        guard let info: Sis.File = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        guard let context: Sis.BeginContext = L.todecodable(2) else {
+            print("Bad BeginContext!")
+            return 0
+        }
+        let result = iohandler.sisInstallBegin(sis: info, context: context)
+        L.push(result)
+        return 1
+    }
+
+    internal static let sisInstallRollback: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        guard let info: Sis.File = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        let result = iohandler.sisInstallRollback(sis: info)
+        L.push(result)
+        return 1
+    }
+
+    internal static let sisInstallComplete: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        guard let info: Sis.File = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        iohandler.sisInstallComplete(sis: info)
+        return 0
+    }
+
+    internal static let sisInstallQuery: lua_CFunction = { (L: LuaState!) -> CInt in
+        let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        let iohandler = wrapper.value
+        guard let info: Sis.File = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        guard let text = L.tostring(2, encoding: .utf8) else {
+            print("Bad text!")
+            return 0
+        }
+        guard let queryString = L.tostring(3),
+              let queryType = Sis.QueryType(rawValue: queryString)
+        else {
+            print("Unknown queryType \(L.tostring(3, convert: true)!)")
+            return 0
+        }
+        let result = iohandler.sisInstallQuery(sis: info, text: text, type: queryType)
+        L.push(result)
+        return 1
+    }
 }
 
-fileprivate class FsHandlerWrapper: PushableWithMetatable {
-    init(iohandler: FileSystemIoHandler) {
-        self.iohandler = iohandler
+fileprivate class Wrapper<T>: PushableWithMetatable {
+    init(value: T) {
+        self.value = value
     }
-    static let metatable = Metatable<FsHandlerWrapper>()
+    static var metatable: Metatable<Wrapper<T>> {
+        return .init()
+    }
 
-    let iohandler: FileSystemIoHandler
+    let value: T
 }
 
 internal extension LuaState {
@@ -478,5 +619,100 @@ internal extension LuaState {
         }
         L.pop() // icons
         return PsiLuaEnv.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons, era: era)
+    }
+}
+
+extension Sis.InstallError: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .userCancelled: return "SisInstallError.userCancelled"
+        case .epocError(let err, let context): return "SisInstallError.epocError(\(err), \(context ?? "''"))"
+        case .internalError(let err): return "SisInstallError.internalError(\(err))"
+        }
+    }
+}
+
+extension Sis.InstallError: Codable {
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case code
+        case context
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try values.decode(String.self, forKey: .type)
+        switch type {
+        case "usercancel":
+            self = .userCancelled
+        case "epocerr":
+            let code: Int32 = try values.decode(Int32.self, forKey: .code)
+            let path = try values.decode(String?.self, forKey: .context)
+            self = .epocError(code, path)
+        case "internal":
+            let details = try values.decode(String.self, forKey: .context)
+            self = .internalError(details)
+        default:
+            throw DecodingError.dataCorrupted(.init(codingPath: [CodingKeys.type], debugDescription: "Unhandled type \(type)"))
+        }
+
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .userCancelled:
+            try container.encode("usercancel", forKey: .type)
+        case .epocError(let err, let path):
+            try container.encode("epocerr", forKey: .type)
+            try container.encode(err, forKey: .code)
+            try container.encode(path, forKey: .context)
+        case .internalError(let details):
+            try container.encode("internal", forKey: .type)
+            try container.encode(details, forKey: .context)
+        }
+    }
+
+}
+
+extension Sis.BeginResult: Pushable {
+    public func push(onto L: LuaState) {
+        L.newtable()
+        switch self {
+        case .skipInstall:
+            L.rawset(-1, key: "type", value: "skip")
+        case .userCancelled:
+            L.rawset(-1, key: "type", value: "usercancel")
+        case .epocError(let err):
+            L.rawset(-1, key: "type", value: "epocerr")
+            L.rawset(-1, key: "code", value: err)
+        case .install(let lang, let drive):
+            L.rawset(-1, key: "type", value: "install")
+            L.rawset(-1, key: "lang", value: lang)
+            L.rawset(-1, key: "drive", value: drive)
+        }
+    }
+}
+
+extension Sis.InstallError: Pushable {
+    public func push(onto state: LuaState) {
+        try! state.push(encodable: self)
+    }
+}
+
+extension Sis.Version: Comparable {
+    public static func < (lhs: Sis.Version, rhs: Sis.Version) -> Bool {
+        return lhs.major < rhs.major || (lhs.major == rhs.major && lhs.minor < rhs.minor)
+    }
+
+    public static func == (lhs: Sis.Version, rhs: Sis.Version) -> Bool {
+        return lhs.major == rhs.major && lhs.minor == rhs.minor
+    }
+}
+
+extension Sis.Version: CustomStringConvertible {
+    public var description: String {
+        return String(format: "%d.%02d", major, minor)
     }
 }

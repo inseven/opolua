@@ -428,13 +428,13 @@ extension Graphics.GreyMode {
 public struct Fs {
     public struct Operation {
         public enum OpType {
-            case delete // return none, notFound, accessDenied if readonly, notReady
-            case mkdir // return none, alreadyExists, accessDenied if readonly, notReady
-            case rmdir // return none, notFound, inUse if it isn't empty, pathNotFound if it's not a dir, accessDenied if readonly, notReady
-            case write(Data) // return none, accessDenied if readonly, notReady
-            case read // return none, notFound, notReady
+            case delete // return .success, notFound, accessDenied if readonly, notReady
+            case mkdir // return .success, alreadyExists, accessDenied if readonly, notReady
+            case rmdir // return .success, notFound, inUse if it isn't empty, pathNotFound if it's not a dir, accessDenied if readonly, notReady
+            case write(Data) // return .success, accessDenied if readonly, notReady
+            case read // return .data() or notFound, notReady
             case dir // return .strings(paths)
-            case rename(String) // return none, notFound, accessDenied if readonly, notReady, alreadyExists
+            case rename(String) // return .success, notFound, accessDenied if readonly, notReady, alreadyExists
             case stat // return stat, or notFound or notReady
             case disks // return .strings(diskList)
         }
@@ -446,10 +446,16 @@ public struct Fs {
         public let size: UInt64
         public let lastModified: Date
         public let isDirectory: Bool
+
+        public init(size: UInt64, lastModified: Date, isDirectory: Bool) {
+            self.size = size
+            self.lastModified = lastModified
+            self.isDirectory = isDirectory
+        }
     }
 
-    public enum Err: Int {
-        case none = 0
+    public enum Err: Int, Codable {
+        case general = -1
         case inUse = -9
         case notFound = -33
         case alreadyExists = -32
@@ -459,10 +465,12 @@ public struct Fs {
     }
 
     public enum Result {
+        case success
         case err(Err)
         case data(Data)
         case stat(Stat)
         case strings([String])
+        case epocError(Int32) // Not recommended to use this for OPL programs
     }
 }
 
@@ -589,6 +597,7 @@ extension Async.KeyPressEvent {
 
 public enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
+    case locale // eg "en_GB"
 }
 
 public struct TextFieldInfo: Codable {
@@ -611,10 +620,89 @@ public protocol FileSystemIoHandler {
 
 }
 
+public struct Sis {
+    public struct Version: Codable /* also Comparable, CustomStringConvertible */ {
+        public let major: Int
+        public let minor: Int
+
+        public init(major: Int, minor: Int) {
+            self.major = major
+            self.minor = minor
+        }
+    }
+
+    public struct File: Codable {
+        public let name: [String: String]
+        public let uid: UInt32
+        public let version: Version
+        public let languages: [String]
+    }
+
+    public struct Installation: Codable {
+        public let name: String
+        public let uid: UInt32
+        public let version: Version
+        public let language: String
+        public let drive: String
+    }
+
+    public struct Stub: Codable {
+        public let path: String
+        public let contents: Data
+
+        public init(path: String, contents: Data) {
+            self.path = path
+            self.contents = contents
+        }
+    }
+
+    public enum GetStubsResult {
+        case notImplemented
+        case epocError(Int32)
+        case stubs([Sis.Stub])
+    }
+
+    public enum InstallError: Error, Equatable {
+        case userCancelled
+        case epocError(Int32, String?)
+        case internalError(String)
+    }
+
+    public struct BeginContext: Codable {
+        public let driveRequired: Bool
+        public let replacing: Sis.Installation?
+        public let isRoot: Bool
+    }
+
+    public enum BeginResult {
+        case skipInstall // Not an error
+        case userCancelled
+        case epocError(Int32)
+        case install(String, String) // language and drive
+    }
+
+    public enum QueryType: String {
+        case `continue` // "Continue" button only
+        case skip // "Yes"/"No" buttons, next install file skipped on "No"
+        case abort // "Yes"/"No" buttons, abort install on "No"
+        case exit // Same as abort but also do cleanup (?)
+    }
+}
+
 public protocol SisInstallIoHandler: FileSystemIoHandler {
 
-    // probably some extra stuff for prompting the user
+    func sisGetStubs() -> Sis.GetStubsResult
 
+    func sisInstallBegin(sis: Sis.File, context: Sis.BeginContext) -> Sis.BeginResult
+
+    // Return true to continue, false if user selected "No"
+    func sisInstallQuery(sis: Sis.File, text: String, type: Sis.QueryType) -> Bool
+
+    // Called to indicate that an error occurred and the installation will now roll back. Return false to indicate
+    // rollback is unnecessary (because for eg, the native code will take care of it).
+    func sisInstallRollback(sis: Sis.File) -> Bool
+
+    func sisInstallComplete(sis: Sis.File)
 }
 
 public protocol OpoIoHandler: FileSystemIoHandler {

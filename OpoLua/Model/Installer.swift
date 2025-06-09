@@ -76,4 +76,26 @@ extension Installer: SisInstallIoHandler {
         return fileSystem.perform(op)
     }
 
+    func sisGetStubs() -> Sis.GetStubsResult {
+        return .notImplemented
+    }
+
+    func sisInstallBegin(sis: Sis.File, context: Sis.BeginContext) -> Sis.BeginResult {
+        // print("Installing v\(sis.version)")
+        return .install(sis.languages[0], "C")
+    }
+
+    func sisInstallQuery(sis: Sis.File, text: String, type: Sis.QueryType) -> Bool {
+        print("TODO sisInstallQuery \(text)")
+        return true
+    }
+
+    func sisInstallRollback(sis: Sis.File) -> Bool {
+        print("sisInstallRollback")
+        return false // rollback not needed since we install to a sandbox.
+    }
+
+    func sisInstallComplete(sis: Sis.File) {
+    }
+
 }

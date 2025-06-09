@@ -47,6 +47,13 @@ FileType = enum {
     FileMime = 5,
 }
 
+FileTextDetails = enum {
+    continue = 0,
+    skip = 1,
+    abort = 2,
+    exit = 3,
+}
+
 -- Codes from https://thoukydides.github.io/riscos-psifs/sis.html mapped into
 -- ICU Locale identifiers based on some guesswork and
 -- https://icu4c-demos.unicode.org/icu-bin/locexp?d_=en
@@ -153,7 +160,7 @@ Locales = enum {
 function parseSisFile(data, verbose)
     local uid1, uid2, uid3, uid4, checksum, nLangs, nFiles, pos = string.unpack("<I4I4I4I4I2I2I2", data)
     if verbose then
-        printf("uid1=0x%08X uid2=0x%08X nLangs=%d nFiles=%d\n", uid1, uid2, nLangs, nFiles)
+        printf("uid1=0x%08X uid2=0x%08X uid3=0x%08X uid4=0x%08X nLangs=%d nFiles=%d\n", uid1, uid2, uid3, uid4, nLangs, nFiles)
     end
 
     assert(uid2 == KUidAppDllDoc8 or uid2 == KUidSisFileEr6, "Bad uid2 in SIS file!")
@@ -176,6 +183,8 @@ function parseSisFile(data, verbose)
 
     assert(options & Options.IsUnicode == 0, "ER5U not supported!")
 
+    local endOfStrings = 0
+
     local result = {
         name = {},
         langs = {},
@@ -193,16 +202,17 @@ function parseSisFile(data, verbose)
 
     pos = 1 + filesPtr
     for i = 1, nFiles do
-        local recordType, file
+        local recordType, file, maxStringOffset
         recordType, pos = string.unpack("<I4", data, pos)
         if recordType == FileRecordType.SimpleFileRecord then
-            file, pos = parseSimpleFileRecord(data, pos, 1, verbose)
+            file, pos, maxStringOffset = parseSimpleFileRecord(data, pos, 1, verbose)
         elseif recordType == FileRecordType.MultiLangRecord then
-            file, pos = parseSimpleFileRecord(data, pos, nLangs, verbose)
+            file, pos, maxStringOffset = parseSimpleFileRecord(data, pos, nLangs, verbose)
         else
             error("Unknown record type "..tostring(recordType))
         end
         result.files[i] = file
+        endOfStrings = math.max(endOfStrings, maxStringOffset)
     end
 
     pos = 1 + namePtr
@@ -213,20 +223,46 @@ function parseSisFile(data, verbose)
     for i = 1, nLangs do
         local ptr
         ptr, pos = string.unpack("<I4", data, pos)
+        endOfStrings = math.max(endOfStrings, ptr + nameLens[i])
         result.name[i] = data:sub(1 + ptr, ptr + nameLens[i])
     end
 
+    if instDrv ~= 0 then
+        local ch = string.char(instDrv)
+        if ch:match("[A-Za-z]") then
+            result.installedDrive = ch:upper()
+        end
+    end
+
+    if lang ~= 0 then
+        result.language = lang
+    end
+
+    result.stubSize = endOfStrings
+
+    if verbose then
+        printf("stubSize=%d\n", result.stubSize)
+    end
     return result
 end
 
-function getBestLangIdx(langs)
-    -- For now, just pick the first english-ish thing
+function getBestLangIdx(langs, preferred)
+    if preferred then
+        for i, lang in ipairs(langs) do
+            if lang == preferred then
+                return i
+            end
+        end
+    end
+
+    -- Otherwise, just pick the first english-ish thing
     for i, lang in ipairs(langs) do
         local locale = Locales[lang]
         if locale and locale:lower():match("^en") then
             return i
         end
     end
+    -- And if all else fails, go with the first one
     return 1
 end
 
@@ -257,6 +293,7 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
 
     local srcName = data:sub(1 + srcNamePtr, srcNamePtr + srcNameLen)
     local destName = data:sub(1 + destNamePtr, destNamePtr + destNameLen)
+    local maxStringOffset = math.max(srcNamePtr + srcNameLen, destNamePtr + destNameLen)
 
     if type == FileType.SisComponent and destName:match("[\x00-\x1F]") then
         -- SIS files created with Neuon's nSISUtil appear to put corrupt garbage data into the dest name for
@@ -270,7 +307,7 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
         dest = destName,
     }
 
-    if type ~= FileRecordType.FileNull then
+    if type ~= FileType.FileNull then
         local langData = {}
         for i, lang in ipairs(contents) do
             local filePtr = contents[i].ptr
@@ -289,18 +326,19 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
             file.data = langData[1]
         end
     end
-    if type == FileRecordType.FileText then
+    if type == FileType.FileText then
         file.details = details
     end
 
-    return file, pos
+    return file, pos, maxStringOffset
 end
 
-function makeManifest(sisfile, includeLangs)
+function makeManifest(sisfile, singleLanguage, includeFiles)
     local langIdx
-    if not includeLangs then
-        langIdx = getBestLangIdx(sisfile.langs)
+    if singleLanguage then
+        langIdx = getBestLangIdx(sisfile.langs, singleLanguage)
     end
+    local includeLangs = singleLanguage == nil
 
     local function langListToLocaleMap(langs, list)
         local result = {}
@@ -318,14 +356,21 @@ function makeManifest(sisfile, includeLangs)
     local result = {
         type = "sis",
         name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name)) or sisfile.name[langIdx],
-        version = string.format("%d.%d", sisfile.version[1], sisfile.version[2]),
+        version = { major = sisfile.version[1], minor = sisfile.version[2] },
         uid = sisfile.uid,
         languages = {},
-        files = {},
+        drive = sisfile.installedDrive, -- will be nil for non-stubs
+        language = sisfile.language and Locales[sisfile.language], -- likewise
     }
     for _, lang in ipairs(sisfile.langs) do
         table.insert(result.languages, Locales[lang])
     end
+
+    if not includeFiles then
+        return result
+    end
+
+    result.files = {}
 
     for i, file in ipairs(sisfile.files) do
         local f = {
@@ -357,12 +402,264 @@ function makeManifest(sisfile, includeLangs)
 
         if file.type == FileType.SisComponent and file.data then
             local componentSis = parseSisFile(file.data)
-            f.sis = makeManifest(componentSis, includeLangs)
+            f.sis = makeManifest(componentSis, singleLanguage, includeFiles)
         end
 
         result.files[i] = f
     end
 
+    return result
+end
+
+function installSis(filename, data, iohandler, includeStub, verbose, stubs)
+    if data == nil then
+        -- Assume filename is a psion path
+        data = assert(iohandler.fsop("read", filename))
+    end
+
+    local sisfile = parseSisFile(data, verbose)
+    -- This is compatible with struct SisFile in Swift (plus some other stuff that doesn't matter)
+    local callbackContext = makeManifest(sisfile)
+
+    local drive = "C"
+    local function getPath(file)
+        return (file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end))
+    end
+
+    local function failInstallWithError(fileIdx, err)
+        printf("Install of %s failed: %s %s %s\n", filename, err.type, err.code or "", err.context or "")
+        if fileIdx and iohandler.sisInstallRollback(callbackContext) then
+            for i = fileIdx + 1, #sisfile.files do
+                local file = sisfile.files[i]
+                if file.type == FileType.File then
+                    local err = iohandler.fsop("delete", getPath(file))
+                    if err ~= KErrNone then
+                        print("Rollback failed")
+                        break
+                    end
+                elseif file.type == FileType.SisComponent then
+                    -- Should we try to roll back completed embedded SIS installs?
+                end
+            end
+        end
+
+        iohandler.sisInstallComplete(callbackContext)
+        return err
+    end
+    local function failInstall(fileIdx, reason, code, context)
+        return failInstallWithError(fileIdx, { type = reason, code = code, context = context })
+    end
+
+    local hasDriveChoice = false
+    for _, file in ipairs(sisfile.files) do
+        if file.dest:match("^!") then
+            hasDriveChoice = true
+            break
+        end
+    end
+    local isRootInstall = (stubs == nil)
+    if stubs == nil then
+        local err
+        stubs, err = getStubs(iohandler)
+        if stubs == nil then
+            return failInstall(nil, "epocerr", err)
+        end
+    end
+    local existing = stubs[sisfile.uid]
+    local beginInfo = {
+        driveRequired = hasDriveChoice,
+        replacing = existing and makeManifest(existing, existing.language),
+        isRoot = isRootInstall,
+    }
+    local ret = iohandler.sisInstallBegin(callbackContext, beginInfo)
+
+    if ret.type == "skip" then
+        return nil -- No error
+    elseif ret.type == "usercancel" then
+        return failInstall(nil, "usercancel")
+    elseif ret.type == "epocerr" then
+        return failInstall(nil, "epocerr", ret.code)
+    else
+        assert(ret.type == "install", "Unexpected return type from sisInstallBegin")
+    end
+
+    if hasDriveChoice then
+        drive = ret.drive:upper()
+        assert(drive:match("^[A-Z]$"), "Bad drive returned!")
+    end
+
+    local preferredLang = assert(Locales[ret.lang], "Bad lang returned from sisInstallBegin")
+    local langIdx = getBestLangIdx(sisfile.langs, preferredLang)
+
+    if existing then
+        -- We need to uninstall existing. Note this will not uninstall embedded SIS files at this point. That happens
+        -- as part of the installSis() call in the FileType.SisComponent clause below.
+        uninstallSis(stubs, existing.uid, iohandler, true)
+    end
+
+    local skipNext = false
+    -- You're supposed to iterate the files list backwards when installing
+    for i = #sisfile.files, 1, -1 do
+        local file = sisfile.files[i]
+        if skipNext then
+            printf("Skipping file %s\n", file.dest)
+            skipNext = false
+        elseif file.type == FileType.File then
+            local path = getPath(file)
+            local dir = oplpath.dirname(path)
+            if iohandler.fsop("stat", dir) == nil then
+                local err = iohandler.fsop("mkdir", dir)
+                if err ~= KErrNone then
+                    return failInstall(i, "epocerr", err, dir)
+                end
+            end
+            local data = file.data
+            if not data then
+                data = file.langData[langIdx]
+            end
+            local err = iohandler.fsop("write", path, data)
+            if err ~= KErrNone then
+                return failInstall(i, "epocerr", err, path)
+            end
+        elseif file.type == FileType.SisComponent then
+            local err = installSis(file.src, file.data, iohandler, includeStub, verbose, stubs)
+            if err then
+                return failInstallWithError(i, err)
+            end
+        elseif file.type == FileType.FileText then
+            local data = file.data or file.langData[langIdx]
+            local cp1252 = require("cp1252")
+            local text = cp1252.toUtf8(data):gsub("\x0D\x0A", "\n")
+            local queryType = FileTextDetails[file.details]
+            assert(queryType, "Unknown FileText details")
+            local shouldContinue = iohandler.sisInstallQuery(callbackContext, text, queryType)
+            if not shouldContinue then
+                if queryType == "skip" then
+                    skipNext = true
+                else
+                    return failInstall(i, "usercancel")
+                end
+            end
+        end
+    end
+
+    if includeStub then
+        local stub = makeStub(data, sisfile.langs[langIdx], drive)
+        local dir = [[C:\System\install\]]
+        if iohandler.fsop("stat", dir) == nil then
+            local err = iohandler.fsop("mkdir", dir)
+            if err ~= KErrNone then
+                return failInstall(0, "epocerr", err, dir)
+            end
+        end
+        local stubPath = oplpath.join(dir, oplpath.basename(filename))
+        local err = iohandler.fsop("write", stubPath, stub)
+        if err ~= KErrNone then
+            return failInstall(0, "epocerr", err, stubPath)
+        end
+    end
+
+    iohandler.sisInstallComplete(callbackContext)
+    return nil -- ie no error
+end
+
+function makeStub(sisData, installedLang, drive)
+    local sisfile = parseSisFile(sisData)
+
+    -- The stub updates lang, instFiles and instDrv. instFiles should be the same as nFiles, not the number of files
+    -- actually written (nFiles includes embedded SIS files, FileNull and FileText files), because it's used as a
+    -- progress indicator to indicate a partial or completed install.
+    --
+    -- In ER6 we'd have to also update the Installed Space field.
+
+    local newData = string.pack("<I2I2I2", installedLang, #sisfile.files, string.byte(drive:lower()))
+    local dataOffset = 0x18 -- position of lang
+
+    local result = sisData:sub(1, dataOffset)..newData..sisData:sub(1 + dataOffset + #newData, sisfile.stubSize)
+    return result
+end
+
+
+function uninstallSis(stubMap, uid, iohandler, upgrading)
+    if not stubMap then
+        stubMap = getStubs(iohandler)
+    end
+    local sisfile = assert(stubMap[uid], "Can't find installer in stubs!")
+    printf("uninstalling %s\n", sisfile.path)
+
+    local drive = sisfile.installedDrive --or "C"
+    local function getPath(file)
+        return (file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end))
+    end
+
+    for i = 1, #sisfile.files do
+        local file = sisfile.files[i]
+        if file.type == FileType.File or (file.type == FileType.FileNull and not upgrading) then
+            -- print("DELETE", getPath(file))
+            local path = getPath(file)
+            local err = iohandler.fsop("delete", path)
+            if err ~= KErrNone and err ~= KErrNotExists then
+                print("Uninstall failed to delete %s, err=%d\n", path, err)
+            end
+        elseif file.type == FileType.SisComponent and not upgrading then
+            -- See if anyone else is using it. If we're upgrading, then the 
+            -- local embeddedSis = parseSisFile(file.data)
+            local inUserBySomethingElse = false
+            local name = oplpath.basename(file.src):lower()
+            local foundStubUid
+            for uid, stub in pairs(stubMap) do
+                if oplpath.basename(stub.path):lower() == name then
+                    printf("Found stub for %s - %s\n", name, stub.path)
+                    foundStubUid = stub.uid
+                end
+
+                for _, file in ipairs(stub.files) do
+                    if file.type == FileType.SisComponent and oplpath.basename(file.src):lower() == name then
+                        printf("%s in use by %s\n", name, stub.path)
+                        if stub.path ~= sisfile.path then
+                            inUserBySomethingElse = true
+                        end
+                    end
+                end
+            end
+
+            if not inUserBySomethingElse then
+                uninstallSis(stubMap, foundStubUid, iohandler, false)
+            end
+        end
+    end
+
+    local err = iohandler.fsop("delete", sisfile.path)
+    if err ~= KErrNone and err ~= KErrNotExists then
+        print("Uninstall failed to delete %s, err=%d\n", sisfile.path, err)
+    end
+end
+
+function getStubs(iohandler)
+    local result, err = iohandler.sisGetStubs()
+    if result == "notimplemented" then
+        local installDir = [[C:\System\install\]]
+        local stubNames = iohandler.fsop("dir", installDir) or {}
+        result = {}
+        for _, path in ipairs(stubNames) do
+            if path:lower():match("%.sis$") then
+                local contents = assert(iohandler.fsop("read", path))
+                table.insert(result, { path = path, contents = contents })
+            end
+        end
+    elseif result == nil then
+        return nil, err
+    end
+    return stubArrayToUidMap(result)
+end
+
+function stubArrayToUidMap(stubs)
+    local result = {}
+    for _, stub in ipairs(stubs) do
+        local sisfile = parseSisFile(stub.contents)
+        sisfile.path = stub.path
+        result[sisfile.uid] = sisfile
+    end
     return result
 end
 

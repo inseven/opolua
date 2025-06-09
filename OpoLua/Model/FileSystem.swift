@@ -74,7 +74,7 @@ extension FileSystem {
             }
             do {
                 try fileManager.removeItem(atPath: path)
-                return .err(.none)
+                return .success
             } catch {
                 return .err(.notReady)
             }
@@ -93,7 +93,7 @@ extension FileSystem {
             }
             do {
                 try fileManager.createDirectory(atPath: path, withIntermediateDirectories: true)
-                return .err(.none)
+                return .success
             } catch {
                 return .err(.notReady)
             }
@@ -135,7 +135,7 @@ extension FileSystem {
                 }
             }
             let ok = fileManager.createFile(atPath: path, contents: data)
-            return .err(ok ? .none : .notReady)
+            return ok ? .success : .err(.notReady)
         case .read:
             if let result = fileManager.contents(atPath: nativePath.path) {
                 return .data(result)
@@ -167,7 +167,7 @@ extension FileSystem {
             }
             do {
                 try fileManager.moveItem(atPath: path, toPath: nativeDest)
-                return .err(.none)
+                return .success
             } catch {
                 return .err(.notReady)
             }

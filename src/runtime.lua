@@ -1465,30 +1465,14 @@ function runOpo(fileName, procName, iohandler, verbose)
     end
 end
 
-function installSis(data, iohandler)
+function installSis(filename, data, iohandler)
+    return require("sis").installSis(filename, data, iohandler, true, false)
+end
+
+function uninstallSis(stubList, uid, iohandler)
     local sis = require("sis")
-    local sisfile = sis.parseSisFile(data, false)
-
-    local langIdx = sis.getBestLangIdx(sisfile.langs)
-
-    for _, file in ipairs(sisfile.files) do
-        if file.type == sis.FileType.File then
-            local path = file.dest:gsub("^.:\\", "C:\\")
-            local dir = oplpath.dirname(path)
-            if iohandler.fsop("stat", dir) == nil then
-                local err = iohandler.fsop("mkdir", dir)
-                assert(err == KErrNone, "Failed to create dir "..dir)
-            end
-            local data = file.data
-            if not data then
-                data = file.langData[langIdx]
-            end
-            local err = iohandler.fsop("write", path, data)
-            assert(err == KErrNone, "Failed to write to "..path)
-        elseif file.type == sis.FileType.SisComponent then
-            installSis(file.data, iohandler)
-        end
-    end
+    local stubMap = sis.stubArrayToUidMap(stubList)
+    sis.uninstallSis(stubMap, uid, iohandler)
 end
 
 return _ENV
