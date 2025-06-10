@@ -1,0 +1,60 @@
+# message($$QMAKESPEC)
+
+QT += core gui widgets multimedia
+
+greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
+
+CONFIG += c++17 sdk_no_version_check debug
+
+!windows:DEFINES += LUA_USE_POSIX
+
+macx {
+    TARGET = OpoLua
+    QMAKE_APPLICATION_BUNDLE_NAME = "OpoLua"
+    QMAKE_INFO_PLIST = Info.plist
+    ICON = AppIcon.icns
+}
+
+VERSION = 1.2.0
+DEFINES += OPOLUA_VERSION=$$VERSION
+
+HEADERS += \
+    aboutwindow.h \
+    asynchandle.h \
+    clockwidget.h \
+    filesystem.h \
+    logwindow.h \
+    luasupport.h \
+    mainwindow.h \
+    oplapplication.h \
+    oplkeycode.h \
+    oplruntime.h \
+    oplruntimegui.h \
+    oplscreenwidget.h
+
+SOURCES += \
+    aboutwindow.cpp \
+    clockwidget.cpp \
+    filesystem.cpp \
+    logwindow.cpp \
+    lua.cpp \
+    luasupport.cpp \
+    main.cpp \
+    mainwindow.cpp \
+    oplapplication.cpp \
+    oplkeycode.cpp \
+    oplruntime.cpp \
+    oplruntimegui.cpp \
+    oplscreenwidget.cpp
+
+INCLUDEPATH += ../LuaSwift/Sources/CLua/lua
+
+FORMS += \
+    aboutwindow.ui \
+    logwindow.ui \
+    mainwindow.ui
+
+RESOURCES += \
+    opolua.qrc
+
+!isEmpty(target.path): INSTALLS += target
