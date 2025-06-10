@@ -371,6 +371,7 @@ function makeManifest(sisfile, singleLanguage, includeFiles)
         drive = sisfile.installedDrive, -- will be nil for non-stubs
         language = sisfile.language and Locales[sisfile.language], -- likewise
         installedFiles = sisfile.installedFiles, -- always zero for non-stubs
+        path = sisfile.path,
     }
     for _, lang in ipairs(sisfile.langs) do
         table.insert(result.languages, Locales[lang])
@@ -527,7 +528,8 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
 
     writeStub = function(instFiles)
         local stub = makeStub(data, sisfile.langs[langIdx], drive, instFiles)
-        local dir = [[C:\System\install\]]
+        local stubDrive = ret.stubDrive or "C"
+        local dir = stubDrive .. [[:\System\install\]]
         if iohandler.fsop("stat", dir) == nil then
             local err = iohandler.fsop("mkdir", dir)
             if err ~= KErrNone then
@@ -577,11 +579,9 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
             end
         elseif file.type == FileType.FileText then
             local data = file.data or file.langData[langIdx]
-            local cp1252 = require("cp1252")
-            local text = cp1252.toUtf8(data):gsub("\x0D\x0A", "\n")
             local queryType = FileTextDetails[file.details]
             assert(queryType, "Unknown FileText details")
-            local shouldContinue = iohandler.sisInstallQuery(callbackContext, text, queryType)
+            local shouldContinue = iohandler.sisInstallQuery(callbackContext, data, queryType)
             if not shouldContinue then
                 if queryType == "skip" then
                     skipNext = true
@@ -688,13 +688,16 @@ end
 function getStubs(iohandler)
     local result, err = iohandler.sisGetStubs()
     if result == "notimplemented" then
-        local installDir = [[C:\System\install\]]
-        local stubNames = iohandler.fsop("dir", installDir) or {}
         result = {}
-        for _, path in ipairs(stubNames) do
-            if path:lower():match("%.sis$") then
-                local contents = assert(iohandler.fsop("read", path))
-                table.insert(result, { path = path, contents = contents })
+        local disks = assert(iohandler.fsop("disks"))
+        for _, disk in ipairs(disks) do
+            local installDir = disk .. [[:\System\install\]]
+            local stubNames = iohandler.fsop("dir", installDir) or {}
+            for _, path in ipairs(stubNames) do
+                if path:lower():match("%.sis$") then
+                    local contents = assert(iohandler.fsop("read", path))
+                    table.insert(result, { path = path, contents = contents })
+                end
             end
         end
     elseif result == nil then

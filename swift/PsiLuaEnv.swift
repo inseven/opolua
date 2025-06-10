@@ -554,17 +554,18 @@ public class PsiLuaEnv {
             print("Bad SIS info!")
             return 0
         }
-        guard let text = L.tostring(2, encoding: .utf8) else {
+        guard let text = L.tostring(2) else {
             print("Bad text!")
             return 0
         }
+        let fixLineEndings = text.replacingOccurrences(of: "\r\n", with: "\n")
         guard let queryString = L.tostring(3),
               let queryType = Sis.QueryType(rawValue: queryString)
         else {
             print("Unknown queryType \(L.tostring(3, convert: true)!)")
             return 0
         }
-        let result = iohandler.sisInstallQuery(sis: info, text: text, type: queryType)
+        let result = iohandler.sisInstallQuery(sis: info, text: fixLineEndings, type: queryType)
         L.push(result)
         return 1
     }
