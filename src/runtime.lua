@@ -1483,4 +1483,10 @@ function uninstallSis(stubList, uid, iohandler)
     sis.uninstallSis(stubMap, uid, iohandler)
 end
 
+function runLauncherCmd(iohandler, cmd, ...)
+    local rt = newRuntime(iohandler)
+    local fn = rt:require("launcher")[cmd]
+    return fn(...)
+end
+
 return _ENV
