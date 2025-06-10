@@ -26,13 +26,16 @@ SOFTWARE.
 
 dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 
+local osPathSeparator = string.match(package.config, "^.")
+
 local function path_join(path, component)
-    local sep = path:match("/^") and "" or "/"
+    local sep = path:match(osPathSeparator.."$") and "" or osPathSeparator
     return path..sep..component
 end
 
 local function path_basename(path)
-    return (path:match("/?([^/]+)$"))
+    local pattern = string.format("%s?([^%s]+)$", osPathSeparator, osPathSeparator)
+    return (path:match(pattern))
 end
 
 local sis = require("sis")
@@ -64,6 +67,7 @@ function main()
         stub = true, s = "stub",
         help = true, h = "help",
         uninstall = true, u = "uninstall",
+        allfiles = true, a = "allfiles",
     })
 
     if args.help or args.filename == nil or (args.uninstall and args.dest == nil) then
@@ -95,6 +99,12 @@ Options:
         Prompt after any show-on-install text files are printed. Cannot be
         combined with --quiet.
 
+    --allfiles, -a
+        Write out all files in the sis, including alternative languages,
+        embedded SIS files and FileText files, which normally wouldn't be saved
+        to the psion filesystem. Implies --quiet. Does not recursively
+        extract the meta files from embedded SIS files.
+
     --stub, -s
         If specified, also write an uninstall stub in C:\System\Install\.
 
@@ -110,6 +120,14 @@ Options:
 
     if args.quiet and args.interactive then
         error("Cannot specify both --quiet and --interactive")
+    end
+
+    if args.allfiles and args.interactive then
+        error("Cannot specify both --allfiles and --interactive")
+    end
+
+    if args.allfiles then
+        args.quiet = true
     end
 
     if args.language then
@@ -143,6 +161,37 @@ Options:
         local err = sis.installSis(path_basename(args.filename), data, iohandler, args.stub, args.verbose)
         if err then
             printf("Install failed, err=%s\n", err.type)
+            return
+        end
+
+        if args.allfiles then
+            -- Extract all the things the normal installer skips over
+            local sisfile = sis.parseSisFile(data, args.verbose)
+            local FileType = sis.FileType
+            for i = #sisfile.files, 1, -1 do
+                local file = sisfile.files[i]
+                if file.type == FileType.SisComponent then
+                    local path = string.format("C:\\SisComponent_%i_%s", i, path_basename(file.src))
+                    iohandler.fsop("write", path, file.data)
+                elseif file.langData then
+                    local basename
+                    local suffix
+                    if file.type == FileType.FileText then
+                        basename = string.format("FileText_%i_", i)
+                        suffix = ".txt"
+                    else
+                        basename = file.dest
+                        suffix = ""
+                    end
+                    for langIdx, langData in ipairs(file.langData) do
+                        local path = basename .. sisfile.langs[langIdx] .. suffix
+                        iohandler.fsop("write", path, langData)
+                    end
+                elseif file.type == FileType.FileText then
+                    local path = string.format("C:\\FileText_%i_%s", i, file.src:match("[^/\\]+$"))
+                    iohandler.fsop("write", path, file.data)
+                end
+            end
         end
     else
         local sisfile = sis.parseSisFile(data, args.verbose)

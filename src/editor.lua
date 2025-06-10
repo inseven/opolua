@@ -9,6 +9,7 @@ Editor = class {
     anchor = 1,
     view = nil,
     movableCursor = true,
+    readonly = false,
 }
 
 function Editor:setValue(newVal, newCursorPos)
@@ -60,7 +61,7 @@ function Editor:handleKeyPress(k, modifiers)
     end
     local hasSelection = self:hasSelection()
     -- For simplicity's sake, we will accept either 16-bit or 32-bit event keycodes here
-    if k == KKeyDel then -- backspace
+    if k == KKeyDel and not self.readonly then -- backspace
         local from, to
         if hasSelection then
             from, to = self:getSelectionRange()
@@ -79,9 +80,9 @@ function Editor:handleKeyPress(k, modifiers)
         if from and to then
             self:setValue(self.value:sub(1, from - 1) .. self.value:sub(to + 1), from)
         end
-    elseif k >= 0x20 and k <= 0xFF then
+    elseif k >= 0x20 and k <= 0xFF and not self.readonly then
         self:insert(string.char(k))
-    elseif k == KTabCharacter then
+    elseif k == KTabCharacter and not self.readonly then
         -- We're not going to implement the entire tab stop logic but we can at least allow the character
         self:insert(string.char(k))
     elseif k == KKeyLeftArrow or k == KKeyLeftArrow32 then

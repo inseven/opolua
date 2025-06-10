@@ -577,11 +577,9 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
             end
         elseif file.type == FileType.FileText then
             local data = file.data or file.langData[langIdx]
-            local cp1252 = require("cp1252")
-            local text = cp1252.toUtf8(data):gsub("\x0D\x0A", "\n")
             local queryType = FileTextDetails[file.details]
             assert(queryType, "Unknown FileText details")
-            local shouldContinue = iohandler.sisInstallQuery(callbackContext, text, queryType)
+            local shouldContinue = iohandler.sisInstallQuery(callbackContext, data, queryType)
             if not shouldContinue then
                 if queryType == "skip" then
                     skipNext = true
