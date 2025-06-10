@@ -334,6 +334,14 @@ TypeToStr = {
     [String] = "String",
 }
 
+-- gPrint doesn't use the same convention as print and lprint...
+GPrintTypeToStr = {
+    [Int] = "gPrintWord",
+    [Long] = "gPrintLong",
+    [Float] = "gPrintDbl",
+    [String] = "gPrintStr",
+}
+
 DefaultReturnOpcode = {
     [Int] = "ZeroReturnInt",
     [Long] = "ZeroReturnLong",
@@ -2503,12 +2511,7 @@ local function handlePrint(procState)
     while not tokens:eos() do
         local exp = parseExpression(tokens)
         procState:emitExpression(exp, exp.valType)
-        local opName = opPrefix..TypeToStr[exp.valType]
-        if opName == "gPrintString" then
-            opName = "gPrintStr" -- Consistency, sigh
-        elseif opName == "gPrintFloat" then
-            opName = "gPrintDbl"
-        end
+        local opName = gprint and GPrintTypeToStr[exp.valType] or opPrefix..TypeToStr[exp.valType]
         procState:emit("B", opcodes[opName])
         procState:popStack(1)
 
