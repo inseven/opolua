@@ -3,13 +3,13 @@ CONST h% = 30
 
 PROC main:
 	draw:
-	gSAVEBIT("D:\border-white.mbm")
+	gSAVEBIT("C:\border-white.mbm")
 	GET
 	gCOLOR 160,160,160
 	gAT 0, 0
 	gFILL gWIDTH, gHEIGHT, 0
 	draw:
-	gSAVEBIT("D:\border-grey.mbm")
+	gSAVEBIT("C:\border-grey.mbm")
 	GET
 ENDP
 
