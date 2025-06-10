@@ -146,7 +146,7 @@ function TBarInitC(aTitle, screenWidth, screenHeight, winMode)
     gCOLORBACKGROUND(table.unpack(bgColour))
     title = aTitle
     drawTitleAndClock()
-    runtime:iohandler().setAppTitle(name)
+    runtime:iohandler().setAppTitle(title)
     gUSE(prevId)
 end
 
