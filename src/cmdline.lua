@@ -31,7 +31,12 @@ local args = arg
 local launchFile = args[0]
 local sep = package.config:sub(1, 1)
 package.path = launchFile:sub(1, launchFile:match(sep.."?()[^" .. sep .. "]+$") - 1).."?.lua"
+local debug, io, os = debug, io, os
 require("init")
+-- Undo the sandboxing of init.lua
+_G.debug = debug
+_G.io = io
+_G.os = os
 
 local terminalCharMode = false
 
@@ -251,7 +256,6 @@ function setTerminalCharMode(flag)
     end
     terminalCharMode = flag
 end
-
 
 function pcallMain()
     local runtime = require("runtime")

@@ -22,6 +22,21 @@ SOFTWARE.
 
 ]]
 
+-- We assume io and debug tables are opened, and we lock them down here.
+local debug, io, os = debug, io, os
+_G.io = nil
+package.loaded.io = nil
+_G.debug = {
+    getinfo = debug.getinfo,
+    traceback = debug.traceback,
+}
+package.loaded.debug = _G.debug
+_G.os = {
+    date = os.date,
+    time = os.time,
+}
+package.loaded.os = _G.os
+
 require("const")
 
 KLineBreakStr = string.char(KLineBreak)
