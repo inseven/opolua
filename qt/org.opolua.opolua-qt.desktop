@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OpoLua
+Exec=opolua open %f
+Icon=opolua
+MimeType=application/vnd.symbian.install;application/x-opolua-oplsys
+Categories=System;Emulator

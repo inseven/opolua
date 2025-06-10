@@ -1111,6 +1111,10 @@ local DialogItemEditMulti = class { _super = DialogItemEdit }
 function DialogItemEditMulti:init(lineHeight)
     self.firstDrawnLine = 1
     DialogItemEdit.init(self, lineHeight)
+    if self.readonly then
+        self.editor:setCursorPos(1)
+        self.editor.readonly = true
+    end
 end
 
 function DialogItemEditMulti:lineHeight()
@@ -1367,7 +1371,8 @@ function DialogItemEditMulti:updateCursorIfFocussed()
     if self.hasFocus then
         local x, y = self:getCursorPos()
         if x then
-            CURSOR(gIDENTITY(), x, y, self.cursorWidth, self:lineHeight())
+            local flags = self.readonly and KCursorTypeNotFlashing or 0
+            CURSOR(gIDENTITY(), x, y, self.cursorWidth, self:lineHeight(), flags)
             self:updateIohandler()
         else
             -- Cursor not visible in the currently shown lines
@@ -1406,7 +1411,7 @@ function DialogItemEditMulti:handleKeyPress(k, modifiers)
     if modifiers & KKmodShift ~= 0 then
         anchor = self.editor.anchor
     end
-    if k == KKeyEnter and modifiers == 0 then
+    if k == KKeyEnter and modifiers == 0 and not self.readonly then
         if self.numLines > 1 then
             self.editor:insert(KLineBreakStr)
         end
@@ -1494,10 +1499,12 @@ function DialogItemEditMulti:scrollbarContentOffsetChanged()
 end
 
 function DialogItemEditMulti:updateVariable()
-    local len = #self.editor.value
-    self.addr:write(string.pack("<i4", len))
-    local startOfData = self.addr + 4
-    startOfData:write(self.editor.value)
+    if not self.readonly then
+        local len = #self.editor.value
+        self.addr:write(string.pack("<i4", len))
+        local startOfData = self.addr + 4
+        startOfData:write(self.editor.value)
+    end
 end
 
 local DialogChoiceList = class {
@@ -2312,7 +2319,7 @@ function DIALOG(dialog)
     local state = runtime:saveGraphicsState()
 
     local borderWidth = 4 -- 1 px black box plus 3 px for the gXBORDER
-    local hMargin = 8
+    local hMargin = (dialog.flags & KDlgDensePack) == 0 and 8 or 2
     local bottomMargin = 4
     -- local titleIndent = 3
     local titleBarSpace = 4 -- extra gap between title bar and first item
@@ -2375,9 +2382,11 @@ function DIALOG(dialog)
         end
     end
 
-    if maxPromptWidth > 0 or maxContentWidth > 0 then
-        maxWidth = math.max(maxPromptWidth + promptGap + maxContentWidth, maxWidth)
+    if maxPromptWidth > 0 then
+        maxPromptWidth = maxPromptWidth + promptGap
     end
+
+    maxWidth = math.max(maxPromptWidth + maxContentWidth, maxWidth)
 
     local screenWidth, screenHeight = runtime:getScreenInfo()
     local w = maxWidth + (borderWidth + hMargin) * 2
@@ -2432,7 +2441,7 @@ function DIALOG(dialog)
 
     local itemWidth = w - (borderWidth + hMargin) * 2 - rightHandButtonWidth
     for i, item in ipairs(dialog.items) do
-        item:setPromptWidth(maxPromptWidth + promptGap)
+        item:setPromptWidth(maxPromptWidth)
         local ch = item:contentHeight()
         item.focusOrderIndex = i
         win:addSubview(item, borderWidth + hMargin, y, itemWidth, ch)
