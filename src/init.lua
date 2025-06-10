@@ -22,6 +22,21 @@ SOFTWARE.
 
 ]]
 
+-- We assume io and debug tables are opened, and we lock them down here.
+local debug, io, os = debug, io, os
+_G.io = nil
+package.loaded.io = nil
+_G.debug = {
+    getinfo = debug.getinfo,
+    traceback = debug.traceback,
+}
+package.loaded.debug = _G.debug
+_G.os = {
+    date = os.date,
+    time = os.time,
+}
+package.loaded.os = _G.os
+
 require("const")
 
 KLineBreakStr = string.char(KLineBreak)
@@ -64,8 +79,25 @@ json = {
     Dict = function(tbl) return setmetatable(tbl, json.dictHintMetatable) end,
 }
 
+-- Might be overridden by native code impl
+function doprint(str)
+    io.stdout:write(str)
+end
+
 function printf(...)
-    io.stdout:write(string.format(...))
+    doprint(string.format(...))
+end
+
+function print(...)
+    local nargs = select("#", ...)
+    for i = 1, nargs do
+        doprint(tostring(select(i, ...)))
+        if i == nargs then
+            doprint("\n")
+        else
+            doprint("\t")
+        end
+    end
 end
 
 function toint32(val)
