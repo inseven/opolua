@@ -55,6 +55,11 @@ a:hover {
     color: var(--tint-color);
 }
 
+hr {
+    border: 0;
+    border-bottom: 0.5px solid var(--body-color);
+}
+
 ul.navigation a,
 footer a {
     text-decoration: none;
