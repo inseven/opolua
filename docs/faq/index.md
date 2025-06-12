@@ -1,20 +1,12 @@
 ---
 title: Frequently Asked Questions
----
-
-# FAQ
-
-1. [How do I install OPL programs?](#installing-programs)
-2. [Where can I find OPL programs to try out?](#finding-programs)
-3. [How should I go about reporting problems?](#reporting-issues)
-4. [What OPX libraries are supported?](#opx-support)
-5. [Why do the graphics sometimes look wrong?](#invert-draw-mode)
-
+toc: true
+layout: documentation
 ---
 
 <a id="installing-programs"></a>
 
-## How do I install programs?
+## How do I install OPL programs?
 
 OPL supports open-in-place for Psion installers (SIS files), allowing you to install programs directly from iCloud Drive using the Files app on your iPhone or iPad.
 
