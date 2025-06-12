@@ -56,7 +56,7 @@ a:hover {
 }
 
 ul.navigation a,
-.footer a {
+footer a {
     text-decoration: none;
 }
 
@@ -139,27 +139,38 @@ th, td {
     font-size: 1.3em;
 }
 
-.footer {
+footer {
     max-width: var(--content-width);
     margin: auto;
     padding: 2em;
+    font-size: 0.8em;
+    text-align: center;
 }
 
-.footer p {
+footer p {
     color: var(--secondary-color);
-    text-align: center;
-    font-size: 0.8em;
     margin: 0;
 }
 
-.footer a {
+footer a {
     color: var(--secondary-link-color);
     text-decoration: underline;
     font-weight: 200;
 }
 
-.footer a:hover {
+footer a:hover {
     color: var(--tint-color);
+}
+
+footer nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+footer nav ul li {
+    display: inline;
+    margin-right: 0.4em;
 }
 
 .copyright {
