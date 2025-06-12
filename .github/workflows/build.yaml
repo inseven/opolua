@@ -50,46 +50,32 @@ jobs:
 
   website-build:
 
-    runs-on: ubuntu-latest
+      needs: [app-build]
 
-    steps:
+      runs-on: ubuntu-latest
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      steps:
 
-    - name: Checkout required submodules
-      run: |
-        git submodule update --init --depth 1 scripts/build-tools
-        git submodule update --init --depth 1 scripts/changes
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.9"
+      - name: Checkout required submodules
+        run: |
+          git submodule update --init --depth 1 scripts/build-tools
+          git submodule update --init --depth 1 scripts/changes
 
-    - name: Install pipenv
-      run: |
-        python -m pip install --upgrade pipenv wheel
+      - name: Install the tool dependencies
+        uses: jdx/mise-action@v2
 
-    - uses: jdx/mise-action@v2
-      with:
-        install: true
-        cache: true
+      - name: Install dependencies
+        run: scripts/install-dependencies.sh
 
-    - name: Install dependencies
-      run: scripts/install-dependencies.sh
+      - name: Build website
+        run: |
+          scripts/build-website.sh
+          chmod -v -R +rX "_site/"
 
-    - name: Update release notes
-      run: |
-        scripts/update-release-notes.sh
-
-    - name: Commit documentation
-      uses: stefanzweifel/git-auto-commit-action@v5
-      id: auto-commit
-      with:
-        branch: documentation
-        create_branch: true
-        push_options: --force
-        commit_message: "docs: Update release notes"
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
