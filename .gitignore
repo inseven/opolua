@@ -1,6 +1,7 @@
+_site
 .build
 .jekyll-cache
 .local
 .swiftpm
-_site
+/docs/releases
 build
