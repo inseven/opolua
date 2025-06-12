@@ -26,22 +26,19 @@ set -x
 set -u
 
 SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-ROOT_DIRECTORY="${SCRIPTS_DIRECTORY}/.."
-CHANGES_DIRECTORY="${SCRIPTS_DIRECTORY}/changes"
-BUILD_TOOLS_DIRECTORY="${SCRIPTS_DIRECTORY}/build-tools"
+ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
+CHANGES_DIRECTORY="$SCRIPTS_DIRECTORY/changes"
+BUILD_TOOLS_DIRECTORY="$SCRIPTS_DIRECTORY/build-tools"
 
-ENVIRONMENT_PATH="${SCRIPTS_DIRECTORY}/environment.sh"
-
-# Install tools.
 cd "$ROOT_DIRECTORY"
 mise install
 
-# Create directory for local tools.
-if [ -d "${ROOT_DIRECTORY}/.local" ] ; then
-    rm -r "${ROOT_DIRECTORY}/.local"
-fi
-source "${ENVIRONMENT_PATH}"
+source "$SCRIPTS_DIRECTORY/environment.sh"
 
-# Install the Python dependencies.
+if [ -d "$LOCAL_TOOLS_PATH" ] ; then
+    rm -r "$LOCAL_TOOLS_PATH"
+fi
+
+python -m pip install --target "$PYTHONUSERBASE" --upgrade pipenv wheel
 PIPENV_PIPFILE="$CHANGES_DIRECTORY/Pipfile" pipenv install
 PIPENV_PIPFILE="$BUILD_TOOLS_DIRECTORY/Pipfile" pipenv install
