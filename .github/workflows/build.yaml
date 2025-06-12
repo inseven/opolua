@@ -50,46 +50,52 @@ jobs:
 
   website-build:
 
+      needs: [app-build]
+
+      runs-on: ubuntu-latest
+
+      steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout required submodules
+        run: |
+          git submodule update --init --depth 1 scripts/build-tools
+          git submodule update --init --depth 1 scripts/changes
+
+      - name: Install the tool dependencies
+        uses: jdx/mise-action@v2
+
+      - name: Install dependencies
+        run: scripts/install-dependencies.sh
+
+      - name: Build website
+        run: |
+          scripts/build-website.sh
+          chmod -v -R +rX "_site/"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+
+  website-deploy:
+
+    needs: website-build
+    if: ${{ github.ref == 'refs/heads/main' }}
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     runs-on: ubuntu-latest
 
     steps:
-
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Checkout required submodules
-      run: |
-        git submodule update --init --depth 1 scripts/build-tools
-        git submodule update --init --depth 1 scripts/changes
-
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.9"
-
-    - name: Install pipenv
-      run: |
-        python -m pip install --upgrade pipenv wheel
-
-    - uses: jdx/mise-action@v2
-      with:
-        install: true
-        cache: true
-
-    - name: Install dependencies
-      run: scripts/install-dependencies.sh
-
-    - name: Update release notes
-      run: |
-        scripts/update-release-notes.sh
-
-    - name: Commit documentation
-      uses: stefanzweifel/git-auto-commit-action@v5
-      id: auto-commit
-      with:
-        branch: documentation
-        create_branch: true
-        push_options: --force
-        commit_message: "docs: Update release notes"
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

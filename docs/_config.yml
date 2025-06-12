@@ -5,6 +5,7 @@ url: ""
 
 plugins:
   - jekyll-feed
+destination: ../_site
 
 defaults:
   - values:
