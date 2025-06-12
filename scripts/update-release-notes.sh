@@ -27,14 +27,15 @@ set -u
 
 SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-ROOT_DIRECTORY="${SCRIPTS_DIRECTORY}/.."
-RELEASE_NOTES_TEMPLATE_PATH="${SCRIPTS_DIRECTORY}/release-notes.markdown"
-RELEASE_NOTES_PATH="${ROOT_DIRECTORY}/docs/release-notes/index.markdown"
+ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
+RELEASE_NOTES_TEMPLATE_PATH="$SCRIPTS_DIRECTORY/release-notes.md"
+RELEASE_NOTES_DIRECTORY="$ROOT_DIRECTORY/docs/releases"
+RELEASE_NOTES_PATH="$RELEASE_NOTES_DIRECTORY/index.md"
 HISTORY_PATH="${ROOT_DIRECTORY}/history.yaml"
 
-source "${SCRIPTS_DIRECTORY}/environment.sh"
-
+source "$SCRIPTS_DIRECTORY/environment.sh"
 
 cd "$ROOT_DIRECTORY"
 
+mkdir -p "$RELEASE_NOTES_DIRECTORY"
 changes notes --all --released --history "$HISTORY_PATH" --template "$RELEASE_NOTES_TEMPLATE_PATH" > "$RELEASE_NOTES_PATH"
