@@ -60,6 +60,10 @@ hr {
     border-bottom: 0.5px solid var(--body-color);
 }
 
+p.center {
+    text-align: center;
+}
+
 ul.navigation a,
 footer a {
     text-decoration: none;
