@@ -1,8 +1,9 @@
 :root {
     --tint-color: #57C2C0;
-    --body-color: #000;
-    --secondary-color: #000;
-    --secondary-link-color: #000;
+    --primary-foreground-color: #000;
+    --secondary-foreground-color: #000;
+    --background-color: #ffffff;
+    --navigation-background: rgba(255, 255, 255, 0.7);
     --icon-border-color: rgba(0, 0, 0, 0.2);
     --icon-size: 120px;
     --navigation-padding: 1em;
@@ -13,6 +14,21 @@
     --line-height: 1.7em;
     --h1-size: 3em;
     --h2-size: 1.5em;
+}
+
+@media (prefers-color-scheme: dark) {
+
+    :root {
+        --primary-foreground-color: #ffffff;
+        --secondary-foreground-color: gray;
+        --background-color: #181818;
+        --navigation-background: rgba(24, 24, 24, 0.7);
+        --primary-action-background-color: #0a84ff;
+
+        --primary-highlight-color: #22221a;
+        --secondary-highlight-color: #3c3a1f;
+    }
+
 }
 
 @media only screen and (max-width: 600px) {
@@ -41,14 +57,15 @@ body {
     font-family: 'Inter', Helvetica, sans-serif;
     font-weight: 300;
     margin: 0;
-    color: var(--body-color);
+    color: var(--primary-foreground-color);
     line-height: var(--line-height);
+    background-color: var(--background-color);
 }
 
 a {
     font-weight: 400;
     text-decoration: underline;
-    color: var(--body-color);
+    color: var(--primary-foreground-color);
 }
 
 a:hover {
@@ -57,7 +74,7 @@ a:hover {
 
 hr {
     border: 0;
-    border-bottom: 0.5px solid var(--body-color);
+    border-bottom: 0.5px solid var(--primary-foreground-color);
 }
 
 p.center {
@@ -80,7 +97,7 @@ ul.navigation {
     width: 100%;
     z-index: 1000;
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--navigation-background);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
@@ -157,12 +174,12 @@ footer {
 }
 
 footer p {
-    color: var(--secondary-color);
+    color: var(--secondary-foreground-color);
     margin: 0;
 }
 
 footer a {
-    color: var(--secondary-link-color);
+    color: var(--secondary-foreground-color);
     text-decoration: underline;
     font-weight: 200;
 }
@@ -338,24 +355,4 @@ img.program-screenshot {
         left: 0;
     }
 
-}
-
-.status {
-    background-color: #ccc;
-    color: #fff;
-    display: inline-block;
-    padding: 0.1em 0.8em;
-    border-radius: 1em;
-}
-
-.status.working {
-    background-color: rgb(52, 199, 89);
-}
-
-.status.issues {
-    background-color: rgb(255, 149, 0);
-}
-
-.status.broken {
-    background-color: rgb(255, 59, 48);
 }
