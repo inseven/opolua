@@ -5,8 +5,22 @@ url: ""
 
 plugins:
   - jekyll-feed
+  - jekyll-toc
 destination: ../_site
+
+toc:
+  ordered_list: true
 
 defaults:
   - values:
       layout: "default"
+  - scope:
+      path: "docs"
+    values:
+      layout: "documentation"
+      toc: true
+  - scope:
+      path: "faq"
+    values:
+      layout: "documentation"
+      toc: true
