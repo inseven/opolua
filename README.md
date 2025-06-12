@@ -291,7 +291,7 @@ The format of the field data (and the type byte used in the table definition sec
 
 Fields other than `int16`, `int32`, `Double` and `Text` are skipped over when decoded by OPL.
 
-The `Date` type is ([apparently](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm); I haven't verified this myself) microseconds since 0000-01-01, applying Gregorian leap year rules from 1600 onward (ie leap century rules) and Julian leap year rules before that (ie every 4th year is a leap year). Ignoring the other nuances between the calendars. Which by my maths means divide by 1000000 and subtract `719540 * 86400` to convert to a unix-epoch (ie 1970) based date. 
+The `Date` type is ([apparently](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm); I haven't verified this myself) microseconds since 0000-01-01, applying Gregorian leap year rules from 1600 onward (ie leap century rules) and Julian leap year rules before that (ie every 4th year is a leap year). Ignoring the other nuances between the calendars. Which by my maths means divide by 1000000 and subtract `719540 * 86400` to convert to a unix-epoch (ie 1970) based date.
 
 The `LongBinary` type consumes an additional bit in `fieldMask` - if this bit is 0, the field data is 4 bytes which is the index into the TOC of a `LongBinary` section. If the bit is 1, there is `LongBinary` data included inline as an `SString` (I think - haven't confirmed this). The `LongBinary` data itself is not documented, and is skipped over during decoding. The `LongText8` (and, presumably, `LongText16`) section behaves the same as `LongBinary`.
 
@@ -323,6 +323,11 @@ We invite and welcome contributions! There's a pretty comprehensive list of [iss
 
 Please recognise opolua is a labour of love, and be respectful of others in your communications. We will not accept racism, sexism, or any form of discrimination in our community.
 
-## Licensing
+## License
 
-opolua is licensed under the MIT License (see [LICENSE](LICENSE)).
+OpoLua is licensed under the MIT License (see [LICENSE](LICENSE)). It depends on the following separately licensed third-party libraries and components:
+
+- [Diligence](https://github.com/inseven/diligence), MIT License
+- [Interact](https://github.com/inseven/interact), MIT License
+- [Licensable](https://github.com/inseven/licensable), MIT License
+- [Lua](https://www.lua.org), MIT License
