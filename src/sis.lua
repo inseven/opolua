@@ -54,6 +54,14 @@ FileTextDetails = enum {
     exit = 3,
 }
 
+FileRunDetails = enum {
+    RunInstall = 0,
+    RunRemove = 1,
+    RunBoth = 2,
+    RunSendEnd = 256,
+    RunWait = 512,
+}
+
 -- Codes from https://thoukydides.github.io/riscos-psifs/sis.html mapped into
 -- ICU Locale identifiers based on some guesswork and
 -- https://icu4c-demos.unicode.org/icu-bin/locexp?d_=en
@@ -326,7 +334,7 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
             file.data = langData[1]
         end
     end
-    if type == FileType.FileText then
+    if type == FileType.FileText or type == FileType.FileRun then
         file.details = details
     end
 
@@ -504,7 +512,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
         if skipNext then
             printf("Skipping file %s\n", file.dest)
             skipNext = false
-        elseif file.type == FileType.File then
+        elseif file.type == FileType.File or file.type == FileType.FileRun then
             local path = getPath(file)
             local dir = oplpath.dirname(path)
             if iohandler.fsop("stat", dir) == nil then
@@ -520,6 +528,9 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
             local err = iohandler.fsop("write", path, data)
             if err ~= KErrNone then
                 return failInstall(i, "epocerr", err, path)
+            end
+            if file.type == FileType.FileRun and (file.details & FileRunDetails.RunRemove) == 0 then
+                iohandler.sisInstallRun(callbackContext, path, file.details)
             end
         elseif file.type == FileType.SisComponent then
             local err = installSis(file.src, file.data, iohandler, includeStub, verbose, stubs)
@@ -586,10 +597,17 @@ function uninstallSis(stubMap, uid, iohandler, upgrading)
     end
     local sisfile = assert(stubMap[uid], "Can't find installer in stubs!")
     printf("uninstalling %s\n", sisfile.path)
+    local callbackContext = makeManifest(sisfile)
 
     local drive = sisfile.installedDrive --or "C"
     local function getPath(file)
         return (file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end))
+    end
+    local function delete(path)
+        local err = iohandler.fsop("delete", path)
+        if err ~= KErrNone and err ~= KErrNotExists then
+            printf("Uninstall failed to delete %s, err=%d\n", path, err)
+        end
     end
 
     for i = 1, #sisfile.files do
@@ -597,13 +615,9 @@ function uninstallSis(stubMap, uid, iohandler, upgrading)
         if file.type == FileType.File or (file.type == FileType.FileNull and not upgrading) then
             -- print("DELETE", getPath(file))
             local path = getPath(file)
-            local err = iohandler.fsop("delete", path)
-            if err ~= KErrNone and err ~= KErrNotExists then
-                print("Uninstall failed to delete %s, err=%d\n", path, err)
-            end
+            delete(path)
         elseif file.type == FileType.SisComponent and not upgrading then
-            -- See if anyone else is using it. If we're upgrading, then the 
-            -- local embeddedSis = parseSisFile(file.data)
+            -- See if anyone else is using it. If we're upgrading, then the nested install will take care of uninstalling.
             local inUserBySomethingElse = false
             local name = oplpath.basename(file.src):lower()
             local foundStubUid
@@ -626,13 +640,16 @@ function uninstallSis(stubMap, uid, iohandler, upgrading)
             if not inUserBySomethingElse then
                 uninstallSis(stubMap, foundStubUid, iohandler, false)
             end
+        elseif file.type == FileType.FileRun then
+            local path = getPath(file)
+            if file.details & (FileRunDetails.RunRemove | FileRunDetails.RunBoth) ~= 0 then
+                iohandler.sisInstallRun(callbackContext, path, file.details)
+            end
+            delete(path)
         end
     end
 
-    local err = iohandler.fsop("delete", sisfile.path)
-    if err ~= KErrNone and err ~= KErrNotExists then
-        print("Uninstall failed to delete %s, err=%d\n", sisfile.path, err)
-    end
+    delete(sisfile.path) -- the stub
 end
 
 function getStubs(iohandler)

@@ -485,6 +485,7 @@ public class PsiLuaEnv {
             "sisInstallComplete": { L in return autoreleasepool { return PsiLuaEnv.sisInstallComplete(L) } },
             "sisInstallRollback": { L in return autoreleasepool { return PsiLuaEnv.sisInstallRollback(L) } },
             "sisInstallQuery": { L in return autoreleasepool { return PsiLuaEnv.sisInstallQuery(L) } },
+            "sisInstallRun": { L in return autoreleasepool { return PsiLuaEnv.sisInstallRun(L) } },
         ]
         L.setfuncs(fns, nup: 1)
     }
@@ -567,6 +568,22 @@ public class PsiLuaEnv {
         L.push(result)
         return 1
     }
+
+    internal static let sisInstallRun: lua_CFunction = { (L: LuaState!) -> CInt in
+        let iohandler: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
+        guard let info: Sis.File = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        guard let path = L.tostring(2),
+              let flags = L.toint(3) else {
+            print("Bad sisInstallRun params")
+            return 0
+        }
+        iohandler.value.sisInstallRun(sis: info, path: path, flags: Sis.RunFlags(rawValue: flags))
+        return 0
+    }
+
 }
 
 fileprivate class Wrapper<T>: PushableWithMetatable {
