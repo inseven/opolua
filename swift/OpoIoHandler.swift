@@ -687,6 +687,13 @@ public struct Sis {
         case abort // "Yes"/"No" buttons, abort install on "No"
         case exit // Same as abort but also do cleanup (?)
     }
+
+    public enum RunFlag: Int, FlagEnum {
+        case closeWhenComplete = 256
+        case waitForClose = 512
+    }
+    public typealias RunFlags = FlagSet<RunFlag>
+
 }
 
 public protocol SisInstallIoHandler: FileSystemIoHandler {
@@ -701,6 +708,8 @@ public protocol SisInstallIoHandler: FileSystemIoHandler {
     // Called to indicate that an error occurred and the installation will now roll back. Return false to indicate
     // rollback is unnecessary (because for eg, the native code will take care of it).
     func sisInstallRollback(sis: Sis.File) -> Bool
+
+    func sisInstallRun(sis: Sis.File, path: String, flags: Sis.RunFlags)
 
     func sisInstallComplete(sis: Sis.File)
 }

@@ -337,4 +337,8 @@ function sisInstallQuery(sisInfo, text, type)
     return true
 end
 
+function sisInstallRun(sisInfo, path, flags)
+    printf("sisInstallRun %s\n", path)
+end
+
 return _ENV
