@@ -196,6 +196,7 @@ function parseSisFile(data, verbose)
     local result = {
         name = {},
         langs = {},
+        installedFiles = instFiles,
         files = {},
         version = { verMaj, verMin },
         uid = uid1,
@@ -369,6 +370,7 @@ function makeManifest(sisfile, singleLanguage, includeFiles)
         languages = {},
         drive = sisfile.installedDrive, -- will be nil for non-stubs
         language = sisfile.language and Locales[sisfile.language], -- likewise
+        installedFiles = sisfile.installedFiles, -- always zero for non-stubs
     }
     for _, lang in ipairs(sisfile.langs) do
         table.insert(result.languages, Locales[lang])
@@ -434,21 +436,39 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
         return (file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end))
     end
 
+    local writeStub
+
     local function failInstallWithError(fileIdx, err)
         printf("Install of %s failed: %s %s %s\n", filename, err.type, err.code or "", err.context or "")
-        if fileIdx and iohandler.sisInstallRollback(callbackContext) then
+        local failedFile = fileIdx and sisfile.files[fileIdx]
+        local shouldRollback = fileIdx ~= nil -- by default
+        local isAbort = failedFile and failedFile.type == FileType.FileText
+            and failedFile.details == FileTextDetails.abort
+        if err.type == "usercancel" and isAbort then
+            shouldRollback = false
+        end
+
+        local didRollback = false
+        if shouldRollback and iohandler.sisInstallRollback(callbackContext) then
             for i = fileIdx + 1, #sisfile.files do
                 local file = sisfile.files[i]
                 if file.type == FileType.File then
                     local err = iohandler.fsop("delete", getPath(file))
                     if err ~= KErrNone then
-                        print("Rollback failed")
+                        print("Rollback failed", err)
                         break
                     end
                 elseif file.type == FileType.SisComponent then
                     -- Should we try to roll back completed embedded SIS installs?
                 end
             end
+            didRollback = true
+        end
+
+        if fileIdx and not didRollback and includeStub then
+            -- Have to write a stub with the partial count
+            writeStub(#sisfile.files - fileIdx)
+            -- ignore errors from within rollback?
         end
 
         iohandler.sisInstallComplete(callbackContext)
@@ -505,6 +525,24 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
         uninstallSis(stubs, existing.uid, iohandler, true)
     end
 
+    writeStub = function(instFiles)
+        local stub = makeStub(data, sisfile.langs[langIdx], drive, instFiles)
+        local dir = [[C:\System\install\]]
+        if iohandler.fsop("stat", dir) == nil then
+            local err = iohandler.fsop("mkdir", dir)
+            if err ~= KErrNone then
+                return failInstall(0, "epocerr", err, dir)
+            end
+        end
+        local stubPath = oplpath.join(dir, oplpath.basename(filename))
+        local err = iohandler.fsop("write", stubPath, stub)
+        if err ~= KErrNone then
+            return failInstall(0, "epocerr", err, stubPath)
+        end
+        return nil -- meaning success
+    end
+
+
     local skipNext = false
     -- You're supposed to iterate the files list backwards when installing
     for i = #sisfile.files, 1, -1 do
@@ -555,18 +593,9 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
     end
 
     if includeStub then
-        local stub = makeStub(data, sisfile.langs[langIdx], drive)
-        local dir = [[C:\System\install\]]
-        if iohandler.fsop("stat", dir) == nil then
-            local err = iohandler.fsop("mkdir", dir)
-            if err ~= KErrNone then
-                return failInstall(0, "epocerr", err, dir)
-            end
-        end
-        local stubPath = oplpath.join(dir, oplpath.basename(filename))
-        local err = iohandler.fsop("write", stubPath, stub)
-        if err ~= KErrNone then
-            return failInstall(0, "epocerr", err, stubPath)
+        local err = writeStub()
+        if err then
+            return err
         end
     end
 
@@ -574,7 +603,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
     return nil -- ie no error
 end
 
-function makeStub(sisData, installedLang, drive)
+function makeStub(sisData, installedLang, drive, instFiles)
     local sisfile = parseSisFile(sisData)
 
     -- The stub updates lang, instFiles and instDrv. instFiles should be the same as nFiles, not the number of files
@@ -583,7 +612,11 @@ function makeStub(sisData, installedLang, drive)
     --
     -- In ER6 we'd have to also update the Installed Space field.
 
-    local newData = string.pack("<I2I2I2", installedLang, #sisfile.files, string.byte(drive:lower()))
+    if instFiles == nil then
+        instFiles = #sisfile.files
+    end
+
+    local newData = string.pack("<I2I2I2", installedLang, instFiles, string.byte(drive:lower()))
     local dataOffset = 0x18 -- position of lang
 
     local result = sisData:sub(1, dataOffset)..newData..sisData:sub(1 + dataOffset + #newData, sisfile.stubSize)

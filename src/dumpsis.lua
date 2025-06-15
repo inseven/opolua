@@ -35,6 +35,23 @@ local function path_basename(path)
     return (path:match("/?([^/]+)$"))
 end
 
+local sis = require("sis")
+
+local shortFileTextDetails = enum {
+    TC = sis.FileTextDetails.continue,
+    TS = sis.FileTextDetails.skip,
+    TA = sis.FileTextDetails.abort,
+    TE = sis.FileTextDetails.exit,
+}
+
+local shortFileRunDetails = enum {
+    RI = sis.FileRunDetails.RunInstall,
+    RR = sis.FileRunDetails.RunRemove,
+    RB = sis.FileRunDetails.RunBoth,
+    RE = sis.FileRunDetails.RunSendEnd,
+    RW = sis.FileRunDetails.RunWait,
+}
+
 function main()
     local args = getopt({
         "filename",
@@ -95,8 +112,6 @@ Options:
         error("Cannot specify both --quiet and --interactive")
     end
 
-    sis = require("sis")
-
     if args.language then
         assert(sis.Locales[args.language], "Bad --language argument")
     end
@@ -153,6 +168,8 @@ function describeSis(sisfile, indent)
         printf("%sLanguage: 0x%04X (%s)\n", indent, lang, sis.Locales[lang])
     end
 
+    printf("Installed files: %d of %d\n", sisfile.installedFiles, #sisfile.files)
+
     local langIdx = sis.getBestLangIdx(sisfile.langs)
     for _, file in ipairs(sisfile.files) do
         local len
@@ -166,6 +183,11 @@ function describeSis(sisfile, indent)
         printf("%s%s: %s -> %s", indent, sis.FileType[file.type], src, dest)
         if len then
             printf(" len=%d", len)
+        end
+        if file.type == sis.FileType.FileText then
+            printf(" [%s]", shortFileTextDetails[file.details])
+        elseif file.type == sis.FileType.FileRun then
+            printf(" [%s]", shortFileRunDetails[file.details])
         end
         printf("\n")
 
