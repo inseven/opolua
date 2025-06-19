@@ -12,6 +12,7 @@ macx {
     TARGET = OpoLua
     QMAKE_APPLICATION_BUNDLE_NAME = "OpoLua Qt"
     QMAKE_INFO_PLIST = Info.plist
+    ICON = AppIcon.icns
 }
 
 VERSION = 1.2.0
