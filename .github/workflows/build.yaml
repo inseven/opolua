@@ -77,7 +77,9 @@ jobs:
 
   website-build:
 
-      needs: [app-build]
+      needs:
+        - app-build
+        - qt-build
 
       runs-on: ubuntu-latest
 
