@@ -81,13 +81,14 @@ jobs:
       run: scripts/test.sh
 
     - name: Build, test, and release
+      id: build
       run: |
         scripts/build-qt.sh
 
     - name: Archive the binary
       uses: actions/upload-artifact@v4
       with:
-        name: qt-mac
+        name: qt-mac-${{ steps.build.changes_version_number }}-${{ steps.build.changes_build_number }}
         path: qt/build/build.zip
         if-no-files-found: error
 
