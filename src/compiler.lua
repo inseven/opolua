@@ -1886,13 +1886,13 @@ function ProcState:parse()
 
                     if arrayLenExp then
                         exp.array = true
-                        exp.arrayLen = evalConstExpr(Int, arrayLenExp, consts)
+                        exp.arrayLen = evalConstExpr(Int, arrayLenExp, self.consts)
                         -- Max array size is in practice constrained lower than this by the
                         -- procedure variables overall size limit.
                         synassert(exp.arrayLen > 0 and exp.arrayLen < 32768, maxLenExp, "Bad array size")
                     end
                     if maxLenExp then
-                        exp.maxLen = evalConstExpr(Int, maxLenExp, consts)
+                        exp.maxLen = evalConstExpr(Int, maxLenExp, self.consts)
                         synassert(exp.maxLen > 0 and exp.maxLen < 256, maxLenExp, "String is too long")
                     end
                 end
