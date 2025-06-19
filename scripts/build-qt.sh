@@ -45,4 +45,4 @@ qmake ..
 make
 
 # Compress the bundle.
-zip "OpoLua Qt.zip" "OpoLua Qt.app"
+zip "build.zip" "OpoLua Qt.app"
