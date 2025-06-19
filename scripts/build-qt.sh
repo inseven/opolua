@@ -39,6 +39,14 @@ if [ -d "$BUILD_DIRECTORY" ] ; then
 fi
 mkdir -p "$BUILD_DIRECTORY"
 
+# Determine the version and build number.
+VERSION_NUMBER=`changes version`
+BUILD_NUMBER=`build-tools generate-build-number`
+
+# Export the version number to be used outside of this action.
+echo "changes_version=$VERSION" >> "$GITHUB_OUTPUT"
+echo "changes_build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
 # Build.
 cd "$BUILD_DIRECTORY"
 qmake ..
