@@ -67,8 +67,11 @@ jobs:
 
     - name: Install dependencies
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Set a GitHub token to bump our rate limits fetching using Mise.
       run: scripts/install-dependencies.sh
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
 
     - name: Test Lua
       run: scripts/test.sh
