@@ -48,6 +48,28 @@ jobs:
       run: |
         scripts/build.sh
 
+  qt-build:
+
+    runs-on: macos-latest
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: scripts/install-dependencies.sh
+
+    - name: Test Lua
+      run: scripts/test.sh
+
+    - name: Build, test, and release
+      run: |
+        scripts/build-qt.sh
+
   website-build:
 
       needs: [app-build]
