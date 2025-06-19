@@ -1,0 +1,70 @@
+INCLUDE "const.oph"
+
+CONST numWin% = 5
+
+PROC main:
+    GLOBAL ids%(numWin%)
+    LOCAL info%(10), i%, k%, current%
+
+    SCREENINFO info%()
+    SCREEN info%(3) / 2, info%(4), info%(3) / 2, 1
+
+    i% = 1
+    WHILE i% <= numWin%
+        ids%(i%) = gCREATE(i% * 20, i% * 20 - 5, 100, 100, 1)
+        i% = i% + 1
+    ENDWH
+    current% = 1
+    updateWindows:
+
+    WHILE 1
+        k% = GET
+        IF k% > $30 AND k% <= $30 + numWin%
+            current% = k% - $30
+            PRINT "Selecting window", current%
+        ELSEIF k% = %f
+            PRINT "Moving window", current%, "to the front"
+            gORDER ids%(current%), 1
+            updateWindows:
+        ELSEIF k% = %b
+            PRINT "Moving window", current%, "to the back"
+            gORDER ids%(current%), numWin%
+            updateWindows:
+        ELSEIF k% = ASC("-")
+            PRINT "Moving window", current%, "backwards"
+            gUSE ids%(current%)
+            gORDER ids%(current%), gRANK + 1
+            updateWindows:        
+        ELSEIF k% = ASC("=")
+            PRINT "Moving window", current%, "forwards"
+            gUSE ids%(current%)
+            gORDER ids%(current%), gRANK - 1
+            updateWindows:        
+        ELSEIF k% = %i
+            gIPRINT "Info print!", 0
+        ELSE
+            PRINT "Key", k%
+        ENDIF
+    ENDWH
+ENDP
+
+PROC updateWindows:
+    LOCAL i%, j%, r%, orig%
+    i% = 1
+    WHILE i% <= numWin%
+        gUSE ids%(i%)
+        gAT 0, 0
+        gFILL gWIDTH, gHEIGHT, KgModeClear%
+        r% = gRANK
+        gFONT KFontArialNormal8&
+        j% = 0
+        WHILE j% < 15
+            gAT 1, j% * 8 + 1
+            gPRINT r%,r%,r%,r%,r%,r%,r%,r%,r%,r%,r%
+            j% = j% + 1
+        ENDWH
+        gAT 0, 0
+        gBOX 100, 100
+        i% = i% + 1
+    ENDWH
+ENDP
