@@ -57,7 +57,7 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
-        modules: 'qtmultimedia qtwidgets'
+        modules: 'qtmultimedia qt5compat'
 
     - name: Checkout repository
       uses: actions/checkout@v4
