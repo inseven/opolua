@@ -66,6 +66,8 @@ jobs:
         install: false
 
     - name: Install dependencies
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: scripts/install-dependencies.sh
 
     - name: Test Lua
