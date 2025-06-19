@@ -54,11 +54,6 @@ jobs:
 
     steps:
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-      with:
-        modules: 'qtmultimedia qt5compat'
-
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
@@ -75,12 +70,23 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Set a GitHub token to bump our rate limits fetching using Mise.
       run: scripts/install-dependencies.sh
 
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        modules: 'qtmultimedia qt5compat'
+
     - name: Test Lua
       run: scripts/test.sh
 
     - name: Build, test, and release
       run: |
         scripts/build-qt.sh
+
+    - name: Archive the binary
+      uses: actions/upload-artifact@v4
+      with:
+        path: qt/build/build.zip
+        if-no-files-found: error
 
   website-build:
 
