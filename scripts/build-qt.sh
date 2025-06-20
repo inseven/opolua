@@ -48,5 +48,12 @@ cd "$BUILD_DIRECTORY"
 qmake ..
 make
 
-# Compress the bundle.
-zip -r "build.zip" "OpoLua Qt.app"
+# Package the binary.
+case `uname` in
+    Linux)
+        zip -r "build.zip" "opolua"
+    ;;
+    Darwin)
+        zip -r "build.zip" "OpoLua Qt.app"
+    ;;
+esac
