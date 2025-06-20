@@ -49,8 +49,11 @@ jobs:
         scripts/build.sh
 
   qt-build:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
 
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
 
@@ -84,7 +87,7 @@ jobs:
     - name: Archive the binary
       uses: actions/upload-artifact@v4
       with:
-        name: opolua-qt-macos
+        name: opolua-qt-${{ matrix.os }}
         path: qt/build/build.zip
         if-no-files-found: error
 
