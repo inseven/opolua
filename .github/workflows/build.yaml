@@ -63,13 +63,9 @@ jobs:
     - name: Install the tool dependencies
       uses: jdx/mise-action@v2
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Set a GitHub token to bump our rate limits fetching using Mise.
-      # with:
-      #   install: false
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install dependencies
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Set a GitHub token to bump our rate limits fetching using Mise.
       run: scripts/install-dependencies.sh
 
     - name: Install Qt
@@ -88,7 +84,7 @@ jobs:
     - name: Archive the binary
       uses: actions/upload-artifact@v4
       with:
-        name: qt-mac-${{ steps.build.changes_version_number }}-${{ steps.build.changes_build_number }}
+        name: opolua-qt-macos
         path: qt/build/build.zip
         if-no-files-found: error
 
