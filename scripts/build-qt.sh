@@ -25,11 +25,14 @@ set -o pipefail
 set -x
 set -u
 
-SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ROOT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 
-ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
+SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
+
+QT_INSTALL_DIRECTORY="$ROOT_DIRECTORY/qt-install"
+export PATH="$QT_INSTALL_DIRECTORY/bin:$PATH"
 
 source "$SCRIPTS_DIRECTORY/environment.sh"
 
