@@ -76,16 +76,23 @@ jobs:
     - name: Install dependencies
       run: scripts/install-dependencies.sh
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-      with:
-        modules: 'qtmultimedia qt5compat'
+    # - name: Install Qt
+    #   uses: jurplel/install-qt-action@v4
+    #   with:
+    #     modules: 'qtmultimedia qt5compat'
 
     - name: Test Lua
       run: scripts/test.sh
 
     - name: Build, test, and release
-      id: build
+      env:
+        DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64: ${{ secrets.PERSONAL_DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64 }}
+        DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD: ${{ secrets.PERSONAL_DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD }}
+
+        APPLE_API_KEY_BASE64: ${{ secrets.PERSONAL_APPLE_API_KEY_BASE64 }}
+        APPLE_API_KEY_ISSUER_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ISSUER_ID }}
+        APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
+
       run: |
         scripts/build-qt.sh
 

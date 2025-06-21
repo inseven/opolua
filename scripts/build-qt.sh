@@ -30,17 +30,48 @@ ROOT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd 
 SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
+TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
 
 QT_INSTALL_DIRECTORY="$ROOT_DIRECTORY/qt-install"
 export PATH="$QT_INSTALL_DIRECTORY/bin:$PATH"
 
 source "$SCRIPTS_DIRECTORY/environment.sh"
 
+# Generate a random string to secure the local keychain.
+export TEMPORARY_KEYCHAIN_PASSWORD=`openssl rand -base64 14`
+
+# Source the .env file if it exists to make local development easier.
+if [ -f "$ENV_PATH" ] ; then
+    echo "Sourcing .env..."
+    source "$ENV_PATH"
+fi
+
 # Clean up the build directory.
 if [ -d "$BUILD_DIRECTORY" ] ; then
     rm -r "$BUILD_DIRECTORY"
 fi
 mkdir -p "$BUILD_DIRECTORY"
+
+# Create the a new keychain.
+if [ -d "$TEMPORARY_DIRECTORY" ] ; then
+    rm -rf "$TEMPORARY_DIRECTORY"
+fi
+mkdir -p "$TEMPORARY_DIRECTORY"
+echo "$TEMPORARY_KEYCHAIN_PASSWORD" | build-tools create-keychain "$KEYCHAIN_PATH" --password
+
+function cleanup {
+
+    # Cleanup the temporary files, keychain and keys.
+    cd "$ROOT_DIRECTORY"
+    build-tools delete-keychain "$KEYCHAIN_PATH"
+    rm -rf "$TEMPORARY_DIRECTORY"
+    rm -rf ~/.appstoreconnect/private_keys
+}
+
+trap cleanup EXIT
+
+# Import the certificates into our dedicated keychain.
+echo "$DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64"
 
 # Determine the version and build number.
 VERSION_NUMBER=`changes version`
@@ -51,12 +82,32 @@ cd "$BUILD_DIRECTORY"
 qmake ..
 make
 
+# Sign the app and prepare it for notarization.
+RELEASE_BASENAME="OpoLua-Qt-$VERSION_NUMBER-$BUILD_NUMBER"
+RELEASE_ZIP_BASENAME="$RELEASE_BASENAME.zip"
+RELEASE_ZIP_PATH="$BUILD_DIRECTORY/$RELEASE_ZIP_BASENAME"
+codesign -s "Developer ID Application: Jason Morley (QS82QFHKWB)" --timestamp --options runtime "OpoLua Qt.app"
+/usr/bin/ditto -c -k --keepParent "OpoLua Qt.app" "$RELEASE_ZIP_BASENAME"
+
+# Install the private key.
+mkdir -p ~/.appstoreconnect/private_keys/
+API_KEY_PATH=~/".appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
+echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o "$API_KEY_PATH"
+
+# Notarize the app.
+xcrun notarytool submit "$RELEASE_ZIP_PATH" \
+    --key "$API_KEY_PATH" \
+    --key-id "$APPLE_API_KEY_ID" \
+    --issuer "$APPLE_API_KEY_ISSUER_ID" \
+    --output-format json \
+    --wait | tee command-notarization-response.json
+NOTARIZATION_ID=`cat command-notarization-response.json | jq -r ".id"`
+NOTARIZATION_RESPONSE=`cat command-notarization-response.json | jq -r ".status"`
+
+if [ "$NOTARIZATION_RESPONSE" != "Accepted" ] ; then
+    echo "Failed to notarize command."
+    exit 1
+fi
+
 # Package the binary.
-case `uname` in
-    Linux)
-        zip -r "build.zip" "opolua"
-    ;;
-    Darwin)
-        zip -r "build.zip" "OpoLua Qt.app"
-    ;;
-esac
+zip -r "build.zip" "OpoLua Qt.app"
