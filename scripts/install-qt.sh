@@ -25,10 +25,11 @@ set -o pipefail
 set -x
 set -u
 
-SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ROOT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 
-ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
+SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt-build"
+INSTALL_DIRECTORY="$ROOT_DIRECTORY/qt-install"
 
 # source "$SCRIPTS_DIRECTORY/environment.sh"
 
@@ -38,6 +39,13 @@ if [ -d "$BUILD_DIRECTORY" ] ; then
 fi
 mkdir -p "$BUILD_DIRECTORY"
 
+# Clean up the install directory.
+if [ -d "$INSTALL_DIRECTORY" ] ; then
+    rm -r "$INSTALL_DIRECTORY"
+fi
+mkdir -p "$INSTALL_DIRECTORY"
+
+# Build
 cd "$BUILD_DIRECTORY"
 curl -O https://qt.mirror.constant.com/archive/qt/6.9/6.9.1/single/qt-everywhere-src-6.9.1.tar.xz
 tar xf qt-everywhere-src-6.9.1.tar.xz
@@ -45,7 +53,9 @@ mkdir -p qt-build
 cd qt-build
 
 ../qt-everywhere-src-6.9.1/configure \
+    -prefix "$INSTALL_DIRECTORY" \
     -static \
-    -submodules qtmultimedia
+    -submodules qtmultimedia,qt5compat
 
 cmake --build . --parallel
+cmake --install .
