@@ -57,14 +57,14 @@ jobs:
 
     steps:
 
-    - name: Install Qt
-      run: scripts/build-qt.sh
-
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
         fetch-depth: 0
+
+    - name: Install Qt
+      run: scripts/install-qt.sh
 
     - name: Install the tool dependencies
       uses: jdx/mise-action@v2
