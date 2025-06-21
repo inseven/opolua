@@ -43,5 +43,9 @@ curl -O https://qt.mirror.constant.com/archive/qt/6.9/6.9.1/single/qt-everywhere
 tar xf qt-everywhere-src-6.9.1.tar.xz
 mkdir -p qt-build
 cd qt-build
-../qt-everywhere-src-6.9.1/configure
+
+../qt-everywhere-src-6.9.1/configure \
+    -static \
+    -submodules qtmultimedia
+
 cmake --build . --parallel
