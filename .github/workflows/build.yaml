@@ -57,6 +57,9 @@ jobs:
 
     steps:
 
+    - name: Install Qt
+      run: scripts/build-qt.sh
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
