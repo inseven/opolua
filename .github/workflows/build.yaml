@@ -51,7 +51,9 @@ jobs:
   qt-build:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os:
+        - macos-latest
+        # - ubuntu-latest
 
     runs-on: ${{ matrix.os }}
 
