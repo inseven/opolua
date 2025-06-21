@@ -85,11 +85,14 @@ cd "$BUILD_DIRECTORY"
 qmake ..
 make
 
+# Add the Qt libraries to the app bundle.
+macdeployqt "OpoLua Qt.app"
+
 # Sign the app and prepare it for notarization.
 RELEASE_BASENAME="OpoLua-Qt-$VERSION_NUMBER-$BUILD_NUMBER"
 RELEASE_ZIP_BASENAME="$RELEASE_BASENAME.zip"
 RELEASE_ZIP_PATH="$BUILD_DIRECTORY/$RELEASE_ZIP_BASENAME"
-codesign -s "Developer ID Application: Jason Morley (QS82QFHKWB)" --timestamp --options runtime "OpoLua Qt.app"
+codesign -s "Developer ID Application: Jason Morley (QS82QFHKWB)" --timestamp --options runtime --deep "OpoLua Qt.app"
 /usr/bin/ditto -c -k --keepParent "OpoLua Qt.app" "$RELEASE_ZIP_BASENAME"
 
 # Install the private key.
