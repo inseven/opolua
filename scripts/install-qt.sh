@@ -11,6 +11,5 @@ tar xf qt-everywhere-src-6.9.1.tar.xz
 mkdir -p qt-build
 # cd qt-build
 cd qt-build
-/tmp/qt-everywhere-src-6.9.1/configure
-./configure
+../configure
 cmake --build . --parallel
