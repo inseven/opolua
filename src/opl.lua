@@ -1219,16 +1219,11 @@ function drawText(str, x, y, mode, xflags)
 end
 
 function gINFO()
-    local ginfo = runtime:getResource("ginfo")
-    if ginfo then
-        return ginfo
-    end
-
     local context = runtime:getGraphicsContext()
     local font = runtime:getFont()
     local cursor = runtime:getResource("cursor")
 
-    ginfo = {
+    local ginfo = {
         fontHeight = font.height,
         fontDescent = font.descent,
         fontAscent = font.ascent,
@@ -1249,8 +1244,6 @@ function gINFO()
         cursorFlags = cursor and cursor.flags,
         displayMode = context.displayMode,
     }
-
-    runtime:setResource("ginfo", ginfo)
     return ginfo
 end
 
