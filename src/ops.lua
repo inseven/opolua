@@ -1809,7 +1809,7 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
         ginfo.cursorX or 0, -- 26 cursor x
         ginfo.cursorY or 0, -- 27 cursor y
         ginfo.isWindow and 0 or 1, -- 28 drawableIsBitmap
-        ginfo.cursorFlags, -- 29 cursor effects
+        ginfo.cursorFlags or 0, -- 29 cursor effects
         0, -- 30 gGREY setting (TODO...)
         0, -- 31 reserved
         0, -- 32 reserved
@@ -2595,7 +2595,7 @@ function gInfo32(stack, runtime) -- 0x128
         ginfo.cursorX or 0, -- 26 cursor x
         ginfo.cursorY or 0, -- 27 cursor y
         ginfo.isWindow and 0 or 1, -- 28 drawableIsBitmap
-        ginfo.cursorFlags, -- 29 cursor effects
+        ginfo.cursorFlags or 0, -- 29 cursor effects
         ginfo.displayMode, -- 30 color mode of current window
         context.color.r, -- 31 fg r
         context.color.g, -- 32 fg g
