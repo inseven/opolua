@@ -312,14 +312,25 @@ function sisGetStubs()
 end
 
 function sisInstallBegin(sisInfo, context)
-    printf("sisInstallBegin %s v%d.%02d", sisInfo.name[sisInfo.languages[1]], sisInfo.version.major, sisInfo.version.minor)
+    local preferredLang
+    for _, lang in ipairs(sisInfo.languages) do
+        if lang == config.locale then
+            preferredLang = lang
+            break
+        end
+    end
+    if not preferredLang then
+        preferredLang = sisInfo.languages[1]
+    end
+
+    printf("sisInstallBegin %s v%d.%02d", sisInfo.name[preferredLang], sisInfo.version.major, sisInfo.version.minor)
     if context.replacing then
         local v = context.replacing.version
         printf(" replacing v%d.%02d", v.major, v.minor)
     end
     printf("\n")
 
-    return { type = "install", drive = "C", lang = sisInfo.languages[1] }
+    return { type = "install", drive = "C", lang = preferredLang }
 end
 
 function sisInstallRollback(sisInfo)
