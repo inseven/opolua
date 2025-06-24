@@ -530,7 +530,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
         local stub = makeStub(data, sisfile.langs[langIdx], drive, instFiles)
         local stubDrive = ret.stubDrive or "C"
         local dir = stubDrive .. [[:\System\install\]]
-        if iohandler.fsop("stat", dir) == nil then
+        if iohandler.fsop("exists", dir) ~= KErrNone then
             local err = iohandler.fsop("mkdir", dir)
             if err ~= KErrNone then
                 return failInstall(0, "epocerr", err, dir)
@@ -555,7 +555,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
         elseif file.type == FileType.File or file.type == FileType.FileRun then
             local path = getPath(file)
             local dir = oplpath.dirname(path)
-            if iohandler.fsop("stat", dir) == nil then
+            if not dir:match("^.:\\$") and iohandler.fsop("exists", dir) ~= KErrNone then
                 local err = iohandler.fsop("mkdir", dir)
                 if err ~= KErrNone then
                     return failInstall(i, "epocerr", err, dir)

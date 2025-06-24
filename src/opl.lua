@@ -1395,8 +1395,8 @@ end
 -- File APIs
 
 function EXIST(path)
-    local ret = runtime:iohandler().fsop("stat", runtime:abs(path))
-    return ret ~= nil
+    local ret = runtime:iohandler().fsop("exists", runtime:abs(path))
+    return ret == KErrNone
 end
 
 function MKDIR(path)

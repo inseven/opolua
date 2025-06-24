@@ -345,6 +345,8 @@ public class PsiLuaEnv {
         switch cmd {
         case "stat":
             op = .stat
+        case "exists":
+            op = .exists
         case "disks":
             op = .disks
         case "delete":
