@@ -140,6 +140,8 @@ Options:
     if args.dest then
         local iohandler = require("defaultiohandler")
         iohandler.fsmap("C:\\", path_join(args.dest, ""))
+        -- Have to create C drive up front because iohandler can't
+        os.execute(string.format('mkdir -p "%s"', args.dest))
 
         if args.uninstall then
             local sisfile = sis.parseSisFile(data)

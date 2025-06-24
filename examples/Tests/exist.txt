@@ -1,0 +1,8 @@
+PROC main:
+    PRINT "EXIST C:\", EXIST("C:\")
+    PRINT "EXIST C:\System", EXIST("C:\System")
+    PRINT "EXIST C:\System\", EXIST("C:\System\")
+    PRINT "EXIST C:\exist.opo", EXIST("C:\exist.opo")
+    PRINT "EXIST C:\exist.opo\", EXIST("C:\exist.opo\")
+    GET
+ENDP

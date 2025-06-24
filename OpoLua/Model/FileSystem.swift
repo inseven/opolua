@@ -58,6 +58,12 @@ extension FileSystem {
             } else {
                 return .err(.notFound)
             }
+        case .exists:
+            if fileManager.fileExists(atPath: path) {
+                return .success
+            } else {
+                return .err(.notFound)
+            }
         case .disks:
             fatalError("Shouldn't get here!")
         case .delete:

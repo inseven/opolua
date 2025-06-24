@@ -436,6 +436,7 @@ public struct Fs {
             case dir // return .strings(paths)
             case rename(String) // return .success, notFound, accessDenied if readonly, notReady, alreadyExists
             case stat // return stat, or notFound or notReady
+            case exists // return .success or .notFound
             case disks // return .strings(diskList)
         }
         public let path: String
@@ -480,6 +481,7 @@ extension Fs.Operation {
         case .read: return true
         case .dir: return true
         case .stat: return true
+        case .exists: return true
         case .disks: return true
         default: return false
         }

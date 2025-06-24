@@ -173,7 +173,10 @@ local function fileErrToOpl(errno)
 end
 
 function fsop(cmd, path, ...)
-    local filename = mapDevicePath(path)
+    local filename
+    if path then
+        filename = mapDevicePath(path)
+    end
     if cmd == "stat" then
         -- printf("stat %s\n", filename)
         local f = io.open(filename, "r")
@@ -187,8 +190,16 @@ function fsop(cmd, path, ...)
         else
             return nil, KErrNotExists
         end
+    elseif cmd == "exists" then
+        local f = io.open(filename, "r")
+        if f then
+            f:close()
+            return KErrNone
+        else
+            return KErrNotExists
+        end
     elseif cmd == "disks" then
-        return { "C", "Z" }
+        return { "C" }
     elseif cmd == "delete" then
         printf("delete %s\n", filename)
         local ok, err, errno = os.remove(filename)
