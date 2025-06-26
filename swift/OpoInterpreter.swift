@@ -575,29 +575,28 @@ private func setConfig(_ L: LuaState!) -> CInt {
     return 0
 }
 
-private func setAppTitle(_ L: LuaState!) -> CInt {
+private func system(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
-    if let title = L.tostring(1) {
+    let cmd = L.tostring(1)
+    if cmd == "setAppTitle", let title = L.tostring(2) {
         iohandler.setAppTitle(title)
+    } else if cmd == "displayTaskList" {
+        iohandler.displayTaskList()
+    } else if cmd == "runApp" {
+        // iohandler.setForeground()
+        guard let prog = L.tostring(2), let doc = L.tostring(3) else {
+            return 0
+        }
+        let result = iohandler.runApp(name: prog, document: doc)
+        L.push(result)
+        return 1
+    } else if cmd == "setForeground" {
+        iohandler.setForeground()
+    } else if cmd == "setBackground" {
+        iohandler.setBackground()
+    } else {
+        print("Bad args to system()!")
     }
-    return 0
-}
-
-private func displayTaskList(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    iohandler.displayTaskList()
-    return 0
-}
-
-private func setForeground(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    iohandler.setForeground()
-    return 0
-}
-
-private func setBackground(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    iohandler.setBackground()
     return 0
 }
 
@@ -606,16 +605,6 @@ private func stop(_ L: LuaState!, _: UnsafeMutablePointer<lua_Debug>!) {
     lua_sethook(L, nil, 0, 0)
     L.push(KStopErr)
     lua_error(L)
-}
-
-private func runApp(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    guard let prog = L.tostring(1), let doc = L.tostring(2) else {
-        return 0
-    }
-    let result = iohandler.runApp(name: prog, document: doc)
-    L.push(result)
-    return 1
 }
 
 private func getTimeField(_ L: LuaState!, _ key: String) -> Int32? {
@@ -753,11 +742,7 @@ public class OpoInterpreter: PsiLuaEnv {
             "opsync": { L in return autoreleasepool { return opsync(L) } },
             "getConfig": { L in return autoreleasepool { return getConfig(L) } },
             "setConfig": { L in return autoreleasepool { return setConfig(L) } },
-            "setAppTitle": { L in return autoreleasepool { return setAppTitle(L) } },
-            "displayTaskList": { L in return autoreleasepool { return displayTaskList(L) } },
-            "setForeground": { L in return autoreleasepool { return setForeground(L) } },
-            "setBackground": { L in return autoreleasepool { return setBackground(L) } },
-            "runApp": { L in return autoreleasepool { return runApp(L) } },
+            "system": { L in return autoreleasepool { return system(L) } },
             "utctime": { L in return autoreleasepool { return utctime(L) } },
             "setEra": { L in return autoreleasepool { return setEra(L) } },
         ]

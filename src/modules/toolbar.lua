@@ -146,7 +146,7 @@ function TBarInitC(aTitle, screenWidth, screenHeight, winMode)
     gCOLORBACKGROUND(table.unpack(bgColour))
     title = aTitle
     drawTitleAndClock()
-    runtime:iohandler().setAppTitle(title)
+    runtime:iohandler().system("setAppTitle", title)
     gUSE(prevId)
 end
 
@@ -155,7 +155,7 @@ function TBarSetTitle(name)
     local prevId = gIDENTITY()
     gUSE(tbWinId)
     drawTitle()
-    runtime:iohandler().setAppTitle(name)
+    runtime:iohandler().system("setAppTitle", title)
     gUSE(prevId)
 end
 
