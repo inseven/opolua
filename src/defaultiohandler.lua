@@ -299,20 +299,7 @@ function setConfig(key, val)
     config[key] = val
 end
 
-function setAppTitle(title)
-end
-
-function displayTaskList()
-end
-
-function setForeground()
-end
-
-function setBackground()
-end
-
-function runApp(prog, doc)
-    return nil
+function system(cmd, ...)
 end
 
 function setEra(era)

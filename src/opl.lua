@@ -1616,17 +1616,17 @@ end
 
 function DisplayTaskList()
     printf("system.DisplayTaskList()\n")
-    runtime:iohandler():displayTaskList()
+    runtime:iohandler().system("displayTaskList")
 end
 
 function SetForeground()
     printf("system.SetForeground()\n")
-    runtime:iohandler():setForeground()
+    runtime:iohandler().system("setForeground")
 end
 
 function SetBackground()
     printf("system.SetBackground()\n")
-    runtime:iohandler():setBackground()
+    runtime:iohandler().system("setBackground")
 end
 
 function LoadRsc(path)
