@@ -1485,7 +1485,7 @@ end
 
 function Escape(stack, runtime) -- 0xA9
     local state = runtime:IP8()
-    -- We don't care
+    runtime:ESCAPE(state ~= 0)
 end
 
 Escape_dump = IPflag_dump

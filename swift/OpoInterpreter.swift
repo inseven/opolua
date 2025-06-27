@@ -594,6 +594,8 @@ private func system(_ L: LuaState!) -> CInt {
         iohandler.setForeground()
     } else if cmd == "setBackground" {
         iohandler.setBackground()
+    } else if cmd == "escape" {
+        // We don't do anything for this
     } else {
         print("Bad args to system()!")
     }
