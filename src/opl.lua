@@ -1384,6 +1384,10 @@ function GETEVENTA32(stat, evAddr)
     runtime:iohandler().asyncRequest("getevent", requestTable)
 end
 
+function ESCAPE(flag)
+    runtime:iohandler().system("escape", flag)
+end
+
 -- Menu APIs
 
 function mINIT()
