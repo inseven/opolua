@@ -38,7 +38,6 @@
 		D84ADB162771D937001ABFB4 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB152771D937001ABFB4 /* Device.swift */; };
 		D84ADB182771DAB9001ABFB4 /* NSNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ADB172771DAB9001ABFB4 /* NSNotification.swift */; };
 		D8535A28277139AB00DFCE29 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A27277139AB00DFCE29 /* Sound.swift */; };
-		D8535A2A277139D900DFCE29 /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8535A29277139D900DFCE29 /* Tone.swift */; };
 		D8553768278F535A00ED67C0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8553767278F535A00ED67C0 /* SettingsView.swift */; };
 		D85699C627A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */; };
 		D85E0C412CA24975002EFBB3 /* PsionSoftwareIndex in Frameworks */ = {isa = PBXBuildFile; productRef = D85E0C402CA24975002EFBB3 /* PsionSoftwareIndex */; };
@@ -169,7 +168,6 @@
 		D84ADB152771D937001ABFB4 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		D84ADB172771DAB9001ABFB4 /* NSNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSNotification.swift; sourceTree = "<group>"; };
 		D8535A27277139AB00DFCE29 /* Sound.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
-		D8535A29277139D900DFCE29 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		D8553767278F535A00ED67C0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D85699C527A9948F00E6F6DD /* PsiLuaEnv+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PsiLuaEnv+Utilities.swift"; sourceTree = "<group>"; };
 		D85F596E27ACB64E006AAF3B /* UIButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIButton.swift; sourceTree = "<group>"; };
@@ -325,7 +323,6 @@
 				D884A3D42779025A008954A0 /* SystemFileSystem.swift */,
 				D8647C6F2793540500DCC261 /* TaskManager.swift */,
 				D82639352783CAE500AB4086 /* TimerRequest.swift */,
-				D8535A29277139D900DFCE29 /* Tone.swift */,
 				D8632831279C240600B63625 /* UID.swift */,
 				D8DCD03D277AC9B300760302 /* WindowServer.swift */,
 			);
@@ -644,7 +641,6 @@
 				D884A3D7277914CF008954A0 /* Installer.swift in Sources */,
 				D8B2757527B6840D00DAAFC0 /* RateLimiter.swift in Sources */,
 				D8C3BD632774BEA1003B1AD0 /* ErrorViewController.swift in Sources */,
-				D8535A2A277139D900DFCE29 /* Tone.swift in Sources */,
 				D884A3D32778E335008954A0 /* FileSystem.swift in Sources */,
 				D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */,
 				D80A9CBC27A48BED00E49AD8 /* ApplicationSection.swift in Sources */,

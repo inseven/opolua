@@ -95,9 +95,7 @@ class Sound {
     static let AudioOutSubType = kAudioUnitSubType_DefaultOutput
 #endif
 
-    static func beep(frequency: Double, duration: Double, sampleRate: Double = 44100.0) throws {
-        let tone = Tone(sampleRate: sampleRate, frequency: frequency, duration: duration)
-
+    private static func _play(data: Data, cancelToken: CancelToken) throws {
         let semaphore = DispatchSemaphore(value: 0)
         let audioComponentDescription = AudioComponentDescription(componentType: kAudioUnitType_Output,
                                                                   componentSubType: AudioOutSubType,
@@ -107,113 +105,33 @@ class Sound {
         let audioUnit = try AUAudioUnit(componentDescription: audioComponentDescription)
         let bus0 = audioUnit.inputBusses[0]
         let audioFormat = AVAudioFormat(commonFormat: AVAudioCommonFormat.pcmFormatInt16,
-                                        sampleRate: Double(sampleRate),
-                                        channels:AVAudioChannelCount(2),
+                                        sampleRate: 8000,
+                                        channels: 1,
                                         interleaved: true)
-        try bus0.setFormat(audioFormat ?? AVAudioFormat())
-        audioUnit.outputProvider = { actionFlags, timestamp, frameCount, inputBusNumber, inputDataList -> AUAudioUnitStatus in
+        try bus0.setFormat(audioFormat!)
 
-            let inputDataPtr = UnsafeMutableAudioBufferListPointer(inputDataList)
-            guard inputDataPtr.count > 0 else {
-                actionFlags.pointee.insert(AudioUnitRenderActionFlags.unitRenderAction_OutputIsSilence)
-                actionFlags.pointee.insert(AudioUnitRenderActionFlags.offlineUnitRenderAction_Complete)
-                semaphore.signal()
-                return kAudioServicesNoError
-            }
+        var dataIdx = 0
+        data.withUnsafeBytes { dataPtr in
+            audioUnit.outputProvider = { actionFlags, timestamp, frameCount, inputBusNumber, inputDataList -> AUAudioUnitStatus in
 
-            let bufferSize = Int(inputDataPtr[0].mDataByteSize)
-            if var buffer = UnsafeMutableRawPointer(inputDataPtr[0].mData) {  // TODO: Guard this?
-                for i in 0 ..< frameCount {
-
-                    guard let x = tone.next() else {
-                        actionFlags.pointee.insert(AudioUnitRenderActionFlags.unitRenderAction_OutputIsSilence)
-                        actionFlags.pointee.insert(AudioUnitRenderActionFlags.offlineUnitRenderAction_Complete)
-                        semaphore.signal()
-                        return kAudioServicesNoError
-                    }
-
-                    if i < (bufferSize / 2) {
-                        buffer.assumingMemoryBound(to: Int16.self).pointee = x; buffer += 2  // L
-                        buffer.assumingMemoryBound(to: Int16.self).pointee = x; buffer += 2  // R
-                    }
-
+                if cancelToken.isCancelled {
+                    semaphore.signal()
+                    return kAudioServicesNoError
                 }
-            }
-            return kAudioServicesNoError
-        }
-        audioUnit.isOutputEnabled = true
 
-        try audioUnit.allocateRenderResources()
-        try audioUnit.startHardware()
-
-        semaphore.wait()
-        audioUnit.stopHardware()
-    }
-
-    // See https://www.reddit.com/r/iOSProgramming/comments/pgi1zl/how_to_play_raw_audio_in/
-    static var audioStreamBasicDescription: AudioStreamBasicDescription = {
-        var asbd = AudioStreamBasicDescription()
-        asbd.mSampleRate = 8000
-        asbd.mFormatID = kAudioFormatALaw
-        asbd.mFormatFlags = 0
-        asbd.mFramesPerPacket = 1
-        asbd.mChannelsPerFrame = 1
-        asbd.mBitsPerChannel = 8 * UInt32(MemoryLayout<UInt8>.size)
-        asbd.mReserved = 0
-        asbd.mBytesPerFrame = asbd.mChannelsPerFrame * UInt32(MemoryLayout<UInt8>.size) // channels * sizeof(data type)
-        asbd.mBytesPerPacket = asbd.mBytesPerFrame * asbd.mFramesPerPacket // mBytesPerFrame * mFramesPerPacket
-        return asbd
-    }()
-
-    static var audioFormat: AVAudioFormat = {
-        let audioFormat = AVAudioFormat(streamDescription: &audioStreamBasicDescription)!
-        return audioFormat
-    }()
-
-    private static func _play(data: Data, cancelToken: CancelToken) throws {
-        var iterator = data.makeIterator()
-        let semaphore = DispatchSemaphore(value: 0)
-        let audioComponentDescription = AudioComponentDescription(componentType: kAudioUnitType_Output,
-                                                                  componentSubType: AudioOutSubType,
-                                                                  componentManufacturer: kAudioUnitManufacturer_Apple,
-                                                                  componentFlags: 0,
-                                                                  componentFlagsMask: 0)
-        let audioUnit = try AUAudioUnit(componentDescription: audioComponentDescription)
-        let bus0 = audioUnit.inputBusses[0]
-        try bus0.setFormat(self.audioFormat)
-        audioUnit.outputProvider = { actionFlags, timestamp, frameCount, inputBusNumber, inputDataList -> AUAudioUnitStatus in
-
-            guard !cancelToken.isCancelled else {
-                semaphore.signal()
-                return kAudioServicesNoError
-            }
-
-            let inputDataPtr = UnsafeMutableAudioBufferListPointer(inputDataList)
-            guard inputDataPtr.count > 0 else {
-                actionFlags.pointee.insert(AudioUnitRenderActionFlags.unitRenderAction_OutputIsSilence)
-                actionFlags.pointee.insert(AudioUnitRenderActionFlags.offlineUnitRenderAction_Complete)
-                semaphore.signal()
-                return kAudioServicesNoError
-            }
-
-            let bufferSize = Int(inputDataPtr[0].mDataByteSize)
-            if var buffer = UnsafeMutableRawPointer(inputDataPtr[0].mData) {  // TODO: Guard this?
-                for i in 0 ..< frameCount {
-
-                    guard let x = iterator.next() else {
-                        actionFlags.pointee.insert(AudioUnitRenderActionFlags.unitRenderAction_OutputIsSilence)
-                        actionFlags.pointee.insert(AudioUnitRenderActionFlags.offlineUnitRenderAction_Complete)
-                        semaphore.signal()
-                        return kAudioServicesNoError
-                    }
-
-                    if i < bufferSize {
-                        buffer.assumingMemoryBound(to: UInt8.self).pointee = x; buffer += 1
-                    }
-
+                let inputDataPtr = UnsafeMutableAudioBufferListPointer(inputDataList)
+                precondition(inputDataPtr.count == 1)
+                let numBytes = min(min(Int(inputDataPtr[0].mDataByteSize), Int(frameCount) * MemoryLayout<UInt16>.size), dataPtr.count - dataIdx)
+                inputDataPtr[0].mData!.copyMemory(from: dataPtr.baseAddress! + dataIdx, byteCount: numBytes)
+                dataIdx += numBytes
+                inputDataPtr[0].mDataByteSize = UInt32(numBytes)
+                if dataIdx == dataPtr.count {
+                    actionFlags.pointee.insert(AudioUnitRenderActionFlags.unitRenderAction_OutputIsSilence)
+                    actionFlags.pointee.insert(AudioUnitRenderActionFlags.offlineUnitRenderAction_Complete)
+                    semaphore.signal()
                 }
+                return kAudioServicesNoError
             }
-            return kAudioServicesNoError
         }
         audioUnit.isOutputEnabled = true
 

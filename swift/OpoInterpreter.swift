@@ -52,18 +52,6 @@ private func getInterpreterUpval(_ L: LuaState!) -> OpoInterpreter {
 //     return 0
 // }
 
-private func beep(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
-    if let err = iohandler.beep(frequency: lua_tonumber(L, 1), duration: lua_tonumber(L, 2)) {
-        L.pushnil()
-        L.push(err.detailIfPresent)
-        return 2
-    } else {
-        L.push(true)
-        return 1
-    }
-}
-
 private func textEditor(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     if L.isnoneornil(1) {
@@ -728,7 +716,6 @@ public class OpoInterpreter: PsiLuaEnv {
         let fns: [String: lua_CFunction] = [
             "textEditor": { L in return autoreleasepool { return textEditor(L) } },
             // "print": { L in return autoreleasepool { return print_lua(L) } },
-            "beep": { L in return autoreleasepool { return beep(L) } },
             "draw": { L in return autoreleasepool { return draw(L) } },
             "graphicsop": { L in return autoreleasepool { return graphicsop(L) } },
             "getDeviceInfo": { L in return autoreleasepool { return getDeviceInfo(L) } },

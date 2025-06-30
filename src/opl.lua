@@ -1697,8 +1697,6 @@ end
 -- Sound
 
 function PlaySoundA(var, path)
-    assert(runtime:getResource("sound") == nil, KErrInUse)
-    var:setPending()
     local path = runtime:abs(path)
 
     local data, err = runtime:iohandler().fsop("read", path)
@@ -1715,11 +1713,18 @@ function PlaySoundA(var, path)
         runtime:requestSignal()
         return
     end
+    PlaySoundPcm16(var, sndData)
+end
+
+function PlaySoundPcm16(var, data)
+    assert(runtime:getResource("sound") == nil, KErrInUse)
+    var:setPending()
+
     runtime:setResource("sound", var)
     local function completion()
         runtime:setResource("sound", nil)
     end
-    runtime:iohandler().asyncRequest("playsound", { var = var, data = sndData, completion = completion })
+    runtime:iohandler().asyncRequest("playsound", { var = var, data = data, completion = completion })
 end
 
 function StopSound()
