@@ -722,8 +722,6 @@ public protocol OpoIoHandler: FileSystemIoHandler {
 
     func textEditor(_ info: TextFieldInfo?)
 
-    func beep(frequency: Double, duration: Double) -> Error?
-
     func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error?
     func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result
 
@@ -766,11 +764,6 @@ class DummyIoHandler : OpoIoHandler {
 
     func getch() -> Int {
         return 0
-    }
-
-    func beep(frequency: Double, duration: Double) -> Error? {
-        print("BEEP \(frequency)kHz \(duration)s")
-        return nil
     }
 
     func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {

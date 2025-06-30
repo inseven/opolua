@@ -450,15 +450,6 @@ extension Program: OpoIoHandler {
         }
     }
 
-    func beep(frequency: Double, duration: Double) -> Error? {
-        do {
-            try Sound.beep(frequency: frequency * 1000, duration: duration)
-            return nil
-        } catch {
-            return error
-        }
-    }
-
     func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {
         return DispatchQueue.main.sync {
             return windowServer.draw(operations: operations)
