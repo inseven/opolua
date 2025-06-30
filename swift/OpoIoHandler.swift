@@ -623,7 +623,7 @@ public protocol FileSystemIoHandler {
 }
 
 public struct Sis {
-    public struct Version: Codable /* also Comparable, CustomStringConvertible */ {
+    public struct Version: Codable, Hashable /* also Comparable, CustomStringConvertible */ {
         public let major: Int
         public let minor: Int
 
@@ -633,7 +633,7 @@ public struct Sis {
         }
     }
 
-    public struct File: Codable {
+    public struct File: Codable, Hashable {
         public let name: [String: String]
         public let uid: UInt32
         public let version: Version
