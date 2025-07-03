@@ -564,7 +564,8 @@ private func setConfig(_ L: LuaState!) -> CInt {
 }
 
 private func system(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
+    let interpreter = getInterpreterUpval(L)
+    let iohandler = interpreter.iohandler
     let cmd = L.tostring(1)
     if cmd == "setAppTitle", let title = L.tostring(2) {
         iohandler.setAppTitle(title)
@@ -584,6 +585,10 @@ private func system(_ L: LuaState!) -> CInt {
         iohandler.setBackground()
     } else if cmd == "escape" {
         // We don't do anything for this
+    } else if cmd == "getCmd" {
+        L.push(interpreter.getCmd)
+        interpreter.getCmd = ""
+        return 1
     } else {
         print("Bad args to system()!")
     }
@@ -661,6 +666,8 @@ private extension Error {
 public class OpoInterpreter: PsiLuaEnv {
 
     public var iohandler: OpoIoHandler
+
+    public var getCmd: String = ""
 
     override init() {
         iohandler = DummyIoHandler() // For now...
@@ -890,9 +897,9 @@ public class OpoInterpreter: PsiLuaEnv {
                 ev[0] = 0x402
                 ev[1] = timestampToInt32(event.timestamp)
             case .quitevent:
-                // 0x404 is actually just the generic "cmd" event, but since we don't support changing files, quit
-                // is the only thing it can be and doesn't require further elaboration.
+                // 0x404 is actually just the generic "cmd" event, hence we set getCmd for iohandler.system("getCmd")
                 ev[0] = 0x404
+                self.getCmd = "X"
             case .cancelled, .completed, .interrupt:
                 break // No completion data for these
             }

@@ -1289,9 +1289,8 @@ function UpperStr(stack, runtime) -- 0xD3
 end
 
 function WCmd(stack, runtime) -- 0xD5
-    local result = runtime:getResource("GETCMD")
-    runtime:setResource("GETCMD", nil)
-    stack:push(result or "")
+    local result = runtime:iohandler().system("getCmd")
+    stack:push(result)
 end
 
 function CmdStr(stack, runtime) -- 0xD6
