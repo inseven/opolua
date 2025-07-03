@@ -55,18 +55,15 @@ class Canvas: Drawable {
         self.id = id
         self.size = size
         self.mode = mode
-        // Apparently zero-width windows are allowed in OPL, who knows why...
-        let intw = size.width == 0 ? 1 : size.width
-        let inth = size.height == 0 ? 1 : size.height
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bytesPerPixel = 4
         let bitmapInfo: UInt32 = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
-        self.data = .allocate(capacity: intw * inth)
-        let bytesPerRow = bytesPerPixel * intw
+        self.data = .allocate(capacity: size.width * size.height)
+        let bytesPerRow = bytesPerPixel * size.width
         let bitsPerComponent = 8
         context = CGContext(data: self.data.baseAddress,
-                            width: intw,
-                            height: inth,
+                            width: size.width,
+                            height: size.height,
                             bitsPerComponent: bitsPerComponent,
                             bytesPerRow: bytesPerRow,
                             space: colorSpace,
