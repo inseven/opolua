@@ -1,6 +1,7 @@
-REM This is the source for the welcome app. It was originally compiled and
-REM tested on a Series 5 R1, but now is compiled using compiler.lua. This isn't
-REM yet integrated into the app, so you can't modify this file. Sorry!
+REM This is the source for the welcome app. It was originally
+REM compiled and tested on a Series 5 R1, but now is compiled
+REM using compiler.lua. This isn't yet integrated into the app,
+REM so you can't modify this file. Sorry!
 
 INCLUDE "const.oph"
 INCLUDE "system.oxh"
@@ -17,15 +18,22 @@ CONST buttonHInset% = 5
 CONST buttonVInset% = 5
 
 PROC main:
+	REM The only to really figure out device capabilities is to check the default
+	REM window colour mode immediately after app launch - use this to default to
+	REM colour on if running on a colour-capable device.
+	GLOBAL colour%
+	LOCAL info&(48)
+	gINFO32 info&()
+	colour% = info&(30) >= KColorDefWin16ColorMode% 
+
 	DEFAULTWIN 5
 	LOADM "Z:\System\OPL\TOOLBAR.OPO"
 	TBarLink:("go")
 ENDP
 
 PROC go:
-	GLOBAL colour%, card%, drv$(1), menustate%
+	GLOBAL card%, drv$(1), menustate%
 	LOCAL ev&(16), k&, butY%, nextButX%, x%, y%
-	colour% = 0
 	card% = 0
 	drv$ = LEFT$(CMD$(1), 1)
 	TBarInit:("Welcome", gWIDTH, gHEIGHT)
