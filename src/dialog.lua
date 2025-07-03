@@ -1673,7 +1673,7 @@ function DialogChoiceList:handleKeyPress(k, modifiers)
             self:setNeedsRedraw()
         end
     else
-        print("Unhandled key", k)
+        -- print("Unhandled key", k)
     end
     return false
 end
@@ -2038,8 +2038,9 @@ function Button:handleKeyPress(k, modifiers)
             return true
         end
     else
-        -- It's an alphabet key in which case modifiers must match
-        local requiredModifiers = (self:getKey() & KDButtonPlainKey > 0) and 0 or KKmodControl
+        -- It's an alphabet key in which case modifiers must match. Oddly, space is halfway between the two in that it
+        -- _is_ a bare key by default, but does _not_ accept any modifiers.
+        local requiredModifiers = ((shortcut == 32) or (self:getKey() & KDButtonPlainKey > 0)) and 0 or KKmodControl
         if modifiers & KKmodControl > 0 and k < 32 then
             -- massage k back to the keycode range, sigh
             k = k + 0x40
