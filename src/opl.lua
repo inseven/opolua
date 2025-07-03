@@ -483,19 +483,26 @@ function gSETWIN(x, y, w, h)
     -- printf("gSETWIN id=%d %d,%d %sx%s\n", gIDENTITY(), x, y, w, h)
     -- runtime:flushGraphicsOps()
     local ctx = runtime:getGraphicsContext()
-    runtime:iohandler().graphicsop("setwin", ctx.id, x, y, w, h)
     ctx.winX = x
     ctx.winY = y
     if w then
         ctx.width = w
         ctx.height = h
     end
+    if w == 0 then w = 1 end
+    if h == 0 then h = 1 end
+    runtime:iohandler().graphicsop("setwin", ctx.id, x, y, w, h)
 end
 
 function gCREATE(x, y, w, h, visible, flags)
     -- printf("gCREATE w=%d h=%d flags=%X", w, h, flags or 0)
     local ctx = runtime:newGraphicsContext(w, h, true, (flags or 0) & 0xF)
     local id = ctx.id
+    -- Since neither backend (Swift/CoreGraphics or Qt) likes zero-sized bitmaps or windows, we're going to fudge it
+    -- here.
+    if w == 0 then w = 1 end
+    if h == 0 then h = 1 end
+
     local err = runtime:iohandler().createWindow(id, x, y, w, h, flags or KColorgCreate2GrayMode) or KErrNone
     if err ~= KErrNone then
         runtime:closeGraphicsContext(id)
@@ -517,6 +524,10 @@ function gCREATEBIT(w, h, mode)
     mode = (mode or 0) & 0xF
     local ctx = runtime:newGraphicsContext(w, h, false, mode)
     local id = ctx.id
+    -- See comment in gCREATE
+    if w == 0 then w = 1 end
+    if h == 0 then h = 1 end
+
     local err = runtime:iohandler().createBitmap(id, w, h, mode) or KErrNone
     if err ~= KErrNone then
         runtime:closeGraphicsContext(id)
