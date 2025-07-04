@@ -667,6 +667,7 @@ public struct Sis {
     public enum InstallError: Error, Equatable {
         case userCancelled
         case epocError(Int32, String?)
+        case isStub
         case internalError(String)
     }
 

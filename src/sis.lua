@@ -220,6 +220,9 @@ function parseSisFile(data, verbose)
         else
             error("Unknown record type "..tostring(recordType))
         end
+        if file.type ~= FileType.FileNull and file.data == nil and file.langData == nil then
+            result.isTruncated = true
+        end
         result.files[i] = file
         endOfStrings = math.max(endOfStrings, maxStringOffset)
     end
@@ -248,6 +251,7 @@ function parseSisFile(data, verbose)
     end
 
     result.stubSize = endOfStrings
+    result.isStub = #data == result.stubSize
 
     if verbose then
         printf("stubSize=%d\n", result.stubSize)
@@ -477,6 +481,12 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
     end
     local function failInstall(fileIdx, reason, code, context)
         return failInstallWithError(fileIdx, { type = reason, code = code, context = context })
+    end
+
+    if sisfile.isStub then
+        return failInstall(nil, "stub")
+    elseif sisfile.isTruncated then
+        return failInstall(nil, "epocerr", KErrEof)
     end
 
     local hasDriveChoice = false
