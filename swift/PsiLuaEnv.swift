@@ -647,6 +647,7 @@ extension Sis.InstallError: CustomStringConvertible {
         switch self {
         case .userCancelled: return "SisInstallError.userCancelled"
         case .epocError(let err, let context): return "SisInstallError.epocError(\(err), \(context ?? "''"))"
+        case .isStub: return "SisInstallError.isStub"
         case .internalError(let err): return "SisInstallError.internalError(\(err))"
         }
     }
@@ -673,6 +674,8 @@ extension Sis.InstallError: Codable {
         case "internal":
             let details = try values.decode(String.self, forKey: .context)
             self = .internalError(details)
+        case "stub":
+            self = .isStub
         default:
             throw DecodingError.dataCorrupted(.init(codingPath: [CodingKeys.type], debugDescription: "Unhandled type \(type)"))
         }
@@ -691,6 +694,8 @@ extension Sis.InstallError: Codable {
         case .internalError(let details):
             try container.encode("internal", forKey: .type)
             try container.encode(details, forKey: .context)
+        case .isStub:
+            try container.encode("stub", forKey: .type)
         }
     }
 

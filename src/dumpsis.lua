@@ -224,10 +224,9 @@ function describeSis(sisfile, indent)
     local langIdx = sis.getBestLangIdx(sisfile.langs)
     for _, file in ipairs(sisfile.files) do
         local len
-        if file.data then
-            len = #file.data
-        elseif file.langData then
-            len = #(file.langData[langIdx])
+        local data = file.data and file.data or (file.langData and file.langData[langIdx])
+        if data then
+            len = #data
         end
         local src = cp1252.toUtf8(file.src)
         local dest = cp1252.toUtf8(file.dest)
