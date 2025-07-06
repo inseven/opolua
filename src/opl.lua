@@ -268,22 +268,8 @@ function gFILL(width, height, mode)
 end
 
 function gBORDER(flags, w, h)
-    local context = runtime:getGraphicsContext()
-    local x = context.pos.x
-    local y = context.pos.y
-    if not w then
-        x = 0
-        y = 0
-        w = context.width
-        h = context.height
-    end
-    if flags & KBordGapAllRound > 0 then
-        flags = flags & ~KBordGapAllRound
-        -- No I don't understand the reason for this flag either
-        runtime:drawCmd("border", { x = x + 1, y = y + 1, width = w - 2, height = h - 2, btype = flags })
-    else
-        runtime:drawCmd("border", { x = x, y = y, width = w, height = h, btype = flags })
-    end
+    -- gBORDER(...) is equivalent to gXBORDER(0, ...)
+    gXBORDER(0, flags, w, h)
 end
 
 function gXBORDER(type, flags, w, h)
@@ -296,20 +282,36 @@ function gXBORDER(type, flags, w, h)
         w = context.width
         h = context.height
     end
+    printf("gXBorder type=%d flags=%x %dx%d\n", type, flags, w, h)
 
-    if flags == 0 then
-        -- Nothing...
-    elseif type == 2 and flags == 1 then
-        gBOX(w, h)
-    else
-        if type == 1 and flags & KBordGapAllRound > 0 then
-            flags = flags & ~KBordGapAllRound -- KBordGapAllRound has no effect on type 1
+    -- KBordLosePixel has no effect on ANY border type, that I can see. The docs suggest it's supposed to make a less
+    -- rounded corner (contrasting with KBordRoundCorners) on series 3 style buttons (type=0 or type=1), but it does
+    -- not appear to be implemented - at least on my Series 5.
+    flags = flags & ~KBordLosePixel
+
+    if type == 0 then
+        if flags & KBordGapAllRound > 0 then
+            -- This flag is a straighforward "inset everything by one pixel" so doesn't require distinguishing native-side
+            flags = flags & ~KBordGapAllRound
+            x = x + 1
+            y = y + 1
+            w = w - 2
+            h = h - 2
         end
-        if type == 2 and flags & KBordRoundCorners > 0 then
-            flags = flags & ~KBordRoundCorners -- rounded corners is ignored on type 2 borders
+        runtime:drawCmd("border", { x = x, y = y, width = w, height = h, btype = flags })
+    elseif type == 1 then
+        flags = flags & ~(KBordGapAllRound) -- The only flag that has an effect on type 1 is KBordRoundCorners
+        runtime:drawCmd("border", { x = x, y = y, width = w, height = h, btype = (type << 16) | flags })
+    elseif type == 2 then
+        if flags == 0 then
+            return -- It's a no-op
         end
-        if flags & KBordLosePixel > 0 then
-            flags = flags & ~KBordLosePixel
+        if flags & KBordRoundCorners > 0 and flags ~= 0x294 then
+            -- It doesn't make any sense logically for the round corners variants to be the same as the "gap all round"
+            -- variant. I think it's likely to be a drop-through in a switch statement in the original implementation,
+            -- or something like that. It makes even LESS sense that "deep raised with outline" (0x94) is only border
+            -- type where 194 and 294 are completely different.
+            flags = (flags & ~KBordRoundCorners) | KBordGapAllRound
         end
         runtime:drawCmd("border", { x = x, y = y, width = w, height = h, btype = (type << 16) | flags })
     end
@@ -333,8 +335,9 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         lineh = h
     end
 
-    local series7 = runtime:getDeviceName() == "psion-series-7"
-    if series7 then
+    local _, _, displayMode = runtime:getScreenInfo()
+    local isColor = displayMode >= KColorgCreate256ColorMode
+    if isColor then
         gCOLOR(0x99, 0x99, 0xCC)
     else
         lightGrey()
@@ -348,14 +351,14 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     elseif state == 1 then
         gXBORDER(2, 0x42, width, height)
         gMOVE(2, 2)
-        if series7 then
+        if isColor then
             gCOLOR(0x88, 0x88, 0x88)
         else
             white()
         end
         gFILL(width - 4, height - 4)
     elseif state == 2 then
-        if series7 then
+        if isColor then
             gCOLOR(0x66, 0x66, 0x99)
         end
         gXBORDER(2, 0x54, width, height)

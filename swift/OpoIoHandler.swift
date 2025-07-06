@@ -247,38 +247,6 @@ public struct Graphics {
         case replace = 3 // Only applicable for copy, pattern and text operations
     }
 
-    enum BorderType: Int {
-        // gBORDER
-        case singlePixel = 0x0
-        case singlePixelShadow = 0x1
-        case singlePixelShadowRounded = 0x201
-        case clearSinglePixelShadow = 0x2
-        case clearSinglePixelShadowRounded = 0x202
-        case doublePixelShadow = 0x3
-        case doublePixelShadowRounded = 0x203
-        case clearDoublePixelShadow = 0x4
-        case clearDoublePixelShadowRounded = 0x204
-
-        // gXBORDER type=1
-        case series3singlePixelShadow = 0x10001
-        case series3singlePixelShadowRounded = 0x10201
-        case series3clearSinglePixelShadow = 0x10002
-        case series3doublePixelShadow = 0x10003
-        case series3doublePixelShadowRounded = 0x10203
-        case series3clearDoublePixelShadow = 0x10004
-
-
-        // gXBORDER type=2
-        case shallowSunken = 0x20042
-        case deepSunken = 0x20044
-        case deepSunkenWithOutline = 0x20054
-        case shallowRaised = 0x20082
-        case deepRaised = 0x20084
-        case deepRaisedWithOutline = 0x20094
-        case verticalBar = 0x20022
-        case horizontalBar = 0x2002A
-    }
-
     // Specific to gXPRINT, stacks (mostly) with FontFlag except when it doesn't
     enum XStyle: Int, Codable {
         case normal = 0
@@ -308,7 +276,7 @@ public struct Graphics {
             case mcopy(DrawableId, [Rect], [Point])
             case pattern(CopySource)
             case scroll(Int, Int, Rect) // dx, dy, rect
-            case border(Rect, BorderType)
+            case border(Rect, Int) // border type
             case invert(Size)
         }
         let drawableId: DrawableId
