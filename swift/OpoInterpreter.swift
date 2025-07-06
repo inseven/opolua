@@ -170,13 +170,8 @@ private func draw(_ L: LuaState!) -> CInt {
         case "border":
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             let rect = Graphics.Rect(origin: origin, size: size)
-            let type = L.toint(-1, key: "btype") ?? 0
-            if let borderType = Graphics.BorderType(rawValue: type) {
-                optype = .border(rect, borderType)
-            } else {
-                print("Unknown border type \(type)")
-                continue
-            }
+            let borderType = L.toint(-1, key: "btype") ?? 0
+            optype = .border(rect, borderType)
         default:
             print("Unknown Graphics.DrawCommand.OpType \(t)")
             continue

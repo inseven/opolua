@@ -17,46 +17,84 @@ PROC draw:
 	GLOBAL i%
 	gFONT 9
 	gCOLOR 0,0,0
-	gAT 10, 10
+	gAT 8, 8
 
-	brd:(0)
-	brd:(1)
-	brd:(2)
-	brd:(3)
-	brd:(4)
-	brd:($201)
-	brd:($202)
-	brd:($203)
-	brd:($204)
+	border:(0)
+	border:(1)
+	border:(2)
+	border:(3)
+	border:(4)
+	border:($100)
+	border:($101)
+	border:($102)
+	border:($103)
+	border:($104)
 
-	gAT 10, gY + h% + 10
+	newline:
+	border:($200)
+	border:($201)
+	border:($202)
+	border:($203)
+	border:($204)
+	border:($300)
+	border:($301)
+	border:($302)
+	border:($303)
+	border:($304)
 
-	bord:(1, 1)
-	bord:(1, 2)
-	bord:(1, 3)
-	bord:(1, 4)
-	bord:(1, $201)
-	bord:(1, $202)
-	bord:(1, $203)
-	bord:(1, $204)
-	REM bord:(1, $403)
+	REM $400 does nothing on any type, afaics
+	REM newline:
+	REM xborder:(0, $400)
+	REM xborder:(0, $401)
+	REM xborder:(0, $402)
+	REM xborder:(0, $403)
+	REM xborder:(0, $404)
 
-	gAT 10, gY + h% + 10
-	bord:(2, 0)
-	bord:(2, 1)
-	bord:(2, $42)
-	bord:(2, $44)
-	bord:(2, $144)
-	bord:(2, $244)
-	bord:(2, $444)
-	bord:(2, $54)
-	bord:(2, $82)
-	bord:(2, $84)
-	bord:(2, $94)
-	bord:(2, $22)
-	bord:(2, $2A)
+	newline:
+	xborder:(1, 0)
+	xborder:(1, 1)
+	xborder:(1, 2)
+	xborder:(1, 3)
+	xborder:(1, 4)
+	REM $100 and $400 have no effect on type=1, don't bother showing them
+	xborder:(1, $200)
+	xborder:(1, $201)
+	xborder:(1, $202)
+	xborder:(1, $203)
+	xborder:(1, $204)
+
+	newline:
+	REM borders where 2xx is the same as 1xx and 4xx is the same as xx are omitted.
+	xborder:(2, 0)
+	xborder:(2, 1)
+	xborder:(2, $22)
+	xborder:(2, $2A)
+	xborder:(2, $42)
+	xborder:(2, $142)
+	REM xborder:(2, $242)
+	REM xborder:(2, $442)
+	xborder:(2, $44)
+	xborder:(2, $144)
+	REM xborder:(2, $244)
+	REM xborder:(2, $444)
+	xborder:(2, $54)
+	xborder:(2, $154)
+	REM xborder:(2, $254)
+	REM xborder:(2, $454)
+	xborder:(2, $82)
+	xborder:(2, $182)
+	REM xborder:(2, $282)
+	REM xborder:(2, $482)
+	xborder:(2, $84)
+	xborder:(2, $184)
+	REM xborder:(2, $284)
+	REM xborder:(2, $484)
+	xborder:(2, $94)
+	xborder:(2, $194)
+	xborder:(2, $294)
+	REM xborder:(2, $494)
 	
-	gAT 10, gY + h% + 10
+	newline:
 	but:(1, 0)
 	but:(1, 1)
 	but:(1, 2)
@@ -65,7 +103,7 @@ PROC draw:
 	but:(2, 2)
 ENDP
 
-PROC bord:(type%, flags%)
+PROC xborder:(type%, flags%)
 	LOCAL x%
 	gXBORDER type%, flags%, w%, h%
 	x% = gX
@@ -76,7 +114,7 @@ PROC bord:(type%, flags%)
 	checkEnd:	
 ENDP
 
-PROC brd:(flags%)
+PROC border:(flags%)
 	LOCAL x%
 	gBORDER flags%, w%, h%
 	x% = gX
@@ -87,9 +125,13 @@ PROC brd:(flags%)
 	checkEnd:	
 ENDP
 
+PROC newline:
+	gAT 8, gY + h% + 8
+ENDP
+
 PROC checkEnd:
 	IF gX + w% > gWIDTH
-		gAT 10, gY + h% + 10
+		newline:
 	ENDIF
 ENDP
 
