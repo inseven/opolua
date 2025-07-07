@@ -277,7 +277,7 @@ function RunApp(stack, runtime) -- 31
             stack:push(0)
             return
         end
-        local ret = runtime:iohandler().runApp(prog, doc)
+        local ret = runtime:iohandler().system("runApp", prog, doc)
         -- Although a non-existent prog _would_ cause an error dialog to appear
         -- on screen, that was posted the system and you'd get a seemingly-valid
         -- but useless thread id returned to the program. We're not going to do
