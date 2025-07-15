@@ -47,11 +47,35 @@ FileType = enum {
     FileMime = 5,
 }
 
+FileTypeAliases = {
+    FILE = FileType.File,
+    FF = FileType.File,
+    FILETEXT = FileType.FileText,
+    FT = FileType.FileText,
+    FILERUN = FileType.FileRun,
+    FR = FileType.FileRun,
+    FILENULL = FileType.FileNull,
+    FN = FileType.FileNull,
+    FILEMIME = FileType.FileMime,
+    FM = FileType.FileMime,
+}
+
 FileTextDetails = enum {
     continue = 0,
     skip = 1,
     abort = 2,
     exit = 3,
+}
+
+FileTextAliases = {
+    TEXTCONTINUE = FileTextDetails.continue,
+    TC = FileTextDetails.continue,
+    TEXTSKIP = FileTextDetails.skip,
+    TS = FileTextDetails.skip,
+    TEXTABORT = FileTextDetails.abort,
+    TA = FileTextDetails.abort,
+    TEXTEXIT = FileTextDetails.exit,
+    TE = FileTextDetails.exit,
 }
 
 FileRunDetails = enum {
@@ -60,6 +84,18 @@ FileRunDetails = enum {
     RunBoth = 2,
     RunSendEnd = 256,
     RunWait = 512,
+}
+
+FileRunAliases = {
+    RUNINSTALL = FileRunDetails.RunInstall,
+    RI = FileRunDetails.RunInstall,
+    RUNREMOVE = FileRunDetails.RunRemove,
+    RR = FileRunDetails.RunRemove,
+    RUNBOTH = FileRunDetails.RunBoth,
+    RB = FileRunDetails.RunBoth,
+    RUNSENDEND = FileRunDetails.RunSendEnd,
+    RE = FileRunDetails.RunSendEnd,
+    RW = FileRunDetails.RunWait,
 }
 
 -- Codes from https://thoukydides.github.io/riscos-psifs/sis.html mapped into
@@ -165,6 +201,105 @@ Locales = enum {
     [0x0062] = "zu_ZA", -- Zulu (ZU)
 }
 
+LangShortCodes = enum {
+    [0x0001] = "EN", -- UK English
+    [0x0002] = "FR", -- French
+    [0x0003] = "GE", -- German
+    [0x0004] = "SP", -- Spanish
+    [0x0005] = "IT", -- Italian
+    [0x0006] = "SW", -- Swedish
+    [0x0007] = "DA", -- Danish
+    [0x0008] = "NO", -- Norwegian
+    [0x0009] = "FI", -- Finnish
+    [0x000A] = "AM", -- American English
+    [0x000B] = "SF", -- Swiss French
+    [0x000C] = "SG", -- Swiss German
+    [0x000D] = "PO", -- Portuguese
+    [0x000E] = "TU", -- Turkish
+    [0x000F] = "IC", -- Icelandic
+    [0x0010] = "RU", -- Russian
+    [0x0011] = "HU", -- Hungarian
+    [0x0012] = "DU", -- Dutch
+    [0x0013] = "BL", -- Belgian Flemish
+    [0x0014] = "AU", -- Australian English
+    [0x0015] = "BF", -- Belgian French
+    [0x0016] = "AS", -- Austrian German
+    [0x0017] = "NZ", -- New Zealand English
+    [0x0018] = "IF", -- International French
+    [0x0019] = "CS", -- Czech
+    [0x001A] = "SK", -- Slovak
+    [0x001B] = "PL", -- Polish
+    [0x001C] = "SL", -- Slovenian
+    [0x001D] = "TC", -- Taiwan Chinese
+    [0x001E] = "HK", -- Hong Kong Chinese
+    [0x001F] = "ZH", -- PRC Chinese
+    [0x0020] = "JA", -- Japanese
+    [0x0021] = "TH", -- Thai
+    [0x0022] = "AF", -- Afrikaans
+    [0x0023] = "SQ", -- Albanian
+    [0x0024] = "AH", -- Amharic
+    [0x0025] = "AR", -- Arabic
+    [0x0026] = "HY", -- Armenian
+    [0x0027] = "TL", -- Tagalog
+    [0x0028] = "BE", -- Belarussian
+    [0x0029] = "BN", -- Bengali
+    [0x002A] = "BG", -- Bulgarian
+    [0x002B] = "MY", -- Burmese
+    [0x002C] = "CA", -- Catalan
+    [0x002D] = "HR", -- Croatian
+    [0x002E] = "CE", -- Canadian English
+    [0x002F] = "IE", -- International English
+    [0x0030] = "SF", -- South African English
+    [0x0031] = "ET", -- Estonian
+    [0x0032] = "FA", -- Farsi
+    [0x0033] = "CF", -- Canadian French
+    [0x0034] = "GD", -- Scots Gaelic
+    [0x0035] = "KA", -- Georgian
+    [0x0036] = "EL", -- Greek
+    [0x0037] = "CG", -- Cyprus Greek
+    [0x0038] = "GU", -- Gujarati
+    [0x0039] = "HE", -- Hebrew
+    [0x003A] = "HI", -- Hindi
+    [0x003B] = "IN", -- Indonesian
+    [0x003C] = "GA", -- Irish
+    [0x003D] = "SZ", -- Swiss Italian
+    [0x003E] = "KN", -- Kannada
+    [0x003F] = "KK", -- Kazakh
+    [0x0040] = "KM", -- Khmer
+    [0x0041] = "KO", -- Korean
+    [0x0042] = "LO", -- Laothian
+    [0x0043] = "LV", -- Latvian
+    [0x0044] = "LT", -- Lithuanian
+    [0x0045] = "MK", -- Macedonian
+    [0x0046] = "MS", -- Malay
+    [0x0047] = "ML", -- Malayalam
+    [0x0048] = "MR", -- Marathi
+    [0x0049] = "MO", -- Moldavian
+    [0x004A] = "MN", -- Mongolian
+    [0x004B] = "NN", -- Norwegian-Nynorsk
+    [0x004C] = "BP", -- Brazilian Portuguese
+    [0x004D] = "PA", -- Punjabi
+    [0x004E] = "RO", -- Romanian
+    [0x004F] = "SR", -- Serbian
+    [0x0050] = "SI", -- Sinhalese
+    [0x0051] = "SO", -- Somali
+    [0x0052] = "OS", -- International Spanish
+    [0x0053] = "LS", -- Latin American Spanish
+    [0x0054] = "SH", -- Swahili
+    [0x0055] = "FS", -- Finland Swedish
+    [0x0057] = "TA", -- Tamil
+    [0x0058] = "TE", -- Telugu
+    [0x0059] = "BO", -- Tibetan
+    [0x005A] = "TI", -- Tigrinya
+    [0x005B] = "CT", -- Cyprus Turkish
+    [0x005C] = "TK", -- Turkmen
+    [0x005D] = "UK", -- Ukrainian
+    [0x005E] = "UR", -- Urdu
+    [0x0060] = "VI", -- Vietnamese
+    [0x0061] = "CY", -- Welsh
+    [0x0062] = "ZU", -- Zulu
+}
+
 function parseSisFile(data, verbose)
     local uid1, uid2, uid3, uid4, checksum, nLangs, nFiles, pos = string.unpack("<I4I4I4I4I2I2I2", data)
     if verbose then
@@ -237,6 +372,9 @@ function parseSisFile(data, verbose)
         ptr, pos = string.unpack("<I4", data, pos)
         endOfStrings = math.max(endOfStrings, ptr + nameLens[i])
         result.name[i] = data:sub(1 + ptr, ptr + nameLens[i])
+        if verbose then
+            printf("Name[%d] ptr=0x%08X %s\n", i, ptr, result.name[i])
+        end
     end
 
     if instDrv ~= 0 then
@@ -320,7 +458,9 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
         dest = destName,
     }
 
-    if type ~= FileType.FileNull then
+    if type == FileType.FileNull then
+        vprintf("    %s[FileNull] ptr=0x%08X len=%d\n", destName, contents[1].ptr, contents[1].len)
+    else
         local langData = {}
         for i, lang in ipairs(contents) do
             local filePtr = contents[i].ptr
@@ -724,6 +864,330 @@ function stubArrayToUidMap(stubs)
         result[sisfile.uid] = sisfile
     end
     return result
+end
+
+local shortFileTextDetails = enum {
+    TC = FileTextDetails.continue,
+    TS = FileTextDetails.skip,
+    TA = FileTextDetails.abort,
+    TE = FileTextDetails.exit,
+}
+
+local shortFileRunDetails = enum {
+    RI = FileRunDetails.RunInstall,
+    RR = FileRunDetails.RunRemove,
+    RB = FileRunDetails.RunBoth,
+    RE = FileRunDetails.RunSendEnd,
+    RW = FileRunDetails.RunWait,
+}
+
+function describeSis(sisfile, indent)
+    local cp1252 = require("cp1252")
+    for _, name in ipairs(sisfile.name) do
+        printf("%sName: %s\n", indent, cp1252.toUtf8(name))
+    end
+
+    printf("%sVersion: %d.%d\n", indent, sisfile.version[1], sisfile.version[2])
+    
+    printf("%sUid: 0x%08X\n", indent, sisfile.uid)
+
+    for _, lang in ipairs(sisfile.langs) do
+        printf("%sLanguage: 0x%04X (%s)\n", indent, lang, Locales[lang])
+    end
+
+    printf("Installed files: %d of %d\n", sisfile.installedFiles, #sisfile.files)
+
+    -- local langIdx = getBestLangIdx(sisfile.langs)
+    for _, file in ipairs(sisfile.files) do
+        local src = cp1252.toUtf8(file.src)
+        local dest = cp1252.toUtf8(file.dest)
+        printf("%s%s: %s -> %s", indent, FileType[file.type], src, dest)
+        if file.langData then
+            local lens = {}
+            for i, data in ipairs(file.langData) do
+                lens[i] = tostring(#data)
+            end
+            printf(" len=%s", table.concat(lens, ","))
+        elseif file.data then
+            printf(" len=%d", #file.data)
+        end
+        if file.type == FileType.FileText then
+            printf(" [%s]", shortFileTextDetails[file.details])
+        elseif file.type == FileType.FileRun then
+            printf(" [%s]", shortFileRunDetails[file.details])
+        end
+        printf("\n")
+
+        if file.type == FileType.SisComponent and file.data then
+            local componentSis = parseSisFile(file.data)
+            describeSis(componentSis, "    "..indent)
+        end
+    end
+end
+
+function pkgToManifest(pkgData)
+    local manifest = { files = {} }
+
+    for line in pkgData:gmatch("[^\r\n]*") do
+        local pos = 1
+        local function parseQuotedString()
+            local str, newPos = line:match('^ *"([^"]*)" *()', pos)
+            assert(str, "Expected quoted string")
+            pos = newPos
+            return str
+        end
+        local function handleFileRecord(file)
+            -- pos should be pointing to the dash before the dest
+            local dash, nextPos = line:match("^ *(%-)()", pos)
+            assert(dash, "Expected '-'")
+            pos = nextPos
+            file.dest = parseQuotedString()
+            file.type = "File"
+            local fileTypeStr, pos = line:match("^ *, *([A-Za-z]+)()", pos)
+            if fileTypeStr then
+                file.type = FileType[assert(FileTypeAliases[fileTypeStr:upper()], "Bad file type "..fileTypeStr)]
+                local detailsStr = line:match(" *, *([A-Za-z]+)()", pos)
+                if detailsStr then
+                    if file.type == "FileRun" then
+                        file.details = assert(FileRunAliases[detailsStr:upper()], "Bad FileRun details "..detailsStr)
+                    elseif file.type == "FileText" then
+                        file.details = assert(FileTextAliases[detailsStr:upper()], "Bad FileText details "..detailsStr)
+                    else
+                        error("Unexpected details for file type "..file.type)
+                    end
+                end
+            end
+            table.insert(manifest.files, file)
+        end
+
+        if line == "" or line:match("^;") then
+            -- ignore
+        elseif line:match("^&") then
+            manifest.languages = {}
+            for langCode in line:gmatch("[^,]+", 2) do
+                local langId = LangShortCodes[langCode]
+                assert(langId, "Unrecognized language "..langCode)
+                table.insert(manifest.languages, Locales[langId])
+            end
+        elseif line:match("^#{") then
+            pos = 3
+            if manifest.languages == nil then
+                manifest.languages = { "en_GB" }
+            end
+            local names = {}
+            while true do
+                table.insert(names, parseQuotedString())
+                local nextToken, nextPos = line:match('^ *([,}])()', pos)
+                pos = nextPos
+                assert(nextToken, "Expected , or }")
+                if nextToken == "}" then
+                    break
+                end
+            end
+            assert(#names == #manifest.languages, "Bad localised string count in package name")
+            manifest.name = {}
+            for i, name in ipairs(names) do
+                manifest.name[manifest.languages[i]] = name
+            end
+            local uidStr, majStr, minStr, optStr, pos = line:match(", *%(([0-9A-Fa-fxX]+)%),([0-9]+),([0-9]+),([0-9]+)()", pos)
+            manifest.uid = assert(tonumber(uidStr), "Bad uid "..uidStr)
+            manifest.version = {
+                major = assert(tonumber(majStr), "Bad major version "..majStr),
+                minor = assert(tonumber(minStr), "Bad minor version "..minStr)
+            }
+            local options = assert(tonumber(optStr), "Bad options "..optStr)
+            assert(options == 0, "Non-zero options not supported!")
+            -- Not supporting type for now, since it appears to be ER6 and later only.
+        elseif line:match('^%"') then
+            -- Simple file record
+            local file = {
+                src = { parseQuotedString() }
+            }
+            handleFileRecord(file)
+        elseif line:match('^{"') then
+            local src = {}
+            pos = 2
+            while true do
+                table.insert(src, parseQuotedString())
+                local nextToken, nextPos = line:match('^ *(["}])()', pos)
+                assert(nextToken, 'Expected " or }')
+                if nextToken == '"' then
+                    pos = nextPos - 1 -- unconsume the opening quote
+                else
+                    pos = nextPos
+                    break
+                end
+            end
+            assert(#src == #manifest.languages, "Bad number of sources in MultiLangRecord")
+            handleFileRecord({ src = src })
+        else
+            printf("Warning: unhandled line %s\n", line)
+        end
+    end
+
+    return manifest
+end
+
+local singleFileRecordSize = 28 -- not including file length(s) and pointer(s)
+
+--[[
+Implementation detail of how the average sis file is laid out:
+
+Header - 68 bytes
+
+Languages - 2n bytes
+
+Files - SimpleFileRecord 36 bytes, MultiLangFileRecord 28 + 8n bytes
+
+Requisites - if empty, reqPtr points to same as namePtr
+
+Name table - not the actual strings
+
+File src/dest strings
+
+Name strings
+
+-- End of stub sis --
+
+File data
+
+]]
+function makeSis(manifest)
+    local parts = { sz = 0 }
+    local function appendData(str)
+        parts.sz = parts.sz + #str
+        table.insert(parts, str)
+    end        
+    local function appendf(fmt, ...)
+        local part = string.pack("<" .. fmt, ...)
+        appendData(part)
+    end
+    local function updateIndex(index)
+        assert(#parts[index] == 4, "Cannot update index that isn't pointer-sized")
+        parts[index] = string.pack("<I4", parts.sz)
+    end
+    -- local uid1, uid2, uid3, uid4, checksum, nLangs, nFiles, pos = string.unpack("<I4I4I4I4I2I2I2", data)
+
+    local uid1, uid2, uid3 = manifest.uid, KUidAppDllDoc8, KUidInstallApp
+    local uid4 = require("crc").getUidsChecksum(uid1, uid2, uid3)
+    local chk = 0 -- TODO
+    appendf("I4I4I4I4I2I2I2 I2I2I2I2I2I4 I2I2I2I2I4",
+        uid1,
+        uid2,
+        uid3,
+        uid4,
+        chk,
+        #manifest.languages,
+        #manifest.files,
+
+        0, -- numRequisites
+        0, -- instLang
+        0, -- instFiles
+        0, -- instDrv
+        0, -- nCaps
+        0x64, -- instVer
+
+        0, -- options
+        0, -- type
+        manifest.version.major,
+        manifest.version.minor,
+        0) -- variant
+
+    appendf("I4", 0)
+    local langPtrIdx = #parts
+    appendf("I4", 0)
+    local filesPtrIdx = #parts
+    appendf("I4", 0)
+    local reqPtrIdx = #parts
+    
+    appendf("I4", 0)
+    -- certPtr is always zero
+
+    appendf("I4", 0)
+    local namePtrIdx = #parts
+
+    -- Header done, languages next
+    updateIndex(langPtrIdx)
+    for _, lang in ipairs(manifest.languages) do
+        appendf("I2", Locales[lang])
+    end
+
+    -- Files section
+    updateIndex(filesPtrIdx)
+    local nameTableSize = 8 * #manifest.languages
+    local filesEnd = parts.sz
+    for _, file in ipairs(manifest.files) do
+        filesEnd = filesEnd + singleFileRecordSize + (file.data == nil and 1 or #file.data) * 8
+    end
+    local stringPtr = filesEnd + nameTableSize
+    local fileDataPtrIndexes = {}
+    for i, file in ipairs(manifest.files) do
+        local recordType = (file.data == nil or #file.data == 1) and FileRecordType.SimpleFileRecord or FileRecordType.MultiLangRecord
+        local srcNamePtr = stringPtr
+        stringPtr = stringPtr + #file.src[1]
+        local destNamePtr = stringPtr
+        stringPtr = stringPtr + #file.dest
+        appendf("I4I4I4I4I4I4I4",
+            recordType,
+            FileType[file.type],
+            file.details or 0,
+            #file.src[1],
+            srcNamePtr,
+            #file.dest,
+            destNamePtr
+        )
+        fileDataPtrIndexes[i] = {}
+        if file.data then
+            for j = 1, #file.data do
+                appendf("I4", #file.data[j])
+            end
+            for j = 1, #file.data do
+                appendf("I4", 0)
+                fileDataPtrIndexes[i][j] = #parts
+            end
+        else
+            appendf("I4", 0) -- len
+            appendf("I4", 0) -- ptr
+            fileDataPtrIndexes[i] = #parts
+        end
+    end
+
+    assert(parts.sz == filesEnd, "filesEnd calculation mismatch!")
+    updateIndex(reqPtrIdx)
+
+    -- package name(s)
+    updateIndex(namePtrIdx)
+    for _, lang in ipairs(manifest.languages) do
+        appendf("I4", #manifest.name[lang])
+    end
+    for _, lang in ipairs(manifest.languages) do
+        appendf("I4", stringPtr)
+        stringPtr = stringPtr + #manifest.name[lang]
+    end
+
+    -- Now file strings
+    for i, file in ipairs(manifest.files) do
+        appendData(file.src[1])
+        appendData(file.dest)
+    end
+    -- Name strings
+    for _, lang in ipairs(manifest.languages) do
+        appendData(manifest.name[lang])
+    end
+
+    assert(parts.sz == stringPtr, "stringPtr calculation mismatch!")
+
+    -- Finally, file data
+    for i, file in ipairs(manifest.files) do
+        for j, idx in ipairs(fileDataPtrIndexes[i]) do
+            updateIndex(idx)
+            if file.data then
+                appendData(file.data[j])
+            end
+        end
+    end
+
+    return table.concat(parts)
 end
 
 return _ENV
