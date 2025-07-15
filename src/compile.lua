@@ -105,7 +105,7 @@ Options:
         end
     end
     if args.output or not args.dump then
-        local outName = args.output or (args.filename .. ".opo")
+        local outName = args.output or (oplpath.splitext(args.filename) .. ".opo")
         writeFile(outName, result)
         if args.aif then
             local aifName = oplpath.splitext(outName)..".aif"
