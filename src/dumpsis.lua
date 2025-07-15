@@ -26,18 +26,6 @@ SOFTWARE.
 
 dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 
-local osPathSeparator = string.match(package.config, "^.")
-
-local function path_join(path, component)
-    local sep = path:match(osPathSeparator.."$") and "" or osPathSeparator
-    return path..sep..component
-end
-
-local function path_basename(path)
-    local pattern = string.format("%s?([^%s]+)$", osPathSeparator, osPathSeparator)
-    return (path:match(pattern))
-end
-
 local sis = require("sis")
 
 local shortFileTextDetails = enum {
@@ -201,49 +189,7 @@ Options:
             local manifest = manifestToUtf8(sis.makeManifest(sisfile, args.language, true))
             print(json.encode(manifest))
         else
-            describeSis(sisfile, "")
-        end
-    end
-end
-
-function describeSis(sisfile, indent)
-    for _, name in ipairs(sisfile.name) do
-        printf("%sName: %s\n", indent, cp1252.toUtf8(name))
-    end
-
-    printf("%sVersion: %d.%d\n", indent, sisfile.version[1], sisfile.version[2])
-    
-    printf("%sUid: 0x%08X\n", indent, sisfile.uid)
-
-    for _, lang in ipairs(sisfile.langs) do
-        printf("%sLanguage: 0x%04X (%s)\n", indent, lang, sis.Locales[lang])
-    end
-
-    printf("Installed files: %d of %d\n", sisfile.installedFiles, #sisfile.files)
-
-    local langIdx = sis.getBestLangIdx(sisfile.langs)
-    for _, file in ipairs(sisfile.files) do
-        local len
-        local data = file.data and file.data or (file.langData and file.langData[langIdx])
-        if data then
-            len = #data
-        end
-        local src = cp1252.toUtf8(file.src)
-        local dest = cp1252.toUtf8(file.dest)
-        printf("%s%s: %s -> %s", indent, sis.FileType[file.type], src, dest)
-        if len then
-            printf(" len=%d", len)
-        end
-        if file.type == sis.FileType.FileText then
-            printf(" [%s]", shortFileTextDetails[file.details])
-        elseif file.type == sis.FileType.FileRun then
-            printf(" [%s]", shortFileRunDetails[file.details])
-        end
-        printf("\n")
-
-        if file.type == sis.FileType.SisComponent and file.data then
-            local componentSis = sis.parseSisFile(file.data)
-            describeSis(componentSis, "    "..indent)
+            sis.describeSis(sisfile, "")
         end
     end
 end
