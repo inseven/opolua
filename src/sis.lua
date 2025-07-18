@@ -895,7 +895,7 @@ function describeSis(sisfile, indent)
         printf("%sLanguage: 0x%04X (%s)\n", indent, lang, Locales[lang])
     end
 
-    printf("Installed files: %d of %d\n", sisfile.installedFiles, #sisfile.files)
+    printf("%sInstalled files: %d of %d\n", indent, sisfile.installedFiles, #sisfile.files)
 
     -- local langIdx = getBestLangIdx(sisfile.langs)
     for _, file in ipairs(sisfile.files) do
@@ -989,15 +989,22 @@ function pkgToManifest(pkgData)
             for i, name in ipairs(names) do
                 manifest.name[manifest.languages[i]] = name
             end
-            local uidStr, majStr, minStr, optStr, pos = line:match(", *%(([0-9A-Fa-fxX]+)%),([0-9]+),([0-9]+),([0-9]+)()", pos)
+            local uidStr, majStr, minStr, variantStr, pos = line:match(", *%(([0-9A-Fa-fxX]+)%),([0-9]+),([0-9]+),([0-9]+)()", pos)
             manifest.uid = assert(tonumber(uidStr), "Bad uid "..uidStr)
             manifest.version = {
                 major = assert(tonumber(majStr), "Bad major version "..majStr),
                 minor = assert(tonumber(minStr), "Bad minor version "..minStr)
             }
-            local options = assert(tonumber(optStr), "Bad options "..optStr)
-            assert(options == 0, "Non-zero options not supported!")
-            -- Not supporting type for now, since it appears to be ER6 and later only.
+            local variant = assert(tonumber(variantStr), "Bad variant "..variantStr)
+            assert(variant == 0, "Non-zero variant not supported!")
+            
+            local optionsStr = line:match(" *,(.*)", pos)
+            if optionsStr == "ID" then
+                manifest.options = 2
+            else
+                manifest.options = tonumber(optionsStr) or 0
+            end
+
         elseif line:match('^%"') then
             -- Simple file record
             local file = {
@@ -1069,14 +1076,16 @@ function makeSis(manifest)
     -- local uid1, uid2, uid3, uid4, checksum, nLangs, nFiles, pos = string.unpack("<I4I4I4I4I2I2I2", data)
 
     local uid1, uid2, uid3 = manifest.uid, KUidAppDllDoc8, KUidInstallApp
-    local uid4 = require("crc").getUidsChecksum(uid1, uid2, uid3)
-    local chk = 0 -- TODO
-    appendf("I4I4I4I4I2I2I2 I2I2I2I2I2I4 I2I2I2I2I4",
+    local crc = require("crc")
+    local uid4 = crc.getUidsChecksum(uid1, uid2, uid3)
+    appendf("I4I4I4I4",
         uid1,
         uid2,
         uid3,
-        uid4,
-        chk,
+        uid4
+    )
+    appendf("I2", 0) -- checksum
+    appendf("I2I2 I2I2I2I2I2I4 I2I2I2I2I4",
         #manifest.languages,
         #manifest.files,
 
@@ -1087,7 +1096,7 @@ function makeSis(manifest)
         0, -- nCaps
         0x64, -- instVer
 
-        0, -- options
+        manifest.options,
         0, -- type
         manifest.version.major,
         manifest.version.minor,
@@ -1186,6 +1195,14 @@ function makeSis(manifest)
             end
         end
     end
+
+    -- Last thing is to calculate the checksum
+    local checksum = crc.crc16(parts[1])
+    -- parts[2] is checksum placeholder
+    for i = 3, #parts do
+        checksum = crc.crc16(parts[i], checksum)
+    end
+    parts[2] = string.pack("<I2", checksum)
 
     return table.concat(parts)
 end

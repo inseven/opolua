@@ -161,20 +161,20 @@ Options:
             for i = #sisfile.files, 1, -1 do
                 local file = sisfile.files[i]
                 if file.type == FileType.SisComponent then
-                    local path = string.format("C:\\SisComponent_%i_%s", i, path_basename(file.src))
+                    local path = string.format("C:\\SisComponent_%i_%s", i, oplpath.basename(file.src))
                     iohandler.fsop("write", path, file.data)
                 elseif file.langData then
                     local basename
                     local suffix
                     if file.type == FileType.FileText then
-                        basename = string.format("FileText_%i_", i)
+                        basename = string.format("C:\\FileText_%i_", i)
                         suffix = ".txt"
                     else
-                        basename = file.dest
+                        basename = file.dest:gsub("^.:\\", "C:\\").."_"
                         suffix = ""
                     end
                     for langIdx, langData in ipairs(file.langData) do
-                        local path = basename .. sisfile.langs[langIdx] .. suffix
+                        local path = basename .. sis.Locales[sisfile.langs[langIdx]] .. suffix
                         iohandler.fsop("write", path, langData)
                     end
                 elseif file.type == FileType.FileText then
