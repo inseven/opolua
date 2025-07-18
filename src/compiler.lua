@@ -1624,11 +1624,13 @@ function ProcState:resolveOffsets(argExps)
 
     for _, p in ipairs(self.pendingOffsets) do
         local result
+        local packFmt = "<H" -- everything except labels use unsigned 16-bit offsets
         if p.type == "label" then
             local offset = self.labels[p.name]
             synassert(offset, p.token, "No label found for %s", p.name)
             -- The desired value is an offset relative the location of the jump instruction...
             result = offset - p.codeSz + 3
+            packFmt = "<h" -- label offsets are signed 16-bit
         elseif p.type == "local" then
             local var = assert(self.locals[p.name])
             result = var.offset
@@ -1641,7 +1643,7 @@ function ProcState:resolveOffsets(argExps)
         else
             error("Unhandled pending offset type "..p.type)
         end
-        self.code[p.codeIdx] = string_pack("<h", result)
+        self.code[p.codeIdx] = string_pack(packFmt, result)
     end
 end
 

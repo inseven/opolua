@@ -268,3 +268,18 @@ function pcallMain()
         os.exit(false)
     end
 end
+
+local osPathSeparator = string.match(package.config, "^.")
+
+function path_join(path, component)
+    if path == "" then
+        return component
+    end
+    local sep = path:match(osPathSeparator.."$") and "" or osPathSeparator
+    return path..sep..component
+end
+
+function path_basename(path)
+    local pattern = string.format("%s?([^%s]+)$", osPathSeparator, osPathSeparator)
+    return (path:match(pattern))
+end

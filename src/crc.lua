@@ -61,7 +61,7 @@ local crcTable = {
 }
 
 function crc16(data, initialVal)
-    local result = initalVal or 0
+    local result = initialVal or 0
     local pos = 1
     local len = #data
     while pos <= len do
