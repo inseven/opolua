@@ -96,6 +96,7 @@ FileRunAliases = {
     RUNSENDEND = FileRunDetails.RunSendEnd,
     RE = FileRunDetails.RunSendEnd,
     RW = FileRunDetails.RunWait,
+    RUNWAITEND = FileRunDetails.RunWait,
 }
 
 -- Codes from https://thoukydides.github.io/riscos-psifs/sis.html mapped into
@@ -479,7 +480,7 @@ function parseSimpleFileRecord(data, pos, numLangs, verbose)
             file.data = langData[1]
         end
     end
-    if type == FileType.FileText or type == FileType.FileRun then
+    if type == FileType.FileText or type == FileType.FileRun or type == FileType.SisComponent then
         file.details = details
     end
 
@@ -946,7 +947,7 @@ function pkgToManifest(pkgData)
             local fileTypeStr, pos = line:match("^ *, *([A-Za-z]+)()", pos)
             if fileTypeStr then
                 file.type = FileType[assert(FileTypeAliases[fileTypeStr:upper()], "Bad file type "..fileTypeStr)]
-                local detailsStr = line:match(" *, *([A-Za-z]+)()", pos)
+                local detailsStr, pos = line:match(" *, *([A-Za-z]+)()", pos)
                 if detailsStr then
                     if file.type == "FileRun" then
                         file.details = assert(FileRunAliases[detailsStr:upper()], "Bad FileRun details "..detailsStr)
@@ -963,6 +964,7 @@ function pkgToManifest(pkgData)
         if line == "" or line:match("^;") then
             -- ignore
         elseif line:match("^&") then
+            -- Languages
             manifest.languages = {}
             for langCode in line:gmatch("[^,]+", 2) do
                 local langId = LangShortCodes[langCode]
@@ -970,6 +972,7 @@ function pkgToManifest(pkgData)
                 table.insert(manifest.languages, Locales[langId])
             end
         elseif line:match("^#{") then
+            -- Header
             pos = 3
             if manifest.languages == nil then
                 manifest.languages = { "en_GB" }
@@ -1012,6 +1015,7 @@ function pkgToManifest(pkgData)
             }
             handleFileRecord(file)
         elseif line:match('^{"') then
+            -- Multi-language record
             local src = {}
             pos = 2
             while true do
@@ -1027,6 +1031,21 @@ function pkgToManifest(pkgData)
             end
             assert(#src == #manifest.languages, "Bad number of sources in MultiLangRecord")
             handleFileRecord({ src = src })
+        elseif line:match('^@"') then
+            -- Embedded (not-per-language) SIS file
+            pos = 2
+            local src = parseQuotedString()
+            local uid = assert(tonumber(line:match("^, *%(([0-9A-Fa-fxX]+)%)", pos)))
+            local file = {
+                src = { src },
+                dest = "",
+                type = "SisComponent",
+                details = uid,
+            }
+            table.insert(manifest.files, file)
+        elseif line:match('^{@') then
+            -- Embedded per-language SIS file
+            error("TODO")
         else
             printf("Warning: unhandled line %s\n", line)
         end
@@ -1157,7 +1176,7 @@ function makeSis(manifest)
         else
             appendf("I4", 0) -- len
             appendf("I4", 0) -- ptr
-            fileDataPtrIndexes[i] = #parts
+            fileDataPtrIndexes[i][1] = #parts
         end
     end
 
