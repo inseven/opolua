@@ -484,7 +484,8 @@ function parseMbmHeader(data)
     local numBitmaps, pos = string_unpack("<I4", data, 1 + trailerOffset)
     local bitmaps = {}
     for i = 1, numBitmaps do
-        local headerOffset = string_unpack("<I4", data, 1 + trailerOffset + 4 + (i-1) * 4)
+        local headerOffset
+        headerOffset, pos = string_unpack("<I4", data, pos)
         local bitmap = parseBitmap(data, headerOffset)
         table.insert(bitmaps, bitmap)
     end

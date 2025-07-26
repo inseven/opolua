@@ -119,8 +119,7 @@ function makeAif(info)
         add(data)
     end
 
-    local chk = require("crc").getUidsChecksum(KUidDirectFileStore, KUidAppInfoFile8, info.uid3)
-    addf("<I4I4I4I4", KUidDirectFileStore, KUidAppInfoFile8, info.uid3, chk)
+    addf("<I4I4I4I4", require("crc").getUids(KUidDirectFileStore, KUidAppInfoFile8, info.uid3))
 
     addf("<I4", 0) -- parts[2] = trailerOffset, will be replaced at end
 
@@ -168,6 +167,37 @@ function makeAif(info)
     )
 
     return table.concat(parts, "")
+end
+
+function toMbm(aif)
+    local parts = { n = 0 }
+    local function add(data)
+        table.insert(parts, data)
+        parts.n = parts.n + #data
+    end
+    local function addf(fmt, ...)
+        local data = string.pack(fmt, ...)
+        add(data)
+    end
+
+    addf("<I4I4I4I4", require("crc").getUids(KUidDirectFileStore, KUidMultiBitmapFileImage, 0))
+    addf("<I4", 0) -- parts[2] = trailerOffset, will be replaced at end
+
+    local imageOffsets = {}
+    for _, icon in ipairs(aif.icons) do
+        table.insert(imageOffsets, parts.n)
+        add(icon.data:sub(1 + icon.offset, icon.offset + icon.len))
+        table.insert(imageOffsets, parts.n)
+        add(icon.mask.data:sub(1 + icon.mask.offset, icon.mask.offset + icon.mask.len))
+    end
+
+    parts[2] = string.pack("<I4", parts.n) -- trailerOffset
+    addf("<I4", #imageOffsets) -- numBitmaps
+    for _, offset in ipairs(imageOffsets) do
+        addf("<I4", offset)
+    end
+
+    return table.concat(parts)
 end
 
 return _ENV
