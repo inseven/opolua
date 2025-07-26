@@ -982,7 +982,11 @@ function parseApp(tokens, consts)
             table.insert(aif.captions, { evalConstExpr(Int, exps[2], consts), evalConstExpr(String, exps[1], consts) })
         elseif token.type == "ICON" then
             tokens:advance()
-            table.insert(aif.icons, evalConstExpr(String, parseExpression(tokens), consts))
+            local iconToken = tokens:current()
+            table.insert(aif.icons, {
+                token = iconToken,
+                path = evalConstExpr(String, parseExpression(tokens), consts)
+            })
         elseif token.type == "FLAGS" then
             tokens:advance()
             synassert(aif.flags == nil, token, "Duplicate FLAGS")
@@ -2669,6 +2673,17 @@ function handleOp_USE(procState)
     procState:emit("BB", opcodes.Use, log)
 end
 
+
+function readFile(filename, text)
+    local f = io.open(filename, text and "r" or "rb")
+    if not f then
+        return nil
+    end
+    local data = f:read("a")
+    f:close()
+    return data
+end
+
 function docompile(path, realPath, programText, includePaths)
     local tokens = lex(programText, realPath or path)
     local procTable = {}
@@ -2696,11 +2711,9 @@ function docompile(path, realPath, programText, includePaths)
             local includeText, foundIncludePath
             for _, includePath in ipairs(includePaths) do
                 local path = includePath .. includeName
-                local f = io.open(path, "r")
-                if f then
+                includeText = readFile(path, true)
+                if includeText then
                     foundIncludePath = path
-                    includeText = f:read("*a")
-                    f:close()
                     break
                 end
             end
@@ -2789,11 +2802,43 @@ function docompile(path, realPath, programText, includePaths)
     end
 end
 
-function compile(path, realPath, programText, includePaths)
+function compile(path, realPath, programText, includePaths, shouldMakeAif)
     local compileResult = docompile(path, realPath, programText, includePaths)
     local opo = require("opofile").makeOpo(compileResult)
-    local aif = compileResult.aif and require("aif").makeAif(compileResult.aif)
-    return opo, aif
+    local aifData = nil
+    if shouldMakeAif and compileResult.aif then
+        if compileResult.aif.icons then
+            -- compileResult.aif.icons is list of mbm paths, convert to list of actual bitmaps
+            local mbm = require("mbm")
+            local iconBitmaps = {}
+            for _, icon in ipairs(compileResult.aif.icons) do
+                if icon.path:match("%.bmp$") then
+                    error("TODO")
+                else
+                    local mbmData = readFile(icon.path)
+                    synassert(mbmData, icon.token, "Could not read file '%s'", icon.path)
+                    local bitmaps = mbm.parseMbmHeader(mbmData)
+                    for _, bmp in ipairs(bitmaps) do
+                        table.insert(iconBitmaps, bmp)
+                    end
+                end
+            end
+            synassert(#iconBitmaps % 2 == 0, compileResult.aif.icons[#compileResult.aif.icons].token,
+                "ICONs must have an even number of bitmaps in total")
+
+            for i = 1, #iconBitmaps, 2 do
+                synassert(iconBitmaps[i].width == iconBitmaps[i+1].width,
+                    compileResult.aif.icons[(i + 1) // 2],
+                    "Icon and mask sizes must match")
+            end
+
+            -- Convert icons to format expected by makeAif
+            compileResult.aif.icons = iconBitmaps
+        end
+
+        aifData = require("aif").makeAif(compileResult.aif)
+    end
+    return opo, aifData
 end
 
 return _ENV

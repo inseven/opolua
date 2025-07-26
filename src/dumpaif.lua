@@ -31,8 +31,26 @@ function main()
         "filename",
         extract = true, e = "extract",
         json = true, j = "json",
-        verbose = true, v = "verbose",
     })
+
+    if args.help or args.filename == nil then
+        print([[
+Syntax: dumpaif.lua [options] <filename>
+
+Print info about an AIF or extract the images from it, depending on whether
+--extract is specified.
+
+Options:
+    --extract, -e
+        Extract the icon(s) from the AIF and save them in BMP format. Files
+        are written alongside <filename>. The icons are also written to a MBM
+        file, for convenience.
+    
+    --json, -j
+        Print AIF info in JSON format.
+]])
+        os.exit(true)
+    end
 
     local aif = require("aif")
     local mbm = require("mbm")
@@ -66,6 +84,11 @@ function main()
                 -- printf("toBmp icon %s\n", maskName)
                 writeFile(maskName, mask:toBmp())
             end
+        end
+
+        if #info.icons > 0 then
+            local mbmName = string.format("%s_icons.mbm", args.filename)
+            writeFile(mbmName, aif.toMbm(info))
         end
     end
 

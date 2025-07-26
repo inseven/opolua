@@ -31,7 +31,24 @@ function main()
         "filename",
         "index",
         extract = true, e = "extract",
+        help = true, h = "help",
     })
+
+    if args.help or args.filename == nil then
+        print([[
+Syntax: dumpmbm.lua [options] <filename> [<index>]
+
+Print info about an MBM or extract the images from it, depending on whether
+--extract is specified. If <index> is specified, only print/extract that
+indexed image.
+
+Options:
+    --extract, -e
+        Extract the image(s) from the MBM and save them in BMP format. Files
+        are written alongside <filename>.
+]])
+        os.exit(true)
+    end
 
     mbm = require("mbm")
     local data = readFile(args.filename)
@@ -47,9 +64,9 @@ function main()
 end
 
 function dump(filename, i, bitmap, extract)
-    print(string.format("%d: len=%d w=%d h=%d stride=%d bpp=%d col=%s paletteSz=%d compression=%s",
-        i, bitmap.imgLen, bitmap.width, bitmap.height, bitmap.stride, bitmap.bpp, bitmap.isColor, bitmap.paletteSz, mbm.compressionToString(bitmap.compression)))
-    local img = mbm.decodeBitmap(bitmap)
+    print(string.format("%d: len=%d imgLen=%d w=%d h=%d stride=%d bpp=%d col=%s paletteSz=%d compression=%s",
+        i, bitmap.len, bitmap.imgLen, bitmap.width, bitmap.height, bitmap.stride, bitmap.bpp, bitmap.isColor, bitmap.paletteSz, mbm.compressionToString(bitmap.compression)))
+    -- local img = mbm.decodeBitmap(bitmap)
     if extract then
         local bmpName = string.format("%s_%d_%dx%d_%dbpp.bmp", filename, i, bitmap.width, bitmap.height, bitmap.bpp)
         writeFile(bmpName, bitmap:toBmp())

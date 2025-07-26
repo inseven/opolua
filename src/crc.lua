@@ -88,4 +88,8 @@ function getUidsChecksum(uid1, uid2, uid3)
     return checksum
 end
 
+function getUids(uid1, uid2, uid3)
+    return uid1, uid2, uid3, getUidsChecksum(uid1, uid2, uid3)
+end
+
 return _ENV
