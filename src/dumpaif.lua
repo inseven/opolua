@@ -31,8 +31,25 @@ function main()
         "filename",
         extract = true, e = "extract",
         json = true, j = "json",
-        verbose = true, v = "verbose",
     })
+
+    if args.help or args.filename == nil then
+        print([[
+Syntax: dumpaif.lua [options] <filename>
+
+Print info about an AIF or extract the images from it, depending on whether
+--extract is specified.
+
+Options:
+    --extract, -e
+        Extract the image(s) from the AIF and save them in BMP format. Files
+        are written alongside <filename>.
+    
+    --json, -j
+        Print AIF info in JSON format.
+]])
+        os.exit(true)
+    end
 
     local aif = require("aif")
     local mbm = require("mbm")

@@ -495,6 +495,7 @@ local function parseSEpocBitmapHeader(data, offset)
     local len, headerLen, x, y, twipsx, twipsy, bpp, col, paletteSz, compression, pos =
         string_unpack("<I4I4I4I4I4I4I4I4I4I4", data, 1 + offset)
     return Bitmap {
+        offset = offset,
         data = data,
         len = len,
         headerLen = headerLen,

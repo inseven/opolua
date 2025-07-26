@@ -24,7 +24,7 @@ SOFTWARE.
 
 _ENV = module()
 
-function parseAif(data, verbose)
+function parseAif(data)
     local sis = require("sis")
     local mbm = require("mbm")
 
@@ -33,7 +33,7 @@ function parseAif(data, verbose)
         -- Not entirely clear how to establish if this is an OPA with metadata or just an OPO without - we will peek
         -- for a PIC header and assume that means we're an OPA
 
-        -- local _, _, era = require("opofile").parseOpo(data, verbose)
+        -- local _, _, era = require("opofile").parseOpo(data)
 
         local sourceName, pos = string.unpack("<s1", data, 21)
         local len, hdr = string.unpack("<I2c4", data, pos)
@@ -83,15 +83,15 @@ function parseAif(data, verbose)
     local nIcons, pos = string.unpack("<B", data, pos)
     local icons = {}
     for i = 1, (nIcons // 2) do
-        local offset, size
-        offset, size, pos = string.unpack("<I4I2", data, pos)
+        local offset, width
+        offset, width, pos = string.unpack("<I4I2", data, pos)
         local bitmap = mbm.parseBitmap(data, offset)
-        -- print(offset, size, bitmap.len)
+        -- printf("Icon %d offset=0x%08X width=%d len=%d\n", i, offset, width, bitmap.len)
         bitmap.imgData = bitmap:getImageData()
 
         local maskStart = (offset + bitmap.len)
         local mask = mbm.parseBitmap(data, maskStart)
-        -- printf("Mask: 0x%08X w=%d h=%d, len=%d\n", maskStart, mask.width, mask.height, mask.len)
+        -- printf("Mask %d offset=0x%08X width=%d height=%d len=%d\n", i, maskStart, mask.width, mask.height, mask.len)
         mask.imgData = mask:getImageData()
         bitmap.mask = mask
 
@@ -124,7 +124,17 @@ function makeAif(info)
 
     addf("<I4", 0) -- parts[2] = trailerOffset, will be replaced at end
 
-    -- MBM icons would go here
+    local iconOffsets = {}
+    for i = 1, #info.icons, 2 do
+        table.insert(iconOffsets, parts.n)
+        local icon = info.icons[i]
+        local mask = info.icons[i + 1]
+        -- Don't call icon:getImageData() or mbm.decodeBitmap() here, we want the compressed data as stored in the mbm
+        local imgData = icon.data:sub(1 + icon.offset, icon.offset + icon.len)
+        add(imgData)
+        local maskData = mask.data:sub(1 + mask.offset, mask.offset + mask.len)
+        add(maskData)
+    end
 
     local captionOffsets = {}
     for _, cap in ipairs(info.captions) do
@@ -143,7 +153,10 @@ function makeAif(info)
         addf("<I4I2", captionOffsets[i], langId)
     end
 
-    addf("B", 0) -- nIcons
+    addf("B", #info.icons) -- nIcons
+    for i, offset in ipairs(iconOffsets) do
+        addf("<I4I2", offset, info.icons[2 * i - 1].width)
+    end
 
     addf("<I4I4I4I4I4B",
         1, -- (unknown),
