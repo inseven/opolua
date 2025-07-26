@@ -2332,6 +2332,7 @@ function DIALOG(dialog)
         maxWidth = math.max(cw, maxWidth)
         h = h + ch + titleBarSpace
     end
+    local titleBarHeight = h
 
     for i, item in ipairs(dialog.items) do
         -- printf("Item %i is type %d\n", i, item.type)
@@ -2360,7 +2361,9 @@ function DIALOG(dialog)
             -- printf("Button %i key: %d text: %s\n", i, button.key, button.text)
         end
         butw, buth = dialog.buttons:contentSize()
-        if not dialog.buttons.side then
+        if dialog.buttons.side then
+            h = math.max(h, titleBarHeight + buth + bottomMargin + borderWidth)
+        else
             maxWidth = math.max(butw, maxWidth)
             h = h + buth + kDialogLineGap
         end
