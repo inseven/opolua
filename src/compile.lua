@@ -77,7 +77,7 @@ Options:
         -- Assume it's a .opl file
         progText = require("recognizer").getOplText(progText)
     end
-    local ok, result, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText, args.include)
+    local ok, result, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText, args.include, args.aif)
     if not ok then
         if type(result) == "string" then
             print(result)

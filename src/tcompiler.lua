@@ -223,6 +223,13 @@ local function checkProg(prog, expected)
         end
     end
 
+    if progObj.aif and progObj.aif.icons then
+        -- Strip the tokens, they aren't useful to test
+        for _, icon in ipairs(progObj.aif.icons) do
+            icon.token = nil
+        end
+    end
+
     assertEquals(progObj.aif, expected.aif)
     assertEquals(opxTable, expected.opxTable)
 end
@@ -831,7 +838,7 @@ checkProg(aiftest, {
             { 2, "Welcome" },
         },
         icons = {
-            "welc.mbm",
+            { path = "welc.mbm" },
         },
     },
 })
