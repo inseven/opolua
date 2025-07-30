@@ -339,7 +339,7 @@ public class PsiLuaEnv {
             return 0
         }
 
-        let cmdReturnsResult = cmd == "read" || cmd == "dir" || cmd == "stat"
+        let cmdReturnsResult = cmd == "read" || cmd == "dir" || cmd == "stat" || cmd == "disks"
 
         let op: Fs.Operation.OpType
         switch cmd {
