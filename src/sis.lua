@@ -840,7 +840,7 @@ function getStubs(iohandler)
     local result, err = iohandler.sisGetStubs()
     if result == "notimplemented" then
         result = {}
-        local disks = assert(iohandler.fsop("disks"))
+        local disks = assert(iohandler.fsop("disks", ""))
         for _, disk in ipairs(disks) do
             local installDir = disk .. [[:\System\install\]]
             local stubNames = iohandler.fsop("dir", installDir) or {}
