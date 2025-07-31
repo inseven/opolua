@@ -93,6 +93,7 @@ PROC draw:
 	xborder:(2, $194)
 	xborder:(2, $294)
 	REM xborder:(2, $494)
+	xborder:(2, $96)
 	
 	newline:
 	but:(1, 0)
