@@ -207,7 +207,15 @@ function VolumeSize(stack, runtime) -- 23
 end
 
 function VolumeSpaceFree(stack, runtime) -- 24
-    unimplemented("opx.system.VolumeSpaceFree")
+    local drv = stack:pop()
+    if drv < 0 or drv > 25 then
+        error(KErrInvalidArgs)
+    elseif drv ~= 2 and drv ~= 3 then -- C or D
+        error(KErrNotReady)
+    else
+        -- Just pretend C and D have plenty of space
+        stack:push(16 * 1024) -- kB
+    end
 end
 
 function VolumeUniqueID(stack, runtime) -- 25
