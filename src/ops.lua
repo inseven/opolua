@@ -1405,7 +1405,13 @@ function Beep(stack, runtime) -- 0xA0
     end
     local dataStr = table.concat(data)
 
-    assert(runtime:getResource("sound") == nil, KErrInUse)
+    -- Oddly BEEP does not care about ongoing sound effects - on device it kindasorta plays it over the top but not
+    -- properly, so we'll just ignore it.
+    -- assert(runtime:getResource("sound") == nil, KErrInUse)
+    if runtime:getResource("sound") then
+        return
+    end
+
     local var = runtime:makeTemporaryVar(DataTypes.ELong)
     runtime:PlaySoundPcm16(var, dataStr)
     runtime:waitForRequest(var)
