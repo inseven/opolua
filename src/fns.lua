@@ -823,7 +823,8 @@ function PeekL(stack, runtime) -- 0x43
 end
 
 function Space(stack, runtime) -- 0x44
-    unimplemented("fns.Space")
+    -- Just pretend every drive has plenty of space (see also VolumeSpaceFree in system.lua)
+    stack:push(16 * 1024 * 1024)
 end
 
 function DateToSecs(stack, runtime) -- 0x45
