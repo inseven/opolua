@@ -1297,7 +1297,9 @@ end
 function CmdStr(stack, runtime) -- 0xD6
     local x = stack:pop()
     if x == 1 then
-        stack:push(runtime:getPath())
+        local path = runtime:getPath()
+        -- printf("CMD$(1)=%s\n", path)
+        stack:push(path)
     elseif x == 2 then
         local path = runtime:getPath()
         path = oplpath.join(oplpath.dirname(path), "SomeDoc.Wat")
@@ -1316,10 +1318,15 @@ function ParseStr(stack, runtime) -- 0xD7
     -- Wow this is a fun API
     -- printf("Parse(%s, %s)\n", f, rel)
 
+    -- Make rel a fully specified path, if necessary
     rel = oplpath.abs(rel, runtime:getCwd())
+    printf("rel=%s\n", rel)
+
+    f = oplpath.abs(f, rel)
+    printf("f = %s\n", f)
+
     local _, fext = oplpath.splitext(f)
     local _, relext = oplpath.splitext(rel)
-    f = oplpath.abs(f, rel)
     if #fext == 0 and #relext > 0 then
         -- f is expected to inherit rel's extension
         f = f .. relext

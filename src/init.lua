@@ -325,6 +325,13 @@ function oplpath.split(path)
     end
 end
 
+function oplpath.parse(path)
+    local drv = path:match("^[a-zA-Z]:") or ""
+    local dir, name = oplpath.split(path:sub(#drv + 1))
+    local base, ext = oplpath.splitext(name)
+    return drv, dir, base, ext
+end
+
 function oplpath.dirname(path)
     local dir, file = oplpath.split(path)
     return dir
@@ -336,7 +343,9 @@ function oplpath.basename(path)
 end
 
 function oplpath.splitext(path)
-    local base, ext = path:match("(.+)(%.[^%.]*)")
+    -- Note, ".foo" is considered as an empty name with extension ".foo".
+    -- This is different to how Linux-y filesystems generally consider such a name.
+    local base, ext = path:match("(.*)(%.[^%.]*)")
     if not base then
         return path, ""
     else
@@ -351,30 +360,35 @@ function oplpath.join(path, component)
     return path..component
 end
 
-local function abs(path, relativeTo)
-    if path == "" then
-        return relativeTo
-    elseif oplpath.isabs(path) then
-        return path
-    elseif path:match("^\\") then
-        -- Just take drive letter from relativeTo
-        return relativeTo:sub(1, 2) .. path
-    else
-        local dir, name = oplpath.split(relativeTo)
-        -- Check if relativeTo has a wildcarded name (ugh)
-        if name:match("%*") then
-            path = name:gsub("%*", path, 1)
-        end
-        return oplpath.join(dir, path)
-    end
-end
-
 function oplpath.abs(path, relativeTo)
-    local result = abs(path, relativeTo)
-    -- printf("ABS(%s, %s)->%s\n", path, relativeTo, result)
-    return result
-end
+    --[[
+    Paths are considered to have 4 distinct items, any or all of which can be taken from relativeTo if not specified:
+    * Drive letter
+    * Path
+    * Name
+    * Extension
 
+    Furthermore, relativeTo can have a wildcarded name like "*.foo" meaning path should be given the extension ".foo"
+    if it doesn't already have one.
+    ]]
+
+    local pathDrv, pathDir, pathName, pathExt = oplpath.parse(path)
+    local relDrv, relDir, relName, relExt = oplpath.parse(relativeTo)
+
+    if #pathDrv == 0 then
+        pathDrv = relDrv
+    end
+    if #pathDir == 0 then
+        pathDir = relDir
+    end
+    if #pathName == 0 then
+        pathName = relName
+    end
+    if #pathExt == 0 and relName == "*" then
+        pathExt = relExt
+    end
+    return pathDrv..pathDir..pathName..pathExt
+end
 
 -- For whenever you need to compare paths for equality - not to be used for anything else
 function oplpath.canon(path)

@@ -16,7 +16,23 @@ function checkQuery(query, value)
     assertEquals(database.splitQuery(query), value)
 end
 
+function checkParse(path, expected)
+    local drv, dir, name, ext = oplpath.parse(path)
+    assertEquals(drv..dir..name..ext, path)
+    assertEquals({drv, dir, name, ext}, expected)
+end
+
 function main()
+
+    checkParse("foo", {"", "", "foo", ""})
+    checkParse([[C:\foo\bar.baz]], {"C:", [[\foo\]], "bar", ".baz"})
+    checkParse([[C:woop]], {"C:", "", "woop", ""})
+    checkParse([[C:woop.txt]], {"C:", "", "woop", ".txt"})
+
+    assertEquals(oplpath.abs("woop", [[D:\System\Apps\woop\woop.app]]), [[D:\System\Apps\woop\woop]])
+    assertEquals(oplpath.abs("C:woop", [[D:\System\Apps\woop\woop.app]]), [[C:\System\Apps\woop\woop]])
+    assertEquals(oplpath.abs("C:woop", [[D:\System\Apps\woop\*.mbm]]), [[C:\System\Apps\woop\woop.mbm]])
+
     database = require("database")
 
     assertEquals(database.commaSplit(""), { "" })
