@@ -306,12 +306,37 @@ local kEpoc8bitPalette = {
 
 local string_byte, string_char, string_rep, string_sub = string.byte, string.char, string.rep, string.sub
 local string_pack, string_packsize, string_unpack = string.pack, string.packsize, string.unpack
+local table_insert = table.insert
 
 local ENoBitmapCompression = 0
 local EByteRLECompression = 1
 local ETwelveBitRLECompression = 2
 local ESixteenBitRLECompression = 3
 local ETwentyFourBitRLECompression = 4
+
+local GrayBppToMode = {
+    [1] = KColorgCreate2GrayMode,
+    [2] = KColorgCreate4GrayMode,
+    [4] = KColorgCreate16GrayMode,
+    [8] = KColorgCreate256GrayMode,
+}
+
+local ColorBppToMode = {
+    [4] = KColorgCreate16ColorMode,
+    [8] = KColorgCreate256ColorMode,
+    [12] = KColorgCreate4KColorMode,
+    [16] = KColorgCreate64KColorMode,
+    [24] = KColorgCreate16MColorMode,
+    [32] = KColorgCreateRGBColorMode,
+}
+
+function bppColorToMode(bpp, color)
+    local result = (color and ColorBppToMode or GrayBppToMode)[bpp]
+    if not result then
+        error(string.format("Invalid bpp=%d color=%s combination", bpp, color))
+    end
+    return result
+end
 
 Bitmap = class {
     -- See parseSEpocBitmapHeader for members
@@ -365,6 +390,7 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
             trimmed[1 + y] = row..rowPad
         end
         imgData = table.concat(trimmed)
+        -- print(#imgData, resultStride, self.height, resultStride * self.height)
         assert(#imgData == resultStride * self.height, "getImageData did not return expected size")
     elseif expandToBitDepth == 24 then
         local bytes
@@ -481,6 +507,8 @@ function parseMbmHeader(data)
     -- KUidOplFile)
     -- assert(uid2 == KUidMultiBitmapFileImage, "Bad uid2 in MBM file!")
 
+    -- printf("Uids: 0x%08X 0x%08X 0x%08X\n", uid1, uid2, uid3)
+
     local numBitmaps, pos = string_unpack("<I4", data, 1 + trailerOffset)
     local bitmaps = {}
     for i = 1, numBitmaps do
@@ -492,9 +520,133 @@ function parseMbmHeader(data)
     return bitmaps
 end
 
+local ModeToBpp = {
+    [KColorgCreate2GrayMode] = 1,
+    [KColorgCreate4GrayMode] = 2,
+    [KColorgCreate16GrayMode] = 4,
+    [KColorgCreate256GrayMode] = 8,
+    [KColorgCreate16ColorMode] = 4,
+    [KColorgCreate256ColorMode] = 8,
+    [KColorgCreate4KColorMode] = 12,
+    [KColorgCreate64KColorMode] = 16,
+    [KColorgCreate16MColorMode] = 24,
+    [KColorgCreateRGBColorMode] = 32,
+}
+
+local SEpocBitmapHeader = "<I4I4I4I4I4I4I4I4I4I4"
+
+function makeMbm(uid2, bitmaps)
+    local parts = { n = 0 }
+    local function add(data)
+        table.insert(parts, data)
+        parts.n = parts.n + #data
+    end
+    local function addf(fmt, ...)
+        local data = string_pack(fmt, ...)
+        add(data)
+    end
+
+    addf("<I4I4I4I4", require("crc").getUids(KUidDirectFileStore, uid2, 0))
+    addf("<I4", 0) -- parts[2] = trailerOffset, will be replaced at end
+    local bitmapOffsets = {}
+
+    for i, bitmap in ipairs(bitmaps) do
+        bitmapOffsets[i] = parts.n
+        local headerLen = string_packsize(SEpocBitmapHeader)
+
+        -- normalizedImgData is 8-bit for any greyscale mode, and 32-bit for any color
+        local isColor = bitmap.mode >= KColorgCreate16ColorMode
+        local bpp = ModeToBpp[bitmap.mode]
+        local stride = byteWidth(bitmap.width, bpp)
+        local pixels = {}
+        local compression = ENoBitmapCompression
+        local function copyPixels832()
+            local pixelSz = (bpp // 8)
+            local padSz = stride - (pixelSz * bitmap.width)
+            assert(padSz >= 0)
+            local pad = string_rep("\0", padSz)
+            for i = 0, bitmap.width - 1 do
+                pixels[i + 1] = bitmap.normalizedImgData:sub(1 + bitmap.width * i * pixelSz, bitmap.width * (i + 1) * pixelSz) .. pad
+            end
+        end
+        local function copyPixels2()
+            for y = 0, bitmap.height - 1 do
+                local offset = bitmap.width * y
+                local line = string_sub(bitmap.normalizedImgData, 1 + offset, offset + bitmap.width).."\0\0\0\0"
+                local x = 0
+                while x < bitmap.width do
+                    local p1, p2, p3, p4 = string_byte(line, 1 + x, x + 4)
+                    table_insert(pixels, string_char(((p4 >> 6) << 6) | ((p3 >> 6) << 4) | ((p2 >> 6) << 2) | (p1 >> 6)))
+                    x = x + 4
+                end
+                table_insert(pixels, string.rep("\0", stride - (bitmap.width + 3) // 4))
+            end
+        end
+        local function copyPixels4()
+            for y = 0, bitmap.height - 1 do
+                local offset = bitmap.width * y
+                local line = string_sub(bitmap.normalizedImgData, 1 + offset, offset + bitmap.width).."\0\0\0\0"
+                local x = 0
+                while x < bitmap.width do
+                    local p1, p2 = string_byte(line, 1 + x, x + 2)
+                    table_insert(pixels, string_char(((p2 >> 4) << 4) | (p1 >> 4)))
+                    x = x + 2
+                end
+                table_insert(pixels, string.rep("\0", stride - (bitmap.width + 1) // 2))
+            end
+        end
+        if (bpp == 8 and not isColor) or bpp == 32 then
+            if bpp == 8 then 
+                compression = EByteRLECompression
+            end
+            copyPixels832()
+        elseif bpp == 2 then
+            compression = EByteRLECompression
+            copyPixels2()
+        elseif bpp == 4 then
+            compression = EByteRLECompression
+            copyPixels4()
+        else
+            unimplemented("mbm.makeMbm.mode"..tostring(bitmap.mode))
+        end
+
+        local paddedData = table.concat(pixels)
+        if compression == EByteRLECompression then
+            paddedData = rleEncode(paddedData, 1)
+        elseif compression == ESixteenBitRLECompression then
+            paddedData = rleEncode(paddedData, 2)
+        elseif compression == ETwentyFourBitRLECompression then
+            paddedData = rleEncode(paddedData, 3)
+        elseif compression == ETwelveBitRLECompression then
+            unimplemented("mbm.makeMbm.rle12")
+        end
+        addf(SEpocBitmapHeader,
+            #paddedData + headerLen, -- len
+            headerLen,
+            bitmap.width,
+            bitmap.height,
+            math.floor(bitmap.width * 11.90625 + 0.5), -- twipsx
+            math.floor(bitmap.height * 11.90625 + 0.5), -- twipsy
+            bpp,
+            isColor and 1 or 0,
+            0, -- paletteSz,
+            compression)
+        add(paddedData)
+    end
+
+    parts[2] = string_pack("<I4", parts.n) -- trailerOffset
+    addf("I4", #bitmapOffsets)
+    for _, offset in ipairs(bitmapOffsets) do
+        addf("I4", offset)
+    end
+
+    return table.concat(parts)
+end
+
 local function parseSEpocBitmapHeader(data, offset)
     local len, headerLen, x, y, twipsx, twipsy, bpp, col, paletteSz, compression, pos =
-        string_unpack("<I4I4I4I4I4I4I4I4I4I4", data, 1 + offset)
+        string_unpack(SEpocBitmapHeader, data, 1 + offset)
+    -- printf("x=%d y=%d twipsx=%d twipsy=%d headerLen=%d\n", x, y, twipsx, twipsy, headerLen)
     return Bitmap {
         offset = offset,
         data = data,
@@ -541,6 +693,7 @@ function decodeBitmap(bitmap)
             -- Workaround: Some AIFs appear to have an incorrectly-calculated length in the header (failing to include
             -- headerLen) so we will allow this (on uncompressed bitmaps only) and just hope the data is otherwise
             -- correct.
+            print("Working around bad len", len, expectedImgSize, bitmap.headerLen)
             len = expectedImgSize
         end
 
@@ -595,6 +748,74 @@ function rleDecode(data, pos, len, pixelSize)
     end
     local result = table.concat(bytes)
     return result
+end
+
+function rleEncode(data, pixelSize)
+    local result = {}
+    local current = nil -- nil if currently in a raw block, non-nil if in a run block of that character
+    local prev = nil -- previous raw-block byte
+    local start = 1 -- Where the current block started (indexes are pixel-based, not byte based)
+    local function indexToPos(i)
+        return (i - 1) * pixelSize + 1
+    end
+    for i = 1, #data // pixelSize do
+        local b = string_sub(data, indexToPos(i), indexToPos(i) + pixelSize - 1)
+        assert(#b == pixelSize)
+        local blockLen = i - start + 1 -- Assuming b is the same type as the current block
+
+        if current and b == current and blockLen == 0x81 then
+            -- We have to end the run now (without including byte i) because i won't fit
+            table.insert(result, string_char(blockLen - 2)..current)
+            current = nil
+            start = i
+        end
+
+        if current then
+            assert(prev == nil)
+            if b == current then
+                -- Keep adding to the run
+            else
+                -- end the run
+                table.insert(result, string_char(i - start - 1)..current)
+                current = nil
+                start = i
+            end
+        else -- current == nil
+            if prev == b then
+                -- start a run, by first ending the raw block
+                local len = (i - 1) - start
+                if len > 0 then
+                    table.insert(result, string_char(256 - len))
+                    table.insert(result, string_sub(data, indexToPos(start), indexToPos(i - 1) - 1))
+                end
+                start = i - 1
+                current = b
+                prev = nil
+            elseif blockLen == 0x7F then
+                -- We have to end the raw block anyway due to becoming too big
+                table.insert(result, string_char(256 - blockLen))
+                local block = string_sub(data, indexToPos(start), indexToPos(i) - 1)
+                assert(#block == blockLen * pixelSize)
+                table.insert(result, block)
+                start = i + 1
+                prev = nil
+            else
+                -- Keep adding to the raw block
+                prev = b
+            end
+        end
+    end
+    if start ~= (#data // pixelSize) + 1 then
+        if current then
+            local len = (#data // pixelSize) - (start - 1)
+            table.insert(result, string_char(len - 1)..current)
+        else
+            local block = string_sub(data, indexToPos(start))
+            table.insert(result, string_char(256 - (#block // pixelSize)))
+            table.insert(result, block)
+        end
+    end
+    return table.concat(result)
 end
 
 local compressionNames = {
