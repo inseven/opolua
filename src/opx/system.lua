@@ -411,7 +411,10 @@ function CheckUid(stack, runtime) -- 47
 end
 
 function SetPointerGrabOn(stack, runtime) -- 48
-    unimplemented("opx.system.SetPointerGrabOn")
+    -- unimplemented("opx.system.SetPointerGrabOn")
+    local winId, state = stack:pop(2)
+    printf("SetPointerGrabOn(%d, %d)\n", winId, state)
+    stack:push(0)
 end
 
 function MachineName(stack, runtime) -- 49
