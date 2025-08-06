@@ -109,6 +109,36 @@ function main()
     assertEquals(likeExp({FOO="doom%"}), true)
     assertEquals(likeExp({FOO="dom%"}), false)
 
+    local mbm = require("mbm")
+    local rleEncode = mbm.rleEncode
+    local function rleDecode(data, pixelSize)
+        return mbm.rleDecode(data, 1, #data, pixelSize or 1)
+    end
+
+    local function checkRle(data, expected, pixelSize)
+        local encoded = rleEncode(data, pixelSize or 1)
+        assertEquals(hexEscape(encoded), hexEscape(expected))
+        assertEquals(rleDecode(encoded, pixelSize), data)
+    end
+
+    checkRle("", "")
+    checkRle("abcde", "\251abcde")
+    checkRle("abccd", "\254ab\1c\255d")
+    checkRle("aaa", "\2a")
+    checkRle(string.rep("a", 128), "\127a")
+    checkRle(string.rep("a", 129), "\127a\255a")
+    checkRle(string.rep("a", 130), "\127a\1a")
+    checkRle(string.rep("a", 131).."b", "\127a\2a\255b")
+
+    checkRle("", "", 2)
+    checkRle("aabbccddee", "\251aabbccddee", 2)
+    checkRle("aabbccccdd", "\254aabb\1cc\255dd", 2)
+    checkRle("aaaaaa", "\2aa", 2)
+    checkRle(string.rep("aa", 128), "\127aa", 2)
+    checkRle(string.rep("aa", 129), "\127aa\255aa", 2)
+    checkRle(string.rep("aa", 130), "\127aa\1aa", 2)
+    checkRle(string.rep("aa", 131).."bb", "\127aa\2aa\255bb", 2)
+
     print("All tests passed.")
 end
 

@@ -398,7 +398,10 @@ class Program {
 
         case .peekline(let drawableId, let position, let numPixels, let mode):
             let data = windowServer.peekLine(drawableId: drawableId, position: position, numPixels: numPixels, mode: mode)
-            return .peekedData(data)
+            return .data(data)
+
+        case .getimg(let drawableId, let rect):
+            return .data(windowServer.getImageData(drawableId: drawableId, rect: rect))
 
         case .cursor(let cursor):
             windowServer.cursor(cursor)

@@ -358,12 +358,13 @@ public struct Graphics {
         case sprite(DrawableId, Int, Sprite?) // Int is handle, sprite is nil when sprite is closed
         case clock(DrawableId, ClockInfo?)
         case peekline(DrawableId, Point, Int, PeekMode) // drawableId, pos, numPixels, peekMode
+        case getimg(DrawableId, Rect)
         case cursor(Cursor?)
     }
 
     public enum Result {
         case nothing
-        case peekedData(Data)
+        case data(Data)
         case rank(Int)
         case error(Error)
         case fontMetrics(FontMetrics)

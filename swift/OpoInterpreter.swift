@@ -192,7 +192,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
     switch result {
     case .nothing:
         return 0
-    case .peekedData(let data):
+    case .data(let data):
         L.push(data)
         return 1
     case .rank(let rank):
@@ -230,6 +230,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("title", appTitle)
 // graphicsop("clock", drawableId, [{mode=, x=, y=}])
 // graphicsop("peekline", drawableId, x, y, numPixels, mode)
+// graphicsop("getimg", drawableId, {x=, y=, w=, h=})
 // graphicsop("loadfont", drawableId, uid)
 private func graphicsop(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
@@ -327,6 +328,13 @@ private func graphicsop(_ L: LuaState!) -> CInt {
             return doGraphicsOp(L, iohandler, .peekline(drawableId, pos, numPixels, mode))
         } else {
             print("Missing peekline params!")
+        }
+    case "getimg":
+        if let id = L.toint(2),
+           let rect = L.todecodable(3, type: Graphics.Rect.self) {
+            return doGraphicsOp(L, iohandler, .getimg(Graphics.DrawableId(value: id), rect))
+        } else {
+            print("Missing getimg params!")
             break
         }
     case "loadfont":

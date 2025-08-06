@@ -551,7 +551,7 @@ function gLOADBIT(path, writable, index)
     -- printf("gLOADBIT %s mbmid=%d", path, 1 + index)
     local iohandler = runtime:iohandler()
     local absPath = runtime:abs(path)
-    if not EXIST(absPath) then
+    if not EXIST(absPath) and runtime:isSibo() then
         -- It's allowed to omit the .pic
         absPath = absPath .. ".PIC"
     end
@@ -572,7 +572,27 @@ function gLOADBIT(path, writable, index)
 end
 
 function gSAVEBIT(path, w, h)
-    printf("TODO: gSAVEBIT(%s)\n", path)
+    runtime:flushGraphicsOps()
+    local context = runtime:getGraphicsContext()
+    local rect
+    if w then
+        rect = { x = context.pos.x, y = context.pos.y, w = w, h = h }
+    else
+        rect = { x = 0, y = 0, w = context.width, h = context.height }
+    end
+    printf("gSAVEBIT %s %dx%d mode=%d\n", path, rect.w, rect.h, context.displayMode)
+    local data = runtime:iohandler().graphicsop("getimg", context.id, rect)
+    local bmp = {
+        width = rect.w,
+        height = rect.h,
+        mode = context.displayMode,
+        normalizedImgData = data,
+    }
+    local mbmData = require("mbm").makeMbm(KUidOplFile, { bmp })
+    local err = runtime:iohandler().fsop("write", path, mbmData)
+    if err ~= KErrNone then
+        error(err)
+    end
 end
 
 function gIDENTITY()

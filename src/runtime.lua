@@ -375,6 +375,10 @@ function Runtime:setTrap(flag)
     end
 end
 
+function Runtime:setHaltOnAnyError(flag)
+    self.haltOnAnyError = flag
+end
+
 function Runtime:getTrap()
     return self.trap
 end
@@ -1147,7 +1151,7 @@ function Runtime:pcallProc(procName, ...)
                 printf("Interrupted!\n%s\n", err)
             end
 
-            if err.code and err.code ~= KStopErr then
+            if err.code and err.code ~= KStopErr and not self.haltOnAnyError then
                 self.errorValue = err.code
                 -- An error code that might potentially be handled by a Trap or OnErr
                 if self.trap then
@@ -1456,6 +1460,7 @@ function runOpoFileData(fileName, data, procName, iohandler, verbose)
     iohandler.setEra(era) -- Needed to set the default string encoding
     local rt = newRuntime(iohandler, era)
     rt:setInstructionDebug(verbose)
+    -- rt:setHaltOnAnyError(true) -- DEBUG
     rt:addModule(fileName, procTable, opxTable)
     local procToCall = procName and procName:upper() or procTable[1].name
     local err = rt:pcallProc(procToCall)

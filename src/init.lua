@@ -277,30 +277,6 @@ KColorgCreate16MColorMode = 0x0007
 KColorgCreateRGBColorMode = 0x0008
 KColorgCreate4KColorMode = 0x0009
 
-local GrayBppToMode = {
-    [1] = KColorgCreate2GrayMode,
-    [2] = KColorgCreate4GrayMode,
-    [4] = KColorgCreate16GrayMode,
-    [8] = KColorgCreate256GrayMode,
-}
-
-local ColorBppToMode = {
-    [4] = KColorgCreate16ColorMode,
-    [8] = KColorgCreate256ColorMode,
-    [12] = KColorgCreate4KColorMode,
-    [16] = KColorgCreate64KColorMode,
-    [24] = KColorgCreate16MColorMode,
-    [32] = KColorgCreateRGBColorMode,
-}
-
-function bppColorToMode(bpp, color)
-    local result = (color and ColorBppToMode or GrayBppToMode)[bpp]
-    if not result then
-        error(string.format("Invalid bpp=%d color=%s combination", bpp, color))
-    end
-    return result
-end
-
 function sortedKeys(tbl)
     local result = {}
     for k in pairs(tbl) do

@@ -463,12 +463,40 @@ class WindowServer {
             }
         } else {
             for i in 0 ..< numPixels {
-                let px = UInt32(ptr[offset + i]) + UInt32(ptr[offset + i]) + UInt32(ptr[offset + i + 1]) + UInt32(ptr[offset + i + 2])
+                let px = UInt32(ptr[offset + i]) + UInt32(ptr[offset + i + 1]) + UInt32(ptr[offset + i + 2])
                 addPixel(UInt8(px / 3))
             }
         }
         if bitIdx != 0 {
             result.append(currentByte)
+        }
+        return result
+    }
+
+    public func getImageData(drawableId: Graphics.DrawableId, rect: Graphics.Rect) -> Data {
+        guard let canvas = self.drawablesById[drawableId],
+              let image = canvas.getImage()?.cropping(to: rect.cgRect())
+        else {
+            print("Failed to get canvas image!")
+            return Data()
+        }
+        var result = Data()
+        let pixelData = image.dataProvider!.data!
+        let ptr: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+        assert(image.bitsPerPixel == 32)
+        if canvas.mode.isColor {
+            for y in 0 ..< image.height {
+                result.append(ptr.advanced(by: y * image.bytesPerRow), count: image.width * 4)
+            }
+        } else {
+            // We need to step down to 8bpp and of course there's no framework-supplied way to do that
+            for y in 0 ..< image.height {
+                for x in 0 ..< image.width {
+                    let offset = y * image.bytesPerRow + x * 4
+                    var px = UInt8((UInt32(ptr[offset]) + UInt32(ptr[offset + 1]) + UInt32(ptr[offset + 2])) / 3)
+                    result.append(&px, count: 1)
+                }
+            }
         }
         return result
     }
