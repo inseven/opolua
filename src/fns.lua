@@ -419,8 +419,9 @@ function IoRead(stack, runtime) -- 0x0F
     local maxLen = stack:pop()
     local addr = runtime:addrFromInt(stack:pop())
     local h = stack:pop()
-    -- printf("IoRead maxLen=%d\n", maxLen)
+    -- printf("IoRead maxLen=%d", maxLen)
     local data, err = runtime:IOREAD(h, maxLen)
+    -- printf(" err=%d\n", data and 0 or err)
 
     if data then
         -- printf("IoRead got %d bytes\n", #data)
