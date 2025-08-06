@@ -1567,12 +1567,12 @@ function IOSEEK(h, mode, offset)
     assert(f.pos, "Cannot IOSEEK a non-file handle!")
     local newPos
     -- printf("IOSEEK(%d, %d, %d)\n", h, mode, offset)
-    if mode == KIoSeekFromStart then
+    if mode == KIoSeekFromStart or mode == 0 then
         newPos = 1 + offset
     elseif mode == KIoSeekFromEnd then
         newPos = 1 + #f.data + offset -- I think it's plus...?
     elseif mode == KIoSeekFromCurrent then
-        newPos = self.pos + offset
+        newPos = f.pos + offset
     elseif mode == KIoSeekFirstRecord then
         newPos = 1
     else
@@ -1581,7 +1581,7 @@ function IOSEEK(h, mode, offset)
 
     assert(newPos >= 1 and newPos <= #f.data + 1) -- Not sure what the right error here is
     f.pos = newPos
-    return KErrNone, newPos
+    return KErrNone, newPos - 1
 end
 
 function IOCLOSE(h)
