@@ -1456,8 +1456,15 @@ function IOOPEN(path, mode)
     -- printf("IOOPEN %s mode=%d\n", path, mode)
 
     local openMode = mode & KIoOpenModeMask
-    assert(openMode ~= KIoOpenModeAppend, "Don't support append yet!")
-    assert(openMode ~= KIoOpenModeUnique, "Don't support unique yet!")
+    if openMode == KIoOpenModeUnique then
+        local dir = oplpath.split(path)
+        local i = 0
+        repeat
+            path = string.format("%stemp%03d", dir, i)
+            i = i + 1
+        until not EXIST(path)
+
+    end
 
     local ok, err = checkPathValid(path)
     if not ok then
@@ -1466,7 +1473,7 @@ function IOOPEN(path, mode)
 
     local data
 
-    if openMode == KIoOpenModeOpen then
+    if openMode == KIoOpenModeOpen or openMode == KIoOpenModeAppend then
         data, err = runtime:iohandler().fsop("read", path)
         if not data then
             return nil, err, nil
@@ -1482,10 +1489,14 @@ function IOOPEN(path, mode)
 
     local f = runtime:newFileHandle()
     f.path = path
-    f.pos = 1
+    f.pos = openMode == KIoOpenModeAppend and #data or 1
     f.mode = mode
     f.data = data or ""
-    return f.h
+    if openMode == KIoOpenModeUnique then
+        return f.h, nil, path
+    else
+        return f.h
+    end
 end
 
 -- return `nil, err` in some errors, and `data, err` in the event of "valid but truncated..."
