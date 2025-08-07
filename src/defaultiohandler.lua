@@ -174,7 +174,7 @@ end
 
 function fsop(cmd, path, ...)
     local filename
-    if path then
+    if path and cmd ~= "disks" then
         filename = mapDevicePath(path)
     end
     if cmd == "stat" then
