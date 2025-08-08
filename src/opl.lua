@@ -335,9 +335,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         lineh = h
     end
 
-    local _, _, displayMode = runtime:getScreenInfo()
-    local isColor = displayMode >= KColorgCreate256ColorMode
-    if isColor then
+    if runtime:isColor() then
         gCOLOR(0x99, 0x99, 0xCC)
     else
         lightGrey()

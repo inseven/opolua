@@ -164,17 +164,11 @@ function View:drawPrompt()
         return x
     end
     local texty = self.y + kDialogLineTextYOffset
-    if self.hasFocus then
-        black()
-    else
-        white()
-    end
+    black()
     gAT(x, texty - 1)
-    gFILL(gTWIDTH(self.prompt), self.charh + 2)
+    gFILL(gTWIDTH(self.prompt), self.charh + 2, self.hasFocus and KgModeSet or KgModeClear)
     if self.hasFocus then
         white()
-    else
-        black()
     end
     drawText(self.prompt, x, texty)
     x = x + self.promptWidth
@@ -250,11 +244,24 @@ function DialogTitleBar:draw()
     if self.pressedX then
         white()
     else
-        lightGrey()
+        if runtime:isColor() then
+            gCOLOR(0, 0, 0x82)
+        else
+            lightGrey()
+        end
     end
     gFILL(self.w, self.h)
-    black()
+    if runtime:isColor() then
+        if self.pressedX then
+            black()
+        else
+            white()
+        end
+    else
+        black()
+    end
     drawText(self.value, self.x + self.hMargin, self.y + 2)
+    black()
     View.draw(self)
 end
 
@@ -368,9 +375,10 @@ function DialogItemEdit:drawPromptAndBox()
     lightGrey()
     gAT(x, texty - 2)
     gBOX(boxWidth, self.charh + 3)
-    black()
+    white()
     gAT(x + 1, texty - 1)
-    gFILL(boxWidth - 2, self.charh + 1, KgModeClear)
+    gFILL(boxWidth - 2, self.charh + 1)
+    black()
     gAT(x + 1, texty)
     return x, texty
 end
@@ -1283,9 +1291,10 @@ function DialogItemEditMulti:draw()
     lightGrey()
     gAT(x, texty - 2)
     gBOX(boxWidth, boxHeight + 3)
-    black()
+    white()
     gAT(x + 1, texty - 1)
-    gFILL(boxWidth - 2, boxHeight + 1, KgModeClear)
+    gFILL(boxWidth - 2, boxHeight + 1)
+    black()
     gAT(x + 1, texty)
 
     local scrollbarWasVisible = self.scrollbar and self:shouldDrawScrollbar()
@@ -1540,26 +1549,22 @@ function DialogChoiceList:draw()
     lightGrey()
     gAT(x, texty - 2)
     gBOX(choicesWidth, self.charh + 3)
-    black()
-    gAT(x + 1, texty)
-    gFILL(choicesWidth - 2, self.charh, KgModeClear)
+    gAT(x + 1, texty - 1)
+    white()
+    gFILL(choicesWidth - 2, self.charh + 1)
     if self.choiceFont then
         gFONT(self.choiceFont)
     end
     local text = self.choices[self.index]
+    black()
     drawText(text, x + self.choiceTextSpace, texty)
 
     self.rightArrowX = x + choicesWidth + kChoiceArrowSpace
     gFONT(KFontEiksym15)
-    if self.hasFocus then
-        black()
-    else
-        white()
-    end
-    drawText(kChoiceLeftArrow, self.leftArrowX, texty)
-    drawText(kChoiceRightArrow, self.rightArrowX, texty)
+    local arrowMode = self.hasFocus and KgModeSet or KgModeClear
+    drawText(kChoiceLeftArrow, self.leftArrowX, texty, arrowMode)
+    drawText(kChoiceRightArrow, self.rightArrowX, texty, arrowMode)
     gFONT(kDialogFont)
-    black()
 
     if self.typeable and self.hasFocus then
         local cursorx, cursory = self:getCursorPos()
@@ -2161,7 +2166,8 @@ end
 local DialogWindow = class { _super = View }
 
 function DialogWindow.new(items, x, y, w, h)
-    local id = gCREATE(x, y, w, h, false, KColorgCreate256GrayMode | KgCreateHasShadow | 0x200)
+    local mode = runtime:isColor() and KColorgCreate256ColorMode or KColorgCreate4GrayMode
+    local id = gCREATE(x, y, w, h, false, mode | KgCreateHasShadow | 0x200)
     return DialogWindow {
         x = x,
         y = y,
@@ -2404,9 +2410,15 @@ function DIALOG(dialog)
 
     local win = DialogWindow.new(dialog.items, winX, winY, w, h)
     gFONT(kDialogFont)
+    if runtime:isColor() then
+        gCOLORBACKGROUND(0xCC, 0xCC, 0xCC)
+    else
+        gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
+    end
 
     -- Now we have our window and prompt area sizes we can actually lay out the items
 
+    gFILL(w, h, KgModeClear)
     gBOX(w, h)
     gAT(1, 1)
     gXBORDER(2, 0x94, w - 2, h - 2)

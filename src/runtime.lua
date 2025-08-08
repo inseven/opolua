@@ -492,6 +492,11 @@ function Runtime:getScreenInfo()
     return graphics.screenWidth, graphics.screenHeight, graphics.screenMode
 end
 
+function Runtime:isColor()
+    local _, _, displayMode = self:getScreenInfo()
+    return displayMode >= KColorgCreate256ColorMode
+end
+
 function Runtime:getDeviceName()
     if not self.graphics then
         self:getGraphics()
