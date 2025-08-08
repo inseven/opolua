@@ -679,8 +679,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
 
     writeStub = function(instFiles)
         local stub = makeStub(data, sisfile.langs[langIdx], drive, instFiles)
-        local stubDrive = ret.stubDrive or "C"
-        local dir = stubDrive .. [[:\System\install\]]
+        local dir = oplpath.join(ret.stubDir or [[C:\System\install]], "")
         if iohandler.fsop("exists", dir) ~= KErrNone then
             local err = iohandler.fsop("mkdir", dir)
             if err ~= KErrNone then
