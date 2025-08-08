@@ -33,6 +33,13 @@ function main()
     assertEquals(oplpath.abs("C:woop", [[D:\System\Apps\woop\woop.app]]), [[C:\System\Apps\woop\woop]])
     assertEquals(oplpath.abs("C:woop", [[D:\System\Apps\woop\*.mbm]]), [[C:\System\Apps\woop\woop.mbm]])
 
+    assertEquals(oplpath.join([[C:\]], "dir"), [[C:\dir]])
+    assertEquals(oplpath.join([[C:\dir]], "sub"), [[C:\dir\sub]])
+    assertEquals(oplpath.join([[C:\dir\]], "sub"), [[C:\dir\sub]])
+    assertEquals(oplpath.join([[C:\dir]], ""), [[C:\dir\]])
+    assertEquals(oplpath.join([[C:\dir\]], ""), [[C:\dir\]])
+    assertEquals(oplpath.join("a", "b"), [[a\b]])
+
     database = require("database")
 
     assertEquals(database.commaSplit(""), { "" })

@@ -646,11 +646,23 @@ public struct Sis {
         public let isRoot: Bool
     }
 
+    public struct BeginInstallData {
+        public let drive: String
+        public let stubDir: String? // nil means use default
+        public let language: String
+
+        public init(drive: String, stubDir: String?, language: String) {
+            self.drive = drive
+            self.stubDir = stubDir
+            self.language = language
+        }
+    }
+
     public enum BeginResult {
         case skipInstall // Not an error
         case userCancelled
         case epocError(Int32)
-        case install(String, String) // language and drive
+        case install(BeginInstallData)
     }
 
     public enum QueryType: String {

@@ -82,7 +82,7 @@ extension Installer: SisInstallIoHandler {
 
     func sisInstallBegin(sis: Sis.File, context: Sis.BeginContext) -> Sis.BeginResult {
         // print("Installing v\(sis.version)")
-        return .install(sis.languages[0], "C")
+        return .install(.init(drive: "C", stubDir: nil, language: sis.languages[0]))
     }
 
     func sisInstallQuery(sis: Sis.File, text: String, type: Sis.QueryType) -> Bool {

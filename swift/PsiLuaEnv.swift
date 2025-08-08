@@ -712,10 +712,12 @@ extension Sis.BeginResult: Pushable {
         case .epocError(let err):
             L.rawset(-1, key: "type", value: "epocerr")
             L.rawset(-1, key: "code", value: err)
-        case .install(let lang, let drive):
+        case .install(let data):
             L.rawset(-1, key: "type", value: "install")
-            L.rawset(-1, key: "lang", value: lang)
-            L.rawset(-1, key: "drive", value: drive)
+            L.rawset(-1, key: "lang", value: data.language)
+            L.rawset(-1, key: "drive", value: data.drive)
+            L.push(data.stubDir)
+            L.rawset(-2, key: "stubDir")
         }
     }
 }
