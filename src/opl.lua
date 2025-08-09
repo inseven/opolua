@@ -546,7 +546,7 @@ function gLOADBIT(path, writable, index)
     -- (3) Tell iohandler to blit the decoded MBM data into it
 
     -- (1)
-    -- printf("gLOADBIT %s mbmid=%d", path, 1 + index)
+    -- printf("gLOADBIT %s index=%d", path, 1 + index)
     local iohandler = runtime:iohandler()
     local absPath = runtime:abs(path)
     if not EXIST(absPath) and runtime:isSibo() then
@@ -555,7 +555,17 @@ function gLOADBIT(path, writable, index)
     end
     local data, err = iohandler.fsop("read", absPath)
     assert(data, err)
-    local bitmaps = mbm.parseMbmHeader(data)
+
+    local bitmaps
+    -- Apparently loading an AIF file is allowed using gLOADBIT!
+    -- https://github.com/inseven/opolua/issues/443
+    local uid1, uid2, uid3, checksum = string.unpack("<I4I4I4I4", data)
+    if uid1 == KUidDirectFileStore and uid2 == KUidAppInfoFile8 then
+        bitmaps = require("aif").parseAif(data).icons
+    else
+        bitmaps = mbm.parseMbmHeader(data)
+    end
+
     assert(bitmaps, KErrGenFail)
     local bitmap = bitmaps[1 + index]
     assert(bitmap, KErrNotExists)
