@@ -1680,27 +1680,42 @@ function LoadRsc(path)
         runtime:setResource("rsc", loadedResources)
     end
     resourceFile.handle = loadedResources.nextHandle
+    resourceFile.path = path
     loadedResources.nextHandle = loadedResources.nextHandle + 1
     table.insert(loadedResources, resourceFile)
+    loadedResources[path] = resourceFile
     return resourceFile.handle
 end
 
 function UnLoadRsc(handle)
     local loadedResources = runtime:getResource("rsc")
-    local resourceFileIdx
+    local resourceFileIdx, path
     for i, r in ipairs(loadedResources or {}) do
         if r.handle == handle then
             resourceFileIdx = i
+            path = r.path
             break
         end
     end
     assert(resourceFileIdx, KErrNotExists)
     table.remove(loadedResources, resourceFileIdx)
+    loadedResources[path] = nil
+
 end
+
+local eikonRscPath = [[Z:\System\Data\Eikon.rsc]]
+local eikonRscOffset = 0x00F3B001
 
 function ReadRsc(id)
     local loadedResources = runtime:getResource("rsc")
-    for i, resourceFile in ipairs(loadedResources) do
+
+    -- Some apps out there assume eikon.rsc is always loaded https://github.com/inseven/opolua/issues/457
+    if id & 0xFFFFF000 == 0x00F3B000 and (loadedResources == nil or loadedResources[eikonRsc] == nil) then
+        LoadRsc(eikonRscPath)
+        loadedResources = runtime:getResource("rsc") -- in case it was nil previously
+    end
+
+    for i, resourceFile in ipairs(loadedResources or {}) do
         local result
         if resourceFile.idOffset then
             result = resourceFile[id - resourceFile.idOffset + 1]
