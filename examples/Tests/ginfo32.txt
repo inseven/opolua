@@ -2,6 +2,7 @@ DECLARE EXTERNAL
 INCLUDE "const.oph"
 
 EXTERNAL ginf:(desc$)
+EXTERNAL colorinfo:
 
 PROC main:
 	LOCAL win%
@@ -21,6 +22,9 @@ PROC main:
 
 	gFONT KFontTimesNormal15&
 	ginf:("gFONT KFontTimesNormal15")
+	GET
+
+	colorinfo:
 	GET
 
 	REM FONT KFontArialNormal11&, 0
@@ -93,4 +97,13 @@ PROC ginf:(desc$)
 	PRINT "Info[46] (unused):", i&(46)
 	PRINT "Info[47] (unused):", i&(47)
 	PRINT "Info[48] (unused):", i&(48)
+ENDP
+
+PROC colorinfo:
+    LOCAL info&(3)
+    CLS
+    gCOLORINFO info&()
+    PRINT "Display mode:", info&(1)
+    PRINT "Num colours:", info&(2)
+    PRINT "Num grays:", info&(3)
 ENDP

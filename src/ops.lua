@@ -2772,13 +2772,25 @@ function gColorBackground(stack, runtime) -- ER5: 0x137, ER6: 0x136
     runtime:gCOLORBACKGROUND(r % 256, g % 256, b % 256)
 end
 
+-- gColorInfo uses actual TDisplayMode, rather than the kColorgCreate... values that almost everything else in OPL land
+-- uses when referring to a display/bitmap/graphics mode.
+local displayModeToColorInfo = {
+    [KColorgCreate2GrayMode] = { KDisplayModeGray2, 0, 2 },
+    [KColorgCreate4GrayMode] = { KDisplayModeGray4, 0, 4 },
+    [KColorgCreate16GrayMode] = { KDisplayModeGray16, 0, 16 },
+    [KColorgCreate256GrayMode] = { KDisplayModeGray256, 0, 256 },
+    [KColorgCreate16ColorMode] = { KDisplayModeColor16, 16, 0 },
+    [KColorgCreate256ColorMode] = { KDisplayModeColor256, 256, 0 },
+}
+
 function gColorInfo(stack, runtime) -- ER5: 0x136, ER6: 0x135
     local addr = runtime:addrFromInt(stack:pop())
-    local result = {
-        6, -- TDisplayMode::EColor256
-        256, -- numColors
-        256, -- numGrays
-    }
+    local _, _, displayMode = runtime:getScreenInfo()
+
+    -- The result is technically { <default mode>, <maxColors>, <maxGrays> }
+    -- where the Psion 5 for eg supported 16 grays, but the default mode was 4 grays only for memory space reasons.
+    -- We aren't making that distinction and always use the highest bit depth the device supported.
+    local result = assert(displayModeToColorInfo[displayMode])
     addr:writeArray(result, DataTypes.ELong)
 end
 
