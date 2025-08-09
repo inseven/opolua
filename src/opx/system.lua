@@ -527,7 +527,9 @@ function CaptureKey(stack, runtime) -- 71
 end
 
 function CancelCaptureKey(stack, runtime) -- 72
-    unimplemented("opx.system.CancelCaptureKey")
+    local k = stack:pop()
+    printf("system.CancelCaptureKey(%d)\n", k)
+    stack:push(0)
 end
 
 function SetPointerCapture(stack, runtime) -- 73
