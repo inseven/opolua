@@ -454,6 +454,7 @@ Callables = {
     GCLS = Op("gCls", {}),
     GCOLOR = Op("gColor", {Int, Int, Int}),
     GCOLORBACKGROUND = Op("gColorBackground", {Int, Int, Int}),
+    GCOLORINFO = Op("gColorInfo", {LongArrayVariable}),
     GCOPY = Op("gCopy", {Int, Int, Int, Int, Int, Int}),
     GCREATE = SpecialFn({Int, Int, Int, Int, Int, Int, numParams = {5, 6}}, Int),
     GCREATEBIT = Fn("gCreateBit", {Int, Int, Int, numParams = {2, 3}}, Int),
