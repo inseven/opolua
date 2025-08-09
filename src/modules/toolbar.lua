@@ -307,6 +307,7 @@ end
 function TBarShow()
     local prevId = gIDENTITY()
     gUSE(tbWinId)
+    gORDER(gIDENTITY(), 1)
     gVISIBLE(true)
     TbVis(-1)
     TbMenuSym(KMenuCheckBox | KMenuSymbolOn)
