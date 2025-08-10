@@ -1,0 +1,12 @@
+PROC main:
+	LOCAL k%
+	PRINT "Pausing..."
+	KEY REM flush anything out
+	PAUSE -100
+	PRINT "Done"
+	k% = KEY
+	IF k% <> 0
+		PRINT "Pause completed by keypress", k%
+	ENDIF
+	GET
+ENDP

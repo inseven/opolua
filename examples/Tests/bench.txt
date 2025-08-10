@@ -1,0 +1,113 @@
+INCLUDE "const.oph"
+INCLUDE "date.oxh"
+
+PROC main:
+    bench:("clock")
+    bench:("clockUpdateOff")
+    bench:("floatyClock")
+    bench:("sieve")
+    GET
+ENDP
+
+PROC bench:(procName$)
+    LOCAL dateStart&, dateEnd&
+    dateStart& = DTNow&:
+    @(procName$):
+    dateEnd& = DTNow&:
+    PRINT procName$; ":", DTMicrosDiff&:(dateStart&, dateEnd&)
+ENDP
+
+PROC clock:
+    LOCAL clock%, w%, h%, x%, y%, mode%
+    clock% = gLOADBIT("Z:\System\Data\Eikon.mbm", 0, 32)
+    w% = gWIDTH
+    h% = gHEIGHT
+    gUSE 1
+    gAT 0, 0
+
+    mode% = 0
+    WHILE mode% < 4
+        y% = 0
+        WHILE y% < 4
+            x% = 0
+            WHILE x% < 8
+                gAT 150 + x% * w%, y% * h%
+                gCOPY clock%, 0, 0, w%, h%, 0
+                x% = x% + 1
+            ENDWH
+            y% = y% + 1
+        ENDWH
+        mode% = mode% + 1
+    ENDWH
+    gCLOSE clock%
+ENDP
+
+PROC clockUpdateOff:
+    gUPDATE OFF
+    clock:
+    gUPDATE ON
+ENDP
+
+CONST n%=16384
+
+PROC sieve:
+    LOCAL prime%(n%), i%, j%, max%
+    max% = INT(SQR(n%))
+    i% = 2
+    WHILE i% < n%
+        prime%(i%) = 1
+        i% = i% + 1
+    ENDWH
+    
+    i% = 2
+    WHILE i% <= max%
+        IF prime%(i%) = 1
+            REM all multiples of i% not prime
+            j% = i% * 2
+            WHILE j% <= n%
+                prime%(j%) = 0
+                j% = j% + i%
+            ENDWH
+        ENDIF
+        i% = i% + 1
+    ENDWH
+    
+    i% = 2
+    j% = 0
+    WHILE i% <= n%
+        IF prime%(i%) = 1
+            REM PRINT i%, "is prime"
+            j% = j% + 1
+        ENDIF
+        i% = i% + 1
+    ENDWH    
+    REM PRINT j%, "primes found in", DTMicrosDiff&:(dateStart&, dateEnd&)
+ENDP
+
+PROC floatyClock:
+    LOCAL clock%, w%, h%, x%, y%, xd%, yd%, steps%
+    clock% = gLOADBIT("Z:\System\Data\Eikon.mbm", 0, 32)
+    w% = gWIDTH
+    h% = gHEIGHT
+    gUSE 1
+    gAT 0, 0
+
+    xd% = 1
+    yd% = 1
+    steps% = 0
+    gCOPY clock%, 0, 0, w%, h%, KgModeInvert%
+    WHILE steps% < 2000
+        gCOPY clock%, 0, 0, w%, h%, KgModeInvert%
+        gMOVE xd%, yd%
+        IF gX >= gWIDTH OR gX < -30
+            xd% = -xd%
+            gMOVE xd%, 0
+        ENDIF
+        IF gY >= gHEIGHT OR gY < -30
+            yd% = -yd%
+            gMOVE yd%, 0
+        ENDIF
+        gCOPY clock%, 0, 0, w%, h%, KgModeInvert%
+        steps% = steps% + (xd% * xd%) + (yd% + yd%)
+    ENDWH
+ENDP
