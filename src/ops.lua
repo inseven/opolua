@@ -2585,7 +2585,9 @@ function SetFlags(stack, runtime) -- 0x125
 end
 
 function SetDoc(stack, runtime) -- 0x126
-    printf("SetDoc(%s)\n", stack:pop())
+    local str = stack:pop()
+    printf("SetDoc(%s)\n", str)
+    runtime:setResource("doc", str)
 end
 
 function DaysToDate(stack, runtime) -- 0x127
