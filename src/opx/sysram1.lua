@@ -67,7 +67,15 @@ function DBFindField(stack, runtime) -- 2
 end
 
 function GetThreadIdFromCaption(stack, runtime) -- 3
-    unimplemented("opx.sysram1.GetThreadIdFromCaption")
+    -- There is a common pattern documented in the OPLv5 developer papers to use this to close an app's help, if it
+    -- is running. We can probably safely always leave.
+
+    -- It doesn't seem like this should be necessary, but some code seems to expect it
+    -- https://github.com/inseven/opolua/issues/419
+    local prev = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    prev(-1)
+
+    error(KErrNotExists)
 end
 
 function ExternalPower(stack, runtime) -- 4

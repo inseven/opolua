@@ -1169,6 +1169,8 @@ function Runtime:pcallProc(procName, ...)
                     while true do
                         if self.frame.errIp then
                             self.ip = self.frame.errIp
+                            -- Jumping to an error handler nukes all temporaries on the stack
+                            stack:popTo(self.frame.returnStackSize)
                             break
                         else
                             local prevFrame = self:popFrame(stack)
