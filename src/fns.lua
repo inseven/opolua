@@ -1302,9 +1302,7 @@ function CmdStr(stack, runtime) -- 0xD6
         -- printf("CMD$(1)=%s\n", path)
         stack:push(path)
     elseif x == 2 then
-        local path = runtime:getPath()
-        path = oplpath.join(oplpath.dirname(path), "SomeDoc.Wat")
-        stack:push(path)
+        stack:push(runtime:getResource("cmdlinedoc"))
     elseif x == 3 then
         stack:push("R")
     else
@@ -1369,7 +1367,8 @@ function Size(stack, runtime) -- 0xDA
 end
 
 function GetDocStr(stack, runtime) -- 0xD9
-    unimplemented("fns.GetDocStr")
+    local doc = runtime:getResource("doc") or runtime:getResource("cmdlinedoc")
+    stack:push(doc)
 end
 
 return _ENV

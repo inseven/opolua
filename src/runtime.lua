@@ -178,7 +178,9 @@ function Runtime:addModule(path, procTable, opxTable)
     table.insert(self.modules, mod)
     if not self.cwd then
         assert(oplpath.isabs(path), "Bad path for initial module!")
-        self.cwd = path:sub(1, 3)
+        local drive, dir, base, ext = oplpath.parse(path)
+        self.cwd = drive.."\\"
+        self:setResource("cmdlinedoc", oplpath.join(drive..dir, base))
     end
 end
 
