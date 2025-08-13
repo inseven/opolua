@@ -49,6 +49,11 @@ extension Graphics.Rect {
         if result.isNull {
             return nil
         }
+        if result.width == 0 || result.height == 0 {
+            // Apparently this can happen - WTF CoreGraphics?? How is this not "not intersecting" and thus should be
+            // returning a null rect??
+            return nil
+        }
         return Graphics.Rect(x: Int(result.minX), y: Int(result.minY),
             width: Int(result.width), height: Int(result.height))
     }
