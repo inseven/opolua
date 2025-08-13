@@ -364,6 +364,14 @@ end
 
 function Exist(stack, runtime) -- 0x08
     local path = stack:pop()
+
+    -- Special case hack for apps that brokenly check for the existence of "toolbar" (the OPL file) rather than the
+    -- actual module ("toolbar.opo") - specifically SameGame.
+    if path:lower() == [[z:\system\opl\toolbar]] then
+        stack:push(true)
+        return
+    end
+
     stack:push(runtime:EXIST(path))
 end
 
