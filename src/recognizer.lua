@@ -29,7 +29,15 @@ function recognize(data, verbose)
     if siboHeader == "ALawSoundFile**\0" then
         return { type = "sound", data = require("sound").parseWveFile(data) }
     elseif siboHeader == "OPLObjectFile**\0" then
-        return require("aif").parseAif(data)
+        local info = require("aif").parseAif(data)
+        if info then
+            return info
+        else
+            -- parseAif could return nil if there's no actual icons
+           return { type = "opo", era = "sibo", uid3 = 0 }
+       end
+    elseif siboHeader == "ImageFileType**\0" then
+        return { type = "nativebin", era = "sibo" }
     elseif data:sub(1, 4) == "PIC\xDC" then
         return { type = "mbm", bitmaps = getMbmBitmaps(data) }
     end
@@ -114,6 +122,10 @@ function recognize(data, verbose)
 
     if uid1 == KPermanentFileStoreLayoutUid then
         return { type = "database" }
+    end
+
+    if uid1 == KDynamicLibraryUid then
+        return { type = "nativebin", era = "er5" }
     end
 
     if (uid2 == KUidAppDllDoc8 or uid2 == KUidSisFileEr6) and uid3 == KUidInstallApp then
