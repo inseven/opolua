@@ -153,6 +153,10 @@ public class PsiLuaEnv {
         public let era: AppEra
     }
 
+    public struct NativeBinary : Codable {
+        public let era: AppEra
+    }
+
     public struct ResourceFile: Codable {
         public let idOffset: UInt32?
     }
@@ -162,6 +166,7 @@ public class PsiLuaEnv {
         case aif
         case database
         case mbm
+        case nativebin
         case opl
         case opa
         case opo
@@ -176,6 +181,7 @@ public class PsiLuaEnv {
         case aif(AppInfo)
         case database
         case mbm(MbmFile)
+        case nativebin(NativeBinary)
         case opl(OplFile)
         case opa(OpaFile)
         case opo(OpoFile)
@@ -263,6 +269,10 @@ public class PsiLuaEnv {
         case .opo:
             if let info: OpoFile = L.todecodable(-1) {
                 return .opo(info)
+            }
+        case .nativebin:
+            if let info: NativeBinary = L.todecodable(-1) {
+                return .nativebin(info)
             }
         case .resource:
             if let info: ResourceFile = L.todecodable(-1) {
