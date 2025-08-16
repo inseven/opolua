@@ -24,6 +24,14 @@ end
 
 function main()
 
+    assertEquals(toint16(0x10123), 0x123)
+    assertEquals(toint16(-1), -1)
+    assertEquals(toint16(-32768), -32768)
+    assertEquals(toint16(0xFFFF), -1)
+    assertEquals(toint16(0xFFFE), -2)
+    assertEquals(toint16(0x0FFFFFFE), -2)
+    assertEquals(touint16(0xFFF0), 0xFFF0)
+
     checkParse("foo", {"", "", "foo", ""})
     checkParse([[C:\foo\bar.baz]], {"C:", [[\foo\]], "bar", ".baz"})
     checkParse([[C:woop]], {"C:", "", "woop", ""})

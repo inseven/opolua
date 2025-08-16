@@ -101,25 +101,30 @@ function print(...)
 end
 
 function toint32(val)
-    if val >= 0x80000000 then
-        val = string.unpack("<i4", string.pack("<I4", val))
+    val = val & 0xFFFFFFFF
+    if val & 0x80000000 ~= 0 then
+        return ~0xFFFFFFFF | val
+    else
+        return val
     end
     return val
 end
 
 function toint16(val)
-    if val >= 0x8000 then
-        val = string.unpack("<i2", string.pack("<I2", val))
+    val = val & 0xFFFF
+    if val & 0x8000 ~= 0 then
+        return ~0xFFFF | val
+    else
+        return val
     end
-    return val
 end
 
 function touint16(val)
-    return string.unpack("<I2", string.pack("<i2", val))
+    return val & 0xFFFF
 end
 
 function touint32(val)
-    return string.unpack("<I4", string.pack("<i4", val))
+    return string & 0xFFFFFFFF
 end
 
 DataTypes = enum {
