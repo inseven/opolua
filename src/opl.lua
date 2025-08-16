@@ -660,14 +660,24 @@ function gSETPENWIDTH(width)
     runtime:getGraphicsContext().penwidth = width
 end
 
-function gCLOCK(mode)
+function gCLOCK(mode, offset, format, font, style)
+    -- printf("gCLOCK(%s, %s, %s, %s, %s)\n", mode, offset, format, font, style)
     local context = runtime:getGraphicsContext()
     assert(context.isWindow, KErrInvalidWindow)
-    local x, y
+    local info = nil
     if mode then
-        x, y = context.pos.x, context.pos.y
+        info = {
+            mode = mode,
+            position = {
+                x = context.pos.x,
+                y = context.pos.y,
+            },
+            format = format,
+            font = font,
+            style = style,
+        }
     end
-    runtime:iohandler().graphicsop("clock", context.id, { mode = mode, position = { x = x, y = y }})
+    runtime:iohandler().graphicsop("clock", context.id, info)
 end
 
 -- Screen APIs
