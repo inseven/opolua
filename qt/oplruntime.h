@@ -1,0 +1,242 @@
+// Copyright (c) 2025 Jason Morley, Tom Sutcliffe
+// See LICENSE file for license information.
+
+#ifndef OPLRUNTIME_H
+#define OPLRUNTIME_H
+
+#include <QDir>
+#include <QElapsedTimer>
+#include <QKeyEvent>
+#include <QMutex>
+#include <QObject>
+#include <QScopedPointer>
+#include <QSemaphore>
+#include <QTextCodec>
+#include <QThread>
+#include <QVector>
+#include <functional>
+#include <optional>
+
+#include "oplscreen.h"
+
+class FileSystemIoHandler;
+struct lua_State;
+class AsyncHandle;
+struct Completion;
+class MainThreadEvent;
+
+#define DECLARE_IOHANDLER_FN(fn) \
+    static int fn ## _s(lua_State* L) { \
+        return getSelf(L)->fn(L); \
+    } \
+    int fn(lua_State* L)
+
+#define IOHANDLER_FN(fn) { #fn, fn ## _s }
+
+enum class Drive : char {
+    C = 'C',
+    D = 'D',
+};
+
+class OplRuntime : public QObject, public OplFontProvider
+{
+    Q_OBJECT
+
+public:
+    enum DeviceType {
+        Series3c,
+        Series5,
+        Revo,
+        Series7,
+        GeofoxOne,
+    };
+
+    enum Speed {
+        Slowest = 1,
+        Slower = 2,
+        Slow = 3,
+        Tardy = 4,
+        DefaultSpeed = 5,
+        Snappy = 6,
+        Fast = 7,
+        Faster = 8,
+        Fastest = 9,
+    };
+
+    explicit OplRuntime(QObject *parent = nullptr);
+    ~OplRuntime();
+    void setScreen(OplScreen* screen) { mScreen = screen; }
+    QSize screenSize() const;
+    bool running() const;
+    QString lastLauncherCommand() const { return mLauncherCmd; }
+    QString runningLauncherCommand() const { return running() ? mLauncherCmd : QString(); }
+    bool writableCDrive() const;
+    void setDeviceType(DeviceType type);
+    DeviceType getDeviceType() const;
+    static QString deviceTypeToString(DeviceType type);
+    Speed getSpeed() const;
+    void setSpeed(Speed speed);
+
+    void setDrive(Drive drive, const QString& path);
+    void removeAllDrives();
+    QString getNativePath(const QString& devicePath) const;
+
+    void run(const QString& devicePath);
+    void run(const QDir& cDrive, const QString& devicePath); // convenience
+    void runOpo(const QString& path); // convenience, sets up dummy C drive
+    void runInstaller(const QString& file, const QString& displayPath);
+    void runLauncher();
+    void runAppSelector();
+
+    void keyEvent(const QKeyEvent& event);
+    void mouseEvent(const QMouseEvent& event, int windowId, const QPoint& screenPos);
+    void focusEvent(bool focussed);
+
+    void asyncFinished(AsyncHandle* handle, int code);
+
+    void interruptAndRun(std::function<void(void)> runNextFn);
+
+    static void configureLuaResourceSearcher(lua_State *L);
+    static int dofile(lua_State *L);
+
+    QString getFont(uint32_t uid, OplScreen::FontMetrics& metrics) override;
+
+protected:
+    bool event(QEvent* ev) override;
+
+public slots:
+    void interrupt();
+    void restart();
+    void pressMenuKey();
+    void runFaster();
+    void runSlower();
+    void closeEvent();
+
+signals:
+    void startedRunning(const QString& path);
+    void titleChanged(const QString& title);
+    void runComplete(const QString& errMsg, const QString& errDetail);
+    void installationComplete();
+    void systemClockChanged(bool digital);
+    void escapeStateChanged(bool on);
+    void speedChanged();
+    void debugLog(const QString& str);
+    void closeEventProcessed();
+
+private slots:
+    void onThreadExited();
+
+private:
+    struct Event {
+        int32_t code;
+        union {
+            struct {
+                int32_t timestamp;
+                int32_t scancode;
+                int32_t modifiers; // Modifiers
+                int32_t repeat;
+            } keypress;
+            struct {
+                int32_t timestamp;
+                int32_t scancode;
+                int32_t modifiers; // Modifiers
+            } keyupdown;
+            struct {
+                int32_t timestamp;
+                int32_t windowId;
+                int32_t pointerType;
+                int32_t modifiers; // TEventModifiers NOT Modifiers
+                int32_t x;
+                int32_t y;
+                int32_t xscreen;
+                int32_t yscreen;
+            } penevent;
+            struct {
+                int32_t timestamp;
+            } focusevent;
+            int32_t pad[15];
+        };
+
+        bool isKeyEvent() const;
+    };
+
+    void pushRunParams(const QString& devicePath);
+    void pushIohandler();
+    void startThread();
+    static void threadFn(OplRuntime* self);
+    int call(std::function<int(void)> fn);
+    void didWritePixels(int numPixels);
+
+    void addEvent(const Event& event);
+    bool checkEventRequest_locked();
+    void unlockAndSignalIfWaiting();
+    bool completeAnyRequest_locked(lua_State *L);
+    void asyncFinished_locked(AsyncHandle* asyncHandle, int code);
+
+    static OplRuntime* getSelf(lua_State *L);
+    QString tolocalstring(lua_State *L, int index);
+    void setEscape(bool flag);
+
+    DECLARE_IOHANDLER_FN(asyncRequest);
+    DECLARE_IOHANDLER_FN(cancelRequest);
+    DECLARE_IOHANDLER_FN(checkCompletions);
+    DECLARE_IOHANDLER_FN(createBitmap);
+    DECLARE_IOHANDLER_FN(createWindow);
+    DECLARE_IOHANDLER_FN(draw);
+    DECLARE_IOHANDLER_FN(getConfig);
+    DECLARE_IOHANDLER_FN(getDeviceInfo);
+    DECLARE_IOHANDLER_FN(getTime);
+    DECLARE_IOHANDLER_FN(graphicsop);
+    DECLARE_IOHANDLER_FN(opsync);
+    DECLARE_IOHANDLER_FN(setConfig);
+    DECLARE_IOHANDLER_FN(setEra);
+    DECLARE_IOHANDLER_FN(system);
+    DECLARE_IOHANDLER_FN(testEvent);
+    DECLARE_IOHANDLER_FN(textEditor);
+    DECLARE_IOHANDLER_FN(utctime);
+    DECLARE_IOHANDLER_FN(waitForAnyRequest);
+
+    DECLARE_IOHANDLER_FN(printHandler); // Not actually part of iohandler, but behaves similarly
+
+protected:
+    lua_State* L;
+    QScopedPointer<FileSystemIoHandler> mFs;
+    QString mDeviceOpoPath; // Of the current executable (or empty if running a custom launcher)
+private:
+    QThread* mThread;
+    mutable QMutex mMutex;
+    DeviceType mDeviceType;
+    QString mLauncherCmd;
+    QTextCodec* mStringCodec;
+    OplScreen* mScreen;
+    int mRet;
+    //// BEGIN protected by mMutex
+    MainThreadEvent* mCallEvent;
+    QVector<Event> mEvents;
+    AsyncHandle* mEventRequest;
+    bool mWaiting;
+    bool mInterrupted;
+    uint8_t mSpeed;
+    QElapsedTimer mLastOpTime;
+    QMap<int, AsyncHandle*> mPendingRequests;
+    QVector<Completion> mPendingCompletions;
+    //// END protected by mMutex
+    std::function<void(void)> mRunNextFn;
+    QSemaphore mWaitSemaphore;
+
+    int mInfoWinId;
+    QScopedPointer<QTimer> mInfoWinHideTimer;
+
+    int mBusyWinId;
+    QScopedPointer<QTimer> mBusyWinShowTimer;
+
+    std::optional<OplScreen::DrawCmd> mCursorDrawCmd;
+    QScopedPointer<QTimer> mCursorTimer;
+
+    QMap<QString, QString> mConfig;
+    QString mGetCmd;
+
+    bool mEscapeOn;
+};
+
+#endif // OPLRUNTIME_H

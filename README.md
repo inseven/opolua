@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/inseven/opolua/actions/workflows/build.yaml/badge.svg)](https://github.com/inseven/opolua/actions/workflows/build.yaml)
 
-An OPO (compiled OPL) interpreter written in Lua and Swift, based on the Psion Series 5 era format (ie ER5, prior to the Quartz 6.x changes). It lets you run Psion 5 programs written in OPL on any iOS device, subject to the limitations described below.
+An OPO (compiled OPL) interpreter written in Lua and Swift/Qt, based on the Psion Series 5 era format (ie ER5, prior to the Quartz 6.x changes). It lets you run Psion 5 programs written in OPL on any iOS device, subject to the limitations described below, as well as on any platform supported by the Qt port (mac, windows, linux).
 
 Supported features:
 
@@ -10,9 +10,11 @@ Supported features:
 * SIS files can be installed directly by launching them.
 * Colour graphics (if the program originally provided them).
 * Sound.
-* Limited game controller support - although a paired bluetooth keyboard is necessary for some programs that rely on the keyboard rather than touchscreen input.
+* Limited game controller support - although a paired bluetooth keyboard is necessary for some programs that rely on the keyboard rather than touchscreen input (iOS version only).
 
 One thing that is explicitly not supported is programs that aren't pure OPL - ie that are native ARM-format binaries. This project is an OPL interpreter only, it is not a full ARM virtual machine.
+
+There are two versions of the app: one for iOS and macOS Catalyst written in Swift; and one written in Qt which runs on macOS, Windows and linux. The two versions are mostly equivalent with some minor differences in UX.
 
 ## Screenshots
 
@@ -24,6 +26,33 @@ Some example OPL programs downloaded from the internet, running in OpoLua on iOS
 
 ![Tile Fall](screenshots/tile-fall.png)
 
+## Building the Qt version
+
+On Linux you'll need a version of Qt 5 or 6 and qmake, something like:
+
+```
+sudo apt install qt5-qmake qtmultimedia5-dev libqt5multimedia5-plugins
+git clone https://github.com/inseven/opolua.git
+cd opolua/qt
+git submodule update --init --recursive
+qmake opolua.pro
+make
+sudo make install
+```
+
+On mac:
+
+```
+brew install qt@5
+git clone https://github.com/inseven/opolua.git
+cd opolua/qt
+git submodule update --init --recursive
+qmake opolua.pro
+make
+```
+
+Both Qt 5 and Qt 6 are supported and in theory should run on all platforms supported by Qt. Only macOS, Linux and Windows are tested, however.
+
 ## QCode
 
 _Disclaimer: My understanding only, based on reading the opl-dev source code._
@@ -34,7 +63,7 @@ An "application" is an OPO file called "X.app" alongside a file "X.aif" (Applica
 
 There are something like 280 defined opcodes, plus another 128 or so "functions" invoked with the `CallFunction` opcode. The distinction between dedicated opcode and function code appears entirely arbitrary as there are some extremely complex "opcodes" and some fairly basic functions codes. Opcodes whose numerical value doesn't fit in a single byte are expressed as opcode 255 ("NextOpcodeTable") followed by a second byte being the real code minus 256. There are no opcodes requiring more than 2 bytes to express.
 
-Strings are limited to a maximum length of 255 bytes (this was increased in Quartz, as well as making strings support UCS-2). Various other internal data structures were increased from 1 byte to 2 at the same time. Strings not part of a string array have a maxlength byte preceding the length byte - string addresses always point to the length byte. String arrays have a single maxlength byte common to all elements, immediately preceding the first string element. For this reason opcodes that operate on strings take an explicit max length parameter on the stack, since it is not possible to know a string's max length based solely on its address (you need to know whether it's in an array or not, and if so where the start of the array is).
+Strings are limited to a maximum length of 255 bytes using a leading length byte (this was increased in Quartz, as well as making strings support UCS-2). Various other internal data structures were increased from 1 byte to 2 at the same time. Strings not part of a string array have a maxlength byte preceding the length byte - string addresses always point to the length byte. String arrays have a single maxlength byte common to all elements, immediately preceding the first string element. For this reason opcodes that operate on strings take an explicit max length parameter on the stack, since it is not possible to know a string's max length based solely on its address (you need to know whether it's in an array or not, and if so where the start of the array is).
 
 Arrays are limited to 32767 elements (signed 16-bit) although the overall local variable size of a function is also limited to something like 16KB. The array length is stored in the 2 bytes immediately preceding the first element (in the case of number arrays) or preceding the max length byte (in the case of string arrays). Array size is statically fixed at the point of declaration and cannot be changed at runtime. Array addresses always point to the start of the first element. Arrays are not first-class values (you cannot pass an array to a proc, or assign one array to another) but some commands do accept array parameters.
 
@@ -42,7 +71,7 @@ Arrays are limited to 32767 elements (signed 16-bit) although the overall local 
 
 This interpreter largely ignores types and specific memory layout restrictions. The stack is represented with a simple Lua table containing Lua number or string values, with no strict distinction between words/longs/floats.
 
-Right now it runs in minimal Lua 5.3 or 5.4 with bare bones I/O support (on any OS), or as a iOS Swift app with fairly comprehensive graphics support (which uses Lua 5.4).
+Right now it runs in minimal Lua 5.3 or 5.4 with bare bones I/O support (on any OS), or as a iOS Swift app with fairly comprehensive graphics support (which uses Lua 5.4). There is also now a version using Qt for the front end.
 
 Variables (ie, values not on the stack) are represented by a table of metatable type `Variable`. Calling `var()` gets the value, and calling `var(newVal)` sets it. In the case of array values, `Variable` also supports array indexing. Each item in the array is itself a `Variable`. To assign to the first item in an array variable, do `arrayVar[1](newVal)`.
 
@@ -59,11 +88,12 @@ This interpreter is not 100% behaviour compatible with the original Psion. The m
   * Sorting records with ORDER BY
   * Some databases created outside of OPL
   * Writing Psion-format databases
-* Some dialog features like dTIME, dFILE
 * Invert drawing mode
+  * This is mostly done now in the Swift frontend
 * Ability to suspend/resume app execution in the iOS UI
+* Due to the event handling and rendering pipeline for the Qt and Swift versions being completely different, there might be some differences in how apps behave. We will try to fix bugs in both versions to the extent it is possible to do so.
 
-## Example
+## Command-line example
 
 [simple.txt](examples/Tests/simple.txt) compiled on a Psion Series 5:
 
@@ -73,10 +103,15 @@ Hello world!
 Waaaat
 (Skipping get)
 $ ./src/dumpopo.lua examples/Tests/simple.opo --all
+UID2: 0x10000073
+UID3: 0x10000168
+translatorVersion: 0x200A minRunVersion: 0x200A
 Source name: D:\Program
 procTableIdx: 0x0000006B
 1: TEST @ 0x0000001F code=0x00000036 line=0
     Subproc "WAT" offset=0x0012 nargs=0
+    maxStack: 8
+    iDataSize: 23 (0x00000017)
     iTotalTableSize: 5 (0x00000005)
 00000036: 2B [ConstantString] "Hello world!"
 00000044: 8B [PrintString]
@@ -87,6 +122,8 @@ procTableIdx: 0x0000006B
 0000004C: 80 [DropInt]
 0000004D: 76 [ZeroReturnFloat]
 2: WAT @ 0x0000004E code=0x00000060 line=6
+    maxStack: 0
+    iDataSize: 18 (0x00000012)
     iTotalTableSize: 0 (0x00000000)
 00000060: 2B [ConstantString] "Waaaat"
 00000068: 8B [PrintString]

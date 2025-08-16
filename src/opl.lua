@@ -282,7 +282,7 @@ function gXBORDER(type, flags, w, h)
         w = context.width
         h = context.height
     end
-    printf("gXBorder type=%d flags=%x %dx%d\n", type, flags, w, h)
+    -- printf("gXBorder type=%d flags=%x %dx%d\n", type, flags, w, h)
 
     -- KBordLosePixel has no effect on ANY border type, that I can see. The docs suggest it's supposed to make a less
     -- rounded corner (contrasting with KBordRoundCorners) on series 3 style buttons (type=0 or type=1), but it does
