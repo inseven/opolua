@@ -304,7 +304,37 @@ function RunApp(stack, runtime) -- 31
 end
 
 function RunExe(stack, runtime) -- 32
-    unimplemented("opx.system.RunExe")
+    local path = stack:pop()
+    printf("RunExe %s\n", path)
+    -- unimplemented("opx.system.RunExe")
+
+    runtime:DIALOG({
+        title = "Not supported",
+        flags = 0,
+        xpos = 0,
+        ypos = 0,
+        items = {
+            {
+            type = dItemTypes.dTEXT,
+            align = "left",
+            value = "Program attempted to call RunExe with the following path:",
+            },
+            {
+            type = dItemTypes.dTEXT,
+            align = "center",
+            value = path,
+            },
+            {
+            type = dItemTypes.dTEXT,
+            align = "left",
+            value = "which is not supported in OpoLua.",
+            },
+        },
+        buttons = {
+            { key = KKeyEnter | KDButtonNoLabel, text = "OK" },
+        },
+    })
+    stack:push(0)
 end
 
 function LogonToThread(stack, runtime) -- 33
@@ -312,7 +342,7 @@ function LogonToThread(stack, runtime) -- 33
     local id = stack:pop()
     printf("LogonToThread(%d, %s)\n", id, status:addressOf())
     if id == 0 then
-        -- Probably a follow on from a RunApp which we've already handled
+        -- Probably a follow on from a RunApp/RunExe which we've already handled
         status(KErrGenFail)
         stack:push(0)
     else
