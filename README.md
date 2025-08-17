@@ -18,7 +18,7 @@ There are two versions of the app: one for iOS and macOS Catalyst written in Swi
 
 ## Screenshots
 
-Some example OPL programs downloaded from the internet, running in OpoLua on iOS:
+Some example OPL programs downloaded from the internet, running in OpoLua on iOS, Windows and macOS respectively:
 
 ![Jumpy! Plus](screenshots/jumpy-plus.png)
 
