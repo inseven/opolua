@@ -1,4 +1,5 @@
 PROC main:
+    PRINT "EXIST ''", EXIST("")
     PRINT "EXIST C:\", EXIST("C:\")
     PRINT "EXIST C:\System", EXIST("C:\System")
     PRINT "EXIST C:\System\", EXIST("C:\System\")

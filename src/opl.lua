@@ -1441,7 +1441,12 @@ end
 -- File APIs
 
 function EXIST(path)
+    if path == "" then
+        -- This shouldn't error; the call to runtime:abs() otherwise would
+        return false
+    end
     local ret = runtime:iohandler().fsop("exists", runtime:abs(path))
+    -- printf("EXIST(%q) = %d\n", path, ret)
     return ret == KErrNone
 end
 
