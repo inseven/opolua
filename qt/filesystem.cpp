@@ -182,15 +182,19 @@ int FileSystemIoHandler::fsop(lua_State* L)
     };
 
     QMutexLocker lock(&self->mMutex);
-    if (cmd == "dir" && self->mSimulatedDrive && path == QString(QChar(self->mSimulatedDrive)) + ":\\") {
-        // Special case this
-        auto files = self->mSimulatedPaths.keys();
-        QStringList result;
-        for (const auto& file : files) {
-            result.append(path + file);
+    if (self->mSimulatedDrive && path == QString(QChar(self->mSimulatedDrive)) + ":\\") {
+        // Some special cases required here
+        if (cmd == "dir") {
+            auto files = self->mSimulatedPaths.keys();
+            QStringList result;
+            for (const auto& file : files) {
+                result.append(path + file);
+            }
+            pushValue(L, result);
+            return 1;
+        } else if (cmd == "exists") {
+            return err(KErrNone);
         }
-        pushValue(L, result);
-        return 1;
     }
     lock.unlock();
 
