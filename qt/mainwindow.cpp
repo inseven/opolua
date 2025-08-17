@@ -195,7 +195,7 @@ void MainWindow::runComplete(const QString& errMsg, const QString& /*errDetail*/
 
 void MainWindow::openDialog()
 {
-    QString file = QFileDialog::getOpenFileName(this, tr("Select OPL app"), QString(), tr("OPL Apps (*.opo *.app)"));
+    QString file = QFileDialog::getOpenFileName(this, tr("Select OPL app"), QString(), tr("OPL Apps (*.opo *.app *.oplsys)"));
     // qDebug("open %s", qPrintable(file));
 
     if (file.isEmpty()) {
