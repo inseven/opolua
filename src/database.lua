@@ -853,6 +853,10 @@ function parseTableSpec(spec)
         spec = rest
     end
 
+    if filename == nil then
+        return "", "Table1", nil, nil, nil
+    end
+
     local query = splitQuery(spec)
 
     -- Check this is a legal combination of query items

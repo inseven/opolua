@@ -1332,6 +1332,11 @@ function Runtime:setCwd(cwd)
 end
 
 function Runtime:abs(path)
+    -- The empty path should never be made into anything else, I don't think?
+    -- This is different to the beheviour of oplpath.abs() (which is also used by PARSE$) which
+    -- does support resolving the empty path.
+    assert(path ~= "", KErrName)
+
     return oplpath.abs(path, self.cwd)
 end
 

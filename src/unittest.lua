@@ -83,6 +83,8 @@ function main()
         ["ORDER BY"] = "id, l",
     })
 
+    checkSpec("", "", "Table1", nil, nil)
+
     checkSpec("clients SELECT name, tel FROM phone",
         "clients",
         "phone",
