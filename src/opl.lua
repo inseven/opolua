@@ -1000,12 +1000,13 @@ function SCREEN(widthInChars, heightInChars, xInChars, yInChars)
     -- (x,y) being (0,0) means centre the screen, whereas 1,1 means put it in top left (well, the top left char pos
     -- if the screen were full width)
     
-    local screen = runtime:getGraphics().screen
+    local graphics = runtime:getGraphics()
+    local screen = graphics.screen
     local defaultWin = runtime:getGraphicsContext(KDefaultWin)
 
     -- Both of these are in chars too
-    local maxScreenWidth = defaultWin.width // screen.charw
-    local maxScreenHeight = defaultWin.height // screen.charh
+    local maxScreenWidth = graphics.screenWidth // screen.charw
+    local maxScreenHeight = graphics.screenHeight // screen.charh
 
     if xInChars == 0 and yInChars == 0 then
         xInChars = ((maxScreenWidth - widthInChars) // 2) + 1
