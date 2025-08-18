@@ -116,7 +116,7 @@ signals:
     void startedRunning(const QString& path);
     void titleChanged(const QString& title);
     void runComplete(const QString& errMsg, const QString& errDetail);
-    void installationComplete();
+    void installationComplete(const QString& sisPath);
     void systemClockChanged(bool digital);
     void escapeStateChanged(bool on);
     void speedChanged();
