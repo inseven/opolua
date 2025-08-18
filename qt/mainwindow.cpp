@@ -9,7 +9,13 @@
 #include <QJsonObject>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QSettings>
 #include <QStandardPaths>
+
+#ifdef Q_OS_MAC
+#include <sys/xattr.h>
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 
 #include "ui_mainwindow.h"
 #include "oplapplication.h"
@@ -371,25 +377,34 @@ void MainWindow::openFile(const QString& path)
     }
 }
 
-void MainWindow::installationComplete()
+void MainWindow::installationComplete(const QString& sisPath)
 {
     auto path = getRuntime().getNativePath("C:\\");
     Q_ASSERT(!path.isEmpty());
     mManifest = manifestForDrive(path);
-    updateManifest();
+    QString source(getSourceUrlForPath(sisPath));
+    updateManifest(source);
 }
 
-void MainWindow::updateManifest()
+void MainWindow::updateManifest(const QString& sourceUrl)
 {
     Q_ASSERT(!mManifest.isEmpty());
+    QJsonObject obj;
+    QFile f(mManifest);
+    if (f.open(QFile::ReadOnly)) {
+        obj = QJsonDocument::fromJson(f.readAll()).object();
+        f.close();
+    }
+
     auto deviceType = getRuntime().getDeviceType();
     QString typeStr = OplRuntime::deviceTypeToString(deviceType);
-    QJsonObject obj;
     obj.insert("device", typeStr);
-    QJsonDocument json(obj);
-    QFile f(mManifest);
+    if (!sourceUrl.isEmpty()) {
+        obj.insert("sourceUrl", sourceUrl);
+    }
+
     if (f.open(QFile::ReadWrite)) {
-        f.write(json.toJson());
+        f.write(QJsonDocument(obj).toJson());
         f.close();
     } else {
         qDebug("Failed to open %s", qPrintable(mManifest));
@@ -507,4 +522,39 @@ void MainWindow::onSpeedChanged()
     auto speed = getRuntime().getSpeed();
     ui->actionSpeed->setText(QString("Speed: %1").arg(kSpeedNames[(int)speed - 1]));
     speedLabel->setText(QString("Speed: %1").arg((int)speed));
+}
+
+QString MainWindow::getSourceUrlForPath(const QString& path)
+{
+    QString result;
+#if defined(Q_OS_MAC)
+    auto p = QDir::toNativeSeparators(path);
+    auto buf = CFDataCreateMutable(NULL, 0);
+    CFDataSetLength(buf, 2048);
+    auto ret = getxattr(p.toUtf8().data(), "com.apple.metadata:kMDItemWhereFroms",
+        CFDataGetMutableBytePtr(buf), CFDataGetLength(buf), 0, 0);
+    if (ret > 0) {
+        CFDataSetLength(buf, ret);
+        auto props = CFPropertyListCreateWithData(NULL, buf, kCFPropertyListImmutable, NULL, NULL);
+        if (props && CFGetTypeID(props) == CFArrayGetTypeID()) {
+            auto arr = (CFArrayRef)props;
+            if (CFArrayGetCount(arr) > 0) {
+                auto val = CFArrayGetValueAtIndex(arr, 0);
+                if (CFGetTypeID(val) == CFStringGetTypeID()) {
+                    result = QString::fromCFString((CFStringRef)val);
+                }
+            }
+        }   
+
+        CFRelease(props);
+    }
+    CFRelease(buf);
+#elif defined(Q_OS_WIN)
+    QSettings info(path + ":Zone.Identifier", QSettings::IniFormat);
+    result = info.value("ZoneTransfer/HostUrl").toString();
+#else
+    // I don't think there's any (standard) way this is done on Linux?
+    Q_UNUSED(path);
+#endif
+    return result;
 }

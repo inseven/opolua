@@ -533,7 +533,7 @@ void OplRuntime::runInstaller(const QString& file, const QString& displayPath)
     pushValue(L, file);
     pushValue(L, QString("I:\\" + QFileInfo(file).fileName()));
     pushValue(L, displayPath);
-    mRunNextFn = [this]() {
+    mRunNextFn = [this, file]() {
         mFs->removeMapping('I');
         if (lua_type(L, -1) != LUA_TTABLE) {
             emit runComplete(QString(), QString());
@@ -541,7 +541,7 @@ void OplRuntime::runInstaller(const QString& file, const QString& displayPath)
         }
         auto launch = to_string(L, -1, "launch");
         lua_pop(L, 1);
-        emit installationComplete();
+        emit installationComplete(file);
         if (!launch.isEmpty()) {
             pushRunParams(launch);
             startThread();

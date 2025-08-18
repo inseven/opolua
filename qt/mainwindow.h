@@ -46,15 +46,16 @@ private slots:
     void forceClose();
     void startedRunning(const OplAppInfo& info);
     void runComplete(const QString& errMsg, const QString& errDetail);
-    void installationComplete();
+    void installationComplete(const QString& sisPath);
     void updateRecents(const QStringList& recentFiles);
     void onSpeedChanged();
 
 private:
     void setDevice(QAction* action, int device);
     void sizeWindowToFitInterpreter();
+    QString getSourceUrlForPath(const QString& path);
     void applyManifest();
-    void updateManifest();
+    void updateManifest(const QString& sourceUrl = QString());
     void doInstallSis(const QString& file);
 
 private:
