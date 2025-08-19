@@ -124,7 +124,7 @@ function touint16(val)
 end
 
 function touint32(val)
-    return string & 0xFFFFFFFF
+    return val & 0xFFFFFFFF
 end
 
 DataTypes = enum {
