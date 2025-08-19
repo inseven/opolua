@@ -283,7 +283,7 @@ void OplScreenWidget::endBatchDraw()
     mBatchSeenDrawables.clear();
 }
 
-void OplScreenWidget::bitBlt(int drawableId, OplScreen::BitmapMode mode, int width, int height, int stride, const QByteArray& data)
+void OplScreenWidget::bitBlt(int drawableId, bool color, int width, int height, const QByteArray& data)
 {
     auto drawable = mDrawables.value(drawableId, nullptr);
     if (!drawable) {
@@ -291,7 +291,7 @@ void OplScreenWidget::bitBlt(int drawableId, OplScreen::BitmapMode mode, int wid
         return;
     }
     mBatchSeenDrawables.insert(drawable);
-    drawable->loadFromBitmap(mode, width, height, stride, data);
+    drawable->loadFromBitmap(color, width, height, data);
 }
 
 static int maxX(const QRect& rect) {
@@ -866,11 +866,11 @@ void Drawable::drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* 
     }
 }
 
-void Drawable::loadFromBitmap(OplScreen::BitmapMode mode, int width, int height, int stride, const QByteArray& data)
+void Drawable::loadFromBitmap(bool color, int width, int height, const QByteArray& data)
 {
     invalidateMask();
-    // qDebug("loadFromBitmap mode=%d width=%d height=%d stride=%d datalen=%d", mode, width, height, stride, data.size());
-    mPixmap = OplRuntimeGui::imageFromBitmap(mode, width, height, stride, data);
+    // qDebug("loadFromBitmap color=%d width=%d height=%d datalen=%d", color, width, height, data.size());
+    mPixmap = OplRuntimeGui::imageFromBitmap(color, width, height, data);
 }
 
 Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplScreen::BitmapMode mode, int shadowSize)

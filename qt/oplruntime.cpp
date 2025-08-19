@@ -1023,14 +1023,13 @@ int OplRuntime::draw(lua_State* L)
                 continue;
             } else if (type == "bitblt") {
                 rawgetfield(L, 2, "bitmap");
-                auto mode = (OplScreen::BitmapMode)to_int(L, -1, "mode");
                 int width = to_int(L, -1, "width");
                 int height = to_int(L, -1, "height");
-                int stride = to_int(L, -1, "stride");
-                auto data = to_bytearray(L, -1, "imgData");
+                bool color = to_bool(L, -1, "isColor");
+                auto data = to_bytearray(L, -1, "normalizedImgData");
                 lua_pop(L, 1); // bitmap
 
-                mScreen->bitBlt(cmd.drawableId, mode, width, height, stride, data);
+                mScreen->bitBlt(cmd.drawableId, color, width, height, data);
                 didWritePixels(width * height);
                 lua_pop(L, 1); // cmd
                 continue;

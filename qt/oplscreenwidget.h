@@ -67,7 +67,7 @@ protected:
     int setWindowRect(int drawableId, const QPoint& position, const QSize* size) override;
     void beginBatchDraw() override;
     void draw(const DrawCmd& command) override;
-    void bitBlt(int drawableId, BitmapMode mode, int width, int height, int stride, const QByteArray& data) override;
+    void bitBlt(int drawableId, bool color, int width, int height, const QByteArray& data) override;
     void copyMultiple(int srcId, int destId, QRgb color, bool invert, const QVector<QRect>& rects, const QVector<QPoint>& points) override;
     void endBatchDraw() override;
     void clock(int drawableId, const ClockInfo* info) override;
@@ -122,7 +122,7 @@ public:
     void draw(const OplScreen::DrawCmd& cmd);
     void drawSetPixels(Drawable& src, const QRect& srcRect, const QRect& destRect, bool invert, QRgb color);
     void drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* mask);
-    void loadFromBitmap(OplScreen::BitmapMode mode, int width, int height, int stride, const QByteArray& data);
+    void loadFromBitmap(bool color, int width, int height, const QByteArray& data);
 
     QPixmap& getPixmap();
     QBitmap& getMask();

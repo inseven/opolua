@@ -32,11 +32,6 @@ extension Graphics.MaskedBitmap {
                     // We don't (yet) deal with masks of a mismatching size,
                     // something that EPOC apps seem to do all too frequently
                     return img
-                } else if maskBmp.mode == .gray2 {
-                    // 1BPP image masks are inverted relative to other bit
-                    // depths which actually makes them aligned with how
-                    // CoreGraphics expects them!
-                    maskImg  = CGImage.from(bitmap: maskBmp)
                 } else {
                     maskImg = CGImage.from(bitmap: maskBmp).inverted()?.stripAlpha(grayscale: true)
                 }
