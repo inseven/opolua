@@ -86,7 +86,7 @@ Options:
             end
         end
 
-        if #info.icons > 0 then
+        if #info.icons > 0 and info.era ~= "sibo" then
             local mbmName = string.format("%s_icons.mbm", args.filename)
             writeFile(mbmName, aif.toMbm(info))
         end
