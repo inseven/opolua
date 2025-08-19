@@ -41,9 +41,6 @@ function parseAif(data)
             local picDataPos = pos + 2
             local picData = data:sub(picDataPos, picDataPos + len - 1)
             local icons = mbm.parseMbmHeader(picData)
-            for _, bitmap in ipairs(icons) do
-                bitmap.imgData = bitmap:getImageData()
-            end
 
             local infoPos = picDataPos + len
             local infoLen, name, path, type = string.unpack("<I2c14c20I2", data, infoPos)
@@ -87,12 +84,10 @@ function parseAif(data)
         offset, width, pos = string.unpack("<I4I2", data, pos)
         local bitmap = mbm.parseBitmap(data, offset)
         -- printf("Icon %d offset=0x%08X width=%d len=%d\n", i, offset, width, bitmap.len)
-        bitmap.imgData = bitmap:getImageData()
 
         local maskStart = (offset + bitmap.len)
         local mask = mbm.parseBitmap(data, maskStart)
         -- printf("Mask %d offset=0x%08X width=%d height=%d len=%d\n", i, maskStart, mask.width, mask.height, mask.len)
-        mask.imgData = mask:getImageData()
         bitmap.mask = mask
 
         icons[i] = bitmap
@@ -104,6 +99,21 @@ function parseAif(data)
         captions = captions,
         icons = icons,
     }
+end
+
+function parseAifToNative(data)
+    local result = parseAif(data)
+    if result then
+        for i, icon in ipairs(result.icons) do
+            result.icons[i] = {
+                bitmap = icon:toNative()
+            }
+            if icon.mask then
+                result.icons[i].mask = icon.mask:toNative()
+            end
+        end
+    end
+    return result
 end
 
 function makeAif(info)

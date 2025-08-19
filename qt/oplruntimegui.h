@@ -22,7 +22,7 @@ public:
 
     static QBitmap pixToBitmap(const QPixmap& pixmap);
     static QPixmap imageFromBitmap(lua_State* L, int index);
-    static QPixmap imageFromBitmap(OplScreen::BitmapMode mode, int width, int height, int stride, const QByteArray& data);
+    static QPixmap imageFromBitmap(bool color, int width, int height, const QByteArray& data);
     OplAppInfo getAppInfo(const QString& aifPath);
 
     QVector<OplAppInfo> getCDriveApps();

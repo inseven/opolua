@@ -361,7 +361,7 @@ local function byteWidth(pixelWidth, bpp)
     elseif bpp == 12 or bpp == 16 then
         return 4 * ((pixelWidth + 1) // 2)
     elseif bpp == 24 then
-        return 4 * ((((pixelWidth * 3) + 11) / 12) * 3)
+        return 4 * ((((pixelWidth * 3) + 11) // 12) * 3)
     elseif bpp == 32 then
         return 4 * ((pixelWidth + 15) // 16)
     else
@@ -392,7 +392,7 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
         imgData = table.concat(trimmed)
         -- print(#imgData, resultStride, self.height, resultStride * self.height)
         assert(#imgData == resultStride * self.height, "getImageData did not return expected size")
-    elseif expandToBitDepth == 24 then
+    elseif expandToBitDepth == 24 or expandToBitDepth == 32 then
         local bytes
         if self.bpp == 12 or self.bpp == 16 or self.bpp == 24 then
             -- These are handled directly by getPixel() below
@@ -401,12 +401,13 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
             -- First expand to 8bpp with no padding
             bytes = self:getImageData(8, nil)
         end
-
-        local rowPad = string.rep("\0", (resultStride or 0) - (self.width * 3))
+        local bytesPerPixel = expandToBitDepth // 8
+        local alphaByte = (expandToBitDepth == 32) and '\xFF' or ''
+        local rowPad = string.rep("\0", (resultStride or 0) - (self.width * bytesPerPixel))
         local color = self.isColor
         local function getPixel(x, y)
             if self.bpp == 12 then
-                local pos = 1 + (y * self.width * 2 + x * 2)
+                local pos = 1 + (y * self.stride + x * 2)
                 -- Note the endianness is probably wrong here, but is balanced by returning r g and b in the wrong order
                 -- at the end. Probably.
                 local value = string.unpack(">I2", bytes, pos)
@@ -415,7 +416,7 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
                 local r = (value & 0xF) * 17
                 return string_char(r & 0xFF, g & 0xFF, b & 0xFF)
             elseif self.bpp == 16 then
-                local pos = 1 + (y * self.width * 2 + x * 2)
+                local pos = 1 + (y * self.stride + x * 2)
                 local value = string.unpack("<I2", bytes, pos)
                 local r = (value & 0xF800) >> 8
                 local g = (value & 0x7E0) >> 3
@@ -423,23 +424,23 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
                 -- Adding an extra bit on to each value looks weird to me, but it's what
                 -- https://github.com/SymbianSource/oss.API_REF.Public_API/blob/c8cfcfafc002d82a4e96f1197865cc7acf7f6fc3/epoc32/include/gdi.inl#L326
                 -- did...
-                return string_char(b + (b >> 5), g + (g >> 6), r + (r >> 5))
+                return string_char(b + (b >> 5), g + (g >> 6), r + (r >> 5))..alphaByte
             elseif self.bpp == 24 then
-                local pos = 1 + (y * self.width * 3 + x * 3)
-                return string_sub(bytes, pos, pos + 2)
+                local pos = 1 + (y * self.stride + x * 3)
+                return string_sub(bytes, pos, pos + 2)..alphaByte
             end
             local pos = 1 + (y * self.width + x)
             local b = string_byte(bytes, pos, pos)
             if color then
                 if self.bpp == 8 then
-                    return string_pack("<I3", kEpoc8bitPalette[1 + b])
+                    return string_pack("<I3", kEpoc8bitPalette[1 + b])..alphaByte
                 elseif self.bpp == 4 then
-                    return string_pack("<I3", kEpoc4bitPalette[1 + b])
+                    return string_pack("<I3", kEpoc4bitPalette[1 + b])..alphaByte
                 else
                     error("Bad depth!")
                 end
             else
-                return string_char(b, b, b)
+                return string_char(b, b, b)..alphaByte
             end
         end
         local result = {}
@@ -456,6 +457,15 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
         error("expandToBitDepth depth not supported yet")
     end
     return imgData
+end
+
+function Bitmap:toNative()
+    return {
+        width = self.width,
+        height = self.height,
+        isColor = self.isColor,
+        normalizedImgData = self:getImageData(self.isColor and 32 or 8)
+    }
 end
 
 function parseMbmHeader(data)
@@ -555,6 +565,7 @@ function makeMbm(uid2, bitmaps)
         local headerLen = string_packsize(SEpocBitmapHeader)
 
         -- normalizedImgData is 8-bit for any greyscale mode, and 32-bit for any color
+        -- with zero line padding
         local isColor = bitmap.mode >= KColorgCreate16ColorMode
         local bpp = ModeToBpp[bitmap.mode]
         local stride = byteWidth(bitmap.width, bpp)

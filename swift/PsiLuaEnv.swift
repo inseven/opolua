@@ -99,7 +99,7 @@ public class PsiLuaEnv {
             return nil
         }
         require("aif")
-        L.rawget(-1, utf8Key: "parseAif")
+        L.rawget(-1, utf8Key: "parseAifToNative")
         L.remove(-2) // aif module
         L.push(data)
         guard logpcall(1, 1) else { return nil }
@@ -635,18 +635,7 @@ internal extension LuaState {
         }
 
         L.rawget(index, key: "icons")
-        var icons: [Graphics.MaskedBitmap] = []
-        // Need to refactor the Lua data structure before we can make MaskedBitmap decodable
-        for _ in L.ipairs(-1) {
-            if let bmp = L.todecodable(-1, type: Graphics.Bitmap.self) {
-                var mask: Graphics.Bitmap? = nil
-                if L.rawget(-1, key: "mask") == .table {
-                    mask = L.todecodable(-1)
-                }
-                L.pop()
-                icons.append(Graphics.MaskedBitmap(bitmap: bmp, mask: mask))
-            }
-        }
+        let icons: [Graphics.MaskedBitmap] = L.todecodable(-1) ?? []
         L.pop() // icons
         return PsiLuaEnv.AppInfo(captions: captions, uid3: UInt32(uid3), icons: icons, era: era)
     }

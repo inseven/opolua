@@ -570,8 +570,7 @@ function gLOADBIT(path, writable, index)
     local id = gCREATEBIT(bitmap.width, bitmap.height, bitmap.mode)
     -- printf(" %dx%d drawableid=%d\n", bitmap.width, bitmap.height, id)
     -- (3)
-    bitmap.imgData = bitmap:getImageData()
-    runtime:drawCmd("bitblt", { bitmap = bitmap, mode = KtModeReplace })
+    runtime:drawCmd("bitblt", { bitmap = bitmap:toNative(), mode = KtModeReplace })
     -- runtime:flushGraphicsOps()
     return id
 end

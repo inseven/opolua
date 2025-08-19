@@ -5,7 +5,6 @@
 
 #include "filesystem.h"
 #include "luasupport.h"
-#include "palettes.h"
 
 #include <QBitmap>
 
@@ -45,7 +44,7 @@ OplAppInfo OplRuntimeGui::getAppInfo(const QString& aifPath)
     f.close();
 
     require(L, "aif");
-    lua_getfield(L, -1, "parseAif");
+    lua_getfield(L, -1, "parseAifToNative");
     lua_remove(L, -2); // aif
     pushValue(L, data);
     int ret = lua_pcall(L, 1, 1, 0);
@@ -135,114 +134,27 @@ void OplRuntimeGui::onStartedRunning()
     emit startedRunningApp(info);
 }
 
-static uint8_t scale2bpp(uint8_t val)
-{
-    return val | (val << 2) | (val << 4) | (val << 6);
-}
-
 QPixmap OplRuntimeGui::imageFromBitmap(lua_State* L, int index)
 {
-    auto mode = (OplScreen::BitmapMode)to_int(L, index, "mode");
     int width = to_int(L, index, "width");
     int height = to_int(L, index, "height");
-    int stride = to_int(L, index, "stride");
-    auto data = to_bytearray(L, index, "imgData");
-    return imageFromBitmap(mode, width, height, stride, data);
+    bool color = to_bool(L, index, "isColor");
+    auto data = to_bytearray(L, index, "normalizedImgData");
+    return imageFromBitmap(color, width, height, data);
 }
 
-QPixmap OplRuntimeGui::imageFromBitmap(OplScreen::BitmapMode mode, int width, int height, int stride, const QByteArray& data)
+QPixmap OplRuntimeGui::imageFromBitmap(bool color, int width, int height, const QByteArray& data)
 {
-    QImage img;
-    if (mode <= OplScreen::gray256) {
-        img = QImage(width, height, QImage::Format_Grayscale8);
-        img.fill(0xFF888888);
-        switch (mode) {
-        case OplScreen::gray2: // 1 bpp
-            for (int y = 0; y < height; y++) {
-                auto src = (const uchar*)data.data() + stride * y;
-                auto dest = img.scanLine(y);
-                int x = 0;
-                while (x < width) {
-                    for (int i = 0; i < 8 && x < width; i++, x++) {
-                        dest[x] = (((*src) >> i) & 1) ? 0xFF : 0;
-                    }
-                    src++;
-                }
-            }
-            break;
-        case OplScreen::gray4: // 2 bpp
-            for (int y = 0; y < height; y++) {
-                auto src = (const uchar*)data.data() + stride * y;
-                auto dest = img.scanLine(y);
-                int x = 0;
-                while (x < width) {
-                    for (int i = 0; i < 4 && x < width; i++, x++) {
-                        dest[x] = scale2bpp((*src & (0x3 << (i*2))) >> (i * 2));
-                    }
-                    src++;
-                }
-            }
-            break;
-        case OplScreen::gray16:
-            for (int y = 0; y < height; y++) {
-                auto src = (const uchar*)data.data() + stride * y;
-                auto dest = img.scanLine(y);
-                int x = 0;
-                while (x < width) {
-                    uint8_t b = *src;
-                    dest[x++] = ((b & 0xF) << 4) | (b & 0xF); // 0xA -> 0xAA etc
-                    dest[x++] = (b & 0xF0) | (b >> 4); // 0x0A -> 0xAA etc
-                    src++;
-                }
-            }
-            break;
-        case OplScreen::gray256:
-            for (int y = 0; y < height; y++) {
-                auto src = (const uchar*)data.data() + stride * y;
-                auto dest = img.scanLine(y);
-                memcpy(dest, src, width);
-            }
-            break;
-        default:
-            Q_UNREACHABLE();
-        }
+    QImage img = QImage(width, height, color ? QImage::Format_RGB32 : QImage::Format_Grayscale8);
+    int bytesPerPixel = color ? 4 : 1;
+    if (img.bytesPerLine() == bytesPerPixel * width) {
+        memcpy(img.bits(), data.data(), img.sizeInBytes());
     } else {
-        switch (mode) {
-        case OplScreen::color256:
-            img = QImage(width, height, QImage::Format_Indexed8);
-            img.setColorTable(QVector<QRgb>(std::begin(kEpoc8bitPalette), std::end(kEpoc8bitPalette)));
-            if (img.bytesPerLine() == stride) {
-                memcpy(img.bits(), data.data(), stride * height);
-            } else {
-                for (int y = 0; y < height; y++) {
-                    auto src = (const uchar*)data.data() + stride * y;
-                    auto dest = img.scanLine(y);
-                    memcpy(dest, src, width);
-                }
-            }
-            break;
-        case OplScreen::color16:
-            img = QImage(width, height, QImage::Format_Indexed8);
-            img.setColorTable(QVector<QRgb>(std::begin(kEpoc4bitPalette), std::end(kEpoc4bitPalette)));
-            for (int y = 0; y < height; y++) {
-                auto src = (const uchar*)data.data() + stride * y;
-                auto dest = img.scanLine(y);
-                int x = 0;
-                while (x < width) {
-                    for (int i = 0; i < 2 && x < width; i++, x++) {
-                        dest[x] = (*src & (0xF << (i*4))) >> (i * 4);
-                    }
-                    src++;
-                }
-            }
-            break;
-        default:
-            qDebug("TODO imageFromBitmap mode=%d", mode);
+        for (int y = 0; y < height; y++) {
+            auto src = (const uchar*)data.data() + width * bytesPerPixel * y;
+            auto dest = img.scanLine(y);
+            memcpy(dest, src, width * bytesPerPixel);
         }
     }
-    if (!img.isNull()) {
-        return QPixmap::fromImage(img);
-    } else {
-        return QPixmap();
-    }
+    return QPixmap::fromImage(img);
 }

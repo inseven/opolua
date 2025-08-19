@@ -163,22 +163,20 @@ public struct Graphics {
             case color4K = 9 // ie 12bpp color
         }
 
-        public let mode: Mode
         public let width: Int
         public let height: Int
-        public let stride: Int
-        public let imgData: Data
-        // TODO palette info also needed, in due course
+        public let isColor: Bool
+        public let normalizedImgData: Data
 
         public var size: Size {
             return Size(width: width, height: height)
         }
-        public var isColor: Bool {
-            return mode.isColor
+        public var stride: Int {
+            return isColor ? 4 * width : width
         }
     }
 
-    public struct MaskedBitmap {
+    public struct MaskedBitmap: Codable {
         public let bitmap: Bitmap
         public let mask: Bitmap?
     }

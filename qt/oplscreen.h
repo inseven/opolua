@@ -167,7 +167,7 @@ public:
     
     virtual void beginBatchDraw() = 0;
     virtual void draw(const DrawCmd& command) = 0;
-    virtual void bitBlt(int drawableId, BitmapMode mode, int width, int height, int stride, const QByteArray& data) = 0;
+    virtual void bitBlt(int drawableId, bool color, int width, int height, const QByteArray& data) = 0;
     virtual void copyMultiple(int srcId, int destId, uint32_t color, bool invert, const QVector<QRect>& rects, const QVector<QPoint>& points) = 0;
     virtual void endBatchDraw() = 0;
 
