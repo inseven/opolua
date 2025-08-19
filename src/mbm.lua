@@ -426,7 +426,7 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
                 -- did...
                 return string_char(b + (b >> 5), g + (g >> 6), r + (r >> 5))..alphaByte
             elseif self.bpp == 24 then
-                local pos = 1 + (y * self.width * self.stride + x * 3)
+                local pos = 1 + (y * self.stride + x * 3)
                 return string_sub(bytes, pos, pos + 2)..alphaByte
             end
             local pos = 1 + (y * self.width + x)
