@@ -26,11 +26,11 @@ private func traceHandler(_ L: LuaState!) -> CInt {
     L.settop(1)
     if L.type(1) != .table {
         // Create a table
-        lua_newtable(L)
+        L.newtable()
         // We shouldn't be getting eg raw numbers-as-leave-codes being thrown here
         let msg = L.tostring(1) ?? "(No error message)"
         L.rawset(-1, key: "msg", value: msg)
-        lua_remove(L, 1)
+        L.remove(1)
     }
 
     // Position 1 is now definitely a table. See if needs a stacktrace.
@@ -265,7 +265,7 @@ private func graphicsop(_ L: LuaState!) -> CInt {
             return doGraphicsOp(L, iohandler, .rank(drawableId))
         } else {
             print("Bad drawableId to rank graphicsop!")
-            L.push(Graphics.Error.invalidArguments.rawValue)
+            L.push(Graphics.Error.invalidArguments)
             return 1
         }
     case "busy":
@@ -372,7 +372,7 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     guard let name = L.tostring(1) else { return 0 }
     L.settop(2)
-    lua_remove(L, 1) // Removes name, so requestTable is now at position 1
+    L.remove(1) // Removes name, so requestTable is now at position 1
     L.rawset(-1, key: "type", value: name) // requestTable.type = name
     L.rawget(1, key: "var") // Put var at 2 for compat with code below
 
@@ -410,14 +410,14 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
     // Then set registry[statusVar:uniqueKey()] = requestTable
     // That way both Lua and swift sides can look up the request
 
-    lua_pushvalue(L, 1) // dup requestTable
+    L.push(index: 1) // dup requestTable
     let requestHandle = luaL_ref(L, LUA_REGISTRYINDEX) // pop dup, registry[requestHandle] = requestTable
     L.rawset(1, key: "ref", value: requestHandle) // requestTable.ref = requestHandle
 
-    lua_pushvalue(L, 2) // dup statusVar
+    L.push(index: 2) // dup statusVar
     luaL_callmeta(L, -1, "uniqueKey")
-    lua_remove(L, -2) // remove the dup statusVar
-    lua_pushvalue(L, 1) // dup requestTable
+    L.remove(-2) // remove the dup statusVar
+    L.push(index: 1) // dup requestTable
     L.rawset(LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = requestTable
 
     iohandler.asyncRequest(handle: requestHandle, type: type)
@@ -427,6 +427,16 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
 // As per init.lua
 private let KOplErrIOCancelled = -48
 private let KStopErr = -999
+private enum DataTypes: Int, RawPushable {
+    case EWord = 0
+    case ELong = 1
+    case EReal = 2
+    case EString = 3
+    case EWordArray = 0x80
+    case ELongArray = 0x81
+    case ERealArray = 0x82
+    case EStringArray = 0x83
+}
 
 private func checkCompletions(_ L: LuaState!) -> CInt {
     let interpreter = getInterpreterUpval(L)
@@ -461,12 +471,12 @@ private func cancelRequest(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     L.settop(1)
     luaL_callmeta(L, -1, "uniqueKey")
-    let t = lua_gettable(L, LUA_REGISTRYINDEX) // 2: registry[statusVar:uniqueKey()] -> requestTable
-    if t == LUA_TNIL {
+    let t = L.rawget(LUA_REGISTRYINDEX) // 2: registry[statusVar:uniqueKey()] -> requestTable
+    if t == .nil {
         // Request must've already been completed in waitForAnyRequest
         return 0
     } else {
-        assert(t == LUA_TTABLE, "Unexpected type for registry requestTable!")
+        assert(t == .table, "Unexpected type for registry requestTable!")
     }
     L.rawget(2, key: "ref")
     if let requestHandle = L.toint(-1) {
@@ -491,7 +501,7 @@ private func createBitmap(_ L: LuaState!) -> CInt {
           let modeVal = L.toint(4),
           let mode = Graphics.Bitmap.Mode(rawValue: modeVal) else {
         print("Bad parameters to createBitmap")
-        L.push(Graphics.Error.invalidArguments.rawValue)
+        L.push(Graphics.Error.invalidArguments)
         return 1
     }
     let drawableId = Graphics.DrawableId(value: id)
@@ -507,7 +517,7 @@ private func createWindow(_ L: LuaState!) -> CInt {
           let flags = L.toint(6),
           let mode = Graphics.Bitmap.Mode(rawValue: flags & 0xF) else {
         print("Bad parameters to createWindow")
-        L.push(Graphics.Error.invalidArguments.rawValue)
+        L.push(Graphics.Error.invalidArguments)
         return 1
     }
 
@@ -598,11 +608,19 @@ private func system(_ L: LuaState!) -> CInt {
     return 0
 }
 
-private func stop(_ L: LuaState!, _: UnsafeMutablePointer<lua_Debug>!) {
+// Minimal error class used for throwing when we want a specific leave code to occur.
+private struct LeaveError: Error, Pushable {
+    let err: Int
+
+    func push(onto state: LuaState) {
+        state.push(err)
+    }
+}
+
+private func stop(L: LuaState, event: LuaHookEvent, context: LuaHookContext) throws {
     print("Stop hook called, exiting interpreter with error(KStopErr)")
-    lua_sethook(L, nil, 0, 0)
-    L.push(KStopErr)
-    lua_error(L)
+    L.setHook(mask: .none, function: nil)
+    throw LeaveError(err: KStopErr)
 }
 
 private func getTimeField(_ L: LuaState!, _ key: String) -> Int32? {
@@ -672,20 +690,24 @@ public class OpoInterpreter: PsiLuaEnv {
 
     public var getCmd: String = ""
 
+    private var hooks: LuaHooksState!
+
     override init() {
         iohandler = DummyIoHandler() // For now...
+        hooks = nil // also only for the duration of super.init()
         super.init()
+        L.setErrorConverter(ErrorHandler())
+        hooks = L.getHooks()
     }
 
-    // throws an InterpreterError or subclass thereof
-    func pcall(_ narg: CInt, _ nret: CInt) throws {
-        let base = L.gettop() - narg // Where the function is, and where the msghandler will be
-        lua_pushcfunction(L, traceHandler)
-        lua_insert(L, base)
-        let err = lua_pcall(L, narg, nret, base);
-        lua_remove(L, base) // remove msghandler
-        if err != 0 {
-            assert(L.type(-1) == .table) // Otherwise our traceHandler isn't doing its job
+    private struct ErrorHandler: LuaErrorConverter {
+        func popErrorFromStack(_ L: LuaState) -> any Error {
+            defer {
+                L.pop() // the error
+            }
+            guard L.type(-1) == .table else { // Otherwise our traceHandler isn't doing its job
+                return InterpreterError(message: L.tostring(-1, convert: true) ?? "<Unrepresentable error!>")
+            }
             let msg = L.tostring(-1, key: "msg")!
             var detail = msg
             if let opoStack = L.tostring(-1, key: "opoStack") {
@@ -695,16 +717,19 @@ public class OpoInterpreter: PsiLuaEnv {
                 detail = "\(detail)\n\(luaStack)"
             }
             print(detail)
-            let error = if let operation = L.tostring(-1, key: "unimplemented") {
-                UnimplementedOperationError(message: msg, detail: detail, operation: operation)
+            if let operation = L.tostring(-1, key: "unimplemented") {
+                return UnimplementedOperationError(message: msg, detail: detail, operation: operation)
             } else if L.toboolean(-1, key: "notOpl") {
-                NativeBinaryError(message: msg, detail: detail)
+                return NativeBinaryError(message: msg, detail: detail)
             } else {
-                InterpreterError(message: msg, detail: detail)
+                return InterpreterError(message: msg, detail: detail)
             }
-            L.pop() // the error object
-            throw error
         }
+    }
+
+    // throws an InterpreterError or subclass thereof
+    func pcall(_ narg: CInt, _ nret: CInt) throws {
+        try L.pcall(nargs: narg, nret: nret, msgh: traceHandler)
     }
 
     func logpcall(_ narg: CInt, _ nret: CInt) -> Bool {
@@ -910,7 +935,7 @@ public class OpoInterpreter: PsiLuaEnv {
             luaL_getmetafield(L, -1, "writeArray") // Addr:writeArray
             lua_insert(L, -2) // put writeArray below eventArray
             L.push(ev) // ev as a table
-            L.push(1) // DataTypes.ELong
+            L.push(DataTypes.ELong)
             let _ = logpcall(3, 0)
         case "keya":
             switch response.value {
@@ -922,7 +947,7 @@ public class OpoInterpreter: PsiLuaEnv {
                 luaL_getmetafield(L, -1, "writeArray") // Addr:writeArray
                 lua_insert(L, -2) // put writeArray below eventArray
                 L.push(k) // k as a table
-                L.push(0) // DataTypes.EWord
+                L.push(DataTypes.EWord)
                 let _ = logpcall(3, 0)
             case .cancelled, .interrupt:
                 break
@@ -967,7 +992,7 @@ public class OpoInterpreter: PsiLuaEnv {
 
     // Safe to call from any thread
     func interrupt() {
-        lua_sethook(L, stop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT, 1)
+        hooks.setHook(forState: L, mask: [.call, .ret, .line, .count], count: 1, function: stop)
     }
 
 }

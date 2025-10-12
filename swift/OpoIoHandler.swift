@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 import Foundation
+import Lua
 
 public struct Graphics {
 
@@ -368,7 +369,7 @@ public struct Graphics {
         case fontMetrics(FontMetrics)
     }
 
-    public enum Error: Int {
+    public enum Error: Int, RawPushable {
         case invalidArguments = -2
         case badDrawable = -118
         case invalidWindow = -119
