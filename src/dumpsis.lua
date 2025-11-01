@@ -192,7 +192,8 @@ Options:
                         iohandler.fsop("write", path, langData)
                     end
                 elseif file.type == FileType.FileText then
-                    local path = string.format("C:\\FileText_%i\\%s", i, oplpath.basename(file.src))
+                    local path = string.format("C:\\_FileText_%i\\%s", i, oplpath.basename(file.src))
+                    iohandler.fsop("mkdir", oplpath.dirname(path))
                     iohandler.fsop("write", path, file.data)
                 end
             end
