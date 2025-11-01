@@ -11,6 +11,7 @@
 #include <QMimeData>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QUrlQuery>
 
 #ifdef Q_OS_MAC
 #include <sys/xattr.h>
@@ -44,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+W", nullptr));
     ui->actionForceClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Shift+W", nullptr));
     ui->actionRestart->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+R", nullptr));
+    ui->actionReportIssue->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+P", nullptr));
 
     ui->actionFaster->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+=", nullptr));
     ui->actionSlower->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+-", nullptr));
@@ -83,6 +85,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionSlower, &QAction::triggered, runtime, &OplRuntime::runSlower);
     connect(ui->actionDefaultSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::DefaultSpeed); });
     connect(ui->actionFullSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::Fastest); });
+    connect(ui->actionReportIssue, &QAction::triggered, this, &MainWindow::reportIssue);
     connect(runtime, &OplRuntime::debugLog, gApp, &OplApplication::appendLogging);
     connect(runtime, &OplRuntimeGui::startedRunningApp, this, &MainWindow::startedRunning);
     connect(runtime, &OplRuntime::titleChanged, this, &MainWindow::setTitle);
@@ -151,6 +154,8 @@ void MainWindow::forceClose()
 void MainWindow::startedRunning(const OplAppInfo& info)
 {
     statusLabel->setText("Running");
+    mErrMsg = QString();
+    mErrDetail = QString();
     // Don't try to put path in the title bar for things running from resources
     auto path = getRuntime().getNativePath(info.deviceAppPath);
     if (path.startsWith(":")) {
@@ -165,6 +170,7 @@ void MainWindow::startedRunning(const OplAppInfo& info)
     if (!path.isEmpty()) {
         gApp->addRecentFile(path);
     }
+    mAppInfo.reset(new OplAppInfo(info));
 }
 
 void MainWindow::setTitle(const QString& title)
@@ -185,7 +191,7 @@ void MainWindow::sizeWindowToFitInterpreter()
     }
 }
 
-void MainWindow::runComplete(const QString& errMsg, const QString& /*errDetail*/)
+void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)
 {
     if (errMsg.isEmpty()) {
         statusLabel->setText("Completed");
@@ -195,6 +201,8 @@ void MainWindow::runComplete(const QString& errMsg, const QString& /*errDetail*/
     } else {
         statusLabel->setText(errMsg);
     }
+    mErrMsg = errMsg;
+    mErrDetail = errDetail;
     mCloseSent = false;
     mForceClosing = false;
 }
@@ -416,6 +424,7 @@ void MainWindow::applyManifest()
     QFile f(mManifest);
     if (!f.open(QFile::ReadOnly)) {
         qWarning("Failed to open manifest %s", qPrintable(mManifest));
+        mSourceUrl = QString();
         return;
     }
     auto manifest = QJsonDocument::fromJson(f.readAll());
@@ -434,6 +443,10 @@ void MainWindow::applyManifest()
     } else {
         qWarning("Unknown device type in manifest: %s", qPrintable(device));
     }
+
+    mSourceUrl = manifest["sourceUrl"].toString();
+    qDebug("sourceUrl = %s", qPrintable(mSourceUrl));
+
     sizeWindowToFitInterpreter();
 }
 
@@ -557,4 +570,46 @@ QString MainWindow::getSourceUrlForPath(const QString& path)
     Q_UNUSED(path);
 #endif
     return result;
+}
+
+void MainWindow::reportIssue()
+{
+    QUrl githubUrl("https://github.com/inseven/opolua/issues/new", QUrl::StrictMode);
+    QString title;
+    if (mAppInfo && !mAppInfo->appName.isEmpty()) {
+        title = QString("[%1]").arg(mAppInfo->appName);
+    }
+    if (!mErrMsg.isEmpty()) {
+        if (!title.isEmpty()) {
+            title = title + " ";
+        }
+        title += mErrMsg;
+    }
+    auto description = QString(R"(## Description
+
+_Please provide details of the program you were running, and what you were doing when you encountered the error._
+
+## Metadata
+
+| Key | Value |
+| --- | --- |
+| **App name** | %1 |
+| **UID** | %2 |
+| **Source URL** | %3 |
+)");
+    description = description
+        .arg((mAppInfo && !mAppInfo->appName.isEmpty()) ? mAppInfo->appName : QString("*unknown*"))
+        .arg((mAppInfo && mAppInfo->uid != 0) ? QString("0x%1").arg(mAppInfo->uid, 0, 16) : "*unknown*")
+        .arg(mSourceUrl.isEmpty() ? "*unknown*" : mSourceUrl);
+
+    if (!mErrDetail.isEmpty()) {
+        description = QString("%1\n\n## Details\n\n```\n%2\n```").arg(description, mErrDetail);
+    }
+
+    qDebug("Submitting report description: %s", qPrintable(description));
+    QUrlQuery query;
+    query.addQueryItem("title", QUrl::toPercentEncoding(title));
+    query.addQueryItem("body", QUrl::toPercentEncoding(description));
+    githubUrl.setQuery(query);
+    QDesktopServices::openUrl(githubUrl);
 }
