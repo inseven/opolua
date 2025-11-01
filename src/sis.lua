@@ -579,7 +579,9 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
 
     local drive = "C"
     local function getPath(file)
-        return (file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end))
+        local result = file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end)
+        -- You're not supposed to, but non-absolute paths aren't explicitly disallowed by the Psion 5 (see #520)
+        return oplpath.abs(result, "C:\\")
     end
 
     local writeStub
