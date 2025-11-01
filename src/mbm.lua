@@ -481,6 +481,7 @@ function parseMbmHeader(data)
             local stride = 2 * ((width + 15) // 16)
             local bmp = Bitmap {
                 data = data,
+                len = (nextPos + offset) - pos,
                 width = width,
                 height = height,
                 bpp = 1,
