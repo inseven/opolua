@@ -475,7 +475,22 @@ function GetThreadIdFromOpenDoc(stack, runtime) -- 53
 end
 
 function GetThreadIdFromAppUid(stack, runtime) -- 54
-    unimplemented("opx.system.GetThreadIdFromAppUid")
+    local prev = stack:pop():asVariable(DataTypes.ELong)
+    local uid = stack:pop()
+    if prev() ~= 0 then
+        -- Attempting to find secondary threads of anything is not something we support
+        error(KErrGenFail)
+    end
+    prev(-1)
+
+    if uid == runtime:getAppUid() then
+        -- We will say the current app always has thread id 1
+        stack:push(1)
+        return
+    else
+        printf("GetThreadIdFromAppUid(0x%08x) appuid=0x%08x\n", uid, runtime:getAppUid())
+        error(KErrGenFail)
+    end
 end
 
 function SetForeground(stack, runtime) -- 55

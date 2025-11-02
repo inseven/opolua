@@ -146,8 +146,8 @@ function Runtime:makeTemporaryVar(type, len, stringMaxLen)
     return result
 end
 
-function Runtime:addModule(path, procTable, opxTable)
-    -- printf("addModule: %s\n", path)
+function Runtime:addModule(path, procTable, opxTable, uid3)
+    printf("addModule: %s\n", path)
     local name = oplpath.splitext(oplpath.basename(path)):upper()
     local mod = {
         -- Since 'name' isn't a legal procname (they're always uppercase in
@@ -157,6 +157,7 @@ function Runtime:addModule(path, procTable, opxTable)
         name = name,
         path = path,
         opxTable = opxTable,
+        uid3 = uid3,
     }
     for _, proc in ipairs(procTable) do
         mod[proc.name] = proc
@@ -1456,6 +1457,13 @@ function Runtime:adjustAlloc(addr, offset, sz)
     end
 end
 
+function Runtime:getAppUid()
+    -- This is defined (by me) as the OPO uid3 of the first module added to the runtime. It doesn't account for AIF
+    -- files, and may be nil.
+    local firstMod = self.modules[1]
+    return firstMod and firstMod.uid3
+end
+
 function runOpo(fileName, procName, iohandler, verbose)
     local data, err = iohandler.fsop("read", fileName)
     if not data then
@@ -1470,13 +1478,13 @@ function runOpoFileData(fileName, data, procName, iohandler, verbose)
         error({ msg = "File is a native binary and not compiled OPL.", notOpl = true })
     end
 
-    local procTable, opxTable, era = require("opofile").parseOpo(data, verbose)
-    iohandler.setEra(era) -- Needed to set the default string encoding
-    local rt = newRuntime(iohandler, era)
+    local module = require("opofile").parseOpo2(data, verbose)
+    iohandler.setEra(module.era) -- Needed to set the default string encoding
+    local rt = newRuntime(iohandler, module.era)
     rt:setInstructionDebug(verbose)
     -- rt:setHaltOnAnyError(true) -- DEBUG
-    rt:addModule(fileName, procTable, opxTable)
-    local procToCall = procName and procName:upper() or procTable[1].name
+    rt:addModule(fileName, module.procTable, module.opxTable, module.uid3)
+    local procToCall = procName and procName:upper() or module.procTable[1].name
     local err = rt:pcallProc(procToCall)
     if err and err.code == KStopErr then
         -- Don't care about the distinction

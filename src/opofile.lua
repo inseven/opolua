@@ -38,13 +38,19 @@ TOpoRootStream = "<I4I2I2I4I4I4I2"
 TOpoProcHeader = "<s1I4I2"
 
 function parseOpo(data, verbose)
+    local module = parseOpo2(data, verbose)
+    return module.procTable, module.opxTable, module.era
+end
+
+function parseOpo2(data, verbose)
     local function vprintf(...)
         if verbose then
             printf(...)
         end
     end
 
-    local procTableIdx, opxTableIdx, srcNameIdx, era
+    local result = {}
+    local procTableIdx, opxTableIdx, srcNameIdx
     if data:sub(1, 16) == "OPLObjectFile**\0" then
         -- SIBO format
         -- TOpoFileHeader16
@@ -59,7 +65,7 @@ function parseOpo(data, verbose)
         procTableIdx = pti
         opxTableIdx = 0 -- not supported in this version
         srcNameIdx = 0x14
-        era = "sibo"
+        result.era = "sibo"
     else
         -- TOpoStoreHeader
         local uid1, uid2, uid3, checksum, rootStreamIdx, pos = string.unpack(TOpoStoreHeader, data)
@@ -83,7 +89,8 @@ function parseOpo(data, verbose)
         srcNameIdx = sni
         procTableIdx = pti
         opxTableIdx = oti
-        era = "er5"
+        result.era = "er5"
+        result.uid3 = uid3
     end
 
     local sourceName
@@ -97,7 +104,7 @@ function parseOpo(data, verbose)
         vprintf("Source name: %s\n", sourceName)
     end
 
-    local procTable = {}
+    result.procTable = {}
     vprintf("procTableIdx: 0x%08X\n", procTableIdx)
 
     local nextProcIdx = procTableIdx
@@ -107,7 +114,7 @@ function parseOpo(data, verbose)
         end
         -- TOpoProcHeader
         local procName, procOffset, lineNumber, pos = string.unpack(TOpoProcHeader, data, nextProcIdx + 1)
-        table.insert(procTable, {
+        table.insert(result.procTable, {
             name = procName,
             source = sourceName,
             offset = procOffset,
@@ -118,20 +125,19 @@ function parseOpo(data, verbose)
         nextProcIdx = pos - 1 -- Because pos is in Lua 1-based coords
     end
 
-    for i, proc in ipairs(procTable) do
+    for i, proc in ipairs(result.procTable) do
         parseProc(proc)
     end
 
-    local opxTable = nil
     if opxTableIdx ~= 0 then
-        opxTable = {}
+        result.opxTable = {}
         local nopx, pos = string.unpack("<I2", data, 1 + opxTableIdx)
         vprintf("opxTableIdx: 0x%08X count=%d\n", opxTableIdx, nopx)
         for i = 1, nopx do
             local name, uid, version
             name, uid, version, pos = string.unpack("<s1I4I2", data, pos)
             vprintf("OPX %d: %s 0x%08X v%d\n", i - 1, name, uid, version)
-            table.insert(opxTable, {
+            table.insert(result.opxTable, {
                 name = name,
                 uid = uid,
                 version = version
@@ -140,7 +146,7 @@ function parseOpo(data, verbose)
 
     end
 
-    return procTable, opxTable, era
+    return result
 end
 
 function parseProc(proc)
