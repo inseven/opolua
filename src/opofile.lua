@@ -260,7 +260,7 @@ function printProc(proc)
     local numParams = #proc.params
     for i, param in ipairs(proc.params) do
         local indirectIdx = (i - 1) * 2 + proc.iTotalTableSize + 18 -- inverse of Runtime:getIndirectVar() logic
-        printf("    Param %d: %s indirectIdx=0x%04x\n", i, DataTypes[param], indirectIdx)
+        printf("    Param %d: %s indirectIdx=0x%04X\n", i, DataTypes[param], indirectIdx)
     end
     for _, subproc in ipairs(proc.subprocs) do
         printf('    Subproc "%s" offset=0x%04X nargs=%d\n', subproc.name, subproc.offset, subproc.numParams)
@@ -274,7 +274,7 @@ function printProc(proc)
     end
     for _, offset in ipairs(sortedKeys(proc.strings)) do
         local maxLen = proc.strings[offset]
-        printf("    String offset=0x%04X maxLen=%d\n", offset, maxLen)
+        printf("    String offset=0x%04X maxLen=%d directIdx=0x%04X\n", offset, maxLen, offset + 1)
     end
     for _, offset in ipairs(sortedKeys(proc.arrays)) do
         local len = proc.arrays[offset]

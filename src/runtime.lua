@@ -944,7 +944,7 @@ function Runtime:addressType()
 end
 
 function printInstruction(currentOpIdx, opCode, op, extra)
-    printf("%08X: %02X [%s] %s\n", currentOpIdx, opCode, op, extra or "")
+    printf("%08X: %02X [%s]%s\n", currentOpIdx, opCode, op, extra and (" "..extra) or "")
 end
 
 function Runtime:decodeNextInstruction()
@@ -957,7 +957,7 @@ function Runtime:decodeNextInstruction()
     self.ip = currentIp + 1
     local opDump = op and op.."_dump"
     local extra = ops[opDump] and ops[opDump](self)
-    return fmt("%08X: %02X [%s] %s", currentIp, opCode, op or "?", extra or "")
+    return fmt("%08X: %02X [%s]%s", currentIp, opCode, op or "?", extra and (" "..extra) or "")
 end
 
 function Runtime:dumpRawBytesUntil(newIp)
