@@ -21,6 +21,12 @@ void FileSystemIoHandler::addMapping(char drive, const QDir& path, bool writable
     QMutexLocker lock(&mMutex);
     // qDebug("mapping: %c -> %s", drive, qPrintable(path.absolutePath()));
     mPaths[drive] = { writable, path.absolutePath() };
+    if (writable && !path.exists()) {
+        // It's important that writeable mapping paths always exist because there's no way for OPL code to create them
+        // without creating a subdir.
+        QFileInfo info(path.absolutePath());
+        info.dir().mkpath(info.fileName());
+    }
 }
 
 void FileSystemIoHandler::removeMapping(char drive)
