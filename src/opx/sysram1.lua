@@ -141,11 +141,23 @@ function DTIsLeapYear(stack, runtime) -- 16
 end
 
 function LCDateSeparator(stack, runtime) -- 17
-    unimplemented("opx.sysram1.LCDateSeparator")
+    -- See also SIDateFormat in systinfo.lua...
+    local idx = stack:pop()
+    if idx == 1 or idx == 2 then
+        stack:push("/")
+    else
+        stack:push("")
+    end
 end
 
 function LCTimeSeparator(stack, runtime) -- 18
-    unimplemented("opx.sysram1.LCTimeSeparator")
+    -- See also SITimeFormat in systinfo.lua...
+    local idx = stack:pop()
+    if idx == 1 or idx == 2 then
+        stack:push(":")
+    else
+        stack:push("")
+    end
 end
 
 function LCAmPmSpaceBetween(stack, runtime) -- 19
