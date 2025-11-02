@@ -1770,7 +1770,7 @@ function DialogItemFileChooser:update(dir, name)
     printf("DialogItemFileChooser:update(%s, %s)\n", dir, name)
 
     local canonName = name and oplpath.canon(name)
-    local dirContents = runtime:ls(dir)
+    local dirContents = runtime:ls(dir) or {}
     self.choices = {}
     self.paths = {}
     self.index = 1
