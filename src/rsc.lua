@@ -24,20 +24,35 @@ SOFTWARE.
 
 _ENV = module()
 
+--[[
+We make some assumptions about valid file structure because resource files have very little metadata so we need to be
+stricter in order to weed out false positives (particularly for the recognizer). In addition to minimum required of the
+format, we also assume:
+
+* The TOC is at the end of the file.
+* Resources start immediately after the header, ie at offset 4.
+* The TOC is ordered by resource offset.
+* There are no gaps between resources, ie each resource's 'next' offset is a TOC entry (except the last one).
+]]
 function parseRsc(data)
     local result = {}
     local tocOffset, len = string.unpack("<I2I2", data)
-    local endBytes = string.unpack("<I2", data, #data - 1)
-    assert(tocOffset == endBytes, "Data is not a ER5 resource file!")
+    assert(tocOffset >= 4, "Bad tocOffset")
+    assert(tocOffset + len == #data, "Truncated TOC!")
     local tocEnd = tocOffset + len
     local i = 1
+    local tocStart = tocOffset
+    local expectedOffset = 4
     while tocOffset < tocEnd - 2 do
         local offset, next = string.unpack("<I2I2", data, 1 + tocOffset)
-        -- print(offset, next)
+        assert(offset == expectedOffset, "Unexpected offset!")
+        assert(next >= offset and next <= tocStart, "Unexpected resource end!")
+        -- printf("%04X %04X\n", offset, next)
         local val = string.sub(data, 1 + offset, next)
         result[i] = val
         i = i + 1
         tocOffset = tocOffset + 2
+        expectedOffset = next
     end
     local first = result[1]
     if first and #first == 8 then
