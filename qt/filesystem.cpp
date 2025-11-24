@@ -136,13 +136,6 @@ QString FileSystemIoHandler::getNativePath(const QString& devicePath, bool* writ
                 // Try a case-insensitive match
                 auto map = getEntryListLowerMap(dir);
                 foundEntry = map.value(component.toLower());
-                if (foundEntry.isEmpty()) {
-                    // Epoc seems to have a weird handling of paths ending in a space, in that playing a sound file
-                    // with a path "C:\name.wav " will work (assuming the file is called "name.wav"). Whether that's
-                    // truncating of extensions with more than 3 letters, or simply that spaces on the of paths are
-                    // ignored, I'm not sure.
-                    foundEntry = map.value(component.toLower().trimmed());
-                }
             }
 
             if (foundEntry.isEmpty()) {
