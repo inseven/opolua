@@ -381,6 +381,13 @@ function PlaySoundA(stack, runtime) -- 39
     local var = stack:pop():asVariable(DataTypes.ELong)
     local volume = stack:pop() -- not used atm...
     local path = stack:pop()
+
+    if path:match(" $") then
+        -- For some odd reason some programs put a space on the end, and the series 5 will allow it. See
+        -- https://github.com/inseven/opolua/issues/449
+        -- for the mess this caused when 'fixed' at the filesystem level.
+        path = path:sub(1, -2)
+    end
     runtime:PlaySoundA(var, path)
     stack:push(0)
 end
