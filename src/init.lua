@@ -358,7 +358,7 @@ end
 function oplpath.splitext(path)
     -- Note, ".foo" is considered as an empty name with extension ".foo".
     -- This is different to how Linux-y filesystems generally consider such a name.
-    local base, ext = path:match("(.*)(%.[^%.]*)")
+    local base, ext = path:match("^(.*)(%.[^%.\\]*)$")
     if not base then
         return path, ""
     else
