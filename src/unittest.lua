@@ -22,6 +22,12 @@ function checkParse(path, expected)
     assertEquals({drv, dir, name, ext}, expected)
 end
 
+function checkSplitExt(path, expectedExt)
+    local base, ext = oplpath.splitext(path)
+    assertEquals(base..ext, path)
+    assertEquals(ext, expectedExt)
+end
+
 function main()
 
     assertEquals(toint16(0x10123), 0x123)
@@ -31,6 +37,13 @@ function main()
     assertEquals(toint16(0xFFFE), -2)
     assertEquals(toint16(0x0FFFFFFE), -2)
     assertEquals(touint16(0xFFF0), 0xFFF0)
+
+    checkSplitExt("", "")
+    checkSplitExt(".", ".") -- I guess this should be treated as an empty extension...?
+    checkSplitExt("foo.bar", ".bar")
+    checkSplitExt("C:\\.foo", ".foo")
+    checkSplitExt([[C:\a.b\foo]], "")
+    checkSplitExt([[C:\a.b\foo.bar]], ".bar")
 
     checkParse("foo", {"", "", "foo", ""})
     checkParse([[C:\foo\bar.baz]], {"C:", [[\foo\]], "bar", ".baz"})
