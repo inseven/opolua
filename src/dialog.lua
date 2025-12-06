@@ -11,10 +11,11 @@ local View = class {}
 local kDialogFont = KFontArialNormal15
 local kButtonFont = KFontArialBold11
 local kButtonShortcutFont = KFontArialNormal11
-local kButtonHeight = 23
+local kButtonDefaultHeight = 23
 local kButtonYOffset = 9
 local kButtonMinWidth = 50
 local kButtonSpacing = 10
+local kButtonLabelHeight = 12
 local kDialogLineHeight = 22 -- ?
 local kDialogTightLineHeight = 18
 local kDialogLineGap = 1
@@ -1985,8 +1986,22 @@ end
 local Button = class { _super = View }
 
 function Button:contentSize()
-    local w = math.max(gTWIDTH(self.text, kButtonFont) + 8, kButtonMinWidth)
-    return w, kButtonHeight
+    -- Following logic cribbed from gBUTTON()
+    local textw = 0
+    local texth = 0
+    local _, descent, lineh
+    for line in self.text:gmatch("[^\n]*") do
+        local w, h, _, d = gTWIDTH(line, kButtonFont)
+        textw = math.max(textw, w)
+        texth = texth + h
+        descent = d
+        lineh = h
+    end
+
+    local w = math.max(textw + 8, kButtonMinWidth)
+    local h = math.max(texth + 12, kButtonDefaultHeight) -- kButtonDefaultHeight is also the min height
+    -- printf("Button '%s' textw=%d texth=%d w=%d h=%d\n", self.text, textw, texth, w, h)
+    return w, h
 end
 
 function Button:draw()
@@ -2100,26 +2115,35 @@ end
 local DialogButtonGroup = class { _super = View }
 
 function DialogButtonGroup:contentSize()
-    -- All buttons are the same size, which can grow to fit the longest button text
+    -- In normal mode, all buttons are the same size, and the width is that of the longest button text. In vertical
+    -- mode, the button height is additionally allowed to be variable to allow multi-line buttons.
     local maxButtonWidth = 0
     local numButtons = #self
     local hasLabels = false
+    local sideh = 0
     for _, button in ipairs(self) do
-        maxButtonWidth = math.max(button:contentSize(), maxButtonWidth)
-        if button:getLabel() then
+        local butw, buth = button:contentSize()
+        maxButtonWidth = math.max(butw, maxButtonWidth)
+        local label = button:getLabel()
+        if label then
             hasLabels = true
         end
-    end
-    local h
-    if hasLabels then
-       h = kDialogLineHeight * 2
-    else
-       h = kButtonYOffset + kButtonHeight
+        if self.side then
+            sideh = sideh + kButtonYOffset + buth
+            if label then
+                sideh = sideh + kButtonLabelHeight
+            end
+        end
     end
 
     if self.side then
-        return maxButtonWidth + kButtonSpacing, h * numButtons, maxButtonWidth
+        -- printf("DialogButtonGroup:contentSize() = (%d, %d)\n", maxButtonWidth + kButtonSpacing, sideh)
+        return maxButtonWidth + kButtonSpacing, sideh, maxButtonWidth
     else
+        local h = kButtonYOffset + kButtonDefaultHeight
+        if hasLabels then
+           h = h + kButtonLabelHeight
+        end
         local buttonsWidth = maxButtonWidth * numButtons + kButtonSpacing * (numButtons - 1)
         return buttonsWidth, h, maxButtonWidth
     end
@@ -2127,19 +2151,22 @@ end
 
 function DialogButtonGroup:addButtonsToView()
     local cw, ch, buttonWidth = self:contentSize()
-    local buttonHeight = ch // #self
     if self.side then
         local x = self.x
         local y = self.y
         for _, button in ipairs(self) do
-            self:addSubview(button, x, y, buttonWidth, kButtonHeight)
-            y = y + buttonHeight
+            local _, buttonHeight = button:contentSize()
+            self:addSubview(button, x, y, buttonWidth, buttonHeight)
+            y = y + buttonHeight + kButtonYOffset
+            if button:getLabel() then
+                y = y + kButtonLabelHeight
+            end
         end
     else
         local x = self.x + ((self.w - cw) // 2)
         local buttonY = self.y + kButtonYOffset
         for _, button in ipairs(self) do
-            self:addSubview(button, x, buttonY, buttonWidth, kButtonHeight)
+            self:addSubview(button, x, buttonY, buttonWidth, kButtonDefaultHeight)
             x = x + buttonWidth + kButtonSpacing
         end
     end
