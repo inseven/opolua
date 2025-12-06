@@ -82,7 +82,27 @@ extension Installer: SisInstallIoHandler {
 
     func sisInstallBegin(sis: Sis.File, context: Sis.BeginContext) -> Sis.BeginResult {
         // print("Installing v\(sis.version)")
-        return .install(.init(drive: "C", stubDir: nil, language: sis.languages[0]))
+        var installLang: String? = nil
+        for language in Locale.preferredLanguages {
+            // POSIX identifiers are "en-US", ICU canonlicalized identifiers are "en_US"
+            // (This is not perfect logic given variants, better than nothing though).
+            let langIcu = language.replacingOccurrences(of: "-", with: "_")
+            if sis.languages.contains(langIcu) {
+                installLang = langIcu
+                break
+            }
+        }
+        // If we didn't find any language the host liked, fall back to en_GB, en_US then whatever was first in sis.languages
+        if installLang == nil && sis.languages.contains("en_GB") {
+            installLang = "en_GB"
+        }
+        if installLang == nil && sis.languages.contains("en_US") {
+            installLang = "en_US"
+        }
+        if installLang == nil {
+            installLang = sis.languages[0]
+        }
+        return .install(.init(drive: "C", stubDir: nil, language: installLang!))
     }
 
     func sisInstallQuery(sis: Sis.File, text: String, type: Sis.QueryType) -> Bool {
