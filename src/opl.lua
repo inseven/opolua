@@ -398,13 +398,15 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     end
 
     local pos = (layout or 0) & 0xF
-    if pos == KButtTextTop or pos == KButtTextBottom then
-        -- We need to center the text (note, we don't actually support layout when there actually is an image, yet)
-        textX = s.pos.x + state + (width - textw) // 2
-    end
+    -- note, we don't actually support centering when there actually is an image, yet.
+    local shouldCentre = (pos == KButtTextTop or pos == KButtTextBottom)
     local textY = s.pos.y + ((height - texth + descent) // 2) + state
     black()
     for line in text:gmatch("[^\n]*") do
+        if shouldCentre then
+            local linew = gTWIDTH(line)
+            textX = s.pos.x + state + (width - linew) // 2
+        end
         runtime:drawText(line, textX, textY, KgModeSet)
         textY = textY + lineh
     end
