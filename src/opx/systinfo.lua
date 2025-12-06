@@ -174,7 +174,15 @@ function SIWorkday(stack, runtime) -- 7
 end
 
 function SIDaylightSaving(stack, runtime) -- 8
-    unimplemented("opx.systinfo.SIDaylightSaving")
+    local zone = stack:pop()
+    local result
+    if zone == KDaylightSavingZoneHome then
+        result = os.date("*t").isdst
+    end
+    if result == nil then
+        result = false
+    end
+    stack:push(result)
 end
 
 function SIHomeCountry(stack, runtime) -- 9
