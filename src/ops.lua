@@ -1611,9 +1611,22 @@ function LClose(stack, runtime) -- 0xAD
     runtime:setTrap(false)
 end
 
+local function resolveModuleName(runtime, name)
+    -- Unlike everything else, LoadM/UnloadM have their own idea of where paths should be relative to
+    local path = oplpath.abs(name, runtime:getPath())
+    local _, ext = oplpath.splitext(path)
+    if #ext == 0 then
+        if runtime:isSibo() then
+            path = path..".opm" -- I think...?
+        else
+            path = path .. ".opo"
+        end
+    end
+    return path
+end
+
 function LoadM(stack, runtime) -- 0xAE
-    -- Unlike everything else, LoadM has its own idea of where paths should be relative to
-    local path = oplpath.abs(stack:pop(), runtime:getPath())
+    local path = resolveModuleName(runtime, stack:pop())
     runtime:loadModule(path)
     runtime:setTrap(false)
 end
@@ -1752,8 +1765,8 @@ function Return(stack, runtime) -- 0xC0
 end
 
 function UnLoadM(stack, runtime) -- 0xC1
-    local module = stack:pop()
-    runtime:unloadModule(module)
+    local path = resolveModuleName(runtime, stack:pop())
+    runtime:unloadModule(path)
     runtime:setTrap(false)
 end
 
