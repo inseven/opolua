@@ -46,7 +46,7 @@ local KTbClockPosX = 4
 local KTbClockHeight = 64
 
 -- Global vars
-local TbVis, TbMenuSym, TbBtFlags
+local TbVis, TbMenuSym, TbBtFlags, TbWinId
 
 -- Actual state
 local tbWinId
@@ -81,6 +81,7 @@ function TBarLink(appLink)
         maxButtons = 4
     end
     TbBtFlags = runtime:declareGlobal("TbBtFlags%", maxButtons)
+    TbWinId = runtime:declareGlobal("TbWinId%")
     runtime:callProc(appLink:upper())
 end
 
@@ -142,6 +143,7 @@ function TBarInitC(aTitle, screenWidth, screenHeight, winMode)
         winMode = KgCreateRGBColorMode
     end
     tbWinId = gCREATE(screenWidth - w, 0, w, toolbarHeight, false, winMode)
+    TbWinId(tbWinId)
     gCOLOR(table.unpack(fgColour))
     gCOLORBACKGROUND(table.unpack(bgColour))
     title = aTitle
