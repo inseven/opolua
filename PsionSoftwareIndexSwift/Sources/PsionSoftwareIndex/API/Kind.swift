@@ -18,50 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import Foundation
 
-extension UISplitViewController.Column {
-
-    var description: String {
-        switch self {
-        case .primary:
-            return ".primary"
-        case .supplementary:
-            return ".supplementary"
-        case .secondary:
-            return ".secondary"
-        case .compact:
-            return ".compact"
-        case .inspector:
-            return ".inspector"
-        @unknown default:
-            return "unknown"
-        }
-    }
-
-}
-
-extension UISplitViewController.DisplayMode {
-
-    var description: String {
-        switch self {
-        case .automatic:
-            return ".automatic"
-        case .secondaryOnly:
-            return ".secondaryOnly"
-        case .oneBesideSecondary:
-            return ".oneBesideSecondary"
-        case .oneOverSecondary:
-            return ".oneOverSecondary"
-        case .twoBesideSecondary:
-            return ".twoBesideSecondary"
-        case .twoOverSecondary:
-            return ".twoOverSecondary"
-        case .twoDisplaceSecondary:
-            return ".twoDisplaceSecondary"
-        @unknown default:
-            return "unknown"
-        }
-    }
-
+public enum Kind: String, Codable {
+    case installer
+    case standalone
 }
