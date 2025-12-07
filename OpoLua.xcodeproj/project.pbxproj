@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -96,6 +96,7 @@
 		D8D95506279B7B100049A3C3 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D95505279B7B100049A3C3 /* UIColor.swift */; };
 		D8DCD03E277AC9B300760302 /* WindowServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03D277AC9B300760302 /* WindowServer.swift */; };
 		D8DCD040277ACD7800760302 /* CanvasSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DCD03F277ACD7800760302 /* CanvasSprite.swift */; };
+		D8EA52E02EE62B5A000750C9 /* z-s7 in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52DF2EE62B44000750C9 /* z-s7 */; };
 		D8EB6FFA275995DB00FC139F /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FF9275995DB00FC139F /* Dictionary.swift */; };
 		D8EB6FFC2759BB3500FC139F /* ConcurrentBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */; };
 		D8EE4D86279E4D2900F91150 /* ProgramDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */; };
@@ -224,6 +225,7 @@
 		D8D95505279B7B100049A3C3 /* UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
 		D8DCD03D277AC9B300760302 /* WindowServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowServer.swift; sourceTree = "<group>"; };
 		D8DCD03F277ACD7800760302 /* CanvasSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasSprite.swift; sourceTree = "<group>"; };
+		D8EA52DF2EE62B44000750C9 /* z-s7 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "z-s7"; sourceTree = "<group>"; };
 		D8EB6FF9275995DB00FC139F /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		D8EB6FFB2759BB3500FC139F /* ConcurrentBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentBox.swift; sourceTree = "<group>"; };
 		D8EE4D85279E4D2900F91150 /* ProgramDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramDetector.swift; sourceTree = "<group>"; };
@@ -258,10 +260,6 @@
 		DBEBA4452CCCF033009335CA /* CommonImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonImage.swift; sourceTree = "<group>"; };
 		DBEBA4472CCCF7E7009335CA /* ViewBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewBase.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		D8DE1B512CA5F829007EF1CC /* z-s7 */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "z-s7"; sourceTree = "<group>"; };
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		DB79FFA32742D88A005E904F /* Frameworks */ = {
@@ -341,10 +339,10 @@
 		D88851242C91149400A7F663 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				D8DE1B512CA5F829007EF1CC /* z-s7 */,
 				D893EAD4276073CA00E64219 /* Borders */,
 				DB0B919227836E70006F5CD0 /* fonts */,
 				DB9F837027D3834000940D5C /* z-s5 */,
+				D8EA52DF2EE62B44000750C9 /* z-s7 */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -523,9 +521,6 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				D8DE1B512CA5F829007EF1CC /* z-s7 */,
-			);
 			name = OpoLua;
 			packageProductDependencies = (
 				D824641E2C90E71100CE8C0A /* Diligence */,
@@ -580,6 +575,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8EA52E02EE62B5A000750C9 /* z-s7 in Resources */,
 				D87A9249274C517000254DE9 /* Assets.xcassets in Resources */,
 				D815C6602DE145CC009EABFE /* lua-license in Resources */,
 				D815C6612DE145CC009EABFE /* opolua-license in Resources */,
