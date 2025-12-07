@@ -28,7 +28,6 @@ struct ProgramsView: View {
 
     var body: some View {
         ScrollView {
-            TitleView("All Programs")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 240))], spacing: 0) {
                 ForEach(libraryModel.filteredPrograms) { program in
                     NavigationLink {
@@ -45,10 +44,17 @@ struct ProgramsView: View {
         }
         .searchable(text: $libraryModel.searchFilter)
         .navigationTitle("Software Index")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .destructiveAction) {
-                Button("Cancel") {
+            ToolbarItem(placement: .cancellationAction) {
+                Button {
                     dismiss()
+                } label: {
+                    if #available(iOS 26, *) {
+                        Image(systemName: "xmark")
+                    } else {
+                        Text("Cancel")
+                    }
                 }
                 .keyboardShortcut(.cancelAction)
             }

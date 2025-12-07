@@ -25,7 +25,7 @@ import PsionSoftwareIndex
 class BrowserViewController: UICollectionViewController {
 
     internal lazy var addBarButtonItem: UIBarButtonItem = {
-        let softwareIndexAction = UIAction(title: "Psion Software Index",
+        let softwareIndexAction = UIAction(title: "Software Index",
                                            image: UIImage(systemName: "list.dash.header.rectangle")) { [weak self] action in
             self?.showSoftwareIndex()
         }

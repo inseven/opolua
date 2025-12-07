@@ -20,10 +20,14 @@
 
 import Foundation
 
-struct Image: Codable, Hashable {
+public struct SoftwareIndex {
 
-    let width: Int
-    let height: Int
-    let path: String
+    struct Image: Codable, Hashable {
+
+        let width: Int
+        let height: Int
+        let path: String
+
+    }
 
 }
