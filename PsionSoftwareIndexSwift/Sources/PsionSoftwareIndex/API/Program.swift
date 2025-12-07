@@ -24,12 +24,12 @@ struct Program: Codable, Identifiable, Hashable {
 
     let id: String
     let name: String
-    let icon: Image?
+    let icon: SoftwareIndex.Image?
     let versions: [Version]
     let subtitle: String?
     let description: String?
     let tags: [String]
-    var screenshots: [Image]?
+    var screenshots: [SoftwareIndex.Image]?
 
     var iconURL: URL? {
         guard let icon else {

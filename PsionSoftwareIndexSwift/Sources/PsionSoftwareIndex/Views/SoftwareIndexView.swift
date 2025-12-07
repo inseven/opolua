@@ -67,19 +67,11 @@ public struct SoftwareIndexView: View {
     }
 
     public var body: some View {
-#if os(macOS)
-        NavigationStack {
-            ProgramsView()
-                .environmentObject(model)
-        }
-        .frame(width: 600, height: 400)
-#else
         NavigationView {
             ProgramsView()
                 .environmentObject(model)
         }
         .navigationViewStyle(.stack)
-#endif
     }
 
 }

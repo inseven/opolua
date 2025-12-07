@@ -30,7 +30,7 @@ public struct Release: Codable, Hashable {
     public let uid: String?
     public let kind: Kind
     public let name: String
-    let icon: Image?
+    let icon: SoftwareIndex.Image?
     let filename: String
     let size: Int
     let sha256: String
