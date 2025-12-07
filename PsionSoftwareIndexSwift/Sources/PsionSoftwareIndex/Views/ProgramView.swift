@@ -24,7 +24,7 @@ struct ProgramView: View {
 
     @EnvironmentObject private var libraryModel: LibraryModel
 
-    var program: Program
+    var program: SoftwareIndex.Program
 
     var body: some View {
         List {
