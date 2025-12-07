@@ -39,14 +39,14 @@ function main()
     if offset then
         printf("Offset: %08X\n", offset)
     end
-    for _, id in ipairs(sortedKeys(resources)) do
+    for id, resource in sortedPairs(resources) do
         local offsetStr
         if offset then
             offsetStr = string.format("%08X/", offset + (id - 1))
         else
             offsetStr = "         "
         end
-        printf("%s%08X: %s\n", offsetStr, id, hexEscape(resources[id]))
+        printf("%s%08X: %s\n", offsetStr, id, hexEscape(resource))
     end
 end
 

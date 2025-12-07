@@ -568,7 +568,12 @@ end
 
 local function index_dump(runtime)
     local index = runtime:IP16()
-    return fmt("0x%04X", index)
+    local var = runtime:currentProc().vars[index]
+    local result = fmt("0x%04X", index)
+    if var then
+        result = result .. fmt(" (%s)", var.name)
+    end
+    return result
 end
 
 local function IPs8_dump(runtime)
