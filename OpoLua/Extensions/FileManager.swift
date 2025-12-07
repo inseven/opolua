@@ -182,14 +182,6 @@ extension FileManager {
                 }
             }
         }
-        if let dot = uncasedName.lastIndex(of: ".") {
-            let suff = uncasedName[uncasedName.index(after: dot)...]
-            if suff.count > 3 {
-                //  Try truncating the extension to 3 chars
-                let newName = String(uncasedName[...dot]) + suff.prefix(3)
-                return try findCorrectCase(in: path, for: newName)
-            }
-        }
         return uncasedName
     }
 

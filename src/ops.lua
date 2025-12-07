@@ -875,10 +875,31 @@ function CompareLessThanUntyped(stack)
     stack:push(left < right)
 end
 
+-- Returns a negative value, zero, or a positive value if a is less than, equal, or greater than b respectively
+local function strcmp(a, b)
+    -- We can't just use Lua string operations < > <= >= because they are affected by the current locale which we don't
+    -- really want to mess with (being potentially embedded in a UI app) and Lua doesn't offer any way to override
+    -- that. And yes this matters even on a vanilla English system.
+    local n = math.min(#a, #b)
+    local byte = string.byte
+    for i = 1, n do
+        local diff = byte(a) - byte(b)
+        if diff ~= 0 then
+            return diff
+        end
+    end
+    -- Reaching here means the first n characters are the same so whichever string is longer is the greater
+    return #a - #b
+end
+
 CompareLessThanInt = CompareLessThanUntyped -- 0x30
 CompareLessThanLong = CompareLessThanUntyped -- 0x31
 CompareLessThanFloat = CompareLessThanUntyped -- 0x32
-CompareLessThanString = CompareLessThanUntyped -- 0x33
+
+function CompareLessThanString(stack) -- 0x33
+    local left, right = stack:pop(2)
+    stack:push(strcmp(left, right) < 0)
+end
 
 function CompareLessOrEqualUntyped(stack)
     local right = stack:pop()
@@ -889,7 +910,11 @@ end
 CompareLessOrEqualInt = CompareLessOrEqualUntyped -- 0x34
 CompareLessOrEqualLong = CompareLessOrEqualUntyped -- 0x35
 CompareLessOrEqualFloat = CompareLessOrEqualUntyped -- 0x36
-CompareLessOrEqualString = CompareLessOrEqualUntyped -- 0x37
+
+function CompareLessOrEqualString(stack) -- 0x37
+    local left, right = stack:pop(2)
+    stack:push(strcmp(left, right) <= 0)
+end
 
 function CompareGreaterThanUntyped(stack)
     local right = stack:pop()
@@ -900,7 +925,11 @@ end
 CompareGreaterThanInt = CompareGreaterThanUntyped -- 0x38
 CompareGreaterThanLong = CompareGreaterThanUntyped -- 0x39
 CompareGreaterThanFloat = CompareGreaterThanUntyped -- 0x3A
-CompareGreaterThanString = CompareGreaterThanUntyped -- 0x3B
+
+function CompareGreaterThanString(stack, runtime) -- 0x3B
+    local left, right = stack:pop(2)
+    stack:push(strcmp(left, right) > 0)
+end
 
 function CompareGreaterOrEqualUntyped(stack)
     local right = stack:pop()
@@ -912,6 +941,11 @@ CompareGreaterOrEqualInt = CompareGreaterOrEqualUntyped -- 0x3C
 CompareGreaterOrEqualLong = CompareGreaterOrEqualUntyped -- 0x3D
 CompareGreaterOrEqualFloat = CompareGreaterOrEqualUntyped -- 0x3E
 CompareGreaterOrEqualString = CompareGreaterOrEqualUntyped -- 0x3F
+
+function CompareGreaterOrEqualString(stack) -- 0x3F
+    local left, right = stack:pop(2)
+    stack:push(strcmp(left, right) >= 0)
+end
 
 function CompareEqualUntyped(stack)
     local right = stack:pop()
@@ -1577,9 +1611,22 @@ function LClose(stack, runtime) -- 0xAD
     runtime:setTrap(false)
 end
 
+local function resolveModuleName(runtime, name)
+    -- Unlike everything else, LoadM/UnloadM have their own idea of where paths should be relative to
+    local path = oplpath.abs(name, runtime:getPath())
+    local _, ext = oplpath.splitext(path)
+    if #ext == 0 then
+        if runtime:isSibo() then
+            path = path..".opm" -- I think...?
+        else
+            path = path .. ".opo"
+        end
+    end
+    return path
+end
+
 function LoadM(stack, runtime) -- 0xAE
-    -- Unlike everything else, LoadM has its own idea of where paths should be relative to
-    local path = oplpath.abs(stack:pop(), runtime:getPath())
+    local path = resolveModuleName(runtime, stack:pop())
     runtime:loadModule(path)
     runtime:setTrap(false)
 end
@@ -1718,8 +1765,8 @@ function Return(stack, runtime) -- 0xC0
 end
 
 function UnLoadM(stack, runtime) -- 0xC1
-    local module = stack:pop()
-    runtime:unloadModule(module)
+    local path = resolveModuleName(runtime, stack:pop())
+    runtime:unloadModule(path)
     runtime:setTrap(false)
 end
 

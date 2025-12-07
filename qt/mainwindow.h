@@ -7,6 +7,7 @@
 #include <QAction>
 #include <QLabel>
 #include <QMainWindow>
+#include <QScopedPointer>
 #include <QStringList>
 
 namespace Ui {
@@ -49,6 +50,7 @@ private slots:
     void installationComplete(const QString& sisPath);
     void updateRecents(const QStringList& recentFiles);
     void onSpeedChanged();
+    void reportIssue();
 
 private:
     void setDevice(QAction* action, int device);
@@ -71,6 +73,10 @@ private:
     QLabel* speedLabel;
     QAction* currentDevice;
     QString mManifest;
+    QScopedPointer<OplAppInfo> mAppInfo;
+    QString mErrMsg;
+    QString mErrDetail;
+    QString mSourceUrl;
 };
 
 #endif // MAINWINDOW_H

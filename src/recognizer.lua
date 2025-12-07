@@ -171,10 +171,11 @@ end
 function getMbmBitmaps(data)
     local mbm = require("mbm")
     local bitmaps = mbm.parseMbmHeader(data)
-    for _, bitmap in ipairs(bitmaps) do
-        bitmap.imgData = bitmap:getImageData()
+    local result = {}
+    for i, bitmap in ipairs(bitmaps) do
+        result[i] = bitmap:toNative()
     end
-    return bitmaps
+    return result
 end
 
 return _ENV

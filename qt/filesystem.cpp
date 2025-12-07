@@ -21,6 +21,12 @@ void FileSystemIoHandler::addMapping(char drive, const QDir& path, bool writable
     QMutexLocker lock(&mMutex);
     // qDebug("mapping: %c -> %s", drive, qPrintable(path.absolutePath()));
     mPaths[drive] = { writable, path.absolutePath() };
+    if (writable && !path.exists()) {
+        // It's important that writeable mapping paths always exist because there's no way for OPL code to create them
+        // without creating a subdir.
+        QFileInfo info(path.absolutePath());
+        info.dir().mkpath(info.fileName());
+    }
 }
 
 void FileSystemIoHandler::removeMapping(char drive)
@@ -130,13 +136,6 @@ QString FileSystemIoHandler::getNativePath(const QString& devicePath, bool* writ
                 // Try a case-insensitive match
                 auto map = getEntryListLowerMap(dir);
                 foundEntry = map.value(component.toLower());
-                if (foundEntry.isEmpty()) {
-                    // Epoc seems to have a weird handling of paths ending in a space, in that playing a sound file
-                    // with a path "C:\name.wav " will work (assuming the file is called "name.wav"). Whether that's
-                    // truncating of extensions with more than 3 letters, or simply that spaces on the of paths are
-                    // ignored, I'm not sure.
-                    foundEntry = map.value(component.toLower().trimmed());
-                }
             }
 
             if (foundEntry.isEmpty()) {

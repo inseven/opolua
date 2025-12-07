@@ -381,6 +381,13 @@ function PlaySoundA(stack, runtime) -- 39
     local var = stack:pop():asVariable(DataTypes.ELong)
     local volume = stack:pop() -- not used atm...
     local path = stack:pop()
+
+    if path:match(" $") then
+        -- For some odd reason some programs put a space on the end, and the series 5 will allow it. See
+        -- https://github.com/inseven/opolua/issues/449
+        -- for the mess this caused when 'fixed' at the filesystem level.
+        path = path:sub(1, -2)
+    end
     runtime:PlaySoundA(var, path)
     stack:push(0)
 end
@@ -475,7 +482,22 @@ function GetThreadIdFromOpenDoc(stack, runtime) -- 53
 end
 
 function GetThreadIdFromAppUid(stack, runtime) -- 54
-    unimplemented("opx.system.GetThreadIdFromAppUid")
+    local prev = stack:pop():asVariable(DataTypes.ELong)
+    local uid = stack:pop()
+    if prev() ~= 0 then
+        -- Attempting to find secondary threads of anything is not something we support
+        error(KErrGenFail)
+    end
+    prev(-1)
+
+    if uid == runtime:getAppUid() then
+        -- We will say the current app always has thread id 1
+        stack:push(1)
+        return
+    else
+        printf("GetThreadIdFromAppUid(0x%08x) appuid=0x%08x\n", uid, runtime:getAppUid())
+        error(KErrGenFail)
+    end
 end
 
 function SetForeground(stack, runtime) -- 55

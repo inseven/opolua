@@ -146,7 +146,23 @@ function SIDateFormat(stack, runtime) -- 4
 end
 
 function SITimeFormat(stack, runtime) -- 5
-    unimplemented("opx.systinfo.SITimeFormat")
+    local ampmPos = stack:pop():asVariable(DataTypes.ELong)
+    local ampmSpace = stack:pop():asVariable(DataTypes.ELong)
+    local timeSep3 = stack:pop():asVariable(DataTypes.EWord)
+    local timeSep2 = stack:pop():asVariable(DataTypes.EWord)
+    local timeSep1 = stack:pop():asVariable(DataTypes.EWord)
+    local timeSep0 = stack:pop():asVariable(DataTypes.EWord)
+    local timeFmt = stack:pop():asVariable(DataTypes.ELong)
+
+    timeFmt(runtime:LCClockFormat())
+    timeSep0(0)
+    timeSep1(string.byte(':'))
+    timeSep2(string.byte(':'))
+    timeSep3(0)
+    ampmSpace(0)
+    ampmPos(1)
+
+    stack:push(0)
 end
 
 function SIUTCOffset(stack, runtime) -- 6
@@ -158,7 +174,15 @@ function SIWorkday(stack, runtime) -- 7
 end
 
 function SIDaylightSaving(stack, runtime) -- 8
-    unimplemented("opx.systinfo.SIDaylightSaving")
+    local zone = stack:pop()
+    local result
+    if zone == KDaylightSavingZoneHome then
+        result = os.date("*t").isdst
+    end
+    if result == nil then
+        result = false
+    end
+    stack:push(result)
 end
 
 function SIHomeCountry(stack, runtime) -- 9
