@@ -69,7 +69,7 @@ class BrowserViewController: UICollectionViewController {
                 return false
             }
 #endif
-            return release.kind == .installer && release.hasDownload && release.tags.contains("opl")
+            return release.kind == .installer && release.tags.contains("opl")
         }
         indexViewController.delegate = self
         present(indexViewController, animated: true)

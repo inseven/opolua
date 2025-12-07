@@ -20,16 +20,20 @@
 
 import Foundation
 
-public struct Release: Codable, Identifiable {
+public struct Release: Codable, Hashable {
 
-    public var id: String {
-        return uid + referenceString
+    public var uniqueId: String {
+        return id + referenceString
     }
 
-    public let uid: String  // TODO: Rename to 'identifier'
+    public let id: String
+    public let uid: String?
     public let kind: Kind
     public let name: String
     let icon: Image?
+    let filename: String
+    let size: Int
+    let sha256: String
     let reference: [ReferenceItem]
     public let tags: [String]
 
@@ -46,16 +50,8 @@ public struct Release: Codable, Identifiable {
             .joined(separator: " - ")
     }
 
-    public var hasDownload: Bool {
-        return reference.last?.url != nil
-    }
-
-    var filename: String {
-        return reference.last!.name.lastPathComponent
-    }
-
-    var downloadURL: URL? {
-        return reference.last?.url
+    var downloadURL: URL {
+        return URL(string: "https://software.psion.info/files/\(sha256)")!
     }
 
 }

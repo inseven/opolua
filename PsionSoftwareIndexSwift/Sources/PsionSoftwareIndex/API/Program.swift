@@ -20,16 +20,14 @@
 
 import Foundation
 
-struct Program: Codable, Identifiable {
+struct Program: Codable, Identifiable, Hashable {
 
-    var id: String {
-        return uid
-    }
-
-    let uid: String  // TODO: Rename to 'identifier'
+    let id: String
     let name: String
     let icon: Image?
     let versions: [Version]
+    let subtitle: String?
+    let description: String?
     let tags: [String]
     var screenshots: [Image]?
 

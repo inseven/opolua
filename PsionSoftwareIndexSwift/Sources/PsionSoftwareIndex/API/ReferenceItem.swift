@@ -20,7 +20,7 @@
 
 import Foundation
 
-struct ReferenceItem: Codable {
+struct ReferenceItem: Codable, Hashable {
 
     let name: String
     let url: URL?

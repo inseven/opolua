@@ -20,13 +20,17 @@
 
 import Foundation
 
-struct Collection: Codable, Identifiable, Hashable {
+enum SoftwareIndexError: Error {
+    case unknownDownloadFailure
+}
 
-    var id: String {
-        return identifier
+extension SoftwareIndexError: LocalizedError {
+
+    public var errorDescription: String? {
+        switch self {
+        case .unknownDownloadFailure:
+            return "Unknown download failure"
+        }
     }
-
-    let identifier: String
-    let items: [Release]
 
 }
