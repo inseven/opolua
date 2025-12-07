@@ -40,6 +40,18 @@ PROC bareButtonDlg:
 	GET
 ENDP
 
+PROC sideButtonsDlg:
+	LOCAL x%
+	LOCAL result%
+	dINIT "Side buttons", KDlgButRight% REM OR KDlgFillScreen%
+	dBUTTONS "Single", %S, "Multi" + CHR$(10) + "Line", %M
+	dTEXT "", "Some text"
+	result% = DIALOG
+	PRINT "Dialog returned", result%
+	GET
+ENDP
+
+
 PROC longDlg:
 	LOCAL val&
 	dINIT "Long input"
@@ -244,7 +256,7 @@ PROC loop%:
 	REM dTEXT "", "", $800
 	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
 	dCHOICE choice%, "", "password,empty,date,time,..."
-	dCHOICE choice%, "", "buttons,bareButtons,cancelDlg,..."
+	dCHOICE choice%, "", "buttons,bareButtons,sideButtons,cancelDlg,..."
 	dCHOICE choice%, "", "editmulti,file,emptychoice"
 	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
 	choice% = 2
@@ -278,12 +290,14 @@ PROC loop%:
 	ELSEIF choice% = 11
 		bareButtonDlg:
 	ELSEIF choice% = 12
-		cancelDlg:
+		sideButtonsDlg:
 	ELSEIF choice% = 13
-		editMultiDlg:
+		cancelDlg:
 	ELSEIF choice% = 14
-		fileDlg:
+		editMultiDlg:
 	ELSEIF choice% = 15
+		fileDlg:
+	ELSEIF choice% = 16
 		emptyChoiceDlg:
 	ENDIF
 	
