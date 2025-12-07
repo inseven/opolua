@@ -102,7 +102,7 @@ struct ProgramView: View {
             }
         }
         .listStyle(.plain)
-        .inlineTitle()
+        .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(program.name)
     }
 
