@@ -24,20 +24,27 @@ import SwiftUI
 /// Callbacks always occur on `MainActor`.
 protocol LibraryModelDelegate: AnyObject {
 
-    @MainActor func libraryModelDidCancel(libraryModel: LibraryModel)
-    @MainActor func libraryModel(libraryModel: LibraryModel, didSelectItem item: SoftwareIndexView.Item)
+    @MainActor
+    func libraryModelDidCancel(libraryModel: LibraryModel)
+
+    @MainActor
+    func libraryModel(libraryModel: LibraryModel, didSelectItem item: SoftwareIndexView.Item)
 
 }
 
 @MainActor class LibraryModel: ObservableObject {
 
+    @Published var isLoading: Bool = true
     @Published var programs: [Program] = []
     @Published var searchFilter: String = ""
     @Published var filteredPrograms: [Program] = []
+    @Published var error: Error? = nil
 
     weak var delegate: LibraryModelDelegate?
 
     private var cancellables: Set<AnyCancellable> = []
+
+    @Published var downloads: [URL: URLSessionDownloadTask] = [:]
 
     private let filter: (Release) -> Bool
 
@@ -64,75 +71,108 @@ protocol LibraryModelDelegate: AnyObject {
     }
 
     @MainActor private func fetch() async {
+        isLoading = true
         let url = URL.softwareIndexAPIV1.appendingPathComponent("programs")
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            // TODO: Check for success
             let decoder = JSONDecoder()
+
+            // Filter the list to include only SIS files.
             let programs = try decoder.decode([Program].self, from: data).compactMap { program -> Program? in
-
                 let versions: [Version] = program.versions.compactMap { version in
-
                     let variants: [Collection] = version.variants.compactMap { collection in
-
                         let items: [Release] = collection.items.compactMap { release -> Release? in
                             guard filter(release) else {
                                 return nil
                             }
-                            return Release(uid: release.uid,
-                                           kind: release.kind,
-                                           name: release.name,
-                                           icon: release.icon,
-                                           reference: release.reference,
-                                           tags: release.tags)
+                            return release
                         }
-
                         guard let release = items.first else {
                             return nil
                         }
-
                         return Collection(identifier: collection.identifier, items: [release])
-
                     }
-
                     guard variants.count > 0 else {
                         return nil
                     }
-
                     return Version(version: version.version, variants: variants)
-
                 }
-
                 guard versions.count > 0 else {
                     return nil
                 }
-
-                return Program(uid: program.uid,
+                return Program(id: program.id,
                                name: program.name,
                                icon: program.icon,
                                versions: versions,
+                               subtitle: program.subtitle,
+                               description: program.description,
                                tags: program.tags,
                                screenshots: program.screenshots)
+            }.sorted { lhs, rhs in
+                lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
             }
 
             await MainActor.run {
+                self.isLoading = false
                 self.programs = programs
             }
         } catch {
+            self.isLoading = false
             print("Failed to fetch data with error \(error).")
         }
     }
 
-    func install(release: Release) async throws {
-        guard let downloadURL = release.downloadURL else {
-            print("No download URL!")
+    func download(_ release: Release) {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        // Ensure there are no active downloads for that URL.
+        guard downloads[release.downloadURL] == nil else {
             return
         }
-        let (url, _) = try await URLSession.shared.download(from: downloadURL)
-        let item = SoftwareIndexView.Item(sourceURL: downloadURL, url: url)
-        await MainActor.run {
-            self.delegate?.libraryModel(libraryModel: self, didSelectItem: item)
+
+        let downloadURL = release.downloadURL
+
+        // Create the download task.
+        let downloadTask = URLSession.shared.downloadTask(with: downloadURL) { [weak self] url, response, error in
+            dispatchPrecondition(condition: .notOnQueue(.main))
+            guard let self else {
+                return
+            }
+            do {
+                // First, cean up the download task and observation.
+                DispatchQueue.main.sync {
+                    self.downloads.removeValue(forKey: downloadURL)
+                }
+
+                // Check for errors.
+                guard let url else {
+                    throw error ?? SoftwareIndexError.unknownDownloadFailure
+                }
+
+                // Create a temporary directory and move the downloaded contents to ensure it has the correct filename.
+                let fileManager = FileManager.default
+                let temporaryDirectory = fileManager.temporaryDirectory.appendingPathComponent((UUID().uuidString))
+                try fileManager.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
+                let itemURL = temporaryDirectory.appendingPathComponent(release.filename)
+                try fileManager.moveItem(at: url, to: itemURL)
+
+                // Call our delegate.
+                let item = SoftwareIndexView.Item(sourceURL: downloadURL, url: itemURL)
+                DispatchQueue.main.async {
+                    self.delegate?.libraryModel(libraryModel: self, didSelectItem: item)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.error = error
+                }
+            }
         }
+
+        // Cache the download task.
+        self.downloads[downloadURL] = downloadTask
+
+        // Start the download.
+        downloadTask.resume()
     }
 
 }

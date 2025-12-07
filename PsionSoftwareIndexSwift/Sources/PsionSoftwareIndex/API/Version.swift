@@ -20,13 +20,13 @@
 
 import Foundation
 
-struct Version: Codable, Identifiable {
+struct Version: Codable, Identifiable, Hashable {
 
     var id: String {
         return version
     }
 
-    let version: String  // TODO: Rename to 'identifier'
-    let variants: [Collection]  // TODO: Is this actually a good name?
+    let version: String
+    let variants: [Collection]
 
 }

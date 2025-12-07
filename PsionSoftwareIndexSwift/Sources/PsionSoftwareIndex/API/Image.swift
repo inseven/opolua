@@ -20,7 +20,7 @@
 
 import Foundation
 
-struct Image: Codable {
+struct Image: Codable, Hashable {
 
     let width: Int
     let height: Int

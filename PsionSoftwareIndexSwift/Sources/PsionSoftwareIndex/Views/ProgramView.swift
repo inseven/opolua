@@ -53,36 +53,51 @@ struct ProgramView: View {
                         }
                     }
                 }
+                if let description = program.description {
+                    Text(description)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             ForEach(program.versions) { version in
-                Section(version.id) {
+                Section {
                     ForEach(version.variants) { variant in
-                        ForEach(variant.items) { item in
+                        ForEach(variant.items, id: \.uniqueId) { item in
                             HStack(alignment: .center) {
                                 IconView(url: item.iconURL)
                                 VStack(alignment: .leading) {
-                                    Text(item.filename)
-                                    Text(item.referenceString)
-                                        .font(.footnote)
+                                    Text(item.name)
+                                    Text(String(item.sha256.prefix(8)))
+                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+//                                        .monospaced()
                                 }
                                 Spacer()
-                                Button {
-                                    Task {
-                                        do {
-                                            try await libraryModel.install(release: item)
-                                        } catch {
-                                            print("Failed to install software with error")
+                                Text(item.size.formatted(.byteCount(style: .file)))
+                                    .foregroundStyle(.secondary)
+                                if let task = libraryModel.downloads[item.downloadURL] {
+                                    HStack {
+                                        ProgressView(task.progress)
+                                            .progressViewStyle(.circular)
+//                                            .progressViewStyle(.unadornedCircular)  //??
+                                            .controlSize(.small)
+                                        Button("Cancel") {
+                                            libraryModel.downloads[item.downloadURL]?.cancel()
                                         }
                                     }
-                                } label: {
-                                    Label("Download", systemImage: "arrow.down")
-                                        .labelStyle(.iconOnly)
+                                } else {
+                                    Button {
+                                        libraryModel.download(item)
+                                    } label: {
+                                        Text("Install")
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .buttonBorderShape(.capsule)
                                 }
-                                .buttonStyle(.bordered)
-                                .buttonBorderShape(.capsule)
                             }
                         }
                     }
+                } header: {
+                    Text(version.version)
                 }
             }
         }
