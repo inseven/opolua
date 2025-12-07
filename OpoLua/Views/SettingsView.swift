@@ -82,8 +82,14 @@ struct SettingsView: View {
             .toolbar {
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button {
                         dismiss()
+                    } label: {
+                        if #available(iOS 26, *) {
+                            Image(systemName: "xmark")
+                        } else {
+                            Text("Done")
+                        }
                     }
                 }
             }
