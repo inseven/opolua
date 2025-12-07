@@ -1,11 +1,20 @@
 PROC main:
 	GLOBAL foo$(4)
+	GLOBAL stringarr$(5, 10) REM arraysize=5, string maxlen=10
+	LOCAL anonstr$(6)
 	foo$ = "Baa"
+	anonstr$ = "anon"
 	fn:(123, "yarp")
 	GET
 ENDP
 
 PROC fn:(x%, y$)
-	PRINT foo$
+	LOCAL int%
+	PRINT foo$, int%
 	PRINT x%, y$
+ENDP
+
+PROC localstrarr:
+	LOCAL strarr$(2, 255)
+	PRINT strarr$(1)
 ENDP
