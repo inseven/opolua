@@ -1184,7 +1184,7 @@ function DialogItemEditMulti:posToCharPos(x, y)
     return lineInfo.charPos + result
 end
 
-local function formatText(text, maxWidth)
+function formatText(text, maxWidth, widthFn)
     local lines = {}
     local currentLine = {}
     local lineWidth = 0
@@ -1197,33 +1197,35 @@ local function formatText(text, maxWidth)
         table.insert(currentLine, word)
         lineWidth = lineWidth + wordWidth
     end
-    local spaceWidth = gTWIDTH(" ", kDialogFont)
+    local spaceWidth = widthFn(" ")
     local function addWord(word)
-        local wordWidth = gTWIDTH(word, kDialogFont)
+        local wordWidth = widthFn(word)
         local lineAndWordWidth = lineWidth + wordWidth
         if lineAndWordWidth <= maxWidth then
             -- Fits on current line
             addToLine(word, wordWidth)
-        elseif wordWidth >= maxWidth * 3 / 4 then
-            -- Uh oh the word on its own doesn't fit. Try to camelcase split it
-            local w1, w2 = word:match("([A-Z][a-z]+)([A-Z][a-z]+)")
-            if w1 then
-                addToLine(w1, gTWIDTH(w1, kDialogFont))
-                newLine()
-                addToLine(w2, gTWIDTH(w2, kDialogFont))
-            else
-                -- Give up
-                if lineWidth > 0 then
-                    newLine()
-                end
-                addToLine(word, wordWidth)
-            end
-        else
-            if lineWidth > 0 then
-                newLine()
-            end
-            addToLine(word, wordWidth)
+            return
         end
+
+        -- Will it fit on a line on its own?
+        if wordWidth <= maxWidth then
+            newLine()
+            addToLine(word, wordWidth)
+            return
+        end
+
+        -- oh dear, need to forcibly split (after putting on its own line if necessary)
+        if lineWidth > 0 then
+            newLine()
+        end
+
+        local fragPos = 0
+        while widthFn(word:sub(1, fragPos + 1)) <= maxWidth do
+            fragPos = fragPos + 1
+        end
+        assert(fragPos > 0, "maxWidth is less than a single character??")
+        addWord(word:sub(1, fragPos))
+        addWord(word:sub(fragPos + 1))
     end
 
     local pos = 1
@@ -1232,7 +1234,14 @@ local function formatText(text, maxWidth)
         if ch == "" then
             break
         elseif ch == " " then
-            addWord(ch)
+            -- if the space is at the end of a line and pushes past the max length, it goes with the current line with
+            -- zero width, otherwise it is added to the line
+            if lineWidth + spaceWidth >= maxWidth then
+                addToLine(ch, 0)
+                newLine()
+            else
+                addToLine(ch, spaceWidth)
+            end
             pos = pos + 1
         elseif ch == KLineBreakStr or ch == KParagraphDelimiterStr then
             addToLine(ch, 0)
@@ -1258,7 +1267,10 @@ function DialogItemEditMulti:getTextWidth()
 end
 
 function DialogItemEditMulti:formatTextIntoLines()
-    local lines = formatText(self.editor.value, self:getTextWidth())
+    local function widthFn(text)
+        return gTWIDTH(text, kDialogFont)
+    end
+    local lines = formatText(self.editor.value, self:getTextWidth(), widthFn)
     self.lines = {}
 
     local texty = self.y + kDialogLineTextYOffset

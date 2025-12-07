@@ -169,6 +169,19 @@ function main()
     checkRle(string.rep("aa", 130), "\127aa\1aa", 2)
     checkRle(string.rep("aa", 131).."bb", "\127aa\2aa\255bb", 2)
 
+    local dialog = require("dialog")
+    -- For simplicity, test assuming a monospaced font where all characters are one unit wide
+    local widthFn = function(text) return #text end
+    local function checkWrap(text, maxWidth, expected)
+        local wrappedLines = dialog.formatText(text, maxWidth, widthFn)
+        local wrappedText = table.concat(wrappedLines, "\n")
+        assertEquals(wrappedText, expected)
+    end
+
+    checkWrap("hello world", 6, "hello \nworld")
+    checkWrap("hello world", 5, "hello \nworld")
+    checkWrap("hello!", 4, "hell\no!")
+
     print("All tests passed.")
 end
 
