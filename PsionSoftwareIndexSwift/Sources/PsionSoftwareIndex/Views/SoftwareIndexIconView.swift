@@ -20,7 +20,7 @@
 
 import SwiftUI
 
-struct IconView: View {
+struct SoftwareIndexIconView: View {
 
     let url: URL?
 

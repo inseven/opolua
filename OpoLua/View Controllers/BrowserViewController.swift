@@ -63,7 +63,7 @@ class BrowserViewController: UICollectionViewController {
     ]
 
     @objc func showSoftwareIndex() {
-        let indexViewController = PsionSoftwareIndexViewController { release in
+        let indexViewController = SoftwareIndexViewController { release in
 #if RELEASE
             guard !Self.blockedUIDs.contains(release.uid) else {
                 return false
@@ -127,13 +127,13 @@ extension BrowserViewController: UIDocumentPickerDelegate {
 
 }
 
-extension BrowserViewController: PsionSoftwareIndexViewControllerDelegate {
+extension BrowserViewController: SoftwareIndexViewControllerDelegate {
 
-    func psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: PsionSoftwareIndexViewController) {
+    func psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: SoftwareIndexViewController) {
         psionSoftwareIndexViewController.dismiss(animated: true)
     }
 
-    func psionSoftwareIndexViewController(psionSoftwareIndexViewController: PsionSoftwareIndexViewController,
+    func psionSoftwareIndexViewController(psionSoftwareIndexViewController: SoftwareIndexViewController,
                                           didSelectItem item: SoftwareIndexView.Item) {
         psionSoftwareIndexViewController.dismiss(animated: true) {
             AppDelegate.shared.install(url: item.url, sourceUrl: item.sourceURL)

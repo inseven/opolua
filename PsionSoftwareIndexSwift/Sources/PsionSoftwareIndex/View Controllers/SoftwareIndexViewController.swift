@@ -21,24 +21,22 @@
 import Combine
 import SwiftUI
 
-#if os(iOS)
+public protocol SoftwareIndexViewControllerDelegate: AnyObject {
 
-public protocol PsionSoftwareIndexViewControllerDelegate: AnyObject {
-
-    func psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: PsionSoftwareIndexViewController)
-    func psionSoftwareIndexViewController(psionSoftwareIndexViewController: PsionSoftwareIndexViewController,
+    func psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: SoftwareIndexViewController)
+    func psionSoftwareIndexViewController(psionSoftwareIndexViewController: SoftwareIndexViewController,
                                           didSelectItem item: SoftwareIndexView.Item)
 
 }
 
-@MainActor public class PsionSoftwareIndexViewController: UIHostingController<SoftwareIndexView> {
+@MainActor public class SoftwareIndexViewController: UIHostingController<SoftwareIndexView> {
 
-    public weak var delegate: PsionSoftwareIndexViewControllerDelegate?
+    public weak var delegate: SoftwareIndexViewControllerDelegate?
 
-    private var libraryModel: LibraryModel
+    private var libraryModel: SoftwareIndexLibraryModel
 
     public init(filter: @escaping (SoftwareIndex.Release) -> Bool = { _ in true }) {
-        self.libraryModel = LibraryModel(filter: filter)
+        self.libraryModel = SoftwareIndexLibraryModel(filter: filter)
         super.init(rootView: SoftwareIndexView(model: libraryModel))
         libraryModel.delegate = self
     }
@@ -49,16 +47,14 @@ public protocol PsionSoftwareIndexViewControllerDelegate: AnyObject {
 
 }
 
-extension PsionSoftwareIndexViewController: LibraryModelDelegate {
+extension SoftwareIndexViewController: SoftwareIndexLibraryModelDelegate {
 
-    func libraryModelDidCancel(libraryModel: LibraryModel) {
+    func libraryModelDidCancel(libraryModel: SoftwareIndexLibraryModel) {
         delegate?.psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: self)
     }
 
-    func libraryModel(libraryModel: LibraryModel, didSelectItem item: SoftwareIndexView.Item) {
+    func libraryModel(libraryModel: SoftwareIndexLibraryModel, didSelectItem item: SoftwareIndexView.Item) {
         delegate?.psionSoftwareIndexViewController(psionSoftwareIndexViewController: self, didSelectItem: item)
     }
 
 }
-
-#endif

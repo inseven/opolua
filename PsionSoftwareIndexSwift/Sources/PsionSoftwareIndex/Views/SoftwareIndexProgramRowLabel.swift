@@ -20,7 +20,7 @@
 
 import SwiftUI
 
-struct ItemView: View {
+struct SoftwareIndexProgramRowLabel: View {
 
     let imageURL: URL?
     let title: String
@@ -34,7 +34,7 @@ struct ItemView: View {
 
     var body: some View {
         HStack {
-            IconView(url: imageURL)
+            SoftwareIndexIconView(url: imageURL)
                 .padding()
             VStack(alignment: .leading) {
                 Spacer()

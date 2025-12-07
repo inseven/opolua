@@ -20,7 +20,7 @@
 
 import SwiftUI
 
-class LibraryModelBlockDelegate: LibraryModelDelegate {
+class LibraryModelBlockDelegate: SoftwareIndexLibraryModelDelegate {
 
     let complete: (SoftwareIndexView.Item?) -> Void
 
@@ -28,17 +28,16 @@ class LibraryModelBlockDelegate: LibraryModelDelegate {
         self.complete = complete
     }
 
-    func libraryModelDidCancel(libraryModel: LibraryModel) {
+    func libraryModelDidCancel(libraryModel: SoftwareIndexLibraryModel) {
         self.complete(nil)
     }
 
-    func libraryModel(libraryModel: LibraryModel, didSelectItem item: SoftwareIndexView.Item) {
+    func libraryModel(libraryModel: SoftwareIndexLibraryModel, didSelectItem item: SoftwareIndexView.Item) {
         self.complete(item)
     }
 
 }
 
-// TODO: Rename?
 public struct SoftwareIndexView: View {
 
     public struct Item {
@@ -48,11 +47,11 @@ public struct SoftwareIndexView: View {
 
     }
 
-    @StateObject var model: LibraryModel
+    @StateObject var model: SoftwareIndexLibraryModel
 
     let delegate: LibraryModelBlockDelegate?
 
-    init(model: LibraryModel) {
+    init(model: SoftwareIndexLibraryModel) {
         _model = StateObject(wrappedValue: model)
         delegate = nil
     }
@@ -60,7 +59,7 @@ public struct SoftwareIndexView: View {
     public init(filter: @escaping (SoftwareIndex.Release) -> Bool = { _ in true },
                 completion: @escaping (SoftwareIndexView.Item?) -> Void) {
         let delegate = LibraryModelBlockDelegate(complete: completion)
-        let libraryModel = LibraryModel(filter: filter)
+        let libraryModel = SoftwareIndexLibraryModel(filter: filter)
         libraryModel.delegate = delegate
         _model = StateObject(wrappedValue: libraryModel)
         self.delegate = delegate
@@ -68,7 +67,7 @@ public struct SoftwareIndexView: View {
 
     public var body: some View {
         NavigationView {
-            ProgramsView()
+            SoftwareIndexProgramsView()
                 .environmentObject(model)
         }
         .navigationViewStyle(.stack)
