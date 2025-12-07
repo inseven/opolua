@@ -339,10 +339,10 @@
 		D88851242C91149400A7F663 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				D8EA52DF2EE62B44000750C9 /* z-s7 */,
 				D893EAD4276073CA00E64219 /* Borders */,
 				DB0B919227836E70006F5CD0 /* fonts */,
 				DB9F837027D3834000940D5C /* z-s5 */,
+				D8EA52DF2EE62B44000750C9 /* z-s7 */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
