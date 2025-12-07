@@ -18,50 +18,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import Foundation
 
-extension UISplitViewController.Column {
+public struct Release: Codable, Identifiable {
 
-    var description: String {
-        switch self {
-        case .primary:
-            return ".primary"
-        case .supplementary:
-            return ".supplementary"
-        case .secondary:
-            return ".secondary"
-        case .compact:
-            return ".compact"
-        case .inspector:
-            return ".inspector"
-        @unknown default:
-            return "unknown"
-        }
+    public var id: String {
+        return uid + referenceString
     }
 
-}
+    public let uid: String  // TODO: Rename to 'identifier'
+    public let kind: Kind
+    public let name: String
+    let icon: Image?
+    let reference: [ReferenceItem]
+    public let tags: [String]
 
-extension UISplitViewController.DisplayMode {
-
-    var description: String {
-        switch self {
-        case .automatic:
-            return ".automatic"
-        case .secondaryOnly:
-            return ".secondaryOnly"
-        case .oneBesideSecondary:
-            return ".oneBesideSecondary"
-        case .oneOverSecondary:
-            return ".oneOverSecondary"
-        case .twoBesideSecondary:
-            return ".twoBesideSecondary"
-        case .twoOverSecondary:
-            return ".twoOverSecondary"
-        case .twoDisplaceSecondary:
-            return ".twoDisplaceSecondary"
-        @unknown default:
-            return "unknown"
+    var iconURL: URL? {
+        guard let icon else {
+            return nil
         }
+        return URL.softwareIndexAPIV1.appendingPathComponent(icon.path)
+    }
+
+    var referenceString: String {
+        return reference
+            .map { $0.name }
+            .joined(separator: " - ")
+    }
+
+    public var hasDownload: Bool {
+        return reference.last?.url != nil
+    }
+
+    var filename: String {
+        return reference.last!.name.lastPathComponent
+    }
+
+    var downloadURL: URL? {
+        return reference.last?.url
     }
 
 }

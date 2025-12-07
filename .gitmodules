@@ -10,6 +10,3 @@
 [submodule "LuaSwift"]
 	path = LuaSwift
 	url = git@github.com:tomsci/LuaSwift.git
-[submodule "dependencies/PsionSoftwareIndexSwift"]
-	path = dependencies/PsionSoftwareIndexSwift
-	url = git@github.com:inseven/PsionSoftwareIndexSwift.git

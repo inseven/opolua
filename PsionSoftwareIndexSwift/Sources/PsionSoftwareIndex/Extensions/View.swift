@@ -18,50 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import UIKit
+import SwiftUI
 
-extension UISplitViewController.Column {
+extension View {
 
-    var description: String {
-        switch self {
-        case .primary:
-            return ".primary"
-        case .supplementary:
-            return ".supplementary"
-        case .secondary:
-            return ".secondary"
-        case .compact:
-            return ".compact"
-        case .inspector:
-            return ".inspector"
-        @unknown default:
-            return "unknown"
+    func inlineTitle() -> some View {
+#if os(iOS)
+        if #available(iOS 17.0, *) {
+            return toolbarTitleDisplayMode(.inline)
+        } else {
+            return navigationBarTitleDisplayMode(.inline)
         }
-    }
-
-}
-
-extension UISplitViewController.DisplayMode {
-
-    var description: String {
-        switch self {
-        case .automatic:
-            return ".automatic"
-        case .secondaryOnly:
-            return ".secondaryOnly"
-        case .oneBesideSecondary:
-            return ".oneBesideSecondary"
-        case .oneOverSecondary:
-            return ".oneOverSecondary"
-        case .twoBesideSecondary:
-            return ".twoBesideSecondary"
-        case .twoOverSecondary:
-            return ".twoOverSecondary"
-        case .twoDisplaceSecondary:
-            return ".twoDisplaceSecondary"
-        @unknown default:
-            return "unknown"
-        }
+#else
+        return toolbarTitleDisplayMode(.inline)
+#endif
     }
 
 }
