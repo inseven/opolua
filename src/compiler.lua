@@ -97,7 +97,7 @@ local statemachine = {
                     return "string", string_sub(text, tokenStart, nextPos - 1)
                 end
             else
-                error('Unmatched "')
+                return "error", 'Unmatched "'
             end
         end
     end,
@@ -271,6 +271,9 @@ function lex(prog, source, language)
         local tok, val = lexmatch(prog, idx, idx, language.statemachine)
         if not tok then
             break
+        end
+        if tok == "error" then
+            synerror({src={source, line, col}}, val)
         end
         idx = idx + #val
         if tok == "newline" then
