@@ -323,6 +323,26 @@ function sortedKeys(tbl)
     return result
 end
 
+function sortedPairs(tbl)
+    local state = sortedKeys(tbl)
+    state.i = 0
+    state.tbl = tbl
+    local iterfn = function(state)
+        state.i = state.i + 1
+        local k = state[state.i]
+        if k == nil then
+            return nil, nil
+        end
+        return k, state.tbl[k]
+    end
+    -- I don't like that a dummy control var is required to be returned here even though it's never used. I don't
+    -- think Lua should conflate "control variable" with "first variable of the loop body". Since every custom iterator
+    -- I write seems to not want to expose the control var to the loop body. It's a construction optimised for pairs
+    -- and ipairs and not a lot else.
+
+    return iterfn, state, "whatevs"
+end
+
 oplpath = {}
 
 function oplpath.isabs(path)

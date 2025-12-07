@@ -159,6 +159,7 @@ function parseProc(proc)
     proc.arrays = {}
 
     local dataDefinitions, qcodePos = string.unpack("<s2", proc.data, proc.offset+1)
+    -- printf("offset=0x%08X #dataDefinitions=%d, qcodePos=%d\n", proc.offset, #dataDefinitions, qcodePos)
     local dataSize, qcodeSize, maxStack, paramsCount, dataPos = string.unpack("<HHHB", dataDefinitions)
     proc.codeSize = qcodeSize
     proc.codeOffset = qcodePos - 1
@@ -252,34 +253,133 @@ function parseProc(proc)
 
     -- print(dataPos, #dataDefinitions + 1)
     assert(dataPos == #dataDefinitions + 1, "Data header size not right?")
+
+    -- Consult globals, strings and arrays and work out every initialised variable in the procedure so we can track them
+    -- as a single ordered list (corresponding to local/global declaration order) rather than them being spread out
+    -- over globals, strings and arrays.
+    local vars = {}
+    for _, global in ipairs(proc.globals) do
+        local var = {
+            name = global.name,
+            directIdx = global.offset,
+            type = global.type,
+            isGlobal = true,
+        }
+        vars[var.directIdx] = var
+    end
+    for offset, arraySz in pairs(proc.arrays) do
+        local var = vars[offset + 2]
+        if var == nil then
+            local stringArrayVar = vars[offset + 3]
+            if stringArrayVar then
+                assert(stringArrayVar.type == DataTypes.EStringArray,
+                    "Found an unexpected variable type in a place it shouldn't be!")
+                var = stringArrayVar
+            end
+        end
+        if var == nil then
+            -- Must be a local. This directIdx may not be correct if the variable is a string array, there's no way of
+            -- knowing that here so we will fix this up below when we iterate proc.strings.
+            local directIdx = offset + 2
+            var = {
+                name = string.format("local_%04X", directIdx),
+                directIdx = directIdx,
+                -- No type because we don't know if it's a word, float etc
+            }
+            vars[var.directIdx] = var
+        end
+
+        var.arraySz = arraySz
+    end
+
+    for offset, maxLen in pairs(proc.strings) do
+        -- Since the string byte is always adjacent to the payload (with any array len before it) the correct directIdx
+        -- will always be offset + 1
+        local directIdx = offset + 1
+        local var = vars[directIdx]
+        if var == nil then
+            -- Check for a local string array that was incorrectly given a non-string array directidx above
+            -- Since there can never be variables a single byte apart I don't think there's any way this can be
+            -- ambiguous.
+            local arrayVar = vars[offset]
+            if arrayVar then
+                vars[offset] = nil
+                var = {
+                    name = string.format("local_%04X", directIdx),
+                    directIdx = directIdx,
+                    arraySz = arrayVar.arraySz,
+                }
+                vars[var.directIdx] = var
+            end
+        end
+        if var == nil then
+            -- Can't be a string array as that would've been handled above, must be a local string
+            var = {
+                name = string.format("local_%04X", directIdx),
+                directIdx = directIdx,
+            }
+            vars[var.directIdx] = var
+        end
+        var.maxLen = maxLen
+        local inferredType = var.arraySz and DataTypes.EStringArray or DataTypes.EString
+        if var.type == nil then
+            var.type = inferredType
+        else
+            assert(var.type == inferredType, "Variable type mismatch!")
+        end
+    end
+
+    -- Since indirect indexes do not overlap direct indexes, we can safely add the params and externals to vars too
+    for i, param in ipairs(proc.params) do
+        local indirectIdx = (i - 1) * 2 + proc.iTotalTableSize + 18 -- inverse of Runtime:getIndirectVar() logic
+        vars[indirectIdx] = {
+            name = string.format("param_%d", i),
+            indirectIdx = indirectIdx,
+            type = param,
+        }
+    end
+
+    for i, external in ipairs(proc.externals) do
+        local indirectIdx = (#proc.params + i - 1) * 2 + proc.iTotalTableSize + 18
+        vars[indirectIdx] = {
+            name = external.name,
+            indirectIdx = indirectIdx,
+            type = external.type,
+        }
+    end
+
+    proc.vars = vars
+
     return proc
 end
 
 function printProc(proc)
     printf("%s @ 0x%08X code=0x%08X line=%d\n", proc.name, proc.offset, proc.codeOffset, proc.lineNumber)
     local numParams = #proc.params
-    for i, param in ipairs(proc.params) do
-        local indirectIdx = (i - 1) * 2 + proc.iTotalTableSize + 18 -- inverse of Runtime:getIndirectVar() logic
-        printf("    Param %d: %s indirectIdx=0x%04X\n", i, DataTypes[param], indirectIdx)
-    end
     for _, subproc in ipairs(proc.subprocs) do
         printf('    Subproc "%s" offset=0x%04X nargs=%d\n', subproc.name, subproc.offset, subproc.numParams)
     end
-    for _, global in ipairs(proc.globals) do
-        printf('    Global "%s" (%s) offset=0x%04X\n', global.name, DataTypes[global.type], global.offset)
+
+    for idx, var in sortedPairs(proc.vars) do
+        local var = proc.vars[idx]
+        local declType = var.indirectIdx and "External" or (var.isGlobal and "Global" or "Local")
+        local szStr = ""
+        if var.arraySz then
+            szStr = string.format(" arraySz=%d", var.arraySz)
+        end
+        if var.maxLen then
+            szStr = string.format("%s maxLen=%d", szStr, var.maxLen)
+        end
+        local idxStr = var.indirectIdx and string.format("indirectIdx=0x%04X", var.indirectIdx) or
+            string.format("directIdx=0x%04X", var.directIdx)
+        printf('    %s "%s" (%s)%s %s\n',
+            declType,
+            var.name,
+            DataTypes[var.type] or "?",
+            szStr,
+            idxStr)
     end
-    for i, external in ipairs(proc.externals) do
-        local indirectIdx = (#proc.params + i - 1) * 2 + proc.iTotalTableSize + 18
-        printf('    External "%s" (%s) indirectIdx=0x%04X\n', external.name, DataTypes[external.type], indirectIdx)
-    end
-    for _, offset in ipairs(sortedKeys(proc.strings)) do
-        local maxLen = proc.strings[offset]
-        printf("    String offset=0x%04X maxLen=%d directIdx=0x%04X\n", offset, maxLen, offset + 1)
-    end
-    for _, offset in ipairs(sortedKeys(proc.arrays)) do
-        local len = proc.arrays[offset]
-        printf("    Array offset=0x%04X len=%d\n", offset, len)
-    end
+
     printf("    maxStack: %d\n", proc.maxStack)
     printf("    iDataSize: %d (0x%08X)\n", proc.iDataSize, proc.iDataSize)
     printf("    iTotalTableSize: %d (0x%08X)\n", proc.iTotalTableSize, proc.iTotalTableSize)
