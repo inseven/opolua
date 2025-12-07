@@ -57,7 +57,7 @@ public struct SoftwareIndexView: View {
         delegate = nil
     }
 
-    public init(filter: @escaping (Release) -> Bool = { _ in true },
+    public init(filter: @escaping (SoftwareIndex.Release) -> Bool = { _ in true },
                 completion: @escaping (SoftwareIndexView.Item?) -> Void) {
         let delegate = LibraryModelBlockDelegate(complete: completion)
         let libraryModel = LibraryModel(filter: filter)

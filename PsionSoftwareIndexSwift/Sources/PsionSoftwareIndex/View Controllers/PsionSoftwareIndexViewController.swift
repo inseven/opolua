@@ -37,7 +37,7 @@ public protocol PsionSoftwareIndexViewControllerDelegate: AnyObject {
 
     private var libraryModel: LibraryModel
 
-    public init(filter: @escaping (Release) -> Bool = { _ in true }) {
+    public init(filter: @escaping (SoftwareIndex.Release) -> Bool = { _ in true }) {
         self.libraryModel = LibraryModel(filter: filter)
         super.init(rootView: SoftwareIndexView(model: libraryModel))
         libraryModel.delegate = self
