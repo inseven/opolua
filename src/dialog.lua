@@ -1251,7 +1251,7 @@ end
 function DialogItemEditMulti:getTextWidth()
     local boxWidth = math.min(self:contentSize(), self.w - (self.x + self.promptWidth))
     local textWidth = boxWidth - 2
-    if self:shouldDrawScrollbar() and self.scrollbar then
+    if self:usingScrollbar() then
         textWidth = textWidth - self.scrollbar.w - 1 -- Extra -1 for the line we draw to left of scrollbar
     end
     return textWidth
@@ -1282,6 +1282,10 @@ function DialogItemEditMulti:shouldDrawScrollbar()
     return self.lines and #self.lines > self.numLines and self.numLines > 1
 end
 
+function DialogItemEditMulti:usingScrollbar()
+    return self.scrollbar and self:shouldDrawScrollbar()
+end
+
 function DialogItemEditMulti:draw()
     if self.hasFocus then
         -- So it doesn't get drawn by native side while we're drawing ourselves
@@ -1302,7 +1306,7 @@ function DialogItemEditMulti:draw()
     black()
     gAT(x + 1, texty)
 
-    local scrollbarWasVisible = self.scrollbar and self:shouldDrawScrollbar()
+    local scrollbarWasVisible = self:usingScrollbar()
     self:formatTextIntoLines()
     local shouldDrawScrollbar = self:shouldDrawScrollbar()
 
@@ -1385,7 +1389,7 @@ end
 
 function DialogItemEditMulti:handlePointerEvent(x, y, type)
     -- printf("DialogItemEditMulti:handlePointerEvent(%d, %d, %d)\n", x, y, type)
-    if self.scrollbar and (self.scrollbar.tracking or (x >= self.scrollbar.x)) then
+    if self:usingScrollbar() and (self.scrollbar.tracking or (x >= self.scrollbar.x)) then
         self.scrollbar:handlePointerEvent(x, y, type)
         if self.scrollbar.tracking and not self.capturing then
             self:drawIfNeeded()
