@@ -20,9 +20,9 @@
 
 import SwiftUI
 
-struct ProgramView: View {
+struct SoftwareIndexProgramView: View {
 
-    @EnvironmentObject private var libraryModel: LibraryModel
+    @EnvironmentObject private var libraryModel: SoftwareIndexLibraryModel
 
     var program: SoftwareIndex.Program
 
@@ -63,7 +63,7 @@ struct ProgramView: View {
                     ForEach(version.variants) { variant in
                         ForEach(variant.items, id: \.uniqueId) { item in
                             HStack(alignment: .center) {
-                                IconView(url: item.iconURL)
+                                SoftwareIndexIconView(url: item.iconURL)
                                 VStack(alignment: .leading) {
                                     Text(item.name)
                                     Text(String(item.sha256.prefix(8)))

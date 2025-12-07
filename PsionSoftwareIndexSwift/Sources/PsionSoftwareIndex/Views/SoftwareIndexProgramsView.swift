@@ -20,22 +20,21 @@
 
 import SwiftUI
 
-struct ProgramsView: View {
+struct SoftwareIndexProgramsView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    @EnvironmentObject private var libraryModel: LibraryModel
+    @EnvironmentObject private var libraryModel: SoftwareIndexLibraryModel
 
     var body: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 240))], spacing: 0) {
                 ForEach(libraryModel.filteredPrograms) { program in
                     NavigationLink {
-                        ProgramView(program: program)
+                        SoftwareIndexProgramView(program: program)
                             .environmentObject(libraryModel)
                     } label: {
-                        ItemView(imageURL: program.iconURL,
-                                 title: program.name)
+                        SoftwareIndexProgramRowLabel(imageURL: program.iconURL, title: program.name)
                     }
                     .buttonStyle(.plain)
                 }

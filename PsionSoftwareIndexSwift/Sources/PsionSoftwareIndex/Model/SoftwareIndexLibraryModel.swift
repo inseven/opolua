@@ -22,17 +22,17 @@ import Combine
 import SwiftUI
 
 /// Callbacks always occur on `MainActor`.
-protocol LibraryModelDelegate: AnyObject {
+protocol SoftwareIndexLibraryModelDelegate: AnyObject {
 
     @MainActor
-    func libraryModelDidCancel(libraryModel: LibraryModel)
+    func libraryModelDidCancel(libraryModel: SoftwareIndexLibraryModel)
 
     @MainActor
-    func libraryModel(libraryModel: LibraryModel, didSelectItem item: SoftwareIndexView.Item)
+    func libraryModel(libraryModel: SoftwareIndexLibraryModel, didSelectItem item: SoftwareIndexView.Item)
 
 }
 
-@MainActor class LibraryModel: ObservableObject {
+@MainActor class SoftwareIndexLibraryModel: ObservableObject {
 
     @Published var isLoading: Bool = true
     @Published var programs: [SoftwareIndex.Program] = []
@@ -40,7 +40,7 @@ protocol LibraryModelDelegate: AnyObject {
     @Published var filteredPrograms: [SoftwareIndex.Program] = []
     @Published var error: Error? = nil
 
-    weak var delegate: LibraryModelDelegate?
+    weak var delegate: SoftwareIndexLibraryModelDelegate?
 
     private var cancellables: Set<AnyCancellable> = []
 

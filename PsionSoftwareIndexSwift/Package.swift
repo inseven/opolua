@@ -6,7 +6,6 @@ let package = Package(
     name: "PsionSoftwareIndexSwift",
     platforms: [
         .iOS(.v15),
-        .macOS(.v14),
     ],
     products: [
         .library(
