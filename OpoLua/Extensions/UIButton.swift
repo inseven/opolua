@@ -23,11 +23,16 @@ import UIKit
 extension UIButton.Configuration {
 
     static func primaryWizardButton(title: String) -> Self {
-        var configuration: UIButton.Configuration = .borderedProminent()
-        configuration.buttonSize = .large
-        configuration.title = title
-        configuration.cornerStyle = .large
-        return configuration
+        if #available(iOS 26, *) {
+            var configuration: UIButton.Configuration = .prominentGlass()
+            configuration.title = title
+            return configuration
+        } else {
+            var configuration: UIButton.Configuration = .borderedProminent()
+            configuration.title = title
+            configuration.cornerStyle = .large
+            return configuration
+        }
     }
 
     static func silkscreen(systemImage: String) -> Self {
