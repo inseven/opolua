@@ -100,11 +100,9 @@ class InstallerIntroductionViewController: UICollectionViewController {
     private var destinationUrl: URL
 
     lazy var cancelBarButtonItem: UIBarButtonItem = {
-        let barButtonItem = UIBarButtonItem(title: "Cancel",
-                                            style: .plain,
-                                            target: self,
-                                            action: #selector(cancelTapped(sender:)))
-        return barButtonItem
+        return UIBarButtonItem(barButtonSystemItem: .cancel,
+                               target: self,
+                               action: #selector(cancelTapped(sender:)))
     }()
 
     lazy var continueButton: UIButton = {
@@ -132,7 +130,7 @@ class InstallerIntroductionViewController: UICollectionViewController {
         self.destinationUrl = preferredDestinationUrl ?? FileManager.default.documentsUrl
         let configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
         super.init(collectionViewLayout: UICollectionViewCompositionalLayout.list(using: configuration))
-        navigationItem.rightBarButtonItem = cancelBarButtonItem
+        navigationItem.leftBarButtonItem = cancelBarButtonItem
         navigationItem.hidesBackButton = true
 
         view.addSubview(footerView)

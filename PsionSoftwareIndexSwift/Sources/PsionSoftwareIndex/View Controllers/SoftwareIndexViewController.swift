@@ -23,7 +23,7 @@ import SwiftUI
 
 public protocol SoftwareIndexViewControllerDelegate: AnyObject {
 
-    func psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: SoftwareIndexViewController)
+    func psionSoftwareIndexViewControllerDidCancel(psionSoftwareIndexViewController: SoftwareIndexViewController)
     func psionSoftwareIndexViewController(psionSoftwareIndexViewController: SoftwareIndexViewController,
                                           didSelectItem item: SoftwareIndexView.Item)
 
@@ -50,7 +50,7 @@ public protocol SoftwareIndexViewControllerDelegate: AnyObject {
 extension SoftwareIndexViewController: SoftwareIndexLibraryModelDelegate {
 
     func libraryModelDidCancel(libraryModel: SoftwareIndexLibraryModel) {
-        delegate?.psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: self)
+        delegate?.psionSoftwareIndexViewControllerDidCancel(psionSoftwareIndexViewController: self)
     }
 
     func libraryModel(libraryModel: SoftwareIndexLibraryModel, didSelectItem item: SoftwareIndexView.Item) {

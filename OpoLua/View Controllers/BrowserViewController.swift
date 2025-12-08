@@ -20,26 +20,22 @@
 
 import UIKit
 
+import UniformTypeIdentifiers
+
 import PsionSoftwareIndex
 
 class BrowserViewController: UICollectionViewController {
 
     internal lazy var addBarButtonItem: UIBarButtonItem = {
-        let softwareIndexAction = UIAction(title: "Software Index",
-                                           image: UIImage(systemName: "list.dash.header.rectangle")) { [weak self] action in
+        let softwareIndexAction = UIAction(title: "Software Index...",
+                                           image: UIImage(systemName: "magnifyingglass")) { [weak self] action in
             self?.showSoftwareIndex()
         }
-        let addFolderAction = UIAction(title: "Add Folder",
-                                       image: UIImage(systemName: "folder.badge.plus")) { [weak self] action in
+        let installAction = UIAction(title: "Install...",
+                                       image: UIImage(systemName: "shippingbox")) { [weak self] action in
             self?.addFolder()
         }
-        let localActionsMenu = UIMenu(options: [.displayInline], children: [softwareIndexAction])
-        let remoteActionsMenu = UIMenu(options: [.displayInline], children: [addFolderAction])
-        let actions = [
-            localActionsMenu,
-            remoteActionsMenu,
-        ]
-        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: actions)
+        let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [installAction, softwareIndexAction])
         let addBarButtonItem = UIBarButtonItem(title: nil,
                                                image: UIImage(systemName: "plus"),
                                                primaryAction: nil,
@@ -76,7 +72,7 @@ class BrowserViewController: UICollectionViewController {
     }
 
     func addFolder() {
-        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
+        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.sis])
         documentPicker.delegate = self
         present(documentPicker, animated: true)
     }
@@ -117,19 +113,19 @@ extension BrowserViewController: UIDocumentPickerDelegate {
 
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         for url in urls {
-            addUrl(url)
+            AppDelegate.shared.install(url: url, sourceUrl: url)
         }
     }
 
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentAt url: URL) {
-        addUrl(url)
+        AppDelegate.shared.install(url: url, sourceUrl: url)
     }
 
 }
 
 extension BrowserViewController: SoftwareIndexViewControllerDelegate {
 
-    func psionSoftwareIndexViewCntrollerDidCancel(psionSoftwareIndexViewController: SoftwareIndexViewController) {
+    func psionSoftwareIndexViewControllerDidCancel(psionSoftwareIndexViewController: SoftwareIndexViewController) {
         psionSoftwareIndexViewController.dismiss(animated: true)
     }
 
