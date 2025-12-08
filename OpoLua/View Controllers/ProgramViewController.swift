@@ -256,13 +256,13 @@ class ProgramViewController: UIViewController {
         title = program.title
         view.clipsToBounds = true
 
-        bottomConstraint = scaleView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        bottomConstraint = scaleView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
 
         view.addSubview(scaleView)
         NSLayoutConstraint.activate([
-            scaleView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scaleView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scaleView.topAnchor.constraint(equalTo: view.topAnchor),
+            scaleView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            scaleView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            scaleView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             bottomConstraint,
         ])
 
