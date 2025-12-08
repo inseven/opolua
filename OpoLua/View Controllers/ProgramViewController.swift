@@ -89,8 +89,7 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var menuButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
-        configuration.image = UIImage(systemName: "filemenu.and.selection")
+        let configuration = UIButton.Configuration.silkscreen(systemImage: "filemenu.and.selection")
         let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
@@ -103,8 +102,7 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var clipboardButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
-        configuration.image = UIImage(systemName: "doc.on.clipboard")
+        let configuration: UIButton.Configuration = .silkscreen(systemImage: "doc.on.clipboard")
         let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
@@ -117,8 +115,7 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var zoomInButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
-        configuration.image = UIImage(systemName: "plus.magnifyingglass")
+        let configuration: UIButton.Configuration = .silkscreen(systemImage: "plus.magnifyingglass")
         let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
@@ -131,8 +128,7 @@ class ProgramViewController: UIViewController {
     }()
 
     lazy var zoomOutButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
-        configuration.image = UIImage(systemName: "minus.magnifyingglass")
+        let configuration: UIButton.Configuration = .silkscreen(systemImage: "minus.magnifyingglass")
         let button = UIButton(configuration: configuration, primaryAction: UIAction() { [weak self] action in
             guard let self = self else {
                 return
@@ -243,7 +239,7 @@ class ProgramViewController: UIViewController {
 
         return scaleView
     }()
-    
+
     var bottomConstraint: NSLayoutConstraint!
 
     init(settings: Settings, taskManager: TaskManager, program: Program) {
@@ -259,7 +255,7 @@ class ProgramViewController: UIViewController {
 
         title = program.title
         view.clipsToBounds = true
-        
+
         bottomConstraint = scaleView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
 
         view.addSubview(scaleView)
@@ -369,7 +365,7 @@ class ProgramViewController: UIViewController {
             self?.configureControllers()
         }
     }
-    
+
     func observeKeyboard() {
         dispatchPrecondition(condition: .onQueue(.main))
         let notificationCenter = NotificationCenter.default
@@ -384,7 +380,7 @@ class ProgramViewController: UIViewController {
             self?.adjustForKeyboard(notification: notification, keyboardShowing: false)
         }
     }
-    
+
     func adjustForKeyboard(notification: Notification, keyboardShowing: Bool) {
         guard let userInfo = notification.userInfo,
               let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
@@ -596,7 +592,7 @@ extension ProgramViewController: ProgramDelegate {
             return AppDelegate.shared.runApplication(applicationIdentifier, url: url)
         }
     }
-    
+
     func program(_ program: Program, didSetCursorPosition cursorPosition: CGPoint?) {
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.3) {
@@ -608,7 +604,7 @@ extension ProgramViewController: ProgramDelegate {
             }
         }
     }
-    
+
 }
 
 extension ProgramViewController: ProgramLifecycleObserver {

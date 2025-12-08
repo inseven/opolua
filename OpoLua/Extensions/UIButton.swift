@@ -30,4 +30,12 @@ extension UIButton.Configuration {
         return configuration
     }
 
+    static func silkscreen(systemImage: String) -> Self {
+        var configuration = UIButton.Configuration.plain()
+        configuration.cornerStyle = .fixed
+        configuration.background.cornerRadius = 0
+        configuration.image = UIImage(systemName: systemImage)
+        return configuration
+    }
+
 }
