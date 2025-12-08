@@ -62,8 +62,8 @@ class DirectoryViewController : BrowserViewController {
         let view = UIView(frame: .zero)
         view.addSubview(wallpaperPixelView)
         NSLayoutConstraint.activate([
-            wallpaperPixelView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            wallpaperPixelView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            wallpaperPixelView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            wallpaperPixelView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
         ])
         return view
     }()
