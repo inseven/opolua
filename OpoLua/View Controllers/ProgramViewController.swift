@@ -298,6 +298,9 @@ class ProgramViewController: UIViewController {
         program.resume()
         configureControllers()
         becomeFirstResponder()
+        if #available(iOS 26.0, *) {
+            navigationController?.interactiveContentPopGestureRecognizer?.isEnabled = false
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
