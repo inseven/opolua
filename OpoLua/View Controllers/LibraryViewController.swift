@@ -240,14 +240,17 @@ class LibraryViewController: UICollectionViewController {
                   !item.isReadOnly else {
                 return nil
             }
-            let action = UIContextualAction(style: .normal, title: "Done!") { action, view, completion in
+            let action = UIContextualAction(style: .destructive, title: nil) { action, view, completion in
                 if case .external(let location) = item {
                     self.deleteLocation(location)
                 }
                 completion(true)
             }
-            action.title = "Delete"
-            action.backgroundColor = .systemRed
+            if #available(iOS 26, *) {
+                action.image = UIImage(systemName: "trash")
+            } else {
+                action.title = "Remove"
+            }
             return UISwipeActionsConfiguration(actions: [action])
         }
         return UICollectionViewCompositionalLayout.list(using: configuration)
