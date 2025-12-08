@@ -74,25 +74,24 @@ struct SoftwareIndexProgramView: View {
                                 Spacer()
                                 Text(item.size.formatted(.byteCount(style: .file)))
                                     .foregroundStyle(.secondary)
-                                if let task = libraryModel.downloads[item.downloadURL] {
-                                    HStack {
+                                HStack {
+                                    if let task = libraryModel.downloads[item.downloadURL] {
                                         ProgressView(task.progress)
-                                            .progressViewStyle(.circular)
-//                                            .progressViewStyle(.unadornedCircular)  //??
+                                            .progressViewStyle(.unadornedCircular)
                                             .controlSize(.small)
                                         Button("Cancel") {
                                             libraryModel.downloads[item.downloadURL]?.cancel()
                                         }
+                                    } else {
+                                        Button {
+                                            libraryModel.download(item)
+                                        } label: {
+                                            Text("Install")
+                                        }
                                     }
-                                } else {
-                                    Button {
-                                        libraryModel.download(item)
-                                    } label: {
-                                        Text("Install")
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .buttonBorderShape(.capsule)
                                 }
+                                .buttonStyle(.bordered)
+                                .buttonBorderShape(.capsule)
                             }
                         }
                     }
