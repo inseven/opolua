@@ -72,6 +72,8 @@ protocol SoftwareIndexLibraryModelDelegate: AnyObject {
 
     @MainActor private func fetch() async {
         isLoading = true
+        error = nil
+        programs = []
         let url = URL.softwareIndexAPIV1.appendingPathComponent("programs")
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
@@ -117,8 +119,11 @@ protocol SoftwareIndexLibraryModelDelegate: AnyObject {
                 self.programs = programs
             }
         } catch {
-            self.isLoading = false
-            print("Failed to fetch data with error \(error).")
+            await MainActor.run {
+                self.isLoading = false
+                self.error = error
+                self.programs = []
+            }
         }
     }
 

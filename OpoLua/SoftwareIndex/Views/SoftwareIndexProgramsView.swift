@@ -28,7 +28,30 @@ struct SoftwareIndexProgramsView: View {
 
     var body: some View {
         VStack {
-            if libraryModel.isLoading {
+            if let error = libraryModel.error {
+                if #available(iOS 17.0, *) {
+                    ContentUnavailableView("Error",
+                                           systemImage: "exclamationmark.triangle",
+                                           description: Text(error.localizedDescription))
+                } else {
+                    Spacer()
+                    VStack {
+                        Spacer()
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundStyle(.secondary)
+                        Text("Error")
+                            .font(.title)
+                            .bold()
+                        Text(error.localizedDescription)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+            } else if libraryModel.isLoading {
                 Spacer()
                 HStack {
                     Spacer()
