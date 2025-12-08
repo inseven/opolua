@@ -54,16 +54,19 @@ class BrowserViewController: UICollectionViewController {
 
     static let blockedUIDs: Set<String> = [
         "0x1000af86",  // Strip Poker
+        "0x101f55d0",  // Mickey Mouse simulator
     ]
 
     @objc func showSoftwareIndex() {
         let indexViewController = SoftwareIndexViewController { release in
-#if RELEASE
-            guard !Self.blockedUIDs.contains(release.uid) else {
+            // Blocklist.
+            if let uid = release.uid?.lowercased(), Self.blockedUIDs.contains(uid) {
                 return false
             }
-#endif
-            return release.kind == .installer && release.tags.contains("opl")
+            // Installer, OPL, and with a title.
+            return (release.kind == .installer &&
+                    release.tags.contains("opl") &&
+                    !release.name.isEmpty)
         }
         indexViewController.delegate = self
         present(indexViewController, animated: true)
