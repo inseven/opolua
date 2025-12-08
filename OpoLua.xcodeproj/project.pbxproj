@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -48,7 +48,6 @@
 		D8647C702793540500DCC261 /* TaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8647C6F2793540500DCC261 /* TaskManager.swift */; };
 		D86724F027715B88009C7246 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724EF27715B88009C7246 /* Program.swift */; };
 		D86724F22771672A009C7246 /* InterpreterThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86724F12771672A009C7246 /* InterpreterThread.swift */; };
-		D86DF95A2EE50FF70014A9D5 /* PsionSoftwareIndex in Frameworks */ = {isa = PBXBuildFile; productRef = D86DF9592EE50FF70014A9D5 /* PsionSoftwareIndex */; };
 		D86E428A2799C0CC00D5596D /* UISplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86E42892799C0CC00D5596D /* UISplitViewController.swift */; };
 		D87A62742752A67500075CB8 /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87A62732752A67500075CB8 /* CGSize.swift */; };
 		D87A9249274C517000254DE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB79FE6427428294005E904F /* Assets.xcassets */; };
@@ -263,6 +262,10 @@
 		DBEBA4472CCCF7E7009335CA /* ViewBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewBase.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D83C2C882EE651EE00D281AA /* SoftwareIndex */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = SoftwareIndex; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		DB79FFA32742D88A005E904F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -271,7 +274,6 @@
 				D82464222C90E71B00CE8C0A /* Lua in Frameworks */,
 				D82464512C90E79C00CE8C0A /* Diligence in Frameworks */,
 				D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */,
-				D86DF95A2EE50FF70014A9D5 /* PsionSoftwareIndex in Frameworks */,
 				D824641F2C90E71100CE8C0A /* Diligence in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -479,6 +481,7 @@
 		DB79FE6127428292005E904F /* OpoLua */ = {
 			isa = PBXGroup;
 			children = (
+				D83C2C882EE651EE00D281AA /* SoftwareIndex */,
 				DB79FE6A27428294005E904F /* OpoLua.entitlements */,
 				DB79FE6927428294005E904F /* Info.plist */,
 				DB79FE6227428292005E904F /* AppDelegate.swift */,
@@ -524,12 +527,14 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				D83C2C882EE651EE00D281AA /* SoftwareIndex */,
+			);
 			name = OpoLua;
 			packageProductDependencies = (
 				D824641E2C90E71100CE8C0A /* Diligence */,
 				D82464212C90E71B00CE8C0A /* Lua */,
 				D82464502C90E79C00CE8C0A /* Diligence */,
-				D86DF9592EE50FF70014A9D5 /* PsionSoftwareIndex */,
 			);
 			productName = "OpoLua (iOS)";
 			productReference = DB79FFA62742D88A005E904F /* OpoLua.app */;
@@ -562,7 +567,6 @@
 			packageReferences = (
 				D82464202C90E71B00CE8C0A /* XCLocalSwiftPackageReference "LuaSwift" */,
 				D824644F2C90E79C00CE8C0A /* XCLocalSwiftPackageReference "dependencies/diligence" */,
-				D86DF9582EE50FF70014A9D5 /* XCLocalSwiftPackageReference "PsionSoftwareIndexSwift" */,
 			);
 			productRefGroup = DB79FE6027428292005E904F /* Products */;
 			projectDirPath = "";
@@ -937,10 +941,6 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = dependencies/diligence;
 		};
-		D86DF9582EE50FF70014A9D5 /* XCLocalSwiftPackageReference "PsionSoftwareIndexSwift" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = PsionSoftwareIndexSwift;
-		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -955,10 +955,6 @@
 		D82464502C90E79C00CE8C0A /* Diligence */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Diligence;
-		};
-		D86DF9592EE50FF70014A9D5 /* PsionSoftwareIndex */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = PsionSoftwareIndex;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

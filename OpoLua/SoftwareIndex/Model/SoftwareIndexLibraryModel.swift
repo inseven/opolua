@@ -140,13 +140,13 @@ protocol SoftwareIndexLibraryModelDelegate: AnyObject {
             }
             do {
                 // First, cean up the download task and observation.
-                DispatchQueue.main.sync {
+                _ = DispatchQueue.main.sync {
                     self.downloads.removeValue(forKey: downloadURL)
                 }
 
                 // Check for errors.
                 guard let url else {
-                    throw error ?? SoftwareIndexError.unknownDownloadFailure
+                    throw error ?? OpoLuaError.unknownDownloadFailure
                 }
 
                 // Create a temporary directory and move the downloaded contents to ensure it has the correct filename.

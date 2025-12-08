@@ -29,6 +29,7 @@ enum OpoLuaError: Error {
     case unsupportedFile
     case exceededMaximumDirectoryCount
     case cancelled
+    case unknownDownloadFailure
 
 }
 
@@ -48,6 +49,8 @@ extension OpoLuaError: LocalizedError {
             return "Exceeded the maximum number of directories; disabling monitoring."
         case .cancelled:
             return "Cancelled."
+        case .unknownDownloadFailure:
+            return "Unknown download failure"
         }
     }
 

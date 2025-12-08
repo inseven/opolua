@@ -22,8 +22,6 @@ import UIKit
 
 import UniformTypeIdentifiers
 
-import PsionSoftwareIndex
-
 class BrowserViewController: UICollectionViewController {
 
     internal lazy var addBarButtonItem: UIBarButtonItem = {
