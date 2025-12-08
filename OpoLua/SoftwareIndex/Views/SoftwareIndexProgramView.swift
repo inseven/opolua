@@ -69,7 +69,7 @@ struct SoftwareIndexProgramView: View {
                                     Text(String(item.sha256.prefix(8)))
                                         .foregroundStyle(.secondary)
                                         .font(.caption)
-//                                        .monospaced()
+                                        .monospacedCompat()
                                 }
                                 Spacer()
                                 Text(item.size.formatted(.byteCount(style: .file)))
