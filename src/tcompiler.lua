@@ -182,7 +182,7 @@ local function checkProg(prog, expected)
             proc[member] = nil
         end
 
-        for _, member in ipairs{"arrays", "externals", "globals", "params", "strings", "subprocs"} do
+        for _, member in ipairs{"arrays", "externals", "globals", "params", "strings", "subprocs", "vars"} do
             if expectedProc[member] == nil then
                 expectedProc[member] = {}
             end
@@ -667,6 +667,9 @@ checkProg(callbystr, {
     {
         name = "WOOP",
         params = { EWord },
+        vars = {
+            [18] = { indirectIdx = 18, name = "param_1", type = EWord },
+        },
         iDataSize = 20,
         op"SimpleInDirectRightSideInt", H(0x0012),
         op"PrintInt",
@@ -708,6 +711,10 @@ checkProg(globint, {
         subprocs = {
             Subproc("FN", 1, 0x25),
         },
+        vars = {
+            [0x29] = { directIdx = 0x29, name = "FOO&", type = ELong, isGlobal = true },
+            [0x2D] = { directIdx = 0x2D, name = "UNUSED&", type = ELong, isGlobal = true },
+        },
         iDataSize = 53,
         iTotalTableSize = 23,
 
@@ -737,6 +744,11 @@ checkProg(globint, {
         externals = {
             External("FOO&", ELong),
         },
+        vars = {
+            [0x21] = { indirectIdx = 0x21, name = "param_1", type = ELong },
+            [0x23] = { indirectIdx = 0x23, name = "FOO&", type = ELong },
+            [0x25] = { directIdx = 0x25, name = "NEST&", type = ELong, isGlobal = true },
+        },
         iDataSize = 45,
         iTotalTableSize = 15,
 
@@ -755,6 +767,9 @@ checkProg(globint, {
         name = "FN2&",
         externals = {
             External("NEST&", ELong),
+        },
+        vars = {
+            [0x12] = { indirectIdx = 0x12, name = "NEST&", type = ELong },
         },
         iDataSize = 20,
 
@@ -790,6 +805,9 @@ checkProg(globals, {
         strings = {
             [30] = 4,
         },
+        vars = {
+            [0x1F] = { directIdx = 0x1F, name = "FOO$", type = EString, maxLen = 4, isGlobal = true },
+        },
         iDataSize = 36,
         iTotalTableSize = 12,
 
@@ -811,6 +829,11 @@ checkProg(globals, {
         params = { EWord, EString },
         externals = {
             External("FOO$", EString),
+        },
+        vars = {
+            [0x12] = { indirectIdx = 0x12, name = "param_1", type = EWord },
+            [0x14] = { indirectIdx = 0x14, name = "param_2", type = EString },
+            [0x16] = { indirectIdx = 0x16, name = "FOO$", type = EString },
         },
         iDataSize = 24,
         op"SimpleInDirectRightSideString", H(0x0016),
@@ -857,6 +880,9 @@ checkProg(dir, {
     {
         strings = {
             [0x12] = 255,
+        },
+        vars = {
+            [0x13] = { directIdx = 0x13, name = "local_0013", type = EString, maxLen = 255 },
         },
         iDataSize = 275,
 
@@ -907,6 +933,9 @@ checkProg(extern, {
         arrays = {
             [0x1F] = 5,
         },
+        vars = {
+            [0x21] = { directIdx = 0x21, name = "ARR%", type = EWordArray, arraySz = 5, isGlobal = true },
+        },
         iDataSize = 43,
         iTotalTableSize = 13,
 
@@ -921,6 +950,9 @@ checkProg(extern, {
         name = "SUB",
         externals = {
             External("ARR%", EWordArray),
+        },
+        vars = {
+            [0x12] = { indirectIdx = 0x12, name = "ARR%", type = EWordArray },
         },
         iDataSize = 20,
 
@@ -1047,11 +1079,11 @@ ENDP
 ]]
 checkProg(vector, {
     {
-        iDataSize = 23,
-        iTotalTableSize = 5,
         subprocs = {
             { name = "VEC", numParams = 1, offset = 18 },
         },
+        iDataSize = 23,
+        iTotalTableSize = 5,
 
         op"StackByteAsWord", 5,
         op"StackByteAsWord", 0,
@@ -1061,8 +1093,11 @@ checkProg(vector, {
     },
     {
         name = "VEC",
-        iDataSize = 22,
         params = { EWord },
+        vars = {
+            [0x12] = { indirectIdx = 0x12, name = "param_1", type = EWord },
+        },
+        iDataSize = 22,
 
         op"SimpleInDirectRightSideInt", h(0x0012),
         op"Vector", h(6),
@@ -1116,10 +1151,13 @@ ENDP
 ]]
 checkProg(eval, {
     {
-        iDataSize = 84,
         strings = {
             [0x12] = 64,
         },
+        vars = {
+            [0x13] = { directIdx = 0x13, name = "local_0013", type = EString, maxLen = 64 },
+        },
+        iDataSize = 84,
 
         op"StackByteAsWord", 1,
         op"BranchIfFalse", h(94),
@@ -1177,6 +1215,9 @@ checkProg(addr, {
     {
         arrays = {
             [0x16] = 10,
+        },
+        vars = {
+            [0x18] = { directIdx = 0x18, name = "local_0018", arraySz = 10 },
         },
         iDataSize = 64,
 
