@@ -27,19 +27,31 @@ struct SoftwareIndexProgramsView: View {
     @EnvironmentObject private var libraryModel: SoftwareIndexLibraryModel
 
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 240))], spacing: 0) {
-                ForEach(libraryModel.filteredPrograms) { program in
-                    NavigationLink {
-                        SoftwareIndexProgramView(program: program)
-                            .environmentObject(libraryModel)
-                    } label: {
-                        SoftwareIndexProgramRowLabel(imageURL: program.iconURL, title: program.name)
+        VStack {
+            if libraryModel.isLoading {
+                Spacer()
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+                Spacer()
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 240))], spacing: 0) {
+                        ForEach(libraryModel.filteredPrograms) { program in
+                            NavigationLink {
+                                SoftwareIndexProgramView(program: program)
+                                    .environmentObject(libraryModel)
+                            } label: {
+                                SoftwareIndexProgramRowLabel(imageURL: program.iconURL, title: program.name)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
-                    .buttonStyle(.plain)
+                    .padding(.trailing)
                 }
             }
-            .padding(.trailing)
         }
         .searchable(text: $libraryModel.searchFilter)
         .navigationTitle("Software Index")
