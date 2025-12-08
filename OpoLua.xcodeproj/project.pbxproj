@@ -11,7 +11,6 @@
 		D82464222C90E71B00CE8C0A /* Lua in Frameworks */ = {isa = PBXBuildFile; productRef = D82464212C90E71B00CE8C0A /* Lua */; };
 		D82464512C90E79C00CE8C0A /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D82464502C90E79C00CE8C0A /* Diligence */; };
 		D82D76082C9142740040265E /* src in Resources */ = {isa = PBXBuildFile; fileRef = D82D76072C9142740040265E /* src */; };
-		D86DF95A2EE50FF70014A9D5 /* PsionSoftwareIndex in Frameworks */ = {isa = PBXBuildFile; productRef = D86DF9592EE50FF70014A9D5 /* PsionSoftwareIndex */; };
 		D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C3BD692774F4A2003B1AD0 /* GameController.framework */; };
 		D8C409862C3CF6DB00C9E857 /* CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C409852C3CF6DB00C9E857 /* CGImage.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
@@ -79,7 +78,6 @@
 				D82464222C90E71B00CE8C0A /* Lua in Frameworks */,
 				D82464512C90E79C00CE8C0A /* Diligence in Frameworks */,
 				D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */,
-				D86DF95A2EE50FF70014A9D5 /* PsionSoftwareIndex in Frameworks */,
 				D824641F2C90E71100CE8C0A /* Diligence in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -157,7 +155,6 @@
 				D824641E2C90E71100CE8C0A /* Diligence */,
 				D82464212C90E71B00CE8C0A /* Lua */,
 				D82464502C90E79C00CE8C0A /* Diligence */,
-				D86DF9592EE50FF70014A9D5 /* PsionSoftwareIndex */,
 			);
 			productName = "OpoLua (iOS)";
 			productReference = DB79FFA62742D88A005E904F /* OpoLua.app */;
@@ -190,7 +187,6 @@
 			packageReferences = (
 				D82464202C90E71B00CE8C0A /* XCLocalSwiftPackageReference "LuaSwift" */,
 				D824644F2C90E79C00CE8C0A /* XCLocalSwiftPackageReference "dependencies/diligence" */,
-				D86DF9582EE50FF70014A9D5 /* XCLocalSwiftPackageReference "PsionSoftwareIndexSwift" */,
 			);
 			productRefGroup = DB79FE6027428292005E904F /* Products */;
 			projectDirPath = "";
@@ -463,10 +459,6 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = dependencies/diligence;
 		};
-		D86DF9582EE50FF70014A9D5 /* XCLocalSwiftPackageReference "PsionSoftwareIndexSwift" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = PsionSoftwareIndexSwift;
-		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -481,10 +473,6 @@
 		D82464502C90E79C00CE8C0A /* Diligence */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Diligence;
-		};
-		D86DF9592EE50FF70014A9D5 /* PsionSoftwareIndex */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = PsionSoftwareIndex;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

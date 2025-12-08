@@ -41,7 +41,7 @@ public struct SoftwareIndex {
 
     }
 
-    public enum Kind: String, Codable {
+    public enum Kind: String, Codable, Sendable {
         case installer
         case standalone
     }
@@ -74,7 +74,7 @@ public struct SoftwareIndex {
 
     }
 
-    public struct Release: Codable, Hashable {
+    public struct Release: Codable, Hashable, Sendable {
 
         public var uniqueId: String {
             return id + referenceString
