@@ -20,11 +20,11 @@ There are two versions of the app: one for iOS and macOS Catalyst written in Swi
 
 Some example OPL programs downloaded from the internet, running in OpoLua on iOS, Windows and macOS respectively:
 
-![Jumpy! Plus](screenshots/jumpy-plus.png)
+![Jumpy! Plus](assets/screenshots/jumpy-plus.png)
 
-![Vexed](screenshots/vexed.png)
+![Vexed](assets/screenshots/vexed.png)
 
-![Tile Fall](screenshots/tile-fall.png)
+![Tile Fall](assets/screenshots/tile-fall.png)
 
 ## Building the Qt version
 
