@@ -26,10 +26,13 @@ _ENV = module()
 
 -- Constants
 
-local KTbWidth = 70
+local KTbWidth_s5 = 70
+local KTbWidth_revo = 52
 local KTbBtTop_s5 = 24
+local KTbBtTop_revo = 20
 local KTbBtTop_s7 = 48
 local KTbBtH_s5 = 37
+local KTbBtH_revo = 35
 local KTbBtH_s7 = 48
 local KTbClockSize = 70
 local KTbNumComps = 6
@@ -42,6 +45,7 @@ local KTbFlgLatched = 0x04
 
 local KTbFont = KFontSquashed
 local KTbTitleFont = KFontArialNormal11
+local KTbTitleFont_revo = KFontSquashed
 local KTbClockPosX = 4
 local KTbClockHeight = 64
 
@@ -49,6 +53,7 @@ local KTbClockHeight = 64
 local TbVis, TbMenuSym, TbBtFlags, TbWinId
 
 -- Actual state
+local tbWidth
 local tbWinId
 local KTitleButtonId = 0
 local KClockButtonId = 1000 -- Not an index into buttons
@@ -61,10 +66,9 @@ local appTitleHeight
 local fgColour = { 0, 0, 0 } -- black
 local bgColour = { 0xFF, 0xFF, 0xFF } -- white
 local defaultIcon
+local titleFont
 
 function TBarLink(appLink)
-    local tbWidthVar = runtime:declareGlobal("TbWidth%")
-    tbWidthVar(KTbWidth)
     TbVis = runtime:declareGlobal("TbVis%")
     TbVis(0)
     TbMenuSym = runtime:declareGlobal("TbMenuSym%")
@@ -72,16 +76,28 @@ function TBarLink(appLink)
     local deviceName = runtime:getDeviceName()
     local maxButtons
     if deviceName == "psion-series-7" then
+        tbWidth = KTbWidth_s5
         appTitleHeight = KTbBtTop_s7
         buttonHeight = KTbBtH_s7
         maxButtons = 7 -- By inspection it looks like 7 would fit, dunno what the actual limit was
+        titleFont = KTbTitleFont
+    elseif deviceName == "psion-revo" then
+        tbWidth = KTbWidth_revo
+        appTitleHeight = KTbBtTop_revo
+        buttonHeight = KTbBtH_revo
+        maxButtons = 3        
+        titleFont = KTbTitleFont_revo
     else
+        tbWidth = KTbWidth_s5
         appTitleHeight = KTbBtTop_s5
         buttonHeight = KTbBtH_s5
         maxButtons = 4
+        titleFont = KTbTitleFont
     end
     TbBtFlags = runtime:declareGlobal("TbBtFlags%", maxButtons)
     TbWinId = runtime:declareGlobal("TbWinId%")
+    local tbWidthVar = runtime:declareGlobal("TbWidth%")
+    tbWidthVar(tbWidth)
     runtime:callProc(appLink:upper())
 end
 
@@ -97,35 +113,38 @@ local function drawButton(pos)
     gUSE(tbWinId)
     gFONT(KTbFont)
     gAT(0, appTitleHeight + (pos - 1) * buttonHeight)
-    gBUTTON(button.text, 2, KTbWidth, buttonHeight + 1, state, button.bmp, button.mask)
+    gBUTTON(button.text, 2, tbWidth, buttonHeight + 1, state, button.bmp, button.mask)
 end
 
 local function drawTitle()
     gUSE(tbWinId)
     gSTYLE(1) -- bold everything
     gAT(0, 0)
-    gFILL(KTbWidth, appTitleHeight, KgModeClear)
-    gBOX(KTbWidth, toolbarHeight)
+    gFILL(tbWidth, appTitleHeight, KgModeClear)
+    gBOX(tbWidth, toolbarHeight)
 
-    gFONT(KTbTitleFont)
+    gFONT(titleFont)
     local _, _, ascent = gTWIDTH("")
     local y = ((appTitleHeight - ascent) // 2) + ascent
     gAT(1, y)
     local align = KgPrintBCentredAligned
-    if gTWIDTH(title) > KTbWidth - 2 then
+    if gTWIDTH(title) > tbWidth - 2 then
         align = KgPrintBLeftAligned
     end
-    gPRINTB(title, KTbWidth - 2, align, 6, 6)
+    gPRINTB(title, tbWidth - 2, align, 6, 6)
 end    
 
 local function drawTitleAndClock()
     gUSE(tbWinId)
     gAT(0, 0)
-    gFILL(KTbWidth, toolbarHeight, KgModeClear)
-    gBOX(KTbWidth, toolbarHeight)
+    gFILL(tbWidth, toolbarHeight, KgModeClear)
+    gBOX(tbWidth, toolbarHeight)
     drawTitle()
-    gAT(KTbClockPosX, toolbarHeight - KTbClockHeight)
-    gCLOCK(KgClockS5System)
+    -- Not sure how the Revo clock should be drawn, for now just omit it.
+    if runtime:getDeviceName() ~= "psion-revo" then
+        gAT(KTbClockPosX, toolbarHeight - KTbClockHeight)
+        gCLOCK(KgClockS5System)
+    end
 end
 
 function TBarInit(title, screenWidth, screenHeight)
@@ -135,7 +154,7 @@ end
 
 function TBarInitC(aTitle, screenWidth, screenHeight, winMode)
     local prevId = gIDENTITY()
-    local w = KTbWidth
+    local w = tbWidth
     toolbarHeight = screenHeight
     gUPDATE(false)
     if runtime:getDeviceName() == "psion-series-7" then
@@ -164,7 +183,7 @@ end
 function TBarButt(shortcut, pos, text, state, bmp, mask, flags)
     local prevId = gIDENTITY()
     if bmp == 0 then
-        if defaultIcon == nil then
+        if defaultIcon == nil and runtime:getDeviceName() ~= "psion-revo" then
             defaultIcon = gCREATEBIT(24, 24, 0)
             gCLS()
             gBORDER(0)
@@ -200,7 +219,7 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
         butId = 1 + ((ptrY - appTitleHeight) // buttonHeight)
     end
 
-    if winId ~= tbWinId or ptrY < 0 or ptrX < 0 or ptrX >= KTbWidth then
+    if winId ~= tbWinId or ptrY < 0 or ptrX < 0 or ptrX >= tbWidth then
         butId = nil
     elseif butId < 0 or (butId > 0 and butId ~= KClockButtonId and not buttons[butId]) then
         butId = nil
