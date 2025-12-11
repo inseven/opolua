@@ -11,6 +11,7 @@
 		D82464222C90E71B00CE8C0A /* Lua in Frameworks */ = {isa = PBXBuildFile; productRef = D82464212C90E71B00CE8C0A /* Lua */; };
 		D82464512C90E79C00CE8C0A /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D82464502C90E79C00CE8C0A /* Diligence */; };
 		D82D76082C9142740040265E /* src in Resources */ = {isa = PBXBuildFile; fileRef = D82D76072C9142740040265E /* src */; };
+		D895332E2EEB62BD00BFCD8A /* z-revo in Resources */ = {isa = PBXBuildFile; fileRef = D895332D2EEB62BD00BFCD8A /* z-revo */; };
 		D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C3BD692774F4A2003B1AD0 /* GameController.framework */; };
 		D8C409862C3CF6DB00C9E857 /* CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C409852C3CF6DB00C9E857 /* CGImage.swift */; };
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
@@ -40,6 +41,7 @@
 
 /* Begin PBXFileReference section */
 		D82D76072C9142740040265E /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
+		D895332D2EEB62BD00BFCD8A /* z-revo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-revo"; path = "resources/z-revo"; sourceTree = "<group>"; };
 		D8C3BD692774F4A2003B1AD0 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk/System/Library/Frameworks/GameController.framework; sourceTree = DEVELOPER_DIR; };
 		D8C409852C3CF6DB00C9E857 /* CGImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGImage.swift; sourceTree = "<group>"; };
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				D8C679BC27484BF400BD8720 /* examples */,
 				D8EA52F42EE62D6B000750C9 /* fonts */,
 				D82D76072C9142740040265E /* src */,
+				D895332D2EEB62BD00BFCD8A /* z-revo */,
 				D8EA52F02EE62D21000750C9 /* z-s5 */,
 				D8EA52EE2EE62D01000750C9 /* z-s7 */,
 				D8C3BD682774F4A2003B1AD0 /* Frameworks */,
@@ -202,6 +205,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D895332E2EEB62BD00BFCD8A /* z-revo in Resources */,
 				D8EA52F52EE62D6B000750C9 /* fonts in Resources */,
 				D8EA52F32EE62D3A000750C9 /* Borders in Resources */,
 				D8EA52F12EE62D21000750C9 /* z-s5 in Resources */,
