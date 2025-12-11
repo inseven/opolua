@@ -5,7 +5,7 @@
     --background-color: #ffffff;
     --navigation-background: rgba(255, 255, 255, 0.7);
     --icon-border-color: rgba(0, 0, 0, 0.2);
-    --icon-size: 120px;
+    --icon-size: 192px;
     --navigation-padding: 1em;
     --content-width: 800px;
     --content-padding: 2em;
@@ -161,6 +161,11 @@ th, td {
     max-width: 800px;
 }
 
+.appname {
+    font-size: var(--h1-size);
+    font-weight: 100;
+}
+
 .tagline {
     font-size: 1.3em;
 }
@@ -232,29 +237,11 @@ img {
     width: var(--icon-size);
     height: var(--icon-size);
     display: inline-block;
-    margin: 8px;
 }
 
 .icon img {
     width: var(--icon-size);
     height: var(--icon-size);
-    border-radius: 17.54385965%;
-}
-
-.icon::after {
-    width: var(--icon-size);
-    height: var(--icon-size);
-    border-width: 1px;
-    border-style: solid;
-    border-color: var(--icon-border-color);
-    border-radius: 17.54385965%;
-    box-sizing: border-box;
-    content: " ";
-    display: block;
-    z-index: 10;
-    position: absolute;
-    top: 0;
-    left: 0;
 }
 
 #carousel img {
