@@ -11,6 +11,8 @@
 		D82464222C90E71B00CE8C0A /* Lua in Frameworks */ = {isa = PBXBuildFile; productRef = D82464212C90E71B00CE8C0A /* Lua */; };
 		D82464512C90E79C00CE8C0A /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D82464502C90E79C00CE8C0A /* Diligence */; };
 		D82D76082C9142740040265E /* src in Resources */ = {isa = PBXBuildFile; fileRef = D82D76072C9142740040265E /* src */; };
+		D88403EE2EEB67200044B759 /* Lua in Frameworks */ = {isa = PBXBuildFile; productRef = D88403ED2EEB67200044B759 /* Lua */; };
+		D88403F12EEB672E0044B759 /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D88403F02EEB672E0044B759 /* Diligence */; };
 		D895332E2EEB62BD00BFCD8A /* z-revo in Resources */ = {isa = PBXBuildFile; fileRef = D895332D2EEB62BD00BFCD8A /* z-revo */; };
 		D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C3BD692774F4A2003B1AD0 /* GameController.framework */; };
 		D8C409862C3CF6DB00C9E857 /* CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C409852C3CF6DB00C9E857 /* CGImage.swift */; };
@@ -40,15 +42,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D82D76072C9142740040265E /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
-		D895332D2EEB62BD00BFCD8A /* z-revo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-revo"; path = "resources/z-revo"; sourceTree = "<group>"; };
+		D82D76072C9142740040265E /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ../src; sourceTree = "<group>"; };
+		D895332D2EEB62BD00BFCD8A /* z-revo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-revo"; path = "../resources/z-revo"; sourceTree = "<group>"; };
 		D8C3BD692774F4A2003B1AD0 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS15.2.sdk/System/Library/Frameworks/GameController.framework; sourceTree = DEVELOPER_DIR; };
 		D8C409852C3CF6DB00C9E857 /* CGImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGImage.swift; sourceTree = "<group>"; };
-		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
-		D8EA52EE2EE62D01000750C9 /* z-s7 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-s7"; path = "resources/z-s7"; sourceTree = "<group>"; };
-		D8EA52F02EE62D21000750C9 /* z-s5 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-s5"; path = "resources/z-s5"; sourceTree = "<group>"; };
-		D8EA52F22EE62D3A000750C9 /* Borders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Borders; path = resources/Borders; sourceTree = "<group>"; };
-		D8EA52F42EE62D6B000750C9 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = resources/fonts; sourceTree = "<group>"; };
+		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../examples; sourceTree = "<group>"; };
+		D8EA52EE2EE62D01000750C9 /* z-s7 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-s7"; path = "../resources/z-s7"; sourceTree = "<group>"; };
+		D8EA52F02EE62D21000750C9 /* z-s5 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-s5"; path = "../resources/z-s5"; sourceTree = "<group>"; };
+		D8EA52F22EE62D3A000750C9 /* Borders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Borders; path = ../resources/Borders; sourceTree = "<group>"; };
+		D8EA52F42EE62D6B000750C9 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../resources/fonts; sourceTree = "<group>"; };
 		DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsiLuaEnv.swift; sourceTree = "<group>"; };
 		DB0B9149276E1BC5006F5CD0 /* OplKeyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OplKeyCode.swift; sourceTree = "<group>"; };
 		DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpoIoHandler_CoreGraphics.swift; sourceTree = "<group>"; };
@@ -78,9 +80,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				D82464222C90E71B00CE8C0A /* Lua in Frameworks */,
+				D88403EE2EEB67200044B759 /* Lua in Frameworks */,
 				D82464512C90E79C00CE8C0A /* Diligence in Frameworks */,
 				D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */,
 				D824641F2C90E71100CE8C0A /* Diligence in Frameworks */,
+				D88403F12EEB672E0044B759 /* Diligence in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,7 +135,8 @@
 				DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */,
 				DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */,
 			);
-			path = swift;
+			name = swift;
+			path = ../swift;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -158,6 +163,8 @@
 				D824641E2C90E71100CE8C0A /* Diligence */,
 				D82464212C90E71B00CE8C0A /* Lua */,
 				D82464502C90E79C00CE8C0A /* Diligence */,
+				D88403ED2EEB67200044B759 /* Lua */,
+				D88403F02EEB672E0044B759 /* Diligence */,
 			);
 			productName = "OpoLua (iOS)";
 			productReference = DB79FFA62742D88A005E904F /* OpoLua.app */;
@@ -188,8 +195,8 @@
 			);
 			mainGroup = DB79FE5627428292005E904F;
 			packageReferences = (
-				D82464202C90E71B00CE8C0A /* XCLocalSwiftPackageReference "LuaSwift" */,
-				D824644F2C90E79C00CE8C0A /* XCLocalSwiftPackageReference "dependencies/diligence" */,
+				D88403EC2EEB67200044B759 /* XCLocalSwiftPackageReference "LuaSwift" */,
+				D88403EF2EEB672E0044B759 /* XCLocalSwiftPackageReference "diligence" */,
 			);
 			productRefGroup = DB79FE6027428292005E904F /* Products */;
 			projectDirPath = "";
@@ -455,13 +462,13 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		D82464202C90E71B00CE8C0A /* XCLocalSwiftPackageReference "LuaSwift" */ = {
+		D88403EC2EEB67200044B759 /* XCLocalSwiftPackageReference "LuaSwift" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = LuaSwift;
 		};
-		D824644F2C90E79C00CE8C0A /* XCLocalSwiftPackageReference "dependencies/diligence" */ = {
+		D88403EF2EEB672E0044B759 /* XCLocalSwiftPackageReference "diligence" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = dependencies/diligence;
+			relativePath = diligence;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -475,6 +482,14 @@
 			productName = Lua;
 		};
 		D82464502C90E79C00CE8C0A /* Diligence */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Diligence;
+		};
+		D88403ED2EEB67200044B759 /* Lua */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Lua;
+		};
+		D88403F02EEB672E0044B759 /* Diligence */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Diligence;
 		};
