@@ -413,7 +413,7 @@ void MainWindow::updateManifest(const QString& sourceUrl)
         obj.insert("sourceUrl", sourceUrl);
     }
 
-    if (f.open(QFile::ReadWrite)) {
+    if (f.open(QFile::ReadWrite | QFile::Truncate)) {
         f.write(QJsonDocument(obj).toJson());
         f.close();
     } else {
