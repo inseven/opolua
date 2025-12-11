@@ -73,6 +73,7 @@
     <addaction name="actionSeries5"/>
     <addaction name="actionSeries7"/>
     <addaction name="actionGeofoxOne"/>
+    <addaction name="actionRevo"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -290,6 +291,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+P</string>
+   </property>
+  </action>
+  <action name="actionRevo">
+   <property name="text">
+    <string>Revo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+4</string>
    </property>
   </action>
  </widget>
