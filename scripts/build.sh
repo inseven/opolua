@@ -29,14 +29,14 @@ SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd 
 
 ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
 SRC_DIRECTORY="$ROOT_DIRECTORY/src"
-APP_DIRECTORY="$ROOT_DIRECTORY"
+APP_DIRECTORY="$ROOT_DIRECTORY/ios"
 
 BUILD_DIRECTORY="$ROOT_DIRECTORY/build"
 TEMPORARY_DIRECTORY="$ROOT_DIRECTORY/temp"
 
 KEYCHAIN_PATH="$TEMPORARY_DIRECTORY/temporary.keychain"
-MACOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-macOS.xcarchive"
-IOS_ARCHIVE_PATH="${BUILD_DIRECTORY}/Archive-iOS.xcarchive"
+MACOS_ARCHIVE_PATH="$BUILD_DIRECTORY/Archive-macOS.xcarchive"
+IOS_ARCHIVE_PATH="$BUILD_DIRECTORY/Archive-iOS.xcarchive"
 ENV_PATH="$APP_DIRECTORY/.env"
 RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/release.sh"
 
@@ -140,7 +140,7 @@ xcodebuild \
     -config Release \
     -archivePath "$IOS_ARCHIVE_PATH" \
     -destination "generic/platform=iOS" \
-    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"$KEYCHAIN_PATH\"" \
     CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
     MARKETING_VERSION=$VERSION_NUMBER \
     clean archive
@@ -159,7 +159,7 @@ xcodebuild \
     -config Release \
     -archivePath "$MACOS_ARCHIVE_PATH" \
     -destination "generic/platform=macOS,variant=Mac Catalyst" \
-    OTHER_CODE_SIGN_FLAGS="--keychain=\"${KEYCHAIN_PATH}\"" \
+    OTHER_CODE_SIGN_FLAGS="--keychain=\"$KEYCHAIN_PATH\"" \
     CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
     MARKETING_VERSION=$VERSION_NUMBER \
     clean archive
