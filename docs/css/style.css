@@ -5,7 +5,7 @@
     --background-color: #ffffff;
     --navigation-background: rgba(255, 255, 255, 0.7);
     --icon-border-color: rgba(0, 0, 0, 0.2);
-    --icon-size: 120px;
+    --icon-size: 192px;
     --navigation-padding: 1em;
     --content-width: 800px;
     --content-padding: 2em;
@@ -232,16 +232,14 @@ img {
     width: var(--icon-size);
     height: var(--icon-size);
     display: inline-block;
-    margin: 8px;
 }
 
 .icon img {
     width: var(--icon-size);
     height: var(--icon-size);
-    border-radius: 17.54385965%;
 }
 
-.icon::after {
+/* .icon::after {
     width: var(--icon-size);
     height: var(--icon-size);
     border-width: 1px;
@@ -255,7 +253,7 @@ img {
     position: absolute;
     top: 0;
     left: 0;
-}
+} */
 
 #carousel img {
     transition: opacity 2s ease-in-out;
