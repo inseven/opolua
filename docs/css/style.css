@@ -161,6 +161,11 @@ th, td {
     max-width: 800px;
 }
 
+.appname {
+    font-weight: bold;
+    font-size: 2.4em;
+}
+
 .tagline {
     font-size: 1.3em;
 }
