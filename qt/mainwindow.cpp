@@ -54,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionSeries5->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+5", nullptr));
     ui->actionSeries7->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+7", nullptr));
     ui->actionGeofoxOne->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+1", nullptr));
+    ui->actionRevo->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+4", nullptr));
 #endif
 
     statusLabel = new QLabel(this);
@@ -81,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(ui->actionSeries5, OplRuntime::Series5); });
     connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(ui->actionSeries7, OplRuntime::Series7); });
     connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(ui->actionGeofoxOne, OplRuntime::GeofoxOne); });
+    connect(ui->actionRevo, &QAction::triggered, this, [this] { setDevice(ui->actionRevo, OplRuntime::Revo); });
     connect(ui->actionFaster, &QAction::triggered, runtime, &OplRuntime::runFaster);
     connect(ui->actionSlower, &QAction::triggered, runtime, &OplRuntime::runSlower);
     connect(ui->actionDefaultSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::DefaultSpeed); });
