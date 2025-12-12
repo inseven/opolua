@@ -136,7 +136,7 @@ function installSis(hostPath, devicePath, hostDest, preselectedLang)
     local sis = require("sis")
 
     local seenApps = {}
-    local drive
+    local drive = "C"
     local changeDevice
     local selectedLang
 
@@ -145,7 +145,6 @@ function installSis(hostPath, devicePath, hostDest, preselectedLang)
             return {
                 type = "install",
                 drive = drive,
-                -- stubDir = nil,
                 lang = sisFile.languages[1]
             }
         end
@@ -248,7 +247,7 @@ function installSis(hostPath, devicePath, hostDest, preselectedLang)
             ESCAPE(false) -- Don't allow polite interruptions from here on
             return {
                 type = "install",
-                drive = "C",
+                drive = drive,
                 lang = selectedLang,
             }
         else
