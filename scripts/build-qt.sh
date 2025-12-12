@@ -86,7 +86,7 @@ qmake ..
 make
 
 # Add the Qt libraries to the app bundle.
-macdeployqt "OpoLua.app"
+# macdeployqt "OpoLua.app"
 
 # Sign the app and prepare it for notarization.
 RELEASE_BASENAME="OpoLua-Qt-$VERSION_NUMBER-$BUILD_NUMBER"
