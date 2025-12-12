@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(runtime, &OplRuntime::titleChanged, this, &MainWindow::setTitle);
     connect(runtime, &OplRuntime::runComplete, this, &MainWindow::runComplete);
     connect(runtime, &OplRuntime::installationComplete, this, &MainWindow::installationComplete);
+    connect(ui->screen, &OplScreenWidget::deviceTypeChanged, this, &MainWindow::onDeviceTypeChanged);
     // connect(runtime, &OplRuntime::escapeStateChanged, ui->actionRestart, &QAction::setEnabled);
     // connect(runtime, &OplRuntime::escapeStateChanged, ui->actionSeries5, &QAction::setEnabled);
     // connect(runtime, &OplRuntime::escapeStateChanged, ui->actionSeries7, &QAction::setEnabled);
@@ -182,15 +183,14 @@ void MainWindow::setTitle(const QString& title)
 
 void MainWindow::sizeWindowToFitInterpreter()
 {
-    // There is definitely a better way to do this...
-    QSize sz = ui->screen->sizeHint();
-    if (!sz.isEmpty()) {
-        QSize windowSz(sz.width(), sz.height() + ui->statusbar->sizeHint().height());
-        if (!ui->menubar->isNativeMenuBar()) {
-            windowSz.setHeight(windowSz.height() + ui->menubar->height());
-        }
-        resize(windowSz);
-    }
+    QSize sz = sizeHint();
+    setMinimumSize(sz);
+    setMaximumSize(sz);
+}
+
+void MainWindow::onDeviceTypeChanged()
+{
+    sizeWindowToFitInterpreter();
 }
 
 void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)
@@ -282,7 +282,6 @@ void MainWindow::setDevice(QAction* action, int device)
     currentDevice = action;
 
     getRuntime().setDeviceType((OplRuntime::DeviceType)device);
-    sizeWindowToFitInterpreter();
     getRuntime().restart();
 
     if (!mManifest.isEmpty() && getRuntime().writableCDrive()) {
@@ -432,24 +431,10 @@ void MainWindow::applyManifest()
     auto manifest = QJsonDocument::fromJson(f.readAll());
     QString device = manifest["device"].toString();
 
-    if (device == "psion-series-3c") {
-        getRuntime().setDeviceType(OplRuntime::Series3c);
-    } else if (device == "psion-series-5") {
-        getRuntime().setDeviceType(OplRuntime::Series5);
-    } else if (device == "psion-revo") {
-        getRuntime().setDeviceType(OplRuntime::Revo);
-    } else if (device == "psion-series-7") {
-        getRuntime().setDeviceType(OplRuntime::Series7);
-    } else if (device == "geofox-one") {
-        getRuntime().setDeviceType(OplRuntime::GeofoxOne);
-    } else {
-        qWarning("Unknown device type in manifest: %s", qPrintable(device));
-    }
+    getRuntime().setDeviceType(OplRuntime::toDeviceType(device));
 
     mSourceUrl = manifest["sourceUrl"].toString();
-    qDebug("sourceUrl = %s", qPrintable(mSourceUrl));
-
-    sizeWindowToFitInterpreter();
+    // qDebug("sourceUrl = %s", qPrintable(mSourceUrl));
 }
 
 QString MainWindow::getSharedDrive()
