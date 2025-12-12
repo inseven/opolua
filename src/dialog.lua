@@ -1123,7 +1123,8 @@ function DialogItemEditMulti:lineHeight()
 end
 
 function DialogItemEditMulti:contentSize()
-    return gTWIDTH(string.rep("M", self.widthChars), kDialogFont) + 2 * kEditTextSpace, self:lineHeight() * self.numLines + 3
+    local h = self:lineHeight() * self.numLines + 3
+    return gTWIDTH(string.rep("M", self.widthChars), kDialogFont) + 2 * kEditTextSpace, h
 end
 
 local function withoutNewline(line)

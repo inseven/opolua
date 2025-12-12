@@ -107,6 +107,7 @@ local langNames = {
 local function sisInstallQuery(sisFile, text, queryType)
     text = text:gsub("\r\n", KLineBreakStr)
     local w, h = gTWIDTH("M", kDialogFont)
+    local nonTextHeight = 23 + 9 + 1 + 3 -- kButtonDefaultHeight + kButtonYOffset + kDialogLineGap + DialogItemEditMulti:contentSize() space
     local ret = DIALOG {
         title = "",
         flags = KDlgNoTitle | KDlgFillScreen | KDlgDensePack,
@@ -117,7 +118,7 @@ local function sisInstallQuery(sisFile, text, queryType)
             type = dItemTypes.dEDITMULTI,
             value = text,
             widthChars = (gWIDTH() // w),
-            numLines = (gHEIGHT() // h) - 7,
+            numLines = (gHEIGHT() - nonTextHeight) // (h + 4), -- See DialogItemEditMulti:lineHeight() for the 4
             readonly = true, -- extension, not part of standard dEDITMULTI
             },
         },
