@@ -83,9 +83,11 @@ private slots:
     void spriteTimerTick();
     void onStopped();
     void clockTick();
+    void onDeviceTypeChanged();
 
 signals:
     void clockTimeChanged();
+    void deviceTypeChanged();
 
 private:
     OplRuntimeGui* mRuntime;
