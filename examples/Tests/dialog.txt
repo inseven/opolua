@@ -166,6 +166,17 @@ PROC cancelDlg:
 	GET
 ENDP
 
+PROC cancelWithChoiceDlg:
+	LOCAL result%, choice%
+	dINIT "Doom"
+	dTEXT "", "EVERYTHING IS DOOMED"
+	dCHOICE choice%, "Doom", "Doom,Doom,Doom"
+	dBUTTONS "Sob", -(%S + 512), "Reject reality", %R + 512
+	result% = DIALOG
+	PRINT "Dialog returned", result%, "choice=", choice%
+	GET
+ENDP
+
 PROC editMultiDlg:
 	LOCAL result%, buf&(16), ptr&, text$(60), len&, i%
 	i% = 0
@@ -256,7 +267,7 @@ PROC loop%:
 	REM dTEXT "", "", $800
 	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
 	dCHOICE choice%, "", "password,empty,date,time,..."
-	dCHOICE choice%, "", "buttons,bareButtons,sideButtons,cancelDlg,..."
+	dCHOICE choice%, "", "buttons,bareButtons,sideButtons,cancelDlg,cancelWithChoiceDlg,..."
 	dCHOICE choice%, "", "editmulti,file,emptychoice"
 	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
 	choice% = 2
@@ -294,10 +305,12 @@ PROC loop%:
 	ELSEIF choice% = 13
 		cancelDlg:
 	ELSEIF choice% = 14
-		editMultiDlg:
+		cancelWithChoiceDlg:
 	ELSEIF choice% = 15
-		fileDlg:
+		editMultiDlg:
 	ELSEIF choice% = 16
+		fileDlg:
+	ELSEIF choice% = 17
 		emptyChoiceDlg:
 	ENDIF
 	
