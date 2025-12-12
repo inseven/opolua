@@ -2282,8 +2282,9 @@ function DialogWindow:processEvent(ev)
             self:moveFocusTo(self.items[newIdx])
         end
     elseif k == KKeyEnter then
-        -- If we get here, there can't be a button with enter as a shortcut
-        if self:canDismiss() then
+        -- If we get here, there can't be a button with enter as a shortcut. Equally, we should ignore enter unless
+        -- there are no buttons at all
+        if self.buttons == nil and self:canDismiss() then
             return self.focussedItemIndex
         end
     elseif k == KEvPtr then
