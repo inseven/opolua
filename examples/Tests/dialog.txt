@@ -110,29 +110,47 @@ PROC textDlg:
 ENDP
 
 PROC xDlg:
-	LOCAL x$(20)
+	LOCAL x$(20), ret%
 	x$ = "12345"
 	dINIT "Password test"
 	dXINPUT x$, "Pass"
-	DIALOG
-	PRINT "Entered:", x$
+	ret% = DIALOG
+	PRINT "Password test returned", ret%, "val:", x$
 	GET
 ENDP
 
 PROC emptyDlg:
 	dINIT "No items dialog"
-	PRINT DIALOG
+	PRINT "No items dialog returned", DIALOG
 	GET
 ENDP
 
+PROC untitledDlg:
+	LOCAL ret%
+	dINIT
+	dTEXT "", "Unselectable text, no title"
+	ret% = DIALOG
+	PRINT "No title dialog returned", ret%
+
+	dINIT ""
+	dTEXT "", "Unselectable text, empty title"
+	ret% = DIALOG
+	PRINT "Empty title dialog returned", ret%
+
+	dINIT "Nope", KDlgNoTitle%
+	dTEXT "", "Unselectable text, titleless"
+	ret% = DIALOG
+	PRINT "Titleless dialog returned", ret%
+ENDP
+
 PROC dateDlg:
-	LOCAL x&
+	LOCAL x&, ret%
 	x& = DAYS(DAY, MONTH, YEAR)
 	dINIT "Date test"
 	dDATE x&, "Date", x& - 1, x& + 6
 	dTEXT "Another", "Option", KDTextAllowSelection%
-	DIALOG
-	PRINT "Entered:", x&
+	ret% = DIALOG
+	PRINT "Date test returned", ret%, "val:", x&
 	GET
 ENDP
 
@@ -268,7 +286,7 @@ PROC loop%:
 	dCHOICE choice%, "Choose", "long,float,edit,checkbox,text,..."
 	dCHOICE choice%, "", "password,empty,date,time,..."
 	dCHOICE choice%, "", "buttons,bareButtons,sideButtons,cancelDlg,cancelWithChoiceDlg,..."
-	dCHOICE choice%, "", "editmulti,file,emptychoice"
+	dCHOICE choice%, "", "editmulti,file,emptychoice,untitled"
 	dBUTTONS "OK", 13, "Cancel", -(512 + %q)
 	choice% = 2
 	dlg% = DIALOG
@@ -312,6 +330,8 @@ PROC loop%:
 		fileDlg:
 	ELSEIF choice% = 17
 		emptyChoiceDlg:
+	ELSEIF choice% = 18
+		untitledDlg:
 	ENDIF
 	
 	RETURN 1
