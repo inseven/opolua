@@ -48,9 +48,73 @@ jobs:
       run: |
         scripts/build.sh
 
+  qt-build:
+    strategy:
+      matrix:
+        os:
+        - macos-latest
+        # - ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v4
+      with:
+        path: qt-install
+        key: ${{ runner.os }}-${{ hashFiles('scripts/install-qt.sh') }}-qt
+
+    - name: Install Qt
+      run: scripts/install-qt.sh
+
+    - name: Install the tool dependencies
+      uses: jdx/mise-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install dependencies
+      run: scripts/install-dependencies.sh
+
+    # - name: Install Qt
+    #   uses: jurplel/install-qt-action@v4
+    #   with:
+    #     modules: 'qtmultimedia qt5compat'
+
+    - name: Test Lua
+      run: scripts/test.sh
+
+    - name: Build, test, and release
+      env:
+        DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64: ${{ secrets.PERSONAL_DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64 }}
+        DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD: ${{ secrets.PERSONAL_DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD }}
+
+        APPLE_API_KEY_BASE64: ${{ secrets.PERSONAL_APPLE_API_KEY_BASE64 }}
+        APPLE_API_KEY_ISSUER_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ISSUER_ID }}
+        APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
+
+      run: |
+        scripts/build-qt.sh
+
+    - name: Archive the binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: opolua-qt-${{ matrix.os }}
+        path: qt/build/build.zip
+        if-no-files-found: error
+
   website-build:
 
-      needs: [app-build]
+      needs:
+        - app-build
+        - qt-build
 
       runs-on: ubuntu-latest
 
