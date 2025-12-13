@@ -2216,7 +2216,7 @@ end
 
 local DialogWindow = class { _super = View }
 
-function DialogWindow.new(items, x, y, w, h)
+function DialogWindow.new(titleBar, items, x, y, w, h)
     local mode = runtime:isColor() and KColorgCreate256ColorMode or KColorgCreate4GrayMode
     local id = gCREATE(x, y, w, h, false, mode | KgCreateHasShadow | 0x200)
     return DialogWindow {
@@ -2228,6 +2228,7 @@ function DialogWindow.new(items, x, y, w, h)
         parent = nil,
         windowId = id,
         items = items,
+        titleBar = titleBar,
         needsRedraw = true,
     }
 end
@@ -2286,7 +2287,19 @@ function DialogWindow:processEvent(ev)
         -- If we get here, there can't be a button with enter as a shortcut. Equally, we should ignore enter unless
         -- there are no buttons at all
         if self.buttons == nil and self:canDismiss() then
-            return self.focussedItemIndex
+            local ret = self.focussedItemIndex
+            if ret == nil then
+                -- If there's no focussed item, the result should always be 1 regardless of whether there's a title bar
+                -- etc
+                return 1
+            else
+                -- The title bar counts as an item, for the purposes of the DIALOG return value (as do focusless
+                -- dTEXTs, separators etc, but we handle those correctly already).
+                if self.titleBar then
+                    ret = ret + 1
+                end
+                return ret
+            end
         end
     elseif k == KEvPtr then
         if ev[KEvAPtrWindowId]() ~= self.windowId then
@@ -2379,7 +2392,7 @@ function DIALOG(dialog)
     View.charh = gINFO().fontHeight
     local titleBar
     local h = borderWidth
-    if dialog.title and (dialog.flags & KDlgNoTitle) == 0 then
+    if dialog.flags & KDlgNoTitle == 0 then
         titleBar = DialogTitleBar {
             hMargin = hMargin,
             value = dialog.title,
@@ -2462,7 +2475,7 @@ function DIALOG(dialog)
         winY = screenHeight - h
     end
 
-    local win = DialogWindow.new(dialog.items, winX, winY, w, h)
+    local win = DialogWindow.new(titleBar, dialog.items, winX, winY, w, h)
     gFONT(kDialogFont)
     if runtime:isColor() then
         gCOLORBACKGROUND(0xCC, 0xCC, 0xCC)
