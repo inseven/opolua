@@ -85,14 +85,17 @@ cd "$BUILD_DIRECTORY"
 qmake ..
 make
 
+# Rename the app.
+mv "OpoLua.app" "OpoLua Qt.app"
+
 # Add the Qt libraries to the app bundle.
-# macdeployqt "OpoLua.app"
+# macdeployqt "OpoLua Qt.app"
 
 # Sign the app and prepare it for notarization.
 RELEASE_BASENAME="OpoLua-Qt-$VERSION_NUMBER-$BUILD_NUMBER"
 RELEASE_ZIP_BASENAME="$RELEASE_BASENAME.zip"
 RELEASE_ZIP_PATH="$BUILD_DIRECTORY/$RELEASE_ZIP_BASENAME"
-codesign -s "Developer ID Application: Jason Morley (QS82QFHKWB)" --timestamp --options runtime --deep "OpoLua.app"
+codesign -s "Developer ID Application: Jason Morley (QS82QFHKWB)" --timestamp --options runtime --deep "OpoLua Qt.app"
 
 # Install the private key.
 mkdir -p ~/.appstoreconnect/private_keys/
@@ -100,10 +103,10 @@ API_KEY_PATH=~/".appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
 echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o "$API_KEY_PATH"
 
 # Notarize and staple the app.
-build-tools notarize "OpoLua.app" \
+build-tools notarize "OpoLua Qt.app" \
     --key "$API_KEY_PATH" \
     --key-id "$APPLE_API_KEY_ID" \
     --issuer "$APPLE_API_KEY_ISSUER_ID"
 
 # Package the binary.
-zip -r "build.zip" "OpoLua.app"
+zip -r "build.zip" "OpoLua Qt.app"
