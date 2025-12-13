@@ -51,9 +51,11 @@ jobs:
   qt-build:
     strategy:
       matrix:
-        os:
-        - macos-latest
-        # - ubuntu-latest
+        include:
+        - os: macos-latest
+          script: build-qt-mac.sh
+        # - os: ubuntu-latest
+        #   script: built-qt-linux.sh
 
     runs-on: ${{ matrix.os }}
 
@@ -72,8 +74,8 @@ jobs:
         path: qt-install
         key: ${{ runner.os }}-${{ hashFiles('scripts/install-qt.sh') }}-qt
 
-    - name: Install Qt
-      run: scripts/install-qt.sh
+    # - name: Install Qt
+    #   run: scripts/install-qt.sh
 
     - name: Install the tool dependencies
       uses: jdx/mise-action@v2
@@ -83,10 +85,10 @@ jobs:
     - name: Install dependencies
       run: scripts/install-dependencies.sh
 
-    # - name: Install Qt
-    #   uses: jurplel/install-qt-action@v4
-    #   with:
-    #     modules: 'qtmultimedia qt5compat'
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        modules: 'qtmultimedia qt5compat'
 
     - name: Test Lua
       run: scripts/test.sh
