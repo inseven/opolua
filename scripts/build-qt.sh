@@ -94,8 +94,6 @@ RELEASE_ZIP_BASENAME="$RELEASE_BASENAME.zip"
 RELEASE_ZIP_PATH="$BUILD_DIRECTORY/$RELEASE_ZIP_BASENAME"
 codesign -s "Developer ID Application: Jason Morley (QS82QFHKWB)" --timestamp --options runtime --deep "OpoLua.app"
 
-# /usr/bin/ditto -c -k --keepParent "OpoLua.app" "$RELEASE_ZIP_BASENAME"
-
 # Install the private key.
 mkdir -p ~/.appstoreconnect/private_keys/
 API_KEY_PATH=~/".appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
@@ -106,21 +104,6 @@ build-tools notarize "OpoLua.app" \
     --key "$API_KEY_PATH" \
     --key-id "$APPLE_API_KEY_ID" \
     --issuer "$APPLE_API_KEY_ISSUER_ID"
-
-# Notarize the app.
-# xcrun notarytool submit "$RELEASE_ZIP_PATH" \
-    # --key "$API_KEY_PATH" \
-    # --key-id "$APPLE_API_KEY_ID" \
-    # --issuer "$APPLE_API_KEY_ISSUER_ID" \
-    # --output-format json \
-    # --wait | tee command-notarization-response.json
-# NOTARIZATION_ID=`cat command-notarization-response.json | jq -r ".id"`
-# NOTARIZATION_RESPONSE=`cat command-notarization-response.json | jq -r ".status"`
-# 
-# if [ "$NOTARIZATION_RESPONSE" != "Accepted" ] ; then
-    # echo "Failed to notarize command."
-    # exit 1
-# fi
 
 # Package the binary.
 zip -r "build.zip" "OpoLua.app"
