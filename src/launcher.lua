@@ -107,6 +107,7 @@ local langNames = {
 local function sisInstallQuery(sisFile, text, queryType)
     text = text:gsub("\r\n", KLineBreakStr)
     local w, h = gTWIDTH("M", kDialogFont)
+    local nonTextHeight = 23 + 9 + 1 + 3 -- kButtonDefaultHeight + kButtonYOffset + kDialogLineGap + DialogItemEditMulti:contentSize() space
     local ret = DIALOG {
         title = "",
         flags = KDlgNoTitle | KDlgFillScreen | KDlgDensePack,
@@ -117,7 +118,7 @@ local function sisInstallQuery(sisFile, text, queryType)
             type = dItemTypes.dEDITMULTI,
             value = text,
             widthChars = (gWIDTH() // w),
-            numLines = (gHEIGHT() // h) - 7,
+            numLines = (gHEIGHT() - nonTextHeight) // (h + 4), -- See DialogItemEditMulti:lineHeight() for the 4
             readonly = true, -- extension, not part of standard dEDITMULTI
             },
         },
@@ -129,34 +130,29 @@ local function sisInstallQuery(sisFile, text, queryType)
     return ret == KKeyEnter
 end
 
-function installSis(hostPath, devicePath, hostDest)
+function installSis(hostPath, devicePath, hostDest, preselectedLang)
     runtime:iohandler().system("setAppTitle", "Installer")
 
     local sis = require("sis")
 
     local seenApps = {}
-    local drive
+    local drive = "C"
+    local changeDevice
+    local selectedLang
 
     local function sisInstallBegin(sisFile, info)
         if not info.isRoot then
             return {
                 type = "install",
                 drive = drive,
-                -- stubDir = nil,
                 lang = sisFile.languages[1]
             }
         end
-
-        local sharedPath = runtime:iohandler().fsop("getNativePath", "D:\\")
-        local showSharedToggle = false -- sharedPath ~= nil
-        local useShared = false
 
         local textLine1
         if info.replacing then
             -- Always upgrade to same drive
             drive = info.replacing.path:sub(1, 1):upper()
-            useShared = drive == "D"
-            showSharedToggle = false
 
             textLine1 = string.format("Replace %s v%d.%02d in",
                 oplpath.basename(hostPath), info.replacing.version.major, info.replacing.version.minor)
@@ -178,59 +174,94 @@ function installSis(hostPath, devicePath, hostDest)
             end
         end
 
-        local ret
-        repeat
-            local buttons = {
+        local deviceNames = {
+            "Series 5",
+            "Series 7",
+            "Geofox One",
+            "Revo",
+        }
+        local devices = {
+            "psion-series-5",
+            "psion-series-7",
+            "geofox-one",
+            "psion-revo",
+        }
+        local deviceVar = runtime:makeTemporaryVar(DataTypes.EWord)
+        local currentDevice = runtime:getDeviceName()
+        local deviceIdx
+        for i, d in ipairs(devices) do
+            if d == currentDevice then
+                deviceIdx = i
+                break
+            end
+        end
+        assert(deviceIdx, "Unhandled device type "..currentDevice)
+        deviceVar(deviceIdx)
+
+        local items = {
+            {
+            type = dItemTypes.dTEXT,
+            align = "center",
+            value = textLine1,
+            },
+            {
+            type = dItemTypes.dTEXT,
+            align = "center",
+            value = string.format("'%s'?", hostDest),
+            }
+        }
+        if langQuery then
+            table.insert(items, langQuery)
+        end
+        table.insert(items, {
+            type = dItemTypes.dCHOICE,
+            prompt = "Device",
+            choices = deviceNames,
+            variable = deviceVar,
+            index = deviceVar(),
+        })
+
+        local ret = DIALOG {
+            title = string.format("Install %s %d.%02d",
+                sisFile.name[sisFile.languages[1]], sisFile.version.major, sisFile.version.minor),
+            flags = 0,
+            xpos = 0,
+            ypos = 0,
+            items = items,
+            buttons = {
                 { key = KKeyEsc | KDButtonNoLabel, text = "Cancel" },
                 { key = KKeyEnter | KDButtonNoLabel, text = "OK" },
-            }
-            if showSharedToggle then
-                if useShared then
-                    table.insert(buttons, 1, { key = ch's' | KDButtonPlainKey, text = "Use Separate" })
-                else
-                    table.insert(buttons, 1, { key = ch's' | KDButtonPlainKey, text = "Use Shared" })
-                end
-            end
-
-            ret = DIALOG {
-                title = string.format("Install %s %d.%02d",
-                    sisFile.name[sisFile.languages[1]], sisFile.version.major, sisFile.version.minor),
-                flags = 0,
-                xpos = 0,
-                ypos = 0,
-                items = {
-                    {
-                    type = dItemTypes.dTEXT,
-                    align = "center",
-                    value = textLine1,
-                    },
-                    {
-                    type = dItemTypes.dTEXT,
-                    align = "center",
-                    value = string.format("'%s'?", useShared and sharedPath or hostDest),
-                    },
-                    langQuery
-                },
-                buttons = buttons,
-            }
-            if ret == ch's' then
-                useShared = not useShared
-            end
-        until ret ~= ch's'
-        drive = useShared and "D" or "C"
-        local lang = sisFile.languages[langQuery and langQuery.variable() or 1]
+            },
+        }
+        selectedLang = sisFile.languages[langQuery and langQuery.variable() or 1]
 
         if ret == KKeyEnter then
+            local selectedDevice = devices[deviceVar()]
+            if selectedDevice ~= currentDevice then
+                changeDevice = selectedDevice
+                -- The usercancel is just so the sis.installSis() logic aborts cleanly, we will call it again once the
+                -- native code has switched the runtime device type.
+                return { type = "usercancel" }
+            end
+
             ESCAPE(false) -- Don't allow polite interruptions from here on
             return {
                 type = "install",
                 drive = drive,
-                -- stubDir = nil,
-                lang = lang,
+                lang = selectedLang,
             }
         else
             return { type = "usercancel" }
         end
+    end
+
+    -- This is used after a device type switch, to skip re-showing the initial installation dialog.
+    local function sisInstallBeginNoUi(sisFile, info)
+        return {
+            type = "install",
+            drive = "C",
+            lang = preselectedLang,
+        }
     end
 
     local iohandler = {
@@ -242,7 +273,7 @@ function installSis(hostPath, devicePath, hostDest)
             end
             return runtime:iohandler().fsop(cmd, path, ...)
         end,
-        sisInstallBegin = sisInstallBegin,
+        sisInstallBegin = preselectedLang and sisInstallBeginNoUi or sisInstallBegin,
         sisGetStubs = function() return "notimplemented" end,
         sisInstallQuery = sisInstallQuery,
         sisInstallRollback = function()
@@ -289,6 +320,8 @@ function installSis(hostPath, devicePath, hostDest)
         else
             return {} -- Success, but no launch
         end
+    elseif changeDevice then
+        return { setdevice = changeDevice, lang = selectedLang }
     else
         local errText
         if result.type == "usercancel" then

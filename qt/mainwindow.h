@@ -50,6 +50,7 @@ private slots:
     void installationComplete(const QString& sisPath);
     void updateRecents(const QStringList& recentFiles);
     void onSpeedChanged();
+    void onDeviceTypeChanged();
     void reportIssue();
 
 private:

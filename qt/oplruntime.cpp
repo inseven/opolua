@@ -190,6 +190,7 @@ void OplRuntime::setDeviceType(DeviceType type)
         mFs->addMapping('Z', QDir(":/psion-series-5/z"), false);
         break;
     }
+    emit deviceTypeChanged();
 }
 
 OplRuntime::DeviceType OplRuntime::getDeviceType() const
@@ -406,6 +407,24 @@ QString OplRuntime::deviceTypeToString(DeviceType type)
     }
 }
 
+OplRuntime::DeviceType OplRuntime::toDeviceType(const QString& device)
+{
+    if (device == "psion-series-3c") {
+        return Series3c;
+    } else if (device == "psion-series-5") {
+        return Series5;
+    } else if (device == "psion-revo") {
+        return Revo;
+    } else if (device == "psion-series-7") {
+        return Series7;
+    } else if (device == "geofox-one") {
+        return GeofoxOne;
+    } else {
+        qWarning("Unknown device type %s", qPrintable(device));
+        return Series5;
+    }
+}
+
 int OplRuntime::getDeviceInfo(lua_State* L)
 {
     auto sz = screenSize();
@@ -521,6 +540,11 @@ void OplRuntime::runOpo(const QString& path)
 // This fn overwrites the filesystem mappings
 void OplRuntime::runInstaller(const QString& file, const QString& displayPath)
 {
+    doRunInstaller(file, displayPath, QString());
+}
+
+void OplRuntime::doRunInstaller(const QString& file, const QString& displayPath, const QString& lang)
+{
     Q_ASSERT(mThread == nullptr);
     mLauncherCmd = "installSis";
     mFs->addSimulatedDrive('I', {file});
@@ -533,13 +557,26 @@ void OplRuntime::runInstaller(const QString& file, const QString& displayPath)
     pushValue(L, file);
     pushValue(L, QString("I:\\" + QFileInfo(file).fileName()));
     pushValue(L, displayPath);
-    mRunNextFn = [this, file]() {
+    if (!lang.isEmpty()) {
+        pushValue(L, lang);
+    }
+    mRunNextFn = [this, file, displayPath]() {
         mFs->removeMapping('I');
         if (lua_type(L, -1) != LUA_TTABLE) {
             emit runComplete(QString(), QString());
             return;
         }
         auto launch = to_string(L, -1, "launch");
+        auto changeDevice = to_string(L, -1, "setdevice");
+
+        if (!changeDevice.isEmpty()) {
+            auto lang = to_string(L, -1, "lang");
+            lua_pop(L, 1);
+            setDeviceType(toDeviceType(changeDevice));
+            doRunInstaller(file, displayPath, lang);
+            return;
+        }
+
         lua_pop(L, 1);
         emit installationComplete(file);
         if (!launch.isEmpty()) {

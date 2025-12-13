@@ -192,9 +192,9 @@
     </qresource>
 
     <qresource prefix="/images">
-        <file alias="clock_medium.png">../OpoLua/Assets.xcassets/ClockMedium.imageset/clock_med.png</file>
-        <file alias="clock_medium_color.png">../OpoLua/Assets.xcassets/ClockMediumC.imageset/image.png</file>
-        <file alias="dither_pattern.png">../OpoLua/Assets.xcassets/DitherPattern.imageset/pattern.png</file>
+        <file alias="clock_medium.png">../ios/OpoLua/Assets.xcassets/ClockMedium.imageset/clock_med.png</file>
+        <file alias="clock_medium_color.png">../ios/OpoLua/Assets.xcassets/ClockMediumC.imageset/image.png</file>
+        <file alias="dither_pattern.png">../ios/OpoLua/Assets.xcassets/DitherPattern.imageset/pattern.png</file>
         <file>opolua.png</file>
     </qresource>
 

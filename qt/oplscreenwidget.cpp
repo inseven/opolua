@@ -21,6 +21,7 @@ OplScreenWidget::OplScreenWidget(QWidget *parent)
     mRuntime = new OplRuntimeGui(this);
     mRuntime->setScreen(this);
     connect(mRuntime, &OplRuntime::runComplete, this, &OplScreenWidget::onStopped);
+    connect(mRuntime, &OplRuntime::deviceTypeChanged, this, &OplScreenWidget::onDeviceTypeChanged);
 
     setFocusPolicy(Qt::StrongFocus);
 }
@@ -64,6 +65,12 @@ QSize OplScreenWidget::sizeHint() const
     } else {
         return QSize();
     }
+}
+
+void OplScreenWidget::onDeviceTypeChanged()
+{
+    updateGeometry();
+    emit deviceTypeChanged();
 }
 
 Drawable* OplScreenWidget::getBitmap(int drawableId) const

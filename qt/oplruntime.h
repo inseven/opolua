@@ -74,6 +74,8 @@ public:
     void setDeviceType(DeviceType type);
     DeviceType getDeviceType() const;
     static QString deviceTypeToString(DeviceType type);
+    static DeviceType toDeviceType(const QString& device);
+
     Speed getSpeed() const;
     void setSpeed(Speed speed);
 
@@ -122,6 +124,7 @@ signals:
     void speedChanged();
     void debugLog(const QString& str);
     void closeEventProcessed();
+    void deviceTypeChanged();
 
 private slots:
     void onThreadExited();
@@ -166,6 +169,8 @@ private:
     static void threadFn(OplRuntime* self);
     int call(std::function<int(void)> fn);
     void didWritePixels(int numPixels);
+    void doRunInstaller(const QString& file, const QString& displayPath, const QString& lang);
+
 
     void addEvent(const Event& event);
     bool checkEventRequest_locked();
