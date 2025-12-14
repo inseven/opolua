@@ -67,13 +67,6 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: Cache Qt
-      id: cache-qt
-      uses: actions/cache@v4
-      with:
-        path: qt-install
-        key: ${{ runner.os }}-${{ hashFiles('scripts/install-qt.sh') }}-qt
-
     - name: Install the tool dependencies
       uses: jdx/mise-action@v2
       env:
