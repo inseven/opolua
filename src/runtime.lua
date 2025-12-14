@@ -1314,6 +1314,11 @@ function Runtime:checkCompletions()
     self.signal = self.signal + self.ioh.checkCompletions()
 end
 
+function Runtime:requestComplete(stat, ret)
+    stat(ret)
+    self:requestSignal()
+end
+
 function Runtime:requestSignal(num)
     self.signal = self.signal + (num or 1)
 end
