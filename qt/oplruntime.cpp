@@ -81,6 +81,7 @@ OplRuntime::OplRuntime(QObject *parent)
     , mSpeed(Fastest)
     , mInfoWinId(0)
     , mBusyWinId(0)
+    , mCursorDrawn(false)
     , mEscapeOn(true)
 {
     mFs.reset(new FileSystemIoHandler());
@@ -874,6 +875,10 @@ int OplRuntime::graphicsop(lua_State* L)
     } else if (cmd == "cursor") {
         return call([this, L] {
             mCursorTimer.reset();
+            if (mCursorDrawn) {
+                // Then clear the old cursor
+                drawCursor();
+            }
             mCursorDrawCmd = std::nullopt;
             if (lua_type(L, 2) == LUA_TTABLE) {
                 int flags = to_int(L, 2, "flags");
@@ -893,18 +898,10 @@ int OplRuntime::graphicsop(lua_State* L)
                         .size = QSize(to_int(L, 3, "w"), to_int(L, 3, "h")),
                     },
                 };
-                mScreen->beginBatchDraw();
-                mScreen->draw(*mCursorDrawCmd);
-                mScreen->endBatchDraw();
+                drawCursor();
                 if ((flags & KCursorTypeNotFlashing) == 0) {
                     mCursorTimer.reset(new QTimer());
-                    connect(mCursorTimer.get(), &QTimer::timeout, this, [this]() {
-                        if (mCursorDrawCmd.has_value()) {
-                            mScreen->beginBatchDraw();
-                            mScreen->draw(*mCursorDrawCmd);
-                            mScreen->endBatchDraw();
-                        }
-                    });
+                    connect(mCursorTimer.get(), &QTimer::timeout, this, &OplRuntime::drawCursor);
                     mCursorTimer->setTimerType(Qt::PreciseTimer);
                     mCursorTimer->start(500);
                 }
@@ -1805,4 +1802,14 @@ int OplRuntime::printHandler(lua_State* L)
     fwrite(s, 1, l, stdout);
     emit debugLog(QString::fromLatin1(s, l));
     return 0;
+}
+
+void OplRuntime::drawCursor()
+{
+    if (mCursorDrawCmd.has_value()) {
+        mScreen->beginBatchDraw();
+        mScreen->draw(*mCursorDrawCmd);
+        mScreen->endBatchDraw();
+        mCursorDrawn = !mCursorDrawn;
+    }
 }
