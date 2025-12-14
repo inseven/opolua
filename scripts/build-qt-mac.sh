@@ -89,7 +89,7 @@ make
 mv "OpoLua.app" "OpoLua Qt.app"
 
 # Add the Qt libraries to the app bundle.
-# macdeployqt "OpoLua Qt.app"
+macdeployqt "OpoLua Qt.app"
 
 # Sign the app and prepare it for notarization.
 RELEASE_BASENAME="OpoLua-Qt-$VERSION_NUMBER-$BUILD_NUMBER"
