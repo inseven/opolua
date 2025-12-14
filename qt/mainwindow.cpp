@@ -46,6 +46,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionForceClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Shift+W", nullptr));
     ui->actionRestart->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+R", nullptr));
     ui->actionReportIssue->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+P", nullptr));
+    ui->actionSoftwareIndex->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+B", nullptr));
 
     ui->actionFaster->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+=", nullptr));
     ui->actionSlower->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+-", nullptr));
@@ -88,6 +89,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionDefaultSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::DefaultSpeed); });
     connect(ui->actionFullSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::Fastest); });
     connect(ui->actionReportIssue, &QAction::triggered, this, &MainWindow::reportIssue);
+    connect(ui->actionSoftwareIndex, &QAction::triggered, this, &MainWindow::openSoftwareIndex);
     connect(runtime, &OplRuntime::debugLog, gApp, &OplApplication::appendLogging);
     connect(runtime, &OplRuntimeGui::startedRunningApp, this, &MainWindow::startedRunning);
     connect(runtime, &OplRuntime::titleChanged, this, &MainWindow::setTitle);
@@ -599,4 +601,10 @@ _Please provide details of the program you were running, and what you were doing
     query.addQueryItem("body", QUrl::toPercentEncoding(description));
     githubUrl.setQuery(query);
     QDesktopServices::openUrl(githubUrl);
+}
+
+void MainWindow::openSoftwareIndex()
+{
+    QUrl indexUrl("https://software.psion.info/", QUrl::StrictMode);
+    QDesktopServices::openUrl(indexUrl);
 }
