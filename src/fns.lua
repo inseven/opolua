@@ -396,7 +396,19 @@ function Ioa(stack, runtime) -- 0x0B
 end
 
 function Iow(stack, runtime) -- 0x0C
-    unimplemented("fns.Iow")
+    local b = runtime:addrFromInt(stack:pop())
+    local a = runtime:addrFromInt(stack:pop())
+    local fn = stack:pop()
+    local h = stack:pop()
+    -- printf("IOW(%s, %s, %s, %s)\n", h, fn, a, b)
+
+    local stat = runtime:makeTemporaryVar(DataTypes.EWord)
+    local err = runtime:IOA(h, fn, stat, a, b)
+    if err == KErrNone then
+        runtime:waitForRequest(stat)
+        err = stat()
+    end
+    stack:push(err)
 end
 
 function IoOpen(stack, runtime) -- 0x0D
@@ -895,7 +907,12 @@ function Ioc(stack, runtime) -- 0x4F
     local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     local fn = stack:pop()
     local h = stack:pop()
-    runtime:IOC(h, fn, stat, a, b)
+
+    local err = runtime:IOA(h, fn, stat, a, b)
+    if err ~= 0 then
+        runtime:requestComplete(stat, err)
+    end
+
     stack:push(0)
 end
 

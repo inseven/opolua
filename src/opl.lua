@@ -1656,13 +1656,6 @@ function IOA(h, fn, stat, a, b)
     return 0
 end
 
-function IOC(h, fn, stat, a, b)
-    local err = IOA(h, fn, stat, a, b)
-    if err ~= 0 then
-        stat(err)
-    end
-end
-
 function IOCANCEL(h)
     local f = runtime:getFile(h)
     if not f or not f.timer then
@@ -1775,16 +1768,14 @@ function PlaySoundA(var, path)
 
     local data, err = runtime:iohandler().fsop("read", path)
     if not data then
-        var(err)
-        runtime:requestSignal()
+        runtime:requestComplete(var, err)
         return
     end
 
     local sndData, err = require("sound").parseWveFile(data)
     if not sndData then
         print("Failed to decode sound data, not playing anything!")
-        var(err)
-        runtime:requestSignal()
+        runtime:requestComplete(var, err)
         return
     end
     PlaySoundPcm16(var, sndData)
