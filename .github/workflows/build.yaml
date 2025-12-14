@@ -103,7 +103,7 @@ jobs:
         APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
 
       run: |
-        scripts/build-qt.sh
+        scripts/{{ matrix.script }}
 
     - name: Archive the binary
       uses: actions/upload-artifact@v4
