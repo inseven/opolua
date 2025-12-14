@@ -391,8 +391,8 @@ void MainWindow::installationComplete(const QString& sisPath)
     auto path = getRuntime().getNativePath("C:\\");
     Q_ASSERT(!path.isEmpty());
     mManifest = manifestForDrive(path);
-    QString source(getSourceUrlForPath(sisPath));
-    updateManifest(source);
+    mSourceUrl = getSourceUrlForPath(sisPath);
+    updateManifest(mSourceUrl);
 }
 
 void MainWindow::updateManifest(const QString& sourceUrl)
