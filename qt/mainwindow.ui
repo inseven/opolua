@@ -86,6 +86,8 @@
      <string>Help</string>
     </property>
     <addaction name="actionReportIssue"/>
+    <addaction name="separator"/>
+    <addaction name="actionSoftwareIndex"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuInterpreter"/>
@@ -123,7 +125,7 @@
   </action>
   <action name="actionMenu">
    <property name="text">
-    <string>Press 'Menu' key</string>
+    <string>Press 'Menu' Key</string>
    </property>
    <property name="shortcut">
     <string>F1</string>
@@ -299,6 +301,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+4</string>
+   </property>
+  </action>
+  <action name="actionSoftwareIndex">
+   <property name="text">
+    <string>Software Index...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+B</string>
    </property>
   </action>
  </widget>

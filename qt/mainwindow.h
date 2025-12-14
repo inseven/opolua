@@ -52,6 +52,7 @@ private slots:
     void onSpeedChanged();
     void onDeviceTypeChanged();
     void reportIssue();
+    void openSoftwareIndex();
 
 private:
     void setDevice(QAction* action, int device);
