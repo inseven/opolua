@@ -176,8 +176,11 @@ class Program {
         switch configuration.device {
         case .psionSeries3c:
             break
-        case .psionSeries5, .psionRevo, .geofoxOne:
+        case .psionSeries5, .geofoxOne:
             let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s5", isDirectory: true)
+            self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
+        case .psionRevo:
+            let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-revo", isDirectory: true)
             self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
         case .psionSeries7:
             let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s7", isDirectory: true)
