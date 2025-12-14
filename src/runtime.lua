@@ -205,7 +205,8 @@ function Runtime:findProc(procName)
             return proc
         end
     end
-    error("No proc named "..procName.." found in loaded modules")
+    printf("No proc named %s found in loaded modules\n", procName)
+    error(KErrNoProc)
 end
 
 local function quoteVal(val)
