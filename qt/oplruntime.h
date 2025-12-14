@@ -128,6 +128,7 @@ signals:
 
 private slots:
     void onThreadExited();
+    void drawCursor();
 
 private:
     struct Event {
@@ -169,8 +170,6 @@ private:
     static void threadFn(OplRuntime* self);
     int call(std::function<int(void)> fn);
     void didWritePixels(int numPixels);
-    void doRunInstaller(const QString& file, const QString& displayPath, const QString& lang);
-
 
     void addEvent(const Event& event);
     bool checkEventRequest_locked();
@@ -180,7 +179,9 @@ private:
 
     static OplRuntime* getSelf(lua_State *L);
     QString tolocalstring(lua_State *L, int index);
+
     void setEscape(bool flag);
+    void doRunInstaller(const QString& file, const QString& displayPath, const QString& lang);
 
     DECLARE_IOHANDLER_FN(asyncRequest);
     DECLARE_IOHANDLER_FN(cancelRequest);
@@ -237,6 +238,7 @@ private:
 
     std::optional<OplScreen::DrawCmd> mCursorDrawCmd;
     QScopedPointer<QTimer> mCursorTimer;
+    bool mCursorDrawn;
 
     QMap<QString, QString> mConfig;
     QString mGetCmd;
