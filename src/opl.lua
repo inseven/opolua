@@ -1627,8 +1627,37 @@ end
 
 local KFnTimerRelative = 1
 local KFnTimerAbsolute = 2
+local KConsoleRequestHandle = -2
+local KIoConsoleRequestSense = 8
+local KIoConsoleRequestInquire = 12
 
 function IOA(h, fn, stat, a, b)
+    -- See CIOCollection::HandleConsoleRequest()
+    if h == KConsoleRequestHandle then
+        if fn == KIoConsoleRequestSense then
+            local screen = runtime:getGraphics().screen
+            -- rect_tl, rect_br, point_pos
+            a:write(string.pack("hhhhhh",
+                0,
+                0,
+                screen.w,
+                screen.h,
+                screen.cursorx,
+                screen.cursory))
+        elseif fn == KIoConsoleRequestInquire then
+            local screen = runtime:getGraphics().screen
+            a:write(string.pack("hhhh",
+                1, -- console window handle
+                0, -- font handle...?
+                screen.charh,
+                screen.charw))                
+        else
+            error("TODO console request"..tostring(fn))
+        end
+        runtime:requestComplete(stat, KErrNone)
+        return KErrNone
+    end
+
     local f = runtime:getFile(h)
     if not f or not f.timer then
         return KErrInvalidArgs
