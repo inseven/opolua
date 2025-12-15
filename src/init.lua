@@ -295,6 +295,9 @@ dItemTypes = enum {
 KDefaultFontUid = KFontArialNormal15
 
 FontAliases = {
+    [1] = KFontArialNormal8, -- Should be "Series 3 normal"
+    [2] = KFontArialBold8, -- Should be "Series 3 bold"
+    -- [3] = No equivalent for "Seies 3 digits"
     [4] = KFontCourierNormal8,
     [5] = KFontTimesNormal8,
     [6] = KFontTimesNormal11,
@@ -459,6 +462,9 @@ function keycodeToCharacterCode(keycode)
     if ch then
         return ch
     elseif keycode < 256 then
+        return keycode
+    elseif keycode == 292 then
+        -- diamond key, there is no "32" code because the key was removed in epoc32, so no translation needed.
         return keycode
     else
         error("Unknown keycode "..tostring(keycode))

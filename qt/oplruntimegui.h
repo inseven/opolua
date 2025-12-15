@@ -26,6 +26,7 @@ public:
     OplAppInfo getAppInfo(const QString& aifPath);
 
     QVector<OplAppInfo> getCDriveApps();
+    QVector<OplAppInfo> getMDriveApps();
 
 signals:
     void startedRunningApp(const OplAppInfo& app);

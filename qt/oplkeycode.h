@@ -130,6 +130,8 @@ enum OplKeyCode {
     irSoftkey = 10002,
     zoomInSoftkey = 10003,
     zoomOutSoftkey = 10004,
+    help = 291,
+    diamond = 292,
 };
 
 enum Modifier {
@@ -171,6 +173,7 @@ enum TEventModifiers {
 
 opl::Modifiers getOplModifiers(Qt::KeyboardModifiers modifiers);
 int32_t scancodeForKeycode(int32_t keycode);
+int32_t siboScancodeForKeycode(int32_t keycode);
 int32_t modifiersToTEventModifiers(opl::Modifiers modifiers);
 int32_t charcodeForKeycode(int32_t keycode);
 int qtKeyToOpl(int qtKey);

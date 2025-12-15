@@ -56,6 +56,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionSeries7->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+7", nullptr));
     ui->actionGeofoxOne->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+1", nullptr));
     ui->actionRevo->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+4", nullptr));
+    ui->actionSeries3->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+1", nullptr));
+    ui->actionSiena->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+2", nullptr));
+    ui->actionSeries3c->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+3", nullptr));
 #endif
 
     statusLabel = new QLabel(this);
@@ -80,6 +83,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionStop, &QAction::triggered, runtime, &OplRuntime::interrupt);
     connect(ui->actionRestart, &QAction::triggered, runtime, &OplRuntime::restart);
     connect(ui->actionMenu, &QAction::triggered, runtime, &OplRuntime::pressMenuKey);
+    connect(ui->actionDiamond, &QAction::triggered, runtime, &OplRuntime::pressDiamondKey);
+    connect(ui->actionSeries3, &QAction::triggered, this, [this] { setDevice(ui->actionSeries3, OplRuntime::Series3); });
+    connect(ui->actionSeries3c, &QAction::triggered, this, [this] { setDevice(ui->actionSeries3c, OplRuntime::Series3c); });
+    connect(ui->actionSiena, &QAction::triggered, this, [this] { setDevice(ui->actionSiena, OplRuntime::Siena); });
     connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(ui->actionSeries5, OplRuntime::Series5); });
     connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(ui->actionSeries7, OplRuntime::Series7); });
     connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(ui->actionGeofoxOne, OplRuntime::GeofoxOne); });
@@ -102,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
     // connect(runtime, &OplRuntime::escapeStateChanged, ui->actionGeofoxOne, &QAction::setEnabled);
     connect(runtime, &OplRuntime::speedChanged, this, &MainWindow::onSpeedChanged);
     connect(gApp, &OplApplication::recentFilesChanged, this, &MainWindow::updateRecents);
-    sizeWindowToFitInterpreter();
+    onDeviceTypeChanged();
     updateRecents(gApp->getRecentFiles());
     onSpeedChanged();
     gApp->updateWindowMenu(this, ui->menuWindow);
@@ -193,6 +200,15 @@ void MainWindow::sizeWindowToFitInterpreter()
 void MainWindow::onDeviceTypeChanged()
 {
     sizeWindowToFitInterpreter();
+    bool sibo = getRuntime().isSibo();
+    ui->actionDiamond->setVisible(sibo);
+    ui->actionSeries3->setVisible(sibo);
+    ui->actionSeries3c->setVisible(sibo);
+    ui->actionSiena->setVisible(sibo);
+    ui->actionSeries5->setVisible(!sibo);
+    ui->actionSeries7->setVisible(!sibo);
+    ui->actionGeofoxOne->setVisible(!sibo);
+    ui->actionRevo->setVisible(!sibo);
 }
 
 void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)
@@ -213,7 +229,7 @@ void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)
 
 void MainWindow::openDialog()
 {
-    QString file = QFileDialog::getOpenFileName(this, tr("Select OPL app"), QString(), tr("OPL Apps (*.opo *.app *.oplsys)"));
+    QString file = QFileDialog::getOpenFileName(this, tr("Select OPL app"), QString(), tr("OPL Apps (*.opo *.app *.oplsys *.opa)"));
     // qDebug("open %s", qPrintable(file));
 
     if (file.isEmpty()) {
@@ -239,16 +255,26 @@ QString MainWindow::driveForApp(const QString& appPath)
                 return dir.absolutePath();
             }
         }
+    } else if (extension == "opa") {
+        QDir dir(QFileInfo(appPath).absoluteDir());
+        if (dir.dirName().toUpper() == "APP") {
+            dir.cdUp();
+            return dir.absolutePath();
+        }
     } else if (extension == "oplsys") {
-        if (info.isDir()) {
-            // The oplsys bundle itself
-            return info.filePath() + "/c";
-        } else {
+        auto dir = QDir(info.filePath());
+        if (!info.isDir()) {
             // ie launch.oplsys
-            return info.path() + "/c";
+            dir.cdUp();
+        }
+        auto c = QFileInfo(dir, "c");
+        auto m = QFileInfo(dir, "m");
+        if (!c.isDir() && m.isDir()) {
+            return m.filePath();
+        } else {
+            return c.filePath();
         }
     }
-
 
     return QString();
 }
@@ -352,20 +378,35 @@ void MainWindow::openFile(const QString& path)
         getRuntime().setDrive(Drive::C, dest + "/c");
         getRuntime().setDrive(Drive::D, getSharedDrive());
         getRuntime().runInstaller(path, dest);
-    } else if (extension == "app" || extension == "oplsys") {
+    } else if (extension == "app" || extension == "opa" || extension == "oplsys") {
         QString drive = driveForApp(path);
         if (!drive.isEmpty()) {
+
             mManifest = manifestForDrive(drive);
             if (!mManifest.isEmpty()) {
                 applyManifest();
             }
 
-            getRuntime().setDrive(Drive::C, drive);
-            getRuntime().setDrive(Drive::D, getSharedDrive());
+            auto mainDrv = Drive::C;
+            std::optional<Drive> sharedDrv = Drive::D;
+            if (drive.endsWith("/m") || extension == "opa") {
+                mainDrv = Drive::M;
+                sharedDrv = std::nullopt;
+            }
+
+            getRuntime().setDrive(mainDrv, drive);
+            if (sharedDrv.has_value()) {
+                getRuntime().setDrive(*sharedDrv, getSharedDrive());
+            }
 
             QString appPath;
             if (extension == "app") {
                 appPath = QString("C:\\System\\Apps\\") + info.dir().dirName() + "\\" + info.fileName();
+            } else if (mainDrv == Drive::M) {
+                auto apps = getRuntime().getMDriveApps();
+                if (apps.count() == 1) {
+                    appPath = apps[0].deviceAppPath;
+                }
             } else {
                 auto apps = getRuntime().getCDriveApps();
                 if (apps.count() == 1) {

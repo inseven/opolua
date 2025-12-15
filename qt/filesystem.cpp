@@ -131,6 +131,8 @@ QString FileSystemIoHandler::getNativePath(const QString& devicePath, bool* writ
             const QString& component = components[i];
             QString foundEntry;
             if (dir.exists(component)) {
+                // qDebug() << dir;
+                // qDebug("Entry %s exists with correct case", qPrintable(component));
                 foundEntry = component;
             } else {
                 // Try a case-insensitive match

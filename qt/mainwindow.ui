@@ -27,7 +27,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -56,6 +56,7 @@
      <string>Interpreter</string>
     </property>
     <addaction name="actionMenu"/>
+    <addaction name="actionDiamond"/>
     <addaction name="actionRestart"/>
     <addaction name="actionStop"/>
     <addaction name="actionSendCloseEvent"/>
@@ -70,6 +71,9 @@
     <property name="title">
      <string>Device</string>
     </property>
+    <addaction name="actionSeries3"/>
+    <addaction name="actionSiena"/>
+    <addaction name="actionSeries3c"/>
     <addaction name="actionSeries5"/>
     <addaction name="actionSeries7"/>
     <addaction name="actionGeofoxOne"/>
@@ -125,10 +129,10 @@
   </action>
   <action name="actionMenu">
    <property name="text">
-    <string>Press 'Menu' Key</string>
+    <string>Press 'Menu' Key (F1)</string>
    </property>
-   <property name="shortcut">
-    <string>F1</string>
+   <property name="toolTip">
+    <string>Press 'Menu' Key (F1)</string>
    </property>
   </action>
   <action name="actionStop">
@@ -296,6 +300,9 @@
    </property>
   </action>
   <action name="actionRevo">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Revo</string>
    </property>
@@ -309,6 +316,47 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+B</string>
+   </property>
+  </action>
+  <action name="actionSeries3">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Series 3</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+1</string>
+   </property>
+  </action>
+  <action name="actionSeries3c">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Series 3c</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+3</string>
+   </property>
+  </action>
+  <action name="actionSiena">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Siena</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+2</string>
+   </property>
+  </action>
+  <action name="actionDiamond">
+   <property name="text">
+    <string>Press '◆' Key (F2)</string>
+   </property>
+   <property name="toolTip">
+    <string>Press '◆' Key (F2)</string>
    </property>
   </action>
  </widget>
