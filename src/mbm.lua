@@ -581,30 +581,23 @@ function makeMbm(uid2, bitmaps)
                 pixels[i + 1] = bitmap.normalizedImgData:sub(1 + bitmap.width * i * pixelSz, bitmap.width * (i + 1) * pixelSz) .. pad
             end
         end
-        local function copyPixels2()
+        local function copyPixelsPacked()
+            local pixelsPerByte = 8 // bpp
+            local rshift = 8 - bpp
             for y = 0, bitmap.height - 1 do
                 local offset = bitmap.width * y
                 local line = string_sub(bitmap.normalizedImgData, 1 + offset, offset + bitmap.width).."\0\0\0\0"
                 local x = 0
                 while x < bitmap.width do
-                    local p1, p2, p3, p4 = string_byte(line, 1 + x, x + 4)
-                    table_insert(pixels, string_char(((p4 >> 6) << 6) | ((p3 >> 6) << 4) | ((p2 >> 6) << 2) | (p1 >> 6)))
-                    x = x + 4
+                    local packedByte = 0
+                    for i = 1, pixelsPerByte do
+                        local px = string_byte(line, x + i)
+                        packedByte = packedByte | ((px >> rshift) << ((i-1) * bpp))
+                    end
+                    table_insert(pixels, string_char(packedByte))
+                    x = x + pixelsPerByte
                 end
-                table_insert(pixels, string.rep("\0", stride - (bitmap.width + 3) // 4))
-            end
-        end
-        local function copyPixels4()
-            for y = 0, bitmap.height - 1 do
-                local offset = bitmap.width * y
-                local line = string_sub(bitmap.normalizedImgData, 1 + offset, offset + bitmap.width).."\0\0\0\0"
-                local x = 0
-                while x < bitmap.width do
-                    local p1, p2 = string_byte(line, 1 + x, x + 2)
-                    table_insert(pixels, string_char(((p2 >> 4) << 4) | (p1 >> 4)))
-                    x = x + 2
-                end
-                table_insert(pixels, string.rep("\0", stride - (bitmap.width + 1) // 2))
+                table_insert(pixels, string.rep("\0", stride - (bitmap.width + pixelsPerByte - 1) // pixelsPerByte))
             end
         end
         if (bpp == 8 and not isColor) or bpp == 32 then
@@ -612,12 +605,9 @@ function makeMbm(uid2, bitmaps)
                 compression = EByteRLECompression
             end
             copyPixels832()
-        elseif bpp == 2 then
+        elseif bpp < 8 then
             compression = EByteRLECompression
-            copyPixels2()
-        elseif bpp == 4 then
-            compression = EByteRLECompression
-            copyPixels4()
+            copyPixelsPacked()
         else
             unimplemented("mbm.makeMbm.mode"..tostring(bitmap.mode))
         end
