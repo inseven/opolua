@@ -548,7 +548,11 @@ codes_sibo = setmetatable({
     [0x57] = "CallFunction_sibo",
     [0xA3] = "Compress",
     [0xD0] = "gInfo",
+    [0xEF] = "StatusWin",
     [0x100] = "gGrey_sibo",
+    [0x102] = "diamInit",
+    [0x103] = "diamPos",
+    [0x10E] = "rCache",
     [0x118] = "IllegalOpCode",
     [0x122] = "IllegalOpCode",
     [0x123] = "IllegalOpCode",
@@ -2301,6 +2305,12 @@ function dItem_dump(runtime)
     return fmt("%d (%s)%s", itemType, dItemTypes[itemType] or "?", extra)
 end
 
+function StatusWin(stack, runtime) -- 0xEF (SIBO)
+    unimplemented("StatusWin")
+end
+
+StatusWin_dump = qualifier_dump
+
 function Busy(stack, runtime) -- 0xF0
     local numParams = runtime:IP8()
     local corner, delay, str
@@ -2453,6 +2463,16 @@ function DefaultWin(stack, runtime) -- 0x101
     runtime:iohandler().graphicsop("show", id, true)
 end
 
+function diamInit(stack, runtime) -- 0x102 (SIBO)
+    unimplemented("diamInit")
+end
+
+diamInit_dump = qualifier_dump
+
+function diamPos(stack, runtime) -- 0x103 (SIBO)
+    unimplemented("diamPos")
+end
+
 function Font(stack, runtime) -- 0x104
     local style = stack:pop()
     local uid = stack:pop()
@@ -2468,6 +2488,18 @@ function FreeAlloc(stack, runtime) -- 0x10C
     local addr = runtime:addrFromInt(stack:pop())
     runtime:realloc(addr:intValue(), 0)
 end
+
+function rCache(stack, runtime) -- 0x10E (SIBO)
+    local param = runtime:IP8()
+    if param == 2 then
+        local init, max = stack:pop(2)
+        printf("CACHE %d, %d\n", init, max)
+    else
+        printf("CACHE %s\n", param == 0 and "OFF" or "ON")
+    end
+end
+
+rCache_dump = qualifier_dump
 
 function gButton(stack, runtime) -- 0x10F
     local text, type, width, height, state, bitmap, mask, layout
