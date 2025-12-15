@@ -259,6 +259,7 @@ codes_sibo = setmetatable({
     [0x02] = "Call",
     [0x1D] = "Usr",
     [0x35] = "Os",
+    [0x53] = "StatWinInfo",
     [0xD9] = "IllegalFuncOpCode",
     [0xDA] = "IllegalFuncOpCode",
     [0xDB] = "IllegalFuncOpCode",
@@ -943,6 +944,10 @@ function IoCancel(stack, runtime) -- 0x52
     stack:push(runtime:IOCANCEL(stack:pop()))
 end
 
+function StatWinInfo(stack, runtime) -- 0x53 (SIBO)
+    unimplemented("fns.StatWinInfo")
+end
+
 function FindField(stack, runtime) -- 0x54
     local flags = stack:pop()
     local num = stack:pop()
@@ -1347,7 +1352,7 @@ function ParseStr(stack, runtime) -- 0xD7
     printf("rel=%s\n", rel)
 
     f = oplpath.abs(f, rel)
-    printf("f = %s\n", f)
+    -- printf("f = %s\n", f)
 
     local _, fext = oplpath.splitext(f)
     local _, relext = oplpath.splitext(rel)
