@@ -4,6 +4,7 @@
 #ifndef OPLRUNTIME_H
 #define OPLRUNTIME_H
 
+// #include <QBitArray>
 #include <QDir>
 #include <QElapsedTimer>
 #include <QKeyEvent>
@@ -36,6 +37,7 @@ class MainThreadEvent;
 enum class Drive : char {
     C = 'C',
     D = 'D',
+    M = 'M',
 };
 
 class OplRuntime : public QObject, public OplFontProvider
@@ -44,7 +46,9 @@ class OplRuntime : public QObject, public OplFontProvider
 
 public:
     enum DeviceType {
+        Series3,
         Series3c,
+        Siena,
         Series5,
         Revo,
         Series7,
@@ -73,8 +77,10 @@ public:
     bool writableCDrive() const;
     void setDeviceType(DeviceType type);
     DeviceType getDeviceType() const;
+    bool isSibo() const;
     static QString deviceTypeToString(DeviceType type);
     static DeviceType toDeviceType(const QString& device);
+    static bool isSiboDeviceType(DeviceType type);
 
     Speed getSpeed() const;
     void setSpeed(Speed speed);
@@ -110,6 +116,7 @@ public slots:
     void interrupt();
     void restart();
     void pressMenuKey();
+    void pressDiamondKey();
     void runFaster();
     void runSlower();
     void closeEvent();
@@ -226,6 +233,7 @@ private:
     QElapsedTimer mLastOpTime;
     QMap<int, AsyncHandle*> mPendingRequests;
     QVector<Completion> mPendingCompletions;
+    // QBitArray mSiboScanArray;
     //// END protected by mMutex
     std::function<void(void)> mRunNextFn;
     QSemaphore mWaitSemaphore;

@@ -224,6 +224,10 @@ QString OplRuntime::getNativePath(const QString& devicePath) const
 QSize OplRuntime::screenSize() const
 {
     switch (mDeviceType) {
+    case Series3:
+        return QSize(240, 80);
+    case Siena:
+        return QSize(240, 160);
     case Series3c:
         return QSize(480, 160);
     case Series5:
@@ -393,8 +397,12 @@ void OplRuntime::restart()
 QString OplRuntime::deviceTypeToString(DeviceType type)
 {
     switch (type) {
+    case Series3:
+        return "psion-series-3";
     case Series3c:
         return "psion-series-3c";
+    case Siena:
+        return "psion-siena";
     case Series5:
         return "psion-series-5";
     case Revo:
@@ -403,15 +411,17 @@ QString OplRuntime::deviceTypeToString(DeviceType type)
         return "psion-series-7";
     case GeofoxOne:
         return "geofox-one";
-    default:
-        Q_UNREACHABLE();
     }
 }
 
 OplRuntime::DeviceType OplRuntime::toDeviceType(const QString& device)
 {
-    if (device == "psion-series-3c") {
+    if (device == "psion-series-3") {
+        return Series3;
+    } else if (device == "psion-series-3c") {
         return Series3c;
+    } else if (device == "psion-siena") {
+        return Siena;
     } else if (device == "psion-series-5") {
         return Series5;
     } else if (device == "psion-revo") {
@@ -426,6 +436,26 @@ OplRuntime::DeviceType OplRuntime::toDeviceType(const QString& device)
     }
 }
 
+bool OplRuntime::isSiboDeviceType(DeviceType type)
+{
+    switch (type) {
+    case Series3:
+    case Series3c:
+    case Siena:
+        return true;
+    case Series5:
+    case Revo:
+    case Series7:
+    case GeofoxOne:
+        return false;
+    }
+}
+
+bool OplRuntime::isSibo() const
+{
+    return isSiboDeviceType(mDeviceType);
+}
+
 int OplRuntime::getDeviceInfo(lua_State* L)
 {
     auto sz = screenSize();
@@ -433,7 +463,9 @@ int OplRuntime::getDeviceInfo(lua_State* L)
     lua_pushinteger(L, sz.width());
     lua_pushinteger(L, sz.height());
     switch (mDeviceType) {
+    case Series3:
     case Series3c:
+    case Siena:
         lua_pushinteger(L, KColorgCreate4GrayMode);
         break;
     case Series5:
@@ -460,7 +492,7 @@ bool OplRuntime::running() const
 
 bool OplRuntime::writableCDrive() const
 {
-    return mFs->isWritable('C');
+    return mFs->isWritable('C') || mFs->isWritable('M');
 }
 
 void OplRuntime::setEscape(bool flag) {
@@ -1152,6 +1184,13 @@ void OplRuntime::pressMenuKey()
     keyEvent(QKeyEvent(QEvent::KeyRelease, Qt::Key_F1, Qt::NoModifier));
 }
 
+void OplRuntime::pressDiamondKey()
+{
+    Q_ASSERT(isSiboDeviceType(mDeviceType));
+    keyEvent(QKeyEvent(QEvent::KeyPress, Qt::Key_F2, Qt::NoModifier));
+    keyEvent(QKeyEvent(QEvent::KeyRelease, Qt::Key_F2, Qt::NoModifier));
+}
+
 void OplRuntime::keyEvent(const QKeyEvent& event)
 {
     // qDebug("keyEvent %d type=%d repeat=%d", event.key(), event.type(), event.isAutoRepeat());
@@ -1196,7 +1235,7 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
 
     if (!oplcode) return;
 
-    int32_t scan = scancodeForKeycode(oplcode);
+    int32_t scan = isSibo() ? siboScancodeForKeycode(oplcode) : scancodeForKeycode(oplcode);
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
 
     if (event.type() == QEvent::KeyPress) {
@@ -1648,10 +1687,15 @@ int OplRuntime::utctime(lua_State *L)
 int OplRuntime::setEra(lua_State *L)
 {
     QString era(lua_tostring(L, 1));
-    if (era == "sibo") {
+    bool eraIsSibo = era == "sibo";
+    if (eraIsSibo) {
         mStringCodec = QTextCodec::codecForName("IBM 850"); // Is this the right name...?
     } else {
         mStringCodec = QTextCodec::codecForName("Windows-1252");
+    }
+
+    if (eraIsSibo != isSibo()) {
+        setDeviceType(eraIsSibo ? Series3c : Series5);
     }
     return 0;
 }
@@ -1711,17 +1755,19 @@ void OplRuntime::runSlower()
     }
 }
 
-int64_t kOpTime = 3500; // in nanoseconds
+const int64_t kOpTime = 3500; // in nanoseconds
+const int64_t kSiboMultiplier = 10;
 
 int OplRuntime::opsync(lua_State *)
 {
     auto speed = getSpeed();
+    auto optime = kOpTime * (isSibo() ? kSiboMultiplier : 1);
     if (speed != Fastest) {
         auto elapsed = mLastOpTime.nsecsElapsed();
-        if (elapsed < kOpTime) {
+        if (elapsed < optime) {
             struct timespec t;
             t.tv_sec = 0;
-            t.tv_nsec = kOpTime - elapsed;
+            t.tv_nsec = optime - elapsed;
             nanosleep(&t, NULL);
         }
         mLastOpTime.start();
@@ -1733,7 +1779,7 @@ constexpr int64_t kDelayPerPixel = 100; // In nanoseconds. Total guess.
 void OplRuntime::didWritePixels(int numPixels)
 {
     QMutexLocker lock(&mMutex);
-    int64_t delay_ns = (9 - mSpeed) * numPixels * kDelayPerPixel;
+    int64_t delay_ns = (9 - mSpeed) * numPixels * kDelayPerPixel * (isSibo() ? kSiboMultiplier : 1);
     lock.unlock();
 
     struct timespec t;
