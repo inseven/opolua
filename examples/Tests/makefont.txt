@@ -1,0 +1,97 @@
+INCLUDE "Const.oph"
+
+PROC main:
+    font:("KFontArialNormal8", KFontArialNormal8&)
+    font:("KFontArialNormal11", KFontArialNormal11&)
+    font:("KFontArialNormal13", KFontArialNormal13&)
+    font:("KFontArialNormal15", KFontArialNormal15&)
+    font:("KFontArialNormal18", KFontArialNormal18&)
+    font:("KFontArialNormal22", KFontArialNormal22&)
+    font:("KFontArialNormal27", KFontArialNormal27&)
+    font:("KFontArialNormal32", KFontArialNormal32&)
+    font:("KFontArialBold8", KFontArialBold8&)
+    font:("KFontArialBold11", KFontArialBold11&)
+    font:("KFontArialBold13", KFontArialBold13&)
+    font:("KFontCourierNormal8", KFontCourierNormal8&)
+    font:("KFontCourierNormal11", KFontCourierNormal11&)
+    font:("KFontCourierNormal13", KFontCourierNormal13&)
+    font:("KFontCourierNormal15", KFontCourierNormal15&)
+    font:("KFontCourierNormal18", KFontCourierNormal18&)
+    font:("KFontCourierNormal22", KFontCourierNormal22&)
+    font:("KFontCourierNormal27", KFontCourierNormal27&)
+    font:("KFontCourierNormal32", KFontCourierNormal32&)
+    font:("KFontCourierBold8", KFontCourierBold8&)
+    font:("KFontCourierBold11", KFontCourierBold11&)
+    font:("KFontCourierBold13", KFontCourierBold13&)
+    font:("KFontTimesNormal8", KFontTimesNormal8&)
+    font:("KFontTimesNormal11", KFontTimesNormal11&)
+    font:("KFontTimesNormal13", KFontTimesNormal13&)
+    font:("KFontTimesNormal15", KFontTimesNormal15&)
+    font:("KFontTimesNormal18", KFontTimesNormal18&)
+    font:("KFontTimesNormal22", KFontTimesNormal22&)
+    font:("KFontTimesNormal27", KFontTimesNormal27&)
+    font:("KFontTimesNormal32", KFontTimesNormal32&)
+    font:("KFontTimesBold8", KFontTimesBold8&)
+    font:("KFontTimesBold11", KFontTimesBold11&)
+    font:("KFontTimesBold13", KFontTimesBold13&)
+    font:("KFontSquashed", KFontSquashed&)
+    font:("KFontTiny4", KFontTiny4&)
+    font:("KFontEiksym15", KFontEiksym15&)
+    GET
+ENDP
+    
+PROC font:(name$, uid&)
+    LOCAL info&(48), ch%, x%, w%, d%, charh%, f%, LF$(1)
+    LF$ = CHR$(10)
+    
+    LOPEN "D:\" + HEX$(uid&) + ".json"
+    REM LPRINT HEX$(uid&)
+    LPRINT "{" ; LF$ ; "    ""name"": """ ; name$ ; """," ; LF$;
+        
+    gUPDATE OFF
+    gCLS
+    gFONT uid&
+    gINFO32 info&()
+    charh% = info&(3)
+    w% = info&(7)
+
+    LPRINT "    ""charh"": " ; charh% ; "," ; LF$;
+    LPRINT "    ""ascent"": " ; info&(5) ; "," ; LF$;
+    LPRINT "    ""maxwidth"": " ; w% ; "," ; LF$;
+    LPRINT "    ""encoding"": ""windows-1252""," ; LF$;
+    LPRINT "    ""firstch"": 0," ; LF$;
+    LPRINT "    ""widths"": [" ; LF$;
+
+    d% = gCREATEBIT(32*w%, 8*charh%)
+    gFONT uid&
+    gAT 0, info&(5)
+    ch% = 0
+    WHILE ch% < 256
+        x% = gX
+        gPRINT CHR$(ch%)
+        LPRINT "        " ; (gX - x%);
+        IF ch% < 255
+            LPRINT ",";
+        ENDIF
+        LPRINT LF$;
+        gAT x% + w%, gY
+        ch% = ch% + 1
+        IF (ch% AND 31) = 0
+            gAT 0, gY + charh%
+        ENDIF
+    ENDWH
+    LPRINT "    ]" ; LF$ ; "}";
+    gUSE 1
+    gCOPY d%, 0, 0, 32*w%, 8*charh%, 0
+    gAT 0, 10*charh%
+    gPRINT "Font height="; charh%, "+-", info&(5), info&(4), "w="; w%
+    x% = gX
+    gPRINT " "
+    w% = gX - x%
+    gPRINT "Spacew="; w%    
+    gUPDATE ON
+    gUSE d%
+    gSAVEBIT "D:\"+HEX$(uid&)+".mbm"
+    gCLOSE d%
+    LCLOSE
+ENDP

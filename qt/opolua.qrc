@@ -239,6 +239,7 @@
         <file alias="gxprint.opo">../examples/Tests/gxprint.opo</file>
         <file alias="input.opo">../examples/Tests/input.opo</file>
         <file alias="key.opo">../examples/Tests/key.opo</file>
+        <file alias="makefont.opo">../examples/Tests/makefont.opo</file>
         <file alias="menu.opo">../examples/Tests/menu.opo</file>
         <file alias="mpopup.opo">../examples/Tests/mpopup.opo</file>
         <file alias="osversion.opo">../examples/Tests/osversion.opo</file>
