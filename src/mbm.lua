@@ -776,10 +776,11 @@ function rleEncode(data, pixelSize)
         local blockLen = i - start + 1 -- Assuming b is the same type as the current block
 
         if current and b == current and blockLen == 0x81 then
-            -- We have to end the run now (without including byte i) because i won't fit
-            table.insert(result, string_char(blockLen - 2)..current)
+            -- We have to end the run now (without including byte i) because i won't fit in the 0x80 max repeat count
+            table.insert(result, string_char(0x7F)..current)
             current = nil
             start = i
+            blockLen = 1
         end
 
         if current then
@@ -803,14 +804,15 @@ function rleEncode(data, pixelSize)
                 start = i - 1
                 current = b
                 prev = nil
-            elseif blockLen == 0x7F then
+            elseif blockLen == 0x81 then
                 -- We have to end the raw block anyway due to becoming too big
-                table.insert(result, string_char(256 - blockLen))
+                table.insert(result, string_char(0x80))
                 local block = string_sub(data, indexToPos(start), indexToPos(i) - 1)
-                assert(#block == blockLen * pixelSize)
+                printf("start=%d, i=%d, #block=%d, #data=%d\n", start, i, #block, #data)
+                assert(#block == (blockLen - 1) * pixelSize)
                 table.insert(result, block)
-                start = i + 1
-                prev = nil
+                start = i
+                prev = b
             else
                 -- Keep adding to the raw block
                 prev = b
