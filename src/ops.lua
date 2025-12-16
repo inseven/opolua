@@ -2450,7 +2450,10 @@ end
 
 function gGrey_sibo(stack, runtime) -- 0x100
     local mode = stack:pop()
-    runtime:getGraphicsContext().greyMode = mode
+    local ctx = runtime:getGraphicsContext()
+    assert(ctx.isWindow and ctx.displayMode == KColorgCreate4GrayMode,
+        "Cannot call gGREY on anything other than a 2bpp window")
+    ctx.greyMode = mode
 end
 
 function DefaultWin(stack, runtime) -- 0x101

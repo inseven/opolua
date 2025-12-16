@@ -68,7 +68,7 @@ protected:
     void beginBatchDraw() override;
     void draw(const DrawCmd& command) override;
     void bitBlt(int drawableId, bool color, int width, int height, const QByteArray& data) override;
-    void copyMultiple(int srcId, int destId, QRgb color, bool invert, const QVector<QRect>& rects, const QVector<QPoint>& points) override;
+    void copyMultiple(const CopyMultipleCmd& cmd, const QVector<QRect>& rects, const QVector<QPoint>& points) override;
     void endBatchDraw() override;
     void clock(int drawableId, const ClockInfo* info) override;
     void startClockTimer();
@@ -121,14 +121,15 @@ public:
     QSize size() const;
     OplScreen::BitmapMode getMode() const { return mode; }
     virtual void setSize(const QSize& size);
-    void draw(const OplScreen::DrawCmd& cmd);
-    void drawSetPixels(Drawable& src, const QRect& srcRect, const QRect& destRect, bool invert, QRgb color);
-    void drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* mask);
+    virtual void draw(const OplScreen::DrawCmd& cmd);
+    virtual void drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect);
+    virtual void drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* mask);
     void loadFromBitmap(bool color, int width, int height, const QByteArray& data);
 
     QPixmap& getPixmap();
     QBitmap& getMask();
     void invalidateMask();
+    virtual Drawable* getGreyPlane() const;
 
     virtual void update();
 
@@ -148,6 +149,10 @@ public:
     void setPos(const QPoint& pos);
     WindowShadow* shadow() const { return mShadow; }
 
+    void draw(const OplScreen::DrawCmd& cmd) override;
+    void drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect) override;
+    void drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* mask) override;
+    Drawable* getGreyPlane() const override;
     void update() override;
     void setSprite(int spriteId, const OplScreen::Sprite* sprite);
     void animateSprites(int64_t interval_us);
@@ -158,11 +163,15 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event) override;
     virtual void mouseReleaseEvent(QMouseEvent *event) override;
 
+private:
+    Drawable& greyPlane();
+
 public:
     ClockWidget* mClock;
     QMap<int, WindowSprite> mSprites;
     WindowShadow* mShadow;
     int mShadowSize;
+    QScopedPointer<Drawable> mGreyPlane;
 };
 
 class SpriteWidget : public QLabel

@@ -338,10 +338,10 @@ static bool adjustBounds(QRect& srcRect, QRect& destRect, const QSize& srcSize, 
     return true;
 }
 
-void OplScreenWidget::copyMultiple(int srcId, int destId, uint32_t color, bool invert, const QVector<QRect>& rects, const QVector<QPoint>& points)
+void OplScreenWidget::copyMultiple(const OplScreen::CopyMultipleCmd& cmd, const QVector<QRect>& rects, const QVector<QPoint>& points)
 {
-    auto src = mDrawables.value(srcId, nullptr);
-    auto dest = mDrawables.value(destId, nullptr);
+    auto src = mDrawables.value(cmd.srcId, nullptr);
+    auto dest = mDrawables.value(cmd.destId, nullptr);
      if (!src || !dest) {
         qWarning("Bad src/dest in copyMultiple");
         return;
@@ -353,7 +353,7 @@ void OplScreenWidget::copyMultiple(int srcId, int destId, uint32_t color, bool i
         QRect srcRect = rects[i];
         QRect destRect = QRect(points[i], srcRect.size());
         if (adjustBounds(srcRect, destRect, src->size(), dest->size())) {
-            dest->drawSetPixels(*src, srcRect, destRect, invert, color);
+            dest->drawSetPixels(cmd, *src, srcRect, destRect);
         }
     }
     mBatchSeenDrawables.insert(dest);
@@ -773,11 +773,17 @@ void Drawable::invalidateMask()
     }
 }
 
-void Drawable::drawSetPixels(Drawable& src, const QRect& srcRect, const QRect& destRect, bool invert, QRgb color)
+Drawable* Drawable::getGreyPlane() const
+{
+    // Bitmaps never have a grey plane.
+    return nullptr;
+}
+
+void Drawable::drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect)
 {
     QPainter painter(&mPixmap);
-    painter.setPen(color);
-    if (invert) {
+    painter.setPen(cmd.color);
+    if (cmd.invert) {
         // See comment in drawCopy below
         QPixmap tempBuf = mPixmap.copy(destRect);
         QPainter tempPainter(&tempBuf);
@@ -886,8 +892,12 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
     , mClock(nullptr)
     , mShadow(nullptr)
     , mShadowSize(shadowSize)
+    , mGreyPlane(nullptr)
 {
     setGeometry(rect);
+    if (mode == OplScreen::monochromeWithGreyPlane) {
+        mGreyPlane.reset(new Drawable(getId(), Drawable::size(), OplScreen::gray2));
+    }
     if (mShadowSize) {
         mShadow = new WindowShadow(screen);
         mShadow->setGeometry(x() + mShadowSize, y() + mShadowSize, width(), height());
@@ -896,9 +906,90 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
     update();
 }
 
+void Window::draw(const OplScreen::DrawCmd& cmd)
+{
+    invalidateMask();
+    if (cmd.greyMode) {
+        // For simplicity of compositing, make sure any non-white colours are set to the grey level we want
+        auto greyPlaneCmd = cmd;
+        if (greyPlaneCmd.color != 0xFFFFFFFF) {
+            greyPlaneCmd.color = 0xFFAAAAAA;
+        }
+        if (greyPlaneCmd.bgcolor != 0xFFFFFFFF) {
+            greyPlaneCmd.bgcolor = 0xFFAAAAAA;
+        }
+        greyPlane().draw(greyPlaneCmd);
+    }
+
+    if (cmd.greyMode != OplScreen::drawGreyOnly) {
+        Drawable::draw(cmd);
+    }
+}
+
+void Window::drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect)
+{
+    if (cmd.greyMode) {
+        auto greyPlaneCmd = cmd;
+        if (greyPlaneCmd.color != 0xFFFFFFFF) {
+            greyPlaneCmd.color = 0xFFAAAAAA;
+        }
+        greyPlane().drawSetPixels(greyPlaneCmd, src, srcRect, destRect);
+    }
+
+    if (cmd.greyMode != OplScreen::drawGreyOnly) {
+        Drawable::drawSetPixels(cmd, src, srcRect, destRect);
+    }
+}
+
+void Window::drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* mask)
+{
+    if (cmd.greyMode) {
+        auto greyPlaneCmd = cmd;
+        // mode=clear uses the background colour
+        if (greyPlaneCmd.bgcolor != 0xFFFFFFFF) {
+            greyPlaneCmd.bgcolor = 0xFFAAAAAA;
+        }
+        auto greySrc = src.getGreyPlane();
+        if (greySrc) {
+            // Copy grey to grey
+            greyPlane().drawCopy(greyPlaneCmd, *greySrc, mask);
+        } else {
+            // Copy black to grey
+            greyPlane().drawCopy(greyPlaneCmd, src, mask);
+        }
+    }
+
+    if (cmd.greyMode != OplScreen::drawGreyOnly) {
+        // Black to black (if either have a grey plane)
+        Drawable::drawCopy(cmd, src, mask);
+    }
+}
+
 void Window::update()
 {
-    setPixmap(mPixmap);
+    if (mGreyPlane) {
+        QPixmap result(mPixmap.size());
+        QPainter painter(&result);
+        painter.drawPixmap(QPoint(), mGreyPlane->getPixmap());
+        // Now draw the black plane on top with a mask, so its white pixels don't overwrite the grey plane
+        QPixmap maskedPixmap(mPixmap);
+        maskedPixmap.setMask(getMask());
+        painter.drawPixmap(QPoint(), maskedPixmap);
+        setPixmap(result);
+    } else {
+        setPixmap(mPixmap);
+    }
+}
+
+Drawable& Window::greyPlane()
+{
+    Q_ASSERT(getMode() == OplScreen::monochromeWithGreyPlane);
+    return *mGreyPlane;
+}
+
+Drawable* Window::getGreyPlane() const
+{
+    return mGreyPlane.get();
 }
 
 void Window::updateSprites(QPainter& painter)
@@ -930,7 +1021,6 @@ void Window::updateSprites(QPainter& painter)
             painter.drawPixmap(pos, src->getPixmap());
         }
     }
-
 }
 
 void Window::mousePressEvent(QMouseEvent *event)
@@ -965,6 +1055,9 @@ void Window::setSize(const QSize& size)
     resize(size); // update widget
     if (mShadow) {
         mShadow->resize(size);
+    }
+    if (mGreyPlane) {
+        mGreyPlane->setSize(size);
     }
 }
 

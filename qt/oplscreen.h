@@ -29,6 +29,7 @@ class OplScreen {
 public:
 
     enum BitmapMode {
+        monochromeWithGreyPlane = -1, // SIBO only, 1bpp plus grey plane
         gray2 = 0, // ie 1bpp
         gray4 = 1, // ie 2bpp
         gray16 = 2, // ie 4bpp grayscale
@@ -61,6 +62,12 @@ public:
         replace = 3, // Only applicable for copy, pattern and text operations
     };
 
+    enum GreyMode {
+        drawBlack = 0,
+        drawGreyOnly = 1,
+        drawBlackAndGrey = 2,
+    };
+
     struct DrawCmd {
         DrawCmdType type;
         int drawableId;
@@ -69,7 +76,7 @@ public:
         uint32_t color;
         uint32_t bgcolor;
         int penWidth;
-        // int greyMode; // TODO
+        GreyMode greyMode;
         union {
             struct {
                 QSize size;
@@ -112,6 +119,14 @@ public:
             } invert;
             int shutUpCompiler; // so we can always have something to initialise to silence some compilers
         };
+    };
+
+    struct CopyMultipleCmd {
+        int srcId;
+        int destId;
+        uint32_t color;
+        bool invert;
+        GreyMode greyMode;
     };
 
     struct FontMetrics {
@@ -168,7 +183,7 @@ public:
     virtual void beginBatchDraw() = 0;
     virtual void draw(const DrawCmd& command) = 0;
     virtual void bitBlt(int drawableId, bool color, int width, int height, const QByteArray& data) = 0;
-    virtual void copyMultiple(int srcId, int destId, uint32_t color, bool invert, const QVector<QRect>& rects, const QVector<QPoint>& points) = 0;
+    virtual void copyMultiple(const CopyMultipleCmd& cmd, const QVector<QRect>& rects, const QVector<QPoint>& points) = 0;
     virtual void endBatchDraw() = 0;
 
     virtual void sprite(int drawableId, int spriteId, const Sprite* sprite) = 0;
