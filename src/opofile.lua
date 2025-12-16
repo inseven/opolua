@@ -26,6 +26,7 @@ _ENV = module()
 
 -- POS MEANS 1-BASED LUA STRING POSITION. OFFSET OR INDEX MEANS ZERO BASED
 
+EOplTranVersionOplS3 = 0x110F -- No idea what this should be called officially, I _think_ it's for pre-Series 3a devices
 EOplTranVersionOpl1993 = 0x111F
 EOplTranVersionOpler1 = 0x200A
 
@@ -51,6 +52,7 @@ function parseOpo2(data, verbose)
 
     local result = {}
     local procTableIdx, opxTableIdx, srcNameIdx
+    local tv
     if data:sub(1, 16) == "OPLObjectFile**\0" then
         -- SIBO format
         -- TOpoFileHeader16
@@ -60,12 +62,13 @@ function parseOpo2(data, verbose)
         -- TOpoModuleHeader16
         local totalSize, translatorVersion, minRunVersion, pti = string.unpack("<i4I2I2i4", data, 1 + offset)
         vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
-        assert(translatorVersion == EOplTranVersionOpl1993)
-        assert(minRunVersion == EOplTranVersionOpl1993)
+        assert(translatorVersion == EOplTranVersionOplS3 or translatorVersion == EOplTranVersionOpl1993)
+        assert(minRunVersion == EOplTranVersionOplS3 or minRunVersion == EOplTranVersionOpl1993)
         procTableIdx = pti
         opxTableIdx = 0 -- not supported in this version
         srcNameIdx = 0x14
         result.era = "sibo"
+        tv = translatorVersion
     else
         -- TOpoStoreHeader
         local uid1, uid2, uid3, checksum, rootStreamIdx, pos = string.unpack(TOpoStoreHeader, data)
@@ -91,6 +94,7 @@ function parseOpo2(data, verbose)
         opxTableIdx = oti
         result.era = "er5"
         result.uid3 = uid3
+        tv = translatorVersion
     end
 
     local sourceName
@@ -126,7 +130,7 @@ function parseOpo2(data, verbose)
     end
 
     for i, proc in ipairs(result.procTable) do
-        parseProc(proc)
+        parseProc(proc, tv)
     end
 
     if opxTableIdx ~= 0 then
@@ -149,7 +153,7 @@ function parseOpo2(data, verbose)
     return result
 end
 
-function parseProc(proc)
+function parseProc(proc, translatorVersion)
     -- See CProcedure::ConstructL()
     proc.params = {}
     proc.globals = {}
@@ -158,34 +162,39 @@ function parseProc(proc)
     proc.strings = {}
     proc.arrays = {}
 
-    local dataDefinitions, qcodePos = string.unpack("<s2", proc.data, proc.offset+1)
-    -- printf("offset=0x%08X #dataDefinitions=%d, qcodePos=%d\n", proc.offset, #dataDefinitions, qcodePos)
-    local dataSize, qcodeSize, maxStack, paramsCount, dataPos = string.unpack("<HHHB", dataDefinitions)
+
+    local definitionsSz, dataStart
+    if translatorVersion == EOplTranVersionOplS3 then
+        definitionSz = nil
+        dataStart = 1 + proc.offset
+    else
+        definitionSz, dataStart = string.unpack("<H", proc.data, 1 + proc.offset)
+    end
+
+    local dataSize, qcodeSize, maxStack, paramsCount, dataPos = string.unpack("<HHHB", proc.data, dataStart)
     proc.codeSize = qcodeSize
-    proc.codeOffset = qcodePos - 1
     local function readString()
-        local result, nextPos = string.unpack("<s1", dataDefinitions, dataPos)
+        local result, nextPos = string.unpack("<s1", proc.data, dataPos)
         dataPos = nextPos
         return result
     end
     local function readWord()
-        local result, nextPos = string.unpack("<H", dataDefinitions, dataPos)
+        local result, nextPos = string.unpack("<H", proc.data, dataPos)
         dataPos = nextPos
         return result
     end
     local function readByte()
-        local result, nextPos = string.unpack("<B", dataDefinitions, dataPos)
+        local result, nextPos = string.unpack("<B", proc.data, dataPos)
         dataPos = nextPos
         return result
     end
-    -- print(dataSize, qcodeSize, maxStack, paramsCount, dataPos)
+    -- print("datasz etc", dataSize, qcodeSize, maxStack, paramsCount, dataPos)
     proc.maxStack = maxStack
     -- Params are in reverse order in memory (ie last first) so flip them in proc.params
     for i = 1, paramsCount do
         table.insert(proc.params, 1, readByte())
     end
 
-    -- printf("globalsTableStart=0x%08X\n", proc.offset+2+dataPos-1)
     local globalsTableSize = readWord()
     local startOfGlobals = dataPos-1
     -- printf("globalsTableSize=%d\n", globalsTableSize)
@@ -251,8 +260,10 @@ function parseProc(proc)
         proc.arrays[offset] = len
     end
 
-    -- print(dataPos, #dataDefinitions + 1)
-    assert(dataPos == #dataDefinitions + 1, "Data header size not right?")
+    if definitionSz then
+        assert(dataPos == dataStart + definitionSz, "Data header size not right?")
+    end
+    proc.codeOffset = dataPos - 1
 
     -- Consult globals, strings and arrays and work out every initialised variable in the procedure so we can track them
     -- as a single ordered list (corresponding to local/global declaration order) rather than them being spread out
