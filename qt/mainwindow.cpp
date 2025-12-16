@@ -626,11 +626,13 @@ _Please provide details of the program you were running, and what you were doing
 | **App name** | %1 |
 | **UID** | %2 |
 | **Source URL** | %3 |
+| **Device** | %4 |
 )");
     description = description
         .arg((mAppInfo && !mAppInfo->appName.isEmpty()) ? mAppInfo->appName : QString("*unknown*"))
         .arg((mAppInfo && mAppInfo->uid != 0) ? QString("0x%1").arg(mAppInfo->uid, 0, 16) : "*unknown*")
-        .arg(mSourceUrl.isEmpty() ? "*unknown*" : mSourceUrl);
+        .arg(mSourceUrl.isEmpty() ? "*unknown*" : mSourceUrl)
+        .arg(OplRuntime::deviceTypeToString(getRuntime().getDeviceType()));
 
     if (!mErrDetail.isEmpty()) {
         description = QString("%1\n\n## Details\n\n```\n%2\n```").arg(description, mErrDetail);
