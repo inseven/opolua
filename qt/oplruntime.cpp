@@ -1038,6 +1038,7 @@ int OplRuntime::draw(lua_State* L)
                 .color = to_rgb(L, 2, "color"),
                 .bgcolor = to_rgb(L, 2, "bgcolor"),
                 .penWidth = to_int(L, 2, "penwidth"),
+                .greyMode = (OplScreen::GreyMode)to_int(L, 2, "greyMode"),
                 .shutUpCompiler = 0,
             };
             if (cmd.penWidth == 0) cmd.penWidth = 1;
@@ -1061,8 +1062,13 @@ int OplRuntime::draw(lua_State* L)
                 cmd.box.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
                 didWritePixels(2 * cmd.box.size.width() + 2 * cmd.box.size.height());
             } else if (type == "mcopy") {
-                int srcId = to_int(L, 2, "srcid");
-                int destId = cmd.drawableId;
+                OplScreen::CopyMultipleCmd cpycmd = {
+                    .srcId = to_int(L, 2, "srcid"),
+                    .destId = cmd.drawableId,
+                    .color = cmd.bgcolor,
+                    .invert = cmd.mode == OplScreen::invert,
+                    .greyMode = cmd.greyMode,
+                };
                 QVector<QRect> rects;
                 QVector<QPoint> points;
                 int numPixels = 0;
@@ -1082,9 +1088,8 @@ int OplRuntime::draw(lua_State* L)
                     points.append(QPoint(lua_tointeger(L, -2), lua_tointeger(L, -1)));
                     lua_pop(L, 6);
                 }
-                bool invert = cmd.mode == OplScreen::invert;
                 didWritePixels(numPixels);
-                mScreen->copyMultiple(srcId, destId, cmd.bgcolor, invert, rects, points);
+                mScreen->copyMultiple(cpycmd, rects, points);
                 lua_pop(L, 1); // cmd
                 continue;
             } else if (type == "bitblt") {
@@ -1146,6 +1151,10 @@ int OplRuntime::createWindow(lua_State* L)
         QRect rect(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5));
         int flags = lua_tointeger(L, 6);
         OplScreen::BitmapMode mode = (OplScreen::BitmapMode)(flags & 0xFF);
+        if (mode == OplScreen::gray4 && isSibo()) {
+            // On SIBO flags was actually a boolean for use grey plane, so mode=1 actually means monochromeWithGreyPlane
+            mode = OplScreen::monochromeWithGreyPlane;
+        }
         int shadow = 0;
         if ((flags & 0xF0) != 0) {
             shadow = 2 * ((flags & 0xF00) >> 8);
