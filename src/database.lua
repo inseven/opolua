@@ -159,7 +159,7 @@ function Db:setView(tableName, fieldNames, variables, filterPredicate, sortSpec)
     for i, var in ipairs(variables) do
         local fieldName = fieldNames and fieldNames[i] or oplValidField(tbl, i).name
         if tbl.fields[fieldName].type ~= var.type then
-            printf("Field %s type is %d, var %s type is %d\n", fieldName, tbl.fields[fieldName].type, var.name, var.type)
+            printf("Error: Field %s type is %d, var %s type is %d\n", fieldName, tbl.fields[fieldName].type, var.name, var.type)
             error(KErrInvalidArgs)
         end
         map[var.name] = {
@@ -391,6 +391,8 @@ function Db:load(data)
     if data:sub(1, 4) == "\x50\x00\x00\x10" then -- KPermanentFileStoreLayoutUid
         -- It's an epoc binary db
         self:loadBinary(data)
+    elseif data:sub(1, 15) == "OPLDatabaseFile" then -- Series 3 ODB
+        self:loadOdbBinary(data)
     else
         self:loadText(data)
     end
@@ -1131,6 +1133,70 @@ function parseWhere(str)
     end
 
     return evalExpression(exp)
+end
+
+local kMergableDataRecordType = 1
+local kFieldRecordType = 2
+
+function Db:loadOdbBinary(data)
+    self.currentTable = {
+        name = "Table1",
+    }
+    table.insert(self.tables, self.currentTable)
+    self.tables[self.currentTable.name] = self.currentTable
+
+    local magic, version, dataStart, minVer, pos = string.unpack("<c15HHH", data)
+    -- printf("version=0x%X, dataStart=0x%X, minVer=0x%X\n", version, dataStart, minVer)
+    -- What's between the end of the header and dataStart, who knows. Stale data awaiting decompress?
+    
+    -- HACK: I've no idea what dataStart is, it seems wrong
+    local recordStart = 22 --dataStart
+    
+    while recordStart < #data do
+        local header, pos = string.unpack("<H", data, 1 + recordStart, pos)
+        local recordLen = header & 0xFFF
+        local recordType = header >> 12
+        -- printf("%04X: record len=0x%X, type=%d\n", recordStart, recordLen, recordType)
+        if self.currentTable.fields == nil then
+            self.currentTable.fields = {}
+            assert(recordType == kFieldRecordType)
+            for i = 0, recordLen - 1 do
+                local type
+                type, pos = string.unpack("B", data, pos)
+                local field = {
+                    type = type,
+                    name = string.format("Field%d", i + 1),
+                    rawType = OplTypeToFieldType[type],
+                }
+                table.insert(self.currentTable.fields, field)
+                self.currentTable.fields[field.name] = field
+                -- printf("Field %d type %s\n", i + 1, DataTypes[type])
+            end
+        elseif recordType == kMergableDataRecordType then
+            local record = {}
+            for i, field in ipairs(self.currentTable.fields) do
+                local t = field.type
+                local val
+                if t == DataTypes.EWord then
+                    val, pos = string.unpack("<h", data, pos)
+                elseif t == DataTypes.ELong then
+                    val, pos = string.unpack("<i4", data, pos)
+                elseif t == DataTypes.EReal then
+                    val, pos = string.unpack("<d", data, pos)
+                elseif t == DataTypes.EString then
+                    val, pos = string.unpack("<s1", data, pos)
+                else
+                    error("Unknown field type!")
+                end
+                record[field.name] = val
+            end
+            table.insert(self.currentTable, record)
+        else
+            printf("Unhandled record type %d\n", recordType)
+        end
+
+        recordStart = recordStart + 2 + recordLen
+    end
 end
 
 return _ENV
