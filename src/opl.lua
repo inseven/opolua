@@ -1299,7 +1299,13 @@ function gINFO()
 end
 
 function TESTEVENT()
-    return runtime:iohandler().testEvent()
+    local result = runtime:iohandler().testEvent()
+    -- I assume the reason for only doing this if there's no event is that if there is an event, the program will be
+    -- expected to call GETEVENT etc which will do the flush there?
+    if not result then
+        runtime:flushGraphicsOps()
+    end
+    return result
 end
 
 function KEY()
@@ -1348,6 +1354,9 @@ function KEYA(stat, keyArrayAddr)
     }
     runtime:setResource("getevent", requestTable)
     runtime:iohandler().asyncRequest("keya", requestTable)
+
+    -- It's safest to just always do this here
+    runtime:flushGraphicsOps()
 end
 
 function KEYSTR()
@@ -1425,6 +1434,9 @@ function GETEVENTA32(stat, evAddr)
     }
     runtime:setResource("getevent", requestTable)
     runtime:iohandler().asyncRequest("getevent", requestTable)
+
+    -- It's safest to just always do this here
+    runtime:flushGraphicsOps()
 end
 
 function ESCAPE(flag)
