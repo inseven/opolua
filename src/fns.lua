@@ -258,6 +258,7 @@ codes_er5 = {
 codes_sibo = setmetatable({
     [0x02] = "Call",
     [0x1D] = "Usr",
+    [0x27] = "gCreateBit_sibo",
     [0x35] = "Os",
     [0x53] = "StatWinInfo",
     [0xD9] = "IllegalFuncOpCode",
@@ -600,6 +601,12 @@ function gCreateBit(stack, runtime) -- 0x27
 end
 
 gCreateBit_dump = numParams_dump
+
+function gCreateBit_sibo(stack, runtime) -- 0x27
+    local w, h = stack:popXY()
+    local id = runtime:gCREATEBIT(w, h, KColorgCreate2GrayMode)
+    stack:push(id)
+end
 
 function gLoadBit(stack, runtime) -- 0x28
     local numParams = runtime:IP8()
