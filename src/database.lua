@@ -352,7 +352,8 @@ function Db:isModified()
 end
 
 function Db:appendRecord()
-    assert(self.inAppendUpdate, "Incompatible update mode")
+    -- inAppendUpdate need not be set here; doing an APPEND without having set any fields at all is permissable
+    assert(not self.inInsertModify, "Incompatible update mode")
     self:setModified()
     local newPos = #self.currentView + 1
     table.insert(self.currentTable, self:currentVarsToRecord())
