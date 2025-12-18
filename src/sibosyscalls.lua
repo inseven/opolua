@@ -25,6 +25,7 @@ SOFTWARE.
 _ENV = module()
 
 fns = {
+    [0x8000] = "SegFreeMemory",
     [0x861E] = "IoPlaySoundW",
     [0x861F] = "IoPlaySoundA",
     [0x8620] = "IoPlaySoundCancel",
@@ -64,6 +65,10 @@ function syscall(runtime, fn, params)
     end
 end
 
+function SegFreeMemory(runtime, fn, params)
+    return 60000 // 16
+end
+
 function IoPlaySoundW(runtime, params) -- 0x861E
     -- print("IoPlaySoundW", dumpRegisters(params))
     -- Fortunately PlaySound doesn't care (and will respect) what the type of
@@ -101,7 +106,7 @@ end
 function ProcRename(runtime, params) -- 0x880C
     assert(params.bx == 1, "Bad process id to ProcRename") -- ie what we returned from ProcId
     local addr = runtime:addrFromInt(params.di)
-    local str = string.unpack("z", addr:read(8))
+    local str = string.unpack("z", addr:read(9))
     -- printf("ProcRename %s\n", str)
     runtime:iohandler().system("setAppTitle", str)
 end
