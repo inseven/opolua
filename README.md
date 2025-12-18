@@ -53,13 +53,28 @@ make
 
 Both Qt 5 and Qt 6 are supported and in theory should run on all platforms supported by Qt. Only macOS, Linux and Windows are tested, however.
 
+## SIBO/EPOC16/Series 3 support
+
+There is preliminary support for running OPL programs which target the Series 3/3a/3c and Siena. Due to the lack of installable SIS files on these platforms, currently only the Qt app and the command line tools support them. You will need to manually construct a directory structure that looks like this:
+
+```
+<whatever>.oplsys
+|- m/
+|  |- APP/
+|  |  |- <appname>.OPA
+```
+
+Populate any files or directories under the 'm' directory as instructed by the readme for the app. At which point you can open the OPA in the app or (on macOS) double-click the .oplsys bundle. For a double-clickable option on other platforms, create an empty 'launch.oplsys' file next to the 'm' directory. This file can then be double-clicked to launch the app.
+
+The Series 3 support is at an early stage of development and there are many missing features compared to the Series 5 support. Please raise bugs for any programs you particularly want to run! (Help -> Report Issue, in the Qt app).
+
 ## QCode
 
 _Disclaimer: My understanding only, based on reading the opl-dev source code._
 
 The OPL bytecode format is called QCode (due to the intermediary parsed code format being called PCode). It is a simple stack machine with variable length commands. Each command consists of an 8-bit opcode followed by variable length parameters. A command like "AddInt" is a single 8-bit opcode, which pops 2 values from the stack and pushes 1 result. The OPO file format defines a collection of procedures with metadata (such as number of arguments, required local variable stack frame size, etc) for each plus the QCode itself.
 
-An "application" is an OPO file called "X.app" alongside a file "X.aif" (Application Info Format) describing the app's icons and localised name.
+An "application" is an OPO file called "X.app" alongside a file "X.aif" (Application Info Format) describing the app's icons and localised name (or X.OPA on SIBO).
 
 There are something like 280 defined opcodes, plus another 128 or so "functions" invoked with the `CallFunction` opcode. The distinction between dedicated opcode and function code appears entirely arbitrary as there are some extremely complex "opcodes" and some fairly basic functions codes. Opcodes whose numerical value doesn't fit in a single byte are expressed as opcode 255 ("NextOpcodeTable") followed by a second byte being the real code minus 256. There are no opcodes requiring more than 2 bytes to express.
 
