@@ -407,7 +407,13 @@ function oplpath.abs(path, relativeTo)
     Furthermore, relativeTo can have a wildcarded name like "*.foo" meaning path should be given the extension ".foo"
     if it doesn't already have one.
     ]]
-    -- printf("oplpath.abs(%q, %q)\n", path, relativeTo)   
+    -- printf("oplpath.abs(%q, %q)\n", path, relativeTo)
+
+    -- Support for EPOC16 paths LOC::M:\path\to\file.ext
+    local locPath = path:match("^[Ll][Oo][Cc]::(.*)")
+    if locPath then
+        path = locPath
+    end
 
     local pathDrv, pathDir, pathName, pathExt = oplpath.parse(path)
     local relDrv, relDir, relName, relExt = oplpath.parse(relativeTo)
