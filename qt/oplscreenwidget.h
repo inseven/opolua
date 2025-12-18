@@ -44,6 +44,8 @@ public:
     ~OplScreenWidget();
     OplRuntimeGui* getRuntime() const;
 
+    int getScale() const { return mScale; }
+    void setScale(int scale);
     QSize sizeHint() const override;
 
     void mouseEvent(QMouseEvent* event, Window* window);
@@ -94,6 +96,7 @@ private:
     QMap<int, Window*> mWindows;
     QMap<int, Drawable*> mDrawables;
     QSet<Drawable*> mBatchSeenDrawables;
+    int mScale;
 
     QPointer<WindowShadow> mStoppedShadow;
     QScopedPointer<Drawable> mDitherPattern;
@@ -147,6 +150,9 @@ public:
     explicit Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplScreen::BitmapMode mode, int shadowSize);
     void setSize(const QSize& size) override;
     void setPos(const QPoint& pos);
+    QPoint getPos() const;
+    void setScale(int scale);
+    QRect scaledRect() const;
     WindowShadow* shadow() const { return mShadow; }
 
     void draw(const OplScreen::DrawCmd& cmd) override;
@@ -169,6 +175,9 @@ private:
 public:
     ClockWidget* mClock;
     QMap<int, WindowSprite> mSprites;
+private:
+    QRect mUnscaledRect;
+    int mScale;
     WindowShadow* mShadow;
     int mShadowSize;
     QScopedPointer<Drawable> mGreyPlane;
@@ -180,7 +189,10 @@ class SpriteWidget : public QLabel
 
 public:
     explicit SpriteWidget(OplScreenWidget* screen);
-    void renderSprites(const QList<Window*>& windows);
+    void renderSprites(const QList<Window*>& windows, int scale);
+
+protected:
+    void resizeEvent(QResizeEvent *event);
 
 private:
     QPixmap mPixmap;

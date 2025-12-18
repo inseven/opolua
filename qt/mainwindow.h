@@ -56,6 +56,8 @@ private slots:
 
 private:
     void setDevice(QAction* action, int device);
+    void setScale(int scale);
+    void doSetScale(int scale);
     void sizeWindowToFitInterpreter();
     QString getSourceUrlForPath(const QString& path);
     void applyManifest();

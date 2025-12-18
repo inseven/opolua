@@ -27,7 +27,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>37</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -66,6 +66,11 @@
     <addaction name="actionDefaultSpeed"/>
     <addaction name="actionFaster"/>
     <addaction name="actionFullSpeed"/>
+    <addaction name="separator"/>
+    <addaction name="actionScale1x"/>
+    <addaction name="actionScale2x"/>
+    <addaction name="actionScale3x"/>
+    <addaction name="actionScale4x"/>
    </widget>
    <widget class="QMenu" name="menuDevice">
     <property name="title">
@@ -108,7 +113,7 @@
     <string>Ctrl+Alt+O</string>
    </property>
    <property name="shortcutContext">
-    <enum>Qt::ApplicationShortcut</enum>
+    <enum>Qt::ShortcutContext::ApplicationShortcut</enum>
    </property>
   </action>
   <action name="actionClose">
@@ -184,7 +189,7 @@
     <string>Geofox One</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Alt+1</string>
+    <string>Ctrl+Alt+G</string>
    </property>
   </action>
   <action name="actionInstall">
@@ -251,7 +256,7 @@
     <string>About</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::AboutRole</enum>
+    <enum>QAction::MenuRole::AboutRole</enum>
    </property>
   </action>
   <action name="actionAboutQt">
@@ -259,7 +264,7 @@
     <string>About Qt</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::AboutQtRole</enum>
+    <enum>QAction::MenuRole::AboutQtRole</enum>
    </property>
   </action>
   <action name="actionDebugLog">
@@ -275,7 +280,7 @@
     <string>Open Shared Folder</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Alt+E</string>
+    <string>Ctrl+Alt+F</string>
    </property>
   </action>
   <action name="actionForceClose">
@@ -307,7 +312,7 @@
     <string>Revo</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Alt+4</string>
+    <string>Ctrl+Alt+E</string>
    </property>
   </action>
   <action name="actionSoftwareIndex">
@@ -326,7 +331,7 @@
     <string>Series 3</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Alt+1</string>
+    <string>Ctrl+Alt+T</string>
    </property>
   </action>
   <action name="actionSeries3c">
@@ -337,7 +342,7 @@
     <string>Series 3c</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Alt+3</string>
+    <string>Ctrl+Alt+U</string>
    </property>
   </action>
   <action name="actionSiena">
@@ -348,7 +353,7 @@
     <string>Siena</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Alt+2</string>
+    <string>Ctrl+Alt+Y</string>
    </property>
   </action>
   <action name="actionDiamond">
@@ -357,6 +362,53 @@
    </property>
    <property name="toolTip">
     <string>Press '◆' Key (F2)</string>
+   </property>
+  </action>
+  <action name="actionScale1x">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Scale 1x</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+1</string>
+   </property>
+  </action>
+  <action name="actionScale2x">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Scale 2x</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+2</string>
+   </property>
+  </action>
+  <action name="actionScale4x">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Scale 4x</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+4</string>
+   </property>
+  </action>
+  <action name="actionScale3x">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Scale 3x</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+3</string>
    </property>
   </action>
  </widget>

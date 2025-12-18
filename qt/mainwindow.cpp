@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionWelcome->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+L", nullptr));
     ui->actionInstall->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+I", nullptr));
     ui->actionDebugLog->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+D", nullptr));
-    ui->actionOpenSharedFolder->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+E", nullptr));
+    ui->actionOpenSharedFolder->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+F", nullptr));
     ui->actionClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+W", nullptr));
     ui->actionForceClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Shift+W", nullptr));
     ui->actionRestart->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+R", nullptr));
@@ -52,13 +52,19 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionSlower->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+-", nullptr));
     ui->actionFullSpeed->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+9", nullptr));
     ui->actionDefaultSpeed->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+0", nullptr));
+
+    ui->actionScale1x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+1", nullptr));
+    ui->actionScale2x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+2", nullptr));
+    ui->actionScale3x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+3", nullptr));
+    ui->actionScale4x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+4", nullptr));
+
     ui->actionSeries5->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+5", nullptr));
     ui->actionSeries7->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+7", nullptr));
-    ui->actionGeofoxOne->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+1", nullptr));
-    ui->actionRevo->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+4", nullptr));
-    ui->actionSeries3->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+1", nullptr));
-    ui->actionSiena->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+2", nullptr));
-    ui->actionSeries3c->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+3", nullptr));
+    ui->actionGeofoxOne->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+G", nullptr));
+    ui->actionRevo->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+E", nullptr));
+    ui->actionSeries3->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+T", nullptr));
+    ui->actionSiena->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Y", nullptr));
+    ui->actionSeries3c->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+U", nullptr));
 #endif
 
     statusLabel = new QLabel(this);
@@ -95,6 +101,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionSlower, &QAction::triggered, runtime, &OplRuntime::runSlower);
     connect(ui->actionDefaultSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::DefaultSpeed); });
     connect(ui->actionFullSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::Fastest); });
+    connect(ui->actionScale1x, &QAction::triggered, this, [this] { setScale(1); });
+    connect(ui->actionScale2x, &QAction::triggered, this, [this] { setScale(2); });
+    connect(ui->actionScale3x, &QAction::triggered, this, [this] { setScale(3); });
+    connect(ui->actionScale4x, &QAction::triggered, this, [this] { setScale(4); });
     connect(ui->actionReportIssue, &QAction::triggered, this, &MainWindow::reportIssue);
     connect(ui->actionSoftwareIndex, &QAction::triggered, this, &MainWindow::openSoftwareIndex);
     connect(runtime, &OplRuntime::debugLog, gApp, &OplApplication::appendLogging);
@@ -312,9 +322,23 @@ void MainWindow::setDevice(QAction* action, int device)
     getRuntime().setDeviceType((OplRuntime::DeviceType)device);
     getRuntime().restart();
 
-    if (!mManifest.isEmpty() && getRuntime().writableCDrive()) {
-        updateManifest();
-    }
+    updateManifest();
+}
+
+void MainWindow::setScale(int scale)
+{
+    doSetScale(scale);
+    updateManifest();
+}
+
+void MainWindow::doSetScale(int scale)
+{
+    ui->actionScale1x->setChecked(scale == 1);
+    ui->actionScale2x->setChecked(scale == 2);
+    ui->actionScale3x->setChecked(scale == 3);
+    ui->actionScale4x->setChecked(scale == 4);
+    ui->screen->setScale(scale);
+    sizeWindowToFitInterpreter();
 }
 
 void MainWindow::installSis()
@@ -440,7 +464,10 @@ void MainWindow::installationComplete(const QString& sisPath)
 
 void MainWindow::updateManifest(const QString& sourceUrl)
 {
-    Q_ASSERT(!mManifest.isEmpty());
+    if (mManifest.isEmpty() || !getRuntime().writableCDrive()) {
+        return;
+    }
+
     QJsonObject obj;
     QFile f(mManifest);
     if (f.open(QFile::ReadOnly)) {
@@ -451,6 +478,7 @@ void MainWindow::updateManifest(const QString& sourceUrl)
     auto deviceType = getRuntime().getDeviceType();
     QString typeStr = OplRuntime::deviceTypeToString(deviceType);
     obj.insert("device", typeStr);
+    obj.insert("scale", ui->screen->getScale());
     if (!sourceUrl.isEmpty()) {
         obj.insert("sourceUrl", sourceUrl);
     }
@@ -475,6 +503,7 @@ void MainWindow::applyManifest()
     QString device = manifest["device"].toString();
 
     getRuntime().setDeviceType(OplRuntime::toDeviceType(device));
+    doSetScale(manifest["scale"].toInt(1));
 
     mSourceUrl = manifest["sourceUrl"].toString();
     // qDebug("sourceUrl = %s", qPrintable(mSourceUrl));

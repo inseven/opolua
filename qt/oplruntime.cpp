@@ -1301,11 +1301,17 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
     }
 }
 
-void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId, const QPoint& screenPos)
+void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
 {
     if (isSibo()) {
         return;
     }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QPoint screenPos = event.globalPosition().toPoint();
+#else
+    QPoint screenPos = event.globalPos();
+#endif
 
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
     opl::Modifiers modifiers = getOplModifiers(event.modifiers());
