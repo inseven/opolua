@@ -926,6 +926,7 @@ int OplRuntime::graphicsop(lua_State* L)
                     .color = (flags & KCursorTypeGrey) ? 0xFF888888 : 0xFF000000,
                     .bgcolor = 0xFFFFFFFF, // doesn't really matter
                     .penWidth = 1,
+                    .greyMode = OplScreen::drawBlack,
                     .fill = {
                         .size = QSize(to_int(L, 3, "w"), to_int(L, 3, "h")),
                     },
@@ -1244,10 +1245,14 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
     if (!oplcode) {
         oplcode = qtKeyToOpl(event.key());
     }
-
     if (!oplcode) return;
 
     int32_t scan = isSibo() ? siboScancodeForKeycode(oplcode) : scancodeForKeycode(oplcode);
+    // -1 means invalid, because in SIBO 0 is a valid scan code (for enter)
+    if (scan < 0) {
+        // Possible if eg the user presses a sibo-specific key on a non-sibo device
+        return;
+    }
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
 
     if (event.type() == QEvent::KeyPress) {
@@ -1298,6 +1303,10 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
 
 void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId, const QPoint& screenPos)
 {
+    if (isSibo()) {
+        return;
+    }
+
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
     opl::Modifiers modifiers = getOplModifiers(event.modifiers());
     if (event.type() == QEvent::MouseButtonPress) {
