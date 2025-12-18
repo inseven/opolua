@@ -435,7 +435,7 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
 
     -- Enforce the max 64 windows limit
     if isWindow then
-        local limit = self:isSibo() and 8 or 64
+        local limit = --[[self:isSibo() and 8 or]] 64
         if self:getResource("infowin") then
             -- I don't think that the info window counts towards the window limit, since on the Psion it's not
             -- implemented as an OPL window (but it is in our impl).
