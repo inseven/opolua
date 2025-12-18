@@ -33,7 +33,10 @@ OplAppInfo OplRuntimeGui::getAppInfo(const QString& aifPath)
         return result;
     }
     if (nativePath.toLower().endsWith(".app")) {
-        nativePath = nativePath.left(nativePath.length() - 4) + ".aif";
+        auto aif = nativePath.left(nativePath.length() - 4) + ".aif";
+        if (QFileInfo(aif).exists()) {
+            nativePath = aif;
+        }
     }
 
     QFile f(nativePath);
@@ -131,7 +134,7 @@ QVector<OplAppInfo> OplRuntimeGui::getMDriveApps()
         return result;
     }
     QDir appsDir(path);
-    for (const QString& appName : appsDir.entryList({"*.OPA"}, QDir::Files)) {
+    for (const QString& appName : appsDir.entryList({"*.OPA", "*.APP"}, QDir::Files)) {
         // qDebug("Entry %s", qPrintable(appName));
         auto info = getAppInfo("M:\\APP\\" + appName);
         if (!info.deviceAppPath.isEmpty()) {
