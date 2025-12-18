@@ -417,8 +417,11 @@ function Runtime:setMenu(m)
 end
 
 function Runtime:getMenu()
-    -- A menu must always be setup and shown from the same frame
-    assert(self.menu and self.menu.frame == self.frame, KOplStructure)
+    -- Originally I thought menus have the same restrictions as dialogs, in that they must be defined in the same
+    -- procedure as the mINIT, but the OPL manual doesn't actually state this for menus, only dialogs. Having never
+    -- seen a program which actually violated that assumption, I finally found a counter-example app which puts one of
+    -- the mCARD calls in a sub proc - so it definitely is allowed, it's just very rare.
+    assert(self.menu, KOplStructure)
     return self.menu
 end
 
