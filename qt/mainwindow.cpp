@@ -265,7 +265,9 @@ QString MainWindow::driveForApp(const QString& appPath)
                 return dir.absolutePath();
             }
         }
-    } else if (extension == "opa") {
+    }
+
+    if (extension == "app" || extension == "opa") {
         QDir dir(QFileInfo(appPath).absoluteDir());
         if (dir.dirName().toUpper() == "APP") {
             dir.cdUp();
@@ -424,7 +426,7 @@ void MainWindow::openFile(const QString& path)
             }
 
             QString appPath;
-            if (extension == "app") {
+            if (extension == "app" && mainDrv == Drive::C) {
                 appPath = QString("C:\\System\\Apps\\") + info.dir().dirName() + "\\" + info.fileName();
             } else if (mainDrv == Drive::M) {
                 auto apps = getRuntime().getMDriveApps();
