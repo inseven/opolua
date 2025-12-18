@@ -97,7 +97,7 @@ public:
     void runAppSelector();
 
     void keyEvent(const QKeyEvent& event);
-    void mouseEvent(const QMouseEvent& event, int windowId, const QPoint& screenPos);
+    void mouseEvent(const QMouseEvent& event, int windowId);
     void focusEvent(bool focussed);
 
     void asyncFinished(AsyncHandle* handle, int code);
