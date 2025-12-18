@@ -160,7 +160,12 @@ function Runtime:addModule(path, procTable, opxTable, uid3)
         uid3 = uid3,
     }
     for _, proc in ipairs(procTable) do
-        mod[proc.name] = proc
+        if mod[proc.name] then
+            -- Have seen this in some SIBO progs, runtime appears to pick the first
+            printf("Warning: duplicate proc name '%s' in %s\n", proc.name, path)
+        else
+            mod[proc.name] = proc
+        end
         proc.module = mod
         if proc.globals then
             -- runtime expects to be able to do by name lookups in globals...
