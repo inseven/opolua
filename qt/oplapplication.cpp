@@ -167,6 +167,7 @@ void OplApplication::appendLogging(const QString& str)
 void OplApplication::showLogWindow()
 {
     mLogWindow->show();
+    mLogWindow->raise();
 }
 
 int OplApplication::registerApp()
