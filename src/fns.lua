@@ -326,9 +326,9 @@ function Call(stack, runtime) -- 0x02 (SIBO only)
         si = si or 0,
         di = di or 0,
     }
-    sibosyscalls.syscall(runtime, fn, params, params)
-    -- printf("Call result = %x\n", params.ax)
-    stack:push(params.ax)
+    local ret = sibosyscalls.syscall(runtime, fn, params)
+    -- printf("CALL returning %d\n", ret)
+    stack:push(ret)
 end
 
 Call_dump = numParams_dump
@@ -696,11 +696,11 @@ function Os(stack, runtime) -- 0x35 (SIBO only)
     end
     local params = {}
     params.ax, params.bx, params.cx, params.dx, params.si, params.di = string.unpack(syscallPackFmt, addr1:read(12))
-    local results = {}
-    results.ax, results.bx, results.cx, results.dx, results.si, results.di = string.unpack(syscallPackFmt, addr2:read(12))
-    local flags = sibosyscalls.syscall(runtime, fn, params, results)
-    addr2:write(string.pack(syscallPackFmt, results.ax, results.bx, results.cx, results.dx, results.si, results.di))
-    stack:push(flags)
+    -- printf("OS(%X, {%X, %X, %X, %X, %X, %X})\n", fn, params.ax, params.bx, params.cx, params.dx, params.si, params.di)
+    local ax, bx, cx, dx, si, di, flags = sibosyscalls.syscall(runtime, fn, params)
+    -- printf("Returned flags=%X {%X, %X, %X, %X, %X, %X}\n", flags, ax, bx, cx, dx, si, di)
+    addr2:write(string.pack(syscallPackFmt, ax, bx, cx, dx, si, di))
+    stack:push(flags or 0)
 end
 
 Os_dump = numParams_dump

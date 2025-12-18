@@ -28,6 +28,8 @@ fns = {
     [0x861E] = "IoPlaySoundW",
     [0x861F] = "IoPlaySoundA",
     [0x8620] = "IoPlaySoundCancel",
+    [0x8800] = "ProcId",
+    [0x880C] = "ProcRename",
     [0x8B1B] = "GenGetLanguageCode",
     [0x8D0E] = "wInquireWindow",
     [0x8D11] = "wFree",
@@ -49,48 +51,83 @@ function dumpRegisters(registers)
         fmt(registers.ax), fmt(registers.bx), fmt(registers.cx), fmt(registers.dx), fmt(registers.si), fmt(registers.di))
 end
 
-function syscall(runtime, fn, params, results)
+function syscall(runtime, fn, params)
     -- printf("syscall fn=%02X %s\n", fn, dumpRegisters(params))
     local fnSub = (fn << 8) | ((params.ax >> 8) & 0xFF)
     local fnName = fns[fnSub]
-    if not fnName then
-        -- See if there's one with no sub
-        fnName = fns[fn << 8]
-    end
     if fnName and _ENV[fnName] then
-        return _ENV[fnName](runtime, params, results)
+        local ax, bx, cx, dx, si, di, flags = _ENV[fnName](runtime, params)
+        return ax or 0, bx or 0, cx or 0, dx or 0, si or 0, di or 0, flags or 0
     else
-        printf("Unimplemented fn=%02X Params %s results %s\n", fn, dumpRegisters(params), dumpRegisters(results))
+        printf("Unimplemented syscall fn=%02X Params %s\n", fn, dumpRegisters(params))
         unimplemented(string.format("syscall.%04X", fnSub))
     end
 end
 
-function GenGetLanguageCode(runtime, params, results)
-    results.ax = require("sis").Locales["en_GB"]
-    return 0
+function IoPlaySoundW(runtime, params) -- 0x861E
+    -- print("IoPlaySoundW", dumpRegisters(params))
+    -- Fortunately PlaySound doesn't care (and will respect) what the type of
+    -- var is, so even though system.lua expects an ELong, we are OK to use an
+    -- EWord here.
+    local var = runtime:makeTemporaryVar(DataTypes.EWord)
+    params.di = var:addressOf()
+    IoPlaySoundA(runtime, params)
+    runtime:waitForRequest(var)
+    -- printf("IoPlaySoundW returned %d\n", var())
+    return var()
 end
 
-function wInquireWindow(runtime, params, results)
+function IoPlaySoundA(runtime, params) -- 0x861F
+    local path = runtime:abs(string.unpack("z", runtime:addrFromInt(params.bx):read(255)))
+    if not runtime:EXIST(path) then
+        path = path .. ".WVE"
+    end
+    local duration = params.cx
+    local volume = params.dx
+    printf("IoPlaySoundA path=%s\n", path)
+    local var = runtime:addrAsVariable(params.di, DataTypes.EWord)
+    runtime:PlaySoundA(var, path)
+end
+
+function IoPlaySoundCancel(runtime, params) -- 0x8620
+    print("IoPlaySoundCancel")
+    runtime:StopSound()
+end
+
+function ProcId(runtime, params) -- 0x8800
+    return 1 -- We will say the procid is always 1
+end
+
+function ProcRename(runtime, params) -- 0x880C
+    assert(params.bx == 1, "Bad process id to ProcRename") -- ie what we returned from ProcId
+    local addr = runtime:addrFromInt(params.di)
+    local str = string.unpack("z", addr:read(8))
+    -- printf("ProcRename %s\n", str)
+    runtime:iohandler().system("setAppTitle", str)
+end
+
+function GenGetLanguageCode(runtime, params) -- 0x8B1B
+    return require("sis").Locales["en_GB"]
+end
+
+function wInquireWindow(runtime, params) -- 0x8D0E
     local winId = params.bx
     local ctx = runtime:getGraphicsContext(winId)
     assert(ctx and ctx.isWindow, KErrInvalidWindow)
-    local resultAddr = runtime:addrFromInt(results.si)
+    local resultAddr = runtime:addrFromInt(params.si)
     resultAddr:write(string.pack("<I2I2I2I2I2xxxx", 0, ctx.winX, ctx.winY, ctx.width, ctx.height))
-    return 0
 end
 
-function wFree(runtime, params, results)
+function wFree(runtime, params) -- 0x8D11
     -- We're going to ignore this one for now because we don't have separate
     -- namespaces for all the types of identifier that wFree apparently
     -- accepts...
-    return 0
 end
 
-function wserv8D7E(runtime, params, results)
+function wserv8D7E(runtime, params) -- 0x8D7E
     local al = params.ax & 0xFF
     if al == 2 then
         printf("wDisableKeyClick disable=%s\n", params.bx ~= 0)
-        return 0
     else
         unimplemented("syscall.8D.7E."..tostring(al))
     end
@@ -104,7 +141,7 @@ local function getSpriteFrame(runtime, addr)
     return delay * 0.1, bmpBlackSet, bmpBlackSet, true, relx, rely
 end
 
-function wSetSprite(runtime, params, results)
+function wSetSprite(runtime, params) -- 0x8DF5
     -- print("wSetSprite", dumpRegisters(params))
     local spriteId = params.bx
     local bmp = require("opx.bmp")
@@ -117,17 +154,15 @@ function wSetSprite(runtime, params, results)
         local frameId = params.dx + 1 -- Or si...?
         bmp.SPRITECHANGE(runtime, spriteId, frameId, getSpriteFrame(runtime, params.di))
     end
-    results.ax = 0
-    return 0
 end
 
-function wCreateSprite(runtime, params, results)
+function wCreateSprite(runtime, params) -- 0x8DF6
     print("wCreateSprite", dumpRegisters(params))
     local winId = params.bx
-    if winId == 0 then
-        -- Apparently 0 can mean default win?
-        winId = 1
-    end
+    -- if winId == 0 then
+    --     -- Apparently 0 can mean default win?
+    --     winId = 1
+    -- end
     local x = runtime:addrAsVariable(params.cx, DataTypes.EWord)()
     local y = runtime:addrAsVariable(params.cx + 2, DataTypes.EWord)()
 
@@ -142,42 +177,7 @@ function wCreateSprite(runtime, params, results)
     end
     bmp.SPRITEDRAW(runtime)
 
-    results.ax = id
-    return 0
-end
-
-function IoPlaySoundW(runtime, params, results)
-    -- print("IoPlaySoundW", dumpRegisters(params))
-    -- Fortunately PlaySound doesn't care (and will respect) what the type of
-    -- var is, so even though system.lua expects an ELong, we are OK to use an
-    -- EWord here.
-    local var = runtime:makeTemporaryVar(DataTypes.EWord)
-    params.di = var:addressOf()
-    IoPlaySoundA(runtime, params, results)
-    runtime:waitForRequest(var)
-    results.ax = var() -- This will sign extend into AH which is ok
-    -- printf("IoPlaySoundW returned %d\n", var())
-    return 0
-end
-
-function IoPlaySoundA(runtime, params, results)
-    local path = runtime:abs(string.unpack("z", runtime:addrFromInt(params.bx):read(255)))
-    if not runtime:EXIST(path) then
-        path = path .. ".WVE"
-    end
-    local duration = params.cx
-    local volume = params.dx
-    printf("IoPlaySoundA path=%s\n", path)
-    local var = runtime:addrAsVariable(params.di, DataTypes.EWord)
-    runtime:PlaySoundA(var, path)
-    return 0, 0
-end
-
-function IoPlaySoundCancel(runtime, params, results)
-    print("IoPlaySoundCancel")
-    runtime:StopSound()
-    results.ax = 0
-    return 0
+    return id
 end
 
 local function byte(bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7)
@@ -192,7 +192,8 @@ local function byte(bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7)
         (bit7 and 0x80 or 0)
 end
 
-function HwGetScanCodes(runtime, params, results)
+-- TODO(tomsci): This needs updating
+function HwGetScanCodes(runtime, params) -- 0x8E28
     -- print("HwGetScanCodes", dumpRegisters(params), dumpRegisters(results))
     local keys = runtime:iohandler().keysDown()
     local scanCodes = require("oplkeycode").series3aScanCodes
@@ -211,8 +212,7 @@ function HwGetScanCodes(runtime, params, results)
         )
     end
     local buf = string.pack("BBBBBBBBBBBBBBBBBBBB", table.unpack(bytes))
-    runtime:addrFromInt(results.bx):write(buf)
-    return 0
+    runtime:addrFromInt(params.bx):write(buf)
 end
 
 return _ENV
