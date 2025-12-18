@@ -246,17 +246,6 @@ public struct Graphics {
         case replace = 3 // Only applicable for copy, pattern and text operations
     }
 
-    // Specific to gXPRINT, stacks (mostly) with FontFlag except when it doesn't
-    enum XStyle: Int, Codable {
-        case normal = 0
-        case inverse = 1
-        case inverseNoCorner = 2
-        case thinInverse = 3
-        case thinInverseNoCorner = 4
-        case underlined = 5
-        case thinUnderlined = 6
-    }
-
     enum GreyMode: Int, Codable {
         case normal = 0
         case greyPlaneOnly = 1

@@ -944,10 +944,6 @@ function Runtime:addressType()
     end
 end
 
-function printInstruction(currentOpIdx, opCode, op, extra)
-    printf("%08X: %02X [%s]%s\n", currentOpIdx, opCode, op, extra and (" "..extra) or "")
-end
-
 function Runtime:decodeNextInstruction()
     local currentIp = self.ip
     local opCode = sbyte(self.data, currentIp + 1)
@@ -969,7 +965,6 @@ function Runtime:dumpRawBytesUntil(newIp)
         printf("%08X: %02X (%d) '%s'\n", self.ip, valu, val, ch)
         self.ip = self.ip + 1
     end
-
 end
 
 function Runtime:dumpProc(procName, startAddr)
