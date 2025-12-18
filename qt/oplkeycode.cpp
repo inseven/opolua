@@ -260,8 +260,8 @@ int32_t scancodeForKeycode(int32_t keycode)
         case opl::equals:
             return opl::P;
         default:
-            Q_ASSERT(false);
-            return keycode;
+            qWarning("unhandled keycode %d", keycode);
+            return -1;
         }
     }
 }
@@ -280,14 +280,17 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::enter:
         return 0;
     case opl::rightArrow:
+    case opl::endKey:
         return 1;
     case opl::tab:
         return 2;
     case opl::Y:
         return 3;
     case opl::leftArrow:
+    case opl::homeKey:
         return 4;
     case opl::downArrow:
+    case opl::pgDn:
         return 5;
     case opl::N:
         return 6;
@@ -298,16 +301,22 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     // case Time:
     //     return 9;
     case opl::slash:
+    case opl::semicolon:
         return 17;
     case opl::minus:
+    case opl::underscore:
         return 18;
     case opl::plus:
+    case opl::equals:
         return 19;
     case opl::num0:
+    case opl::rightParenthesis:
+    case opl::rightSquareBracket:
         return 20;
     case opl::P:
         return 21;
     case opl::asterisk:
+    case opl::colon:
         return 22;
     case opl::leftShift:
         return 23;
@@ -322,8 +331,12 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::I:
         return 34;
     case opl::num8:
+    case opl::questionMark:
+    case opl::rightCurlyBracket:
         return 35;
     case opl::num9:
+    case opl::leftParenthesis:
+    case opl::leftSquareBracket:
         return 36;
     case opl::O:
         return 37;
@@ -334,6 +347,7 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     // case World:
     //     return 40;
     case opl::comma:
+    case opl::lessThan:
         return 48;
     case opl::help:
         return 49;
@@ -344,6 +358,8 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::U:
         return 52;
     case opl::num7:
+    case opl::ampersand:
+    case opl::leftCurlyBracket:
         return 53;
     case opl::rightShift:
         return 54;
@@ -354,8 +370,12 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::R:
         return 63;
     case opl::num4:
+    case opl::dollar:
+    case opl::tilde:
         return 64;
     case opl::num5:
+    case opl::percent:
+    case opl::singleQuote:
         return 65;
     case opl::T:
         return 66;
@@ -364,6 +384,7 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::B:
         return 68;
     case opl::diamond:
+    case opl::capsLock:
         return 69;
     // case System:
     //     return 70;
@@ -378,6 +399,8 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::E:
         return 82;
     case opl::num3:
+    case opl::pound:
+    case opl::backslash:
         return 83;
     case opl::menu:
         return 84;
@@ -396,22 +419,28 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::Z:
         return 99;
     case opl::num1:
+    case opl::exclamationMark:
         return 109;
     case opl::num2:
+    case opl::doubleQuote:
+    case opl::hash:
         return 110;
     case opl::num6:
+    case opl::circumflex:
         return 111;
     case opl::fullStop:
+    case opl::greaterThan:
         return 112;
     case opl::upArrow:
+    case opl::pgUp:
         return 113;
     case opl::H:
         return 114;
     case opl::escape:
         return 116;
     default:
-        qFatal("unhandled sibo keycode %d", keycode);
-        return keycode;
+        qWarning("unhandled sibo keycode %d", keycode);
+        return -1;
     }
 }
 
