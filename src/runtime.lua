@@ -954,6 +954,11 @@ function Runtime:decodeNextInstruction()
     self.ip = currentIp + 1
     local opDump = op and op.."_dump"
     local extra = ops[opDump] and ops[opDump](self)
+    if op == "CallFunction_sibo" then
+        -- Special case how this is displayed, because CallFunction is not itself sibo specific (although the function
+        -- being called may be)
+        op = "CallFunction"
+    end
     return fmt("%08X: %02X [%s]%s", currentIp, opCode, op or "?", extra and (" "..extra) or "")
 end
 
