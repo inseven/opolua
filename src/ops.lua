@@ -548,6 +548,7 @@ codes_sibo = setmetatable({
     [0x57] = "CallFunction_sibo",
     [0xA3] = "Compress",
     [0xD0] = "gInfo",
+    [0xEE] = "SetName",
     [0xEF] = "StatusWin",
     [0x100] = "gGrey_sibo",
     [0x102] = "diamInit",
@@ -2255,7 +2256,11 @@ function dItem(stack, runtime) -- 0xED
         dialog.xpos, dialog.ypos = stack:popXY()
         shouldAdd = false
     elseif itemType == dItemTypes.dFILE then
-        local var, prompt, flags, uid1, uid2, uid3 = stack:pop(6)
+        local uid1, uid2, uid3 = 0, 0, 0
+        if not runtime:isSibo() then
+            uid1, uid2, uid3 = stack:pop(3)
+        end
+        local var, prompt, flags = stack:pop(3)
         local prompts = {}
         for p in prompt:gmatch("[^,]+") do
             table.insert(prompts, p)
@@ -2264,7 +2269,7 @@ function dItem(stack, runtime) -- 0xED
         local fileItem = {
             type = (flags & KDFileEditBox == 0) and dItemTypes.dFILECHOOSER or dItemTypes.dFILEEDIT,
             variable = var,
-            path = oplpath.abs(var(), "C:\\"),
+            path = oplpath.abs(var(), runtime:getPath()),
             prompt = prompts[1] or prompt,
             uid1 = uid1,
             uid2 = uid2,
@@ -2305,8 +2310,20 @@ function dItem_dump(runtime)
     return fmt("%d (%s)%s", itemType, dItemTypes[itemType] or "?", extra)
 end
 
+function SetName(stack, runtime) -- 0xEE (SIBO)
+    local name = stack:pop()
+    printf("SETNAME '%s'\n", name)
+    -- TODO show this in the statuswin
+    -- runtime:iohandler().system("setAppTitle", title)
+end
+
 function StatusWin(stack, runtime) -- 0xEF (SIBO)
-    unimplemented("StatusWin")
+    -- unimplemented("StatusWin")
+    local type = runtime:IP8()
+    if type > 1 then
+        type = stack:pop()
+    end
+    printf("TODO: STATUSWIN %d\n", type)
 end
 
 StatusWin_dump = qualifier_dump
