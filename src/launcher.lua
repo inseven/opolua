@@ -383,19 +383,26 @@ function selectApp()
     local aif = require("aif")
     local choices = {}
     local choicePaths = {}
+    local function addApp(aifPath)
+        local aifData = runtime:iohandler().fsop("read", aifPath)
+        local captions = aifData and aif.parseAif(aifData).captions
+        local caption = captions[runtime:iohandler().getConfig("locale")]
+            or captions["en_GB"] or captions[next(captions)]
+
+        if caption then
+            table.insert(choices, caption)
+            local appPath = aifPath
+            if appPath:lower():match("%.aif$") then
+                appPath = aifPath:sub(1, #aifPath - 4)..".app"
+            end
+            table.insert(choicePaths, appPath)
+        end
+    end
     local dirs = runtime:ls([[C:\System\Apps]])
-    for _, dir in ipairs(dirs) do
+    for _, dir in ipairs(dirs or {}) do
         local aifPath = runtime:dir(oplpath.join(dir, "*.aif"))
         if #aifPath > 0 then
-            local aifData = runtime:iohandler().fsop("read", aifPath)
-            local captions = aifData and aif.parseAif(aifData).captions
-            local caption = captions[runtime:iohandler().getConfig("locale")]
-                or captions["en_GB"] or captions[next(captions)]
-
-            if caption then
-                table.insert(choices, caption)
-                table.insert(choicePaths, aifPath:sub(1, #aifPath - 4)..".app")
-            end
+            addApp(aifPath)
         else
             -- Look for raw .apps in case it's an app that doesn't install an AIF file or only configures it on first
             -- run rather than in an install step (PsiBall, looking at you)
@@ -406,6 +413,15 @@ function selectApp()
             end
         end
     end
+    if not dirs then
+        apps = runtime:ls([[M:\APP]])
+        for _, app in ipairs(apps or {}) do
+            if app:lower():match("%.opa$") then
+                addApp(app)
+            end
+        end
+    end
+
 
     if #choices == 0 then
         DIALOG {
