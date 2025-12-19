@@ -31,13 +31,17 @@ fns = {
     [0x8620] = "IoPlaySoundCancel",
     [0x8800] = "ProcId",
     [0x880C] = "ProcRename",
+    [0x8B12] = "GenMarkActive",
+    [0x8B13] = "GenMarkNonActive",
     [0x8B1B] = "GenGetLanguageCode",
     [0x8D0E] = "wInquireWindow",
     [0x8D11] = "wFree",
+    [0x8D5F] = "gSetOpenAddress",
     [0x8D7E] = "wserv8D7E",
     [0x8DF5] = "wSetSprite",
     [0x8DF6] = "wCreateSprite",
     [0x8E28] = "HwGetScanCodes",
+    [0xDB00] = "StringCapitalise",
 }
 
 function dumpRegisters(registers)
@@ -111,6 +115,12 @@ function ProcRename(runtime, params) -- 0x880C
     runtime:iohandler().system("setAppTitle", str)
 end
 
+function GenMarkActive(runtime, params) -- 0x8B12
+end
+
+function GenMarkNonActive(runtime, params) -- 0x8B13
+end
+
 function GenGetLanguageCode(runtime, params) -- 0x8B1B
     return require("sis").Locales["en_GB"]
 end
@@ -127,6 +137,19 @@ function wFree(runtime, params) -- 0x8D11
     -- We're going to ignore this one for now because we don't have separate
     -- namespaces for all the types of identifier that wFree apparently
     -- accepts...
+end
+
+function gSetOpenAddress(runtime, params) -- 0x8D5F
+    printf("gSetOpenAddress(bx=%d cx=%d dx=%d)\n", params.bx, params.cx, params.dx)
+    -- This is a gnarly API...
+    assert(params.bx == 0 or params.bx == 1, "gSetOpenAddress mode not supported: "..tostring(params.bx))
+    local offset
+    if params.bx == 0 then
+        offset = nil
+    else
+        offset = (params.dx << 16) + params.cx
+    end
+    runtime:setResource("gSetOpenAddress", offset)
 end
 
 function wserv8D7E(runtime, params) -- 0x8D7E
@@ -218,6 +241,17 @@ function HwGetScanCodes(runtime, params) -- 0x8E28
     end
     local buf = string.pack("BBBBBBBBBBBBBBBBBBBB", table.unpack(bytes))
     runtime:addrFromInt(params.bx):write(buf)
+end
+
+function StringCapitalise(runtime, params) -- 0xDB00
+    local ptr = runtime:addrFromInt(params.si)
+    local len = 0
+    local endPtr = ptr
+    while endPtr:read(1) ~= '\0' and len < 256 do
+        endPtr = endPtr + 1
+        len = len + 1
+    end
+    printf("TODO StringCapitalise len=%d\n", len)
 end
 
 return _ENV
