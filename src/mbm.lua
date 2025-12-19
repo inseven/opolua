@@ -308,11 +308,11 @@ local string_byte, string_char, string_rep, string_sub = string.byte, string.cha
 local string_pack, string_packsize, string_unpack = string.pack, string.packsize, string.unpack
 local table_insert = table.insert
 
-local ENoBitmapCompression = 0
-local EByteRLECompression = 1
-local ETwelveBitRLECompression = 2
-local ESixteenBitRLECompression = 3
-local ETwentyFourBitRLECompression = 4
+ENoBitmapCompression = 0
+EByteRLECompression = 1
+ETwelveBitRLECompression = 2
+ESixteenBitRLECompression = 3
+ETwentyFourBitRLECompression = 4
 
 local GrayBppToMode = {
     [1] = KColorgCreate2GrayMode,
