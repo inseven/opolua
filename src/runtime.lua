@@ -771,7 +771,13 @@ end
 function Runtime:openDb(logName, tableSpec, variables, op)
     assert(self.dbs.open[logName] == nil, KErrOpen)
     printf("parseTableSpec: %s\n", tableSpec)
-    local path, tableName, fieldNames, filterPredicate, sortSpec = database.parseTableSpec(tableSpec)
+    local path, tableName, fieldNames, filterPredicate, sortSpec
+    if self:isSibo() then
+        path = tableSpec
+        tableName = "Table1"
+    else
+        path, tableName, fieldNames, filterPredicate, sortSpec = database.parseTableSpec(tableSpec)
+    end
     path = self:abs(path)
 
     local db = self:newDb(path, op)
