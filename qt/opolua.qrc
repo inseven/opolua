@@ -65,6 +65,12 @@
     </qresource>
 
     <qresource prefix="/fonts">
+        <file alias="1/1.json">../resources/fonts/1/1.json</file>
+        <file alias="1/1.png">../resources/fonts/1/1.png</file>
+        <file alias="2/2.json">../resources/fonts/2/2.json</file>
+        <file alias="2/2.png">../resources/fonts/2/2.png</file>
+        <file alias="3/3.json">../resources/fonts/3/3.json</file>
+        <file alias="3/3.png">../resources/fonts/3/3.png</file>
         <file alias="10000030/10000030.json">../resources/fonts/10000030/10000030.json</file>
         <file alias="10000030/10000030.png">../resources/fonts/10000030/10000030.png</file>
         <file alias="100000CD/100000CD.json">../resources/fonts/100000CD/100000CD.json</file>
