@@ -75,8 +75,12 @@ void OplScreenWidget::setScale(int scale)
     for (Window* w : mWindows) {
         w->setScale(scale);
     }
+    auto sz = sizeHint();
     if (mSpriteWidget) {
-        mSpriteWidget->resize(sizeHint());
+        mSpriteWidget->resize(sz);
+    }
+    if (mStoppedShadow) {
+        mStoppedShadow->resize(sz);
     }
     updateGeometry();
 }
