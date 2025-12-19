@@ -555,6 +555,13 @@ function gLOADBIT(path, writable, index)
     local data, err = iohandler.fsop("read", absPath)
     assert(data, err)
 
+    local gSetOffset = runtime:getResource("gSetOpenAddress")
+    if gSetOffset then
+        data = data:sub(1 + gSetOffset)
+        -- I assume we should clear it now...?
+        runtime:setResource("gSetOpenAddress", nil)
+    end
+
     local bitmaps
     -- Apparently loading an AIF file is allowed using gLOADBIT!
     -- https://github.com/inseven/opolua/issues/443
