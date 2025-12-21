@@ -113,10 +113,14 @@ function Chunk:read(offset, len)
     return table.concat(words)
 end
 
-function Chunk:dump(maxLen)
-    printf("Dumping chunk...\n")
-    local maxIdx = (maxLen and maxLen >> strideshift) or self.size and (self.size >> strideshift) or self.maxIdx
-    for i = 0, maxIdx - 1, 4 do
+function Chunk:dump(start, len)
+    if not start then
+        start = 0
+        len = start.size or (self.maxIdx << strideshift)
+    end
+    local startIdx = start >> strideshift
+    local maxIdx = (start + len) >> strideshift
+    for i = startIdx, maxIdx - 1, 4 do
         local str = word(self, i) .. word(self, i + 1) .. word(self, i + 2) .. word(self, i + 3)
         str = str:gsub("[\x00-\x1F\x7F-\xFF]", ".")
         printf("%08X: %s %s %s %s  %s\n", self.address + i * chunkstride,
@@ -703,6 +707,12 @@ function Addr.__add(lhs, rhs)
 end
 
 function Addr.__sub(lhs, rhs)
+    if not ~lhs and not ~rhs then
+        -- Subtracting two addresses results in a number
+        assert(lhs.chunk == rhs.chunk, "Unrelated addresses!")
+        return lhs.offset - rhs.offset
+    end
+
     local addr, offset = getAddrAndOffset(lhs, rhs)
     return Addr.__add(addr, -offset)
 end
@@ -758,6 +768,10 @@ end
 
 function Addr:uniqueKey()
     return uniqueKey(self.chunk, self.offset)
+end
+
+function Addr:dump(len)
+    self.chunk:dump(self.offset, len)
 end
 
 function printStats()
