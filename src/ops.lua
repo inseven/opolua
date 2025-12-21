@@ -2068,7 +2068,7 @@ function gUpdate_dump(runtime)
 end
 
 function GetEvent(stack, runtime) -- 0xE4
-    local resultAddr = stack:pop()
+    local resultAddr = runtime:addrFromInt(stack:pop())
 
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
     local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
@@ -2113,7 +2113,7 @@ function Screen4(stack, runtime) -- 0xE7
 end
 
 function IoWaitStat(stack, runtime) -- 0xE8
-    local stat = stack:pop():asVariable(DataTypes.EWord)
+    local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     runtime:waitForRequest(stat)
 end
 
@@ -2673,7 +2673,7 @@ end
 
 function GetEventA32(stack, runtime) -- 0x123
     local ev = runtime:addrFromInt(stack:pop())
-    local stat = stack:pop():asVariable(DataTypes.EWord)
+    local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     runtime:GETEVENTA32(stat, ev)
 end
 
@@ -2696,9 +2696,9 @@ function SetDoc(stack, runtime) -- 0x126
 end
 
 function DaysToDate(stack, runtime) -- 0x127
-    local dayVar = stack:pop():asVariable(DataTypes.EWord)
-    local monthVar = stack:pop():asVariable(DataTypes.EWord)
-    local yearVar = stack:pop():asVariable(DataTypes.EWord)
+    local dayVar = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local monthVar = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local yearVar = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     local days = stack:pop()
     local y, m, d = runtime:DAYSTODATE(days)
     yearVar(y)
@@ -2766,7 +2766,7 @@ function gInfo32(stack, runtime) -- 0x128
 end
 
 function IoWaitStat32(stack, runtime) -- 0x129
-    local stat = stack:pop():asVariable(DataTypes.ELong)
+    local stat = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
     -- printf("IoWaitStat32 %s", stat)
     runtime:waitForRequest(stat)
     -- printf(" -> %s\n", stat)

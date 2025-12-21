@@ -274,7 +274,7 @@ end
 
 function Addr(stack, runtime) -- 0x00
     local var = stack:pop()
-    stack:push(var:addressOf())
+    stack:push(var:addressOf():intValue())
 end
 
 function IllegalFuncOpCode(stack, runtime)
@@ -525,7 +525,7 @@ end
 function SAddr(stack, runtime) -- 0x1F
     local str = stack:pop()
     assert(str:type() == DataTypes.EString, "Bad variable type passed to SAddr")
-    stack:push(str:addressOf())
+    stack:push(str:addressOf():intValue())
 end
 
 function Week(stack, runtime) -- 0x20
@@ -554,14 +554,14 @@ end
 
 function KeyA(stack, runtime) -- 0x23
     local keyArrayAddr = runtime:addrFromInt(stack:pop())
-    local stat = stack:pop():asVariable(DataTypes.EWord)
+    local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     runtime:KEYA(stat, keyArrayAddr)
     stack:push(KErrNone)
 end
 
 function KeyC(stack, runtime) -- 0x24
     -- As with GetEventC, this includes the waitForRequest
-    local stat = stack:pop():asVariable(DataTypes.EWord)
+    local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     runtime:iohandler().cancelRequest(stat)
     runtime:waitForRequest(stat)
     stack:push(KErrNone)
@@ -972,7 +972,7 @@ function Bookmark(stack, runtime) -- 0x55
 end
 
 function GetEventC(stack, runtime) -- 0x56
-    local stat = stack:pop():asVariable(DataTypes.EWord)
+    local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
     runtime:iohandler().cancelRequest(stat)
     -- Unlike IoCancel, GetEventC should do its own waitForRequest.
     runtime:waitForRequest(stat)
@@ -1297,8 +1297,7 @@ function NumStr(stack, runtime) -- 0xCE
 end
 
 function PeekStr(stack, runtime) -- 0xCF
-    local addr = runtime:addrFromInt(stack:pop())
-    local var = addr:asVariable(DataTypes.EString)
+    local var = runtime:addrAsVariable(stack:pop(), DataTypes.EString)
     stack:push(var())
 end
 
@@ -1348,7 +1347,7 @@ function CmdStr(stack, runtime) -- 0xD6
 end
 
 function ParseStr(stack, runtime) -- 0xD7
-    local offsetsArrayAddr = stack:pop()
+    local offsetsArrayAddr = runtime:addrFromInt(stack:pop())
     local rel = stack:pop()
     local f = stack:pop()
     -- Wow this is a fun API

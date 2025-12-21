@@ -131,11 +131,11 @@ function SICurrencyFormat(stack, runtime) -- 3
 end
 
 function SIDateFormat(stack, runtime) -- 4
-    local dateSep3 = stack:pop():asVariable(DataTypes.EWord)
-    local dateSep2 = stack:pop():asVariable(DataTypes.EWord)
-    local dateSep1 = stack:pop():asVariable(DataTypes.EWord)
-    local dateSep0 = stack:pop():asVariable(DataTypes.EWord)
-    local dateFormat = stack:pop():asVariable(DataTypes.ELong)
+    local dateSep3 = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local dateSep2 = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local dateSep1 = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local dateSep0 = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local dateFormat = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
 
     dateFormat(KDateFormatEuropean)
     dateSep0(0)
@@ -146,13 +146,13 @@ function SIDateFormat(stack, runtime) -- 4
 end
 
 function SITimeFormat(stack, runtime) -- 5
-    local ampmPos = stack:pop():asVariable(DataTypes.ELong)
-    local ampmSpace = stack:pop():asVariable(DataTypes.ELong)
-    local timeSep3 = stack:pop():asVariable(DataTypes.EWord)
-    local timeSep2 = stack:pop():asVariable(DataTypes.EWord)
-    local timeSep1 = stack:pop():asVariable(DataTypes.EWord)
-    local timeSep0 = stack:pop():asVariable(DataTypes.EWord)
-    local timeFmt = stack:pop():asVariable(DataTypes.ELong)
+    local ampmPos = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local ampmSpace = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local timeSep3 = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local timeSep2 = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local timeSep1 = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local timeSep0 = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
+    local timeFmt = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
 
     timeFmt(runtime:LCClockFormat())
     timeSep0(0)

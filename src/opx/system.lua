@@ -338,7 +338,7 @@ function RunExe(stack, runtime) -- 32
 end
 
 function LogonToThread(stack, runtime) -- 33
-    local status = stack:pop():asVariable(DataTypes.ELong)
+    local status = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
     local id = stack:pop()
     printf("LogonToThread(%d, %s)\n", id, status:addressOf())
     if id == 0 then
@@ -378,7 +378,7 @@ function PlaySound(stack, runtime) -- 38
 end
 
 function PlaySoundA(stack, runtime) -- 39
-    local var = stack:pop():asVariable(DataTypes.ELong)
+    local var = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
     local volume = stack:pop() -- not used atm...
     local path = stack:pop()
 
@@ -482,7 +482,7 @@ function GetThreadIdFromOpenDoc(stack, runtime) -- 53
 end
 
 function GetThreadIdFromAppUid(stack, runtime) -- 54
-    local prev = stack:pop():asVariable(DataTypes.ELong)
+    local prev = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
     local uid = stack:pop()
     if prev() ~= 0 then
         -- Attempting to find secondary threads of anything is not something we support
