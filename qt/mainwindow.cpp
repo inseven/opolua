@@ -618,7 +618,7 @@ QString MainWindow::getSourceUrlForPath(const QString& path)
                     result = QString::fromCFString((CFStringRef)val);
                 }
             }
-        }   
+        }
 
         CFRelease(props);
     }
@@ -680,6 +680,6 @@ _Please provide details of the program you were running, and what you were doing
 
 void MainWindow::openSoftwareIndex()
 {
-    QUrl indexUrl("https://software.psion.info/", QUrl::StrictMode);
+    QUrl indexUrl("https://software.psion.community/", QUrl::StrictMode);
     QDesktopServices::openUrl(indexUrl);
 }

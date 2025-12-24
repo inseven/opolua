@@ -26,8 +26,8 @@ import UIKit
 
 extension URL {
 
-    static let softwareIndexAPIV1 = URL(string: "https://software.psion.info/api/v1")!
-    static let softwareIndexFilesURL = URL(string: "https://software.psion.info/files")!
+    static let softwareIndexAPIV1 = URL(string: "https://software.psion.community/api/v1")!
+    static let softwareIndexFilesURL = URL(string: "https://software.psion.community/files")!
 
     private static func description(details: String, title: String, sourceUrl: URL?) -> String {
         return """
