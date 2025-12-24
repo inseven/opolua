@@ -156,6 +156,9 @@ opl::Modifiers getOplModifiers(Qt::KeyboardModifiers modifiers)
     if (modifiers & kRealControlModifer) {
         result = result | opl::controlModifier;
     }
+    if (modifiers & Qt::AltModifier) {
+        result = result | opl::psionModifier;
+    }
     return result;
 }
 
