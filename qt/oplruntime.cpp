@@ -74,6 +74,7 @@ OplRuntime::OplRuntime(QObject *parent)
     : QObject(parent)
     , mThread(nullptr)
     , mDeviceType(Series5)
+    , mIgnoreOpoEra(false)
     , mCallEvent(nullptr)
     , mEventRequest(nullptr)
     , mWaiting(false)
@@ -192,6 +193,11 @@ void OplRuntime::setDeviceType(DeviceType type)
         break;
     }
     emit deviceTypeChanged();
+}
+
+void OplRuntime::setIgnoreOpoEra(bool flag)
+{
+    mIgnoreOpoEra = flag;
 }
 
 OplRuntime::DeviceType OplRuntime::getDeviceType() const
@@ -1721,7 +1727,7 @@ int OplRuntime::setEra(lua_State *L)
         mStringCodec = QTextCodec::codecForName("Windows-1252");
     }
 
-    if (eraIsSibo != isSibo()) {
+    if (eraIsSibo != isSibo() && !mIgnoreOpoEra) {
         setDeviceType(eraIsSibo ? Series3c : Series5);
     }
     return 0;
