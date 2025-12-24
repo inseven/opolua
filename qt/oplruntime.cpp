@@ -1237,6 +1237,9 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
     }
     int32_t oplcode = 0;
     opl::Modifiers modifiers = getOplModifiers(event.modifiers());
+    if (!isSibo()) {
+        modifiers.setFlag(opl::psionModifier, false);
+    }
     if (event.text().size() == 1) {
         auto ch = event.text()[0].unicode();
         if (ch >= 0x20 && ch <= 0x7E && ch != 0x60) {

@@ -137,6 +137,7 @@ enum OplKeyCode {
 enum Modifier {
     shiftModifier = 2,
     controlModifier = 4,
+    psionModifier = 8,
     capsLockModifier = 16,
     fnModifier = 32,
 };
