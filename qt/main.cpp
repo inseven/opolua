@@ -5,7 +5,7 @@
 #include "luasupport.h"
 #include "mainwindow.h"
 #include "oplapplication.h"
-#include "oplruntime.h"
+#include "oplruntimegui.h"
 
 static int runCommand(const QStringList& args)
 {
@@ -86,8 +86,28 @@ int main(int argc, char *argv[])
     MainWindow* w = new MainWindow();
 
     auto args = QCoreApplication::arguments();
+    QString device;
+    // 0 is app path, 1 will be "open" (or nothing)
+    for (int i = 2; i < args.count(); i++) {
+        if (args[i] == "--device" || args[i] == "-d") {
+            if (i + 1 < args.count()) {
+                args.removeAt(i);
+                device = args[i];
+                args.removeAt(i);
+                i--;
+            } else {
+                qWarning("Syntax: opolua open --device <devicetype>");
+                return 1;
+            }
+        }
+    }
     if (args.count() == 3 && args[1] == "open") {
         w->show();
+        if (!device.isEmpty()) {
+            w->getRuntime().setDeviceType(OplRuntime::toDeviceType(device));
+            // Allow for eg a series 3 device type even when running a er5-era test file
+            w->getRuntime().setIgnoreOpoEra(true);
+        }
         w->openFile(QFileInfo(args[2]).canonicalFilePath());
     } else {
         w->showLauncher();

@@ -76,6 +76,7 @@ public:
     QString runningLauncherCommand() const { return running() ? mLauncherCmd : QString(); }
     bool writableCDrive() const;
     void setDeviceType(DeviceType type);
+    void setIgnoreOpoEra(bool flag);
     DeviceType getDeviceType() const;
     bool isSibo() const;
     static QString deviceTypeToString(DeviceType type);
@@ -219,6 +220,7 @@ private:
     QThread* mThread;
     mutable QMutex mMutex;
     DeviceType mDeviceType;
+    bool mIgnoreOpoEra;
     QString mLauncherCmd;
     QTextCodec* mStringCodec;
     OplScreen* mScreen;
