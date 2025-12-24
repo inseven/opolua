@@ -155,6 +155,17 @@ SizeofType = {
     [DataTypes.EReal] = 8,
 }
 
+DataTypeSuffix = {
+    [DataTypes.EWord] = "%",
+    [DataTypes.ELong] = "&",
+    [DataTypes.EReal] = "",
+    [DataTypes.EString] = "$",
+    [DataTypes.EWordArray] = "%",
+    [DataTypes.ELongArray] = "&",
+    [DataTypes.ERealArray] = "",
+    [DataTypes.EStringArray] = "$",
+}
+
 -- Since we never have to worry about actual epoc error codes (eg -8 meaning
 -- KErrBadHandle) we can just always use the OPL1993 values
 

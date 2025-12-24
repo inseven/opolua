@@ -115,6 +115,12 @@ function Runtime:getLocalVar(index, type, frame)
         var = self.chunk:getVariableAtOffset(frame.framePtr + index, type)
         var:fixup(stringMaxLen, arrayLen)
         vars[index] = var
+        if frame.proc then
+            local procVar = frame.proc.vars[index]
+            if procVar then
+                var.name = procVar.name
+            end
+        end
     end
     return var
 end
