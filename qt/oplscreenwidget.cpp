@@ -734,7 +734,9 @@ void Drawable::draw(const OplScreen::DrawCmd& cmd)
             qDebug("Failed to load border %s w=%d", qPrintable(borderPath), px.width());
         }
         const QRect& r = cmd.border.rect;
-        const int d = 9; // gXBORDER(1, 3) needs nine pixels, most other borders only 5 or 6
+        // gXBORDER(1, 3) needs nine pixels, most other borders only 5 or 6
+        int d = qMin(9, qMin(r.width(), r.height()) / 2);
+        // TODO these operations don't take into account the current colour. Should they...?
         painter.drawPixmap(r.x(), r.y(), px, 0, 0, d, d); // tl
         painter.drawPixmap(r.x() + r.width() - d, r.y(), px, px.width() - d, 0, d, d); // tr
         painter.drawPixmap(r.x(), r.y() + r.height() - d, px, 0, px.height() - d, d, d); // bl
