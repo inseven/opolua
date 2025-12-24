@@ -668,7 +668,7 @@ checkProg(callbystr, {
         name = "WOOP",
         params = { EWord },
         vars = {
-            [18] = { indirectIdx = 18, name = "param_1", type = EWord },
+            [18] = { indirectIdx = 18, name = "param_1%", type = EWord },
         },
         iDataSize = 20,
         op"SimpleInDirectRightSideInt", H(0x0012),
@@ -745,7 +745,7 @@ checkProg(globint, {
             External("FOO&", ELong),
         },
         vars = {
-            [0x21] = { indirectIdx = 0x21, name = "param_1", type = ELong },
+            [0x21] = { indirectIdx = 0x21, name = "param_1&", type = ELong },
             [0x23] = { indirectIdx = 0x23, name = "FOO&", type = ELong },
             [0x25] = { directIdx = 0x25, name = "NEST&", type = ELong, isGlobal = true },
         },
@@ -831,8 +831,8 @@ checkProg(globals, {
             External("FOO$", EString),
         },
         vars = {
-            [0x12] = { indirectIdx = 0x12, name = "param_1", type = EWord },
-            [0x14] = { indirectIdx = 0x14, name = "param_2", type = EString },
+            [0x12] = { indirectIdx = 0x12, name = "param_1%", type = EWord },
+            [0x14] = { indirectIdx = 0x14, name = "param_2$", type = EString },
             [0x16] = { indirectIdx = 0x16, name = "FOO$", type = EString },
         },
         iDataSize = 24,
@@ -882,7 +882,7 @@ checkProg(dir, {
             [0x12] = 255,
         },
         vars = {
-            [0x13] = { directIdx = 0x13, name = "local_0013", type = EString, maxLen = 255 },
+            [0x13] = { directIdx = 0x13, name = "local_0013$", type = EString, maxLen = 255 },
         },
         iDataSize = 275,
 
@@ -1095,7 +1095,7 @@ checkProg(vector, {
         name = "VEC",
         params = { EWord },
         vars = {
-            [0x12] = { indirectIdx = 0x12, name = "param_1", type = EWord },
+            [0x12] = { indirectIdx = 0x12, name = "param_1%", type = EWord },
         },
         iDataSize = 22,
 
@@ -1155,7 +1155,7 @@ checkProg(eval, {
             [0x12] = 64,
         },
         vars = {
-            [0x13] = { directIdx = 0x13, name = "local_0013", type = EString, maxLen = 64 },
+            [0x13] = { directIdx = 0x13, name = "local_0013$", type = EString, maxLen = 64 },
         },
         iDataSize = 84,
 

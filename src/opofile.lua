@@ -153,6 +153,10 @@ function parseOpo2(data, verbose)
     return result
 end
 
+local function makeLocalName(index, type)
+    return string.format("local_%04X%s", index, DataTypeSuffix[type] or "")
+end
+
 function parseProc(proc, translatorVersion)
     -- See CProcedure::ConstructL()
     proc.params = {}
@@ -293,7 +297,7 @@ function parseProc(proc, translatorVersion)
             -- knowing that here so we will fix this up below when we iterate proc.strings.
             local directIdx = offset + 2
             var = {
-                name = string.format("local_%04X", directIdx),
+                name = makeLocalName(directIdx),
                 directIdx = directIdx,
                 -- No type because we don't know if it's a word, float etc
             }
@@ -316,7 +320,7 @@ function parseProc(proc, translatorVersion)
             if arrayVar then
                 vars[offset] = nil
                 var = {
-                    name = string.format("local_%04X", directIdx),
+                    name = makeLocalName(directIdx, DataTypes.EStringArray),
                     directIdx = directIdx,
                     arraySz = arrayVar.arraySz,
                 }
@@ -326,7 +330,7 @@ function parseProc(proc, translatorVersion)
         if var == nil then
             -- Can't be a string array as that would've been handled above, must be a local string
             var = {
-                name = string.format("local_%04X", directIdx),
+                name = makeLocalName(directIdx, DataTypes.EString),
                 directIdx = directIdx,
             }
             vars[var.directIdx] = var
@@ -344,7 +348,7 @@ function parseProc(proc, translatorVersion)
     for i, param in ipairs(proc.params) do
         local indirectIdx = (i - 1) * 2 + proc.iTotalTableSize + 18 -- inverse of Runtime:getIndirectVar() logic
         vars[indirectIdx] = {
-            name = string.format("param_%d", i),
+            name = string.format("param_%d%s", i, DataTypeSuffix[param]),
             indirectIdx = indirectIdx,
             type = param,
         }
