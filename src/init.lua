@@ -303,12 +303,10 @@ dItemTypes = enum {
     dFILEDISK = 262,
 }
 
-KDefaultFontUid = KFontArialNormal15
+KDefaultFontUid_er5 = KFontArialNormal15
+KDefaultFontUid_sibo = KFontArialNormal13
 
-FontAliases = {
-    [1] = KFontArialNormal8, -- Should be "Series 3 normal"
-    [2] = KFontArialBold8, -- Should be "Series 3 bold"
-    -- [3] = No equivalent for "Seies 3 digits"
+FontAliases_er5 = {
     [4] = KFontCourierNormal8,
     [5] = KFontTimesNormal8,
     [6] = KFontTimesNormal11,
@@ -319,7 +317,21 @@ FontAliases = {
     [11] = KFontArialNormal13,
     [12] = KFontArialNormal15,
     [13] = KFontTiny4,
-    [0x9A] = KFontArialNormal15,
+    [0x9A] = KDefaultFontUid_er5,
+}
+
+FontAliases_sibo = {
+    [4] = KFontCourierNormal8,
+    [5] = KFontTimesNormal8,
+    [6] = KFontTimesNormal11,
+    [7] = KFontTimesNormal13,
+    [8] = KFontTimesNormal15,
+    [9] = KFontArialNormal8,
+    [10] = KFontArialNormal11,
+    [11] = KFontArialNormal13,
+    [12] = KFontArialNormal15,
+    [13] = KFontTiny4,
+    [0x9A] = KDefaultFontUid_sibo,
 }
 
 -- These aren't defined in the const.oph version we're using as our baseline

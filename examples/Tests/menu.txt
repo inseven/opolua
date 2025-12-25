@@ -22,8 +22,7 @@ ENDP
 PROC simplemenu%:
 	LOCAL ret%
 	mINIT
-	mCASC "More", "Explode", 1, "Fly", 2
-	mCARD "File", "More>", -16, "Quit", %q
+	mCARD "File", "A", %A, "B", %B, "C", %C, "D", %D, "E", %E, "F", %F
 	mCARD "Edit", "Cut", %x, "Copy", %c, "Paste", %v
 	ret% = MENU(selected%)
 	RETURN ret%
