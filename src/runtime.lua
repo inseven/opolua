@@ -473,7 +473,7 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
         height = height,
         pos = { x = 0, y = 0 },
         isWindow = isWindow,
-        fontUid = KDefaultFontUid,
+        fontUid = self:isSibo() and KDefaultFontUid_sibo or KDefaultFontUid_er5,
         style = 0, -- normal text style
         penwidth = 1,
     }
@@ -592,10 +592,15 @@ function Runtime:getFont(fontId)
     if fontId == nil then
         fontId = self:getGraphicsContext().fontUid
     end
-    local uid = FontAliases[fontId] or fontId
+    local uid
+    if self:isSibo() then
+        uid = FontAliases_sibo[fontId] or fontId
+    else
+        uid = FontAliases_er5[fontId] or fontId
+    end
     local fonts = self:getResource("fonts")
     if not fonts then
-        fonts = {}
+        fonts = { loaded = {} }
         self:setResource("fonts", fonts)
     end
     if fonts[uid] then
@@ -949,9 +954,13 @@ function newRuntime(handler, era)
     return rt
 end
 
--- Returns true when emulating SIBO (Series 3c)
+-- Returns true when emulating SIBO (Series 3/3a/3c)
 function Runtime:isSibo()
     return self.era == "sibo"
+end
+
+function Runtime:isSeries3()
+    return self.deviceName:match("^psion%-series%-3") or self.deviceName == "psion-siena"
 end
 
 -- Returns the datatype for parameters to opcodes that deal with addresses

@@ -16,15 +16,7 @@ local DrawStyle = enum {
     unfocussedHighlighted = 3,
 }
 
-local MenuPane = class {
-    inset = 5, -- Nothing draws inside this except for borders and scrollbar
-    borderWidth = 4, -- See drawBorder(), 3 from the gXBORDER and 1 from the gBOX
-    textGap = 6,
-    lineGap = 5, -- 2 pixels space each side of the horizontal line
-    leftMargin = 15, -- This is part of the highlighted area
-    rightMargin = 20, -- ditto
-    textYPad = 3,
-}
+local MenuPane = class {}
 
 function MenuPane:draw()
     local scrollbar = self.scrollbar
@@ -32,7 +24,7 @@ function MenuPane:draw()
     -- (which is not right up against the top of the content area)
     local topGap = self.items[1].contentOffset - self.contentOffset
     if topGap > 0 then
-        gAT(self.inset, self.contentStartY)
+        gAT(self.inset.left, self.inset.top)
         gFILL(self.contentWidth, topGap, KgModeClear)
     end
 
@@ -41,7 +33,7 @@ function MenuPane:draw()
             self:drawItem(i, i == self.selected)
             if item.lineAfter then
                 black()
-                gAT(self.inset, self:drawPosForContentOffset(item.contentOffset) + self.lineHeight)
+                gAT(self.inset.left, self:drawPosForContentOffset(item.contentOffset) + self.lineHeight)
                 gFILL(self.contentWidth, self.lineGap, KgModeClear)
                 gMOVE(0, self.lineGap // 2)
                 gLINEBY(self.contentWidth, 0)
@@ -61,24 +53,30 @@ end
 function MenuPane:drawBorder()
     black()
     gAT(0, 0)
-    gBOX(self.w, self.h)
-    gMOVE(1, 1)
-    gXBORDER(2, 0x94, self.w - 2, self.h - 2)
-    local nonBorderInset = self.inset - self.borderWidth
-    gAT(self.borderWidth, self.borderWidth)
-    local fillWidth = nonBorderInset + self.contentWidth
-    gFILL(fillWidth, nonBorderInset, KgModeClear)
-    gAT(self.borderWidth, self.h - self.inset)
-    gFILL(fillWidth, nonBorderInset, KgModeClear)
+    if runtime:isSeries3() then
+        gMOVE(1, 0)
+        gBORDER(1, self.w - 2, self.h - 1)
+    else
+        gBOX(self.w, self.h)
+        gMOVE(1, 1)
+        gXBORDER(2, 0x94, self.w - 2, self.h - 2)
+        local nonBorderInset = self.inset.left - self.border.left
+        gAT(self.border.left, self.border.top)
+        local fillWidth = nonBorderInset + self.contentWidth
+        gFILL(fillWidth, nonBorderInset, KgModeClear)
+        gAT(self.border.left, self.h - self.inset.top)
+        gFILL(fillWidth, nonBorderInset, KgModeClear)
+    end
 end
 
 function MenuPane:drawItem(i, style)
     local item = self.items[i]
     local inset, contentWidth, lineHeight = self.inset, self.contentWidth, self.lineHeight
-    local leftMargin, textGap, textYPad = self.leftMargin, self.textGap, self.textYPad
+    local margin, textGap = self.margin, self.textGap
     assert(item, "Index out of range in drawItem! "..tostring(i))
     local y = self:drawPosForContentOffset(item.contentOffset)
-    gAT(inset, y)
+    -- printf("drawItem(%d) contentOffset=%d y=%d\n", i, item.contentOffset, y)
+    gAT(inset.left, y)
     if style == false then
         style = DrawStyle.normal
     elseif style == true then
@@ -90,40 +88,48 @@ function MenuPane:drawItem(i, style)
         black()
     end
     local highlighted = style == DrawStyle.highlighted or style == DrawStyle.unfocussedHighlighted
-    gFILL(contentWidth, lineHeight, highlighted and KgModeSet or KgModeClear)
-    if style == DrawStyle.dismissing then
-        gAT(inset, y)
-        black()
-        gBOX(contentWidth, lineHeight)
-    end
-    if item.key & KMenuDimmed > 0 then
-        darkGrey()
-    elseif highlighted then
-        white()
+    local fillMode = (runtime:isSeries3() or not highlighted) and KgModeClear or KgModeSet
+    gFILL(contentWidth, lineHeight, fillMode)
+    if not runtime:isSeries3() then
+        if style == DrawStyle.dismissing then
+            gAT(inset, y)
+            black()
+            gBOX(contentWidth, lineHeight)
+        end
+        if item.key & KMenuDimmed > 0 then
+            darkGrey()
+        elseif highlighted then
+            white()
+        end
     end
     if item.key & (KMenuSymbolOn|KMenuCheckBox) == (KMenuSymbolOn|KMenuCheckBox) then
-        gAT(inset, y + textYPad)
+        gAT(inset.left, y + margin.top)
         gFONT(KFontEiksym15)
         runtime:drawText(".")
     end
-    gAT(inset + leftMargin, y + textYPad)
-    gFONT(kMenuFont)
+    gAT(inset.left + margin.left, y + margin.top)
+    gFONT(self.menuFont)
     runtime:drawText(item.text)
     if item.shortcutText then
-        local tx = inset + leftMargin + self.maxTextWidth + textGap
-        local ty = y + textYPad + self.shortcutTextYOffset
-        gFONT(kShortcutFont)
+        local tx = inset.left + margin.left + self.maxTextWidth + textGap
+        local ty = y + margin.top + self.shortcutTextYOffset
+        gFONT(self.shortcutFont)
         runtime:drawText(item.shortcutText, tx, ty)
     end
     if item.submenu then
         gFONT(KFontEiksym15)
-        local tx = self.w - self.rightMargin
+        local tx = self.w - margin.right
         if self.scrollbar then
             tx = tx - self.scrollbar.w
         end
-        local ty = y + textYPad
+        local ty = y + margin.top
         item.submenuXPos = tx + gTWIDTH('"')
         runtime:drawText('"', tx, ty)
+        gFONT(self.menuFont)
+    end
+    if style ~= DrawStyle.normal and runtime:isSeries3() then
+        gAT(inset.left, y)
+        gINVERT(contentWidth, lineHeight)
     end
 end
 
@@ -175,6 +181,7 @@ function MenuPane:moveSelectionTo(i)
         newContentOffset = math.max(0, item.contentOffset + item.h - visHeight)
     end
 
+    -- printf("moveSelectionTo(%d) visHeight=%d currentContentOffset=%d newContentOffset=%d\n", i, visHeight, currentContentOffset, newContentOffset)
     if newContentOffset == currentContentOffset then
         local selectedIsVisible = self.selected and self:itemAtLeastPartiallyVisible(self.selected)
         if selectedIsVisible then
@@ -240,7 +247,7 @@ function MenuPane:closeSubmenu()
 end
 
 function MenuPane:drawPosForContentOffset(yoffset)
-    return self.contentStartY + (yoffset - self.contentOffset)
+    return self.inset.top + (yoffset - self.contentOffset)
 end
 
 function MenuPane:scrollbarContentOffsetChanged(scrollbar)
@@ -278,27 +285,69 @@ function MenuPane:contentHeight()
 end
 
 function MenuPane:visibleContentHeight()
-    return self.h - self.inset * 2
+    return self.h - self.inset.top - self.inset.bottom
 end
 
 function MenuPane.new(x, y, pos, values, selected, cutoutLen)
+    -- This is the number of pixels the border occupies, nothing else should draw in here.
+    local border
+
+    -- This is how much the content is inset by. The numbers include the border.
+    -- If there is no space between the content and the border this will be the
+    -- same as border.
+    local inset
+
+    -- This is how much the text is indented by, from the edge of the content
+    -- area. So the text x coord would be inset.left + margin.left
+    local margin
+
+    -- The initial value of this is the extra y offset of where the first item
+    -- is laid out when not scrolling (aka scroll area offset)
+    local contentOffset
+
+    -- Horizontal space between menu text and shortcut
+    local textGap
+
+    local shortcutFont, menuFont, createFlags, shadowHeight, lineGap
+
+    local device = runtime:getDeviceName()
+    if device == "psion-series-3" then
+        border = { top = 2, left = 3, bottom = 4, right = 4 }
+        inset = border
+        margin = { top = 1, left = 2, bottom = 1, right = 2 }
+        contentOffset = 0
+        textGap = 14
+        lineGap = 2 -- No space above line, one below
+        menuFont = 1
+        shortcutFont = 1
+        shadowHeight = 0
+        createFlags = KColorgCreate2GrayMode
+    -- todo 3a/3c
+    else
+        border = { top = 4, left = 4, bottom = 4, right = 4 }
+        inset = { top = 5, left = 5, bottom = 5, right = 5 }
+        margin = { top = 3, left = 15, bottom = 1, right = 20 }
+        contentOffset = 2
+        textGap = 6
+        lineGap = 5 -- 2 pixels space each side of the horizontal line
+        menuFont = kMenuFont
+        shortcutFont = kShortcutFont
+        shadowHeight = 8
+        createFlags = KColorgCreate4GrayMode | KgCreateHasShadow | ((shadowHeight // 2) << 4)
+    end
+
     -- Get required font metrics
-    gFONT(kMenuFont)
+    gFONT(menuFont)
     local textHeight = gINFO().fontHeight
     local ascent = gINFO().fontAscent
-    local lineHeight = textHeight + MenuPane.textYPad * 2
-    gFONT(kShortcutFont)
+    gFONT(shortcutFont)
     local shortcutAscent = gINFO().fontAscent
+    local lineHeight = textHeight + margin.top + margin.bottom
     local shortcutTextYOffset = ascent - shortcutAscent
 
     -- Work out content and window size
-    local inset = MenuPane.inset
-    local textGap = MenuPane.textGap
-    local lineGap = MenuPane.lineGap -- 2 pixels space each side of the horizontal line
     local numItems = #values
     local items = {}
-    local contentStartY = inset
-    local contentOffset = 2 -- Gap between start of content area and first item
     local maxTextWidth = 20
     local maxShortcutTextWidth = 0
     local shortcuts = {}
@@ -316,15 +365,23 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         if keyNoFlags <= 32 then
             shortcutText = nil
         elseif keyNoFlags >= 0x41 and keyNoFlags <= 0x5A then
-            shortcutText = string.format("Shift+Ctrl+%c", keyNoFlags)
+            if runtime:isSeries3() then
+                shortcutText = string.format("Shift\x02%c", keyNoFlags)
+            else
+                shortcutText = string.format("Shift+Ctrl+%c", keyNoFlags)
+            end
         elseif keyNoFlags >= 0x61 and keyNoFlags <= 0x7A then
-            shortcutText = string.format("Ctrl+%c", keyNoFlags - 0x20)
+            if runtime:isSeries3() then
+                shortcutText = string.format("\x02%c", keyNoFlags - 0x20)
+            else
+                shortcutText = string.format("Ctrl+%c", keyNoFlags - 0x20)
+            end
         end
-        gFONT(kMenuFont)
+        gFONT(menuFont)
         local w = gTWIDTH(value.text)
         if shortcutText then
             shortcuts[keyNoFlags] = i
-            gFONT(kShortcutFont)
+            gFONT(shortcutFont)
             local sw = gTWIDTH(shortcutText)
             maxShortcutTextWidth = math.max(maxShortcutTextWidth, textGap + sw)
         end
@@ -343,24 +400,21 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         contentOffset = contentOffset + items[i].h
     end
 
-    local leftMargin = 15 -- This is part of the highlighted area
-    local rightMargin = 20 -- ditto
-    local shadowHeight = 8
-    local contentWidth = leftMargin + maxTextWidth + maxShortcutTextWidth + rightMargin
+    local contentWidth = margin.left + maxTextWidth + maxShortcutTextWidth + margin.right
     local screenWidth, screenHeight = runtime:getScreenInfo()
-    local w = math.min(contentWidth + inset * 2, screenWidth)
-    local h = contentStartY + contentOffset + inset
+    local w = math.min(contentWidth + inset.left + inset.right, screenWidth)
+    local h = inset.top + contentOffset + inset.bottom
     local scrollbar = nil
 
     local maxHeight = (pos == nil) and (screenHeight - shadowHeight - y) or screenHeight
     if h > maxHeight then
         h = maxHeight
-        local scrollbarTop = MenuPane.borderWidth
-        local scrollbarHeight = h - (MenuPane.borderWidth * 2) -- Note, larger than visibleContentHeight!
-        local visibleContentHeight = h - inset * 2 -- Same defn as MenuPane:visibleContentHeight()
+        local scrollbarTop = border.top
+        local scrollbarHeight = h - border.top - border.bottom -- Note, larger than visibleContentHeight!
+        local visibleContentHeight = h - inset.top - inset.bottom -- Same defn as MenuPane:visibleContentHeight()
         local contentHeight = contentOffset -- Should be same as MenuPane:contentHeight()
         local Scrollbar = runtime:require("scrollbar").Scrollbar
-        scrollbar = Scrollbar.newVertical(w - inset + 2, scrollbarTop, scrollbarHeight, visibleContentHeight, contentHeight)
+        scrollbar = Scrollbar.newVertical(w - inset.right + 2, scrollbarTop, scrollbarHeight, visibleContentHeight, contentHeight)
         w = w + scrollbar.w + 1
         if w > screenWidth then
             scrollbar.x = screenWidth - scrollbar.w
@@ -392,7 +446,7 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         y = math.max(0, screenHeight - h - shadowHeight)
     end
 
-    local win = gCREATE(x, y, w, h, false, KColorgCreate4GrayMode | KgCreateHasShadow | 0x400)
+    local win = gCREATE(x, y, w, h, false, createFlags)
     if scrollbar then
         darkGrey()
         gAT(scrollbar.x - 1, scrollbar.y)
@@ -411,8 +465,14 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         y = y,
         w = w,
         h = h,
+        shortcutFont = shortcutFont,
+        menuFont = menuFont,
+        inset = inset,
+        border = border,
+        textGap = textGap,
+        lineGap = lineGap,
+        margin = margin,
         contentWidth = contentWidth,
-        contentStartY = contentStartY,
         lineHeight = lineHeight,
         items = items,
         selected = 1,
@@ -510,12 +570,20 @@ local function runMenuEventLoop(bar, pane, shortcuts)
                 result = current:choose(current.selected)
                 highlight = bar and (bar.selected - 1) * 256 + (pane.selected - 1)
             end
-        elseif k <= 26 then
+        elseif k <= 26 and not runtime:isSeries3() then
             -- Check for a control-X shortcut (control modifier is implied by the code being 1-26)
             local shift = ev[KEvAKMod]() & KKmodShift > 0
             local cmd = (shift and 0x40 or 0x60) + k
             if shortcuts[cmd] then
                 result = cmd
+            end
+        elseif (k >= 0x41 and k <= 0x5A) or (k >= 0x61 and k <= 0x6A) then
+            local psion = ev[KEvAKMod]() & KKmodPsion > 0
+            if psion then
+                local cmd = k | 0x20 -- implicit upper case
+                if shortcuts[cmd] then
+                    result = cmd
+                end
             end
         elseif k == KEvPtr then
             local evWinId = ev[KEvAPtrWindowId]()
@@ -640,21 +708,35 @@ function MENU(menubar)
     local state = runtime:saveGraphicsState()
 
     -- Draw the menu bar
-    local barGap = 21
-    local borderWidth = 5
+    local barGap, barCreateFlags, menuFont
+    local border, textPad, firstItemGap
+    if runtime:isSeries3() then
+        menuFont = 1
+        barGap = 21
+        firstItemGap = 9
+        border = { top = 3, left = 3, bottom = 4, right = 4 }
+        textPad = { top = 0, bottom = 1 }
+        barCreateFlags = KColorgCreate2GrayMode
+    else
+        menuFont = kMenuFont
+        barGap = 21
+        firstItemGap = barGap
+        border = { top = 5, left = 5, bottom = 5, right = 5 }
+        textPad = { top = 2, bottom = 2 }
+        barCreateFlags = KColorgCreate4GrayMode | KgCreateHasShadow | 0x200
+    end
+    gFONT(menuFont)
     local barItems = {}
-    local textx = borderWidth + barGap
-    gFONT(kMenuFont)
+    local textx = border.left + firstItemGap
     local textHeight = gINFO().fontHeight
-    local textYPad = 2
-    local barHeight = borderWidth * 2 + textHeight + textYPad * 2
+    local barHeight = border.top + border.bottom + textHeight + textPad.top + textPad.bottom
     for i, card in ipairs(menubar) do
         local textw = gTWIDTH(card.title)
         barItems[i] = {
             x = textx - barGap // 2,
             textx = textx,
             text = card.title,
-            y = borderWidth + textYPad,
+            y = border.top + textPad.top,
             w = textw + barGap,
             h = barHeight,
 
@@ -662,14 +744,24 @@ function MENU(menubar)
         textx = textx + textw + barGap
     end
     
-    local barWidth = textx + borderWidth
-    local barWin = gCREATE(2, 2, barWidth, barHeight, false, KColorgCreate4GrayMode | KgCreateHasShadow | 0x200)
-    lightGrey()
-    gFILL(barWidth, barHeight)
-    black()
-    gBOX(barWidth, barHeight)
-    gAT(1, 1)
-    gXBORDER(2, 0x94, barWidth - 2, barHeight - 2)
+    local barWidth = textx + border.right
+    local barWin
+    if runtime:isSeries3() then
+        local x = (runtime:getGraphics().screenWidth - barWidth) // 2
+        barWin = gCREATE(x, 0, barWidth, barHeight, false, barCreateFlags)
+        gFONT(1)
+        gAT(1, 1)
+        gBORDER(1, barWidth - 2, barHeight - 2)
+    else
+        barWin = gCREATE(2, 2, barWidth, barHeight, false, barCreateFlags)
+        gFONT(kMenuFont)
+        lightGrey()
+        gFILL(barWidth, barHeight)
+        black()
+        gBOX(barWidth, barHeight)
+        gAT(1, 1)
+        gXBORDER(2, 0x94, barWidth - 2, barHeight - 2)
+    end
     for _, item in ipairs(barItems) do
         gAT(item.textx, item.y)
         runtime:drawText(item.text)
@@ -683,8 +775,6 @@ function MENU(menubar)
     -- 4: pane.submenu, optionally. OPL doesn't support nested submenus.
 
     local bar = {
-        x = 1,
-        y = 1,
         w = barWidth,
         h = barHeight,
         id = barWin,
@@ -692,7 +782,14 @@ function MENU(menubar)
         selected = nil,
         selectionWin = nil,
     }
-    local firstMenuY = bar.y + barHeight - borderWidth
+    local firstMenuY -- In screen coords
+    if runtime:isSeries3() then
+        -- 3 being one less than the height of the bottom of a gBORDER(1), such that firstMenuY is in line with the top
+        -- pixel of the bottom of the gBORDER
+        firstMenuY = gORIGINY() + barHeight - 3
+    else
+        firstMenuY = gORIGINY() + barHeight - border.top
+    end
     local initBarIdx = menubar.highlight and (1 + (menubar.highlight // 256)) or 1
     if initBarIdx > #bar.items then
         initBarIdx = 1
@@ -704,20 +801,28 @@ function MENU(menubar)
 
     local function drawBarSelection()
         if not bar.selectionWin then
-            bar.selectionWin = gCREATE(-1, -1, 1, 1, true, KColorgCreate4GrayMode | KgCreateHasShadow | 0x200)
+            bar.selectionWin = gCREATE(-1, -1, 1, 1, true, barCreateFlags)
         end
-        gUSE(bar.selectionWin)
-        gFONT(kMenuFont)
         local item = bar.items[bar.selected]
+        gUSE(bar.id)
+        local x = gORIGINX() + item.x
+        local y = gORIGINY()
         local w = item.w
-        local h = firstMenuY - bar.y
-        gSETWIN(bar.x + item.x, bar.y, w, h)
+        local h = firstMenuY --TODO?? - bar.y
+        gUSE(bar.selectionWin)
+        gFONT(menuFont)
+        gSETWIN(x, y, w, h)
         gAT(0, 0)
         black()
         gFILL(w, h, KgModeClear)
-        gBOX(w, h + 5)
-        gAT(1, 1)
-        gXBORDER(2, 0x94, w - 2, h + 5)
+        if runtime:isSeries3() then
+            gAT(1, 1)
+            gBORDER(1, w - 2, h + 3)
+        else
+            gBOX(w, h + 5)
+            gAT(1, 1)
+            gXBORDER(2, 0x94, w - 2, h + 5)
+        end
         runtime:drawText(item.text, item.textx - item.x, item.y)
     end
 
@@ -737,7 +842,8 @@ function MENU(menubar)
            bar.pane = nil
         end
         local item = bar.items[bar.selected]
-        bar.pane = MenuPane.new(bar.x + item.x, firstMenuY, nil, menubar[bar.selected], 1, item.w)
+        gUSE(bar.id)
+        bar.pane = MenuPane.new(gORIGINX() + item.x, firstMenuY, nil, menubar[bar.selected], 1, item.w)
     end
 
     bar.moveSelectionTo(initBarIdx)

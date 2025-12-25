@@ -99,6 +99,7 @@ function gVISIBLE(show)
 end
 
 function gFONT(id)
+    assert(id, "No font id specified?")
     local font = runtime:getFont(id)
     if not font then
         printf("No font found for 0x%08X\n", id)
@@ -691,14 +692,23 @@ end
 -- Screen APIs
 
 local function drawInfoPrint(drawable, text, corner)
+    local sibo = runtime:isSibo()
     gUPDATE(false)
-    local screenWidth, screenHeight = runtime:getScreenInfo()
-    local winHeight = 23 -- 15 plus 4 pixels top and bottom
     gUSE(drawable)
-    gFONT(KFontArialNormal15)
+    local screenWidth, screenHeight = runtime:getScreenInfo()
+    local winHeight, cornerInset, inset
+    if sibo then
+        gFONT(1)
+        winHeight = 12
+        cornerInset = 2
+        inset = 2 -- ...?
+    else
+        gFONT(KFontArialNormal15)
+        winHeight = 23 -- 15 plus 4 pixels top and bottom
+        cornerInset = 5
+        inset = 6
+    end
 
-    local cornerInset = 5
-    local inset = 6
     local textWidth, textHeight, ascent = gTWIDTH(text)
     local w = math.min(screenWidth - 2 * cornerInset, textWidth + inset * 2)
     local actualTextWidth = w - 2 * inset
@@ -720,13 +730,21 @@ local function drawInfoPrint(drawable, text, corner)
         error("Bad corner")
     end
     gSETWIN(x, y, w, winHeight)
-    gCOLOR(0, 0, 0)
-    gAT(0, 0)
-    gFILL(w, winHeight)
-    gXBORDER(2, 0x94)
-    gCOLOR(255, 255, 255)
-    gAT(inset, 4 + ascent)
-    gPRINTCLIP(text, w - 2 * inset)
+    if sibo then
+        gFILL(w, winHeight, KgModeClear)
+        gAT(inset, inset + ascent)
+        gPRINTCLIP(text, actualTextWidth)
+        gAT(0, 0)
+        gINVERT(w, winHeight)
+    else
+        gCOLOR(0, 0, 0)
+        gAT(0, 0)
+        gFILL(w, winHeight)
+        gXBORDER(2, 0x94)
+        gCOLOR(255, 255, 255)
+        gAT(inset, 4 + ascent)
+        gPRINTCLIP(text, actualTextWidth)
+    end
     return { x = inset, y = gY() - ascent, w = actualTextWidth, h = textHeight }
 end
 

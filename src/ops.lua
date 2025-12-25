@@ -2132,6 +2132,12 @@ function mCard(stack, runtime) -- 0xEB
     for i = 1, numParams do
         local item = {}
         item.key = stack:pop()
+        if runtime:getDeviceName() == "psion-series-3" then
+            -- Shifted keys weren't a thing
+            if item.key >= 0x41 and item.key <= 0x5A then
+                item.key = item.key + 0x20
+            end
+        end
         item.text = stack:pop()
         if item.text:match(">$") then
             -- It's a cascade
