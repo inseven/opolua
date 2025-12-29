@@ -464,7 +464,7 @@
 /* Begin XCLocalSwiftPackageReference section */
 		D88403EC2EEB67200044B759 /* XCLocalSwiftPackageReference "LuaSwift" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = LuaSwift;
+			relativePath = ../dependencies/LuaSwift;
 		};
 		D88403EF2EEB672E0044B759 /* XCLocalSwiftPackageReference "diligence" */ = {
 			isa = XCLocalSwiftPackageReference;
