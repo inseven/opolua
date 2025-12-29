@@ -8,5 +8,5 @@
 	path = ios/diligence
 	url = git@github.com:inseven/diligence.git
 [submodule "LuaSwift"]
-	path = ios/LuaSwift
+	path = dependencies/LuaSwift
 	url = git@github.com:tomsci/LuaSwift.git
