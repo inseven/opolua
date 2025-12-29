@@ -16,7 +16,7 @@ let package = Package(
             ]),
     ],
     dependencies: [
-        .package(path: "LuaSwift"),
+        .package(path: "ios/LuaSwift"),
         .package(url: "https://github.com/inseven/licensable", from: "0.0.13"),
     ],
     targets: [
@@ -31,7 +31,7 @@ let package = Package(
                 "swift",
             ],
             resources: [
-                .process("OpoLua/Licenses"),
+                .process("ios/OpoLua/Licenses"),
             ],
             plugins: [
                 .plugin(name: "EmbedLuaPlugin", package: "LuaSwift")

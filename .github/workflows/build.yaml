@@ -11,6 +11,19 @@ on:
 
 jobs:
 
+  swift-package-build:
+
+    runs-on: macos-latest
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Build and test
+      run: swift build
+
   app-build:
 
     runs-on: inseven-macos-26
