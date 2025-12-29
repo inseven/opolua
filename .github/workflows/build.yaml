@@ -11,6 +11,23 @@ on:
 
 jobs:
 
+  swift-package-build:
+
+    runs-on: inseven-macos-26
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: scripts/install-dependencies.sh
+
+    - name: Build and test
+      run: swift build
+
   app-build:
 
     runs-on: inseven-macos-26
