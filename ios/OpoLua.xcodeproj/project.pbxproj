@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D816AF1C2F036AC900EE2A40 /* Lua in Frameworks */ = {isa = PBXBuildFile; productRef = D82464212C90E71B00CE8C0A /* Lua */; };
+		D816AF1D2F036AC900EE2A40 /* Lua in Frameworks */ = {isa = PBXBuildFile; productRef = D88403ED2EEB67200044B759 /* Lua */; };
 		D824641F2C90E71100CE8C0A /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D824641E2C90E71100CE8C0A /* Diligence */; };
 		D82464512C90E79C00CE8C0A /* Diligence in Frameworks */ = {isa = PBXBuildFile; productRef = D82464502C90E79C00CE8C0A /* Diligence */; };
 		D82D76082C9142740040265E /* src in Resources */ = {isa = PBXBuildFile; fileRef = D82D76072C9142740040265E /* src */; };
@@ -64,6 +66,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D816AF1D2F036AC900EE2A40 /* Lua in Frameworks */,
+				D816AF1C2F036AC900EE2A40 /* Lua in Frameworks */,
 				D82464512C90E79C00CE8C0A /* Diligence in Frameworks */,
 				D8C3BD6A2774F4A2003B1AD0 /* GameController.framework in Frameworks */,
 				D824641F2C90E71100CE8C0A /* Diligence in Frameworks */,
