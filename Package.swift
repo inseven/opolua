@@ -27,6 +27,7 @@ let package = Package(
                 .product(name: "Licensable", package: "licensable"),
                 .product(name: "Lua", package: "LuaSwift"),
             ],
+            path: "swift",
             resources: [
                 .process("Resources"),
             ],
