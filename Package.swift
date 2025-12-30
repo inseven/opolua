@@ -27,12 +27,9 @@ let package = Package(
                 .product(name: "Licensable", package: "licensable"),
                 .product(name: "Lua", package: "LuaSwift"),
             ],
-            path: ".",
-            sources: [
-                "swift",
-            ],
+            path: "swift",
             resources: [
-                .process("ios/OpoLua/Licenses"),
+                .process("Resources"),
             ],
             plugins: [
                 .plugin(name: "EmbedLuaPlugin", package: "LuaSwift")
