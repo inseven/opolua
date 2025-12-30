@@ -6,6 +6,7 @@ import PackageDescription
 let package = Package(
     name: "OpoLua",
     platforms: [
+        .iOS(.v15),
         .macOS(.v13),
     ],
     products: [
