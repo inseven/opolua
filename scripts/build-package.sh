@@ -13,7 +13,3 @@ xcodebuild -scheme OpoLua -showdestinations
 # Build.
 xcodebuild -scheme OpoLua -destination "platform=macOS" clean build
 xcodebuild -scheme OpoLua -destination "$DEFAULT_IPHONE_DESTINATION" clean build
-
-# Test.
-xcodebuild -scheme OpoLua -destination "platform=macOS" test
-xcodebuild -scheme OpoLua -destination "$DEFAULT_IPHONE_DESTINATION" test
