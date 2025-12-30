@@ -112,7 +112,7 @@
 				D8C3BD682774F4A2003B1AD0 /* Frameworks */,
 				D8EA53652EE62D8A000750C9 /* OpoLua */,
 				DB79FE6027428292005E904F /* Products */,
-				DB79FFE12742E52B005E904F /* swift */,
+				DB79FFE12742E52B005E904F /* Source */,
 			);
 			sourceTree = "<group>";
 		};
@@ -124,7 +124,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		DB79FFE12742E52B005E904F /* swift */ = {
+		DB79FFE12742E52B005E904F /* Source */ = {
 			isa = PBXGroup;
 			children = (
 				D8C409852C3CF6DB00C9E857 /* CGImage.swift */,
@@ -135,8 +135,8 @@
 				DB5AC9752757B6ED0043FE5C /* OpoIoHandler_CoreGraphics.swift */,
 				DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */,
 			);
-			name = swift;
-			path = ../swift;
+			name = Source;
+			path = ../Sources/OpoLuaCore/Source;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -195,7 +195,7 @@
 			);
 			mainGroup = DB79FE5627428292005E904F;
 			packageReferences = (
-				D88403EC2EEB67200044B759 /* XCLocalSwiftPackageReference "LuaSwift" */,
+				D88403EC2EEB67200044B759 /* XCLocalSwiftPackageReference "../dependencies/LuaSwift" */,
 				D88403EF2EEB672E0044B759 /* XCLocalSwiftPackageReference "diligence" */,
 			);
 			productRefGroup = DB79FE6027428292005E904F /* Products */;
@@ -462,7 +462,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		D88403EC2EEB67200044B759 /* XCLocalSwiftPackageReference "LuaSwift" */ = {
+		D88403EC2EEB67200044B759 /* XCLocalSwiftPackageReference "../dependencies/LuaSwift" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../dependencies/LuaSwift;
 		};
