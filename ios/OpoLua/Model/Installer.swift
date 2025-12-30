@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 protocol InstallerDelegate: AnyObject {
 
     func installer(_ installer: Installer, didFinishWithResult result: Installer.Result)

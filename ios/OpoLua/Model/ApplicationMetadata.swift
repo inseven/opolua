@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 fileprivate let appInfoCache = FileMetadataCache<ApplicationMetadata>()
 fileprivate let fileTypeCache = FileMetadataCache<PsiLuaEnv.FileType>()
 

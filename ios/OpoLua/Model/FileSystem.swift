@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 protocol FileSystem {
 
     func prepare() throws

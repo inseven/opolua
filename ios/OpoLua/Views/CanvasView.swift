@@ -19,14 +19,12 @@
 // SOFTWARE.
 
 #if canImport(UIKit)
-
 import UIKit
-
 #else
-
 import AppKit
-
 #endif
+
+import OpoLuaCore
 
 protocol CanvasViewDelegate: AnyObject {
 

@@ -247,7 +247,7 @@ extension OplKeyCode {
         "\n": .enter,
     ]
 
-    static func from(string: String) -> OplKeyCode? {
+    public static func from(string: String) -> OplKeyCode? {
         return CharKeycodeMap[string]
     }
 
@@ -323,7 +323,7 @@ extension OplKeyCode {
     }
 
     // Returns nil for things without a charcode (like modifier keys)
-    func toCharcode() -> Int? {
+    public func toCharcode() -> Int? {
         switch self {
         case .leftShift, .rightShift, .control, .fn, .capsLock:
             return nil

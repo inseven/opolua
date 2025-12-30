@@ -20,6 +20,8 @@
 
 import UIKit
 
+import OpoLuaCore
+
 class ResourceViewController: UITableViewController {
 
     class StringCell: UITableViewCell {

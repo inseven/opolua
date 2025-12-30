@@ -24,11 +24,11 @@ import CoreImage
 
 extension CGImage {
 
-    var size: Graphics.Size {
+    public var size: Graphics.Size {
         return Graphics.Size(width: width, height: height)
     }
 
-    var cgSize: CGSize {
+    public var cgSize: CGSize {
         return CGSize(width: width, height: height)
     }
 
@@ -55,7 +55,7 @@ extension CGImage {
         }
     }
 
-    func masking(componentRange from: Int, to: Int) -> CGImage? {
+    public func masking(componentRange from: Int, to: Int) -> CGImage? {
         let fromf = CGFloat(from)
         let tof = CGFloat(to)
         let components: [CGFloat]
@@ -73,7 +73,7 @@ extension CGImage {
         return self.copy(maskingColorComponents: components)
     }
 
-    func stripAlpha(grayscale: Bool = false) -> CGImage {
+    public func stripAlpha(grayscale: Bool = false) -> CGImage {
         let space = grayscale ? CGColorSpaceCreateDeviceGray() : self.colorSpace ?? CGColorSpaceCreateDeviceGray()
         var info: UInt32 = 0
         if !grayscale {
@@ -91,13 +91,13 @@ extension CGImage {
         return context.makeImage()!
     }
 
-    func inverted() -> CGImage? {
+    public func inverted() -> CGImage? {
         let invertedCi = CIImage(cgImage: self).applyingFilter("CIColorInvert")
         let invertedCG = CIContext().createCGImage(invertedCi, from: invertedCi.extent)
         return invertedCG
     }
 
-    func copyInDeviceGrayColorSpace() -> CGImage? {
+    public func copyInDeviceGrayColorSpace() -> CGImage? {
         let colorSpace = CGColorSpaceCreateDeviceGray()
         let bytesPerPixel: Int = 1
         let bitmapInfo: UInt32 = 0
@@ -116,7 +116,7 @@ extension CGImage {
         return context.makeImage()
     }
 
-    func getPixelData() -> UnsafeBufferPointer<UInt32> {
+    public func getPixelData() -> UnsafeBufferPointer<UInt32> {
         // This is only valid for images created from Canvases (or otherwise are guaranteed to be using 32bpp)
         precondition(self.bitsPerPixel == 32)
         let data = self.dataProvider!.data!

@@ -25,20 +25,26 @@ public struct Graphics {
 
     public struct Size: Equatable, Comparable, Codable {
 
-        public static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
-            lhs.width < rhs.width && lhs.height < rhs.height
-        }
-
-        public let width: Int
-        public let height: Int
-
         enum CodingKeys: String, CodingKey {
             case width = "w"
             case height = "h"
         }
 
+        public static func < (lhs: Graphics.Size, rhs: Graphics.Size) -> Bool {
+            lhs.width < rhs.width && lhs.height < rhs.height
+        }
+
         public static let icon = Self(width: 48, height: 48)
         public static let zero = Self(width: 0, height: 0)
+
+        public let width: Int
+        public let height: Int
+
+        public init(width: Int, height: Int) {
+            self.width = width
+            self.height = height
+        }
+
     }
 
     public struct Point: Equatable, Codable {
@@ -51,10 +57,15 @@ public struct Graphics {
             return Self(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
         }
 
+        public static let zero = Self(x: 0, y: 0)
+
         public let x: Int
         public let y: Int
 
-        public static let zero = Self(x: 0, y: 0)
+        public init(x: Int, y: Int) {
+            self.x = x
+            self.y = y
+        }
     }
 
     public struct Rect: Equatable, Codable {
@@ -129,21 +140,21 @@ public struct Graphics {
         }
     }
 
-    struct Color: Equatable, Codable {
+    public struct Color: Equatable, Codable {
         let r: UInt8
         let g: UInt8
         let b: UInt8
 
-        static let black = Self(r: 0, g: 0, b: 0)
-        static let white = Self(r: 255, g: 255, b: 255)
-        static let midGray = Self(r: 0x80, g: 0x80, b: 0x80)
-        static let alphaMask: UInt32 = 0xFF000000
+        public static let black = Self(r: 0, g: 0, b: 0)
+        public static let white = Self(r: 255, g: 255, b: 255)
+        public static let midGray = Self(r: 0x80, g: 0x80, b: 0x80)
+        public static let alphaMask: UInt32 = 0xFF000000
 
         var greyValue: UInt8 {
             return UInt8((Int(r) + Int(g) + Int(b)) / 3)
         }
 
-        var pixelValue: UInt32 {
+        public var pixelValue: UInt32 {
             return UInt32(r) | (UInt32(g) << 8) | (UInt32(b) << 16) | Self.alphaMask
         }
 
@@ -184,7 +195,7 @@ public struct Graphics {
 
     public struct DrawableId: Hashable, Codable {
 
-        let value: Int
+        public let value: Int
 
         init(value: Int) {
             self.value = value
@@ -199,14 +210,14 @@ public struct Graphics {
             try cont.encode(self.value)
         }
 
-        static var defaultWindow: DrawableId {
+        public static var defaultWindow: DrawableId {
             return .init(value: 1)
         }
     }
 
-    struct CopySource {
-        let drawableId: DrawableId
-        let rect: Rect
+    public struct CopySource {
+        public let drawableId: DrawableId
+        public let rect: Rect
     }
 
     enum FontFace: String, Codable {
@@ -239,21 +250,21 @@ public struct Graphics {
         let flags: FontFlags
     }
 
-    enum Mode: Int {
+    public enum Mode: Int {
         case set = 0
         case clear = 1
         case invert = 2
         case replace = 3 // Only applicable for copy, pattern and text operations
     }
 
-    enum GreyMode: Int, Codable {
+    public enum GreyMode: Int, Codable {
         case normal = 0
         case greyPlaneOnly = 1
         case bothPlanes = 2
     }
 
     public struct DrawCommand {
-        enum OpType {
+        public enum OpType {
             case fill(Size)
             case circle(Int, Bool) // radius, fill
             case ellipse(Int, Int, Bool) // hRadius, vRadius, fill
@@ -267,37 +278,73 @@ public struct Graphics {
             case border(Rect, Int) // border type
             case invert(Size)
         }
-        let drawableId: DrawableId
-        let type: OpType
-        let mode: Mode
-        let origin: Point
-        let color: Color
-        let bgcolor: Color
-        let penWidth: Int
-        let greyMode: GreyMode
+        public let drawableId: DrawableId
+        public let type: OpType
+        public let mode: Mode
+        public let origin: Point
+        public let color: Color
+        public let bgcolor: Color
+        public let penWidth: Int
+        public let greyMode: GreyMode
+
+        public init(drawableId: DrawableId,
+                    type: OpType,
+                    mode: Mode,
+                    origin: Point,
+                    color: Color,
+                    bgcolor: Color,
+                    penWidth: Int,
+                    greyMode: GreyMode) {
+            self.drawableId = drawableId
+            self.type = type
+            self.mode = mode
+            self.origin = origin
+            self.color = color
+            self.bgcolor = bgcolor
+            self.penWidth = penWidth
+            self.greyMode = greyMode
+        }
     }
 
     public struct Sprite: Codable {
-        struct Frame: Codable {
-            let offset: Point
-            let bitmap: DrawableId
-            let mask: DrawableId
-            let invertMask: Bool
-            let time: TimeInterval
+        public struct Frame: Codable {
+            public let offset: Point
+            public let bitmap: DrawableId
+            public let mask: DrawableId
+            public let invertMask: Bool
+            public let time: TimeInterval
+
+            public init(offset: Point, bitmap: DrawableId, mask: DrawableId, invertMask: Bool, time: TimeInterval) {
+                self.offset = offset
+                self.bitmap = bitmap
+                self.mask = mask
+                self.invertMask = invertMask
+                self.time = time
+            }
         }
-        let origin: Point
-        let frames: [Frame]
+        public let origin: Point
+        public let frames: [Frame]
+
+        public init(origin: Point, frames: [Frame]) {
+            self.origin = origin
+            self.frames = frames
+        }
     }
 
     public struct ClockInfo: Codable {
-        enum Mode: Int, Codable {
+        public enum Mode: Int, Codable {
             case systemSetting = 6
             case analog = 7
             case digital = 8
         }
-        let mode: Mode
-        let position: Point
+        public let mode: Mode
+        public let position: Point
         // TODO offset, format, etc
+
+        public init(mode: Mode, position: Point) {
+            self.mode = mode
+            self.position = position
+        }
     }
 
     public struct TextMetrics {
@@ -319,17 +366,31 @@ public struct Graphics {
     }
 
     public struct Cursor: Codable {
-        let id: DrawableId
-        let rect: Rect
-        let flags: FlagSet<CursorFlag>
+        public let id: DrawableId
+        public let rect: Rect
+        public let flags: FlagSet<CursorFlag>
+
+        public init(id: DrawableId, rect: Rect, flags: FlagSet<CursorFlag>) {
+            self.id = id
+            self.rect = rect
+            self.flags = flags
+        }
     }
 
     public struct FontMetrics: Codable {
-        let height: Int
-        let maxwidth: Int
-        let ascent: Int
-        let descent: Int
-        let widths: [Int] // Always 256 elements
+        public let height: Int
+        public let maxwidth: Int
+        public let ascent: Int
+        public let descent: Int
+        public let widths: [Int] // Always 256 elements
+
+        public init(height: Int, maxwidth: Int, ascent: Int, descent: Int, widths: [Int]) {
+            self.height = height
+            self.maxwidth = maxwidth
+            self.ascent = ascent
+            self.descent = descent
+            self.widths = widths
+        }
     }
 
     public enum Operation {
@@ -367,17 +428,17 @@ public struct Graphics {
 
 extension Graphics.Bitmap.Mode {
 
-    var isColor: Bool {
+    public var isColor: Bool {
         return rawValue >= Self.color16.rawValue
     }
 
 }
 
 extension Graphics.GreyMode {
-    var drawGreyPlane: Bool {
+    public var drawGreyPlane: Bool {
         return self == .greyPlaneOnly || self == .bothPlanes
     }
-    var drawNormalPlane: Bool {
+    public var drawNormalPlane: Bool {
         return self == .normal || self == .bothPlanes
     }
 }
@@ -445,13 +506,13 @@ extension Fs.Operation {
     }
 }
 
-enum Modifier: Int, FlagEnum {
+public enum Modifier: Int, FlagEnum {
     case shift = 2
     case control = 4
     case capsLock = 16
     case fn = 32
 }
-typealias Modifiers = FlagSet<Modifier>
+public typealias Modifiers = FlagSet<Modifier>
 
 public struct Async {
 
@@ -468,45 +529,90 @@ public struct Async {
     public struct Request {
         let type: RequestType
         let handle: RequestHandle
+
+        public init(type: RequestType, handle: RequestHandle) {
+            self.type = type
+            self.handle = handle
+        }
     }
 
     public struct KeyPressEvent {
-        let timestamp: TimeInterval // Since boot
-        let keycode: OplKeyCode
-        let modifiers: Modifiers
-        let isRepeat: Bool
+        public let timestamp: TimeInterval // Since boot
+        public let keycode: OplKeyCode
+        public let modifiers: Modifiers
+        public let isRepeat: Bool
+
+        public init(timestamp: TimeInterval, keycode: OplKeyCode, modifiers: Modifiers, isRepeat: Bool) {
+            self.timestamp = timestamp
+            self.keycode = keycode
+            self.modifiers = modifiers
+            self.isRepeat = isRepeat
+        }
     }
 
     public struct KeyUpDownEvent {
-        let timestamp: TimeInterval // Since boot
-        let keycode: OplKeyCode
-        let modifiers: Modifiers
+        public let timestamp: TimeInterval // Since boot
+        public let keycode: OplKeyCode
+        public let modifiers: Modifiers
+
+        public init(timestamp: TimeInterval, keycode: OplKeyCode, modifiers: Modifiers) {
+            self.timestamp = timestamp
+            self.keycode = keycode
+            self.modifiers = modifiers
+        }
     }
 
-    enum PenEventType: Int {
+    public enum PenEventType: Int {
         case down = 0
         case up = 1
         case drag = 6
     }
 
     public struct PenEvent {
-        let timestamp: TimeInterval // Since boot
-        let windowId: Graphics.DrawableId
-        let type: PenEventType
-        let modifiers: Modifiers
-        let x: Int
-        let y: Int
-        let screenx: Int
-        let screeny: Int
+        public let timestamp: TimeInterval // Since boot
+        public let windowId: Graphics.DrawableId
+        public let type: PenEventType
+        public let modifiers: Modifiers
+        public let x: Int
+        public let y: Int
+        public let screenx: Int
+        public let screeny: Int
+
+        public init(timestamp: TimeInterval,
+                    windowId: Graphics.DrawableId,
+                    type: PenEventType,
+                    modifiers: Modifiers,
+                    x: Int,
+                    y: Int,
+                    screenx: Int,
+                    screeny: Int) {
+            self.timestamp = timestamp
+            self.windowId = windowId
+            self.type = type
+            self.modifiers = modifiers
+            self.x = x
+            self.y = y
+            self.screenx = screenx
+            self.screeny = screeny
+        }
     }
 
     public struct PenUpDownEvent {
-        let timestamp: TimeInterval // Since boot
-        let windowId: Graphics.DrawableId
+        public let timestamp: TimeInterval // Since boot
+        public let windowId: Graphics.DrawableId
+
+        public init(timestamp: TimeInterval, windowId: Graphics.DrawableId) {
+            self.timestamp = timestamp
+            self.windowId = windowId
+        }
     }
 
     public struct ActivationEvent {
-        let timestamp: TimeInterval // Since boot
+        public let timestamp: TimeInterval // Since boot
+
+        public init(timestamp: TimeInterval) {
+            self.timestamp = timestamp
+        }
     }
 
     public enum ResponseValue {
@@ -539,7 +645,7 @@ public struct Async {
 }
 
 extension Async.KeyPressEvent {
-    func modifiedKeycode() -> Int? {
+    public func modifiedKeycode() -> Int? {
         if modifiers.contains(.control) && keycode.rawValue >= OplKeyCode.a.rawValue && keycode.rawValue <= OplKeyCode.z.rawValue {
             // OPL likes to send 1-26 for Ctrl-[Shift-]A thru Ctrl-[Shift-]Z
             return keycode.rawValue - (OplKeyCode.a.rawValue - 1)
@@ -560,17 +666,31 @@ public enum ConfigName: String, CaseIterable {
 }
 
 public struct TextFieldInfo: Codable {
-    enum InputType: String, Codable {
+    public enum InputType: String, Codable {
         case text
         case integer
         case float
     }
-    let id: Graphics.DrawableId
-    let type: InputType
-    let controlRect: Graphics.Rect // bounding rect of the whole text field, in screen coords
-    let cursorRect: Graphics.Rect // location of cursor, in screen coords
-    let windowRect: Graphics.Rect // for convenience, in screen coords
-    let userFocusRequested: Bool // true if user tapped in the text field
+    public let id: Graphics.DrawableId
+    public let type: InputType
+    public let controlRect: Graphics.Rect // bounding rect of the whole text field, in screen coords
+    public let cursorRect: Graphics.Rect // location of cursor, in screen coords
+    public let windowRect: Graphics.Rect // for convenience, in screen coords
+    public let userFocusRequested: Bool // true if user tapped in the text field
+
+    public init(id: Graphics.DrawableId,
+                type: InputType,
+                controlRect: Graphics.Rect,
+                cursorRect: Graphics.Rect,
+                windowRect: Graphics.Rect,
+                userFocusRequested: Bool) {
+        self.id = id
+        self.type = type
+        self.controlRect = controlRect
+        self.cursorRect = cursorRect
+        self.windowRect = windowRect
+        self.userFocusRequested = userFocusRequested
+    }
 }
 
 public protocol FileSystemIoHandler {
@@ -719,13 +839,16 @@ public protocol OpoIoHandler: FileSystemIoHandler {
     func opsync()
 }
 
-class DummyIoHandler : OpoIoHandler {
+public class DummyIoHandler : OpoIoHandler {
 
-    func printValue(_ val: String) -> Void {
+    public init() {
+    }
+
+    public func printValue(_ val: String) -> Void {
         print(val, terminator: "")
     }
 
-    func textEditor(_ info: TextFieldInfo?) {
+    public func textEditor(_ info: TextFieldInfo?) {
     }
 
     func alert(lines: [String], buttons: [String]) -> Int {
@@ -736,67 +859,67 @@ class DummyIoHandler : OpoIoHandler {
         return 0
     }
 
-    func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {
+    public func draw(operations: [Graphics.DrawCommand]) -> Graphics.Error? {
         return nil
     }
 
-    func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
+    public func graphicsop(_ operation: Graphics.Operation) -> Graphics.Result {
         return .nothing
     }
 
-    func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
+    public func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
         return (Graphics.Size(width: 640, height: 240), .gray4, "psion-series-5")
     }
 
-    func fsop(_ op: Fs.Operation) -> Fs.Result {
+    public func fsop(_ op: Fs.Operation) -> Fs.Result {
         return .err(.notReady)
     }
 
-    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType) {
+    public func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType) {
     }
 
-    func cancelRequest(handle: Async.RequestHandle) {
+    public func cancelRequest(handle: Async.RequestHandle) {
     }
 
-    func waitForAnyRequest() -> Async.Response {
+    public func waitForAnyRequest() -> Async.Response {
         fatalError("No support for waitForAnyRequest in DummyIoHandler")
     }
 
-    func anyRequest() -> Async.Response? {
+    public func anyRequest() -> Async.Response? {
         return nil
     }
 
-    func testEvent() -> Bool {
+    public func testEvent() -> Bool {
         return false
     }
 
-    func keysDown() -> Set<OplKeyCode> {
+    public func keysDown() -> Set<OplKeyCode> {
         return []
     }
 
-    func setConfig(key: ConfigName, value: String) {
+    public func setConfig(key: ConfigName, value: String) {
     }
 
-    func getConfig(key: ConfigName) -> String {
+    public func getConfig(key: ConfigName) -> String {
         return ""
     }
 
-    func setAppTitle(_ title: String) {
+    public func setAppTitle(_ title: String) {
     }
 
-    func displayTaskList() {
+    public func displayTaskList() {
     }
 
-    func setForeground() {
+    public func setForeground() {
     }
 
-    func setBackground() {
+    public func setBackground() {
     }
 
-    func runApp(name: String, document: String) -> Int32? {
+    public func runApp(name: String, document: String) -> Int32? {
         return nil
     }
 
-    func opsync() {
+    public func opsync() {
     }
 }

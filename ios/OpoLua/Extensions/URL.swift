@@ -24,6 +24,8 @@ import Foundation
 import UIKit
 #endif
 
+import OpoLuaCore
+
 extension URL {
 
     static let softwareIndexAPIV1 = URL(string: "https://software.psion.community/api/v1")!

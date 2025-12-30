@@ -21,6 +21,8 @@
 import Foundation
 import Combine
 
+import OpoLuaCore
+
 class Scheduler {
 
     /// Base class for all asynchronous tasks managed by the Scheduler.
