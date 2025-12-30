@@ -4,16 +4,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "OpoLua",
+    name: "OpoLuaCore",
     platforms: [
         .iOS(.v15),
         .macOS(.v13),
     ],
     products: [
         .library(
-            name: "OpoLua",
+            name: "OpoLuaCore",
             targets: [
-                "OpoLua"
+                "OpoLuaCore"
             ]),
     ],
     dependencies: [
@@ -22,7 +22,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "OpoLua",
+            name: "OpoLuaCore",
             dependencies: [
                 .product(name: "Licensable", package: "licensable"),
                 .product(name: "Lua", package: "LuaSwift"),

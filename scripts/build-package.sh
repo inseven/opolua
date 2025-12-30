@@ -8,8 +8,8 @@ ROOT_DIRECTORY="$( cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )" &> /dev/
 
 cd "$ROOT_DIRECTORY"
 
-xcodebuild -scheme OpoLua -showdestinations
+xcodebuild -scheme OpoLuaCore -showdestinations
 
 # Build.
-xcodebuild -scheme OpoLua -destination "platform=macOS" clean build
-xcodebuild -scheme OpoLua -destination "$DEFAULT_IPHONE_DESTINATION" clean build
+xcodebuild -scheme OpoLuaCore -destination "platform=macOS" clean build
+xcodebuild -scheme OpoLuaCore -destination "$DEFAULT_IPHONE_DESTINATION" clean build
