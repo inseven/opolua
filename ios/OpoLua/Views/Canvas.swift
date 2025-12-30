@@ -21,6 +21,8 @@
 import CoreGraphics
 import Foundation
 
+import OpoLuaCore
+
 protocol DrawableImageProvider {
 
     func getDrawable(_ drawable: Graphics.DrawableId) -> Drawable?

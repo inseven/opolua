@@ -30,9 +30,6 @@ let package = Package(
             path: "swift",
             resources: [
                 .process("Resources"),
-            ],
-            plugins: [
-                .plugin(name: "EmbedLuaPlugin", package: "LuaSwift")
             ]),
     ]
 )

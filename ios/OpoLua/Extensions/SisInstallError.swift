@@ -20,6 +20,8 @@
 
 import Foundation
 
-extension Sis.InstallError: LocalizedError {
+import OpoLuaCore
+
+extension Sis.InstallError: @retroactive LocalizedError {
     public var errorDescription: String? { return self.description }
 }

@@ -21,10 +21,10 @@
 import Foundation
 
 #if canImport(UIKit)
-
 import UIKit
-
 #endif
+
+import OpoLuaCore
 
 class ClockView: ViewBase {
     var clockInfo: Graphics.ClockInfo

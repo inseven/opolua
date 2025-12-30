@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 import Diligence
 
 public struct Legal {
@@ -44,8 +46,7 @@ public struct Legal {
             Credit("Shawn Leedy")
         }
     } licenses: {
-        License(name: "Lua", author: "Lua.org, PUC-Rio", filename: "lua-license")
-        License(name: "OpoLua", author: "Jason Morley, Tom Sutcliffe", filename: "opolua-license")
+        .opolua
     }
 
 }

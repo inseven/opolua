@@ -21,6 +21,8 @@
 import Foundation
 import Combine
 
+import OpoLuaCore
+
 /**
  Called on the main queue.
  */

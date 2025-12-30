@@ -692,7 +692,7 @@ public class OpoInterpreter: PsiLuaEnv {
 
     private var hooks: LuaHooksState!
 
-    override init() {
+    public override init() {
         iohandler = DummyIoHandler() // For now...
         hooks = nil // also only for the duration of super.init()
         super.init()
@@ -773,10 +773,10 @@ public class OpoInterpreter: PsiLuaEnv {
         L.setfuncs(fns, nup: 1)
     }
 
-    class InterpreterError: LocalizedError {
+    public class InterpreterError: LocalizedError {
 
-        let message: String // One-line description of the error
-        let detail: String // Includes all of message, leave code, lua stack trace, opo stacktrace (as appropriate)
+        public let message: String // One-line description of the error
+        public let detail: String // Includes all of message, leave code, lua stack trace, opo stacktrace (as appropriate)
 
         init(message: String) {
             self.message = message
@@ -788,13 +788,13 @@ public class OpoInterpreter: PsiLuaEnv {
             self.detail = detail
         }
 
-        var errorDescription: String? {
+        public var errorDescription: String? {
             return "The program encountered an internal error."
         }
 
     }
 
-    class LeaveError: InterpreterError {
+    public class LeaveError: InterpreterError {
 
         let code: Int
 
@@ -805,30 +805,30 @@ public class OpoInterpreter: PsiLuaEnv {
 
     }
 
-    class UnimplementedOperationError: InterpreterError {
+    public class UnimplementedOperationError: InterpreterError {
 
-        let operation: String
+        public let operation: String
 
         init(message: String, detail: String, operation: String) {
             self.operation = operation
             super.init(message: message, detail: detail)
         }
 
-        override var errorDescription: String? {
+        public override var errorDescription: String? {
             return "The program attempted to use the unimplemented operation '\(operation)'."
         }
 
     }
 
-    class NativeBinaryError : InterpreterError {
+    public class NativeBinaryError : InterpreterError {
 
-        override var errorDescription: String? {
+        public override var errorDescription: String? {
             return "This is not an OPL program, and cannot be run."
         }
 
     }
 
-    func run(devicePath: String, procedureName: String? = nil) throws {
+    public func run(devicePath: String, procedureName: String? = nil) throws {
         L.settop(0)
 
         require("runtime")
@@ -991,7 +991,7 @@ public class OpoInterpreter: PsiLuaEnv {
     }
 
     // Safe to call from any thread
-    func interrupt() {
+    public func interrupt() {
         hooks.setHook(forState: L, mask: [.call, .ret, .line, .count], count: 1, function: stop)
     }
 

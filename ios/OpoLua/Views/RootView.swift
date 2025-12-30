@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 #if canImport(UIKit)
 import UIKit
 #endif
