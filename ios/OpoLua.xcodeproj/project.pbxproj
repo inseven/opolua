@@ -136,7 +136,7 @@
 				DB0366A72C42E85500187DD0 /* PsiLuaEnv.swift */,
 			);
 			name = Source;
-			path = ../Sources/OpoLuaCore/Source;
+			path = ../swift/Source;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
