@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  swift-package-build:
+  package-build:
 
     runs-on: inseven-macos-26
     steps:
@@ -26,7 +26,7 @@ jobs:
       run: scripts/install-dependencies.sh
 
     - name: Build and test
-      run: swift build
+      run: scripts/package-build.sh
 
   app-build:
 
