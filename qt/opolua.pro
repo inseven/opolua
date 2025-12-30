@@ -58,7 +58,7 @@ SOURCES += \
     oplruntimegui.cpp \
     oplscreenwidget.cpp
 
-INCLUDEPATH += ../ios/LuaSwift/Sources/CLua/lua
+INCLUDEPATH += ../dependencies/LuaSwift/Sources/CLua/lua
 
 FORMS += \
     aboutwindow.ui \
