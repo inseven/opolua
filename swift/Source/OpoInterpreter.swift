@@ -539,10 +539,18 @@ private func getTime(_ L: LuaState!) -> CInt {
 private func keysDown(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let keys = iohandler.keysDown()
-    lua_createtable(L, 0, CInt(keys.count))
-    for key in keys {
-        L.rawset(-1, key: key.rawValue, value: true)
+    let scancodes = keys.map { $0.toSiboScancode() }
+    var buf: [UInt8] = []
+    for byteIdx in 0 ..< 20 {
+        var b: UInt8 = 0
+        for bit in 0 ..< 8 {
+            if scancodes.contains(byteIdx * 8 + bit) {
+                b = b | (1 << bit)
+            }
+        }
+        buf.append(b)
     }
+    L.push(buf)
     return 1
 }
 
@@ -663,7 +671,9 @@ private func utctime(_ L: LuaState!) -> CInt {
 }
 
 private func setEra(_ L: LuaState!) -> CInt {
+    let interpreter = getInterpreterUpval(L)
     if let era: OpoInterpreter.AppEra = L.todecodable(1) {
+        interpreter.era = era
         switch era {
         case .sibo:
             L.setDefaultStringEncoding(kSiboEncoding)
@@ -691,6 +701,8 @@ public class OpoInterpreter: PsiLuaEnv {
     public var getCmd: String = ""
 
     private var hooks: LuaHooksState!
+
+    var era: AppEra? = nil
 
     public override init() {
         iohandler = DummyIoHandler() // For now...
@@ -885,20 +897,20 @@ public class OpoInterpreter: PsiLuaEnv {
                 // Remember, ev[0] here means ev[1] in the OPL docs because they're one-based
                 ev[0] = event.modifiedKeycode()!
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = event.keycode.toScancode()
+                ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
                 ev[4] = event.isRepeat ? 1 : 0
             case .keydownevent(let event):
                 // print("keydown \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
                 ev[0] = 0x406
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = event.keycode.toScancode()
+                ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
             case .keyupevent(let event):
                 // print("keyup \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
                 ev[0] = 0x407
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = event.keycode.toScancode()
+                ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
                 ev[3] = event.modifiers.rawValue
             case .penevent(let event):
                 ev[0] = 0x408
@@ -993,6 +1005,10 @@ public class OpoInterpreter: PsiLuaEnv {
     // Safe to call from any thread
     public func interrupt() {
         hooks.setHook(forState: L, mask: [.call, .ret, .line, .count], count: 1, function: stop)
+    }
+
+    private func isSibo() -> Bool {
+        return era == .sibo
     }
 
 }

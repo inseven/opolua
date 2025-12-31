@@ -145,6 +145,8 @@ public enum OplKeyCode: Int, CaseIterable {
     case irSoftkey = 10002
     case zoomInSoftkey = 10003
     case zoomOutSoftkey = 10004
+    case help = 291
+    case diamond = 292
 }
 
 extension OplKeyCode {
@@ -319,6 +321,149 @@ extension OplKeyCode {
             return OplKeyCode.L.rawValue
         case .equals:
             return OplKeyCode.P.rawValue
+        case .help, .diamond:
+            // Don't exist on Series 5
+            return self.rawValue
+        }
+    }
+
+    func toSiboScancode() -> Int {
+        switch self {
+        case .enter:
+            return 0
+        case .rightArrow, .endKey:
+            return 1
+        case .tab:
+            return 2
+        case .Y, .y:
+            return 3
+        case .leftArrow, .homeKey:
+            return 4
+        case .downArrow, .pgDn:
+            return 5
+        case .N, .n:
+            return 6
+        // case Psion:
+        //     return 7
+        // case Sheet:
+        //     return 8 // 1:0
+        // case Time:
+        //     return 9 // 1:1
+        case .slash, .semicolon:
+            return 17 // 2:1
+        case .minus, .underscore:
+            return 18 // 2:2
+        case .plus, .equals:
+            return 19 // 2:3
+        case .num0, .rightParenthesis, .rightSquareBracket:
+            return 20 // 2:4
+        case .P, .p:
+            return 21 // 2:5
+        case .asterisk, .colon:
+            return 22 // 2:6
+        case .leftShift:
+            return 23 // 2:7
+        // case Calc:
+        //     return 24 // 3:0
+        // case Agenda:
+        //     return 25 // 3:1
+        case .backspace:
+            return 32 // 4:0
+        case .K, .k:
+            return 33 // 4:1
+        case .I, .i:
+            return 34 // 4:2
+        case .num8, .questionMark, .rightCurlyBracket:
+            return 35 // 4:3
+        case .num9, .leftParenthesis, .leftSquareBracket:
+            return 36 // 4:4
+        case .O, .o:
+            return 37 // 4:5
+        case .L, .l:
+            return 38 // 4:6
+        case .control:
+            return 39 // 4:7
+        // case World:
+        //     return 41 // 5:1
+        case .comma, .lessThan:
+            return 49 // 6:1
+        case .help:
+            return 50 // 6:2
+        case .M, .m:
+            return 51 // 6:3
+        case .J, .j:
+            return 52 // 6:4
+        case .U, .u:
+            return 53 // 6:5
+        case .num7, .ampersand, .leftCurlyBracket:
+            return 54 // 6:6
+        case .rightShift:
+            return 55 // 6:7
+        // case Data:
+        //     return 57 // 7:1
+        case .space:
+            return 64 // 8:0
+        case .R, .r:
+            return 65 // 8:1
+        case .num4, .dollar, .tilde:
+            return 66 // 8:2
+        case .num5, .percent, .singleQuote:
+            return 67 // 8:3
+        case .T, .t:
+            return 68 // 8:4
+        case .G, .g:
+            return 69 // 8:5
+        case .B, .b:
+            return 70 // 8:6
+        case .diamond, .capsLock:
+            return 71 // 8:7
+        // case System:
+        //     return 73 // 9:1
+        case .F, .f:
+            return 81 // 10:1
+        case .V, .v:
+            return 82 // 10:2
+        case .C, .c:
+            return 83 // 10:3
+        case .D, .d:
+            return 84 // 10:4
+        case .E, .e:
+            return 85 // 10:5
+        case .num3, .pound, .backslash:
+            return 86 // 10:6
+        case .menu:
+            return 87 // 10:7
+        // case Word:
+        //     return 89 // 11:1
+        case .Q, .q:
+            return 97 // 12:1
+        case .A, .a:
+            return 98 // 12:2
+        case .Z, .z:
+            return 99 // 12:3
+        case .S, .s:
+            return 100 // 12:4
+        case .W, .w:
+            return 101 // 12:5
+        case .X, .x:
+            return 102 // 12:6
+        case .num1, .exclamationMark:
+            return 113 // 14:1
+        case .num2, .doubleQuote, .hash:
+            return 114 // 14:2
+        case .num6, .circumflex:
+            return 115 // 14:3
+        case .fullStop, .greaterThan:
+            return 116 // 14:4
+        case .upArrow, .pgUp:
+            return 117 // 14:5
+        case .H, .h:
+            return 118 // 14:6
+        case .escape:
+            return 120 // 15:0
+        default:
+            print("unhandled sibo keycode \(self)");
+            return self.rawValue
         }
     }
 

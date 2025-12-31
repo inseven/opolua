@@ -28,7 +28,6 @@
         <file alias="memory.lua">../src/memory.lua</file>
         <file alias="menu.lua">../src/menu.lua</file>
         <file alias="opl.lua">../src/opl.lua</file>
-        <file alias="oplkeycode.lua">../src/oplkeycode.lua</file>
         <file alias="opltotext.lua">../src/opltotext.lua</file>
         <file alias="opofile.lua">../src/opofile.lua</file>
         <file alias="ops.lua">../src/ops.lua</file>

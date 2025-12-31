@@ -12,6 +12,7 @@
 #include <QObject>
 #include <QScopedPointer>
 #include <QSemaphore>
+#include <QSet>
 #include <QTextCodec>
 #include <QThread>
 #include <QVector>
@@ -201,6 +202,7 @@ private:
     DECLARE_IOHANDLER_FN(getDeviceInfo);
     DECLARE_IOHANDLER_FN(getTime);
     DECLARE_IOHANDLER_FN(graphicsop);
+    DECLARE_IOHANDLER_FN(keysDown);
     DECLARE_IOHANDLER_FN(opsync);
     DECLARE_IOHANDLER_FN(setConfig);
     DECLARE_IOHANDLER_FN(setEra);
@@ -235,7 +237,7 @@ private:
     QElapsedTimer mLastOpTime;
     QMap<int, AsyncHandle*> mPendingRequests;
     QVector<Completion> mPendingCompletions;
-    // QBitArray mSiboScanArray;
+    QSet<int> mKeysDown; // set of scancodes, used for SIBO HwGetScanCodes only
     //// END protected by mMutex
     std::function<void(void)> mRunNextFn;
     QSemaphore mWaitSemaphore;
