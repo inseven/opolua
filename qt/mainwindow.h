@@ -55,7 +55,7 @@ private slots:
     void openSoftwareIndex();
 
 private:
-    void setDevice(QAction* action, int device);
+    void setDevice(int device);
     void setScale(int scale);
     void doSetScale(int scale);
     void sizeWindowToFitInterpreter();
@@ -75,7 +75,6 @@ private:
     bool mForceClosing;
     QLabel* statusLabel;
     QLabel* speedLabel;
-    QAction* currentDevice;
     QString mManifest;
     QScopedPointer<OplAppInfo> mAppInfo;
     QString mErrMsg;
