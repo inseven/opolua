@@ -31,7 +31,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
     setAcceptDrops(true);
-    currentDevice = ui->actionSeries5;
 #ifdef Q_OS_MAC
     // This should be ctrl-esc on ALL platforms
     ui->actionStop->setShortcut(QCoreApplication::translate("MainWindow", "Meta+Esc", nullptr));
@@ -90,13 +89,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionRestart, &QAction::triggered, runtime, &OplRuntime::restart);
     connect(ui->actionMenu, &QAction::triggered, runtime, &OplRuntime::pressMenuKey);
     connect(ui->actionDiamond, &QAction::triggered, runtime, &OplRuntime::pressDiamondKey);
-    connect(ui->actionSeries3, &QAction::triggered, this, [this] { setDevice(ui->actionSeries3, OplRuntime::Series3); });
-    connect(ui->actionSeries3c, &QAction::triggered, this, [this] { setDevice(ui->actionSeries3c, OplRuntime::Series3c); });
-    connect(ui->actionSiena, &QAction::triggered, this, [this] { setDevice(ui->actionSiena, OplRuntime::Siena); });
-    connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(ui->actionSeries5, OplRuntime::Series5); });
-    connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(ui->actionSeries7, OplRuntime::Series7); });
-    connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(ui->actionGeofoxOne, OplRuntime::GeofoxOne); });
-    connect(ui->actionRevo, &QAction::triggered, this, [this] { setDevice(ui->actionRevo, OplRuntime::Revo); });
+    connect(ui->actionSeries3, &QAction::triggered, this, [this] { setDevice(OplRuntime::Series3); });
+    connect(ui->actionSeries3c, &QAction::triggered, this, [this] { setDevice(OplRuntime::Series3c); });
+    connect(ui->actionSiena, &QAction::triggered, this, [this] { setDevice(OplRuntime::Siena); });
+    connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(OplRuntime::Series5); });
+    connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(OplRuntime::Series7); });
+    connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(OplRuntime::GeofoxOne); });
+    connect(ui->actionRevo, &QAction::triggered, this, [this] { setDevice(OplRuntime::Revo); });
     connect(ui->actionFaster, &QAction::triggered, runtime, &OplRuntime::runFaster);
     connect(ui->actionSlower, &QAction::triggered, runtime, &OplRuntime::runSlower);
     connect(ui->actionDefaultSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::DefaultSpeed); });
@@ -211,6 +210,7 @@ void MainWindow::onDeviceTypeChanged()
 {
     sizeWindowToFitInterpreter();
     bool sibo = getRuntime().isSibo();
+    auto device = getRuntime().getDeviceType();
     ui->actionDiamond->setVisible(sibo);
     ui->actionSeries3->setVisible(sibo);
     ui->actionSeries3c->setVisible(sibo);
@@ -219,6 +219,14 @@ void MainWindow::onDeviceTypeChanged()
     ui->actionSeries7->setVisible(!sibo);
     ui->actionGeofoxOne->setVisible(!sibo);
     ui->actionRevo->setVisible(!sibo);
+
+    ui->actionSeries3->setChecked(device == OplRuntime::Series3);
+    ui->actionSeries3c->setChecked(device == OplRuntime::Series3c);
+    ui->actionSiena->setChecked(device == OplRuntime::Siena);
+    ui->actionSeries5->setChecked(device == OplRuntime::Series5);
+    ui->actionSeries7->setChecked(device == OplRuntime::Series7);
+    ui->actionGeofoxOne->setChecked(device == OplRuntime::GeofoxOne);
+    ui->actionRevo->setChecked(device == OplRuntime::Revo);
 }
 
 void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)
@@ -315,12 +323,8 @@ void MainWindow::openWelcome()
     runtime.run("C:\\System\\Apps\\Welcome\\Welcome.app");
 }
 
-void MainWindow::setDevice(QAction* action, int device)
+void MainWindow::setDevice(int device)
 {
-    currentDevice->setChecked(false);
-    action->setChecked(true);
-    currentDevice = action;
-
     getRuntime().setDeviceType((OplRuntime::DeviceType)device);
     getRuntime().restart();
 
