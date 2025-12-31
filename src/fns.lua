@@ -927,24 +927,17 @@ end
 Ioc_dump = numParams_dump
 
 function Uadd(stack, runtime) -- 0x50
-    local right = stack:pop()
-    local left = stack:pop()
-
-    if type(left) == "table" or type(right) == "table" then
-        -- Assume one is an AddrSlice and just run with it (it shouln't be,
-        -- unless SETFLAGS(1) is in effect, but there are programs which use
-        -- UADD on addresses regardless of that setting...)
-        stack:push(left + right)
-    else
-        local result = touint16(left) + touint16(right)
-        stack:push(string.unpack("<i2", string.pack("<I2", result)))
-    end
+    local right = touint16(stack:pop())
+    local left = touint16(stack:pop())
+    local result = toint16(left + right)
+    stack:push(result)
 end
 
 function Usub(stack, runtime) -- 0x51
     local right = touint16(stack:pop())
     local left = touint16(stack:pop())
-    stack:push(string.unpack("<i2", string.pack("<I2", left - right)))
+    local result = toint16(left - right)
+    stack:push(result)
 end
 
 function IoCancel(stack, runtime) -- 0x52
