@@ -128,6 +128,7 @@ void OplRuntime::pushIohandler()
         IOHANDLER_FN(getDeviceInfo),
         IOHANDLER_FN(getTime),
         IOHANDLER_FN(graphicsop),
+        IOHANDLER_FN(keysDown),
         IOHANDLER_FN(opsync),
         IOHANDLER_FN(system),
         IOHANDLER_FN(setConfig),
@@ -1401,6 +1402,11 @@ void OplRuntime::addEvent(const OplRuntime::Event& event)
     }
     mMutex.lock();
     mEvents.append(event);
+    if (event.code == opl::keydown) {
+        mKeysDown.insert(event.keyupdown.scancode);
+    } else if (event.code == opl::keyup) {
+        mKeysDown.remove(event.keyupdown.scancode);
+    }
     if (checkEventRequest_locked()) {
         unlockAndSignalIfWaiting();
     } else {
@@ -1895,4 +1901,21 @@ void OplRuntime::drawCursor()
         mScreen->endBatchDraw();
         mCursorDrawn = !mCursorDrawn;
     }
+}
+
+int OplRuntime::keysDown(lua_State* L)
+{
+    mMutex.lock();
+    uint8_t bytes[20];
+    for (size_t byte = 0; byte < sizeof(bytes); byte++) {
+        bytes[byte] = 0;
+        for (int bit = 0; bit < 8; bit++) {
+            if (mKeysDown.contains(byte * 8 + bit)) {
+                bytes[byte] |= (1 << bit);
+            }
+        }
+    }
+    mMutex.unlock();
+    lua_pushlstring(L, (char*)bytes, sizeof(bytes));
+    return 1;
 }

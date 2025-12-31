@@ -220,26 +220,9 @@ local function byte(bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7)
         (bit7 and 0x80 or 0)
 end
 
--- TODO(tomsci): This needs updating
 function HwGetScanCodes(runtime, params) -- 0x8E28
-    -- print("HwGetScanCodes", dumpRegisters(params), dumpRegisters(results))
-    local keys = runtime:iohandler().keysDown()
-    local scanCodes = require("oplkeycode").series3aScanCodes
-    local bytes = {}
-    for i = 0, 19 do
-        local base = 1 + (8 * i)
-        bytes[i + 1] = byte(
-            keys[scanCodes[base]],
-            keys[scanCodes[base + 1]],
-            keys[scanCodes[base + 2]],
-            keys[scanCodes[base + 3]],
-            keys[scanCodes[base + 4]],
-            keys[scanCodes[base + 5]],
-            keys[scanCodes[base + 6]],
-            keys[scanCodes[base + 7]]
-        )
-    end
-    local buf = string.pack("BBBBBBBBBBBBBBBBBBBB", table.unpack(bytes))
+    -- print("HwGetScanCodes", dumpRegisters(params))
+    local buf = runtime:iohandler().keysDown()
     runtime:addrFromInt(params.bx):write(buf)
 end
 

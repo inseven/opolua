@@ -273,12 +273,9 @@ int32_t scancodeForKeycode(int32_t keycode)
 // description. But because we implement the SIBO input APIs in terms of GETEVENT32, we have to make up a scancode for
 // that to return, and we might as well use the same values. Although it's possible these _are_ the scancodes and the
 // OPL manual doesn't explain them because the bitfield is the only way to retrieve them on SIBO.
+// See HwGetScanCodes in https://www.davros.org/psion/psionics/syscalls.3 for the X:Y references
 int32_t siboScancodeForKeycode(int32_t keycode)
 {
-    if (keycode >= opl::a && keycode <= opl::z) {
-        keycode = keycode - 32;
-    }
-
     switch (keycode) {
     case opl::enter:
         return 0;
@@ -288,6 +285,7 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::tab:
         return 2;
     case opl::Y:
+    case opl::y:
         return 3;
     case opl::leftArrow:
     case opl::homeKey:
@@ -296,151 +294,176 @@ int32_t siboScancodeForKeycode(int32_t keycode)
     case opl::pgDn:
         return 5;
     case opl::N:
+    case opl::n:
         return 6;
     // case Psion:
     //     return 7;
     // case Sheet:
-    //     return 8;
+    //     return 8; // 1:0
     // case Time:
-    //     return 9;
+    //     return 9; // 1:1
     case opl::slash:
     case opl::semicolon:
-        return 17;
+        return 17; // 2:1
     case opl::minus:
     case opl::underscore:
-        return 18;
+        return 18; // 2:2
     case opl::plus:
     case opl::equals:
-        return 19;
+        return 19; // 2:3
     case opl::num0:
     case opl::rightParenthesis:
     case opl::rightSquareBracket:
-        return 20;
+        return 20; // 2:4
     case opl::P:
-        return 21;
+    case opl::p:
+        return 21; // 2:5
     case opl::asterisk:
     case opl::colon:
-        return 22;
+        return 22; // 2:6
     case opl::leftShift:
-        return 23;
+        return 23; // 2:7
     // case Calc:
-    //     return 24;
+    //     return 24; // 3:0
     // case Agenda:
-    //     return 25;
+    //     return 25; // 3:1
     case opl::backspace:
-        return 32;
+        return 32; // 4:0
     case opl::K:
-        return 33;
+    case opl::k:
+        return 33; // 4:1
     case opl::I:
-        return 34;
+    case opl::i:
+        return 34; // 4:2
     case opl::num8:
     case opl::questionMark:
     case opl::rightCurlyBracket:
-        return 35;
+        return 35; // 4:3
     case opl::num9:
     case opl::leftParenthesis:
     case opl::leftSquareBracket:
-        return 36;
+        return 36; // 4:4
     case opl::O:
-        return 37;
+    case opl::o:
+        return 37; // 4:5
     case opl::L:
-        return 38;
+    case opl::l:
+        return 38; // 4:6
     case opl::control:
-        return 39;
+        return 39; // 4:7
     // case World:
-    //     return 40;
+    //     return 41; // 5:1
     case opl::comma:
     case opl::lessThan:
-        return 48;
+        return 49; // 6:1
     case opl::help:
-        return 49;
+        return 50; // 6:2
     case opl::M:
-        return 50;
+    case opl::m:
+        return 51; // 6:3
     case opl::J:
-        return 51;
+    case opl::j:
+        return 52; // 6:4
     case opl::U:
-        return 52;
+    case opl::u:
+        return 53; // 6:5
     case opl::num7:
     case opl::ampersand:
     case opl::leftCurlyBracket:
-        return 53;
+        return 54; // 6:6
     case opl::rightShift:
-        return 54;
+        return 55; // 6:7
     // case Data:
-    //     return 55;
+    //     return 57; // 7:1
     case opl::space:
-        return 62;
+        return 64; // 8:0
     case opl::R:
-        return 63;
+    case opl::r:
+        return 65; // 8:1
     case opl::num4:
     case opl::dollar:
     case opl::tilde:
-        return 64;
+        return 66; // 8:2
     case opl::num5:
     case opl::percent:
     case opl::singleQuote:
-        return 65;
+        return 67; // 8:3
     case opl::T:
-        return 66;
+    case opl::t:
+        return 68; // 8:4
     case opl::G:
-        return 67;
+    case opl::g:
+        return 69; // 8:5
     case opl::B:
-        return 68;
+    case opl::b:
+        return 70; // 8:6
     case opl::diamond:
     case opl::capsLock:
-        return 69;
+        return 71; // 8:7
     // case System:
-    //     return 70;
+    //     return 73; // 9:1
     case opl::F:
-        return 78;
+    case opl::f:
+        return 81; // 10:1
     case opl::V:
-        return 79;
+    case opl::v:
+        return 82; // 10:2
     case opl::C:
-        return 80;
+    case opl::c:
+        return 83; // 10:3
     case opl::D:
-        return 81;
+    case opl::d:
+        return 84; // 10:4
     case opl::E:
-        return 82;
+    case opl::e:
+        return 85; // 10:5
     case opl::num3:
     case opl::pound:
     case opl::backslash:
-        return 83;
+        return 86; // 10:6
     case opl::menu:
-        return 84;
+        return 87; // 10:7
     // case Word:
-    //     return 85;
+    //     return 89; // 11:1
     case opl::Q:
-        return 93;
+    case opl::q:
+        return 97; // 12:1
     case opl::A:
-        return 94;
-    case opl::S:
-        return 96;
-    case opl::W:
-        return 97;
-    case opl::X:
-        return 98;
+    case opl::a:
+        return 98; // 12:2
     case opl::Z:
-        return 99;
+    case opl::z:
+        return 99; // 12:3
+    case opl::S:
+    case opl::s:
+        return 100; // 12:4
+    case opl::W:
+    case opl::w:
+        return 101; // 12:5
+    case opl::X:
+    case opl::x:
+        return 102; // 12:6
     case opl::num1:
     case opl::exclamationMark:
-        return 109;
+        return 113; // 14:1
     case opl::num2:
     case opl::doubleQuote:
     case opl::hash:
-        return 110;
+        return 114; // 14:2
     case opl::num6:
     case opl::circumflex:
-        return 111;
+        return 115; // 14:3
     case opl::fullStop:
     case opl::greaterThan:
-        return 112;
+        return 116; // 14:4
     case opl::upArrow:
     case opl::pgUp:
-        return 113;
+        return 117; // 14:5
     case opl::H:
-        return 114;
+    case opl::h:
+        return 118; // 14:6
     case opl::escape:
-        return 116;
+        return 120; // 15:0
     default:
         qWarning("unhandled sibo keycode %d", keycode);
         return -1;
