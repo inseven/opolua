@@ -898,20 +898,20 @@ public class OpoInterpreter: PsiLuaEnv {
                 ev[0] = event.modifiedKeycode()!
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
-                ev[3] = event.modifiers.rawValue
+                ev[3] = event.getModifiers(includingPsion: isSibo()).rawValue
                 ev[4] = event.isRepeat ? 1 : 0
             case .keydownevent(let event):
                 // print("keydown \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
                 ev[0] = 0x406
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
-                ev[3] = event.modifiers.rawValue
+                ev[3] = event.getModifiers(includingPsion: isSibo()).rawValue
             case .keyupevent(let event):
                 // print("keyup \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
                 ev[0] = 0x407
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
-                ev[3] = event.modifiers.rawValue
+                ev[3] = event.getModifiers(includingPsion: isSibo()).rawValue
             case .penevent(let event):
                 ev[0] = 0x408
                 ev[1] = timestampToInt32(event.timestamp)

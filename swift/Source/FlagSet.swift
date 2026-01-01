@@ -60,6 +60,10 @@ public struct FlagSet<T>: Equatable, Codable where T: FlagEnum, T.RawValue: Coda
         rawValue = rawValue | flag.rawValue
     }
 
+    mutating public func remove(_ flag: T) {
+        rawValue = rawValue & ~flag.rawValue
+    }
+
     public init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer().decode(T.RawValue.self)
         self.init(rawValue: value)

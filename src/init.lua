@@ -486,17 +486,20 @@ local charCodeMap = {
     [KKeyMenu32] = KGetMenu, -- Menu (note different naming convention on charcode)
 }
 
-function keycodeToCharacterCode(keycode)
+function keycodeToCharacterCode(rawKeycode)
+    -- The Psion modifier (on keys that don't have a psion-alternate keycode) is preserved in char codes
+    local psionBit = rawKeycode & 0x200
+    local keycode = rawKeycode & ~0x200
     local ch = charCodeMap[keycode]
     if ch then
-        return ch
+        return ch | psionBit
     elseif keycode < 256 then
-        return keycode
+        return rawKeycode
     elseif keycode == 292 then
         -- diamond key, there is no "32" code because the key was removed in epoc32, so no translation needed.
-        return keycode
+        return rawKeycode
     else
-        error("Unknown keycode "..tostring(keycode))
+        error("Unknown keycode "..tostring(rawKeycode))
     end
 end
 

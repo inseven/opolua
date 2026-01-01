@@ -496,4 +496,26 @@ extension OplKeyCode {
         }
     }
 
+    public func isAlpha() -> Bool {
+        return (self.rawValue >= OplKeyCode.a.rawValue && self.rawValue <= OplKeyCode.z.rawValue) ||
+        (self.rawValue >= OplKeyCode.A.rawValue && self.rawValue <= OplKeyCode.Z.rawValue)
+    }
+
+    public func isNum() -> Bool {
+        return self.rawValue >= OplKeyCode.num0.rawValue && self.rawValue <= OplKeyCode.num9.rawValue
+    }
+
+    public func lowercase() -> OplKeyCode {
+        if self.rawValue >= OplKeyCode.A.rawValue && self.rawValue <= OplKeyCode.Z.rawValue {
+            return OplKeyCode(rawValue: self.rawValue + 32)!
+        } else {
+            return self
+        }
+    }
+
+    // Returns true for keys that add 0x200 to the keycode when the psion key is pressed. This is broadly all
+    // ASCII-producing keys that don't have an alternate usage printed on them.
+    public func addsPsionBit() -> Bool {
+        return isAlpha() || self == .asterisk || self == .slash || self == .minus || self == .plus
+    }
 }

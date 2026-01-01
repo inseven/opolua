@@ -1239,6 +1239,7 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
     int32_t oplcode = 0;
     opl::Modifiers modifiers = getOplModifiers(event.modifiers());
     if (!isSibo()) {
+        // Series 5 doesn't have psion key, make sure we don't expose it
         modifiers.setFlag(opl::psionModifier, false);
     }
     if (event.text().size() == 1) {
@@ -1280,9 +1281,13 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
         }
         // If it doesn't have a charcode, we shouldn't generate a keypress for it
         if (charcodeForKeycode(oplcode)) {
-            // CTRL-[shift-]letter have special codes
+            // Psion-key and CTRL-[shift-]letter have special codes
             int keypressCode;
-            if ((modifiers & opl::controlModifier) && oplcode >= 'A' && oplcode <= 'Z') {
+            if ((modifiers & opl::psionModifier) && keycodeAddsPsionBit(oplcode)) {
+                // Psion key adds 0x200 to the keycode, and they are always sent lowercase, hence the 0x20.
+                // The psion key being pressed supersedes the control key logic below.
+                keypressCode = oplcode | 0x220;
+            } else if ((modifiers & opl::controlModifier) && oplcode >= 'A' && oplcode <= 'Z') {
                 keypressCode = oplcode - 'A' + 1;
             } else {
                 keypressCode = oplcode;

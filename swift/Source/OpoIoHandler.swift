@@ -509,6 +509,7 @@ extension Fs.Operation {
 public enum Modifier: Int, FlagEnum {
     case shift = 2
     case control = 4
+    case psion = 8
     case capsLock = 16
     case fn = 32
 }
@@ -548,6 +549,14 @@ public struct Async {
             self.modifiers = modifiers
             self.isRepeat = isRepeat
         }
+
+        public func getModifiers(includingPsion: Bool) -> Modifiers {
+            var result = self.modifiers
+            if !includingPsion {
+                result.remove(.psion)
+            }
+            return result
+        }
     }
 
     public struct KeyUpDownEvent {
@@ -559,6 +568,14 @@ public struct Async {
             self.timestamp = timestamp
             self.keycode = keycode
             self.modifiers = modifiers
+        }
+        
+        public func getModifiers(includingPsion: Bool) -> Modifiers {
+            var result = self.modifiers
+            if !includingPsion {
+                result.remove(.psion)
+            }
+            return result
         }
     }
 
@@ -646,10 +663,13 @@ public struct Async {
 
 extension Async.KeyPressEvent {
     public func modifiedKeycode() -> Int? {
-        if modifiers.contains(.control) && keycode.rawValue >= OplKeyCode.a.rawValue && keycode.rawValue <= OplKeyCode.z.rawValue {
+        if modifiers.contains(.psion) && keycode.addsPsionBit() {
+            // This takes precedence if both Psion and Control are pressed.
+            return 0x200 | keycode.lowercase().rawValue
+        } else if modifiers.contains(.control) && keycode.isAlpha() {
             // OPL likes to send 1-26 for Ctrl-[Shift-]A thru Ctrl-[Shift-]Z
-            return keycode.rawValue - (OplKeyCode.a.rawValue - 1)
-        } else if modifiers.contains(.control) && keycode.rawValue >= OplKeyCode.num0.rawValue && keycode.rawValue <= OplKeyCode.num9.rawValue {
+            return keycode.lowercase().rawValue - (OplKeyCode.a.rawValue - 1)
+        } else if modifiers.contains(.control) && keycode.isNum() {
             // Ctrl-0 thru Ctrl-9 don't send keypress events at all because CTRL-x,y,z... is used
             // for inputting a key with code xyz.
             // But eg Ctrl-Fn-1 (for underscore) does.

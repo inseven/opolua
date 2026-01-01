@@ -503,3 +503,11 @@ int32_t charcodeForKeycode(int32_t keycode)
         return keycode;
     }
 }
+
+// Returns true for keys that add 0x200 to the keycode when the psion key is pressed. This is broadly all
+// ASCII-producing keys that don't have an alternate usage printed on them.
+bool keycodeAddsPsionBit(int32_t keycode)
+{
+    return (keycode >= opl::A && keycode <= opl::Z) ||
+        keycode == opl::asterisk || keycode == opl::slash || keycode == opl::minus || keycode == opl::plus;
+}
