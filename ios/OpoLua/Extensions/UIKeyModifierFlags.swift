@@ -35,6 +35,9 @@ extension UIKeyModifierFlags {
         if self.contains(.alphaShift) {
             result.insert(.capsLock)
         }
+        if self.contains(.alternate) {
+            result.insert(.psion)
+        }
         return result
     }
 }

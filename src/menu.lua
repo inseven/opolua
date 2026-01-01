@@ -577,13 +577,12 @@ local function runMenuEventLoop(bar, pane, shortcuts)
             if shortcuts[cmd] then
                 result = cmd
             end
-        elseif (k >= 0x41 and k <= 0x5A) or (k >= 0x61 and k <= 0x6A) then
-            local psion = ev[KEvAKMod]() & KKmodPsion > 0
-            if psion then
-                local cmd = k | 0x20 -- implicit upper case
-                if shortcuts[cmd] then
-                    result = cmd
-                end
+        elseif (k & 0x200) ~= 0 then
+            -- Could check for the psion modifier key but there's no need while the 0x200 doesn't happen to anything
+            -- else (and all keys that the 0x200 applies to are ones that can be used as shortcuts)
+            local cmd = k & ~0x200
+            if shortcuts[cmd] then
+                result = cmd
             end
         elseif k == KEvPtr then
             local evWinId = ev[KEvAPtrWindowId]()

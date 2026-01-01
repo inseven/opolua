@@ -178,5 +178,6 @@ int32_t siboScancodeForKeycode(int32_t keycode);
 int32_t modifiersToTEventModifiers(opl::Modifiers modifiers);
 int32_t charcodeForKeycode(int32_t keycode);
 int qtKeyToOpl(int qtKey);
+bool keycodeAddsPsionBit(int32_t keycode);
 
 #endif
