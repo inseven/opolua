@@ -282,15 +282,24 @@ class Program {
     }
 
     func sendEvent(_ event: Async.ResponseValue) {
-        eventQueue.append(event)
         switch event {
         case .keydownevent(let keydown):
             currentKeys.insert(keydown.keycode)
+            if configuration.device.isSibo {
+            // SIBO doesn't do up or down events
+                return
+            }
         case .keyupevent(let keyup):
             currentKeys.remove(keyup.keycode)
+            if configuration.device.isSibo {
+            // SIBO doesn't do up or down events
+                return
+            }
         default:
             break
         }
+
+        eventQueue.append(event)
         checkGetEventCompletion()
     }
 
