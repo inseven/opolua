@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2025-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
 #ifndef OPLRUNTIME_H
@@ -146,19 +146,19 @@ private:
             struct {
                 int32_t timestamp;
                 int32_t scancode;
-                int32_t modifiers; // Modifiers
+                uint32_t modifiers; // Modifiers
                 int32_t repeat;
             } keypress;
             struct {
                 int32_t timestamp;
                 int32_t scancode;
-                int32_t modifiers; // Modifiers
+                uint32_t modifiers; // Modifiers
             } keyupdown;
             struct {
                 int32_t timestamp;
                 int32_t windowId;
                 int32_t pointerType;
-                int32_t modifiers; // TEventModifiers NOT Modifiers
+                uint32_t modifiers; // TEventModifiers NOT Modifiers
                 int32_t x;
                 int32_t y;
                 int32_t xscreen;

@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -234,18 +234,18 @@ class CanvasView : ViewBase, Drawable {
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        handleTouch(touches, event: event, type: .down)
+        handleTouch(touches, event: event, type: .pointerDown)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        handleTouch(touches, event: event, type: .drag)
+        handleTouch(touches, event: event, type: .pointerDrag)
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        handleTouch(touches, event: event, type: .up)
+        handleTouch(touches, event: event, type: .pointerUp)
     }
 
-    private func handleTouch(_ touches: Set<UITouch>, event: UIEvent?, type: Async.PenEventType) {
+    private func handleTouch(_ touches: Set<UITouch>, event: UIEvent?, type: PointerType) {
         guard let event = event,
               let touch = touches.first else {
             return

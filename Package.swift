@@ -13,7 +13,8 @@ let package = Package(
         .library(
             name: "OpoLuaCore",
             targets: [
-                "OpoLuaCore"
+                "OpoLuaCore",
+                "OplCore",
             ]),
     ],
     dependencies: [
@@ -26,10 +27,16 @@ let package = Package(
             dependencies: [
                 .product(name: "Licensable", package: "licensable"),
                 .product(name: "Lua", package: "LuaSwift"),
+                "OplCore",
             ],
             path: "swift",
             resources: [
                 .process("Resources"),
             ]),
+        .target(
+            name: "OplCore",
+            path: "core/shared",
+            publicHeadersPath: "include"
+            ),
     ]
 )
