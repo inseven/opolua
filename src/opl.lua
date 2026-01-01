@@ -336,12 +336,33 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         lineh = h
     end
 
+    gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
     if runtime:isColor() then
         gCOLOR(0x99, 0x99, 0xCC)
+    elseif runtime:getDeviceName() == "psion-series-3" then
+        -- Doesn't look like S3 buttons are drawable with gBORDER commands
+        black()
+        gFILL(width, height, KgModeClear)
+        -- Draw the button 'shadow'
+        gMOVE(width - 2, 1)
+        gLINEBY(0, 0)
+        gMOVE(1, 1)
+        gLINEBY(0, height - 3)
+        gLINEBY(-(width - 3), 0)
+        gMOVE(-1, -1)
+        gLINEBY(0, 0)
+
+        gAT(s.pos.x + state, s.pos.y + state)
+        gBOX(width - 2, height - 2)
+        gAT(s.pos.x + width - 2 + state, s.pos.y + height - 2 + state)
+
+        local textx = s.pos.x + state + (width - textw) // 2
+        local texty = s.pos.y + state + (height - texth) // 2
+        runtime:drawText(text, textx, texty) 
+        return
     else
         lightGrey()
     end
-    gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
 
     if state == 0 then
         gXBORDER(2, 0x84, width, height)
