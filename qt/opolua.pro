@@ -56,9 +56,10 @@ SOURCES += \
     oplkeycode.cpp \
     oplruntime.cpp \
     oplruntimegui.cpp \
-    oplscreenwidget.cpp
+    oplscreenwidget.cpp \
+    ../core/shared/src/oplfns.c
 
-INCLUDEPATH += ../dependencies/LuaSwift/Sources/CLua/lua
+INCLUDEPATH += ../core/shared/include ../dependencies/LuaSwift/Sources/CLua/lua
 
 FORMS += \
     aboutwindow.ui \

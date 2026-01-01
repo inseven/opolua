@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 import Foundation
 import Lua
 import CLua
+import OplCore
 
 private func traceHandler(_ L: LuaState!) -> CInt {
     L.settop(1)
@@ -539,7 +540,7 @@ private func getTime(_ L: LuaState!) -> CInt {
 private func keysDown(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let keys = iohandler.keysDown()
-    let scancodes = keys.map { $0.toSiboScancode() }
+    let scancodes = keys.map { $0.toScancode(sibo: true) }
     var buf: [UInt8] = []
     for byteIdx in 0 ..< 20 {
         var b: UInt8 = 0
@@ -856,22 +857,8 @@ public class OpoInterpreter: PsiLuaEnv {
         try pcall(3, 0) // runOpo(devicePath, proc, iohandler)
     }
 
-    // Pen events actually use TEventModifers not TOplModifiers (despite what the documentation says)
     private static func modifiersToTEventModifiers(_ modifiers: Modifiers) -> Int {
-        var result: Int = 0
-        if modifiers.contains(.shift) {
-            result |= 0x500 // EModifierLeftShift | EModifierShift
-        }
-        if modifiers.contains(.control) {
-            result |= 0xA0 // EModifierLeftCtrl | EModifierCtrl
-        }
-        if modifiers.contains(.capsLock) {
-            result |= 0x4000 // EModifierCapsLock
-        }
-        if modifiers.contains(.fn) {
-            result |= 0x2800 // EModifierLeftFunc | EModifierFunc
-        }
-        return result
+        return Int(oplModifiersToTEventModifiers(UInt32(modifiers.rawValue)))
     }
 
     func completeRequest(_ L: LuaState!, _ response: Async.Response) {
@@ -893,52 +880,53 @@ public class OpoInterpreter: PsiLuaEnv {
             var ev = Array<Int>(repeating: 0, count: 9)
             switch (response.value) {
             case .keypressevent(let event):
+                let modifiers = event.getModifiers(includingPsion: isSibo())
                 // print("keypress \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
                 // Remember, ev[0] here means ev[1] in the OPL docs because they're one-based
                 ev[0] = event.modifiedKeycode()!
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
-                ev[3] = event.getModifiers(includingPsion: isSibo()).rawValue
+                ev[2] = event.keycode.toScancode(sibo: isSibo())
+                ev[3] = modifiers.rawValue
                 ev[4] = event.isRepeat ? 1 : 0
             case .keydownevent(let event):
                 // print("keydown \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
-                ev[0] = 0x406
+                ev[0] = EventId.keydown.intValue
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
+                ev[2] = event.keycode.toScancode(sibo: isSibo())
                 ev[3] = event.getModifiers(includingPsion: isSibo()).rawValue
             case .keyupevent(let event):
                 // print("keyup \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
-                ev[0] = 0x407
+                ev[0] = EventId.keyup.intValue
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = isSibo() ? event.keycode.toSiboScancode() : event.keycode.toScancode()
+                ev[2] = event.keycode.toScancode(sibo: isSibo())
                 ev[3] = event.getModifiers(includingPsion: isSibo()).rawValue
             case .penevent(let event):
-                ev[0] = 0x408
+                ev[0] = EventId.pen.intValue
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.windowId.value
-                ev[3] = event.type.rawValue
+                ev[3] = event.type.intValue
                 ev[4] = Self.modifiersToTEventModifiers(event.modifiers)
                 ev[5] = event.x
                 ev[6] = event.y
                 ev[7] = event.screenx
                 ev[8] = event.screeny
             case .pendownevent(let event):
-                ev[0] = 0x409
+                ev[0] = EventId.pendown.intValue
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.windowId.value
             case .penupevent(let event):
-                ev[0] = 0x40A
+                ev[0] = EventId.penup.intValue
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.windowId.value
             case .foregrounded(let event):
-                ev[0] = 0x401
+                ev[0] = EventId.foregrounded.intValue
                 ev[1] = timestampToInt32(event.timestamp)
             case .backgrounded(let event):
-                ev[0] = 0x402
+                ev[0] = EventId.backgrounded.intValue
                 ev[1] = timestampToInt32(event.timestamp)
             case .quitevent:
                 // 0x404 is actually just the generic "cmd" event, hence we set getCmd for iohandler.system("getCmd")
-                ev[0] = 0x404
+                ev[0] = EventId.command.intValue
                 self.getCmd = "X"
             case .cancelled, .completed, .interrupt:
                 break // No completion data for these

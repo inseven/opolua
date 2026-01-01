@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -506,6 +506,7 @@ extension Fs.Operation {
     }
 }
 
+// The way FlagEnum is defined (requiring CaseIterable) means we cannot define this in terms of CommonCore's OplModifier
 public enum Modifier: Int, FlagEnum {
     case shift = 2
     case control = 4
@@ -579,16 +580,10 @@ public struct Async {
         }
     }
 
-    public enum PenEventType: Int {
-        case down = 0
-        case up = 1
-        case drag = 6
-    }
-
     public struct PenEvent {
         public let timestamp: TimeInterval // Since boot
         public let windowId: Graphics.DrawableId
-        public let type: PenEventType
+        public let type: PointerType
         public let modifiers: Modifiers
         public let x: Int
         public let y: Int
@@ -597,7 +592,7 @@ public struct Async {
 
         public init(timestamp: TimeInterval,
                     windowId: Graphics.DrawableId,
-                    type: PenEventType,
+                    type: PointerType,
                     modifiers: Modifiers,
                     x: Int,
                     y: Int,
@@ -663,20 +658,7 @@ public struct Async {
 
 extension Async.KeyPressEvent {
     public func modifiedKeycode() -> Int? {
-        if modifiers.contains(.psion) && keycode.addsPsionBit() {
-            // This takes precedence if both Psion and Control are pressed.
-            return 0x200 | keycode.lowercase().rawValue
-        } else if modifiers.contains(.control) && keycode.isAlpha() {
-            // OPL likes to send 1-26 for Ctrl-[Shift-]A thru Ctrl-[Shift-]Z
-            return keycode.lowercase().rawValue - (OplKeyCode.a.rawValue - 1)
-        } else if modifiers.contains(.control) && keycode.isNum() {
-            // Ctrl-0 thru Ctrl-9 don't send keypress events at all because CTRL-x,y,z... is used
-            // for inputting a key with code xyz.
-            // But eg Ctrl-Fn-1 (for underscore) does.
-            return nil
-        } else {
-            return keycode.rawValue
-        }
+        return self.keycode.modifiedKeycode(self.modifiers)
     }
 }
 

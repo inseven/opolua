@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2025-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
 #include "oplruntime.h"
@@ -7,6 +7,7 @@
 #include "luasupport.h"
 #include "oplkeycode.h"
 #include "asynchandle.h"
+#include "oplfns.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -1244,24 +1245,19 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
     }
     if (event.text().size() == 1) {
         auto ch = event.text()[0].unicode();
-        if (ch >= 0x20 && ch <= 0x7E && ch != 0x60) {
-            // All the printable ascii block except backtick have the same codes in OPL
-            oplcode = ch;
-            if (ch >= 'A' && ch <= 'Z' && (modifiers & opl::shiftModifier) == 0) {
-                // Presumably caps lock is set?
-                modifiers |= opl::capsLockModifier;
-            }
-        }
+        oplcode = oplUnicodeToKeycode(ch);
+        // TODO We could do with some better handling for capslock here
     }
     if (!oplcode) {
         oplcode = qtKeyToOpl(event.key());
     }
     if (!oplcode) return;
 
-    int32_t scan = isSibo() ? siboScancodeForKeycode(oplcode) : scancodeForKeycode(oplcode);
+    int32_t scan = oplScancodeForKeycode(oplcode, isSibo());
     // -1 means invalid, because in SIBO 0 is a valid scan code (for enter)
     if (scan < 0) {
         // Possible if eg the user presses a sibo-specific key on a non-sibo device
+        qWarning("unhandled keycode %d", oplcode);
         return;
     }
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
@@ -1275,30 +1271,19 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
                 .keyupdown = {
                     .timestamp = timestamp,
                     .scancode = scan,
-                    .modifiers = (int32_t)modifiers,
+                    .modifiers = modifiers,
                 }
             };
             addEvent(e);
         }
-        // If it doesn't have a charcode, we shouldn't generate a keypress for it
-        if (charcodeForKeycode(oplcode)) {
-            // Psion-key and CTRL-[shift-]letter have special codes
-            int keypressCode;
-            if ((modifiers & opl::psionModifier) && keycodeAddsPsionBit(oplcode)) {
-                // Psion key adds 0x200 to the keycode, and they are always sent lowercase, hence the 0x20.
-                // The psion key being pressed supersedes the control key logic below.
-                keypressCode = oplcode | 0x220;
-            } else if ((modifiers & opl::controlModifier) && oplcode >= 'A' && oplcode <= 'Z') {
-                keypressCode = oplcode - 'A' + 1;
-            } else {
-                keypressCode = oplcode;
-            }
+        auto keypressCode = oplModifiedKeycode(oplcode, modifiers);
+        if (keypressCode) {
             Event e = {
                 .code = keypressCode,
                 .keypress = {
                     .timestamp = timestamp,
                     .scancode = scan,
-                    .modifiers = (int32_t)modifiers,
+                    .modifiers = modifiers,
                     .repeat = event.isAutoRepeat() ? 1 : 0
                 }
             };
@@ -1310,7 +1295,7 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
             .keyupdown = {
                 .timestamp = timestamp,
                 .scancode = scan,
-                .modifiers = (int32_t)modifiers,
+                .modifiers = modifiers,
             }
         };
         addEvent(e);
@@ -1338,7 +1323,7 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
                 .timestamp = timestamp,
                 .windowId = windowId,
                 .pointerType = opl::pointerDown,
-                .modifiers = (int32_t)modifiers,
+                .modifiers = oplModifiersToTEventModifiers(modifiers),
                 .x = event.pos().x(),
                 .y = event.pos().y(),
                 .xscreen = screenPos.x(),
@@ -1353,7 +1338,7 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
                 .timestamp = timestamp,
                 .windowId = windowId,
                 .pointerType = opl::pointerUp,
-                .modifiers = (int32_t)modifiers,
+                .modifiers = oplModifiersToTEventModifiers(modifiers),
                 .x = event.pos().x(),
                 .y = event.pos().y(),
                 .xscreen = screenPos.x(),
@@ -1368,7 +1353,7 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
                 .timestamp = timestamp,
                 .windowId = windowId,
                 .pointerType = opl::pointerDrag,
-                .modifiers = (int32_t)modifiers,
+                .modifiers = oplModifiersToTEventModifiers(modifiers),
                 .x = event.pos().x(),
                 .y = event.pos().y(),
                 .xscreen = screenPos.x(),
@@ -1621,7 +1606,7 @@ bool OplRuntime::checkEventRequest_locked()
             auto event = mEvents.takeFirst();
             if (event.isKeyEvent()) {
                 int16_t data[2];
-                data[0] = (int16_t)charcodeForKeycode(event.code);
+                data[0] = (int16_t)oplCharcodeForKeycode(event.code);
                 data[1] = (int16_t)event.keypress.modifiers | (event.keypress.repeat ? 0x100 : 0);
                 mEventRequest->setCompletionData(data);
                 asyncFinished_locked(mEventRequest, KErrNone);
