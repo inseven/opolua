@@ -235,6 +235,7 @@
         <file alias="exist.opo">../examples/Tests/exist.opo</file>
         <file alias="get.opo">../examples/Tests/get.opo</file>
         <file alias="getevent.opo">../examples/Tests/getevent.opo</file>
+        <file alias="getevent32.opo">../examples/Tests/getevent32.opo</file>
         <file alias="ginfo32.opo">../examples/Tests/ginfo32.opo</file>
         <file alias="ginvert.opo">../examples/Tests/ginvert.opo</file>
         <file alias="gmode.opo">../examples/Tests/gmode.opo</file>
