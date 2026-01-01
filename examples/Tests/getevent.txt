@@ -1,88 +1,52 @@
 INCLUDE "system.oxh"
 
 PROC main:
-	GLOBAL ev&(16)
-	LOCAL info%(10), i%
-	LOCAL evstat%, kstat%, key%(1)
-	
-	REM shrink screen so we can draw pointer events
-	SCREENINFO info%()
-	SCREEN info%(3) / 2, info%(4), 1, 1
-	gAT gWIDTH/2, 0
-	gBOX gWIDTH/2, gHEIGHT
-	
-	WHILE 1
-		kstat% = -48 REM KEYA(kstat%, key%())
-		GETEVENTA32 evstat%, ev&()
-		IOWAIT
-		REM PRINT kstat%, evstat%
-		IF kstat% = 0
-			PRINT "KEY!", key%(1)
-		ELSE
-			REM IF ev&(1) < $400
-			REM	PRINT "Peeked KEY:", KEY
-			REM ENDIF
-			IF ev&(1) = 13
-				PRINT "Saving screenshot..."
-				gSAVEBIT "D:\screenshot.mbm"
-			ELSEIF ev&(1) = $74
-				DisplayTaskList:
-			ENDIF
-			printEvent:
-		ENDIF
-	ENDWH
+    GLOBAL ev%(6)
+    
+    WHILE 1
+        GETEVENT ev%()
+        printEvent:
+    ENDWH
 ENDP
 
 PROC printEvent:
-	LOCAL k%
-	k% = ev&(1)
-	REM PRINT "Timestamp", ev&(2), " ",
-	IF (ev&(1) AND $400) = 0
-		PRINT "Key press", k%, "scan="; ev&(3), "mod="; ev&(4), "rep="; ev&(5), "t="; ev&(2)
-	ELSE
-		k% = ev&(1)- $400
-		VECTOR k%
-			fg, bg, nop, nop, cmd
-			keyDown, keyUp
-			pen, penDown, penUp
-		ENDV
-	nop::
-		PRINT "Got event", ev&(1)
-		RETURN
-	fg::
-		PRINT "Foreground!"
-		RETURN
-	bg::
-		PRINT "Background!"
-		RETURN
-	cmd::
-		PRINT "Cmd", GETCMD$
-		RETURN
-	keyDown::
-		PRINT "Key down", ev&(3), "t="; ev&(2)
-		RETURN
-	keyUp::
-		PRINT "Key up", ev&(3), "t="; ev&(2)
-		RETURN
-	pen::
-		PRINT "Pen type="; ev&(4), "mod="; ev&(5), ev&(6), ev&(7)
-		IF ev&(4) = 0
-			gAT ev&(6), ev&(7)
-		ELSE
-			gLINETO ev&(6), ev&(7)
-		ENDIF
-		RETURN
-	penDown::
-		PRINT "Pen down"
-		RETURN
-	penUp::
-		PRINT "Pen up"
-		RETURN
-	ENDIF
-ENDP
-
-PROC async:
-	LOCAL stat%, ev&(16)
-	GETEVENTA32 stat%, ev&()
-	GETEVENTC(stat%)
+    LOCAL k%
+    k% = ev%(1)
+    IF (ev%(1) AND $400) = 0
+        PRINT "Key press", k%, "mod="; ev%(2) AND $FF, "rep="; ev%(2) / 256
+    ELSE
+        k% = ev%(1) - $400
+        VECTOR k%
+            fg, bg, nop, nop, cmd
+            keyDown, keyUp
+            pen, penDown, penUp
+        ENDV
+    nop::
+        PRINT "Got event", ev%(1)
+        RETURN
+    fg::
+        PRINT "Foreground!"
+        RETURN
+    bg::
+        PRINT "Background!"
+        RETURN
+    cmd::
+        PRINT "Cmd", GETCMD$
+        RETURN
+    keyDown::
+        PRINT "Key down", ev%(3), "t="; ev%(2)
+        RETURN
+    keyUp::
+        PRINT "Key up", ev%(3), "t="; ev%(2)
+        RETURN
+    pen::
+        PRINT "Pen"
+        RETURN
+    penDown::
+        PRINT "Pen down"
+        RETURN
+    penUp::
+        PRINT "Pen up"
+        RETURN
+    ENDIF
 ENDP
