@@ -92,6 +92,15 @@ extension Device {
         }
     }
 
+    var isSibo: Bool {
+        switch self {
+        case .psionSeries3c:
+            return true
+        case .psionSeries5, .psionRevo, .psionSeries7, .geofoxOne:
+            return false
+        }
+    }
+
     static func getDefault(forEra era: PsiLuaEnv.AppEra?) -> Device {
         switch era {
         case .sibo:

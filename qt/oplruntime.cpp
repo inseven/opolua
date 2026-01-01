@@ -1267,7 +1267,8 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
 
     if (event.type() == QEvent::KeyPress) {
-        if (!event.isAutoRepeat()) {
+        // SIBO didn't have keyup/down events
+        if (!event.isAutoRepeat() && !isSibo()) {
             // Calling addEvent({ ... }) as one statement crashes some GCC versions :(
             Event e = {
                 .code = opl::keydown,
@@ -1303,7 +1304,7 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
             };
             addEvent(e);
         }
-    } else if (event.type() == QEvent::KeyRelease) {
+    } else if (event.type() == QEvent::KeyRelease && !isSibo()) {
         Event e = {
             .code = opl::keyup,
             .keyupdown = {
