@@ -310,8 +310,10 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
 
     local shortcutFont, menuFont, createFlags, shadowHeight, lineGap
 
-    local device = runtime:getDeviceName()
-    if device == "psion-series-3" then
+    -- local device = runtime:getDeviceName()
+    -- if device == "psion-series-3" then
+    if runtime:isSeries3() then
+        -- todo 3a/3c
         border = { top = 2, left = 3, bottom = 4, right = 4 }
         inset = border
         margin = { top = 1, left = 2, bottom = 1, right = 2 }
@@ -322,7 +324,6 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         shortcutFont = 1
         shadowHeight = 0
         createFlags = KColorgCreate2GrayMode
-    -- todo 3a/3c
     else
         border = { top = 4, left = 4, bottom = 4, right = 4 }
         inset = { top = 5, left = 5, bottom = 5, right = 5 }
