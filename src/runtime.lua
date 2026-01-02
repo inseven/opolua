@@ -1018,8 +1018,9 @@ function Runtime:dumpProc(procName, startAddr)
             print(self:decodeNextInstruction()) -- prints the goto
             self:dumpRawBytesUntil(newIp)
             realCodeStart = newIp
-        elseif self.ip == realCodeStart and string.unpack("c3", self.data, 1 + self.ip) == "\x4F\x00\x5B" then
+        elseif string.unpack("c3", self.data, 1 + self.ip) == "\x4F\x00\x5B" then
             -- Similarly, workaround a [StackByteAsWord] 0, [BranchIfFalse]
+            -- Which in TileFall, happens in the middle of a proc.
             local jmp = string.unpack("<i2", self.data, 1 + self.ip + 3)
             local newIp = self.ip + 2 + jmp
             print(self:decodeNextInstruction()) -- StackByteAsWord
