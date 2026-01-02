@@ -1447,11 +1447,7 @@ end
 
 function GETSTR()
     local code = GET() & 0xFF
-    if code >= 32 then
-        return string.char(code)
-    else
-        return ""
-    end
+    return string.char(code)
 end
 
 function GETEVENTA32(stat, evAddr)

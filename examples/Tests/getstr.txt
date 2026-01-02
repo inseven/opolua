@@ -1,0 +1,7 @@
+PROC main:
+    LOCAL ch$(1)
+    WHILE 1
+        ch$ = GET$
+        PRINT "got char", ch$, "(0x"; HEX$(ASC(ch$)); ")"
+    ENDWH
+ENDP
