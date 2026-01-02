@@ -181,6 +181,7 @@ function TBarSetTitle(name)
 end
 
 function TBarButt(shortcut, pos, text, state, bmp, mask, flags)
+    -- printf("TBarButt(shortcut=%s, pos=%d, text=%s\n", shortcut, pos, text)
     local prevId = gIDENTITY()
     if bmp == 0 then
         if defaultIcon == nil and runtime:getDeviceName() ~= "psion-revo" then
@@ -247,7 +248,9 @@ local function TBarOffer(winId, ptrType, ptrX, ptrY)
                 if not latchable or not latched then
                     -- Call the shortcut
                     local shortcut = button.shortcut
-                    local shifted = shortcut:match("^[A-Z]")
+                    -- Yes this is the logic toolbar uses - meaning that numbers (whose ASCII codes are below 'Z')
+                    -- count as 'shifted'.
+                    local shifted = string.byte(shortcut) <= string.byte('Z')
                     procToCall = string.upper("cmd" .. (shifted and "S" or "")..shortcut.."%")
                 end
             end
@@ -359,6 +362,12 @@ function TBarColor(fgR, fgG, fgB, bgR, bgG, bgB)
         end
         runtime:restoreGraphicsState(s)
     end
+end
+
+function TBarIndicators(...)
+    -- I don't know what this function is for but it is called by some series 7 apps. It seems to take no arguments
+    -- so we'll just ignore it for now.
+    -- print("TBarIndicators nargs=", select("#", ...), ...)
 end
 
 return _ENV
