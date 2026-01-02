@@ -93,7 +93,7 @@ end
 
 function SPRITECREATE(runtime, winId, x, y, flags)
     local graphics = runtime:getGraphics()
-    -- printf("SPRITECREATE(winId=%d, x=%d, y=%d, flags=%X", winId, x, y, flags)
+    -- printf("SPRITECREATE(winId=%d, x=%d, y=%d, flags=%X)", winId, x, y, flags)
     assert(graphics[winId] and graphics[winId].isWindow, "id is not a window")
     local spriteId = #graphics.sprites + 1
     local sprite = {
@@ -132,6 +132,7 @@ function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
         time = time,
         invertMask = invertMask,
     }
+    -- printf("SPRITEAPPEND(t=%s, bmp=%d, mask=%d, inv=%s, dx=%d, dy=%d)\n", time, bitmap, maskBitmap, invertMask, dx, dy)
     table.insert(sprite.frames, frame)
 end
 
@@ -152,6 +153,7 @@ function SpriteChange(stack, runtime)
 end
 
 function SPRITECHANGE(runtime, spriteId, frameId, time, bitmap, maskBitmap, invertMask, dx, dy)
+    -- printf("SPRITECHANGE(id=%d, frame=%d, t=%s, bmp=%d, mask=%d, inv=%s, dx=%d, dy=%d\n", spriteId, frameId, time, bitmap, maskBitmap, invertMask, dx, dy)
     local graphics = runtime:getGraphics()
     local sprite = graphics.sprites[spriteId]
     assert(sprite, "Bad sprite id to SPRITECHANGE")
@@ -169,7 +171,7 @@ function SPRITECHANGE(runtime, spriteId, frameId, time, bitmap, maskBitmap, inve
         bitmap = bitmap,
         mask = maskBitmap,
         time = time,
-        invert = invertMask,
+        invertMask = invertMask,
     }
     sprite.frames[frameId] = frame
     runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
