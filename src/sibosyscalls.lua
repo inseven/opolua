@@ -187,10 +187,10 @@ end
 function wCreateSprite(runtime, params) -- 0x8DF6
     print("wCreateSprite", dumpRegisters(params))
     local winId = params.bx
-    -- if winId == 0 then
-    --     -- Apparently 0 can mean default win?
-    --     winId = 1
-    -- end
+    if winId == 0 then
+        -- Can't decide if this is a bug in PopOut or something we're doing wrong earlier
+        winId = 1
+    end
     local x = runtime:addrAsVariable(params.cx, DataTypes.EWord)()
     local y = runtime:addrAsVariable(params.cx + 2, DataTypes.EWord)()
 
