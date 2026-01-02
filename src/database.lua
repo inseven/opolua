@@ -377,7 +377,8 @@ function Db:deleteRecord()
 end
 
 function Db:updateRecord()
-    assert(self.inAppendUpdate, "Incompatible update mode")
+    -- inAppendUpdate need not be set here; doing an UPDATE without having modified any fields at all is permissable
+    assert(not self.inInsertModify, "Incompatible update mode")
     local pos = self.pos
     self:appendRecord()
     self:setPos(pos)
