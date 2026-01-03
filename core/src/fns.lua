@@ -1039,7 +1039,7 @@ function Log(stack, runtime) -- 0x8A
 end
 
 function PeekF(stack, runtime) -- 0x8B
-    local addr = stack:pop()
+    local addr = runtime:addrFromInt(stack:pop())
     local data = addr:read(8)
     stack:push(string.unpack("<d", data))
 end
