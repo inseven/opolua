@@ -4,7 +4,6 @@
 #ifndef OPLRUNTIME_H
 #define OPLRUNTIME_H
 
-// #include <QBitArray>
 #include <QDir>
 #include <QElapsedTimer>
 #include <QKeyEvent>
@@ -20,6 +19,9 @@
 #include <optional>
 
 #include "oplscreen.h"
+
+#include "opldevicetype.h"
+typedef OplDeviceType DeviceType;
 
 class FileSystemIoHandler;
 struct lua_State;
@@ -46,16 +48,6 @@ class OplRuntime : public QObject, public OplFontProvider
     Q_OBJECT
 
 public:
-    enum DeviceType {
-        Series3,
-        Series3c,
-        Siena,
-        Series5,
-        Revo,
-        Series7,
-        GeofoxOne,
-    };
-
     enum Speed {
         Slowest = 1,
         Slower = 2,

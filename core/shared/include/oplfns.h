@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "opldevicetype.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,6 +23,12 @@ uint32_t oplModifiersToTEventModifiers(uint32_t modifiers);
 int32_t oplModifiedKeycode(int32_t keycode, uint32_t modifiers);
 
 int32_t oplUnicodeToKeycode(uint32_t ch);
+
+const char* oplGetDeviceName(OplDeviceType device);
+int oplGetDeviceFromName(const char* name);
+void oplGetScreenSize(OplDeviceType device, int* width, int* height);
+int oplGetScreenMode(OplDeviceType device);
+bool oplIsSiboDevice(OplDeviceType device);
 
 #ifdef __cplusplus
 } // extern "C"
