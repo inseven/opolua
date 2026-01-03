@@ -28,10 +28,15 @@ let package = Package(
                 .product(name: "Licensable", package: "licensable"),
                 .product(name: "Lua", package: "LuaSwift"),
                 "OplCore",
+                "OpoLuaLicenses",
             ],
-            path: "swift",
+            path: "core/swift"),
+        .target(
+            name: "OpoLuaLicenses",
+            path: "core/licenses",
             resources: [
-                .process("Resources"),
+                .process("lua-license"),
+                .process("opolua-license"),
             ]),
         .target(
             name: "OplCore",
