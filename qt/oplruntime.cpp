@@ -202,10 +202,23 @@ void OplRuntime::setDeviceType(DeviceType type)
 {
     mDeviceType = type;
     switch (mDeviceType) {
+    case psionSeries3:
+    case psionSeries3c:
+    case psionSiena:
+        // There isn't a Z drive per se.
+        mFs->removeMapping('Z');
+        break;
+    case psionRevo:
+        mFs->addMapping('Z', QDir(":/psion-revo/z"), false);
+        break;
+    case oregonOsaris:
+        mFs->addMapping('Z', QDir(":/oregon-osaris/z"), false);
+        break;
     case psionSeries7:
+    case geofoxOne:
         mFs->addMapping('Z', QDir(":/psion-series-7/z"), false);
         break;
-    default:
+    case psionSeries5:
         mFs->addMapping('Z', QDir(":/psion-series-5/z"), false);
         break;
     }

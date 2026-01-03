@@ -68,6 +68,11 @@ local bgColour = { 0xFF, 0xFF, 0xFF } -- white
 local defaultIcon
 local titleFont
 
+local function isNarrowScreen()
+    -- This basically means Revo or Osaris which seem to be the only devices that use the narrower toolbar
+    return runtime:getGraphics().screenWidth <= 480
+end
+
 function TBarLink(appLink)
     TbVis = runtime:declareGlobal("TbVis%")
     TbVis(0)
@@ -81,11 +86,11 @@ function TBarLink(appLink)
         buttonHeight = KTbBtH_s7
         maxButtons = 7 -- By inspection it looks like 7 would fit, dunno what the actual limit was
         titleFont = KTbTitleFont
-    elseif deviceName == "psion-revo" then
+    elseif isNarrowScreen() then
         tbWidth = KTbWidth_revo
         appTitleHeight = KTbBtTop_revo
         buttonHeight = KTbBtH_revo
-        maxButtons = 3        
+        maxButtons = 4 -- technically 3 on the Revo but it's annoying to be strict
         titleFont = KTbTitleFont_revo
     else
         tbWidth = KTbWidth_s5
@@ -141,7 +146,7 @@ local function drawTitleAndClock()
     gBOX(tbWidth, toolbarHeight)
     drawTitle()
     -- Not sure how the Revo clock should be drawn, for now just omit it.
-    if runtime:getDeviceName() ~= "psion-revo" then
+    if not isNarrowScreen() then
         gAT(KTbClockPosX, toolbarHeight - KTbClockHeight)
         gCLOCK(KgClockS5System)
     end
@@ -184,7 +189,7 @@ function TBarButt(shortcut, pos, text, state, bmp, mask, flags)
     -- printf("TBarButt(shortcut=%s, pos=%d, text=%s\n", shortcut, pos, text)
     local prevId = gIDENTITY()
     if bmp == 0 then
-        if defaultIcon == nil and runtime:getDeviceName() ~= "psion-revo" then
+        if defaultIcon == nil and not isNarrowScreen() then
             defaultIcon = gCREATEBIT(24, 24, 0)
             gCLS()
             gBORDER(0)

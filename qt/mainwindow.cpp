@@ -72,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionScale3x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+3", nullptr));
     ui->actionScale4x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+4", nullptr));
 
+    ui->actionOsaris->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+S", nullptr));
     ui->actionSeries5->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+5", nullptr));
     ui->actionSeries7->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+7", nullptr));
     ui->actionGeofoxOne->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+G", nullptr));
@@ -107,6 +108,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionSeries3, &QAction::triggered, this, [this] { setDevice(psionSeries3); });
     connect(ui->actionSeries3c, &QAction::triggered, this, [this] { setDevice(psionSeries3c); });
     connect(ui->actionSiena, &QAction::triggered, this, [this] { setDevice(psionSiena); });
+    connect(ui->actionOsaris, &QAction::triggered, this, [this] { setDevice(oregonOsaris); });
     connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(psionSeries5); });
     connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(psionSeries7); });
     connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(geofoxOne); });
@@ -230,18 +232,20 @@ void MainWindow::onDeviceTypeChanged()
     ui->actionSeries3->setVisible(sibo);
     ui->actionSeries3c->setVisible(sibo);
     ui->actionSiena->setVisible(sibo);
+    ui->actionOsaris->setVisible(!sibo);
     ui->actionSeries5->setVisible(!sibo);
+    ui->actionRevo->setVisible(!sibo);
     ui->actionSeries7->setVisible(!sibo);
     ui->actionGeofoxOne->setVisible(!sibo);
-    ui->actionRevo->setVisible(!sibo);
 
     ui->actionSeries3->setChecked(device == psionSeries3);
     ui->actionSeries3c->setChecked(device == psionSeries3c);
     ui->actionSiena->setChecked(device == psionSiena);
+    ui->actionOsaris->setChecked(device == oregonOsaris);
     ui->actionSeries5->setChecked(device == psionSeries5);
+    ui->actionRevo->setChecked(device == psionRevo);
     ui->actionSeries7->setChecked(device == psionSeries7);
     ui->actionGeofoxOne->setChecked(device == geofoxOne);
-    ui->actionRevo->setChecked(device == psionRevo);
 }
 
 void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)

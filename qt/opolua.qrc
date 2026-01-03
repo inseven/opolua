@@ -224,6 +224,13 @@
         <file alias="System/Data/Eikon.rsc">../resources/z-revo/System/Data/Eikon.rsc</file>
     </qresource>
 
+    <qresource prefix="/oregon-osaris/z">
+        <file alias="System/Apps/Shell/Shell.mbm">../resources/z-osaris/System/Apps/Shell/Shell.mbm</file>
+        <file alias="System/Apps/TimeW/TimeW.mbm">../resources/z-osaris/System/Apps/TimeW/TimeW.mbm</file>
+        <file alias="System/Data/Eikon.mbm">../resources/z-osaris/System/Data/Eikon.mbm</file>
+        <file alias="System/Data/Eikon.rsc">../resources/z-osaris/System/Data/Eikon.rsc</file>
+    </qresource>
+
     <qresource prefix="/tests">
         <file alias="alert.opo">../examples/Tests/alert.opo</file>
         <file alias="bench.opo">../examples/Tests/bench.opo</file>
