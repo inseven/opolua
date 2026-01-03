@@ -27,6 +27,7 @@ enum OplDeviceType {
     psionSeries3,
     psionSeries3c,
     psionSiena,
+    oregonOsaris,
     psionSeries5,
     psionRevo,
     psionSeries7,

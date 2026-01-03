@@ -438,6 +438,7 @@ static char const * const DeviceNames[] = {
     "psion-series-3",
     "psion-series-3c",
     "psion-siena",
+    "oregon-osaris",
     "psion-series-5",
     "psion-revo",
     "psion-series-7",
@@ -479,6 +480,10 @@ void oplGetScreenSize(OplDeviceType device, int* width, int* height)
             *width = 240;
             *height = 160;
             break;
+        case oregonOsaris:
+            *width = 320;
+            *height = 200;
+            break;
         case psionSeries5:
             *width = 640;
             *height = 240;
@@ -513,6 +518,7 @@ int oplGetScreenMode(OplDeviceType device)
         case psionSeries3c:
         case psionSiena:
             return KColorgCreate4GrayMode;
+        case oregonOsaris:
         case psionSeries5:
         case psionRevo:
             return KColorgCreate16GrayMode;

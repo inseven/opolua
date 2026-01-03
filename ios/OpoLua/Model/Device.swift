@@ -31,6 +31,7 @@ extension Device: @retroactive CaseIterable {
             .psionSeries3,
             .psionSeries3c,
             .psionSiena,
+            .oregonOsaris,
             .psionSeries5,
             .psionRevo,
             .psionSeries7,
@@ -70,6 +71,8 @@ extension Device {
             return "Psion Series 3c"
         case .psionSiena:
             return "Psion Siena"
+        case .oregonOsaris:
+            return "Oregon Osaris"
         case .psionSeries5:
             return "Psion Series 5"
         case .psionRevo:
@@ -99,6 +102,8 @@ extension Device {
         case .psionSeries3c:
             return .clockMedium()
         case .psionSiena:
+            return .clockMedium()
+        case .oregonOsaris:
             return .clockMedium()
         case .psionSeries5:
             return .clockMedium()

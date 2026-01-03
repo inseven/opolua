@@ -79,10 +79,11 @@
     <addaction name="actionSeries3"/>
     <addaction name="actionSiena"/>
     <addaction name="actionSeries3c"/>
+    <addaction name="actionOsaris"/>
     <addaction name="actionSeries5"/>
+    <addaction name="actionRevo"/>
     <addaction name="actionSeries7"/>
     <addaction name="actionGeofoxOne"/>
-    <addaction name="actionRevo"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -409,6 +410,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+3</string>
+   </property>
+  </action>
+  <action name="actionOsaris">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Osaris</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+S</string>
    </property>
   </action>
  </widget>
