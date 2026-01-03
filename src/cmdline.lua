@@ -26,11 +26,18 @@ SOFTWARE.
 -- dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 -- local args = getopt({ ... })
 
+if arg[0]:match("cmdline%.lua$") then
+    io.stderr:write("Error: cmdline.lua is a helper script and should not be run directly.\n")
+    os.exit(false)
+end
+
 local args = arg
 -- Have to redo the calculation of our base path here, which is a bit annoying
 local launchFile = args[0]
-local sep = package.config:sub(1, 1)
-package.path = launchFile:sub(1, launchFile:match(sep.."?()[^" .. sep .. "]+$") - 1).."?.lua"
+local osPathSeparator = package.config:sub(1, 1)
+local function native(path) return path:gsub("/", osPathSeparator) end
+local relPath = ...
+package.path = launchFile:sub(1, launchFile:match(native"/?()[^/]+$") - 1) .. native((relPath or "").."?.lua")
 local debug, io, os = debug, io, os
 require("init")
 -- Undo the sandboxing of init.lua
@@ -272,8 +279,6 @@ function pcallMain()
         os.exit(false)
     end
 end
-
-local osPathSeparator = string.match(package.config, "^.")
 
 function path_join(path, component)
     if path == "" then

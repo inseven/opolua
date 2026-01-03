@@ -50,9 +50,9 @@ static QStringList validCmds = {
 int main(int argc, char *argv[])
 {
 
-    for (int i = 0; i < argc; i++) {
-        qDebug("param %d: %s", i, argv[i]);
-    }
+    // for (int i = 0; i < argc; i++) {
+    //     qDebug("param %d: %s", i, argv[i]);
+    // }
 
     if (argc == 2 && strcmp(argv[1], "register") == 0) {
         return OplApplication::registerApp();
