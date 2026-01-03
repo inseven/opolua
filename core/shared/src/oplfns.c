@@ -3,6 +3,7 @@
 
 #include "opldefs.h"
 #include "oplfns.h"
+#include <string.h> // for strcmp
 
 int32_t oplScancodeForKeycode(int32_t keycode, bool sibo)
 {
@@ -412,5 +413,108 @@ int32_t oplUnicodeToKeycode(uint32_t ch)
         return euro;
     } else {
         return 0;
+    }
+}
+
+// Must be in same order as OplDeviceType enum
+static char const * const DeviceNames[] = {
+    "psion-series-3",
+    "psion-series-3c",
+    "psion-siena",
+    "psion-series-5",
+    "psion-revo",
+    "psion-series-7",
+    "geofox-one",
+};
+
+const int NumDevices = sizeof(DeviceNames) / sizeof(DeviceNames[0]);
+
+const char* oplGetDeviceName(OplDeviceType device)
+{
+    if (device < 0 || device >= NumDevices) {
+        return NULL;
+    }
+    return DeviceNames[device];
+}
+
+int oplGetDeviceFromName(const char* name)
+{
+    for (int i = 0; i < NumDevices; i++) {
+        if (strcmp(name, DeviceNames[i]) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void oplGetScreenSize(OplDeviceType device, int* width, int* height)
+{
+    switch (device) {
+        case psionSeries3:
+            *width = 240;
+            *height = 80;
+            break;
+        case psionSeries3c:
+            *width = 480;
+            *height = 160;
+            break;
+        case psionSiena:
+            *width = 240;
+            *height = 160;
+            break;
+        case psionSeries5:
+            *width = 640;
+            *height = 240;
+            break;
+        case psionRevo:
+            *width = 480;
+            *height = 160;
+            break;
+        case psionSeries7:
+            *width = 640;
+            *height = 480;
+            break;
+        case geofoxOne:
+            *width = 640;
+            *height = 320;
+            break;
+        default:
+            *width = 0;
+            *height = 0;
+            break;
+    }
+}
+
+static int KColorgCreate4GrayMode = 0x0001;
+static int KColorgCreate16GrayMode = 0x0002;
+static int KColorgCreate256ColorMode = 0x0005;
+
+int oplGetScreenMode(OplDeviceType device)
+{
+    switch (device) {
+        case psionSeries3:
+        case psionSeries3c:
+        case psionSiena:
+            return KColorgCreate4GrayMode;
+        case psionSeries5:
+        case psionRevo:
+            return KColorgCreate16GrayMode;
+        case psionSeries7:
+        case geofoxOne:
+            return KColorgCreate256ColorMode;
+        default:
+            return -1;
+    }
+}
+
+bool oplIsSiboDevice(OplDeviceType device)
+{
+    switch (device) {
+        case psionSeries3:
+        case psionSeries3c:
+        case psionSiena:
+            return true;
+        default:
+            return false;
     }
 }

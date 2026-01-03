@@ -74,7 +74,7 @@ bool OplRuntime::Event::isKeyEvent() const
 OplRuntime::OplRuntime(QObject *parent)
     : QObject(parent)
     , mThread(nullptr)
-    , mDeviceType(Series5)
+    , mDeviceType(psionSeries5)
     , mIgnoreOpoEra(false)
     , mCallEvent(nullptr)
     , mEventRequest(nullptr)
@@ -187,7 +187,7 @@ void OplRuntime::setDeviceType(DeviceType type)
 {
     mDeviceType = type;
     switch (mDeviceType) {
-    case Series7:
+    case psionSeries7:
         mFs->addMapping('Z', QDir(":/psion-series-7/z"), false);
         break;
     default:
@@ -202,7 +202,7 @@ void OplRuntime::setIgnoreOpoEra(bool flag)
     mIgnoreOpoEra = flag;
 }
 
-OplRuntime::DeviceType OplRuntime::getDeviceType() const
+DeviceType OplRuntime::getDeviceType() const
 {
     return mDeviceType;
 }
@@ -231,24 +231,10 @@ QString OplRuntime::getNativePath(const QString& devicePath) const
 
 QSize OplRuntime::screenSize() const
 {
-    switch (mDeviceType) {
-    case Series3:
-        return QSize(240, 80);
-    case Siena:
-        return QSize(240, 160);
-    case Series3c:
-        return QSize(480, 160);
-    case Series5:
-        return QSize(640, 240);
-    case Revo:
-        return QSize(480, 160);
-    case Series7:
-        return QSize(640, 480);
-    case GeofoxOne:
-        return QSize(640, 320);
-    default:
-        Q_UNREACHABLE();
-    }
+    int w = 0;
+    int h = 0;
+    oplGetScreenSize(mDeviceType, &w, &h);
+    return QSize(w, h);
 }
 
 OplRuntime::~OplRuntime()
@@ -265,9 +251,6 @@ OplRuntime::~OplRuntime()
 }
 
 static int KStopErr = -999;
-static int KColorgCreate4GrayMode = 0x0001;
-static int KColorgCreate16GrayMode = 0x0002;
-static int KColorgCreate256ColorMode = 0x0005;
 
 static void stop(lua_State *L, lua_Debug *)
 {
@@ -404,59 +387,23 @@ void OplRuntime::restart()
 
 QString OplRuntime::deviceTypeToString(DeviceType type)
 {
-    switch (type) {
-    case Series3:
-        return "psion-series-3";
-    case Series3c:
-        return "psion-series-3c";
-    case Siena:
-        return "psion-siena";
-    case Series5:
-        return "psion-series-5";
-    case Revo:
-        return "psion-revo";
-    case Series7:
-        return "psion-series-7";
-    case GeofoxOne:
-        return "geofox-one";
-    }
+    return oplGetDeviceName(type);
 }
 
-OplRuntime::DeviceType OplRuntime::toDeviceType(const QString& device)
+DeviceType OplRuntime::toDeviceType(const QString& device)
 {
-    if (device == "psion-series-3") {
-        return Series3;
-    } else if (device == "psion-series-3c") {
-        return Series3c;
-    } else if (device == "psion-siena") {
-        return Siena;
-    } else if (device == "psion-series-5") {
-        return Series5;
-    } else if (device == "psion-revo") {
-        return Revo;
-    } else if (device == "psion-series-7") {
-        return Series7;
-    } else if (device == "geofox-one") {
-        return GeofoxOne;
-    } else {
+    auto result = oplGetDeviceFromName(device.toUtf8().data());
+    if (result == -1) {
         qWarning("Unknown device type %s", qPrintable(device));
-        return Series5;
+        return psionSeries5;
+    } else {
+        return (DeviceType)result;
     }
 }
 
 bool OplRuntime::isSiboDeviceType(DeviceType type)
 {
-    switch (type) {
-    case Series3:
-    case Series3c:
-    case Siena:
-        return true;
-    case Series5:
-    case Revo:
-    case Series7:
-    case GeofoxOne:
-        return false;
-    }
+    return oplIsSiboDevice(type);
 }
 
 bool OplRuntime::isSibo() const
@@ -470,25 +417,7 @@ int OplRuntime::getDeviceInfo(lua_State* L)
     auto typeStr = deviceTypeToString(mDeviceType);
     lua_pushinteger(L, sz.width());
     lua_pushinteger(L, sz.height());
-    switch (mDeviceType) {
-    case Series3:
-    case Series3c:
-    case Siena:
-        lua_pushinteger(L, KColorgCreate4GrayMode);
-        break;
-    case Series5:
-        lua_pushinteger(L, KColorgCreate16GrayMode);
-        break;
-    case Revo:
-        lua_pushinteger(L, KColorgCreate16GrayMode);
-        break;
-    case Series7:
-        lua_pushinteger(L, KColorgCreate256ColorMode);
-        break;
-    case GeofoxOne:
-        lua_pushinteger(L, KColorgCreate256ColorMode);
-        break;
-    }
+    lua_pushinteger(L, oplGetScreenMode(mDeviceType));
     pushValue(L, typeStr);
     return 4;
 }
@@ -957,7 +886,7 @@ int OplRuntime::graphicsop(lua_State* L)
                 OplScreen::ClockInfo info = {
                     .mode = (OplScreen::ClockType)to_int(L, 3, "mode"),
                     .systemIsDigital = mConfig["clockFormat"] == "1",
-                    .color = mDeviceType >= Series7,
+                    .color = mDeviceType >= psionSeries7,
                     .pos = QPoint(to_int(L, 4, "x"), to_int(L, 4, "y")),
                 };
                 mScreen->clock(drawableId, &info);
@@ -1728,7 +1657,7 @@ int OplRuntime::setEra(lua_State *L)
     }
 
     if (eraIsSibo != isSibo() && !mIgnoreOpoEra) {
-        setDeviceType(eraIsSibo ? Series3c : Series5);
+        setDeviceType(eraIsSibo ? psionSeries3c : psionSeries5);
     }
     return 0;
 }

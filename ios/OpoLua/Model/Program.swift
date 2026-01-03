@@ -176,7 +176,7 @@ class Program {
         }
         
         switch configuration.device {
-        case .psionSeries3c:
+        case .psionSeries3, .psionSeries3c, .psionSiena:
             break
         case .psionSeries5, .geofoxOne:
             let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s5", isDirectory: true)
@@ -481,7 +481,7 @@ extension Program: OpoIoHandler {
 
     func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
         let device = configuration.device
-        return (device.screenSize, device.screenMode, device.rawValue)
+        return (device.screenSize, device.screenMode, device.identifier)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {

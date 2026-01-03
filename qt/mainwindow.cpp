@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2025-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
 #include "mainwindow.h"
@@ -89,13 +89,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionRestart, &QAction::triggered, runtime, &OplRuntime::restart);
     connect(ui->actionMenu, &QAction::triggered, runtime, &OplRuntime::pressMenuKey);
     connect(ui->actionDiamond, &QAction::triggered, runtime, &OplRuntime::pressDiamondKey);
-    connect(ui->actionSeries3, &QAction::triggered, this, [this] { setDevice(OplRuntime::Series3); });
-    connect(ui->actionSeries3c, &QAction::triggered, this, [this] { setDevice(OplRuntime::Series3c); });
-    connect(ui->actionSiena, &QAction::triggered, this, [this] { setDevice(OplRuntime::Siena); });
-    connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(OplRuntime::Series5); });
-    connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(OplRuntime::Series7); });
-    connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(OplRuntime::GeofoxOne); });
-    connect(ui->actionRevo, &QAction::triggered, this, [this] { setDevice(OplRuntime::Revo); });
+    connect(ui->actionSeries3, &QAction::triggered, this, [this] { setDevice(psionSeries3); });
+    connect(ui->actionSeries3c, &QAction::triggered, this, [this] { setDevice(psionSeries3c); });
+    connect(ui->actionSiena, &QAction::triggered, this, [this] { setDevice(psionSiena); });
+    connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(psionSeries5); });
+    connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(psionSeries7); });
+    connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(geofoxOne); });
+    connect(ui->actionRevo, &QAction::triggered, this, [this] { setDevice(psionRevo); });
     connect(ui->actionFaster, &QAction::triggered, runtime, &OplRuntime::runFaster);
     connect(ui->actionSlower, &QAction::triggered, runtime, &OplRuntime::runSlower);
     connect(ui->actionDefaultSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::DefaultSpeed); });
@@ -220,13 +220,13 @@ void MainWindow::onDeviceTypeChanged()
     ui->actionGeofoxOne->setVisible(!sibo);
     ui->actionRevo->setVisible(!sibo);
 
-    ui->actionSeries3->setChecked(device == OplRuntime::Series3);
-    ui->actionSeries3c->setChecked(device == OplRuntime::Series3c);
-    ui->actionSiena->setChecked(device == OplRuntime::Siena);
-    ui->actionSeries5->setChecked(device == OplRuntime::Series5);
-    ui->actionSeries7->setChecked(device == OplRuntime::Series7);
-    ui->actionGeofoxOne->setChecked(device == OplRuntime::GeofoxOne);
-    ui->actionRevo->setChecked(device == OplRuntime::Revo);
+    ui->actionSeries3->setChecked(device == psionSeries3);
+    ui->actionSeries3c->setChecked(device == psionSeries3c);
+    ui->actionSiena->setChecked(device == psionSiena);
+    ui->actionSeries5->setChecked(device == psionSeries5);
+    ui->actionSeries7->setChecked(device == psionSeries7);
+    ui->actionGeofoxOne->setChecked(device == geofoxOne);
+    ui->actionRevo->setChecked(device == psionRevo);
 }
 
 void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)
@@ -325,7 +325,7 @@ void MainWindow::openWelcome()
 
 void MainWindow::setDevice(int device)
 {
-    getRuntime().setDeviceType((OplRuntime::DeviceType)device);
+    getRuntime().setDeviceType((DeviceType)device);
     getRuntime().restart();
 
     updateManifest();
