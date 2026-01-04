@@ -22,6 +22,8 @@ import Foundation
 import Lua
 import CLua
 
+import OpoLuaSource
+
 // ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
 public let kDefaultEpocEncoding: LuaStringEncoding = .stringEncoding(.windowsCP1252)
 // And SIBO uses CP850 (which is handled completely differently and has an inconsistent name to boot)
@@ -35,9 +37,7 @@ public class PsiLuaEnv {
         L = LuaState(libraries: [.package, .table, .io, .os, .string, .math, .utf8, .debug])
         L.setDefaultStringEncoding(kDefaultEpocEncoding)
 
-        let srcRoot = Bundle.main.url(forResource: "init",
-                                      withExtension: "lua",
-                                      subdirectory: "src")!.deletingLastPathComponent()
+        let srcRoot = Bundle.source.url(forResource: "init", withExtension: "lua")!.deletingLastPathComponent()
         L.setRequireRoot(srcRoot.path)
 
         // Finally, run init.lua
