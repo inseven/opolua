@@ -179,4 +179,5 @@ enum TEventModifiers {
     teventControl = 0xA0, // EModifierLeftCtrl | EModifierCtrl
     teventCapsLock = 0x4000, // EModifierCapsLock
     teventFn = 0x2800, // EModifierLeftFunc | EModifierFunc
+    teventDoubleClick = 0x80000,
 } __attribute__((enum_extensibility(closed)));
