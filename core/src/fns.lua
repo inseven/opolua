@@ -626,7 +626,33 @@ end
 gLoadBit_dump = numParams_dump
 
 function gLoadFont(stack, runtime) -- 0x29
-    unimplemented("fns.gLoadFont")
+    local path = stack:pop()
+    if runtime:isSibo() then
+        local currentId = runtime:getGraphicsContext().id
+        local data, err = runtime:iohandler().fsop("read", runtime:abs(path))
+        assert(data, err)
+
+        local font, bmp = require("font").parseFont(data)
+        font.height = font.charh -- parseFont returns the JSON names
+        font.descent = font.height - font.ascent
+        local fonts = runtime:getResource("fonts")
+        if not fonts then
+            fonts = { loaded = {} }
+            self:setResource("fonts", fonts)
+        end
+
+        table.insert(fonts.loaded, font)
+        font.uid = #fonts.loaded + 1000
+        font.id = runtime:gCREATEBIT(bmp.width, bmp.height, KColorgCreate2GrayMode)
+        fonts[font.uid] = font
+        runtime:drawCmd("bitblt", { bitmap = bmp:toNative(), mode = KtModeReplace })
+        -- gCREATEBIT sets currrent context, which we don't want
+        runtime:gUSE(currentId)
+        stack:push(font.uid)
+    else
+        printf("TODO: gLoadFont %s\n", path)
+        unimplemented("fns.gLoadFont")
+    end
 end
 
 function gRank(stack, runtime) -- 0x2A

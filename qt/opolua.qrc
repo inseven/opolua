@@ -14,12 +14,14 @@
         <file alias="dumpaif.lua">../bin/dumpaif.lua</file>
         <file alias="dumpdb.lua">../bin/dumpdb.lua</file>
         <file alias="dumpdfs.lua">../bin/dumpdfs.lua</file>
+        <file alias="dumpfont.lua">../bin/dumpfont.lua</file>
         <file alias="dumpmbm.lua">../bin/dumpmbm.lua</file>
         <file alias="dumpopo.lua">../bin/dumpopo.lua</file>
         <file alias="dumprsc.lua">../bin/dumprsc.lua</file>
         <file alias="dumpsis.lua">../bin/dumpsis.lua</file>
         <file alias="editor.lua">../core/src/editor.lua</file>
         <file alias="fns.lua">../core/src/fns.lua</file>
+        <file alias="font.lua">../core/src/font.lua</file>
         <file alias="init_dump.lua">../core/src/init_dump.lua</file>
         <file alias="init.lua">../core/src/init.lua</file>
         <file alias="launcher.lua">../core/src/launcher.lua</file>

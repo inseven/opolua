@@ -1837,7 +1837,7 @@ QString OplRuntime::getFont(uint32_t uid, OplScreen::FontMetrics& metrics)
 
     metrics.height = manifest["charh"].toInt();
     metrics.ascent = manifest["ascent"].toInt();
-    metrics.descent = manifest["descent"].toInt();
+    metrics.descent = metrics.height - metrics.ascent; // Why do we still have this??
     metrics.maxwidth = manifest["maxwidth"].toInt();
     for (int i = 0; i < 256; i++) {
         metrics.widths[i] = manifest["widths"][i].toInt();
