@@ -22,10 +22,12 @@ import Foundation
 
 import Licensable
 
+import OpoLuaLicenses
+
 extension Licensable where Self == License {
 
     private static var lua: License {
-        let licenseURL = Bundle.module.url(forResource: "lua-license", withExtension: nil)!
+        let licenseURL = Bundle.licenses.url(forResource: "lua-license", withExtension: nil)!
         return License(
             id: "https://www.lua.org",
             name: "Lua",
@@ -36,7 +38,7 @@ extension Licensable where Self == License {
     }
 
     public static var opolua: License {
-        let licenseURL = Bundle.module.url(forResource: "opolua-license", withExtension: nil)!
+        let licenseURL = Bundle.licenses.url(forResource: "opolua-license", withExtension: nil)!
         return License(
             id: "https://github.com/inseven/opolua",
             name: "OpoLua",
