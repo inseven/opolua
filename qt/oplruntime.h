@@ -173,6 +173,10 @@ private:
             } penevent;
             struct {
                 int32_t timestamp;
+                int32_t windowId;
+            } pencontact;
+            struct {
+                int32_t timestamp;
             } focusevent;
             int32_t pad[15];
         };

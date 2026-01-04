@@ -1093,6 +1093,12 @@ void Window::mouseReleaseEvent(QMouseEvent *event)
     static_cast<OplScreenWidget*>(parent())->mouseEvent(event, this);
 }
 
+void Window::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    event->accept();
+    static_cast<OplScreenWidget*>(parent())->mouseEvent(event, this);
+}
+
 QPoint Window::getPos() const
 {
     return mUnscaledRect.topLeft();

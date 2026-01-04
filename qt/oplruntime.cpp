@@ -1273,22 +1273,36 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
 
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
     opl::Modifiers modifiers = getOplModifiers(event.modifiers());
-    if (event.type() == QEvent::MouseButtonPress) {
+    auto type = event.type();
+    if (type == QEvent::MouseButtonPress || type == QEvent::MouseButtonDblClick) {
+        Event penDownEvent = {
+            .code = opl::pendown,
+            .pencontact = {
+                .timestamp = timestamp,
+                .windowId = windowId,
+            },
+        };
+
+        uint32_t penModifiers = oplModifiersToTEventModifiers(modifiers);
+        if (type == QEvent::MouseButtonDblClick) {
+            penModifiers |= opl::teventDoubleClick;
+        }
         Event e = {
             .code = opl::pen,
             .penevent = {
                 .timestamp = timestamp,
                 .windowId = windowId,
                 .pointerType = opl::pointerDown,
-                .modifiers = oplModifiersToTEventModifiers(modifiers),
+                .modifiers = penModifiers,
                 .x = event.pos().x(),
                 .y = event.pos().y(),
                 .xscreen = screenPos.x(),
                 .yscreen = screenPos.y(),
             },
         };
+        addEvent(penDownEvent);
         addEvent(e);
-    } else if (event.type() == QEvent::MouseButtonRelease) {
+    } else if (type == QEvent::MouseButtonRelease) {
         Event e = {
             .code = opl::pen,
             .penevent = {
@@ -1303,7 +1317,7 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
             },
         };
         addEvent(e);
-    } else if (event.type() == QEvent::MouseMove) {
+    } else if (type == QEvent::MouseMove) {
         Event e = {
             .code = opl::pen,
             .penevent = {
