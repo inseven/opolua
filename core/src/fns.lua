@@ -1352,17 +1352,36 @@ end
 
 function CmdStr(stack, runtime) -- 0xD6
     local x = stack:pop()
-    if x == 1 then
-        local path = runtime:getPath()
-        -- printf("CMD$(1)=%s\n", path)
-        stack:push(path)
-    elseif x == 2 then
-        stack:push(runtime:getResource("cmdlinedoc"))
-    elseif x == 3 then
-        stack:push("R")
-    else
-        error("unhandled CMD$ param "..tostring(x))
+    local cmdStr = runtime:getResource("cmdStr")
+    if not cmdStr then
+        local appPath = runtime:getPath()
+        if runtime:isSibo() then
+            -- Some additional logic needed...
+            local data = assert(runtime:iohandler().fsop("read", appPath))
+            local aif = require("aif").parseAif(data)
+            local defaultFile = aif and aif.defaultFile or appPath
+            local filePath = oplpath.abs(defaultFile, appPath)
+            local exists = runtime:iohandler().fsop("exists", filePath) == KErrNone
+            cmdStr = {
+                "LOC::"..appPath,
+                "LOC::"..filePath,
+                exists and "O" or "C",
+                "",
+                aif.captions.en_GB or "",
+            }
+        else
+            cmdStr = {
+                appPath,
+                appPath,
+                "R"
+            }
+        end
+        runtime:setResource("cmdStr", cmdStr)
     end
+
+    local result = cmdStr[x]
+    assert(result, "unhandled CMD$ param "..tostring(x))
+    stack:push(result)
 end
 
 function ParseStr(stack, runtime) -- 0xD7
@@ -1422,7 +1441,8 @@ function Size(stack, runtime) -- 0xDA
 end
 
 function GetDocStr(stack, runtime) -- 0xD9
-    local doc = runtime:getResource("doc") or runtime:getResource("cmdlinedoc")
+    -- GETDOC$ does not inherit the default doc from CMD$(2)
+    local doc = runtime:getResource("doc") or ""
     stack:push(doc)
 end
 
