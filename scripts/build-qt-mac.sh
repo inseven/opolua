@@ -108,4 +108,4 @@ build-tools notarize "OpoLua Qt.app" \
     --issuer "$APPLE_API_KEY_ISSUER_ID"
 
 # Package the binary.
-zip -r "build.zip" "OpoLua Qt.app"
+zip --symlinks -r "build.zip" "OpoLua Qt.app"
