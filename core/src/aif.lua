@@ -44,17 +44,19 @@ function parseAif(data)
 
             local infoPos = picDataPos + len
             local infoLen, name, path, type = string.unpack("<I2c14c20I2", data, infoPos)
+            name = string.unpack("z", name)
+            path = string.unpack("z", path)
             -- name is actually the default filename but that seems to be constructed from the APP <name> plus EXT <ext>
-            name = oplpath.splitext(name)
-
+            local caption = oplpath.splitext(name)
             return {
                 type = "opa",
                 uid3 = 0,
                 captions = {
-                    en_GB = name,
+                    en_GB = caption,
                 },
                 icons = icons,
                 era = "sibo",
+                defaultFile = oplpath.join(path, name),
             }
         else
             return nil

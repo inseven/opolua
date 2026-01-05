@@ -1,0 +1,7 @@
+PROC main:
+    PRINT "GETDOC$:", GETDOC$
+    PRINT "CMD$(1):", CMD$(1)
+    PRINT "CMD$(2):", CMD$(2)
+    PRINT "CMD$(3):", CMD$(3)
+    GET
+ENDP
