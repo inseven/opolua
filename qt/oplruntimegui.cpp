@@ -100,7 +100,9 @@ OplAppInfo OplRuntimeGui::getAppInfo(const QString& aifPath)
             break;
         }
 
+        rawgetfield(L, -1, "bitmap");
         QPixmap img = imageFromBitmap(L, -1);
+        lua_pop(L, 1); // bitmap
         QBitmap mask;
         if (rawgetfield(L, -1, "mask") == LUA_TTABLE) {
             mask = pixToBitmap(imageFromBitmap(L, -1));
@@ -162,9 +164,10 @@ QVector<OplAppInfo> OplRuntimeGui::getMDriveApps()
 void OplRuntimeGui::onStartedRunning()
 {
     OplAppInfo info{};
+    auto lowerPath = mDeviceOpoPath.toLower();
     if (mDeviceOpoPath.isEmpty()) {
         // Nothing to add
-    } else if (!mDeviceOpoPath.toLower().endsWith(".app")) {
+    } else if (!lowerPath.endsWith(".app") && !lowerPath.endsWith(".opa")) {
         info.deviceAppPath = mDeviceOpoPath;
         info.appName = QFileInfo(getNativePath(mDeviceOpoPath)).fileName();
     } else {
