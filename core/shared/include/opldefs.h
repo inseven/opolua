@@ -18,6 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+
+#ifdef __clang__
+#define CLOSED_ENUM __attribute__((enum_extensibility(closed)))
+#else
+#define CLOSED_ENUM
+#endif
+
 // Some of these these aren't strictly keycodes in that they don't generate
 // keypress events, in particular the modifiers, but for the sake of convenience let's
 // pretend they are.
@@ -146,7 +153,7 @@ enum OplKeyCode {
     irSoftkey = 10002,
     zoomInSoftkey = 10003,
     zoomOutSoftkey = 10004,
-} __attribute__((enum_extensibility(closed)));
+} CLOSED_ENUM;
 
 enum OplModifier {
     shiftModifier = 2,
@@ -154,7 +161,7 @@ enum OplModifier {
     psionModifier = 8, // sibo only
     capsLockModifier = 16,
     fnModifier = 32,
-} __attribute__((enum_extensibility(closed)));
+} CLOSED_ENUM;
 
 enum EventId {
     foregrounded = 0x401,
@@ -166,13 +173,13 @@ enum EventId {
     pen = 0x408,
     pendown = 0x409,
     penup = 0x40A,
-} __attribute__((enum_extensibility(closed)));
+} CLOSED_ENUM;
 
 enum PointerType {
     pointerDown = 0,
     pointerUp = 1,
     pointerDrag = 6,
-} __attribute__((enum_extensibility(closed)));
+} CLOSED_ENUM;
 
 enum TEventModifiers {
     teventShift = 0x500, // EModifierLeftShift | EModifierShift
@@ -180,4 +187,4 @@ enum TEventModifiers {
     teventCapsLock = 0x4000, // EModifierCapsLock
     teventFn = 0x2800, // EModifierLeftFunc | EModifierFunc
     teventDoubleClick = 0x80000,
-} __attribute__((enum_extensibility(closed)));
+} CLOSED_ENUM;
