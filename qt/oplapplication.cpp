@@ -167,6 +167,7 @@ void OplApplication::appendLogging(const QString& str)
 void OplApplication::showLogWindow()
 {
     mLogWindow->show();
+    mLogWindow->raise();
 }
 
 int OplApplication::registerApp()
@@ -179,6 +180,7 @@ int OplApplication::registerApp()
 
     hkcu.setValue(applicationSupportedTypes + "/.sis", "");
     hkcu.setValue(applicationSupportedTypes + "/.oplsys", "");
+    hkcu.setValue(applicationSupportedTypes + "/.opa", "");
     hkcu.setValue(shellKey, QString("\"%1\" open \"%2\"").arg(QDir::toNativeSeparators(QCoreApplication::applicationFilePath()), "%1"));
 
     QString dotSisRegistration = "SOFTWARE/Classes/.sis/OpenWithList/opolua.exe/.";

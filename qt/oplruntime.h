@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2025-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
 #ifndef OPLRUNTIME_H
@@ -11,6 +11,7 @@
 #include <QObject>
 #include <QScopedPointer>
 #include <QSemaphore>
+#include <QSet>
 #include <QTextCodec>
 #include <QThread>
 #include <QVector>
@@ -18,6 +19,9 @@
 #include <optional>
 
 #include "oplscreen.h"
+
+#include "opldevicetype.h"
+typedef OplDeviceType DeviceType;
 
 class FileSystemIoHandler;
 struct lua_State;
@@ -36,6 +40,7 @@ class MainThreadEvent;
 enum class Drive : char {
     C = 'C',
     D = 'D',
+    M = 'M',
 };
 
 class OplRuntime : public QObject, public OplFontProvider
@@ -43,14 +48,6 @@ class OplRuntime : public QObject, public OplFontProvider
     Q_OBJECT
 
 public:
-    enum DeviceType {
-        Series3c,
-        Series5,
-        Revo,
-        Series7,
-        GeofoxOne,
-    };
-
     enum Speed {
         Slowest = 1,
         Slower = 2,
@@ -72,9 +69,12 @@ public:
     QString runningLauncherCommand() const { return running() ? mLauncherCmd : QString(); }
     bool writableCDrive() const;
     void setDeviceType(DeviceType type);
+    void setIgnoreOpoEra(bool flag);
     DeviceType getDeviceType() const;
+    bool isSibo() const;
     static QString deviceTypeToString(DeviceType type);
     static DeviceType toDeviceType(const QString& device);
+    static bool isSiboDeviceType(DeviceType type);
 
     Speed getSpeed() const;
     void setSpeed(Speed speed);
@@ -91,7 +91,7 @@ public:
     void runAppSelector();
 
     void keyEvent(const QKeyEvent& event);
-    void mouseEvent(const QMouseEvent& event, int windowId, const QPoint& screenPos);
+    void mouseEvent(const QMouseEvent& event, int windowId);
     void focusEvent(bool focussed);
 
     void asyncFinished(AsyncHandle* handle, int code);
@@ -110,6 +110,7 @@ public slots:
     void interrupt();
     void restart();
     void pressMenuKey();
+    void pressDiamondKey();
     void runFaster();
     void runSlower();
     void closeEvent();
@@ -128,6 +129,7 @@ signals:
 
 private slots:
     void onThreadExited();
+    void drawCursor();
 
 private:
     struct Event {
@@ -136,19 +138,19 @@ private:
             struct {
                 int32_t timestamp;
                 int32_t scancode;
-                int32_t modifiers; // Modifiers
+                uint32_t modifiers; // Modifiers
                 int32_t repeat;
             } keypress;
             struct {
                 int32_t timestamp;
                 int32_t scancode;
-                int32_t modifiers; // Modifiers
+                uint32_t modifiers; // Modifiers
             } keyupdown;
             struct {
                 int32_t timestamp;
                 int32_t windowId;
                 int32_t pointerType;
-                int32_t modifiers; // TEventModifiers NOT Modifiers
+                uint32_t modifiers; // TEventModifiers NOT Modifiers
                 int32_t x;
                 int32_t y;
                 int32_t xscreen;
@@ -169,8 +171,6 @@ private:
     static void threadFn(OplRuntime* self);
     int call(std::function<int(void)> fn);
     void didWritePixels(int numPixels);
-    void doRunInstaller(const QString& file, const QString& displayPath, const QString& lang);
-
 
     void addEvent(const Event& event);
     bool checkEventRequest_locked();
@@ -180,7 +180,9 @@ private:
 
     static OplRuntime* getSelf(lua_State *L);
     QString tolocalstring(lua_State *L, int index);
+
     void setEscape(bool flag);
+    void doRunInstaller(const QString& file, const QString& displayPath, const QString& lang);
 
     DECLARE_IOHANDLER_FN(asyncRequest);
     DECLARE_IOHANDLER_FN(cancelRequest);
@@ -192,6 +194,7 @@ private:
     DECLARE_IOHANDLER_FN(getDeviceInfo);
     DECLARE_IOHANDLER_FN(getTime);
     DECLARE_IOHANDLER_FN(graphicsop);
+    DECLARE_IOHANDLER_FN(keysDown);
     DECLARE_IOHANDLER_FN(opsync);
     DECLARE_IOHANDLER_FN(setConfig);
     DECLARE_IOHANDLER_FN(setEra);
@@ -211,6 +214,7 @@ private:
     QThread* mThread;
     mutable QMutex mMutex;
     DeviceType mDeviceType;
+    bool mIgnoreOpoEra;
     QString mLauncherCmd;
     QTextCodec* mStringCodec;
     OplScreen* mScreen;
@@ -225,6 +229,7 @@ private:
     QElapsedTimer mLastOpTime;
     QMap<int, AsyncHandle*> mPendingRequests;
     QVector<Completion> mPendingCompletions;
+    QSet<int> mKeysDown; // set of scancodes, used for SIBO HwGetScanCodes only
     //// END protected by mMutex
     std::function<void(void)> mRunNextFn;
     QSemaphore mWaitSemaphore;
@@ -237,6 +242,7 @@ private:
 
     std::optional<OplScreen::DrawCmd> mCursorDrawCmd;
     QScopedPointer<QTimer> mCursorTimer;
+    bool mCursorDrawn;
 
     QMap<QString, QString> mConfig;
     QString mGetCmd;

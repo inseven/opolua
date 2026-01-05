@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2025-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
 #include "mainwindow.h"
@@ -31,7 +31,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
     setAcceptDrops(true);
-    currentDevice = ui->actionSeries5;
 #ifdef Q_OS_MAC
     // This should be ctrl-esc on ALL platforms
     ui->actionStop->setShortcut(QCoreApplication::translate("MainWindow", "Meta+Esc", nullptr));
@@ -41,20 +40,30 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionWelcome->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+L", nullptr));
     ui->actionInstall->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+I", nullptr));
     ui->actionDebugLog->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+D", nullptr));
-    ui->actionOpenSharedFolder->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+E", nullptr));
+    ui->actionOpenSharedFolder->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+F", nullptr));
     ui->actionClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+W", nullptr));
     ui->actionForceClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Shift+W", nullptr));
     ui->actionRestart->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+R", nullptr));
     ui->actionReportIssue->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+P", nullptr));
+    ui->actionSoftwareIndex->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+B", nullptr));
 
     ui->actionFaster->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+=", nullptr));
     ui->actionSlower->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+-", nullptr));
     ui->actionFullSpeed->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+9", nullptr));
     ui->actionDefaultSpeed->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+0", nullptr));
+
+    ui->actionScale1x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+1", nullptr));
+    ui->actionScale2x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+2", nullptr));
+    ui->actionScale3x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+3", nullptr));
+    ui->actionScale4x->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+4", nullptr));
+
     ui->actionSeries5->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+5", nullptr));
     ui->actionSeries7->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+7", nullptr));
-    ui->actionGeofoxOne->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+1", nullptr));
-    ui->actionRevo->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+4", nullptr));
+    ui->actionGeofoxOne->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+G", nullptr));
+    ui->actionRevo->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+E", nullptr));
+    ui->actionSeries3->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+T", nullptr));
+    ui->actionSiena->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Y", nullptr));
+    ui->actionSeries3c->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+U", nullptr));
 #endif
 
     statusLabel = new QLabel(this);
@@ -79,15 +88,24 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionStop, &QAction::triggered, runtime, &OplRuntime::interrupt);
     connect(ui->actionRestart, &QAction::triggered, runtime, &OplRuntime::restart);
     connect(ui->actionMenu, &QAction::triggered, runtime, &OplRuntime::pressMenuKey);
-    connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(ui->actionSeries5, OplRuntime::Series5); });
-    connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(ui->actionSeries7, OplRuntime::Series7); });
-    connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(ui->actionGeofoxOne, OplRuntime::GeofoxOne); });
-    connect(ui->actionRevo, &QAction::triggered, this, [this] { setDevice(ui->actionRevo, OplRuntime::Revo); });
+    connect(ui->actionDiamond, &QAction::triggered, runtime, &OplRuntime::pressDiamondKey);
+    connect(ui->actionSeries3, &QAction::triggered, this, [this] { setDevice(psionSeries3); });
+    connect(ui->actionSeries3c, &QAction::triggered, this, [this] { setDevice(psionSeries3c); });
+    connect(ui->actionSiena, &QAction::triggered, this, [this] { setDevice(psionSiena); });
+    connect(ui->actionSeries5, &QAction::triggered, this, [this] { setDevice(psionSeries5); });
+    connect(ui->actionSeries7, &QAction::triggered, this, [this] { setDevice(psionSeries7); });
+    connect(ui->actionGeofoxOne, &QAction::triggered, this, [this] { setDevice(geofoxOne); });
+    connect(ui->actionRevo, &QAction::triggered, this, [this] { setDevice(psionRevo); });
     connect(ui->actionFaster, &QAction::triggered, runtime, &OplRuntime::runFaster);
     connect(ui->actionSlower, &QAction::triggered, runtime, &OplRuntime::runSlower);
     connect(ui->actionDefaultSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::DefaultSpeed); });
     connect(ui->actionFullSpeed, &QAction::triggered, this, [this] { getRuntime().setSpeed(OplRuntime::Fastest); });
+    connect(ui->actionScale1x, &QAction::triggered, this, [this] { setScale(1); });
+    connect(ui->actionScale2x, &QAction::triggered, this, [this] { setScale(2); });
+    connect(ui->actionScale3x, &QAction::triggered, this, [this] { setScale(3); });
+    connect(ui->actionScale4x, &QAction::triggered, this, [this] { setScale(4); });
     connect(ui->actionReportIssue, &QAction::triggered, this, &MainWindow::reportIssue);
+    connect(ui->actionSoftwareIndex, &QAction::triggered, this, &MainWindow::openSoftwareIndex);
     connect(runtime, &OplRuntime::debugLog, gApp, &OplApplication::appendLogging);
     connect(runtime, &OplRuntimeGui::startedRunningApp, this, &MainWindow::startedRunning);
     connect(runtime, &OplRuntime::titleChanged, this, &MainWindow::setTitle);
@@ -100,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent)
     // connect(runtime, &OplRuntime::escapeStateChanged, ui->actionGeofoxOne, &QAction::setEnabled);
     connect(runtime, &OplRuntime::speedChanged, this, &MainWindow::onSpeedChanged);
     connect(gApp, &OplApplication::recentFilesChanged, this, &MainWindow::updateRecents);
-    sizeWindowToFitInterpreter();
+    onDeviceTypeChanged();
     updateRecents(gApp->getRecentFiles());
     onSpeedChanged();
     gApp->updateWindowMenu(this, ui->menuWindow);
@@ -191,6 +209,24 @@ void MainWindow::sizeWindowToFitInterpreter()
 void MainWindow::onDeviceTypeChanged()
 {
     sizeWindowToFitInterpreter();
+    bool sibo = getRuntime().isSibo();
+    auto device = getRuntime().getDeviceType();
+    ui->actionDiamond->setVisible(sibo);
+    ui->actionSeries3->setVisible(sibo);
+    ui->actionSeries3c->setVisible(sibo);
+    ui->actionSiena->setVisible(sibo);
+    ui->actionSeries5->setVisible(!sibo);
+    ui->actionSeries7->setVisible(!sibo);
+    ui->actionGeofoxOne->setVisible(!sibo);
+    ui->actionRevo->setVisible(!sibo);
+
+    ui->actionSeries3->setChecked(device == psionSeries3);
+    ui->actionSeries3c->setChecked(device == psionSeries3c);
+    ui->actionSiena->setChecked(device == psionSiena);
+    ui->actionSeries5->setChecked(device == psionSeries5);
+    ui->actionSeries7->setChecked(device == psionSeries7);
+    ui->actionGeofoxOne->setChecked(device == geofoxOne);
+    ui->actionRevo->setChecked(device == psionRevo);
 }
 
 void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)
@@ -211,7 +247,7 @@ void MainWindow::runComplete(const QString& errMsg, const QString& errDetail)
 
 void MainWindow::openDialog()
 {
-    QString file = QFileDialog::getOpenFileName(this, tr("Select OPL app"), QString(), tr("OPL Apps (*.opo *.app *.oplsys)"));
+    QString file = QFileDialog::getOpenFileName(this, tr("Select OPL app"), QString(), tr("OPL Apps (*.opo *.app *.oplsys *.opa)"));
     // qDebug("open %s", qPrintable(file));
 
     if (file.isEmpty()) {
@@ -237,16 +273,28 @@ QString MainWindow::driveForApp(const QString& appPath)
                 return dir.absolutePath();
             }
         }
-    } else if (extension == "oplsys") {
-        if (info.isDir()) {
-            // The oplsys bundle itself
-            return info.filePath() + "/c";
-        } else {
-            // ie launch.oplsys
-            return info.path() + "/c";
-        }
     }
 
+    if (extension == "app" || extension == "opa") {
+        QDir dir(QFileInfo(appPath).absoluteDir());
+        if (dir.dirName().toUpper() == "APP") {
+            dir.cdUp();
+            return dir.absolutePath();
+        }
+    } else if (extension == "oplsys") {
+        auto dir = QDir(info.filePath());
+        if (!info.isDir()) {
+            // ie launch.oplsys
+            dir.cdUp();
+        }
+        auto c = QFileInfo(dir, "c");
+        auto m = QFileInfo(dir, "m");
+        if (!c.isDir() && m.isDir()) {
+            return m.filePath();
+        } else {
+            return c.filePath();
+        }
+    }
 
     return QString();
 }
@@ -275,18 +323,28 @@ void MainWindow::openWelcome()
     runtime.run("C:\\System\\Apps\\Welcome\\Welcome.app");
 }
 
-void MainWindow::setDevice(QAction* action, int device)
+void MainWindow::setDevice(int device)
 {
-    currentDevice->setChecked(false);
-    action->setChecked(true);
-    currentDevice = action;
-
-    getRuntime().setDeviceType((OplRuntime::DeviceType)device);
+    getRuntime().setDeviceType((DeviceType)device);
     getRuntime().restart();
 
-    if (!mManifest.isEmpty() && getRuntime().writableCDrive()) {
-        updateManifest();
-    }
+    updateManifest();
+}
+
+void MainWindow::setScale(int scale)
+{
+    doSetScale(scale);
+    updateManifest();
+}
+
+void MainWindow::doSetScale(int scale)
+{
+    ui->actionScale1x->setChecked(scale == 1);
+    ui->actionScale2x->setChecked(scale == 2);
+    ui->actionScale3x->setChecked(scale == 3);
+    ui->actionScale4x->setChecked(scale == 4);
+    ui->screen->setScale(scale);
+    sizeWindowToFitInterpreter();
 }
 
 void MainWindow::installSis()
@@ -350,20 +408,35 @@ void MainWindow::openFile(const QString& path)
         getRuntime().setDrive(Drive::C, dest + "/c");
         getRuntime().setDrive(Drive::D, getSharedDrive());
         getRuntime().runInstaller(path, dest);
-    } else if (extension == "app" || extension == "oplsys") {
+    } else if (extension == "app" || extension == "opa" || extension == "oplsys") {
         QString drive = driveForApp(path);
         if (!drive.isEmpty()) {
+
             mManifest = manifestForDrive(drive);
             if (!mManifest.isEmpty()) {
                 applyManifest();
             }
 
-            getRuntime().setDrive(Drive::C, drive);
-            getRuntime().setDrive(Drive::D, getSharedDrive());
+            auto mainDrv = Drive::C;
+            std::optional<Drive> sharedDrv = Drive::D;
+            if (drive.endsWith("/m") || extension == "opa") {
+                mainDrv = Drive::M;
+                sharedDrv = std::nullopt;
+            }
+
+            getRuntime().setDrive(mainDrv, drive);
+            if (sharedDrv.has_value()) {
+                getRuntime().setDrive(*sharedDrv, getSharedDrive());
+            }
 
             QString appPath;
-            if (extension == "app") {
+            if (extension == "app" && mainDrv == Drive::C) {
                 appPath = QString("C:\\System\\Apps\\") + info.dir().dirName() + "\\" + info.fileName();
+            } else if (mainDrv == Drive::M) {
+                auto apps = getRuntime().getMDriveApps();
+                if (apps.count() == 1) {
+                    appPath = apps[0].deviceAppPath;
+                }
             } else {
                 auto apps = getRuntime().getCDriveApps();
                 if (apps.count() == 1) {
@@ -391,13 +464,16 @@ void MainWindow::installationComplete(const QString& sisPath)
     auto path = getRuntime().getNativePath("C:\\");
     Q_ASSERT(!path.isEmpty());
     mManifest = manifestForDrive(path);
-    QString source(getSourceUrlForPath(sisPath));
-    updateManifest(source);
+    mSourceUrl = getSourceUrlForPath(sisPath);
+    updateManifest(mSourceUrl);
 }
 
 void MainWindow::updateManifest(const QString& sourceUrl)
 {
-    Q_ASSERT(!mManifest.isEmpty());
+    if (mManifest.isEmpty() || !getRuntime().writableCDrive()) {
+        return;
+    }
+
     QJsonObject obj;
     QFile f(mManifest);
     if (f.open(QFile::ReadOnly)) {
@@ -408,6 +484,7 @@ void MainWindow::updateManifest(const QString& sourceUrl)
     auto deviceType = getRuntime().getDeviceType();
     QString typeStr = OplRuntime::deviceTypeToString(deviceType);
     obj.insert("device", typeStr);
+    obj.insert("scale", ui->screen->getScale());
     if (!sourceUrl.isEmpty()) {
         obj.insert("sourceUrl", sourceUrl);
     }
@@ -432,6 +509,7 @@ void MainWindow::applyManifest()
     QString device = manifest["device"].toString();
 
     getRuntime().setDeviceType(OplRuntime::toDeviceType(device));
+    doSetScale(manifest["scale"].toInt(1));
 
     mSourceUrl = manifest["sourceUrl"].toString();
     // qDebug("sourceUrl = %s", qPrintable(mSourceUrl));
@@ -544,7 +622,7 @@ QString MainWindow::getSourceUrlForPath(const QString& path)
                     result = QString::fromCFString((CFStringRef)val);
                 }
             }
-        }   
+        }
 
         CFRelease(props);
     }
@@ -582,11 +660,14 @@ _Please provide details of the program you were running, and what you were doing
 | --- | --- |
 | **App name** | %1 |
 | **UID** | %2 |
-| **Source URL** | %3 |
+| **Source URL** | %4 |
+| **Device** | %3 |
 )");
     description = description
         .arg((mAppInfo && !mAppInfo->appName.isEmpty()) ? mAppInfo->appName : QString("*unknown*"))
         .arg((mAppInfo && mAppInfo->uid != 0) ? QString("0x%1").arg(mAppInfo->uid, 0, 16) : "*unknown*")
+        .arg(OplRuntime::deviceTypeToString(getRuntime().getDeviceType()))
+        // Do the URL last because it could itself have %N sequences in...
         .arg(mSourceUrl.isEmpty() ? "*unknown*" : mSourceUrl);
 
     if (!mErrDetail.isEmpty()) {
@@ -599,4 +680,10 @@ _Please provide details of the program you were running, and what you were doing
     query.addQueryItem("body", QUrl::toPercentEncoding(description));
     githubUrl.setQuery(query);
     QDesktopServices::openUrl(githubUrl);
+}
+
+void MainWindow::openSoftwareIndex()
+{
+    QUrl indexUrl("https://software.psion.community/", QUrl::StrictMode);
+    QDesktopServices::openUrl(indexUrl);
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2025-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
 #include "oplruntime.h"
@@ -7,6 +7,7 @@
 #include "luasupport.h"
 #include "oplkeycode.h"
 #include "asynchandle.h"
+#include "oplfns.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -73,7 +74,8 @@ bool OplRuntime::Event::isKeyEvent() const
 OplRuntime::OplRuntime(QObject *parent)
     : QObject(parent)
     , mThread(nullptr)
-    , mDeviceType(Series5)
+    , mDeviceType(psionSeries5)
+    , mIgnoreOpoEra(false)
     , mCallEvent(nullptr)
     , mEventRequest(nullptr)
     , mWaiting(false)
@@ -81,6 +83,7 @@ OplRuntime::OplRuntime(QObject *parent)
     , mSpeed(Fastest)
     , mInfoWinId(0)
     , mBusyWinId(0)
+    , mCursorDrawn(false)
     , mEscapeOn(true)
 {
     mFs.reset(new FileSystemIoHandler());
@@ -126,6 +129,7 @@ void OplRuntime::pushIohandler()
         IOHANDLER_FN(getDeviceInfo),
         IOHANDLER_FN(getTime),
         IOHANDLER_FN(graphicsop),
+        IOHANDLER_FN(keysDown),
         IOHANDLER_FN(opsync),
         IOHANDLER_FN(system),
         IOHANDLER_FN(setConfig),
@@ -183,7 +187,7 @@ void OplRuntime::setDeviceType(DeviceType type)
 {
     mDeviceType = type;
     switch (mDeviceType) {
-    case Series7:
+    case psionSeries7:
         mFs->addMapping('Z', QDir(":/psion-series-7/z"), false);
         break;
     default:
@@ -193,7 +197,12 @@ void OplRuntime::setDeviceType(DeviceType type)
     emit deviceTypeChanged();
 }
 
-OplRuntime::DeviceType OplRuntime::getDeviceType() const
+void OplRuntime::setIgnoreOpoEra(bool flag)
+{
+    mIgnoreOpoEra = flag;
+}
+
+DeviceType OplRuntime::getDeviceType() const
 {
     return mDeviceType;
 }
@@ -222,20 +231,10 @@ QString OplRuntime::getNativePath(const QString& devicePath) const
 
 QSize OplRuntime::screenSize() const
 {
-    switch (mDeviceType) {
-    case Series3c:
-        return QSize(480, 160);
-    case Series5:
-        return QSize(640, 240);
-    case Revo:
-        return QSize(480, 160);
-    case Series7:
-        return QSize(640, 480);
-    case GeofoxOne:
-        return QSize(640, 320);
-    default:
-        Q_UNREACHABLE();
-    }
+    int w = 0;
+    int h = 0;
+    oplGetScreenSize(mDeviceType, &w, &h);
+    return QSize(w, h);
 }
 
 OplRuntime::~OplRuntime()
@@ -252,9 +251,6 @@ OplRuntime::~OplRuntime()
 }
 
 static int KStopErr = -999;
-static int KColorgCreate4GrayMode = 0x0001;
-static int KColorgCreate16GrayMode = 0x0002;
-static int KColorgCreate256ColorMode = 0x0005;
 
 static void stop(lua_State *L, lua_Debug *)
 {
@@ -391,38 +387,28 @@ void OplRuntime::restart()
 
 QString OplRuntime::deviceTypeToString(DeviceType type)
 {
-    switch (type) {
-    case Series3c:
-        return "psion-series-3c";
-    case Series5:
-        return "psion-series-5";
-    case Revo:
-        return "psion-revo";
-    case Series7:
-        return "psion-series-7";
-    case GeofoxOne:
-        return "geofox-one";
-    default:
-        Q_UNREACHABLE();
+    return oplGetDeviceName(type);
+}
+
+DeviceType OplRuntime::toDeviceType(const QString& device)
+{
+    auto result = oplGetDeviceFromName(device.toUtf8().data());
+    if (result == -1) {
+        qWarning("Unknown device type %s", qPrintable(device));
+        return psionSeries5;
+    } else {
+        return (DeviceType)result;
     }
 }
 
-OplRuntime::DeviceType OplRuntime::toDeviceType(const QString& device)
+bool OplRuntime::isSiboDeviceType(DeviceType type)
 {
-    if (device == "psion-series-3c") {
-        return Series3c;
-    } else if (device == "psion-series-5") {
-        return Series5;
-    } else if (device == "psion-revo") {
-        return Revo;
-    } else if (device == "psion-series-7") {
-        return Series7;
-    } else if (device == "geofox-one") {
-        return GeofoxOne;
-    } else {
-        qWarning("Unknown device type %s", qPrintable(device));
-        return Series5;
-    }
+    return oplIsSiboDevice(type);
+}
+
+bool OplRuntime::isSibo() const
+{
+    return isSiboDeviceType(mDeviceType);
 }
 
 int OplRuntime::getDeviceInfo(lua_State* L)
@@ -431,23 +417,7 @@ int OplRuntime::getDeviceInfo(lua_State* L)
     auto typeStr = deviceTypeToString(mDeviceType);
     lua_pushinteger(L, sz.width());
     lua_pushinteger(L, sz.height());
-    switch (mDeviceType) {
-    case Series3c:
-        lua_pushinteger(L, KColorgCreate4GrayMode);
-        break;
-    case Series5:
-        lua_pushinteger(L, KColorgCreate16GrayMode);
-        break;
-    case Revo:
-        lua_pushinteger(L, KColorgCreate16GrayMode);
-        break;
-    case Series7:
-        lua_pushinteger(L, KColorgCreate256ColorMode);
-        break;
-    case GeofoxOne:
-        lua_pushinteger(L, KColorgCreate256ColorMode);
-        break;
-    }
+    lua_pushinteger(L, oplGetScreenMode(mDeviceType));
     pushValue(L, typeStr);
     return 4;
 }
@@ -459,7 +429,7 @@ bool OplRuntime::running() const
 
 bool OplRuntime::writableCDrive() const
 {
-    return mFs->isWritable('C');
+    return mFs->isWritable('C') || mFs->isWritable('M');
 }
 
 void OplRuntime::setEscape(bool flag) {
@@ -874,6 +844,10 @@ int OplRuntime::graphicsop(lua_State* L)
     } else if (cmd == "cursor") {
         return call([this, L] {
             mCursorTimer.reset();
+            if (mCursorDrawn) {
+                // Then clear the old cursor
+                drawCursor();
+            }
             mCursorDrawCmd = std::nullopt;
             if (lua_type(L, 2) == LUA_TTABLE) {
                 int flags = to_int(L, 2, "flags");
@@ -889,22 +863,15 @@ int OplRuntime::graphicsop(lua_State* L)
                     .color = (flags & KCursorTypeGrey) ? 0xFF888888 : 0xFF000000,
                     .bgcolor = 0xFFFFFFFF, // doesn't really matter
                     .penWidth = 1,
+                    .greyMode = OplScreen::drawBlack,
                     .fill = {
                         .size = QSize(to_int(L, 3, "w"), to_int(L, 3, "h")),
                     },
                 };
-                mScreen->beginBatchDraw();
-                mScreen->draw(*mCursorDrawCmd);
-                mScreen->endBatchDraw();
+                drawCursor();
                 if ((flags & KCursorTypeNotFlashing) == 0) {
                     mCursorTimer.reset(new QTimer());
-                    connect(mCursorTimer.get(), &QTimer::timeout, this, [this]() {
-                        if (mCursorDrawCmd.has_value()) {
-                            mScreen->beginBatchDraw();
-                            mScreen->draw(*mCursorDrawCmd);
-                            mScreen->endBatchDraw();
-                        }
-                    });
+                    connect(mCursorTimer.get(), &QTimer::timeout, this, &OplRuntime::drawCursor);
                     mCursorTimer->setTimerType(Qt::PreciseTimer);
                     mCursorTimer->start(500);
                 }
@@ -919,7 +886,7 @@ int OplRuntime::graphicsop(lua_State* L)
                 OplScreen::ClockInfo info = {
                     .mode = (OplScreen::ClockType)to_int(L, 3, "mode"),
                     .systemIsDigital = mConfig["clockFormat"] == "1",
-                    .color = mDeviceType >= Series7,
+                    .color = mDeviceType >= psionSeries7,
                     .pos = QPoint(to_int(L, 4, "x"), to_int(L, 4, "y")),
                 };
                 mScreen->clock(drawableId, &info);
@@ -992,7 +959,8 @@ static uint32_t to_rgb(lua_State* L, int idx, const char* name)
 int OplRuntime::draw(lua_State* L)
 {
     // qDebug("draw top=%d", lua_gettop(L));
-    return call([this, L] {
+    int pixelsWritten = 0;
+    return call([this, L, &pixelsWritten] {
         mScreen->beginBatchDraw();
         for (int i = 0; ; i++) {
             // qDebug("draw[mainthread] i=%d top=%d", i, lua_gettop(L));
@@ -1009,6 +977,7 @@ int OplRuntime::draw(lua_State* L)
                 .color = to_rgb(L, 2, "color"),
                 .bgcolor = to_rgb(L, 2, "bgcolor"),
                 .penWidth = to_int(L, 2, "penwidth"),
+                .greyMode = (OplScreen::GreyMode)to_int(L, 2, "greyMode"),
                 .shutUpCompiler = 0,
             };
             if (cmd.penWidth == 0) cmd.penWidth = 1;
@@ -1016,24 +985,29 @@ int OplRuntime::draw(lua_State* L)
             if (type == "fill") {
                 cmd.type = OplScreen::fill;
                 cmd.fill.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
-                didWritePixels(cmd.fill.size.width() * cmd.fill.size.height());
+                pixelsWritten += cmd.fill.size.width() * cmd.fill.size.height();
             } else if (type == "line") {
                 cmd.type = OplScreen::line;
                 cmd.line.endPoint = QPoint(to_int(L, 2, "x2"), to_int(L, 2, "y2"));
                 // Manhattan approximation
-                didWritePixels(qAbs(cmd.origin.x() - cmd.line.endPoint.x()) + qAbs(cmd.origin.y() - cmd.line.endPoint.y()));
+                pixelsWritten += qAbs(cmd.origin.x() - cmd.line.endPoint.x()) + qAbs(cmd.origin.y() - cmd.line.endPoint.y());
             } else if (type == "circle") {
                 cmd.type = OplScreen::circle;
                 cmd.circle.radius = to_int(L, 2, "r");
                 cmd.circle.fill = to_bool(L, 2, "fill");
-                didWritePixels(6 * cmd.circle.radius); // Close enough to 2 * pi * r
+                pixelsWritten += 6 * cmd.circle.radius; // Close enough to 2 * pi * r
             } else if (type == "box") {
                 cmd.type = OplScreen::box;
                 cmd.box.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
-                didWritePixels(2 * cmd.box.size.width() + 2 * cmd.box.size.height());
+                pixelsWritten += 2 * cmd.box.size.width() + 2 * cmd.box.size.height();
             } else if (type == "mcopy") {
-                int srcId = to_int(L, 2, "srcid");
-                int destId = cmd.drawableId;
+                OplScreen::CopyMultipleCmd cpycmd = {
+                    .srcId = to_int(L, 2, "srcid"),
+                    .destId = cmd.drawableId,
+                    .color = cmd.bgcolor,
+                    .invert = cmd.mode == OplScreen::invert,
+                    .greyMode = cmd.greyMode,
+                };
                 QVector<QRect> rects;
                 QVector<QPoint> points;
                 int numPixels = 0;
@@ -1053,9 +1027,8 @@ int OplRuntime::draw(lua_State* L)
                     points.append(QPoint(lua_tointeger(L, -2), lua_tointeger(L, -1)));
                     lua_pop(L, 6);
                 }
-                bool invert = cmd.mode == OplScreen::invert;
-                didWritePixels(numPixels);
-                mScreen->copyMultiple(srcId, destId, cmd.bgcolor, invert, rects, points);
+                pixelsWritten += numPixels;
+                mScreen->copyMultiple(cpycmd, rects, points);
                 lua_pop(L, 1); // cmd
                 continue;
             } else if (type == "bitblt") {
@@ -1067,7 +1040,7 @@ int OplRuntime::draw(lua_State* L)
                 lua_pop(L, 1); // bitmap
 
                 mScreen->bitBlt(cmd.drawableId, color, width, height, data);
-                didWritePixels(width * height);
+                pixelsWritten += width * height;
                 lua_pop(L, 1); // cmd
                 continue;
             } else if (type == "scroll") {
@@ -1076,27 +1049,28 @@ int OplRuntime::draw(lua_State* L)
                 cmd.scroll.dy = to_int(L, 2, "dy");
                 rawgetfield(L, 2, "rect");
                 cmd.scroll.rect = QRect(to_int(L, -1, "x"), to_int(L, -1, "y"), to_int(L, -1, "w"), to_int(L, -1, "h"));
-                didWritePixels(cmd.scroll.rect.width() * cmd.scroll.rect.height()); // Close enough?
+                pixelsWritten += cmd.scroll.rect.width() * cmd.scroll.rect.height(); // Close enough?
                 lua_pop(L, 1);
             } else if (type == "border") {
                 cmd.type = OplScreen::border;
                 cmd.border.borderType = to_int(L, 2, "btype");
                 cmd.border.rect = QRect(cmd.origin.x(), cmd.origin.y(), to_int(L, 2, "width"), to_int(L, 2, "height"));
+                // TODO pixelsWritten
             } else if (type == "copy") {
                 cmd.type = OplScreen::copy;
                 cmd.copy.srcDrawableId = to_int(L, 2, "srcid");
                 cmd.copy.maskDrawableId = to_int(L, 2, "mask");
                 cmd.copy.srcRect = QRect(to_int(L, 2, "srcx"), to_int(L, 2, "srcy"), to_int(L, 2, "width"), to_int(L, 2, "height"));
-                didWritePixels(cmd.copy.srcRect.width() * cmd.copy.srcRect.height()); // Doesn't account for clipping, close enough
+                pixelsWritten += cmd.copy.srcRect.width() * cmd.copy.srcRect.height(); // Doesn't account for clipping, close enough
             } else if (type == "patt") {
                 cmd.type = OplScreen::pattern;
                 cmd.pattern.srcDrawableId = to_int(L, 2, "srcid");
                 cmd.pattern.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
-                didWritePixels(cmd.pattern.size.width() * cmd.pattern.size.height());
+                pixelsWritten += cmd.pattern.size.width() * cmd.pattern.size.height();
             } else if (type == "invert") {
                 cmd.type = OplScreen::cmdInvert;
                 cmd.invert.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
-                didWritePixels(cmd.invert.size.width() * cmd.invert.size.height());
+                pixelsWritten += cmd.invert.size.width() * cmd.invert.size.height();
             } else {
                 qWarning("Unhandled draw cmd %s", qPrintable(type));
                 lua_pop(L, 1); // cmd
@@ -1106,6 +1080,7 @@ int OplRuntime::draw(lua_State* L)
             lua_pop(L, 1); // cmd
         }
         mScreen->endBatchDraw();
+        didWritePixels(pixelsWritten);
         return 0;
     });
 }
@@ -1117,6 +1092,10 @@ int OplRuntime::createWindow(lua_State* L)
         QRect rect(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5));
         int flags = lua_tointeger(L, 6);
         OplScreen::BitmapMode mode = (OplScreen::BitmapMode)(flags & 0xFF);
+        if (mode == OplScreen::gray4 && isSibo()) {
+            // On SIBO flags was actually a boolean for use grey plane, so mode=1 actually means monochromeWithGreyPlane
+            mode = OplScreen::monochromeWithGreyPlane;
+        }
         int shadow = 0;
         if ((flags & 0xF0) != 0) {
             shadow = 2 * ((flags & 0xF00) >> 8);
@@ -1155,6 +1134,13 @@ void OplRuntime::pressMenuKey()
     keyEvent(QKeyEvent(QEvent::KeyRelease, Qt::Key_F1, Qt::NoModifier));
 }
 
+void OplRuntime::pressDiamondKey()
+{
+    Q_ASSERT(isSiboDeviceType(mDeviceType));
+    keyEvent(QKeyEvent(QEvent::KeyPress, Qt::Key_F2, Qt::NoModifier));
+    keyEvent(QKeyEvent(QEvent::KeyRelease, Qt::Key_F2, Qt::NoModifier));
+}
+
 void OplRuntime::keyEvent(const QKeyEvent& event)
 {
     // qDebug("keyEvent %d type=%d repeat=%d", event.key(), event.type(), event.isAutoRepeat());
@@ -1182,74 +1168,81 @@ void OplRuntime::keyEvent(const QKeyEvent& event)
     }
     int32_t oplcode = 0;
     opl::Modifiers modifiers = getOplModifiers(event.modifiers());
+    if (!isSibo()) {
+        // Series 5 doesn't have psion key, make sure we don't expose it
+        modifiers.setFlag(opl::psionModifier, false);
+    }
     if (event.text().size() == 1) {
         auto ch = event.text()[0].unicode();
-        if (ch >= 0x20 && ch <= 0x7E && ch != 0x60) {
-            // All the printable ascii block except backtick have the same codes in OPL
-            oplcode = ch;
-            if (ch >= 'A' && ch <= 'Z' && (modifiers & opl::shiftModifier) == 0) {
-                // Presumably caps lock is set?
-                modifiers |= opl::capsLockModifier;
-            }
-        }
+        oplcode = oplUnicodeToKeycode(ch);
+        // TODO We could do with some better handling for capslock here
     }
     if (!oplcode) {
         oplcode = qtKeyToOpl(event.key());
     }
-
     if (!oplcode) return;
 
-    int32_t scan = scancodeForKeycode(oplcode);
+    int32_t scan = oplScancodeForKeycode(oplcode, isSibo());
+    // -1 means invalid, because in SIBO 0 is a valid scan code (for enter)
+    if (scan < 0) {
+        // Possible if eg the user presses a sibo-specific key on a non-sibo device
+        qWarning("unhandled keycode %d", oplcode);
+        return;
+    }
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
 
     if (event.type() == QEvent::KeyPress) {
-        if (!event.isAutoRepeat()) {
+        // SIBO didn't have keyup/down events
+        if (!event.isAutoRepeat() && !isSibo()) {
             // Calling addEvent({ ... }) as one statement crashes some GCC versions :(
             Event e = {
                 .code = opl::keydown,
                 .keyupdown = {
                     .timestamp = timestamp,
                     .scancode = scan,
-                    .modifiers = (int32_t)modifiers,
+                    .modifiers = modifiers,
                 }
             };
             addEvent(e);
         }
-        // If it doesn't have a charcode, we shouldn't generate a keypress for it
-        if (charcodeForKeycode(oplcode)) {
-            // CTRL-[shift-]letter have special codes
-            int keypressCode;
-            if ((modifiers & opl::controlModifier) && oplcode >= 'A' && oplcode <= 'Z') {
-                keypressCode = oplcode - 'A' + 1;
-            } else {
-                keypressCode = oplcode;
-            }
+        auto keypressCode = oplModifiedKeycode(oplcode, modifiers);
+        if (keypressCode) {
             Event e = {
                 .code = keypressCode,
                 .keypress = {
                     .timestamp = timestamp,
                     .scancode = scan,
-                    .modifiers = (int32_t)modifiers,
+                    .modifiers = modifiers,
                     .repeat = event.isAutoRepeat() ? 1 : 0
                 }
             };
             addEvent(e);
         }
-    } else if (event.type() == QEvent::KeyRelease) {
+    } else if (event.type() == QEvent::KeyRelease && !isSibo()) {
         Event e = {
             .code = opl::keyup,
             .keyupdown = {
                 .timestamp = timestamp,
                 .scancode = scan,
-                .modifiers = (int32_t)modifiers,
+                .modifiers = modifiers,
             }
         };
         addEvent(e);
     }
 }
 
-void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId, const QPoint& screenPos)
+void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
 {
+    if (isSibo()) {
+        return;
+    }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QPoint screenPos = event.globalPosition().toPoint();
+#else
+    QPoint screenPos = event.globalPos();
+#endif
+
     int32_t timestamp = (int32_t)((uint32_t)event.timestamp() * 1000);
     opl::Modifiers modifiers = getOplModifiers(event.modifiers());
     if (event.type() == QEvent::MouseButtonPress) {
@@ -1259,7 +1252,7 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId, const QPoint
                 .timestamp = timestamp,
                 .windowId = windowId,
                 .pointerType = opl::pointerDown,
-                .modifiers = (int32_t)modifiers,
+                .modifiers = oplModifiersToTEventModifiers(modifiers),
                 .x = event.pos().x(),
                 .y = event.pos().y(),
                 .xscreen = screenPos.x(),
@@ -1274,7 +1267,7 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId, const QPoint
                 .timestamp = timestamp,
                 .windowId = windowId,
                 .pointerType = opl::pointerUp,
-                .modifiers = (int32_t)modifiers,
+                .modifiers = oplModifiersToTEventModifiers(modifiers),
                 .x = event.pos().x(),
                 .y = event.pos().y(),
                 .xscreen = screenPos.x(),
@@ -1289,7 +1282,7 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId, const QPoint
                 .timestamp = timestamp,
                 .windowId = windowId,
                 .pointerType = opl::pointerDrag,
-                .modifiers = (int32_t)modifiers,
+                .modifiers = oplModifiersToTEventModifiers(modifiers),
                 .x = event.pos().x(),
                 .y = event.pos().y(),
                 .xscreen = screenPos.x(),
@@ -1329,6 +1322,11 @@ void OplRuntime::addEvent(const OplRuntime::Event& event)
     }
     mMutex.lock();
     mEvents.append(event);
+    if (event.code == opl::keydown) {
+        mKeysDown.insert(event.keyupdown.scancode);
+    } else if (event.code == opl::keyup) {
+        mKeysDown.remove(event.keyupdown.scancode);
+    }
     if (checkEventRequest_locked()) {
         unlockAndSignalIfWaiting();
     } else {
@@ -1537,7 +1535,7 @@ bool OplRuntime::checkEventRequest_locked()
             auto event = mEvents.takeFirst();
             if (event.isKeyEvent()) {
                 int16_t data[2];
-                data[0] = (int16_t)charcodeForKeycode(event.code);
+                data[0] = (int16_t)oplCharcodeForKeycode(event.code);
                 data[1] = (int16_t)event.keypress.modifiers | (event.keypress.repeat ? 0x100 : 0);
                 mEventRequest->setCompletionData(data);
                 asyncFinished_locked(mEventRequest, KErrNone);
@@ -1651,10 +1649,15 @@ int OplRuntime::utctime(lua_State *L)
 int OplRuntime::setEra(lua_State *L)
 {
     QString era(lua_tostring(L, 1));
-    if (era == "sibo") {
+    bool eraIsSibo = era == "sibo";
+    if (eraIsSibo) {
         mStringCodec = QTextCodec::codecForName("IBM 850"); // Is this the right name...?
     } else {
         mStringCodec = QTextCodec::codecForName("Windows-1252");
+    }
+
+    if (eraIsSibo != isSibo() && !mIgnoreOpoEra) {
+        setDeviceType(eraIsSibo ? psionSeries3c : psionSeries5);
     }
     return 0;
 }
@@ -1714,17 +1717,19 @@ void OplRuntime::runSlower()
     }
 }
 
-int64_t kOpTime = 3500; // in nanoseconds
+const int64_t kOpTime = 3500; // in nanoseconds
+const int64_t kSiboMultiplier = 10;
 
 int OplRuntime::opsync(lua_State *)
 {
     auto speed = getSpeed();
+    auto optime = kOpTime * (isSibo() ? kSiboMultiplier : 1);
     if (speed != Fastest) {
         auto elapsed = mLastOpTime.nsecsElapsed();
-        if (elapsed < kOpTime) {
+        if (elapsed < optime) {
             struct timespec t;
             t.tv_sec = 0;
-            t.tv_nsec = kOpTime - elapsed;
+            t.tv_nsec = optime - elapsed;
             nanosleep(&t, NULL);
         }
         mLastOpTime.start();
@@ -1735,8 +1740,9 @@ int OplRuntime::opsync(lua_State *)
 constexpr int64_t kDelayPerPixel = 100; // In nanoseconds. Total guess.
 void OplRuntime::didWritePixels(int numPixels)
 {
+    // qDebug("didWritePixels(%d)", numPixels);
     QMutexLocker lock(&mMutex);
-    int64_t delay_ns = (9 - mSpeed) * numPixels * kDelayPerPixel;
+    int64_t delay_ns = (9 - mSpeed) * numPixels * kDelayPerPixel * (isSibo() ? kSiboMultiplier : 1);
     lock.unlock();
 
     struct timespec t;
@@ -1805,4 +1811,31 @@ int OplRuntime::printHandler(lua_State* L)
     fwrite(s, 1, l, stdout);
     emit debugLog(QString::fromLatin1(s, l));
     return 0;
+}
+
+void OplRuntime::drawCursor()
+{
+    if (mCursorDrawCmd.has_value()) {
+        mScreen->beginBatchDraw();
+        mScreen->draw(*mCursorDrawCmd);
+        mScreen->endBatchDraw();
+        mCursorDrawn = !mCursorDrawn;
+    }
+}
+
+int OplRuntime::keysDown(lua_State* L)
+{
+    mMutex.lock();
+    uint8_t bytes[20];
+    for (size_t byte = 0; byte < sizeof(bytes); byte++) {
+        bytes[byte] = 0;
+        for (int bit = 0; bit < 8; bit++) {
+            if (mKeysDown.contains(byte * 8 + bit)) {
+                bytes[byte] |= (1 << bit);
+            }
+        }
+    }
+    mMutex.unlock();
+    lua_pushlstring(L, (char*)bytes, sizeof(bytes));
+    return 1;
 }

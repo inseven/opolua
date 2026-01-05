@@ -4,37 +4,81 @@
 import PackageDescription
 
 let package = Package(
-    name: "OpoLua",
+    name: "OpoLuaCore",
     platforms: [
+        .iOS(.v15),
         .macOS(.v13),
     ],
     products: [
         .library(
-            name: "OpoLua",
+            name: "OpoLuaCore",
             targets: [
-                "OpoLua"
+                "OpoLuaCore",
+                "OplCore",
             ]),
     ],
     dependencies: [
-        .package(path: "LuaSwift"),
+        .package(path: "dependencies/LuaSwift"),
         .package(url: "https://github.com/inseven/licensable", from: "0.0.13"),
     ],
     targets: [
         .target(
-            name: "OpoLua",
+            name: "OpoLuaCore",
             dependencies: [
                 .product(name: "Licensable", package: "licensable"),
                 .product(name: "Lua", package: "LuaSwift"),
+                "OplCore",
+                "OpoLuaLicenses",
+                "OpoLuaSource",
             ],
-            path: ".",
-            sources: [
-                "swift",
-            ],
+            path: "core/swift"),
+        .target(
+            name: "OpoLuaLicenses",
+            path: "core/licenses",
             resources: [
-                .process("OpoLua/Licenses"),
-            ],
-            plugins: [
-                .plugin(name: "EmbedLuaPlugin", package: "LuaSwift")
+                .copy("lua-license"),
+                .copy("opolua-license"),
             ]),
+        .target(
+            name: "OpoLuaSource",
+            path: "core/src",
+            resources: [
+                .copy("aif.lua"),
+                .copy("compiler.lua"),
+                .copy("const.lua"),
+                .copy("cp1252.lua"),
+                .copy("crc.lua"),
+                .copy("database.lua"),
+                .copy("defaultiohandler.lua"),
+                .copy("dialog.lua"),
+                .copy("directfilestore.lua"),
+                .copy("editor.lua"),
+                .copy("fns.lua"),
+                .copy("includes"),
+                .copy("init_dump.lua"),
+                .copy("init.lua"),
+                .copy("mbm.lua"),
+                .copy("memory.lua"),
+                .copy("menu.lua"),
+                .copy("modules"),
+                .copy("opl.lua"),
+                .copy("opofile.lua"),
+                .copy("ops.lua"),
+                .copy("opx"),
+                .copy("recognizer.lua"),
+                .copy("rsc.lua"),
+                .copy("runtime.lua"),
+                .copy("scrollbar.lua"),
+                .copy("sibosyscalls.lua"),
+                .copy("sis.lua"),
+                .copy("sound.lua"),
+                .copy("stack.lua"),
+                .copy("struct.lua"),
+            ]),
+        .target(
+            name: "OplCore",
+            path: "core/shared",
+            publicHeadersPath: "include"
+            ),
     ]
 )

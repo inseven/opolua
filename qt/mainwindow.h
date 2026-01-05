@@ -52,9 +52,12 @@ private slots:
     void onSpeedChanged();
     void onDeviceTypeChanged();
     void reportIssue();
+    void openSoftwareIndex();
 
 private:
-    void setDevice(QAction* action, int device);
+    void setDevice(int device);
+    void setScale(int scale);
+    void doSetScale(int scale);
     void sizeWindowToFitInterpreter();
     QString getSourceUrlForPath(const QString& path);
     void applyManifest();
@@ -72,7 +75,6 @@ private:
     bool mForceClosing;
     QLabel* statusLabel;
     QLabel* speedLabel;
-    QAction* currentDevice;
     QString mManifest;
     QScopedPointer<OplAppInfo> mAppInfo;
     QString mErrMsg;

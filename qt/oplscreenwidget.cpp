@@ -14,6 +14,7 @@
 
 OplScreenWidget::OplScreenWidget(QWidget *parent)
     : QWidget(parent)
+    , mScale(1)
     , mSpriteWidget(nullptr)
     , mAudioAsync(nullptr)
     , mAudio(nullptr)
@@ -61,10 +62,27 @@ OplRuntimeGui* OplScreenWidget::getRuntime() const
 QSize OplScreenWidget::sizeHint() const
 {
     if (mRuntime) {
-        return mRuntime->screenSize();
+        auto sz = mRuntime->screenSize();
+        return QSize(sz.width() * mScale, sz.height() * mScale);
     } else {
         return QSize();
     }
+}
+
+void OplScreenWidget::setScale(int scale)
+{
+    mScale = scale;
+    for (Window* w : mWindows) {
+        w->setScale(scale);
+    }
+    auto sz = sizeHint();
+    if (mSpriteWidget) {
+        mSpriteWidget->resize(sz);
+    }
+    if (mStoppedShadow) {
+        mStoppedShadow->resize(sz);
+    }
+    updateGeometry();
 }
 
 void OplScreenWidget::onDeviceTypeChanged()
@@ -99,7 +117,13 @@ void OplScreenWidget::mouseEvent(QMouseEvent* event, Window* window)
 #else
     QPoint pos = event->pos();
 #endif
-    mRuntime->mouseEvent(*event, window->getId(), QPoint(window->x() + pos.x(), window->y() + pos.y()));
+
+    QPointF localPos(pos.x() / mScale, pos.y() / mScale);
+    QPoint windowPos = window->getPos();
+    QPointF screenPos(windowPos.x() + localPos.x(), windowPos.y() + localPos.y());
+    QMouseEvent me(event->type(), localPos, screenPos, event->button(), event->buttons(), event->modifiers());
+
+    mRuntime->mouseEvent(me, window->getId());
 }
 
 void OplScreenWidget::focusInEvent(QFocusEvent *event)
@@ -136,6 +160,7 @@ int OplScreenWidget::createWindow(int drawableId, const QRect& rect, BitmapMode 
 {
     // qDebug("createWindow id=%d (%d,%d) %dx%d mode=%d", drawableId, rect.x(), rect.y(), rect.width(), rect.height(), mode);
     auto win = new Window(this, drawableId, rect, mode, shadowSize);
+    win->setScale(mScale);
     mWindows.insert(drawableId, win);
     mDrawables.insert(drawableId, win);
     return KErrNone;
@@ -338,10 +363,10 @@ static bool adjustBounds(QRect& srcRect, QRect& destRect, const QSize& srcSize, 
     return true;
 }
 
-void OplScreenWidget::copyMultiple(int srcId, int destId, uint32_t color, bool invert, const QVector<QRect>& rects, const QVector<QPoint>& points)
+void OplScreenWidget::copyMultiple(const OplScreen::CopyMultipleCmd& cmd, const QVector<QRect>& rects, const QVector<QPoint>& points)
 {
-    auto src = mDrawables.value(srcId, nullptr);
-    auto dest = mDrawables.value(destId, nullptr);
+    auto src = mDrawables.value(cmd.srcId, nullptr);
+    auto dest = mDrawables.value(cmd.destId, nullptr);
      if (!src || !dest) {
         qWarning("Bad src/dest in copyMultiple");
         return;
@@ -353,7 +378,7 @@ void OplScreenWidget::copyMultiple(int srcId, int destId, uint32_t color, bool i
         QRect srcRect = rects[i];
         QRect destRect = QRect(points[i], srcRect.size());
         if (adjustBounds(srcRect, destRect, src->size(), dest->size())) {
-            dest->drawSetPixels(*src, srcRect, destRect, invert, color);
+            dest->drawSetPixels(cmd, *src, srcRect, destRect);
         }
     }
     mBatchSeenDrawables.insert(dest);
@@ -365,6 +390,7 @@ void OplScreenWidget::clock(int drawableId, const OplScreen::ClockInfo* info)
     if (win) {
         if (info && !win->mClock) {
             win->mClock = new ClockWidget(win, getRuntime(), info->color);
+            win->mClock->setScale(mScale);
             connect(getRuntime(), &OplRuntime::systemClockChanged, win->mClock, &ClockWidget::systemClockChanged);
             // God DAMN that cast is nasty. Needed because QWidget has overloads of update making the slot kinda
             // broken.
@@ -552,7 +578,7 @@ void OplScreenWidget::spriteTimerTick()
     // An oddity of the sprite API is that they can appear anywhere on the screen, ie are not cropped to the Window they
     // are associated with. For that reason, we need to keep a separate fullscreen transparent pixmap around to render
     // them in to.
-    mSpriteWidget->renderSprites(mWindows.values());
+    mSpriteWidget->renderSprites(mWindows.values(), mScale);
 }
 
 QByteArray OplScreenWidget::peekLine(int drawableId, const QPoint& position, int numPixels, OplScreen::PeekMode mode)
@@ -708,7 +734,9 @@ void Drawable::draw(const OplScreen::DrawCmd& cmd)
             qDebug("Failed to load border %s w=%d", qPrintable(borderPath), px.width());
         }
         const QRect& r = cmd.border.rect;
-        const int d = 9; // gXBORDER(1, 3) needs nine pixels, most other borders only 5 or 6
+        // gXBORDER(1, 3) needs nine pixels, most other borders only 5 or 6
+        int d = qMin(9, qMin(r.width(), r.height()) / 2);
+        // TODO these operations don't take into account the current colour. Should they...?
         painter.drawPixmap(r.x(), r.y(), px, 0, 0, d, d); // tl
         painter.drawPixmap(r.x() + r.width() - d, r.y(), px, px.width() - d, 0, d, d); // tr
         painter.drawPixmap(r.x(), r.y() + r.height() - d, px, 0, px.height() - d, d, d); // bl
@@ -773,11 +801,17 @@ void Drawable::invalidateMask()
     }
 }
 
-void Drawable::drawSetPixels(Drawable& src, const QRect& srcRect, const QRect& destRect, bool invert, QRgb color)
+Drawable* Drawable::getGreyPlane() const
+{
+    // Bitmaps never have a grey plane.
+    return nullptr;
+}
+
+void Drawable::drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect)
 {
     QPainter painter(&mPixmap);
-    painter.setPen(color);
-    if (invert) {
+    painter.setPen(cmd.color);
+    if (cmd.invert) {
         // See comment in drawCopy below
         QPixmap tempBuf = mPixmap.copy(destRect);
         QPainter tempPainter(&tempBuf);
@@ -884,10 +918,16 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
     : QLabel(screen)
     , Drawable(drawableId, rect.size(), mode)
     , mClock(nullptr)
+    , mScale(1)
     , mShadow(nullptr)
     , mShadowSize(shadowSize)
+    , mGreyPlane(nullptr)
 {
+    mUnscaledRect = rect;
     setGeometry(rect);
+    if (mode == OplScreen::monochromeWithGreyPlane) {
+        mGreyPlane.reset(new Drawable(getId(), Drawable::size(), OplScreen::gray2));
+    }
     if (mShadowSize) {
         mShadow = new WindowShadow(screen);
         mShadow->setGeometry(x() + mShadowSize, y() + mShadowSize, width(), height());
@@ -896,9 +936,97 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
     update();
 }
 
+void Window::draw(const OplScreen::DrawCmd& cmd)
+{
+    invalidateMask();
+    if (cmd.greyMode) {
+        // For simplicity of compositing, make sure any non-white colours are set to the grey level we want
+        auto greyPlaneCmd = cmd;
+        if (greyPlaneCmd.color != 0xFFFFFFFF) {
+            greyPlaneCmd.color = 0xFFAAAAAA;
+        }
+        if (greyPlaneCmd.bgcolor != 0xFFFFFFFF) {
+            greyPlaneCmd.bgcolor = 0xFFAAAAAA;
+        }
+        greyPlane().draw(greyPlaneCmd);
+    }
+
+    if (cmd.greyMode != OplScreen::drawGreyOnly) {
+        Drawable::draw(cmd);
+    }
+}
+
+void Window::drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect)
+{
+    if (cmd.greyMode) {
+        auto greyPlaneCmd = cmd;
+        if (greyPlaneCmd.color != 0xFFFFFFFF) {
+            greyPlaneCmd.color = 0xFFAAAAAA;
+        }
+        greyPlane().drawSetPixels(greyPlaneCmd, src, srcRect, destRect);
+    }
+
+    if (cmd.greyMode != OplScreen::drawGreyOnly) {
+        Drawable::drawSetPixels(cmd, src, srcRect, destRect);
+    }
+}
+
+void Window::drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* mask)
+{
+    if (cmd.greyMode) {
+        auto greyPlaneCmd = cmd;
+        // mode=clear uses the background colour
+        if (greyPlaneCmd.bgcolor != 0xFFFFFFFF) {
+            greyPlaneCmd.bgcolor = 0xFFAAAAAA;
+        }
+        auto greySrc = src.getGreyPlane();
+        if (greySrc) {
+            // Copy grey to grey
+            greyPlane().drawCopy(greyPlaneCmd, *greySrc, mask);
+        } else {
+            // Copy black to grey
+            greyPlane().drawCopy(greyPlaneCmd, src, mask);
+        }
+    }
+
+    if (cmd.greyMode != OplScreen::drawGreyOnly) {
+        // Black to black (if either have a grey plane)
+        Drawable::drawCopy(cmd, src, mask);
+    }
+}
+
 void Window::update()
 {
-    setPixmap(mPixmap);
+    QPixmap unscaledPixmap;
+    if (mGreyPlane) {
+        unscaledPixmap = QPixmap(mPixmap.size());
+        QPainter painter(&unscaledPixmap);
+        painter.drawPixmap(QPoint(), mGreyPlane->getPixmap());
+        // Now draw the black plane on top with a mask, so its white pixels don't overwrite the grey plane
+        QPixmap maskedPixmap(mPixmap);
+        maskedPixmap.setMask(getMask());
+        painter.drawPixmap(QPoint(), maskedPixmap);
+    } else {
+        unscaledPixmap = mPixmap;
+    }
+
+    if (mScale == 1) {
+        setPixmap(unscaledPixmap);
+    } else {
+        auto scaled = unscaledPixmap.scaled(scaledRect().size());
+        setPixmap(scaled);
+    }
+}
+
+Drawable& Window::greyPlane()
+{
+    Q_ASSERT(getMode() == OplScreen::monochromeWithGreyPlane);
+    return *mGreyPlane;
+}
+
+Drawable* Window::getGreyPlane() const
+{
+    return mGreyPlane.get();
 }
 
 void Window::updateSprites(QPainter& painter)
@@ -930,7 +1058,6 @@ void Window::updateSprites(QPainter& painter)
             painter.drawPixmap(pos, src->getPixmap());
         }
     }
-
 }
 
 void Window::mousePressEvent(QMouseEvent *event)
@@ -951,21 +1078,58 @@ void Window::mouseReleaseEvent(QMouseEvent *event)
     static_cast<OplScreenWidget*>(parent())->mouseEvent(event, this);
 }
 
+QPoint Window::getPos() const
+{
+    return mUnscaledRect.topLeft();
+}
+
 void Window::setPos(const QPoint& pos)
 {
-    move(pos); // in QWidget
+    mUnscaledRect.moveTo(pos);
+    auto scaledPos = scaledRect().topLeft();
+    move(scaledPos); // in QWidget
     if (mShadow) {
-        mShadow->move(pos.x() + mShadowSize, pos.y() + mShadowSize);
+        mShadow->move(scaledPos.x() + mShadowSize * mScale, scaledPos.y() + mShadowSize * mScale);
     }
 }
 
 void Window::setSize(const QSize& size)
 {
+    mUnscaledRect.setSize(size);
     Drawable::setSize(size); // Update image
-    resize(size); // update widget
+    auto scaledSize = scaledRect().size();
+    resize(scaledSize); // update widget
     if (mShadow) {
-        mShadow->resize(size);
+        mShadow->resize(scaledSize);
     }
+    if (mGreyPlane) {
+        mGreyPlane->setSize(size);
+    }
+}
+
+void Window::setScale(int scale)
+{
+    if (scale != mScale) {
+        mScale = scale;
+        setPos(mUnscaledRect.topLeft());
+        // Don't call setSize as that will invalidate the Drawable contents
+        auto scaled = scaledRect().size();
+        resize(scaled);
+        if (mShadow) {
+            mShadow->resize(scaled);
+        }
+        if (mClock) {
+            mClock->setScale(mScale);
+        }
+
+        update();
+    }
+}
+
+QRect Window::scaledRect() const
+{
+    return QRect(mUnscaledRect.x() * mScale, mUnscaledRect.y() * mScale,
+        mUnscaledRect.width() * mScale, mUnscaledRect.height() * mScale);
 }
 
 void Window::setSprite(int spriteId, const OplScreen::Sprite* sprite)
@@ -1002,24 +1166,31 @@ void Window::animateSprites(int64_t interval_us)
 
 SpriteWidget::SpriteWidget(OplScreenWidget* screen)
     : QLabel(screen)
-    , mPixmap(screen->getRuntime()->screenSize())
 {
     setAttribute(Qt::WA_TransparentForMouseEvents);
-    resize(mPixmap.size());
-    mPixmap.fill(Qt::transparent);
-    setPixmap(mPixmap);
+    resize(screen->size()); // This will configure mPixmap via resizeEvent
     show();
 }
 
-void SpriteWidget::renderSprites(const QList<Window*>& windows)
+void SpriteWidget::renderSprites(const QList<Window*>& windows, int scale)
 {
+    // The sprite widget follows the Qt size of OplScreenWidget (ie scaled)
     mPixmap.fill(Qt::transparent);
     QPainter painter;
     painter.begin(&mPixmap);
+    painter.scale(scale, scale);
     for (Window* w : windows) {
         w->updateSprites(painter);
     }
     painter.end();
+    setPixmap(mPixmap);
+}
+
+void SpriteWidget::resizeEvent(QResizeEvent *event)
+{
+    QLabel::resizeEvent(event);
+    mPixmap = QPixmap(size());
+    mPixmap.fill(Qt::transparent);
     setPixmap(mPixmap);
 }
 

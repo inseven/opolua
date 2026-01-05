@@ -21,31 +21,43 @@ static QRect rectForChar(char ch, const OplScreen::FontMetrics& metrics)
 
 ClockWidget::ClockWidget(QWidget *parent, OplFontProvider* fontProvider, bool color)
     : QWidget(parent)
+    , mScale(1)
     , mClock(color ? ":/images/clock_medium_color.png" : ":/images/clock_medium.png", "PNG")
     , mFontProvider(fontProvider)
-    , mClockType(OplScreen::system)
-    , mSystemIsDigital(false)
 {
+    mInfo = {
+        .mode = OplScreen::system,
+        .systemIsDigital = false,
+        .color = color,
+        .pos = QPoint(),
+    };
     resize(mClock.size());
 }
 
 void ClockWidget::updateClockInfo(const OplScreen::ClockInfo& info)
 {
-    move(info.pos);
-    mSystemIsDigital = info.systemIsDigital;
-    mClockType = info.mode;
+    mInfo = info;
+    QPoint scaledPos(info.pos.x() * mScale, info.pos.y() * mScale);
+    move(scaledPos);
     update();
     show();
 }
 
+void ClockWidget::setScale(int scale)
+{
+    mScale = scale;
+    setGeometry(QRect(mInfo.pos.x() * mScale, mInfo.pos.y() * mScale, mClock.width() * mScale, mClock.height() * mScale));
+}
+
 bool ClockWidget::isDigital() const
 {
-    return mClockType == OplScreen::digital || (mClockType == OplScreen::system && mSystemIsDigital);
+    return mInfo.mode == OplScreen::digital || (mInfo.mode == OplScreen::system && mInfo.systemIsDigital);
 }
 
 void ClockWidget::paintEvent(QPaintEvent* /*event*/)
 {
     QPainter painter(this);
+    painter.scale(mScale, mScale);
     QDateTime now = QDateTime::currentDateTime();
 
     if (isDigital()) {
@@ -68,7 +80,7 @@ void ClockWidget::paintEvent(QPaintEvent* /*event*/)
 
         painter.drawPixmap(QPoint(0, 0), mClock);
 
-        QPointF centerPos = rect().center();
+        QPointF centerPos = QRect(QPoint(), mClock.size()).center();
         auto minFrac = now.time().minute() / 60.0;
 
         const double hourHandLen = 18.0;
@@ -93,7 +105,7 @@ void ClockWidget::drawCenteredText(QPainter& painter, int y, const QString& text
     for (QChar ch : text) {
         w += rectForChar(ch.toLatin1(), metrics).width();
     }
-    int x = (width() - w) / 2;
+    int x = (mClock.width() - w) / 2;
     for (QChar ch : text) {
         QRect r = rectForChar(ch.toLatin1(), metrics);
         painter.drawPixmap(QPoint(x, y), masked, r);
@@ -103,6 +115,6 @@ void ClockWidget::drawCenteredText(QPainter& painter, int y, const QString& text
 
 void ClockWidget::systemClockChanged(bool digital)
 {
-    mSystemIsDigital = digital;
+    mInfo.systemIsDigital = digital;
     update();
 }

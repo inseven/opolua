@@ -33,7 +33,10 @@ OplAppInfo OplRuntimeGui::getAppInfo(const QString& aifPath)
         return result;
     }
     if (nativePath.toLower().endsWith(".app")) {
-        nativePath = nativePath.left(nativePath.length() - 4) + ".aif";
+        auto aif = nativePath.left(nativePath.length() - 4) + ".aif";
+        if (QFileInfo(aif).exists()) {
+            nativePath = aif;
+        }
     }
 
     QFile f(nativePath);
@@ -65,10 +68,14 @@ OplAppInfo OplRuntimeGui::getAppInfo(const QString& aifPath)
     }
     lua_pop(L, 1); // captions
     result.appName = captions["en_GB"]; // TODO
-    auto appDir = QFileInfo(nativePath).dir();
-    auto apps = appDir.entryList({"*.app"}, QDir::Files);
-    if (apps.count() == 1) {
-        result.deviceAppPath = aifPath.left(aifPath.lastIndexOf("\\") + 1) + apps[0];
+    if (nativePath.toLower().endsWith(".opa")) {
+        result.deviceAppPath = aifPath;
+    } else {
+        auto appDir = QFileInfo(nativePath).dir();
+        auto apps = appDir.entryList({"*.app"}, QDir::Files);
+        if (apps.count() == 1) {
+            result.deviceAppPath = aifPath.left(aifPath.lastIndexOf("\\") + 1) + apps[0];
+        }
     }
 
     rawgetfield(L, -1, "icons");
@@ -114,6 +121,24 @@ QVector<OplAppInfo> OplRuntimeGui::getCDriveApps()
             if (!info.deviceAppPath.isEmpty()) {
                 result.append(info);
             }
+        }
+    }
+    return result;
+}
+
+QVector<OplAppInfo> OplRuntimeGui::getMDriveApps()
+{
+    QVector<OplAppInfo> result;
+    auto path = getNativePath("M:\\APP");
+    if (path.isEmpty()) {
+        return result;
+    }
+    QDir appsDir(path);
+    for (const QString& appName : appsDir.entryList({"*.OPA", "*.APP"}, QDir::Files)) {
+        // qDebug("Entry %s", qPrintable(appName));
+        auto info = getAppInfo("M:\\APP\\" + appName);
+        if (!info.deviceAppPath.isEmpty()) {
+            result.append(info);
         }
     }
     return result;

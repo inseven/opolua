@@ -20,6 +20,8 @@
 
 import Foundation
 
+import OpoLuaCore
+
 protocol InterpreterThreadDelegate: AnyObject {
 
     func interpreter(_ interpreter: InterpreterThread, pathForUrl url: URL) -> String?

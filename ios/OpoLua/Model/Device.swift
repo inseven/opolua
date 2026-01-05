@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,22 +18,58 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-enum Device: String, CaseIterable, Codable {
+import OpoLuaCore
+import OplCore
 
-    case psionSeries3c = "psion-series-3c"
-    case psionSeries5 = "psion-series-5"
-    case psionRevo = "psion-revo"
-    case psionSeries7 = "psion-series-7"
-    case geofoxOne = "geofox-one"
+typealias Device = OplCore.OplDeviceType
 
+// OplDeviceType is declared as a closed enum so I don't know why it can't be made CaseIterable
+extension Device: @retroactive CaseIterable {
+
+    public static var allCases: [OplDeviceType] {
+        return [
+            .psionSeries3,
+            .psionSeries3c,
+            .psionSiena,
+            .psionSeries5,
+            .psionRevo,
+            .psionSeries7,
+            .geofoxOne
+        ]
+    }
+
+}
+
+extension Device: @retroactive Codable {
+
+    public init(from decoder: any Decoder) throws {
+        let identifier = try decoder.singleValueContainer().decode(String.self)
+        let device = oplGetDeviceFromName(identifier)
+        if device == -1 {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "string is not a known device"))
+        }
+        self.init(rawValue: UInt32(device))!
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        try self.identifier.encode(to: encoder)
+    }
 }
 
 extension Device {
 
+    var identifier: String {
+        return String(cString: oplGetDeviceName(self))
+    }
+
     var name: String {
         switch self {
+        case .psionSeries3:
+            return "Psion Series 3"
         case .psionSeries3c:
             return "Psion Series 3c"
+        case .psionSiena:
+            return "Psion Siena"
         case .psionSeries5:
             return "Psion Series 5"
         case .psionRevo:
@@ -46,38 +82,23 @@ extension Device {
     }
 
     var screenSize: Graphics.Size {
-        switch self {
-        case .psionSeries3c:
-            return Graphics.Size(width:480, height: 160)
-        case .psionSeries5:
-            return Graphics.Size(width:640, height: 240)
-        case .psionRevo:
-            return Graphics.Size(width: 480, height: 160)
-        case .psionSeries7:
-            return Graphics.Size(width:640, height: 480)
-        case .geofoxOne:
-            return Graphics.Size(width: 640, height: 320)
-        }
+        var w: CInt = 0
+        var h: CInt = 0
+        oplGetScreenSize(self, &w, &h)
+        return Graphics.Size(width: Int(w), height: Int(h))
     }
 
     var screenMode: Graphics.Bitmap.Mode {
-        switch self {
-        case .psionSeries3c:
-            return .gray4
-        case .psionSeries5:
-            return .gray16
-        case .psionRevo:
-            return .gray16 // Is this right?
-        case .psionSeries7:
-            return .color256 // ?
-        case .geofoxOne:
-            return .color256 // ?
-        }
+        return .init(rawValue: Int(oplGetScreenMode(self)))!
     }
 
     var analogClockImage: CommonImage {
         switch self {
+        case .psionSeries3:
+            return .clockMedium()
         case .psionSeries3c:
+            return .clockMedium()
+        case .psionSiena:
             return .clockMedium()
         case .psionSeries5:
             return .clockMedium()
@@ -88,6 +109,10 @@ extension Device {
         case .geofoxOne:
             return .clockMedium()
         }
+    }
+
+    var isSibo: Bool {
+        return oplIsSiboDevice(self)
     }
 
     static func getDefault(forEra era: PsiLuaEnv.AppEra?) -> Device {

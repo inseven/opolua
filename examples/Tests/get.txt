@@ -1,5 +1,7 @@
 PROC main:
-	LOCAL x%
-	x% = GET
-	PRINT "got char", x%
+    LOCAL ch%
+    REPEAT
+        ch% = GET
+        PRINT "got char", ch%
+    UNTIL ch% = 27
 ENDP

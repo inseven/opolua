@@ -21,6 +21,8 @@
 import Foundation
 import CoreGraphics
 
+import OpoLuaCore
+
 protocol WindowServerDelegate: CanvasViewDelegate {
 
     func windowServerClockIsDigital(_ windowServer: WindowServer) -> Bool

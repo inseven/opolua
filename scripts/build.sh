@@ -25,10 +25,9 @@ set -o pipefail
 set -x
 set -u
 
-SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
-SRC_DIRECTORY="$ROOT_DIRECTORY/src"
+ROOT_DIRECTORY="$( cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )" &> /dev/null && pwd )"
+SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
+SRC_DIRECTORY="$ROOT_DIRECTORY/core/src"
 APP_DIRECTORY="$ROOT_DIRECTORY/ios"
 
 BUILD_DIRECTORY="$ROOT_DIRECTORY/build"

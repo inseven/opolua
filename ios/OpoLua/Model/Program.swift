@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,8 @@
 
 import Foundation
 import Combine
+
+import OpoLuaCore
 
 /**
  Called on the main queue.
@@ -174,10 +176,13 @@ class Program {
         }
         
         switch configuration.device {
-        case .psionSeries3c:
+        case .psionSeries3, .psionSeries3c, .psionSiena:
             break
-        case .psionSeries5, .psionRevo, .geofoxOne:
+        case .psionSeries5, .geofoxOne:
             let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s5", isDirectory: true)
+            self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
+        case .psionRevo:
+            let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-revo", isDirectory: true)
             self.fileSystem.set(sharedDrive: "Z", url: romfs, readonly: true)
         case .psionSeries7:
             let romfs = Bundle.main.resourceURL!.appendingPathComponent("z-s7", isDirectory: true)
@@ -277,15 +282,24 @@ class Program {
     }
 
     func sendEvent(_ event: Async.ResponseValue) {
-        eventQueue.append(event)
         switch event {
         case .keydownevent(let keydown):
             currentKeys.insert(keydown.keycode)
+            if configuration.device.isSibo {
+            // SIBO doesn't do up or down events
+                return
+            }
         case .keyupevent(let keyup):
             currentKeys.remove(keyup.keycode)
+            if configuration.device.isSibo {
+            // SIBO doesn't do up or down events
+                return
+            }
         default:
             break
         }
+
+        eventQueue.append(event)
         checkGetEventCompletion()
     }
 
@@ -467,7 +481,7 @@ extension Program: OpoIoHandler {
 
     func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String) {
         let device = configuration.device
-        return (device.screenSize, device.screenMode, device.rawValue)
+        return (device.screenSize, device.screenMode, device.identifier)
     }
 
     func fsop(_ op: Fs.Operation) -> Fs.Result {
@@ -584,7 +598,7 @@ extension Program: WindowServerDelegate {
     }
 
     func canvasView(_ canvasView: CanvasView, penEvent: Async.PenEvent) {
-        if penEvent.type == .down {
+        if penEvent.type == .pointerDown {
             sendEvent(.pendownevent(.init(timestamp: penEvent.timestamp, windowId: penEvent.windowId)))
         }
         sendEvent(.penevent(penEvent))
