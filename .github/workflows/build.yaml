@@ -80,6 +80,7 @@ jobs:
         fetch-depth: 0
 
     - name: Install Qt
+      shell: bash
       run: scripts/install-qt.sh
 
     # - name: Build Qt Static
