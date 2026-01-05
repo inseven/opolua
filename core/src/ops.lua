@@ -2098,7 +2098,7 @@ function gPeekLine(stack, runtime) -- 0xE6
     local numBits = numPixels << (mode == -1 and 0 or mode)
     local numWords = (numBits + 15) // 16
     local numBytes = numWords * 2
-    local d = stack:pop()
+    local d = runtime:addrFromInt(stack:pop(), DataTypes.EWordArray)
     local x, y = stack:popXY()
     local drawable = stack:pop()
     -- printf("gPeekLine %d,%d id=%d numPixels=%d mode=%d\n", x, y, drawable, numPixels, mode)
