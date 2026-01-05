@@ -46,9 +46,10 @@ fi
 mkdir -p "$INSTALL_DIRECTORY"
 
 # Build
+# TODO: Minor version.
 QT_VERSION=6.8.3
 cd "$BUILD_DIRECTORY"
-curl -O https://qt.mirror.constant.com/archive/qt/6.9/$QT_VERSION/single/qt-everywhere-src-$QT_VERSION.tar.xz
+curl -O https://qt.mirror.constant.com/archive/qt/6.8/$QT_VERSION/single/qt-everywhere-src-$QT_VERSION.tar.xz
 tar xf qt-everywhere-src-$QT_VERSION.tar.xz
 mkdir -p qt-build
 cd qt-build
