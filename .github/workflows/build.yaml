@@ -79,7 +79,15 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v4
+      with:
+        path: qt-install
+        key: qt-${{ runner.os }}
+
     - name: Install Qt
+      if: steps.cache-qt.outputs.cache-hit != 'true'
       shell: bash
       run: scripts/install-qt.sh
 
