@@ -75,24 +75,28 @@ jobs:
 
     - name: Build Qt Static
       if: steps.cache-qt.outputs.cache-hit != 'true'
-      shell: cmd
+      shell: bash
       run: |
+        set -e
+
         git clone --branch v${{ env.QT_VERSION }} --depth 1 https://code.qt.io/qt/qt5.git qt-source
+
         cd qt-source
         perl init-repository --module-subset=qtbase,qtmultimedia,qt5compat
 
-        mkdir ..\qt-build
-        cd ..\qt-build
+        mkdir ../qt-build
+        cd ../qt-build
 
-        ..\qt-source\configure.bat -prefix %GITHUB_WORKSPACE%\qt-static ^
-          -static -static-runtime -release -optimize-size ^
-          -opensource -confirm-license ^
-          -nomake examples -nomake tests ^
-          -no-opengl -no-icu ^
+        ../qt-source/configure.bat -prefix "$GITHUB_WORKSPACE/qt-static" \
+          -static -static-runtime -release -optimize-size \
+          -opensource -confirm-license \
+          -nomake examples -nomake tests \
+          -no-opengl -no-icu \
           -skip qtwebengine
 
         cmake --build . --parallel
         cmake --install .
+
 
   qt-build:
     strategy:
