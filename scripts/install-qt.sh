@@ -54,9 +54,16 @@ tar xf qt-everywhere-src-$QT_VERSION.tar.xz
 mkdir -p qt-build
 cd qt-build
 
-../qt-everywhere-src-$QT_VERSION/configure \
+../qt-everywhere-src-$QT_VERSION/configure.bat \
     -prefix "$INSTALL_DIRECTORY" \
     -static \
+    -static-runtime \
+    -release \
+    -optimize-size \
+    -opensource \
+    -confirm-license \
+    -nomake examples \
+    -nomake tests \
     -submodules qtmultimedia,qt5compat
 
 cmake --build . --parallel

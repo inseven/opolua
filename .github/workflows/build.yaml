@@ -68,6 +68,7 @@ jobs:
   qt-windows-build:
     runs-on: windows-latest
     env:
+      # TODO: Use these.
       QT_VERSION: 6.8.3
       QT_MODULES: qtmultimedia qt5compat
 
@@ -84,7 +85,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: qt-install
-        key: qt-${{ runner.os }}
+        key: qt-${{ runner.os }}-${{ hashFiles('scripts/install-qt.sh') }}
 
     - name: Install Qt
       if: steps.cache-qt.outputs.cache-hit != 'true'
