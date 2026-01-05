@@ -27,6 +27,16 @@
 #include <QPainter>
 #include <QSet>
 
+#if 0
+#define PAINTER_BEGIN(name, px) \
+    QPainter name; \
+    if (!name.begin(px)) { \
+        qFatal("QPainter begin failed!"); \
+    }
+#else
+#define PAINTER_BEGIN(name, px) QPainter name(px)
+#endif
+
 OplScreenWidget::OplScreenWidget(QWidget *parent)
     : QWidget(parent)
     , mScale(1)
@@ -693,7 +703,7 @@ void Drawable::update()
 void Drawable::draw(const OplScreen::DrawCmd& cmd)
 {
     invalidateMask();
-    QPainter painter(&mPixmap);
+    PAINTER_BEGIN(painter, &mPixmap);
     QPen pen(cmd.mode == OplScreen::clear ? cmd.bgcolor : cmd.color);
     pen.setWidth(cmd.penWidth);
     QBrush brush(cmd.mode == OplScreen::clear ? cmd.bgcolor : cmd.color);
@@ -766,7 +776,7 @@ void Drawable::draw(const OplScreen::DrawCmd& cmd)
         QPixmap temp(cmd.invert.size);
         temp.fill(QColorConstants::Black);
         {
-            QPainter tempPainter(&temp);
+            PAINTER_BEGIN(tempPainter, &temp);
             tempPainter.setPen(QColorConstants::White);
             tempPainter.drawPoint(0, 0);
             tempPainter.drawPoint(0, cmd.invert.size.height() - 1);
@@ -789,6 +799,7 @@ QSize Drawable::size() const
 
 void Drawable::setSize(const QSize& size)
 {
+    Q_ASSERT(size.width() && size.height());
     QPixmap newPixmap(size);
     newPixmap.fill(QColorConstants::White);
     mPixmap.swap(newPixmap);
@@ -824,7 +835,7 @@ Drawable* Drawable::getGreyPlane() const
 
 void Drawable::drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect)
 {
-    QPainter painter(&mPixmap);
+    PAINTER_BEGIN(painter, &mPixmap);
     painter.setPen(cmd.color);
     if (cmd.invert) {
         // See comment in drawCopy below
@@ -845,7 +856,7 @@ void Drawable::drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* 
     Q_ASSERT(cmd.type == OplScreen::copy || cmd.type == OplScreen::pattern);
     bool tiled = cmd.type == OplScreen::pattern;
     invalidateMask();
-    QPainter painter(&mPixmap);
+    PAINTER_BEGIN(painter, &mPixmap);
     QRect destRect;
     if (tiled) {
         destRect = QRect(cmd.origin, cmd.pattern.size);
@@ -860,7 +871,7 @@ void Drawable::drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* 
             QBitmap newMask(maskedSource.size());
             newMask.clear();
             {
-                QPainter maskPainter(&newMask);
+                PAINTER_BEGIN(maskPainter, &newMask);
                 maskPainter.drawPixmap(QPoint(), pixmask);
             }
             pixmask.swap(newMask);
@@ -890,7 +901,7 @@ void Drawable::drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* 
         // QRect destRect(cmd.origin, cmd.copy.srcRect.size());
         QPixmap tempDest(destRect.size());
         {
-            QPainter tempPainter(&tempDest);
+            PAINTER_BEGIN(tempPainter, &tempDest);
             tempPainter.drawPixmap(QPoint(), mPixmap, destRect);
             tempPainter.setCompositionMode(QPainter::RasterOp_NotSourceXorDestination);
             if (tiled) {
@@ -904,7 +915,7 @@ void Drawable::drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* 
             // have to make a new tiled mask rather than being able to use the original source mask directly
             QBitmap tileMask(destRect.size());
             {
-                QPainter tempPainter(&tileMask);
+                PAINTER_BEGIN(tempPainter, &tileMask);
                 tempPainter.drawTiledPixmap(tempDest.rect(), src.getMask());
             }
             tempDest.setMask(tileMask);
@@ -1015,7 +1026,7 @@ void Window::update()
     QPixmap unscaledPixmap;
     if (mGreyPlane) {
         unscaledPixmap = QPixmap(mPixmap.size());
-        QPainter painter(&unscaledPixmap);
+        PAINTER_BEGIN(painter, &unscaledPixmap);
         painter.drawPixmap(QPoint(), mGreyPlane->getPixmap());
         // Now draw the black plane on top with a mask, so its white pixels don't overwrite the grey plane
         QPixmap maskedPixmap(mPixmap);
@@ -1063,7 +1074,7 @@ void Window::updateSprites(QPainter& painter)
             QBitmap m = mask->getMask();
             if (!frame.invertMask) {
                 // Sprite masks are backwards by default, so we have to flip the colours if invertMask is _not_ set
-                QPainter inverter(&m);
+                PAINTER_BEGIN(inverter, &m);
                 inverter.setCompositionMode(QPainter::RasterOp_SourceAndNotDestination);
                 inverter.fillRect(m.rect(), Qt::color0);
             }
@@ -1197,8 +1208,7 @@ void SpriteWidget::renderSprites(const QList<Window*>& windows, int scale)
 {
     // The sprite widget follows the Qt size of OplScreenWidget (ie scaled)
     mPixmap.fill(Qt::transparent);
-    QPainter painter;
-    painter.begin(&mPixmap);
+    PAINTER_BEGIN(painter, &mPixmap);
     painter.scale(scale, scale);
     for (Window* w : windows) {
         w->updateSprites(painter);
