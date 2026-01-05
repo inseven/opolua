@@ -88,15 +88,13 @@ make
 # Rename the app.
 mv "OpoLua.app" "OpoLua Qt.app"
 
-# Add the Qt libraries to the app bundle.
+# Add the Qt libraries and sign the app bundle.
 macdeployqt  "OpoLua Qt.app" -verbose=3 -sign-for-notarization="Developer ID Application: Jason Morley (QS82QFHKWB)"
 
 # Sign the app and prepare it for notarization.
 RELEASE_BASENAME="OpoLua-Qt-$VERSION_NUMBER-$BUILD_NUMBER"
 RELEASE_ZIP_BASENAME="$RELEASE_BASENAME.zip"
 RELEASE_ZIP_PATH="$BUILD_DIRECTORY/$RELEASE_ZIP_BASENAME"
-
-# codesign -s "Developer ID Application: Jason Morley (QS82QFHKWB)" --timestamp --options runtime --deep "OpoLua Qt.app"
 
 # Install the private key.
 mkdir -p ~/.appstoreconnect/private_keys/
