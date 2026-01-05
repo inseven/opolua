@@ -20,6 +20,12 @@
 
 #pragma once
 
+#ifdef __clang__
+#define CLOSED_ENUM __attribute__((enum_extensibility(closed)))
+#else
+#define CLOSED_ENUM
+#endif
+
 // This is kept separate to the things in opldefs.h to limit how much is
 // included by things like oplruntime.h which doesn't need all the other stuff.
 
@@ -32,6 +38,6 @@ enum OplDeviceType {
     psionRevo,
     psionSeries7,
     geofoxOne,
-} __attribute__((enum_extensibility(closed)));
+} CLOSED_ENUM;
 
 typedef enum OplDeviceType OplDeviceType;

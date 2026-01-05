@@ -449,7 +449,7 @@ const int NumDevices = sizeof(DeviceNames) / sizeof(DeviceNames[0]);
 
 const char* oplGetDeviceName(OplDeviceType device)
 {
-    if (device < 0 || device >= NumDevices) {
+    if (device < 0 || (int)device >= NumDevices) {
         return NULL;
     }
     return DeviceNames[device];
