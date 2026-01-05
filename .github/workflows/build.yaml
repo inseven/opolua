@@ -65,6 +65,33 @@ jobs:
       run: |
         scripts/build.sh
 
+  qt-windows-build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install \
+        software-properties-common \
+        lsb-release
+        sudo apt-key adv \
+            --keyserver keyserver.ubuntu.com \
+            --recv-keys 86B72ED9 && \
+        sudo add-apt-repository \
+            "deb [arch=amd64] https://pkg.mxe.cc/repos/apt `lsb_release -sc` main" && \
+        sudo apt-get update
+        sudo apt-get install \
+          mxe-{i686,x86-64}-w64-mingw32.{static,shared}-cc
+        PATH=/usr/lib/mxe/usr/bin:$PATH \
+          x86_64-w64-mingw32.static-gcc --version
+
   qt-build:
     strategy:
       matrix:
