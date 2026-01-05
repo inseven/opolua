@@ -322,7 +322,13 @@ QString MainWindow::manifestForDrive(const QString& drivePath)
 {
     QDir dir(QFileInfo(drivePath).dir());
     if (dir.path().endsWith(".oplsys")) {
-        return QFileInfo(dir, "launch.oplsys").filePath();
+        auto manifest = QFileInfo(dir, "manifest.json");
+        auto launch = QFileInfo(dir, "launch.oplsys");
+        if (manifest.isFile() || !launch.isFile()) {
+            return manifest.filePath();
+        } else {
+            return launch.filePath();
+        }
     } else {
         return QString();
     }
@@ -500,6 +506,16 @@ void MainWindow::updateManifest(const QString& sourceUrl)
         f.close();
     }
 
+    // Migrate launch.oplsys -> manifest.json if necessary
+    QFileInfo inf(mManifest);
+    if (inf.fileName() == "launch.oplsys") {
+        auto newp = QFileInfo(inf.dir(), "manifest.json").filePath();
+        qDebug("Migrating manifest from %s to %s", qPrintable(mManifest), qPrintable(newp));
+        mManifest = newp;
+        f.remove();
+        f.setFileName(mManifest);
+    }
+
     auto deviceType = getRuntime().getDeviceType();
     QString typeStr = OplRuntime::deviceTypeToString(deviceType);
     obj.insert("device", typeStr);
@@ -514,6 +530,15 @@ void MainWindow::updateManifest(const QString& sourceUrl)
     } else {
         qDebug("Failed to open %s", qPrintable(mManifest));
     }
+
+#if !defined(Q_OS_MAC)
+    // Mac is the only OS with bundle support
+    QFile launcherFile(QFileInfo(inf.dir(), "launch.oplsys").filePath());
+    if (!launcherFile.exists()) {
+        launcherFile.open(QFile::WriteOnly);
+        launcherFile.close();
+    }
+#endif
 }
 
 void MainWindow::applyManifest()
