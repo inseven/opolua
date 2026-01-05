@@ -682,6 +682,12 @@ function gPOLY(array)
 end
 
 function gINVERT(w, h)
+    if w == 0 then
+        w = 1
+    end
+    if h == 0 then
+        h = 1
+    end
     runtime:drawCmd("invert", { width = w, height = h })
 end
 
