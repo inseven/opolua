@@ -372,6 +372,8 @@ end
 oplpath = {}
 
 function oplpath.isabs(path)
+    local locPath = path:match("^[Ll][Oo][Cc]::(.*)")
+    if locPath then path = locPath end
     return path:match("^[a-zA-Z]:\\") ~= nil
 end
 
