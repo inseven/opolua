@@ -102,6 +102,13 @@ jobs:
         qmake CONFIG+=release ..
         make
 
+    - name: Archive the binary
+      uses: actions/upload-artifact@v4
+      with:
+        # name: opolua-qt-windows
+        path: qt/build/debug/opolua.exe
+        if-no-files-found: error
+
 
     # - name: Build Qt Static
     #   if: steps.cache-qt.outputs.cache-hit != 'true'
