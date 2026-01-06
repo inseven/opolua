@@ -92,6 +92,17 @@ jobs:
       shell: bash
       run: scripts/install-qt.sh
 
+    - name: Build
+      shell: bash
+      run: |
+        set -e
+        export PATH="${{ github.workspace }}/qt-install/bin:$PATH"
+        mkdir -p qt/build
+        cd qt/build
+        qmake ..
+        make
+
+
     # - name: Build Qt Static
     #   if: steps.cache-qt.outputs.cache-hit != 'true'
     #   shell: bash
