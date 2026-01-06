@@ -159,7 +159,8 @@ jobs:
 
       needs:
         - app-build
-        - qt-build
+        - qt-macos-build
+        - qt-windows-build
 
       runs-on: ubuntu-latest
 
