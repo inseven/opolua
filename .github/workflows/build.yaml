@@ -14,6 +14,10 @@ jobs:
   generate-version-number:
     runs-on: ubuntu-latest
 
+    outputs:
+      version_number: ${{ steps.version.outputs.version_number }}
+      build_number: ${{ steps.version.outputs.build_number }}
+
     steps:
 
     - name: Checkout repository
@@ -35,12 +39,13 @@ jobs:
       run: scripts/install-dependencies.sh
 
     - name: Generate version and build numbers
+      id: version
       run: |
         source scripts/environment.sh
         VERSION_NUMBER=`scripts/changes/changes version`
         BUILD_NUMBER=`build-tools generate-build-number`
-        echo "VERSION_NUMBER=$VERSION_NUMBER" >> $GITHUB_ENV
-        echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
+        echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
+        echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
 
   package-build:
     runs-on: inseven-macos-26
@@ -146,6 +151,10 @@ jobs:
 
     needs:
     - generate-version-number
+
+    env:
+      VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+      BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
 
     steps:
 
