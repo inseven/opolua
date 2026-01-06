@@ -109,16 +109,8 @@ jobs:
         path: qt/build/release/opolua.exe
         if-no-files-found: error
 
-  qt-build:
-    strategy:
-      matrix:
-        include:
-        - os: macos-latest
-          script: build-qt-mac.sh
-        # - os: ubuntu-latest
-        #   script: built-qt-linux.sh
-
-    runs-on: ${{ matrix.os }}
+  qt-macos-build:
+    runs-on: macos-latest
 
     steps:
 
@@ -154,12 +146,12 @@ jobs:
         APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
 
       run: |
-        scripts/${{ matrix.script }}
+        scripts/build-qt-mac.sh
 
     - name: Archive the binary
       uses: actions/upload-artifact@v4
       with:
-        name: opolua-qt-${{ matrix.os }}
+        name: opolua-qt-macos
         path: qt/build/build.zip
         if-no-files-found: error
 
