@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  generate-version:
+  generate-version-number:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,13 +32,16 @@ jobs:
 
     - name: Generate version and build numbers
       run: |
-        scripts/changes/changes version
+        VERSION_NUMBER=`scripts/changes/changes version`
+        BUILD_NUMBER=`build-tools generate-build-number`
+        echo "VERSION_NUMBER=$VERSION_NUMBER" >> $GITHUB_ENV
+        echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
 
   package-build:
     runs-on: inseven-macos-26
 
     needs:
-    - generate-version
+    - generate-version-number
 
     steps:
 
@@ -55,8 +58,10 @@ jobs:
       run: scripts/build-package.sh
 
   ios-build:
-
     runs-on: inseven-macos-26
+
+    needs:
+    - generate-version-number
 
     steps:
 
@@ -217,6 +222,8 @@ jobs:
 
       - name: Install the tool dependencies
         uses: jdx/mise-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: scripts/install-dependencies.sh
