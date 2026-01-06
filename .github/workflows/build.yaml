@@ -193,6 +193,7 @@ jobs:
     runs-on: ubuntu-latest
 
     needs:
+    - ios-build
     - qt-macos-build
     - qt-windows-build
 
@@ -211,9 +212,7 @@ jobs:
       runs-on: ubuntu-latest
 
       needs:
-      - ios-build
-      - qt-macos-build
-      - qt-windows-build
+      - merge-artifacts
 
       steps:
 
