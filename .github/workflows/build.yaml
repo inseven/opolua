@@ -36,6 +36,7 @@ jobs:
 
     - name: Generate version and build numbers
       run: |
+        source scripts/environment.sh
         VERSION_NUMBER=`scripts/changes/changes version`
         BUILD_NUMBER=`build-tools generate-build-number`
         echo "VERSION_NUMBER=$VERSION_NUMBER" >> $GITHUB_ENV
