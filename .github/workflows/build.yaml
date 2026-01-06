@@ -72,6 +72,10 @@ jobs:
     needs:
     - generate-version-number
 
+    env:
+      VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+      BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
+
     steps:
 
     - name: Checkout repository
@@ -109,6 +113,10 @@ jobs:
 
     needs:
     - generate-version-number
+
+    env:
+      VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+      BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
 
     steps:
 
@@ -221,12 +229,19 @@ jobs:
       runs-on: ubuntu-latest
 
       needs:
+      - generate-version-number
       - merge-artifacts
+
+      env:
+        VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+        BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
 
       steps:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Checkout required submodules
         run: |
