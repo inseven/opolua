@@ -99,7 +99,7 @@ jobs:
         export PATH="${{ github.workspace }}/qt-install/bin:$PATH"
         mkdir -p qt/build
         cd qt/build
-        qmake ..
+        qmake CONFIG+=release ..
         make
 
 
