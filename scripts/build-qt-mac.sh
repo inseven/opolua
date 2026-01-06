@@ -77,8 +77,8 @@ trap cleanup EXIT
 echo "$DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64"
 
 # Determine the version and build number.
-VERSION_NUMBER=`changes version`
-BUILD_NUMBER=`build-tools generate-build-number`
+VERSION_NUMBER=${VERSION_NUMBER:-0.0.1}
+BUILD_NUMBER=${BUILD_NUMBER:-0}
 
 # Build.
 cd "$BUILD_DIRECTORY"
