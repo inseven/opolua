@@ -9,7 +9,7 @@ QT += core gui widgets multimedia
 
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
-CONFIG += c++17 sdk_no_version_check debug
+CONFIG += c++17 sdk_no_version_check
 
 !windows:DEFINES += LUA_USE_POSIX
 
