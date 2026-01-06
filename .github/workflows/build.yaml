@@ -67,10 +67,6 @@ jobs:
 
   qt-windows-build:
     runs-on: windows-latest
-    env:
-      # TODO: Use these.
-      QT_VERSION: 6.8.3
-      QT_MODULES: qtmultimedia qt5compat
 
     steps:
 

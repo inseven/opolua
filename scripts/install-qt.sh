@@ -31,8 +31,6 @@ SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt-build"
 INSTALL_DIRECTORY="$ROOT_DIRECTORY/qt-install"
 
-# source "$SCRIPTS_DIRECTORY/environment.sh"
-
 # Clean up the build directory.
 if [ -d "$BUILD_DIRECTORY" ] ; then
     rm -r "$BUILD_DIRECTORY"
@@ -46,15 +44,13 @@ fi
 mkdir -p "$INSTALL_DIRECTORY"
 
 # Build
-# TODO: Minor version.
-QT_VERSION=6.8.3
 cd "$BUILD_DIRECTORY"
-curl -O https://qt.mirror.constant.com/archive/qt/6.8/$QT_VERSION/single/qt-everywhere-src-$QT_VERSION.tar.xz
-tar xf qt-everywhere-src-$QT_VERSION.tar.xz
+curl -O https://qt.mirror.constant.com/archive/qt/6.8/6.8.3/single/qt-everywhere-src-6.8.3.tar.xz
+tar xf qt-everywhere-src-6.8.3.tar.xz
 mkdir -p qt-build
 cd qt-build
 
-../qt-everywhere-src-$QT_VERSION/configure.bat \
+../qt-everywhere-src-6.8.3/configure.bat \
     -prefix "$INSTALL_DIRECTORY" \
     -static \
     -static-runtime \
