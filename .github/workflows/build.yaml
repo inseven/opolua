@@ -146,7 +146,8 @@ jobs:
         cd qt/build
         qmake "CONFIG+=release" ..
         make
-        zip qt/build/build.zip qt/build/release/opolua.exe
+        cd release
+        tar -a -cf ../build.zip opolua.exe  # tar exists but zip doesn't
 
     - name: Archive the binary
       uses: actions/upload-artifact@v4
@@ -215,6 +216,7 @@ jobs:
     - ios-build
     - qt-macos-build
     - qt-windows-build
+    - package-build
 
     env:
       VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
