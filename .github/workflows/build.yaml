@@ -99,14 +99,14 @@ jobs:
         export PATH="${{ github.workspace }}/qt-install/bin:$PATH"
         mkdir -p qt/build
         cd qt/build
-        qmake "CONFIG+=release" "CONFIG-=debug" ..
+        qmake "CONFIG+=release" ..
         make
 
     - name: Archive the binary
       uses: actions/upload-artifact@v4
       with:
         name: opolua-qt-windows
-        path: qt/build/debug/opolua.exe
+        path: qt/build/release/opolua.exe
         if-no-files-found: error
 
   qt-build:
