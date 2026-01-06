@@ -22,6 +22,11 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+    - name: Install the tool dependencies
+      uses: jdx/mise-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Install dependencies
       run: scripts/install-dependencies.sh
 
