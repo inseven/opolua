@@ -28,7 +28,7 @@ jobs:
     - name: Build and test
       run: scripts/build-package.sh
 
-  app-build:
+  ios-build:
 
     runs-on: inseven-macos-26
 
@@ -158,7 +158,7 @@ jobs:
   website-build:
 
       needs:
-        - app-build
+        - ios-build
         - qt-macos-build
         - qt-windows-build
 
