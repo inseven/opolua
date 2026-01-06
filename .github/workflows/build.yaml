@@ -11,9 +11,30 @@ on:
 
 jobs:
 
-  package-build:
+  generate-version:
+    runs-on: ubuntu-latest
 
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: recursive
+          fetch-depth: 0
+
+    - name: Install dependencies
+      run: scripts/install-dependencies.sh
+
+    - name: Generate version and build numbers
+      run: |
+        scripts/changes/changes version
+
+  package-build:
     runs-on: inseven-macos-26
+
+    needs:
+    - generate-version
+
     steps:
 
     - name: Checkout repository
