@@ -367,11 +367,15 @@ checkExpression("1 + (2 + 3)%", { lit"1", op="add", percent{ lit"2", op="add", l
 
 checkNumber("123", Int, 123)
 checkNumber("123.0", Float, 123.0)
+checkNumber("32767", Int, 32767)
+checkNumber("32768", Long, 32768)
 checkNumber("123456", Long, 123456)
 checkNumber("1e2", Float, 100.0)
 checkNumber("1E+2", Float, 100.0)
 checkNumber("$8000", Int, -32768) -- KMinInt
+checkNumber("&8000", Long, 32768)
 checkNumber("&80000000", Long, -2147483648) -- KMinLong
+checkNumber("2147483648", Float, 2147483648)
 
 checkCode("CHR$(&7)", {
     op"StackByteAsLong", 7,

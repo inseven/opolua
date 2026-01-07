@@ -920,7 +920,7 @@ function literalToNumber(str)
     -- fact that any exponent even on an integer value within bounds makes it a float.
     local intval = math.type(val) == "integer"
     if intval then
-        if val >= -65536 and val <= 65535 then
+        if val >= KMinInt and val <= KMaxInt then
             return Int, val
         elseif val >= KMinLong and val <= KMaxLong then
             return Long, val
