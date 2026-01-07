@@ -38,7 +38,7 @@ export PATH="$ROOT_DIRECTORY/qt-install/bin:$PATH"
 # Build.
 mkdir -p "$BUILD_DIRECTORY"
 cd "$BUILD_DIRECTORY"
-qmake "CONFIG+=release" ..
+qmake ..
 make
 
 # Package the app.
