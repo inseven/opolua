@@ -35,10 +35,14 @@ TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
 # TODO: Maybe do this in the install step?
 export PATH="$ROOT_DIRECTORY/qt-install/bin:$PATH"
 
+# Determine the version and build number.
+VERSION_NUMBER=${VERSION_NUMBER:-0.0.1}
+BUILD_NUMBER=${BUILD_NUMBER:-0}
+
 # Build.
 mkdir -p "$BUILD_DIRECTORY"
 cd "$BUILD_DIRECTORY"
-qmake ..
+qmake "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ..
 make
 
 # Package the app.

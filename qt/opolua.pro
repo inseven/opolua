@@ -3,7 +3,13 @@
 
 # message($$QMAKESPEC)
 
-VERSION = 1.2.0
+isEmpty(VERSION) {
+    VERSION = 0.0.1
+}
+
+isEmpty(BUILD_NUMBER) {
+    BUILD_NUMBER = 0
+}
 
 QT += core gui widgets multimedia
 
@@ -16,7 +22,10 @@ CONFIG += c++17 sdk_no_version_check
 macx {
     TARGET = OpoLua
     QMAKE_APPLICATION_BUNDLE_NAME = "OpoLua"
-    QMAKE_INFO_PLIST = Info.plist
+    plist.input = Info.plist.in
+    plist.output = $$OUT_PWD/Info.plist
+    QMAKE_SUBSTITUTES += plist
+    QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
     ICON = AppIcon.icns
 }
 
