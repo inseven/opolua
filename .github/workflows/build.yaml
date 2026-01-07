@@ -205,7 +205,7 @@ jobs:
         path: qt/build/build.zip
         if-no-files-found: error
 
-  merge-artifacts:  # TODO: RENAME
+  publish-release:
     runs-on: inseven-macos-26
 
     needs:
@@ -249,6 +249,8 @@ jobs:
         APPLE_API_KEY_ISSUER_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ISSUER_ID }}
         APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
         #RELEASE: ${{ github.ref == 'refs/heads/main' }}
         RELEASE: true
 
@@ -266,7 +268,7 @@ jobs:
 
       needs:
       - generate-version-number
-      - merge-artifacts
+      - publish-release
 
       env:
         VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
