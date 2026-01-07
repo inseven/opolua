@@ -24,37 +24,6 @@ set -e
 set -o pipefail
 set -x
 
-# This script expects the iOS IPA to be passed as the first argument, and any additional files to be attached to the
-# GitHub release to be passed as subsequent arguments.
-
-# Validate and upload the iOS build.
-xcrun altool --validate-app \
-    -f "$1" \
-    --apiKey "$APPLE_API_KEY_ID" \
-    --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-    --output-format json \
-    --type ios
-xcrun altool --upload-app \
-    -f "$1" \
-    --primary-bundle-id "uk.co.inseven.opolua" \
-    --apiKey "$APPLE_API_KEY_ID" \
-    --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-    --type ios
-
-# Validate and upload the macOS build.
-xcrun altool --validate-app \
-    -f "$2" \
-    --apiKey "$APPLE_API_KEY_ID" \
-    --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-    --output-format json \
-    --type macos
-xcrun altool --upload-app \
-    -f "$2" \
-    --primary-bundle-id "uk.co.inseven.opolua" \
-    --apiKey "$APPLE_API_KEY_ID" \
-    --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-    --type macos
-
 # Actually make the release.
 FLAGS=()
 if $CHANGES_INITIAL_DEVELOPMENT ; then

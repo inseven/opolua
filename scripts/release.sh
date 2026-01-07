@@ -96,27 +96,60 @@ trap cleanup EXIT
 mkdir -p "$BUILD_DIRECTORY"
 
 # Copy the Qt builds.
-mv "$ARTIFACTS_DIRECTORY/opolua-qt-macos/build.zip" "$BUILD_DIRECTORY/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip"
-mv "$ARTIFACTS_DIRECTORY/opolua-qt-windows/build.zip" "$BUILD_DIRECTORY/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip"
+QT_MACOS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip"
+QT_WINDOWS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip"
+mv "$ARTIFACTS_DIRECTORY/opolua-qt-macos/build.zip" "$QT_MACOS_PATH"
+mv "$ARTIFACTS_DIRECTORY/opolua-qt-windows/build.zip" "$QT_WINDOWS_PATH"
 
 # Unpack the iOS and Mac Catalyst builds.
 unzip "$ARTIFACTS_DIRECTORY/opolua-ios/build.zip" -d "$BUILD_DIRECTORY"
+IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
+PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
 
-# Unpack the existing files.
-ls **/*
-
-if $RELEASE ; then
+if $UPLOAD_TO_TESTFLIGHT ; then
 
     mkdir -p ~/.appstoreconnect/private_keys/
     echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o ~/".appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY_ID.p8"
     ls ~/.appstoreconnect/private_keys/
 
+    # Validate and upload the iOS build.
+    xcrun altool --validate-app \
+        -f "$IPA_PATH" \
+        --apiKey "$APPLE_API_KEY_ID" \
+        --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+        --output-format json \
+        --type ios
+    xcrun altool --upload-app \
+        -f "$IPA_PATH" \
+        --primary-bundle-id "uk.co.inseven.opolua" \
+        --apiKey "$APPLE_API_KEY_ID" \
+        --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+        --type ios
+
+    # Validate and upload the macOS build.
+    xcrun altool --validate-app \
+        -f "$PKG_PATH" \
+        --apiKey "$APPLE_API_KEY_ID" \
+        --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+        --output-format json \
+        --type macos
+    xcrun altool --upload-app \
+        -f "$PKG_PATH" \
+        --primary-bundle-id "uk.co.inseven.opolua" \
+        --apiKey "$APPLE_API_KEY_ID" \
+        --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+        --type macos
+
+fi
+
+
+if $RELEASE ; then
+
     changes \
         release \
         --skip-if-empty \
-        --pre-release \
         --push \
         --exec "$RELEASE_SCRIPT_PATH" \
-        "$IPA_PATH" "$PKG_PATH" "$ZIP_PATH"
+        "$IPA_PATH" "$PKG_PATH" "$QT_MACOS_PATH" "$QT_WINDOWS_PATH"
 
 fi
