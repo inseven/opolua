@@ -105,7 +105,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       run: |
-        scripts/ios-build.sh
+        scripts/build-ios.sh
 
   qt-windows-build:
     runs-on: windows-latest
