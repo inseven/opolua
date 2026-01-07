@@ -377,9 +377,27 @@ Please recognise opolua is a labour of love, and be respectful of others in your
 
 ## License
 
-OpoLua is licensed under the MIT License (see [LICENSE](LICENSE)). It depends on the following separately licensed third-party libraries and components:
+OpoLua comprises three components:
+
+- OpoLua Runtime—Lua implementation of the OPL runtime and integration APIs
+- OpoLua Swift—Swift application and OpoLua Runtime wrappers targeting Apple platforms
+- OpoLua Qt—C++ application targeting Windows, Mac, and Linux, using Qt
+
+These components adopt different licenses as a result of linking of LGPLv2 and GPLv3 libraries in some scenarios.
+
+### OpoLua Runtime
+
+OpoLua Runtime is licensed under the MIT License.
+
+### OpoLua Swift
+
+OpoLua Swift is licensed under the MIT License. It depends on the following separately licensed third-party libraries and components:
 
 - [Diligence](https://github.com/inseven/diligence), MIT License
 - [Interact](https://github.com/inseven/interact), MIT License
 - [Licensable](https://github.com/inseven/licensable), MIT License
 - [Lua](https://www.lua.org), MIT License
+
+### OpoLua Qt
+
+OpoLua Qt binaries link Qt LGPLv2 and GPLv3 components and is therefore licensed under a GPLv2 or Later license.
