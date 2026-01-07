@@ -33,4 +33,4 @@ OpoLua also depends on the following separately licensed third-party libraries a
 - [Interact](https://github.com/inseven/interact), MIT License
 - [Licensable](https://github.com/inseven/licensable), MIT License
 - [Lua](https://www.lua.org), MIT License
-- [Qt](https://doc.qt.io/qt-6/qtgui-index.html#licenses-and-attributions), LGPL v3 and GPL v3
+- [Qt](https://doc.qt.io/qt-6/licensing.html), LGPL v3 and GPL v3
