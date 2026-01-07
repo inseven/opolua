@@ -139,15 +139,7 @@ jobs:
 
     - name: Build
       shell: bash
-      run: |
-        set -e
-        export PATH="${{ github.workspace }}/qt-install/bin:$PATH"
-        mkdir -p qt/build
-        cd qt/build
-        qmake "CONFIG+=release" ..
-        make
-        cd release
-        tar -a -cf ../build.zip opolua.exe  # tar exists but zip doesn't
+      run: scripts/build-qt-windows.sh
 
     - name: Archive the binary
       uses: actions/upload-artifact@v4
