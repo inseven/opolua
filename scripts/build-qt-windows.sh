@@ -28,39 +28,24 @@ set -u
 ROOT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 
 SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
-BUILD_DIRECTORY="$ROOT_DIRECTORY/qt-build"
-INSTALL_DIRECTORY="$ROOT_DIRECTORY/qt-install"
+SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
+BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
+TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
 
-# Clean up the build directory.
-if [ -d "$BUILD_DIRECTORY" ] ; then
-    rm -r "$BUILD_DIRECTORY"
-fi
+# Set up the path.
+export PATH="$ROOT_DIRECTORY/qt-install/bin:$PATH"
+
+# Determine the version and build number.
+VERSION_NUMBER=${VERSION_NUMBER:-0.0.1}
+BUILD_NUMBER=${BUILD_NUMBER:-0}
+
+# Build.
 mkdir -p "$BUILD_DIRECTORY"
-
-# Clean up the install directory.
-if [ -d "$INSTALL_DIRECTORY" ] ; then
-    rm -r "$INSTALL_DIRECTORY"
-fi
-mkdir -p "$INSTALL_DIRECTORY"
-
-# Build
 cd "$BUILD_DIRECTORY"
-curl -O https://qt.mirror.constant.com/archive/qt/6.8/6.8.3/single/qt-everywhere-src-6.8.3.tar.xz
-tar xf qt-everywhere-src-6.8.3.tar.xz
-mkdir -p qt-build
-cd qt-build
+qmake "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ..
+make
 
-../qt-everywhere-src-6.8.3/configure.bat \
-    -prefix "$INSTALL_DIRECTORY" \
-    -static \
-    -static-runtime \
-    -release \
-    -optimize-size \
-    -opensource \
-    -confirm-license \
-    -nomake examples \
-    -nomake tests \
-    -submodules qtmultimedia,qt5compat
-
-cmake --build . --parallel
-cmake --install .
+# Package the app.
+# We use `tar` here as `zip` isn't installed on Windows runners.
+cd release
+tar -a -cf "$BUILD_DIRECTORY/build.zip" opolua.exe

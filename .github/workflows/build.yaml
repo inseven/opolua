@@ -11,16 +11,54 @@ on:
 
 jobs:
 
-  package-build:
+  generate-version-number:
+    runs-on: ubuntu-latest
 
+    outputs:
+      version_number: ${{ steps.version.outputs.version_number }}
+      build_number: ${{ steps.version.outputs.build_number }}
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          fetch-depth: 0
+
+    - name: Checkout required submodules
+      run: |
+        git submodule update --init --depth 1 scripts/build-tools
+        git submodule update --init --depth 1 scripts/changes
+
+    - name: Install the tool dependencies
+      uses: jdx/mise-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install dependencies
+      run: scripts/install-dependencies.sh
+
+    - name: Generate version and build numbers
+      id: version
+      run: |
+        source scripts/environment.sh
+        VERSION_NUMBER=`scripts/changes/changes version`
+        BUILD_NUMBER=`build-tools generate-build-number`
+        echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
+        echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+  package-build:
     runs-on: inseven-macos-26
+
+    needs:
+    - generate-version-number
+
     steps:
 
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        fetch-depth: 0
 
     - name: Install dependencies
       run: scripts/install-dependencies.sh
@@ -28,9 +66,15 @@ jobs:
     - name: Build and test
       run: scripts/build-package.sh
 
-  app-build:
-
+  ios-build:
     runs-on: inseven-macos-26
+
+    needs:
+    - generate-version-number
+
+    env:
+      VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+      BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
 
     steps:
 
@@ -38,7 +82,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        fetch-depth: 0
 
     - name: Install dependencies
       run: scripts/install-dependencies.sh
@@ -65,16 +108,15 @@ jobs:
       run: |
         scripts/build.sh
 
-  qt-build:
-    strategy:
-      matrix:
-        include:
-        - os: macos-latest
-          script: build-qt-mac.sh
-        # - os: ubuntu-latest
-        #   script: built-qt-linux.sh
+  qt-windows-build:
+    runs-on: windows-latest
 
-    runs-on: ${{ matrix.os }}
+    needs:
+    - generate-version-number
+
+    env:
+      VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+      BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
 
     steps:
 
@@ -82,7 +124,46 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        fetch-depth: 0
+
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v4
+      with:
+        path: qt-install
+        key: qt-${{ runner.os }}-${{ hashFiles('scripts/install-qt.sh') }}
+
+    - name: Install Qt
+      if: steps.cache-qt.outputs.cache-hit != 'true'
+      shell: bash
+      run: scripts/install-qt.sh
+
+    - name: Build
+      shell: bash
+      run: scripts/build-qt-windows.sh
+
+    - name: Archive the binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: opolua-qt-windows
+        path: qt/build/build.zip
+        if-no-files-found: error
+
+  qt-macos-build:
+    runs-on: macos-latest
+
+    needs:
+    - generate-version-number
+
+    env:
+      VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+      BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     - name: Install the tool dependencies
       uses: jdx/mise-action@v2
@@ -110,22 +191,60 @@ jobs:
         APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
 
       run: |
-        scripts/${{ matrix.script }}
+        scripts/build-qt-mac.sh
 
     - name: Archive the binary
       uses: actions/upload-artifact@v4
       with:
-        name: opolua-qt-${{ matrix.os }}
+        name: opolua-qt-macos
         path: qt/build/build.zip
         if-no-files-found: error
 
+  merge-artifacts:
+    runs-on: ubuntu-latest
+
+    needs:
+    - generate-version-number
+    - ios-build
+    - qt-macos-build
+    - qt-windows-build
+    - package-build
+
+    env:
+      VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+      BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
+
+    steps:
+
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: "opolua-*"
+        path: artifacts
+
+    - name: Repackage
+      run: |
+        find .
+        mkdir -p build
+        mv artifacts/opolua-qt-macos/build.zip build/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip
+        mv artifacts/opolua-qt-windows/build.zip build/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip
+
+    - name: Archive the binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: opolua-qt
+        path: build/*
+        if-no-files-found: error
+
   website-build:
+      runs-on: ubuntu-latest
 
       needs:
-        - app-build
-        - qt-build
+      - generate-version-number
+      - merge-artifacts
 
-      runs-on: ubuntu-latest
+      env:
+        VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+        BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
 
       steps:
 
@@ -141,6 +260,8 @@ jobs:
 
       - name: Install the tool dependencies
         uses: jdx/mise-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: scripts/install-dependencies.sh

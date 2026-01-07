@@ -120,8 +120,8 @@ function cleanup {
 trap cleanup EXIT
 
 # Determine the version and build number.
-VERSION_NUMBER=`changes version`
-BUILD_NUMBER=`build-tools generate-build-number`
+VERSION_NUMBER=${VERSION_NUMBER:-0.0.1}
+BUILD_NUMBER=${BUILD_NUMBER:-0}
 
 # Import the certificates into our dedicated keychain.
 echo "$APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$APPLE_DISTRIBUTION_CERTIFICATE_BASE64"
