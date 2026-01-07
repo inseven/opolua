@@ -90,6 +90,13 @@ function cleanup {
 
 trap cleanup EXIT
 
+# Unpack the existing files.
+cd artifacts
+unzip opolua-ios/build.zip
+unzip opolua-qt-macos/build.zip
+unzip opolua-qt-windows/build.zip
+ls **/*
+
 if $RELEASE ; then
 
     mkdir -p ~/.appstoreconnect/private_keys/
