@@ -112,6 +112,9 @@ jobs:
 
   qt-windows-build:
     runs-on: windows-latest
+    concurrency:
+      group: "windows"
+      cancel-in-progress: false
 
     needs:
     - generate-version-number
