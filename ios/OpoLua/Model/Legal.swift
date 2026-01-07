@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2025 Jason Morley, Tom Sutcliffe
+// Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ import Diligence
 public struct Legal {
 
     public static let contents = Contents(repository: "inseven/opolua",
-                                          copyright: "Copyright © 2021-2025\nJason Morley, Tom Sutcliffe") {
+                                          copyright: "Copyright © 2021-2026\nJason Morley, Tom Sutcliffe") {
         let subject = "OpoLua Support (\(Bundle.main.version ?? "Unknown Version"))"
         Action("Website", url: URL(string: "https://opolua.org")!)
         Action("Privacy Policy", url: URL(string: "https://opolua.org/privacy-policy")!)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025-2026 Jason Morley, Tom Sutcliffe
+ * Copyright (C) 2021-2026 Jason Morley, Tom Sutcliffe
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

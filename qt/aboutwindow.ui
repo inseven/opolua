@@ -70,7 +70,7 @@
    <item>
     <widget class="QLabel" name="text">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Copyright © 2021-2025 Jason Morley, Tom Sutcliffe&lt;/p&gt;&lt;p&gt;Thanks:&lt;br/&gt;Fabrice Cappaert&lt;br/&gt;Lukas Fittl&lt;br/&gt;Sara Frederixon&lt;br/&gt;Sarah Barbour&lt;br/&gt;Shawn Leedy&lt;/p&gt;&lt;p&gt;OpoLua (Qt version) uses the following components:&lt;/p&gt;&lt;p&gt;Lua Copyright © 1994–2025 Lua.org, PUC-Rio.&lt;br/&gt;Qt Copyright © The Qt Company Ltd. and other contributors&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Copyright © 2021-2026 Jason Morley, Tom Sutcliffe&lt;/p&gt;&lt;p&gt;Thanks:&lt;br/&gt;Fabrice Cappaert&lt;br/&gt;Lukas Fittl&lt;br/&gt;Sara Frederixon&lt;br/&gt;Sarah Barbour&lt;br/&gt;Shawn Leedy&lt;/p&gt;&lt;p&gt;OpoLua (Qt version) uses the following components:&lt;/p&gt;&lt;p&gt;Lua Copyright © 1994–2025 Lua.org, PUC-Rio.&lt;br/&gt;Qt Copyright © The Qt Company Ltd. and other contributors&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textInteractionFlags">
       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
