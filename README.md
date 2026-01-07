@@ -394,6 +394,8 @@ OpoLua comprises three main components:
   - Licensed under the GPLv2 or Later license.
   - Located in the 'qt' directory.
 
+Original assets and resources (located in 'resources') remain copyright their creators and are not covered by the licenses herein.
+
 All other material is licensed under the MIT License unless stated.
 
 See [LICENSE](LICENSE) for full license texts.
