@@ -91,25 +91,25 @@ jobs:
 
     - name: Build, test, and release
       env:
-
         APPLE_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.PERSONAL_APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
         APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.PERSONAL_APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
         MACOS_DEVELOPER_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.PERSONAL_MACOS_DEVELOPER_INSTALLER_CERTIFICATE_BASE64 }}
         MACOS_DEVELOPER_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.PERSONAL_MACOS_DEVELOPER_INSTALLER_CERTIFICATE_PASSWORD }}
-
-        APPLE_API_KEY_BASE64: ${{ secrets.PERSONAL_APPLE_API_KEY_BASE64 }}
-        APPLE_API_KEY_ISSUER_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ISSUER_ID }}
-        APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
-
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-        RELEASE: ${{ github.ref == 'refs/heads/main' }}
-
       run: |
-        scripts/build.sh
+        scripts/build-ios.sh
+
+    - name: Archive the binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: opolua-ios
+        path: build/build.zip
+        if-no-files-found: error
 
   qt-windows-build:
     runs-on: windows-latest
+    concurrency:
+      group: "windows"
+      cancel-in-progress: false
 
     needs:
     - generate-version-number
@@ -200,8 +200,8 @@ jobs:
         path: qt/build/build.zip
         if-no-files-found: error
 
-  merge-artifacts:
-    runs-on: ubuntu-latest
+  publish-release:
+    runs-on: inseven-macos-26
 
     needs:
     - generate-version-number
@@ -216,22 +216,44 @@ jobs:
 
     steps:
 
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          fetch-depth: 0
+
+    - name: Checkout required submodules
+      run: |
+        git submodule update --init --depth 1 scripts/build-tools
+        git submodule update --init --depth 1 scripts/changes
+
+    - name: Install dependencies
+      run: scripts/install-dependencies.sh
+
     - uses: actions/download-artifact@v4
       with:
         pattern: "opolua-*"
         path: artifacts
 
-    - name: Repackage
+    - name: List files
       run: |
         find .
-        mkdir -p build
-        mv artifacts/opolua-qt-macos/build.zip build/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip
-        mv artifacts/opolua-qt-windows/build.zip build/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip
+
+    - name: Publish release
+      env:
+        APPLE_API_KEY_BASE64: ${{ secrets.PERSONAL_APPLE_API_KEY_BASE64 }}
+        APPLE_API_KEY_ISSUER_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ISSUER_ID }}
+        APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
+
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        RELEASE: ${{ github.ref == 'refs/heads/main' }}
+
+      run: scripts/release.sh
 
     - name: Archive the binaries
       uses: actions/upload-artifact@v4
       with:
-        name: opolua-qt
+        name: build
         path: build/*
         if-no-files-found: error
 
@@ -240,7 +262,7 @@ jobs:
 
       needs:
       - generate-version-number
-      - merge-artifacts
+      - publish-release
 
       env:
         VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}

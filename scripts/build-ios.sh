@@ -37,24 +37,15 @@ KEYCHAIN_PATH="$TEMPORARY_DIRECTORY/temporary.keychain"
 MACOS_ARCHIVE_PATH="$BUILD_DIRECTORY/Archive-macOS.xcarchive"
 IOS_ARCHIVE_PATH="$BUILD_DIRECTORY/Archive-iOS.xcarchive"
 ENV_PATH="$APP_DIRECTORY/.env"
-RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/release.sh"
 
 source "$SCRIPTS_DIRECTORY/environment.sh"
 
-# Check that the GitHub command is available on the path.
-which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
-
 # Process the command line arguments.
 POSITIONAL=()
-RELEASE=${RELEASE:-false}
 while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        -r|--release)
-        RELEASE=true
-        shift
-        ;;
         *)
         POSITIONAL+=("$1")
         shift
@@ -148,7 +139,6 @@ xcodebuild \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
     -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-iOS.plist"
-IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
 
 # Builds the macOS project.
 sudo xcode-select --switch "$MACOS_XCODE_PATH"
@@ -167,26 +157,6 @@ xcodebuild \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
     -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-macCatalyst.plist"
-PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
 
-if $RELEASE ; then
-
-    # Archive the build directory.
-    ZIP_BASENAME="build-${VERSION_NUMBER}-${BUILD_NUMBER}.zip"
-    ZIP_PATH="${BUILD_DIRECTORY}/${ZIP_BASENAME}"
-    pushd "${BUILD_DIRECTORY}"
-    zip -r "${ZIP_BASENAME}" .
-    popd
-
-    mkdir -p ~/.appstoreconnect/private_keys/
-    echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o ~/".appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
-    ls ~/.appstoreconnect/private_keys/
-    changes \
-        release \
-        --skip-if-empty \
-        --pre-release \
-        --push \
-        --exec "${RELEASE_SCRIPT_PATH}" \
-        "$IPA_PATH" "$PKG_PATH" "$ZIP_PATH"
-
-fi
+cd "$BUILD_DIRECTORY"
+zip --symlinks -r "build.zip" "OpoLua.ipa" "OpoLua.pkg"
