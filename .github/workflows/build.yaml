@@ -249,7 +249,8 @@ jobs:
         APPLE_API_KEY_ISSUER_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ISSUER_ID }}
         APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
 
-        RELEASE: ${{ github.ref == 'refs/heads/main' }}
+        #RELEASE: ${{ github.ref == 'refs/heads/main' }}
+        RELEASE: true
 
       run: scripts/release.sh
 
