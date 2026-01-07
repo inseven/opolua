@@ -1,4 +1,4 @@
-# Copyright (C) 2025-2026 Jason Morley, Tom Sutcliffe
+# Copyright (C) 2021-2026 Jason Morley, Tom Sutcliffe
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ macx {
 
 windows {
     QMAKE_TARGET_PRODUCT = "OpoLua"
-    QMAKE_TARGET_COPYRIGHT = "Copyright (c) 2021-2025 Jason Morley, Tom Sutcliffe"
+    QMAKE_TARGET_COPYRIGHT = "Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe"
     QMAKE_TARGET_DESCRIPTION = "OpoLua OPL Emulator v$$VERSION"
     RC_ICONS = "AppIcon.ico"
 }
