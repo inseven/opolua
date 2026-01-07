@@ -32,7 +32,9 @@ SRC_DIRECTORY="$ROOT_DIRECTORY/core/src"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/build"
 TEMPORARY_DIRECTORY="$ROOT_DIRECTORY/temp"
 
-ENV_PATH="$APP_DIRECTORY/.env"
+ARTIFACTS_DIRECTORY="$ROOT_DIRECTORY/artifacts"
+
+ENV_PATH="$ROOT_DIRECTORY/.env"
 RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/upload-and-publish-release.sh"
 
 source "$SCRIPTS_DIRECTORY/environment.sh"
@@ -90,11 +92,17 @@ function cleanup {
 
 trap cleanup EXIT
 
+# Create the build directory.
+mkdir -p "$BUILD_DIRECTORY"
+
+# Copy the Qt builds.
+mv "$ARTIFACTS_DIRECTORY/opolua-qt-macos/build.zip" "$BUILD_DIRECTORY/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip"
+mv "$ARTIFACTS_DIRECTORY/opolua-qt-windows/build.zip" "$BUILD_DIRECTORY/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip"
+
+# Unpack the iOS and Mac Catalyst builds.
+unzip "$ARTIFACTS_DIRECTORY/opolua-ios/build.zip" -d "$BUILD_DIRECTORY"
+
 # Unpack the existing files.
-cd artifacts
-unzip opolua-ios/build.zip
-unzip opolua-qt-macos/build.zip
-unzip opolua-qt-windows/build.zip
 ls **/*
 
 if $RELEASE ; then
