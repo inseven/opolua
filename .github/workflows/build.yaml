@@ -236,6 +236,13 @@ jobs:
         mv artifacts/opolua-qt-macos/build.zip build/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip
         mv artifacts/opolua-qt-windows/build.zip build/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip
 
+    - name: Archive the binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: opolua-qt
+        path: build/*
+        if-no-files-found: error
+
   website-build:
       runs-on: ubuntu-latest
 
