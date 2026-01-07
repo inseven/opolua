@@ -1,5 +1,20 @@
-// Copyright (c) 2025 Jason Morley, Tom Sutcliffe
-// See LICENSE file for license information.
+/*
+ * Copyright (C) 2025-2026 Jason Morley, Tom Sutcliffe
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
 
 #ifndef LUASUPPORT_H
 #define LUASUPPORT_H
@@ -72,7 +87,7 @@ T* makeUserData(lua_State* L, T data, const char* type_name)
     // We do this instead of just `*ptr = data` in case T is a non-POD type, where the simple assignment might result
     // in a destructor being called with the memory still uninitialised.
     new(ptr) T(data);
-    
+
     // We want to create a metatable for this if it doesn't already exist
     luaL_newmetatable(L, type_name);
     lua_setmetatable(L, -2);
