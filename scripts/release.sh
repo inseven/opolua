@@ -45,17 +45,12 @@ which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
 # Process the command line arguments.
 POSITIONAL=()
 RELEASE=${RELEASE:-false}
-UPLOAD_TO_TESTFLIGHT=${UPLOAD_TO_TESTFLIGHT:-false}
 while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
         -r|--release)
         RELEASE=true
-        shift
-        ;;
-        -t|--upload-to-testflight)
-        UPLOAD_TO_TESTFLIGHT=true
         shift
         ;;
         *)
@@ -106,7 +101,7 @@ unzip "$ARTIFACTS_DIRECTORY/opolua-ios/build.zip" -d "$BUILD_DIRECTORY"
 IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
 PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
 
-if $UPLOAD_TO_TESTFLIGHT ; then
+if $RELEASE ; then
 
     mkdir -p ~/.appstoreconnect/private_keys/
     echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o ~/".appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY_ID.p8"
@@ -139,11 +134,6 @@ if $UPLOAD_TO_TESTFLIGHT ; then
         --apiKey "$APPLE_API_KEY_ID" \
         --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
         --type macos
-
-fi
-
-
-if $RELEASE ; then
 
     changes \
         release \
