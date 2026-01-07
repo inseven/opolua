@@ -160,5 +160,5 @@ xcodebuild \
     -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-macCatalyst.plist"
 PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
 
-# TODO: Ensure these binaries are uploaded to GitHub.
-# TODO: Still archive the build directory.
+cd "$BUILD_DIRECTORY"
+zip --symlinks -r "build.zip" "$IPA_PATH" "$PKG_PATH"

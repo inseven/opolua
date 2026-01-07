@@ -97,15 +97,18 @@ jobs:
         MACOS_DEVELOPER_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.PERSONAL_MACOS_DEVELOPER_INSTALLER_CERTIFICATE_BASE64 }}
         MACOS_DEVELOPER_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.PERSONAL_MACOS_DEVELOPER_INSTALLER_CERTIFICATE_PASSWORD }}
 
-        # TODO: Consider removing these.
-        APPLE_API_KEY_BASE64: ${{ secrets.PERSONAL_APPLE_API_KEY_BASE64 }}
-        APPLE_API_KEY_ISSUER_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ISSUER_ID }}
-        APPLE_API_KEY_ID: ${{ secrets.PERSONAL_APPLE_API_KEY_ID }}
-
+        # TODO: Check if this is necessary.
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       run: |
         scripts/build-ios.sh
+
+    - name: Archive the binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: opolua-ios
+        path: build/build.zip
+        if-no-files-found: error
 
   qt-windows-build:
     runs-on: windows-latest
@@ -232,6 +235,10 @@ jobs:
       with:
         pattern: "opolua-*"
         path: artifacts
+
+    - name: List files
+      run: |
+        find .
 
     - name: Publish release
       env:
