@@ -23,49 +23,85 @@
 set -e
 set -o pipefail
 set -x
+set -u
 
-# This script expects the iOS IPA to be passed as the first argument, and any additional files to be attached to the
-# GitHub release to be passed as subsequent arguments.
+ROOT_DIRECTORY="$( cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )" &> /dev/null && pwd )"
+SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
+SRC_DIRECTORY="$ROOT_DIRECTORY/core/src"
 
-# Validate and upload the iOS build.
-xcrun altool --validate-app \
-    -f "$1" \
-    --apiKey "$APPLE_API_KEY_ID" \
-    --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-    --output-format json \
-    --type ios
-xcrun altool --upload-app \
-    -f "$1" \
-    --primary-bundle-id "uk.co.inseven.opolua" \
-    --apiKey "$APPLE_API_KEY_ID" \
-    --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-    --type ios
+BUILD_DIRECTORY="$ROOT_DIRECTORY/build"
+TEMPORARY_DIRECTORY="$ROOT_DIRECTORY/temp"
 
-# Validate and upload the macOS build.
-xcrun altool --validate-app \
-    -f "$2" \
-    --apiKey "$APPLE_API_KEY_ID" \
-    --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-    --output-format json \
-    --type macos
-xcrun altool --upload-app \
-    -f "$2" \
-    --primary-bundle-id "uk.co.inseven.opolua" \
-    --apiKey "$APPLE_API_KEY_ID" \
-    --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-    --type macos
+ENV_PATH="$APP_DIRECTORY/.env"
+RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/upload-and-publish-release.sh"
 
-# Actually make the release.
-FLAGS=()
-if $CHANGES_INITIAL_DEVELOPMENT ; then
-    FLAGS+=("--prerelease")
-elif $CHANGES_PRE_RELEASE ; then
-    FLAGS+=("--prerelease")
-fi
-gh release create "$CHANGES_TAG" --title "$CHANGES_QUALIFIED_TITLE" --notes-file "$CHANGES_NOTES_FILE" "${FLAGS[@]}"
+source "$SCRIPTS_DIRECTORY/environment.sh"
 
-# Upload the attachments.
-for attachment in "$@"
+# Check that the GitHub command is available on the path.
+which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
+
+# Process the command line arguments.
+POSITIONAL=()
+RELEASE=${RELEASE:-false}
+UPLOAD_TO_TESTFLIGHT=${UPLOAD_TO_TESTFLIGHT:-false}
+while [[ $# -gt 0 ]]
 do
-    gh release upload "$CHANGES_TAG" "$attachment"
+    key="$1"
+    case $key in
+        -r|--release)
+        RELEASE=true
+        shift
+        ;;
+        -t|--upload-to-testflight)
+        UPLOAD_TO_TESTFLIGHT=true
+        shift
+        ;;
+        *)
+        POSITIONAL+=("$1")
+        shift
+        ;;
+    esac
 done
+
+# Source the .env file if it exists to make local development easier.
+if [ -f "$ENV_PATH" ] ; then
+    echo "Sourcing .env..."
+    source "$ENV_PATH"
+fi
+
+cd "$ROOT_DIRECTORY"
+
+# Select the correct Xcode.
+IOS_XCODE_PATH=${IOS_XCODE_PATH:-/Applications/Xcode.app}
+sudo xcode-select --switch "$IOS_XCODE_PATH"
+
+function cleanup {
+
+    # Cleanup the temporary files and keychain.
+    cd "$ROOT_DIRECTORY"
+    rm -rf "$TEMPORARY_DIRECTORY"
+
+    # Clean up any private keys.
+    if [ -f ~/.appstoreconnect/private_keys ]; then
+        rm -r ~/.appstoreconnect/private_keys
+    fi
+
+}
+
+trap cleanup EXIT
+
+if $RELEASE ; then
+
+    mkdir -p ~/.appstoreconnect/private_keys/
+    echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o ~/".appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY_ID.p8"
+    ls ~/.appstoreconnect/private_keys/
+
+    changes \
+        release \
+        --skip-if-empty \
+        --pre-release \
+        --push \
+        --exec "$RELEASE_SCRIPT_PATH" \
+        "$IPA_PATH" "$PKG_PATH" "$ZIP_PATH"
+
+fi
