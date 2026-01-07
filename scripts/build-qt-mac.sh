@@ -82,7 +82,7 @@ BUILD_NUMBER=${BUILD_NUMBER:-0}
 
 # Build.
 cd "$BUILD_DIRECTORY"
-qmake CONFIG+=release ..
+qmake ..
 make
 
 # Rename the app.
