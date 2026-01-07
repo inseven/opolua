@@ -32,7 +32,7 @@ SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
 TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
 
-# TODO: Maybe do this in the install step?
+# Set up the path.
 export PATH="$ROOT_DIRECTORY/qt-install/bin:$PATH"
 
 # Determine the version and build number.
