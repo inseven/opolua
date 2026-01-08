@@ -124,7 +124,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
+        sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
 
     - name: Build
       run: scripts/build-qt-linux.sh
