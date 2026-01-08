@@ -108,9 +108,15 @@ jobs:
   qt-linux-build:
     strategy:
       matrix:
-        os:
-        - ubuntu-latest
-        - ubuntu-24.04-arm
+        include:
+
+        - name: qt-linux-build-ubuntu-intel
+          os: ubuntu-latest
+          artifact: opolua-qt-linux-ubuntu-intel
+
+        - name: qt-linux-build-ubuntu-arm
+          os: ubuntu-24.04-arm
+          artifact: opolua-qt-linux-ubuntu-arm
 
     runs-on: ${{ matrix.os }}
 
@@ -139,7 +145,7 @@ jobs:
     - name: Archive the binary
       uses: actions/upload-artifact@v4
       with:
-        name: opolua-qt-linux
+        name: ${{ matrix.artifact }}
         path: qt/build/build.zip
         if-no-files-found: error
 
