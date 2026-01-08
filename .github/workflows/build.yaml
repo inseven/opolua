@@ -109,7 +109,6 @@ jobs:
     runs-on: windows-latest
     concurrency:
       group: "windows"
-      cancel-in-progress: false
 
     needs:
     - generate-version-number
