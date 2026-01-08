@@ -105,6 +105,37 @@ jobs:
         path: build/build.zip
         if-no-files-found: error
 
+  qt-linux-build:
+    runs-on: ubuntu-latest
+
+    needs:
+    - generate-version-number
+
+    env:
+      VERSION_NUMBER: ${{ needs.generate-version-number.outputs.version_number }}
+      BUILD_NUMBER: ${{ needs.generate-version-number.outputs.build_number }}
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
+
+    - name: Build
+      run: scripts/build-qt-linux.sh
+
+    - name: Archive the binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: opolua-qt-linux
+        path: qt/build/build.zip
+        if-no-files-found: error
+
   qt-windows-build:
     runs-on: windows-latest
     concurrency:
@@ -207,6 +238,7 @@ jobs:
     - ios-build
     - qt-macos-build
     - qt-windows-build
+    - qt-linux-build
     - package-build
 
     env:
