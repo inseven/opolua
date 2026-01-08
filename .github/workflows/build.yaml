@@ -106,7 +106,13 @@ jobs:
         if-no-files-found: error
 
   qt-linux-build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        - ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.os }}
 
     needs:
     - generate-version-number
