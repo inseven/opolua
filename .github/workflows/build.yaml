@@ -118,7 +118,8 @@ jobs:
             apt-get update -y
             apt-get install -y build-essential git
             apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
-            gem install fpm
+            apt-get install -y ruby ruby-bundler
+            gem install --no-user-home fpm
           options: ubuntu
 
         - name: qt-ubuntu-amd64
