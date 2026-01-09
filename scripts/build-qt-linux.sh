@@ -45,5 +45,19 @@ cd "$BUILD_DIRECTORY"
 qmake6 "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ..
 make
 
-# Package the app.
-zip --symlinks -r "$BUILD_DIRECTORY/build.zip" opolua
+# Package.
+ARCHITECTURE=`dpkg --print-architecture`
+PACKAGE_FILENAME="opolua-qt-ubuntu-22.04-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+fpm \
+    -s dir \
+    -t deb \
+    -p "$PACKAGE_FILENAME" \
+    --name "opolua-qt" \
+    --version $VERSION_NUMBER \
+    --architecture "$ARCHITECTURE" \
+    --depends qt6-base-dev \
+    --description "Runtime and viewer for EPOC programs and files." \
+    --url "https://opolua.org" \
+    --maintainer "Jason Morley <support@opolua.org>" \
+    opolua=/usr/bin/opolua
+zip --symlinks -r "$BUILD_DIRECTORY/build.zip" "$PACKAGE_FILENAME"
