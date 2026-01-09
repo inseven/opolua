@@ -55,7 +55,7 @@ case $ID in
             base-devel git \
             qt6-base qt6-multimedia qt6-5compat \
             ruby
-        $SUDO gem install fpm
+        $SUDO gem install --no-user-install fpm
         ;;
 
     *)

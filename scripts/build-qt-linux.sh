@@ -55,6 +55,10 @@ make
 make install INSTALL_ROOT="$INSTALL_DIRECTORY"
 
 # Package.
+NAME="opolua"
+DESCRIPTION="Runtime and viewer for EPOC programs and files."
+URL="https://opolua.org"
+MAINTAINER="Jason Morley <support@opolua.org>"
 source /etc/os-release
 case $ID in
     ubuntu|debian)
@@ -66,12 +70,12 @@ case $ID in
         fpm \
             -s dir \
             -p "$PACKAGE_FILENAME" \
-            --name "opolua" \
+            --name "$NAME" \
             --version $VERSION_NUMBER \
             --architecture "$ARCHITECTURE" \
-            --description "Runtime and viewer for EPOC programs and files." \
-            --url "https://opolua.org" \
-            --maintainer "Jason Morley <support@opolua.org>" \
+            --description "$DESCRIPTION" \
+            --url "$URL" \
+            --maintainer "$MAINTAINER" \
             --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
             --chdir "$INSTALL_DIRECTORY" \
             .
@@ -85,12 +89,12 @@ case $ID in
         fpm \
             -s dir \
             -p "$PACKAGE_FILENAME" \
-            --name "opolua" \
+            --name "$NAME" \
             --version $VERSION_NUMBER \
             --architecture "$ARCHITECTURE" \
-            --description "Runtime and viewer for EPOC programs and files." \
-            --url "https://opolua.org" \
-            --maintainer "Jason Morley <support@opolua.org>" \
+            --description "$DESCRIPTION" \
+            --url "$URL" \
+            --maintainer "$MAINTAINER" \
             --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
             --chdir "$INSTALL_DIRECTORY" \
             .
