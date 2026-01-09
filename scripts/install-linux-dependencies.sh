@@ -25,7 +25,7 @@ set -o pipefail
 set -x
 set -u
 
-if [ -z "$USER" ]; then
+if [ -z ${USER+x} ]; then
 
     # $USER is unbound in GitHub Actions docker containers. We check this as a way of inferring that we shouldn't be
     # using sudo.
