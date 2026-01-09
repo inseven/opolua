@@ -94,6 +94,9 @@ RESOURCES += \
 !isEmpty(target.path): INSTALLS += target
 
 linux {
+    target.path = /usr/bin
+    INSTALLS += target
+
     appReg.path = /usr/share/applications
     appReg.files = org.opolua.opolua-qt.desktop
 
