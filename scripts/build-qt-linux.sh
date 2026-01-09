@@ -71,6 +71,7 @@ case $DISTRO in
         PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
         fpm \
             -s dir \
+            -t deb \
             -p "$PACKAGE_FILENAME" \
             --name "$NAME" \
             --version $VERSION_NUMBER \
@@ -78,7 +79,11 @@ case $DISTRO in
             --description "$DESCRIPTION" \
             --url "$URL" \
             --maintainer "$MAINTAINER" \
-            --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
+            --depends libqt6core6 \
+            --depends libqt6gui6 \
+            --depends libqt6widgets6 \
+            --depends libqt6multimedia6 \
+            --depends libqt6core5compat6 \
             --chdir "$INSTALL_DIRECTORY" \
             .
         ;;
@@ -90,6 +95,7 @@ case $DISTRO in
         PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
         fpm \
             -s dir \
+            -t pacman \
             -p "$PACKAGE_FILENAME" \
             --name "$NAME" \
             --version $VERSION_NUMBER \
@@ -97,7 +103,9 @@ case $DISTRO in
             --description "$DESCRIPTION" \
             --url "$URL" \
             --maintainer "$MAINTAINER" \
-            --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
+            --depends qt6-base \
+            --depends qt6-multimedia \
+            --depends qt6-5compat \
             --chdir "$INSTALL_DIRECTORY" \
             .
         ;;
