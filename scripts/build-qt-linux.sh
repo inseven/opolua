@@ -56,7 +56,7 @@ make install INSTALL_ROOT="$INSTALL_DIRECTORY"
 
 # Package.
 source /etc/os-release
-DISTRO=$DISTRO
+DISTRO=$ID
 NAME="opolua"
 DESCRIPTION="Runtime and viewer for EPOC programs and files."
 URL="https://opolua.org"
