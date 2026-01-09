@@ -28,6 +28,7 @@ set -u
 ROOT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 
 SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
+FPM_OPTIONS_DIRECTORY="$SCRIPTS_DIRECTORY/fpm-options"
 SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
 INSTALL_DIRECTORY="$BUILD_DIRECTORY/install"
@@ -72,10 +73,10 @@ fpm \
     --name "opolua" \
     --version $VERSION_NUMBER \
     --architecture "$ARCHITECTURE" \
-    --depends libqt6core6 --depends libqt6gui6 --depends libqt6widgets6 --depends libqt6multimedia6 --depends libqt6core5compat6  \
     --description "Runtime and viewer for EPOC programs and files." \
     --url "https://opolua.org" \
     --maintainer "Jason Morley <support@opolua.org>" \
+    --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
     --chdir "$INSTALL_DIRECTORY" \
     .
 cp "$PACKAGE_FILENAME" "$ARTIFACTS_DIRECTORY"

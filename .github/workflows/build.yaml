@@ -110,17 +110,34 @@ jobs:
       matrix:
         include:
 
+        - name: qt-ubuntu-questing-amd64
+          os: ubuntu:questing
+          artifact: opolua-qt-ubuntu-questing-amd64
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
+            apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
+          options: ubuntu
+
         - name: qt-ubuntu-amd64
           os: ubuntu-24.04
           artifact: opolua-qt-ubuntu-amd64
+          setup: |
+            sudo apt-get update -y
+            sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
+          options: ubuntu
 
         - name: qt-ubuntu-arm64
           os: ubuntu-24.04-arm
           artifact: opolua-qt-ubuntu-arm64
-
-    runs-on: ${{ matrix.os }}
+          setup: |
+            sudo apt-get update -y
+            sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
+          options: ubuntu
 
     name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container || '' }}
 
     needs:
     - generate-version-number
@@ -131,21 +148,21 @@ jobs:
 
     steps:
 
+    - name: Install dependencies and configure environment
+      run: ${{ matrix.setup }}
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
 
     - name: Install fpm
       run: |
         sudo gem install fpm
 
     - name: Build
+      env:
+        FPM_OPTIONS_FILENAME: ${{ matrix.options }}
       run: scripts/build-qt-linux.sh
 
     - name: Archive the binary
