@@ -30,7 +30,7 @@ ROOT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd 
 SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
-TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
+INSTALL_DIRECTORY="$BUILD_DIRECTORY/install"
 
 function fatal {
     echo $1 >&2
@@ -49,6 +49,7 @@ mkdir -p "$BUILD_DIRECTORY"
 cd "$BUILD_DIRECTORY"
 qmake6 "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ..
 make
+make install INSTALL_ROOT="$INSTALL_DIRECTORY"
 
 # Determine the architecture, OS, and version (used for packaging).
 ARCHITECTURE=`dpkg --print-architecture`
@@ -73,5 +74,6 @@ fpm \
     --description "Runtime and viewer for EPOC programs and files." \
     --url "https://opolua.org" \
     --maintainer "Jason Morley <support@opolua.org>" \
-    opolua=/usr/bin/opolua
+    --chdir "$INSTALL_DIRECTORY" \
+    .
 zip --symlinks -r "$BUILD_DIRECTORY/build.zip" "$PACKAGE_FILENAME"
