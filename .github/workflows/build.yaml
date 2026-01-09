@@ -142,22 +142,6 @@ jobs:
             apt-get install -y build-essential git
           options: ubuntu
 
-        - name: ubuntu-24.10-amd64
-          os: ubuntu-24.04
-          container: ubuntu:oracular
-          setup: |
-            apt-get update -y
-            apt-get install -y build-essential git
-          options: ubuntu
-
-        - name: ubuntu-24.10-arm64
-          os: ubuntu-24.04-arm
-          container: ubuntu:oracular
-          setup: |
-            apt-get update -y
-            apt-get install -y build-essential git
-          options: ubuntu
-
         - name: ubuntu-24.04-amd64
           os: ubuntu-24.04
           options: ubuntu
