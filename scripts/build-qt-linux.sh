@@ -65,7 +65,7 @@ MAINTAINER="Jason Morley <support@opolua.org>"
 case $DISTRO in
     ubuntu|debian)
 
-        ARCHITECTURE=$(uname -m)
+        ARCHITECTURE=`dpkg --print-architecture`
         source /etc/lsb-release
         OS_VERSION="$DISTRIB_RELEASE"
         PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
@@ -85,7 +85,7 @@ case $DISTRO in
 
     arch|manjaro)
 
-        ARCHITECTURE=$(uname -m)
+        ARCHITECTURE=`uname -m`
         OS_VERSION="rolling"
         PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
         fpm \
