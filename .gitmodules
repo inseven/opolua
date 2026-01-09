@@ -6,7 +6,7 @@
 	url = https://github.com/jbmorley/build-tools.git
 [submodule "diligence"]
 	path = ios/diligence
-	url = git@github.com:inseven/diligence.git
+	url = https://github.com/inseven/diligence.git
 [submodule "LuaSwift"]
 	path = dependencies/LuaSwift
-	url = git@github.com:tomsci/LuaSwift.git
+	url = https://github.com/tomsci/LuaSwift.git
