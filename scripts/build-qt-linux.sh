@@ -31,6 +31,7 @@ SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
 INSTALL_DIRECTORY="$BUILD_DIRECTORY/install"
+ARTIFACTS_DIRECTORY="$BUILD_DIRECTORY/artifacts"
 
 function fatal {
     echo $1 >&2
@@ -46,6 +47,7 @@ BUILD_NUMBER=${BUILD_NUMBER:-0}
 
 # Build.
 mkdir -p "$BUILD_DIRECTORY"
+mkdir -p "$ARTIFACTS_DIRECTORY"
 cd "$BUILD_DIRECTORY"
 qmake6 "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ..
 make
@@ -76,4 +78,4 @@ fpm \
     --maintainer "Jason Morley <support@opolua.org>" \
     --chdir "$INSTALL_DIRECTORY" \
     .
-zip --symlinks -r "$BUILD_DIRECTORY/build.zip" "$PACKAGE_FILENAME"
+cp "$PACKAGE_FILENAME" "$ARTIFACTS_DIRECTORY"

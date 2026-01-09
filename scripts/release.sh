@@ -90,6 +90,9 @@ trap cleanup EXIT
 # Create the build directory.
 mkdir -p "$BUILD_DIRECTORY"
 
+# List the artifacts.
+find "$ARTIFACTS_DIRECTORY"
+
 # Copy the Qt builds.
 QT_MACOS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip"
 QT_WINDOWS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip"
