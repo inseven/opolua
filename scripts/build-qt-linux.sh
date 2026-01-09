@@ -57,7 +57,6 @@ make install INSTALL_ROOT="$INSTALL_DIRECTORY"
 # Package.
 source /etc/os-release
 DISTRO=$ID
-NAME="opolua"
 DESCRIPTION="Runtime and viewer for EPOC programs and files."
 URL="https://opolua.org"
 MAINTAINER="Jason Morley <support@opolua.org>"
@@ -73,7 +72,7 @@ case $DISTRO in
             -s dir \
             -t deb \
             -p "$PACKAGE_FILENAME" \
-            --name "$NAME" \
+            --name "opolua" \
             --version $VERSION_NUMBER \
             --architecture "$ARCHITECTURE" \
             --description "$DESCRIPTION" \
@@ -92,12 +91,12 @@ case $DISTRO in
 
         ARCHITECTURE=`uname -m`
         OS_VERSION="rolling"
-        PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
+        PACKAGE_FILENAME="opolua-bin-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
         fpm \
             -s dir \
             -t pacman \
             -p "$PACKAGE_FILENAME" \
-            --name "$NAME" \
+            --name "opolua-bin" \
             --version $VERSION_NUMBER \
             --architecture "$ARCHITECTURE" \
             --description "$DESCRIPTION" \
