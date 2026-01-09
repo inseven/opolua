@@ -113,39 +113,23 @@ jobs:
         - name: ubuntu-25.10-amd64
           os: ubuntu-24.04
           container: ubuntu:questing
-          setup: |
-            apt-get update -y
-            apt-get install -y build-essential git
-            apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
-            apt-get install -y ruby ruby-bundler
-            gem install --no-user-install fpm
+          setup: scripts/setup-scripts/ubuntu.sh
           options: ubuntu
 
         - name: ubuntu-25.10-arm64
           os: ubuntu-24.04-arm
           container: ubuntu:questing
-          setup: |
-            apt-get update -y
-            apt-get install -y build-essential git
-            apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
-            apt-get install -y ruby ruby-bundler
-            gem install --no-user-install fpm
+          setup: scripts/setup-scripts/ubuntu.sh
           options: ubuntu
 
         - name: ubuntu-24.04-amd64
           os: ubuntu-24.04
-          setup: |
-            sudo apt-get update -y
-            sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
-            sudo gem install fpm
+          setup: sudo scripts/setup-scripts/ubuntu.sh
           options: ubuntu
 
         - name: ubuntu-24.04-arm64
           os: ubuntu-24.04-arm
-          setup: |
-            sudo apt-get update -y
-            sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
-            sudo gem install fpm
+          setup: sudo scripts/setup-scripts/ubuntu.sh
           options: ubuntu
 
     name: ${{ matrix.name }}-build
