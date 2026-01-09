@@ -315,10 +315,6 @@ jobs:
         pattern: "opolua-*"
         path: artifacts
 
-    - name: List files
-      run: |
-        find .
-
     - name: Publish release
       env:
         APPLE_API_KEY_BASE64: ${{ secrets.PERSONAL_APPLE_API_KEY_BASE64 }}
