@@ -141,7 +141,7 @@ jobs:
 
     - name: Install fpm
       run: |
-        gem install fpm
+        sudo gem install fpm
 
     - name: Build
       run: scripts/build-qt-linux.sh
