@@ -25,10 +25,25 @@ set -o pipefail
 set -x
 set -u
 
-echo $USER
+if [ -z "$USER" ]; then
 
-sudo apt-get update -y
-sudo apt-get install -y build-essential git
-sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
-sudo apt-get install -y ruby ruby-bundler
-sudo gem install --no-user-install fpm
+    # $USER is unbound in GitHub Actions docker containers. We check this as a way of inferring that we shouldn't be
+    # using sudo.
+
+    apt-get update -y
+    apt-get install -y \
+        build-essential git \
+        qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev \
+        ruby ruby-bundler
+    gem install --no-user-install fpm
+
+else
+
+    sudo apt-get update -y
+    sudo apt-get install -y \
+        build-essential git \
+        qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev \
+        ruby ruby-bundler
+    sudo gem install --no-user-install fpm
+
+fi
