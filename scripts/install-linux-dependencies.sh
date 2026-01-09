@@ -54,7 +54,7 @@ case $ID in
         $SUDO pacman -S --noconfirm --needed \
             base-devel git \
             qt6-base qt6-multimedia qt6-5compat \
-            ruby
+            ruby rubygems ruby-erb
         $SUDO gem install --no-user-install fpm
         ;;
 
