@@ -54,29 +54,64 @@ qmake6 "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ..
 make
 make install INSTALL_ROOT="$INSTALL_DIRECTORY"
 
-# Determine the architecture, OS, and version (used for packaging).
-ARCHITECTURE=`dpkg --print-architecture`
-source /etc/os-release
-if [ "$ID" == "ubuntu" ]; then
-    source /etc/lsb-release
-    OS_VERSION="$DISTRIB_RELEASE"
-else
-    fatal "Unsupported Linux distribution ($ID)."
-fi
-
 # Package.
-PACKAGE_FILENAME="opolua-$ID-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
-fpm \
-    -s dir \
-    -t deb \
-    -p "$PACKAGE_FILENAME" \
-    --name "opolua" \
-    --version $VERSION_NUMBER \
-    --architecture "$ARCHITECTURE" \
-    --description "Runtime and viewer for EPOC programs and files." \
-    --url "https://opolua.org" \
-    --maintainer "Jason Morley <support@opolua.org>" \
-    --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
-    --chdir "$INSTALL_DIRECTORY" \
-    .
+source /etc/os-release
+DISTRO=$ID
+DESCRIPTION="Runtime and viewer for EPOC programs and files."
+URL="https://opolua.org"
+MAINTAINER="Jason Morley <support@opolua.org>"
+
+case $DISTRO in
+    ubuntu|debian)
+
+        ARCHITECTURE=`dpkg --print-architecture`
+        source /etc/lsb-release
+        OS_VERSION="$DISTRIB_RELEASE"
+        PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+        fpm \
+            -s dir \
+            -t deb \
+            -p "$PACKAGE_FILENAME" \
+            --name "opolua" \
+            --version $VERSION_NUMBER \
+            --architecture "$ARCHITECTURE" \
+            --description "$DESCRIPTION" \
+            --url "$URL" \
+            --maintainer "$MAINTAINER" \
+            --depends libqt6core6 \
+            --depends libqt6gui6 \
+            --depends libqt6widgets6 \
+            --depends libqt6multimedia6 \
+            --depends libqt6core5compat6 \
+            --chdir "$INSTALL_DIRECTORY" \
+            .
+        ;;
+
+    arch|manjaro)
+
+        ARCHITECTURE=`uname -m`
+        OS_VERSION="rolling"
+        PACKAGE_FILENAME="opolua-bin-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
+        fpm \
+            -s dir \
+            -t pacman \
+            -p "$PACKAGE_FILENAME" \
+            --name "opolua-bin" \
+            --version $VERSION_NUMBER \
+            --architecture "$ARCHITECTURE" \
+            --description "$DESCRIPTION" \
+            --url "$URL" \
+            --maintainer "$MAINTAINER" \
+            --depends qt6-base \
+            --depends qt6-multimedia \
+            --depends qt6-5compat \
+            --chdir "$INSTALL_DIRECTORY" \
+            .
+        ;;
+
+    *)
+        fatal "Error: Unsupported distribution: $DISTRO."
+        ;;
+esac
+
 cp "$PACKAGE_FILENAME" "$ARTIFACTS_DIRECTORY"
