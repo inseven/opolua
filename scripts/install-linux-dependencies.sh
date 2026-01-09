@@ -25,25 +25,40 @@ set -o pipefail
 set -x
 set -u
 
+function fatal {
+    echo $1 >&2
+    exit 1
+}
+
+# $USER is unbound in GitHub Actions containers. We check this as a way of inferring that we shouldn't be using sudo.
 if [ -z ${USER+x} ]; then
-
-    # $USER is unbound in GitHub Actions docker containers. We check this as a way of inferring that we shouldn't be
-    # using sudo.
-
-    apt-get update -y
-    apt-get install -y \
-        build-essential git \
-        qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev \
-        ruby ruby-bundler
-    gem install --no-user-install fpm
-
+    SUDO=""
 else
-
-    sudo apt-get update -y
-    sudo apt-get install -y \
-        build-essential git \
-        qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev \
-        ruby ruby-bundler
-    sudo gem install --no-user-install fpm
-
+    SUDO="sudo"
 fi
+
+# Install the per-platform build dependencies.
+source /etc/os-release
+case $ID in
+    ubuntu|debian)
+        $SUDO apt-get update -y
+        $SUDO apt-get install -y \
+            build-essential git \
+            qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev \
+            ruby ruby-bundler
+        $SUDO gem install --no-user-install fpm
+        ;;
+
+    arch|manjaro)
+        $SUDO pacman -Syu --noconfirm
+        $SUDO pacman -S --noconfirm --needed \
+            base-devel git \
+            qt6-base qt6-multimedia qt6-5compat \
+            ruby
+        $SUDO gem install fpm
+        ;;
+
+    *)
+        fatal "Error: Unsupported distribution: $ID."
+        ;;
+esac

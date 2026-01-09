@@ -68,7 +68,6 @@ fi
 PACKAGE_FILENAME="opolua-$ID-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
 fpm \
     -s dir \
-    -t deb \
     -p "$PACKAGE_FILENAME" \
     --name "opolua" \
     --version $VERSION_NUMBER \

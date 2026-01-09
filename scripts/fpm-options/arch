@@ -1,0 +1,4 @@
+-t pacman
+--depends qt6-base
+--depends qt6-multimedia
+--depends qt6-5compat

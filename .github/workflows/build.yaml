@@ -150,6 +150,14 @@ jobs:
           os: ubuntu-24.04-arm
           options: ubuntu
 
+        - name: arch-latest-x86_64
+          os: ubuntu-24.04
+          container: archlinux:latest
+          setup: |
+            pacman -Syu --noconfirm
+            pacman -S --noconfirm --needed base-devel git
+          options: arch
+
     name: ${{ matrix.name }}-build
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container || '' }}
