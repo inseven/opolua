@@ -90,17 +90,29 @@ trap cleanup EXIT
 # Create the build directory.
 mkdir -p "$BUILD_DIRECTORY"
 
+# List the artifacts.
+find "$ARTIFACTS_DIRECTORY"
+
 # Copy the Qt builds.
+
+# macOS.
 QT_MACOS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-macos/build.zip" "$QT_MACOS_PATH"
+
+# Windows.
 QT_WINDOWS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip"
-QT_UBUNTU_ARM_PATH="$BUILD_DIRECTORY/OpoLua-Qt-Ubuntu-ARM-$VERSION_NUMBER-$BUILD_NUMBER.zip"
-QT_UBUNTU_Intel_PATH="$BUILD_DIRECTORY/OpoLua-Qt-Ubuntu-Intel-$VERSION_NUMBER-$BUILD_NUMBER.zip"
-mv "$ARTIFACTS_DIRECTORY/opolua-qt-macos/build.zip" "$QT_MACOS_PATH"
-mv "$ARTIFACTS_DIRECTORY/opolua-qt-windows/build.zip" "$QT_WINDOWS_PATH"
-mv "$ARTIFACTS_DIRECTORY/opolua-qt-linux-ubuntu-arm/build.zip" "$QT_UBUNTU_ARM_PATH"
-mv "$ARTIFACTS_DIRECTORY/opolua-qt-linux-ubuntu-intel/build.zip" "$QT_UBUNTU_INTEL_PATH"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-windows/build.zip" "$QT_WINDOWS_PATH"
+
+# Linux.
+QT_UBUNTU_2404_ARM64_NAME="opolua-ubuntu-24.04-arm64-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+QT_UBUNTU_2404_ARM64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2404_ARM64_NAME"
+QT_UBUNTU_2404_AMD64_NAME="opolua-ubuntu-24.04-amd64-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+QT_UBUNTU_2404_AMD64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2404_AMD64_NAME"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-arm64/$QT_UBUNTU_2404_ARM64_NAME" "$QT_UBUNTU_2404_ARM64_PATH"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-amd64/$QT_UBUNTU_2404_AMD64_NAME" "$QT_UBUNTU_2404_AMD64_PATH"
 
 # Unpack the iOS and Mac Catalyst builds.
+
 unzip "$ARTIFACTS_DIRECTORY/opolua-ios/build.zip" -d "$BUILD_DIRECTORY"
 IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
 PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
@@ -144,6 +156,9 @@ if $RELEASE ; then
         --skip-if-empty \
         --push \
         --exec "$RELEASE_SCRIPT_PATH" \
-        "$IPA_PATH" "$PKG_PATH" "$QT_MACOS_PATH" "$QT_WINDOWS_PATH"
+        "$IPA_PATH" "$PKG_PATH" \
+        "$QT_MACOS_PATH" \
+        "$QT_WINDOWS_PATH" \
+        "$QT_UBUNTU_2404_ARM64_PATH" "$QT_UBUNTU_2404_AMD64_PATH"
 
 fi
