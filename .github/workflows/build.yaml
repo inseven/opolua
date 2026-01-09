@@ -113,23 +113,25 @@ jobs:
         - name: ubuntu-25.10-amd64
           os: ubuntu-24.04
           container: ubuntu:questing
-          setup: scripts/setup-scripts/ubuntu.sh
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
           options: ubuntu
 
         - name: ubuntu-25.10-arm64
           os: ubuntu-24.04-arm
           container: ubuntu:questing
-          setup: scripts/setup-scripts/ubuntu.sh
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
           options: ubuntu
 
         - name: ubuntu-24.04-amd64
           os: ubuntu-24.04
-          setup: sudo scripts/setup-scripts/ubuntu.sh
           options: ubuntu
 
         - name: ubuntu-24.04-arm64
           os: ubuntu-24.04-arm
-          setup: sudo scripts/setup-scripts/ubuntu.sh
           options: ubuntu
 
     name: ${{ matrix.name }}-build
@@ -146,12 +148,16 @@ jobs:
     steps:
 
     - name: Install dependencies and configure environment
+      if: ${{ matrix.setup != '' }}
       run: ${{ matrix.setup }}
 
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
+
+    - name: Install dependencies
+      run: scripts/install-linux-dependencies.sh
 
     - name: Build
       env:
