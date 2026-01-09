@@ -32,6 +32,11 @@ SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
 TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
 
+function fatal {
+    echo $1 >&2
+    exit 1
+}
+
 # Set up the path.
 export PATH="$ROOT_DIRECTORY/qt-install/bin:$PATH"
 
@@ -45,14 +50,23 @@ cd "$BUILD_DIRECTORY"
 qmake6 "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ..
 make
 
-# Package.
+# Determine the architecture, OS, and version (used for packaging).
 ARCHITECTURE=`dpkg --print-architecture`
-PACKAGE_FILENAME="opolua-qt-ubuntu-22.04-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+source /etc/os-release
+if [ "$ID" == "ubuntu" ]; then
+    source /etc/lsb-release
+    OS_VERSION="$DISTRIB_RELEASE"
+else
+    fatal "Unsupported Linux distribution ($ID)."
+fi
+
+# Package.
+PACKAGE_FILENAME="opolua-$ID-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
 fpm \
     -s dir \
     -t deb \
     -p "$PACKAGE_FILENAME" \
-    --name "opolua-qt" \
+    --name "opolua" \
     --version $VERSION_NUMBER \
     --architecture "$ARCHITECTURE" \
     --depends qt6-base-dev \
