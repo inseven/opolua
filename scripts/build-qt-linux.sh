@@ -64,6 +64,8 @@ source /etc/os-release
 if [ "$ID" == "ubuntu" ]; then
     source /etc/lsb-release
     OS_VERSION="$DISTRIB_RELEASE"
+elif [ "$ID" == "arch" ] || [ "$ID" == "manjaro" ]; then
+    OS_VERSION="rolling"
 else
     fatal "Unsupported Linux distribution ($ID)."
 fi
