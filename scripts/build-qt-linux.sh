@@ -55,18 +55,20 @@ make
 make install INSTALL_ROOT="$INSTALL_DIRECTORY"
 
 # Package.
+source /etc/os-release
+DISTRO=$DISTRO
 NAME="opolua"
 DESCRIPTION="Runtime and viewer for EPOC programs and files."
 URL="https://opolua.org"
 MAINTAINER="Jason Morley <support@opolua.org>"
-source /etc/os-release
-case $ID in
+
+case $DISTRO in
     ubuntu|debian)
 
         ARCHITECTURE=$(uname -m)
         source /etc/lsb-release
         OS_VERSION="$DISTRIB_RELEASE"
-        PACKAGE_FILENAME="opolua-$ID-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+        PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
         fpm \
             -s dir \
             -p "$PACKAGE_FILENAME" \
@@ -85,7 +87,7 @@ case $ID in
 
         ARCHITECTURE=$(uname -m)
         OS_VERSION="rolling"
-        PACKAGE_FILENAME="opolua-$ID-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
+        PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
         fpm \
             -s dir \
             -p "$PACKAGE_FILENAME" \
@@ -101,7 +103,7 @@ case $ID in
         ;;
 
     *)
-        fatal "Error: Unsupported distribution: $ID."
+        fatal "Error: Unsupported distribution: $DISTRO."
         ;;
 esac
 
