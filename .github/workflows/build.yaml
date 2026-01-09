@@ -113,7 +113,7 @@ jobs:
         - name: qt-ubuntu-questing-amd64
           os: ubuntu-24.04
           container: ubuntu:questing
-          artifact: opolua-qt-ubuntu-questing-amd64
+          artifact: opolua-qt-ubuntu-25.10-amd64
           setup: |
             apt-get update -y
             apt-get install -y build-essential git
@@ -124,7 +124,7 @@ jobs:
 
         - name: qt-ubuntu-amd64
           os: ubuntu-24.04
-          artifact: opolua-qt-ubuntu-amd64
+          artifact: opolua-qt-ubuntu-24.04-amd64
           setup: |
             sudo apt-get update -y
             sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
@@ -133,7 +133,7 @@ jobs:
 
         - name: qt-ubuntu-arm64
           os: ubuntu-24.04-arm
-          artifact: opolua-qt-ubuntu-arm64
+          artifact: opolua-qt-ubuntu-24.04-arm64
           setup: |
             sudo apt-get update -y
             sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
