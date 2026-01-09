@@ -111,7 +111,7 @@ jobs:
         include:
 
         - name: qt-linux-build-ubuntu-intel
-          os: ubuntu-latest
+          os: ubuntu-24.04
           artifact: opolua-qt-linux-ubuntu-intel
 
         - name: qt-linux-build-ubuntu-arm
@@ -138,6 +138,10 @@ jobs:
       run: |
         sudo apt-get update -y
         sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
+
+    - name: Install fpm
+      run: |
+        gem install fpm
 
     - name: Build
       run: scripts/build-qt-linux.sh
