@@ -111,7 +111,8 @@ jobs:
         include:
 
         - name: qt-ubuntu-questing-amd64
-          os: ubuntu:questing
+          os: ubuntu-24.04
+          container: ubuntu:questing
           artifact: opolua-qt-ubuntu-questing-amd64
           setup: |
             apt-get update -y
