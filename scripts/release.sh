@@ -93,8 +93,12 @@ mkdir -p "$BUILD_DIRECTORY"
 # Copy the Qt builds.
 QT_MACOS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip"
 QT_WINDOWS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-Windows-$VERSION_NUMBER-$BUILD_NUMBER.zip"
+QT_UBUNTU_ARM_PATH="$BUILD_DIRECTORY/OpoLua-Qt-Ubuntu-ARM-$VERSION_NUMBER-$BUILD_NUMBER.zip"
+QT_UBUNTU_Intel_PATH="$BUILD_DIRECTORY/OpoLua-Qt-Ubuntu-Intel-$VERSION_NUMBER-$BUILD_NUMBER.zip"
 mv "$ARTIFACTS_DIRECTORY/opolua-qt-macos/build.zip" "$QT_MACOS_PATH"
 mv "$ARTIFACTS_DIRECTORY/opolua-qt-windows/build.zip" "$QT_WINDOWS_PATH"
+mv "$ARTIFACTS_DIRECTORY/opolua-qt-linux-ubuntu-arm/build.zip" "$QT_UBUNTU_ARM_PATH"
+mv "$ARTIFACTS_DIRECTORY/opolua-qt-linux-ubuntu-intel/build.zip" "$QT_UBUNTU_INTEL_PATH"
 
 # Unpack the iOS and Mac Catalyst builds.
 unzip "$ARTIFACTS_DIRECTORY/opolua-ios/build.zip" -d "$BUILD_DIRECTORY"
