@@ -110,10 +110,9 @@ jobs:
       matrix:
         include:
 
-        - name: qt-ubuntu-25.10-amd64
+        - name: ubuntu-25.10-amd64
           os: ubuntu-24.04
           container: ubuntu:questing
-          artifact: opolua-qt-ubuntu-25.10-amd64
           setup: |
             apt-get update -y
             apt-get install -y build-essential git
@@ -122,10 +121,9 @@ jobs:
             gem install --no-user-install fpm
           options: ubuntu
 
-        - name: qt-ubuntu-25.10-arm64
+        - name: ubuntu-25.10-arm64
           os: ubuntu-24.04-arm
           container: ubuntu:questing
-          artifact: opolua-qt-ubuntu-25.10-arm64
           setup: |
             apt-get update -y
             apt-get install -y build-essential git
@@ -134,25 +132,23 @@ jobs:
             gem install --no-user-install fpm
           options: ubuntu
 
-        - name: qt-ubuntu-24.04-amd64
+        - name: ubuntu-24.04-amd64
           os: ubuntu-24.04
-          artifact: opolua-qt-ubuntu-24.04-amd64
           setup: |
             sudo apt-get update -y
             sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
             sudo gem install fpm
           options: ubuntu
 
-        - name: qt-ubuntu-24.04-arm64
+        - name: ubuntu-24.04-arm64
           os: ubuntu-24.04-arm
-          artifact: opolua-qt-ubuntu-24.04-arm64
           setup: |
             sudo apt-get update -y
             sudo apt-get install -y qt6-base-dev qt6-base-dev-tools qt6-multimedia-dev qt6-5compat-dev
             sudo gem install fpm
           options: ubuntu
 
-    name: ${{ matrix.name }}
+    name: ${{ matrix.name }}-build
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container || '' }}
 
@@ -181,7 +177,7 @@ jobs:
     - name: Archive the binary
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.artifact }}
+        name: opolua-qt-${{ matrix.artifact }}
         path: qt/build/artifacts/*
         if-no-files-found: error
 
