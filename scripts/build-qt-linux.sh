@@ -54,35 +54,51 @@ qmake6 "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ..
 make
 make install INSTALL_ROOT="$INSTALL_DIRECTORY"
 
-# Determine the architecture, OS, and version (used for packaging).
-if command -v dpkg >/dev/null 2>&1; then
-    ARCHITECTURE=$(dpkg --print-architecture)
-else
-    ARCHITECTURE=$(uname -m)
-fi
-source /etc/os-release
-if [ "$ID" == "ubuntu" ]; then
-    source /etc/lsb-release
-    OS_VERSION="$DISTRIB_RELEASE"
-elif [ "$ID" == "arch" ] || [ "$ID" == "manjaro" ]; then
-    OS_VERSION="rolling"
-else
-    fatal "Unsupported Linux distribution ($ID)."
-fi
-
 # Package.
-PACKAGE_BASENAME="opolua-$ID-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER"
-fpm \
-    -s dir \
-    -p "$PACKAGE_BASENAME" \
-    --name "opolua" \
-    --version $VERSION_NUMBER \
-    --architecture "$ARCHITECTURE" \
-    --description "Runtime and viewer for EPOC programs and files." \
-    --url "https://opolua.org" \
-    --maintainer "Jason Morley <support@opolua.org>" \
-    --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
-    --chdir "$INSTALL_DIRECTORY" \
-    .
-ls *
-cp "$PACKAGE_BASENAME.*" "$ARTIFACTS_DIRECTORY"
+source /etc/os-release
+case $ID in
+    ubuntu|debian)
+
+        ARCHITECTURE=$(uname -m)
+        source /etc/lsb-release
+        OS_VERSION="$DISTRIB_RELEASE"
+        PACKAGE_FILENAME="opolua-$ID-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+        fpm \
+            -s dir \
+            -p "$PACKAGE_FILENAME" \
+            --name "opolua" \
+            --version $VERSION_NUMBER \
+            --architecture "$ARCHITECTURE" \
+            --description "Runtime and viewer for EPOC programs and files." \
+            --url "https://opolua.org" \
+            --maintainer "Jason Morley <support@opolua.org>" \
+            --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
+            --chdir "$INSTALL_DIRECTORY" \
+            .
+        ;;
+
+    arch|manjaro)
+
+        ARCHITECTURE=$(uname -m)
+        OS_VERSION="rolling"
+        PACKAGE_FILENAME="opolua-$ID-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
+        fpm \
+            -s dir \
+            -p "$PACKAGE_FILENAME" \
+            --name "opolua" \
+            --version $VERSION_NUMBER \
+            --architecture "$ARCHITECTURE" \
+            --description "Runtime and viewer for EPOC programs and files." \
+            --url "https://opolua.org" \
+            --maintainer "Jason Morley <support@opolua.org>" \
+            --fpm-options-file "$FPM_OPTIONS_DIRECTORY/$FPM_OPTIONS_FILENAME" \
+            --chdir "$INSTALL_DIRECTORY" \
+            .
+        ;;
+
+    *)
+        fatal "Error: Unsupported distribution: $ID."
+        ;;
+esac
+
+cp "$PACKAGE_FILENAME" "$ARTIFACTS_DIRECTORY"
