@@ -72,7 +72,7 @@ fpm \
     --name "opolua" \
     --version $VERSION_NUMBER \
     --architecture "$ARCHITECTURE" \
-    --depends qt6-base-dev \
+    --depends libqt6core6 --depends libqt6gui6 --depends libqt6widgets6 --depends libqt6multimedia6 --depends libqt6core5compat6  \
     --description "Runtime and viewer for EPOC programs and files." \
     --url "https://opolua.org" \
     --maintainer "Jason Morley <support@opolua.org>" \
