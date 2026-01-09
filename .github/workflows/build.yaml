@@ -110,15 +110,17 @@ jobs:
       matrix:
         include:
 
-        - name: qt-linux-build-ubuntu-intel
+        - name: qt-ubuntu-amd64
           os: ubuntu-24.04
-          artifact: opolua-qt-linux-ubuntu-intel
+          artifact: opolua-qt-ubuntu-amd64
 
-        - name: qt-linux-build-ubuntu-arm
+        - name: qt-ubuntu-arm64
           os: ubuntu-24.04-arm
-          artifact: opolua-qt-linux-ubuntu-arm
+          artifact: opolua-qt-ubuntu-arm64
 
     runs-on: ${{ matrix.os }}
+
+    name: ${{ matrix.name }}
 
     needs:
     - generate-version-number
