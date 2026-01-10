@@ -8,6 +8,7 @@
         <file alias="cp1252.lua">../core/src/cp1252.lua</file>
         <file alias="crc.lua">../core/src/crc.lua</file>
         <file alias="database.lua">../core/src/database.lua</file>
+        <file alias="decompiler.lua">../core/src/decompiler.lua</file>
         <file alias="defaultiohandler.lua">../core/src/defaultiohandler.lua</file>
         <file alias="dialog.lua">../core/src/dialog.lua</file>
         <file alias="directfilestore.lua">../core/src/directfilestore.lua</file>

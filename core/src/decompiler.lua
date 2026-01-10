@@ -1,0 +1,1676 @@
+-- Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
+-- See LICENSE file for license information.
+
+_ENV = module()
+
+function decompile(procTable, opxTable, era, annotate)
+    for _, opx in ipairs(opxTable or {}) do
+        printf('INCLUDE "%s.oxh"\n', opx.name:lower())
+    end
+    if opxTable and #opxTable > 0 then
+        print("")
+    end
+
+    for i, proc in ipairs(procTable) do
+        if i > 1 then
+            -- Add empty line between procs
+            print("")
+        end
+        decompileProc(proc, opxTable, era, annotate)
+    end
+end
+
+local sbyte = string.byte
+local function fmt(...)
+    if select("#", ...) == 1 then
+        return (...)
+    else
+        return string.format(...)
+    end
+end
+
+local function assertEquals(a, b)
+    local adump, bdump = dump(a), dump(b)
+    if adump ~= bdump then
+        error(string.format("%s != %s", adump, bdump))
+    end
+end
+
+local EWord = DataTypes.EWord
+local ELong = DataTypes.ELong
+local EReal = DataTypes.EReal
+local EString = DataTypes.EString
+local EWordArray = DataTypes.EWordArray
+local ELongArray = DataTypes.ELongArray
+local ERealArray = DataTypes.ERealArray
+local EStringArray = DataTypes.EStringArray
+
+local suffToType = { ["%"] = EWord, ["&"] = ELong, ["$"] = EString, [""] = EReal }
+
+local function getTypeFromName(name)
+    local typeSuff = name:match("([%%&$]?)$")
+    return assert(suffToType[typeSuff])
+end
+
+local prettyNames = {
+    DBUTTONS = "dBUTTONS",
+    DCHECKBOX = "dCHECKBOX",
+    DCHOICE = "dCHOICE",
+    DDATE = "dDATE",
+    DEDIT = "dEDIT",
+    DEDITMULTI = "dEDITMULTI",
+    DFILE = "dFILE",
+    DFLOAT = "dFLOAT",
+    DINIT = "dINIT",
+    DPOSITION = "dPOSITION",
+    DTEXT = "dTEXT",
+    DTIME = "dTIME",
+    DXINPUT = "dXINPUT",
+    GAT = "gAT",
+    GBORDER = "gBORDER",
+    GBOX = "gBOX",
+    GBUTTON = "gBUTTON",
+    GCIRCLE = "gCIRCLE",
+    GCLOCK = "gCLOCK",
+    GCLOSE = "gCLOSE",
+    GCLS = "gCLS",
+    GCOLOR = "gCOLOR",
+    GCOLORBACKGROUND = "gCOLORBACKGROUND",
+    GCOLORINFO = "gCOLORINFO",
+    GCOPY = "gCOPY",
+    GCREATE = "gCREATE",
+    GCREATEBIT = "gCREATEBIT",
+    GELLIPSE = "gELLIPSE",
+    GFILL = "gFILL",
+    GFONT = "gFONT",
+    GGMODE = "gGMODE",
+    GGREY = "gGREY",
+    GHEIGHT = "gHEIGHT",
+    GIDENTITY = "gIDENTITY",
+    GINFO32 = "gINFO32",
+    GINVERT = "gINVERT",
+    GIPRINT = "gIPRINT",
+    GLINEBY = "gLINEBY",
+    GLINETO = "gLINETO",
+    GLOADBIT = "gLOADBIT",
+    GLOADFONT = "gLOADFONT",
+    GMOVE = "gMOVE",
+    GORDER = "gORDER",
+    GORIGINX = "gORIGINX",
+    GORIGINY = "gORIGINY",
+    GOTOMARK = "gOTOMARK",
+    GPATT = "gPATT",
+    GPEEKLINE = "gPEEKLINE",
+    GPOLY = "gPOLY",
+    GPRINT = "gPRINT",
+    GPRINTB = "gPRINTB",
+    GPRINTCLIP = "gPRINTCLIP",
+    GRANK = "gRANK",
+    GSAVEBIT = "gSAVEBIT",
+    GSCROLL = "gSCROLL",
+    GSETPENWIDTH = "gSETPENWIDTH",
+    GSETWIN = "gSETWIN",
+    GSTYLE = "gSTYLE",
+    GTMODE = "gTMODE",
+    GTWIDTH = "gTWIDTH",
+    GUNLOADFONT = "gUNLOADFONT",
+    GUPDATE = "gUPDATE",
+    GUSE = "gUSE",
+    GVISIBLE = "gVISIBLE",
+    GWIDTH = "gWIDTH",
+    GX = "gX",
+    GXBORDER = "gXBORDER",
+    GXPRINT = "gXPRINT",
+    GY = "gY",
+}
+
+local function getLabelName(dest)
+    return fmt("label_%04X::", dest)
+end
+
+function decompileProc(proc, opxTable, era, annotate)
+    assert(era == "er5", "SIBO binaries are not supported yet!")
+    local AddrType = era == "sibo" and EWord or ELong
+    local ip = proc.codeOffset
+    local endIdx = proc.codeOffset + proc.codeSize
+    local ops = require("ops")
+    local opcodes = {}
+    for code, name in pairs(ops.codes_er5) do
+        opcodes[code] = name
+    end
+    if era == "sibo" then
+        for code, name in pairs(ops.codes_sibo) do
+            opcodes[code] = name
+        end
+    end
+    local fns = require("fns")
+    local fncodes = fns["codes_"..era]
+    local EPtrType = era == "er5" and ELong or EWord
+    local compiler = require("compiler")
+    local commands = compiler.Callables
+    local AddressOfPrefix, AddressOfAny, VariablePrefix =
+        compiler.AddressOfPrefix, compiler.AddressOfAny, compiler.VariablePrefix
+    local Int, Long, Float, String = compiler.Int, compiler.Long, compiler.Float, compiler.String
+    local IntPtr = era == "er5" and Long or Int
+    local AddressOfInt, AddressOfLong, AddressOfFloat, AddressOfString =
+        compiler.AddressOfInt, compiler.AddressOfLong, compiler.AddressOfFloat, compiler.AddressOfString
+    local AddressOfIntArray, AddressOfLongArray, AddressOfFloatArray, AddressOfStringArray =
+        compiler.AddressOfIntArray, compiler.AddressOfLongArray, compiler.AddressOfFloatArray, compiler.AddressOfStringArray
+    local IntVariable, LongVariable, FloatVariable, StringVariable =
+        compiler.IntVariable, compiler.LongVariable, compiler.FloatVariable, compiler.StringVariable
+    local IntVariableArray, LongVariableArray, FloatVariableArray, StringVariableArray =
+        compiler.IntVariableArray, compiler.LongVariableArray, compiler.FloatVariableArray, compiler.StringVariableArray
+
+    local varTypeToType = {
+        [IntVariable] = EWord,
+        [LongVariable] = ELong,
+        [FloatVariable] = EReal,
+        [StringVariable] = EString,
+        [IntVariableArray] = EWordArray,
+        [LongVariableArray] = ELongArray,
+        [FloatVariableArray] = ERealArray,
+        [StringVariableArray] = EStringArray,
+        [AddressOfInt] = EWord,
+        [AddressOfLong] = ELong,
+        [AddressOfFloat] = EReal,
+        [AddressOfString] = EString,
+        [AddressOfIntArray] = EWordArray,
+        [AddressOfLongArray] = ELongArray,
+        [AddressOfFloatArray] = ERealArray,
+        [AddressOfStringArray] = EStringArray,
+    }
+    local standardOps = {}
+    local standardFns = {}
+    for cmdName, command in pairs(commands) do
+        if command.type == "op" and command.name then
+            standardOps[command.name] = {
+                name = prettyNames[cmdName] or cmdName,
+                args = command.args
+            }
+        elseif command.type == "fn" and command.name then
+            standardFns[command.name] = {
+                name = prettyNames[cmdName] or cmdName,
+                args = command.args,
+                valType = assert(suffToType[command.valType])
+            }
+        end
+    end
+    -- Add some things which are special from a compiler point of view, but can be handled normally when decompiling the
+    -- opcode.
+    standardOps["Screen2"] = {
+        name = "SCREEN",
+        args = { Int, Int },
+    }
+    standardOps["Screen4"] = {
+        name = "SCREEN",
+        args = { Int, Int, Int, Int },
+    }
+    standardFns["gCreate"] = {
+        name = "gCREATE",
+        args = { Int, Int, Int, Int, Int },
+        valType = EWord,
+    }
+    standardFns["gCreateEnhanced"] = {
+        name = "gCREATE",
+        args = { Int, Int, Int, Int, Int, Int },
+        valType = EWord,
+    }
+    standardFns["Menu"] = {
+        name = "MENU",
+        args = {},
+        valType = EWord,
+    }
+    standardFns["MenuWithMemory"] = {
+        name = "MENU",
+        args = { AddressOfInt },
+        valType = EWord,
+    }
+
+    local statements = {}
+    local gotoLabels = {}
+    local namedLabels = {} -- Used for VECTOR and ONERR
+    local branchTargets = {}
+    local vars = proc.vars
+    local stack = require("stack").newStack()
+    local openIfs = {}
+    local trap = nil
+
+    -- Helper fns (which have access to all the above state)
+
+    local function eval(expr, needsBrackets)
+        -- needs brackets is more "needs brackets if it's a compound expression"
+        if expr.operand then
+            if expr.operand == "CAST" then
+                return eval(expr[1], needsBrackets)
+            elseif expr.operand:match("%%$") then
+                -- Ugh the percent operators...
+                local ret = fmt("%s %s %s%%", eval(expr[1], true), expr.operand:sub(1, -2), eval(expr[2], true))
+                if needsBrackets then
+                    return fmt("(%s)", ret)
+                else
+                    return ret
+                end
+            elseif expr[2] then
+                local ret = fmt("%s %s %s", eval(expr[1], true), expr.operand, eval(expr[2], true))
+                if needsBrackets then
+                    return fmt("(%s)", ret)
+                else
+                    return ret
+                end
+            else
+                -- unary operator
+                return fmt("%s%s", expr.operand, eval(expr[1], true))
+            end
+        elseif expr.value then
+            return expr.value
+        elseif expr.index then -- It's a variable
+            local name = assert(vars[expr.index].name, "No name for variable!")
+            if expr.arrayIndexExpr then
+                name = fmt("%s(%s)", name, eval(expr.arrayIndexExpr))
+            end
+            return name
+        elseif expr.call then
+            if #expr > 0 then
+                local params = {}
+                for i, arg in ipairs(expr) do
+                    params[i] = eval(arg)
+                end
+                return fmt("%s(%s)", expr.call, table.concat(params, ", "))
+            else
+                return expr.call
+            end
+        else
+            print(dump(expr))
+            error("Unhandled expression!")
+        end
+    end
+
+    local function evalKeycodeExpr(expr)
+        -- If expr is a constant in the A-Z range, convert it to a %X keycode
+        local val = tonumber(expr.value)
+        if val and val >= 0x20 and val < 0x7F then
+            -- Oddly something like "% " is actually valid
+            return fmt("%%%c", val)
+        else
+            return eval(expr)
+        end
+    end
+
+    local function ipUnpack(packFmt)
+        local val, nextPos = string.unpack(packFmt, proc.data, 1 + ip)
+        ip = nextPos - 1
+        return val
+    end
+
+    local function ip8() return ipUnpack("B") end
+    local function ips8() return ipUnpack("b") end
+    local function ip16() return ipUnpack("<H") end
+    local function ips16() return ipUnpack("<h") end
+    local function ip32() return ipUnpack("<I4") end
+    local function ips32() return ipUnpack("<i4") end
+    local function ipString() return ipUnpack("s1") end
+    local function ipReal() return ipUnpack("<d") end
+
+    local function declareLocalVar(index, type)
+        -- A non-array non-string local won't have a var from the proc metadata,
+        -- but since indexes don't get reused for different vars we now know its
+        -- type and can make a var entry.
+        if vars[index] == nil then
+            vars[index] = {
+                directIdx = index,
+                type = type,
+                name = fmt("local_%04X%s", index, DataTypeSuffix[type] or ""),
+            }
+        else
+            -- It may have a var but not a type
+            if isArrayType(type) and vars[index].type == nil then
+                vars[index].type = type
+                -- And recalculate name with the type suffix
+                vars[index].name = fmt("local_%04X%s", index, DataTypeSuffix[type])
+            end
+            assertEquals(vars[index].type, type)
+        end
+    end
+
+    local function popExpr(type)
+        local expr = stack:pop()
+        -- if expr.type ~= "expr" or expr.valType ~= type then print(dump(expr)) end
+        assertEquals(expr.type, "expr")
+        if type then
+            assertEquals(expr.valType, type)
+        end
+        return expr
+    end
+
+    local function popVar(type)
+        local expr = stack:pop()
+        -- if expr.type ~= "var" or expr.valType ~= type then print(dump(expr)) end
+        assertEquals(expr.type, "var")
+        if isArrayType(type) then
+            assertEquals(expr.valType, arrayMemberType(type))
+            assert(expr.arrayIndexExpr ~= nil, "Expected an array index expression for an array variable!")
+        else
+            assertEquals(expr.valType, type)
+        end
+        return expr
+    end
+
+    local function popVarAddr(type)
+        -- Syntax for commands like GETEVENT or SCREENINFO is
+        -- StackByteAsWord(1), Array[In]DirectLeftSideInt, CallFunction(Addr), COMMAND
+        local addr = popExpr(EPtrType)
+        assertEquals(addr.call, "ADDR")
+        -- Convenience to reuse the popVar logic
+        stack:push(addr[1])
+        return popVar(type)
+    end
+
+    local function pushVar(isLeft, type, isLocal)
+        local location = ip - 1
+        local index = ip16()
+        local indexExpr = nil
+        local valType = type
+        if isArrayType(type) then
+            indexExpr = popExpr(EWord)
+            valType = arrayMemberType(type)
+            location = indexExpr.location
+        end
+        if isLocal then
+            declareLocalVar(index, type)
+        end
+        stack:push({
+            type = isLeft and "var" or "expr",
+            location = location,
+            index = index,
+            valType = valType,
+            arrayIndexExpr = indexExpr,
+        })
+    end
+
+    local function pushField(isLeft, type)
+        local logName = ip8()
+        local nameExpr = popExpr(EString)
+        local name = eval(nameExpr):match('"([^"]+)"')
+        stack:push({
+            type = isLeft and "var" or "expr",
+            location = nameExpr.location,
+            valType = type,
+            value = fmt("%c.%s", string.byte("A") + logName, name),
+        })
+    end
+
+    local function pushValue(location, type, ...)
+        stack:push({
+            type = "expr",
+            location = location,
+            value = fmt(...),
+            valType = type,
+        })
+    end
+
+    local function pushBinaryExpr(operandType, operand, resultType)
+        local rhs = popExpr(operandType)
+        local lhs = popExpr(operandType)
+        stack:push({
+            type = "expr",
+            location = lhs.location,
+            valType = resultType or operandType,
+            operand = operand,
+            lhs,
+            rhs
+        })
+    end
+
+    local function pushBooleanExpr(operandType, operand)
+        pushBinaryExpr(operandType, operand, EWord)
+    end
+
+    local function pushUnaryExpr(operandType, operand, resultType)
+        local expr = popExpr(operandType)
+        stack:push({
+            type = "expr",
+            location = expr.location,
+            valType = resultType or operandType,
+            operand = operand,
+            expr,
+        })
+    end
+
+    -- For anything that looks like a function call that returns a value
+    local function pushCall(location, retType, call, ...)
+        local expr = { ... }
+        expr.type = "expr"
+        expr.location = location
+        expr.valType = retType
+        expr.call = call
+        stack:push(expr)
+    end
+
+    local function addStatement(location, ...)
+        if location then
+            -- Close any open IFs for this address in reverse order
+            while (openIfs[#openIfs] or {}).endifLocation == location do
+                local openIf = openIfs[#openIfs]
+                local endif = addStatement(nil, "ENDIF")
+                endif.opener = openIf
+                openIf.closer = endif
+                openIfs[#openIfs] = nil
+            end
+        end
+
+        local value = nil
+        if select("#", ...) > 0 then
+            value = fmt(...)
+        end
+        if trap and location then
+            value = "TRAP "..value
+            location = trap
+            trap = nil
+        end
+        local statement = {
+            location = location,
+            value = value
+        }
+        table.insert(statements, statement)
+        return statement
+    end
+
+    local function insertPriorStatement(location, ...)
+        local statement = {
+            location = location,
+            value = fmt(...)
+        }
+        local i = #statements
+        while i > 1 and statements[i].location == nil or statements[i].location > location do
+            i = i - 1
+        end
+        table.insert(statements, i, statement)
+        return statement
+    end
+
+    local function findStatement(statement)
+        for i, s in ipairs(statements) do
+            if s == statement then
+                return i
+            end
+        end
+        return nil
+    end
+
+    -- This is the location of the code that would be executed after hitting a given endif
+    local function endifStatementNextLocation(index)
+        assertEquals(statements[index].value, "ENDIF")
+        index = index + 1
+        while statements[index].location == nil do
+            index = index + 1
+        end
+        return statements[index].location
+    end
+
+    local function locationIsControlFlowTarget(location)
+        return (gotoLabels[location] or 0) > 0
+            or namedLabels[location] ~= nil
+            or (openIfs[#openIfs] or {}).endifLocation == location
+    end
+
+    local function addGotoStatement(location, dest)
+        -- We maintain a counter for elideGotoStatement() in case there are multiple gotos pointing to the same place.
+        gotoLabels[dest] = (gotoLabels[dest] or 0) + 1
+        branchTargets[dest] = true
+        local s = addStatement(location, "GOTO %s", getLabelName(dest))
+        s.type = "GOTO"
+        s.dest = dest
+    end
+
+    local function elideGotoStatement(idx)
+        local s = statements[idx]
+        assert(s.type == "GOTO", dump(s))
+        assert(gotoLabels[s.dest])
+        s.elided = true
+        gotoLabels[s.dest] = gotoLabels[s.dest] - 1
+        -- Note this doesn't remove from branchTargets because it _is_ still a target even if it's not a target of an
+        -- explicit GOTO.
+    end
+
+    local function addNamedLabel(location, name)
+        if namedLabels[location] == nil then
+            namedLabels[location] = {}
+        end
+        table.insert(namedLabels[location], name)
+        branchTargets[location] = true
+    end
+
+    local function addPrintStatement(type, expr, isLast)
+        local s = addStatement(expr.location)
+        s.type = type
+        s.isLast = isLast
+        s[1] = expr
+    end
+
+    local function makeDecl(var)
+        local decl = var.name
+        if var.arraySz and var.maxLen then
+            decl = fmt("%s(%d, %d)", decl, var.arraySz, var.maxLen)
+        elseif var.arraySz or var.maxLen then
+            decl = fmt("%s(%d)", decl, var.arraySz or var.maxLen)
+        end
+        return decl
+    end
+
+    local function argTypeIsAddressOf(argType)
+        return argType:match("^"..AddressOfPrefix) ~= nil
+    end
+
+    local function argTypeIsVariable(argType)
+        return argType:match("^"..VariablePrefix) ~= nil
+    end
+
+    local function getArgs(argTypes, nargs)
+        assert(nargs <= #argTypes, "Not enough argument types!")
+        local args = {}
+        for i = nargs, 1, -1 do
+            local argType = argTypes[i]
+            local expr, valueType
+            if argTypeIsAddressOf(argType) then
+                valueType = varTypeToType[argType]
+                -- valueType can be nil for AddressOfAny, ie the op accepts a variable of any type (IOC does this)
+                assert(valueType or argType == AddressOfAny, "Unhandled arg type "..argType)
+                expr = popVarAddr(valueType)
+
+            elseif argTypeIsVariable(argType) then
+                valueType = varTypeToType[argType]
+                assert(valueType, "Unhandled arg type "..argType)
+                expr = popVar(valueType)
+            else
+                valueType = assert(suffToType[argType], "Unhandled arg type "..argType)
+                expr = popExpr(valueType)
+            end
+
+            if valueType and isArrayType(valueType) then
+                -- Have to massage expr's arrayIndexExpr to come out right
+                assert(expr.arrayIndexExpr, "Array type without an index expression??")
+                assert(expr.arrayIndexExpr.value == "1", "Unexpected variable array expression")
+                expr.arrayIndexExpr = { value = "" }
+            end
+
+            args[i] = expr
+            -- location = expr.location
+        end
+        return args
+    end
+
+    local function handleStandardOp(location, standardOp)
+        local nargs = #standardOp.args
+        if standardOp.args.numParams then
+            nargs = ip8() + standardOp.args.numFixedParams
+        end
+
+        local args = getArgs(standardOp.args, nargs)
+        if nargs > 0 then
+            location = args[1].location
+        end
+
+        local s = addStatement(location, standardOp.name)
+        if nargs > 0 then
+            local argStrs = {}
+            for i, expr in ipairs(args) do
+                argStrs[i] = eval(expr)
+            end
+            s.value = fmt("%s %s", s.value, table.concat(argStrs, ", "))
+        end
+    end
+
+    local function handleStandardFn(location, standardFn)
+        local nargs = #standardFn.args
+        if standardFn.args.numParams then
+            nargs = ip8()
+        end
+        local args = getArgs(standardFn.args, nargs)
+        if nargs > 0 then
+            location = args[1].location
+        end
+        pushCall(location, standardFn.valType, standardFn.name, table.unpack(args))
+    end
+
+    local function handleMathListFn(location, name)
+        local numParams = ip8()
+        if numParams == 0 then
+            handleStandardFn(location, {
+                name = name,
+                args = { FloatVariableArray, Int },
+                valType = EReal,
+            })
+        else
+            ip = ip - 1
+            local args = { numParams = true }
+            for i = 1, numParams do args[i] = Float end
+            handleStandardFn(location, {
+                name = name,
+                args = args,
+                valType = EReal,
+            })
+        end
+    end
+
+    local function addDbStatement(name)
+        local logName = ip8()
+        local path = popExpr(EString)
+        local args = { eval(path), string.char(string.byte("A") + logName) }
+        while true do
+            local type = ip8()
+            if type == 0xFF then
+                break
+            end
+            local field = ipString()
+            table.insert(args, field)
+        end
+        addStatement(path.location, "%s %s", name, table.concat(args, ", "))
+    end
+
+    local function decodeNextStatement()
+        local location = ip
+        local opCode = ip8()
+        if opCode == 0xFF then
+            opCode = 256 + ip8()
+        end
+
+        -- printf("location %x\n", location)
+
+        -- Decode opCode
+        local op = opcodes[opCode]
+
+        local standardOp = standardOps[op]
+        if standardOp then
+            handleStandardOp(location, standardOp)
+        elseif op == "SimpleDirectRightSideInt" then
+            pushVar(false, EWord, true)
+        elseif op == "SimpleDirectRightSideLong" then
+            pushVar(false, ELong, true)
+        elseif op == "SimpleDirectRightSideFloat" then
+            pushVar(false, EReal, true)
+        elseif op == "SimpleDirectRightSideString" then
+            pushVar(false, EString, true)
+        elseif op == "SimpleDirectLeftSideInt" then
+            pushVar(true, EWord, true)
+        elseif op == "SimpleDirectLeftSideLong" then
+            pushVar(true, ELong, true)
+        elseif op == "SimpleDirectLeftSideFloat" then
+            pushVar(true, EReal, true)
+        elseif op == "SimpleDirectLeftSideString" then
+            pushVar(true, EString, true)
+        elseif op == "SimpleInDirectRightSideInt" then
+            pushVar(false, EWord, false)
+        elseif op == "SimpleInDirectRightSideLong" then
+            pushVar(false, ELong, false)
+        elseif op == "SimpleInDirectRightSideFloat" then
+            pushVar(false, EReal, false)
+        elseif op == "SimpleInDirectRightSideString" then
+            pushVar(false, EString, false)
+        elseif op == "SimpleInDirectLeftSideInt" then
+            pushVar(true, EWord, false)
+        elseif op == "SimpleInDirectLeftSideLong" then
+            pushVar(true, ELong, false)
+        elseif op == "SimpleInDirectLeftSideFloat" then
+            pushVar(true, EReal, false)
+        elseif op == "SimpleInDirectLeftSideString" then
+            pushVar(true, EString, false)
+        elseif op == "ArrayDirectRightSideInt" then
+            pushVar(false, EWordArray, true)
+        elseif op == "ArrayDirectRightSideLong" then
+            pushVar(false, ELongArray, true)
+        elseif op == "ArrayDirectRightSideFloat" then
+            pushVar(false, ERealArray, true)
+        elseif op == "ArrayDirectRightSideString" then
+            pushVar(false, EStringArray, true)
+        elseif op == "ArrayDirectLeftSideInt" then
+            pushVar(true, EWordArray, true)
+        elseif op == "ArrayDirectLeftSideLong" then
+            pushVar(true, ELongArray, true)
+        elseif op == "ArrayDirectLeftSideFloat" then
+            pushVar(true, ERealArray, true)
+        elseif op == "ArrayDirectLeftSideString" then
+            pushVar(true, EStringArray, true)
+        elseif op == "ArrayInDirectRightSideInt" then
+            pushVar(false, EWordArray, false)
+        elseif op == "ArrayInDirectRightSideLong" then
+            pushVar(false, ELongArray, false)
+        elseif op == "ArrayInDirectRightSideFloat" then
+            pushVar(false, ERealArray, false)
+        elseif op == "ArrayInDirectRightSideString" then
+            pushVar(false, EStringArray, false)
+        elseif op == "ArrayInDirectLeftSideInt" then
+            pushVar(true, EWordArray, false)
+        elseif op == "ArrayInDirectLeftSideLong" then
+            pushVar(true, ELongArray, false)
+        elseif op == "ArrayInDirectLeftSideFloat" then
+            pushVar(true, ERealArray, false)
+        elseif op == "ArrayInDirectLeftSideString" then
+            pushVar(true, EStringArray, false)
+        elseif op == "FieldRightSideInt" then
+            pushField(false, EWord)
+        elseif op == "FieldRightSideLong" then
+            pushField(false, ELong)
+        elseif op == "FieldRightSideFloat" then
+            pushField(false, EReal)
+        elseif op == "FieldRightSideString" then
+            pushField(false, EString)
+        elseif op == "FieldLeftSideInt" then
+            pushField(true, EWord)
+        elseif op == "FieldLeftSideLong" then
+            pushField(true, ELong)
+        elseif op == "FieldLeftSideFloat" then
+            pushField(true, EReal)
+        elseif op == "FieldLeftSideString" then
+            pushField(true, EString)
+        elseif op == "ConstantInt" then
+            pushValue(location, EWord, "%d", ips16())
+        elseif op == "ConstantLong" then
+            pushValue(location, ELong, "%d", ips32())
+        elseif op == "ConstantFloat" then
+            pushValue(location, EReal, "%0.15g", ipReal())
+        elseif op == "ConstantString" then
+            pushValue(location, EString, '"%s"', ipString():gsub('"', '""'))
+        elseif op == "CompareLessThanInt" then
+            pushBooleanExpr(EWord, "<")
+        elseif op == "CompareLessThanLong" then
+            pushBooleanExpr(ELong, "<")
+        elseif op == "CompareLessThanFloat" then
+            pushBooleanExpr(EReal, "<")
+        elseif op == "CompareLessThanString" then
+            pushBooleanExpr(EString, "<")
+        elseif op == "CompareLessOrEqualInt" then
+            pushBooleanExpr(EWord, "<=")
+        elseif op == "CompareLessOrEqualLong" then
+            pushBooleanExpr(ELong, "<=")
+        elseif op == "CompareLessOrEqualFloat" then
+            pushBooleanExpr(EReal, "<=")
+        elseif op == "CompareLessOrEqualString" then
+            pushBooleanExpr(EString, "<=")
+        elseif op == "CompareGreaterThanInt" then
+            pushBooleanExpr(EWord, ">")
+        elseif op == "CompareGreaterThanLong" then
+            pushBooleanExpr(ELong, ">")
+        elseif op == "CompareGreaterThanFloat" then
+            pushBooleanExpr(EReal, ">")
+        elseif op == "CompareGreaterThanString" then
+            pushBooleanExpr(EString, ">")
+        elseif op == "CompareGreaterOrEqualInt" then
+            pushBooleanExpr(EWord, ">=")
+        elseif op == "CompareGreaterOrEqualLong" then
+            pushBooleanExpr(ELong, ">=")
+        elseif op == "CompareGreaterOrEqualFloat" then
+            pushBooleanExpr(EReal, ">=")
+        elseif op == "CompareGreaterOrEqualString" then
+            pushBooleanExpr(EString, ">=")
+        elseif op == "CompareEqualInt" then
+            pushBooleanExpr(EWord, "=")
+        elseif op == "CompareEqualLong" then
+            pushBooleanExpr(ELong, "=")
+        elseif op == "CompareEqualFloat" then
+            pushBooleanExpr(EReal, "=")
+        elseif op == "CompareEqualString" then
+            pushBooleanExpr(EString, "=")
+        elseif op == "CompareNotEqualInt" then
+            pushBooleanExpr(EWord, "<>")
+        elseif op == "CompareNotEqualLong" then
+            pushBooleanExpr(ELong, "<>")
+        elseif op == "CompareNotEqualFloat" then
+            pushBooleanExpr(EReal, "<>")
+        elseif op == "CompareNotEqualString" then
+            pushBooleanExpr(EString, "<>")
+        elseif op == "AddInt" then
+            pushBinaryExpr(EWord, "+")
+        elseif op == "AddLong" then
+            pushBinaryExpr(ELong, "+")
+        elseif op == "AddFloat" then
+            pushBinaryExpr(EReal, "+")
+        elseif op == "AddString" then
+            pushBinaryExpr(EString, "+")
+        elseif op == "SubtractInt" then
+            pushBinaryExpr(EWord, "-")
+        elseif op == "SubtractLong" then
+            pushBinaryExpr(ELong, "-")
+        elseif op == "SubtractFloat" then
+            pushBinaryExpr(EReal, "-")
+        elseif op == "StackByteAsWord" then
+            pushValue(location, EWord, "%d", ips8())
+        elseif op == "MultiplyInt" then
+            pushBinaryExpr(EWord, "*")
+        elseif op == "MultiplyLong" then
+            pushBinaryExpr(ELong, "*")
+        elseif op == "MultiplyFloat" then
+            pushBinaryExpr(EReal, "*")
+        elseif op == "RunProcedure" then
+            local procIdx = ip16()
+            local name, numParams
+            for _, subproc in ipairs(proc.subprocs) do
+                if subproc.offset == procIdx then
+                    name = subproc.name
+                    numParams = subproc.numParams
+                    break
+                end
+            end
+            assert(name and numParams, "Failed to find target of RunProcedure!")
+            local retType = getTypeFromName(name)
+            local args = {}
+            for i = numParams, 1, -1 do
+                local argType = tonumber(popExpr(EWord).value)
+                args[i] = popExpr(argType)
+                location = args[i].location
+            end
+            pushCall(location, retType, fmt("%s:", name), table.unpack(args))
+        elseif op == "DivideInt" then
+            pushBinaryExpr(EWord, "/")
+        elseif op == "DivideLong" then
+            pushBinaryExpr(ELong, "/")
+        elseif op == "DivideFloat" then
+            pushBinaryExpr(EReal, "/")
+        elseif op == "CallFunction" then
+            local fnCode = ip8()
+            local fn = fncodes[fnCode]
+            local standardFn = standardFns[fn]
+            if standardFn then
+                handleStandardFn(location, standardFn)
+            elseif fn == "Addr" then
+                -- If this is implicit it will be dropped by the op it's associated with
+                pushCall(location, AddrType, "ADDR", stack:pop())
+            elseif fn == "IoOpen" then
+                handleStandardFn(location, {
+                    name = "IOOPEN",
+                    args = { AddressOfInt, String, Int },
+                    valType = EWord,
+                })
+            elseif fn == "SAddr" then
+                pushCall(location, AddrType, "ADDR", stack:pop())
+            elseif fn == "IoOpenUnique" then
+                handleStandardFn(location, {
+                    name = "IOOPEN",
+                    args = { AddressOfInt, IntPtr, Int },
+                    valType = EWord,
+                })
+            elseif fn == "mPopup" then
+                local numVarArgs = ip8()
+                local args = {}
+                for i = numVarArgs, 4, -2 do
+                    args[i + 1] = evalKeycodeExpr(popExpr(EWord))
+                    args[i] = eval(popExpr(EString))
+                end
+                args[3] = eval(popExpr(EWord)) -- posType
+                args[2] = eval(popExpr(EWord)) -- y
+                local x = popExpr(EWord)
+                args[1] = eval(x)
+                addStatement(title.location, "mPOPUP %s", table.concat(args, ", "))
+            elseif fn == "Max" then
+                handleMathListFn(location, "MAX")
+            elseif fn == "Mean" then
+                handleMathListFn(location, "MEAN")
+            elseif fn == "Min" then
+                handleMathListFn(location, "MIN")
+            elseif fn == "Std" then
+                handleMathListFn(location, "STD")
+            elseif fn == "Sum" then
+                handleMathListFn(location, "SUM")
+            elseif fn == "Var" then
+                handleMathListFn(location, "VAR")
+            else
+                error("Unhandled fn "..fn)
+            end
+        elseif op == "PowerOfInt" then
+            pushBinaryExpr(EWord, "**")
+        elseif op == "PowerOfLong" then
+            pushBinaryExpr(ELong, "**")
+        elseif op == "PowerOfFloat" then
+            pushBinaryExpr(EReal, "**")
+        elseif op == "BranchIfFalse" then
+            local jmp = ips16()
+            local jmpDest = location + jmp
+            branchTargets[jmpDest] = true
+            local expr = popExpr(EWord)
+
+            if jmp < 0 then
+                -- I think the only thing that can produce a backwards BranchIfFalse is DO...UNTIL
+                local doStatement = insertPriorStatement(jmpDest, "DO")
+                local untilStatement = addStatement(expr.location, "UNTIL %s", eval(expr))
+                doStatement.closer = untilStatement
+                untilStatement.type = "UNTIL"
+                untilStatement.opener = doStatement
+            else
+                -- it must be an IF (or an ELSEIF, or a WHILE). Here we will assume all BranchIfFalses are independent
+                -- IF...ENDIF statements, and we will convert IFs to ELSEIFs/WHILEs (and hoist code outside into ELSE)
+                -- based on the flow control at the end of each block (drop through, or not), once we've fully parsed
+                -- it.
+                local ifStatement = addStatement(expr.location, "IF %s", eval(expr))
+                ifStatement.type = "IF"
+                ifStatement.endifLocation = jmpDest
+                ifStatement.cond = expr
+                table.insert(openIfs, ifStatement)
+            end
+        elseif op == "AndInt" then
+            pushBinaryExpr(EWord, "AND")
+        elseif op == "AndLong" then
+            pushBinaryExpr(ELong, "AND")
+        elseif op == "AndFloat" then
+            pushBinaryExpr(EReal, "AND")
+        elseif op == "StackByteAsLong" then
+            pushValue(location, ELong, "%d", ips8())
+        elseif op == "OrInt" then
+            pushBinaryExpr(EWord, "OR")
+        elseif op == "OrLong" then
+            pushBinaryExpr(ELong, "OR")
+        elseif op == "OrFloat" then
+            pushBinaryExpr(EReal, "OR")
+        elseif op == "StackWordAsLong" then
+            pushValue(location, ELong, "%d", ips16())
+        elseif op == "NotInt" then
+            pushUnaryExpr(EWord, "NOT ")
+        elseif op == "NotLong" then
+            pushUnaryExpr(ELong, "NOT ", EWord)
+        elseif op == "NotFloat" then
+            pushUnaryExpr(EReal, "NOT ", EWord)
+        elseif op == "UnaryMinusInt" then
+            pushUnaryExpr(EWord, "-")
+        elseif op == "UnaryMinusLong" then
+            pushUnaryExpr(ELong, "-")
+        elseif op == "UnaryMinusFloat" then
+            pushUnaryExpr(EReal, "-")
+        elseif op == "CallProcByStringExpr" then
+            local numParams = ip8()
+            local typech = ip8()
+            local type = typech == 0 and EReal or assert(suffToType[string.char(typech)])
+            local args = {}
+            for i = numParams, 1, -1 do
+                local t = assert(tonumber(popExpr(EWord).value))
+                args[i] = popExpr(t)
+            end
+            local name = popExpr(EString)
+            pushCall(name.location, type, fmt("@%s(%s):", DataTypeSuffix[type], eval(name)), table.unpack(args))
+        elseif op == "PercentLessThan" then
+            pushBinaryExpr(EReal, "<%")
+        elseif op == "PercentGreaterThan" then
+            pushBinaryExpr(EReal, ">%")
+        elseif op == "PercentAdd" then
+            pushBinaryExpr(EReal, "+%")
+        elseif op == "PercentSubtract" then
+            pushBinaryExpr(EReal, "-%")
+        elseif op == "PercentMultiply" then
+            pushBinaryExpr(EReal, "*%")
+        elseif op == "PercentDivide" then
+            pushBinaryExpr(EReal, "/%")
+        elseif op == "ZeroReturnInt" or op == "ZeroReturnLong" or op == "ZeroReturnFloat" or op == "NullReturnString" then
+            local s = addStatement(location, "RETURN")
+            if ip == endIdx then
+                s.elided = true
+            end
+        elseif op == "LongToInt" then
+            pushUnaryExpr(ELong, "CAST", EWord)
+        elseif op == "FloatToInt" then
+            pushUnaryExpr(EReal, "CAST", EWord)
+        elseif op == "FloatToLong" then
+            pushUnaryExpr(EReal, "CAST", ELong)
+        elseif op == "IntToLong" then
+            pushUnaryExpr(EWord, "CAST", ELong)
+        elseif op == "IntToFloat" then
+            pushUnaryExpr(EWord, "CAST", EReal)
+        elseif op == "LongToFloat" then
+            pushUnaryExpr(ELong, "CAST", EReal)
+        elseif op == "LongToUInt" then
+            pushUnaryExpr(ELong, "CAST", EWord)
+        elseif op == "FloatToUInt" then
+            pushUnaryExpr(EReal, "CAST", EWord)
+        elseif op == "DropInt" then
+            local expr = popExpr(EWord)
+            addStatement(expr.location, eval(expr))
+        elseif op == "DropLong" then
+            local expr = popExpr(ELong)
+            addStatement(expr.location, eval(expr))
+        elseif op == "DropFloat" then
+            local expr = popExpr(EReal)
+            addStatement(expr.location, eval(expr))
+        elseif op == "DropString" then
+            local expr = popExpr(EString)
+            addStatement(expr.location, eval(expr))
+        elseif op == "AssignInt" then
+            local expr = popExpr(EWord)
+            local var = popVar(EWord)
+            addStatement(var.location, "%s = %s", eval(var), eval(expr))
+        elseif op == "AssignLong" then
+            local expr = popExpr(ELong)
+            local var = popVar(ELong)
+            addStatement(var.location, "%s = %s", eval(var), eval(expr))
+        elseif op == "AssignFloat" then
+            local expr = popExpr(EReal)
+            local var = popVar(EReal)
+            addStatement(var.location, "%s = %s", eval(var), eval(expr))
+        elseif op == "AssignString" then
+            local expr = popExpr(EString)
+            local var = popVar(EString)
+            addStatement(var.location, "%s = %s", eval(var), eval(expr))
+        elseif op == "PrintInt" then
+            addPrintStatement("PRINT", popExpr(EWord))
+        elseif op == "PrintLong" then
+            addPrintStatement("PRINT", popExpr(ELong))
+        elseif op == "PrintFloat" then
+            addPrintStatement("PRINT", popExpr(EReal))
+        elseif op == "PrintString" then
+            addPrintStatement("PRINT", popExpr(EString))
+        elseif op == "LPrintInt" then
+            addPrintStatement("LPRINT", popExpr(EWord))
+        elseif op == "LPrintLong" then
+            addPrintStatement("LPRINT", popExpr(ELong))
+        elseif op == "LPrintFloat" then
+            addPrintStatement("LPRINT", popExpr(EReal))
+        elseif op == "LPrintString" then
+            addPrintStatement("LPRINT", popExpr(EString))
+        elseif op == "PrintSpace" then
+            addPrintStatement("PRINT", {
+                type = "expr",
+                location = location, 
+                value = " ",
+                valType = EString,
+            })
+        elseif op == "LPrintSpace" then
+            addPrintStatement("LPRINT", {
+                type = "expr",
+                location = location, 
+                value = " ",
+                valType = EString,
+            })
+        elseif op == "PrintCarriageReturn" then
+            addPrintStatement("PRINT", {
+                type = "expr",
+                location = location, 
+                value = "\x0D\x0A",
+                valType = EString,
+            }, true)
+        elseif op == "LPrintCarriageReturn" then
+            addPrintStatement("LPRINT", {
+                type = "expr",
+                location = location, 
+                value = "\x0D\x0A",
+                valType = EString,
+            }, true)
+        elseif op == "InputInt" then
+            local var = popVar(EWord)
+            addStatement(var.location, "INPUT %s", eval(var))
+        elseif op == "InputLong" then
+            local var = popVar(ELong)
+            addStatement(var.location, "INPUT %s", eval(var))
+        elseif op == "InputFloat" then
+            local var = popVar(EReal)
+            addStatement(var.location, "INPUT %s", eval(var))
+        elseif op == "InputString" then
+            local var = popVar(EString)
+            addStatement(var.location, "INPUT %s", eval(var))
+        elseif op == "Create" then
+            addDbStatement("CREATE")
+        elseif op == "Cursor" then
+            local immediate = ip8()
+            if immediate == 0 then
+                addStatement(location, "CURSOR OFF")
+            elseif immediate == 1 then
+                addStatement(location, "CURSOR ON")
+            elseif immediate == 2 then
+                handleStandardOp(location, { name = "CURSOR", args = { Int } })
+            elseif immediate == 3 then
+                handleStandardOp(location, { name = "CURSOR", args = { Int, Int, Int, Int } })
+            elseif immediate == 4 then
+                handleStandardOp(location, { name = "CURSOR", args = { Int, Int, Int, Int, Int } })
+            else
+                error("Unexpected immediate "..tostring(immediate))
+            end
+        elseif op == "Delete" then
+            handleStandardOp(location, {
+                name = "DELETE",
+                args = { String },
+            })
+        elseif op == "Escape" then
+            local flag = ip8()
+            addStatement(location, "ESCAPE %s", flag == 0 and "OFF" or "ON")
+        elseif op == "Vector" then
+            local expr = popExpr(EWord)
+            local ncases = ip16()
+            local vector = addStatement(location, "VECTOR %s", eval(expr))
+            for i = 1, ncases do
+                local dest = location + ips16()
+                local label = fmt("vector_%04X_case_%d", location, i)
+                addNamedLabel(dest, label.."::")
+                addStatement(location + i * 2, label)
+            end
+            local endv = addStatement(location + 2 + ncases * 2, "ENDV")
+            endv.opener = vector
+            vector.closer = endv
+        elseif op == "OnErr" then
+            local offset = ips16()
+            if offset == 0 then
+                addStatement(location, "ONERR OFF")
+            else
+                local dest = location + offset
+                local label = fmt("errhandler_%04X", dest)
+                addNamedLabel(dest, label.."::")
+                addStatement(location, "ONERR %s", label)
+            end
+        elseif op == "Off" then
+            addStatement(location, "OFF")
+        elseif op == "OffFor" then
+            local expr = popExpr(EWord)
+            addStatement(expr.location, "OFF %s", eval(expr))
+        elseif op == "Open" then
+            addDbStatement("OPEN")
+        elseif op == "Trap" then
+            trap = location
+        elseif op == "Use" then
+            local logName = ip8()
+            addStatement(location, "USE %c", logName + string.byte("A"))
+        elseif op == "GoTo" then
+            local jmp = ips16()
+            local jmpDest = location + jmp
+            addGotoStatement(location, jmpDest)
+        elseif op == "Return" then
+            local expr = popExpr()
+            addStatement(expr.location, "RETURN %s", eval(expr))
+        elseif op == "OpenR" then
+            addDbStatement("OPENR")
+        elseif op == "gVisible" then
+            local flag = ip8()
+            addStatement(location, "gVISIBLE %s", flag == 0 and "OFF" or "ON")
+        elseif op == "gPrintWord" then
+            addPrintStatement("gPRINT", popExpr(EWord))
+        elseif op == "gPrintLong" then
+            addPrintStatement("gPRINT", popExpr(ELong))
+        elseif op == "gPrintDbl" then
+            addPrintStatement("gPRINT", popExpr(EReal))
+        elseif op == "gPrintStr" then
+            addPrintStatement("gPRINT", popExpr(EString))
+        elseif op == "gPrintSpace" then
+            addPrintStatement("gPRINT", {
+                type = "expr",
+                location = location, 
+                value = " ",
+                valType = EString,
+            })
+        elseif op == "gUpdate" then
+            local flag = ip8()
+            if flag == 255 then
+                addStatement(location, "gUPDATE")
+            elseif flag == 0 then
+                addStatement(location, "gUPDATE OFF")
+            else
+                addStatement(location, "gUPDATE ON")
+            end
+        elseif op == "gPeekLine" then
+            local modeArg = era == "er5" and Int or nil
+            handleStandardOp(location, {
+                name = "gPEEKLINE",
+                args = { Int, Int, Int, AddressOfIntArray, Int, modeArg }
+            })
+        elseif op == "mCard" then
+            local numVarArgs = ip8() * 2
+            local args = {}
+            for i = numVarArgs, 2, -2 do
+                args[i + 1] = evalKeycodeExpr(popExpr(EWord))
+                args[i] = eval(popExpr(EString))
+            end
+            local title = popExpr(EString)
+            args[1] = eval(title)
+            addStatement(title.location, "mCARD %s", table.concat(args, ", "))
+        elseif op == "dItem" then
+            local itemType = ip8()
+            if itemType == dItemTypes.dTEXT then
+                local flagSuff = ""
+                if ip8() ~= 0 then
+                    flagSuff = fmt(", %s", eval(popExpr(EWord)))
+                end
+                local body = popExpr(EString)
+                local prompt = popExpr(EString)
+                addStatement(prompt.location, "dTEXT %s, %s%s", eval(prompt), eval(body), flagSuff)
+            elseif itemType == dItemTypes.dCHOICE then
+                handleStandardOp(location, {
+                    name = "dCHOICE",
+                    args = { IntVariable, String, String },
+                })
+            elseif itemType == dItemTypes.dLONG then
+                handleStandardOp(location, {
+                    name = "dLONG",
+                    args = { LongVariable, String, Long, Long },
+                })
+            elseif itemType == dItemTypes.dFLOAT then
+                handleStandardOp(location, {
+                    name = "dFLOAT",
+                    args = { FloatVariable, String, Float, Float },
+                })
+            elseif itemType == dItemTypes.dTIME then
+                handleStandardOp(location, {
+                    name = "dTIME",
+                    args = { LongVariable, String, Int, Long, Long },
+                })
+            elseif itemType == dItemTypes.dDATE then
+                handleStandardOp(location, {
+                    name = "dDATE",
+                    args = { LongVariable, String, Long, Long },
+                })
+            elseif itemType == dItemTypes.dEDIT then
+                handleStandardOp(location, {
+                    name = "dEDIT",
+                    args = { StringVariable, String },
+                })
+            elseif itemType == dItemTypes.dEDITlen then
+                handleStandardOp(location, {
+                    name = "dEDIT",
+                    args = { StringVariable, String, Int },
+                })
+            elseif itemType == dItemTypes.dXINPUT then
+                handleStandardOp(location, {
+                    name = "dXINPUT",
+                    args = { StringVariable, String },
+                })
+            elseif itemType == dItemTypes.dFILE then
+                local uidsuff = ""
+                -- Unlike so many commands that got a new opcode when extended, they just straight up changed the number
+                -- of arguments dFILE takes (although I'm unsure if this was sibo->er5 or something the 3c-era did)
+                if era == "er5" then
+                    local uid3 = popExpr(ELong)
+                    local uid2 = popExpr(ELong)
+                    local uid1 = popExpr(ELong)
+                    if uid1.value == "0" and uid2.value == "0" and uid3.value == "0" then
+                        -- ER5 2-arg syntax just pushed 3 literal zeros onto the stack
+                    else
+                        uidSuff = fmt(", %s, %s, %s", eval(uid1), eval(uid2), eval(uid3))
+                    end
+                end
+                local flags = popExpr(EWord)
+                local prompt = popExpr(EString)
+                local var = popVar(EString)
+                addStatement(var.location, "dFILE %s, %s, %s%s", eval(var), eval(prompt), eval(flags), uidSuff)
+            elseif itemType == dItemTypes.dBUTTONS then
+                local nargs = ip8() * 2
+                local args = {}
+                for i = nargs - 1, 1, -2 do
+                    args[i + 1] = eval(popExpr(EWord))
+                    local prompt = popExpr(EString)
+                    args[i] = eval(prompt)
+                    location = prompt.location
+                end
+                addStatement(location, "dBUTTONS %s", table.concat(args, ", "))
+            elseif itemType == dItemTypes.dPOSITION then
+                handleStandardOp(location, {
+                    name = "dPOSITION",
+                    args = { Int, Int },
+                })
+            elseif itemType == dItemTypes.dCHECKBOX then
+                handleStandardOp(location, {
+                    name = "dCHECKBOX",
+                    args = { IntVariable, String },
+                })
+            else
+                error(fmt("Unhandled dItemType %d", itemType))
+            end
+        elseif op == "Busy" then
+            local nargs = ip8()
+            if nargs == 0 then
+                addStatement(location, "BUSY OFF")
+            else
+                ip = ip - 1 -- Rewind because handleStandardOp expects to read it to check numParams
+                handleStandardOp(location, {
+                    name = "BUSY",
+                    args = { String, Int, Int, numParams = { 1, 2, 3 }, numFixedParams = 0 }
+                })
+            end
+        elseif op == "Lock" then
+            local flag = ip8()
+            addStatement(location, "LOCK %s", flag == 0 and "OFF" or "ON")
+        elseif op == "gClock" then
+            local qualifier = ip8()
+            if qualifier <= 1 then
+                addStatement(location, "gCLOCK %s", qualifier == 0 and "OFF" or "ON")
+            else
+                ip = ip - 1
+                handleStandardOp(location, {
+                    name = "gCLOCK ON,",
+                    args = { Int, IntPtr, String, IntPtr, Int, numParams = {1, 2, 3, 4, 5}, numFixedParams = -1 },
+                })
+            end
+        elseif op == "CallOpxFunc" then
+            local opxNo = ip8()
+            local fnIdx = ip16()
+            local opx = assert(opxTable[1 + opxNo], "Bad opx id?")
+            -- Well this is a challenge... the OPX calling convention has no indication as to how many arguments the
+            -- call has, or their types. Individual functions are free to manipulate the stack as they see fit. We can
+            -- however extract them from the original DECLARE OPX declaration, which means we can work with the
+            -- built-in OPXes, at least. It's very annoying this info isn't part of the call info, like it is with
+            -- RunProcedure.
+            local oxh = require("includes."..opx.name:lower().."_oxh")
+            local decls = require("compiler").docompile(modName, nil, oxh, nil).procDecls
+            local decl = assert(decls[fnIdx], "Function not found in OPX")
+            local fnName = decl.sourceName
+            local retType = getTypeFromName(fnName)
+            local args = getArgs(decl.args, #decl.args)
+            if args[1] then
+                location = args[1].location
+            end
+            pushCall(location, retType, fnName..":", table.unpack(args))
+        elseif op == "DeleteTable" then
+            handleStandardOp(location, {
+                name = "DELETE",
+                args = { String, String },
+            })
+        elseif op == "mCasc" then
+            local numVarArgs = ip8() * 2
+            local args = {}
+            for i = numVarArgs, 2, -2 do
+                args[i + 1] = evalKeycodeExpr(popExpr(EWord))
+                args[i] = eval(popExpr(EString))
+            end
+            local title = popExpr(EString)
+            args[1] = eval(title)
+            addStatement(title.location, "mCASC %s", table.concat(args, ", "))
+        else
+            error("Unhandled op "..(op or fmt("0x%02X", opCode)))
+        end
+
+        if op ~= "Trap" then
+            trap = false
+        end
+    end
+
+    local realCodeStart = proc.codeOffset
+    while ip < endIdx do
+        if ip == realCodeStart and string.unpack("B", proc.data, 1 + ip) == 0xBF then
+            -- Workaround for a main proc starting with a goto that jumps over some non-code
+            -- data.
+            local jmp = string.unpack("<i2", proc.data, 1 + ip + 1)
+            local newIp = ip + jmp
+            -- handleStandardOp(location, standardOps["GoTo"])
+            addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+            realCodeStart = newIp
+            ip = newIp
+        elseif string.unpack("c3", proc.data, 1 + ip) == "\x4F\x00\x5B" then
+            -- Similarly, workaround a [StackByteAsWord] 0, [BranchIfFalse]
+            local jmp = string.unpack("<i2", proc.data, 1 + ip + 3)
+            if jmp > 0 then
+                local newIp = ip + 2 + jmp
+                addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+                realCodeStart = newIp
+                ip = newIp
+            else
+                decodeNextStatement()
+            end
+        else
+            decodeNextStatement()
+        end
+    end
+
+    local endp = addStatement(proc.codeOffset + proc.codeSize, "ENDP")
+    endp.opener = true -- trust me bro
+
+    local args = {}
+    for i, type in ipairs(proc.params) do
+        args[i] = fmt("param_%d%s", i, DataTypeSuffix[type])
+    end
+    local argstr
+    if #args > 0 then
+        argstr = fmt("(%s)", table.concat(args, ", "))
+    else
+        argstr = ""
+    end
+
+    if annotate then
+        printf("%08X: PROC %s:%s\n", proc.offset, proc.name, argstr)
+    else
+        printf("PROC %s:%s\n", proc.name, argstr)
+    end
+
+    local blockNest = { { type = "PROC" } } -- Stack of block scopes, where a block here is code inside a IF/ELSEIF/DO/WHILE 
+    local function emit(val, ...)
+        local str, location, elided
+        if type(val) == "string" then
+            str = fmt(val, ...)
+            location = nil
+        else
+            local statement = val
+            location = statement.location
+            if statement.elided and not annotate then
+                return
+            end
+            if statement.type == "PRINT" or statement.type == "gPRINT" or statement.type == "LPRINT" then
+                local parts = { statement.type }
+                local needsSep = false
+                for i, part in ipairs(statement) do
+                    if part.value == " " and needsSep then
+                        table.insert(parts, ",")
+                        needsSep = false
+                    elseif part.value == "\x0D\x0A" and needsSep then
+                        needsSep = false
+                    else
+                        if needsSep then
+                            table.insert(parts, ";")
+                        end
+                        table.insert(parts, " "..eval(part))
+                        needsSep = true
+                    end
+                end
+                if needsSep and statement.type ~= "gPRINT" then
+                    -- gPRINT doesn't need a semicolon at the end
+                    table.insert(parts, ";")
+                end
+                str = fmt("%s", table.concat(parts, ""))
+            else
+                str = fmt("%s", statement.value)
+                if annotate then
+                    if statement.type == "IF" or statement.value == "ELSE" then
+                        str = fmt("%s :rem endif=%04X", str, statement.endifLocation)
+                    elseif statement.value == "ENDIF" then
+                        str = fmt("%s :rem if=%04X", str, statement.opener.location)
+                    end
+                end
+            end
+
+            if statement.elided then
+                str = "REM "..str
+            end
+        end
+
+        local prefix
+        if annotate then
+            prefix = fmt("%s: %s", location and fmt("%08X", location) or "        ", string.rep("    ", #blockNest))
+        else
+            prefix = string.rep("    ", #blockNest)
+        end
+        print(prefix..str)
+    end
+
+    -- We emit variables after parsing the proc so we can benefit from type inference from the variable instructions
+    -- to set variable types (and declare locals) that wouldn't otherwise be known.
+    local sortedVars = sortedKeys(vars)
+    for _, index in ipairs(sortedVars) do
+        local var = vars[index]
+        if var.isGlobal then
+            emit("GLOBAL %s", makeDecl(var))
+        end
+    end
+    for _, index in ipairs(sortedVars) do
+        local var = vars[index]
+        if var.directIdx and not var.isGlobal then
+            emit("LOCAL %s", makeDecl(var))
+        end
+    end
+
+    -- Do a pass to transform IF statements into something more legible. At this point the only control structures we
+    -- have are IF...ENDIF and DO...UNTIL.
+    local i = 1
+    while i < #statements do
+        local s = statements[i]
+        if s.value == "ENDIF" then
+            local ifStatement = s.opener
+            local nextStatement = statements[i + 1]
+            -- For previous statement here, we're only interested in statements with actual code, ie ignoring any ENDIFs
+            -- that happen to be there, or similar (there probably can't be any here in the case of the GOTO on an
+            -- actual ENDIF but possibly an ENDIF that's due to be transformed into an ENDWH, it could have been
+            -- hoisted before a nested ENDIF).
+            local prevRealStatementIdx = i - 1
+            while statements[prevRealStatementIdx].location == nil do
+                 prevRealStatementIdx = prevRealStatementIdx - 1
+            end
+            local prevStatement = statements[prevRealStatementIdx]
+
+            if s.elseStatement == nil and prevStatement.type == "GOTO" and prevStatement.dest > prevStatement.location then
+                -- Execution does not drop through the current ENDIF so we can hoist up to the prevStatement GOTO dest,
+                -- or a higher nested ENDIF/UNTIL, whichever occurs first (this last caveat is to handle BREAKs)
+
+                local endifStatement = {
+                    value = "ENDIF",
+                    opener = s.opener,
+                    elseStatement = s,
+                }
+                -- Transform the current ENDIF into an ELSE
+                s.value = "ELSE"
+                ifStatement.closer = endifStatement
+                s.closer = endifStatement
+                s.opener.closer = endifStatement
+
+                -- And add the new ENDIF, being sure not to extend past an outer block boundary
+                local endifIndex = i
+                repeat
+                    endifIndex = endifIndex + 1
+                    local stmt = statements[endifIndex]
+                    -- stmt.opener == true is the hack used by ENDP so make sure we don't blast past that
+                until stmt.location == prevStatement.dest or stmt.opener == true or (stmt.opener and stmt.opener.location < s.opener.location)
+                table.insert(statements, endifIndex, endifStatement)
+                s.endifLocation = endifStatementNextLocation(endifIndex)
+                s.opener.endifLocation = s.endifLocation
+
+                -- And we can remove the GOTO, providing it was a straightforward end-of-if-block jump and not a BREAK
+                if prevStatement.dest == s.endifLocation then
+                    elideGotoStatement(prevRealStatementIdx)
+                end
+            end
+
+            if s.value == "ENDIF" and prevStatement.type == "GOTO" and prevStatement.dest == s.opener.location then
+                -- It's a WHILE...ENDWH not an IF...ENDIF
+                s.value = "ENDWH"
+                s.opener.type = "WHILE"
+                s.opener.value = fmt("WHILE %s", eval(s.opener.cond))
+                elideGotoStatement(prevRealStatementIdx)
+            end
+
+            if s.value == "ENDIF" then -- ie none of the previous checks changed this to not be an ENDIF
+                -- Now we've fully figured out the final location for this ENDIF, look at its IF to see if there's a
+                -- prior ELSE we can combine into a ELSEIF. This is only valid to do if the previous ELSE's ENDIF
+                -- location is identical to this IF's.
+                local ifStatement = s.opener
+                local endifStatement = ifStatement.closer
+                assert(endifStatement == s)
+                local ifIdx = assert(findStatement(ifStatement))
+                local endifIdx = assert(findStatement(endifStatement))
+                local prevStatement = statements[ifIdx - 1]
+                if prevStatement and prevStatement.value == "ELSE" and endifStatementNextLocation(endifIdx) == endifStatementNextLocation(findStatement(prevStatement.closer)) then
+                    -- Transform the inner IF into an ELSEIF subordinate to the outer IF
+                    ifStatement.value = "ELSE"..ifStatement.value
+                    ifStatement.opener = prevStatement.opener
+                    ifStatement.closer = prevStatement.closer
+                    -- Remove the dead ENDIF
+                    table.remove(statements, i)
+                    i = i - 1
+
+                    -- And the ELSE
+                    table.remove(statements, ifIdx - 1)
+                    i = i - 1
+                end
+            end
+        end
+
+        i = i + 1
+    end
+
+    -- And a pass analysing DO...UNTIL and WHILE...ENDWH for GOTOs that are actually BREAKs or CONTINUEs
+    i = 1
+    local controlBlockNest = {}
+    while i < #statements do
+        local s = statements[i]
+        if s.value == "DO" or s.type == "WHILE" then
+            table.insert(controlBlockNest, i)
+        elseif s.type == "UNTIL" then
+            assert(statements[controlBlockNest[#controlBlockNest]].value == "DO", "UNTIL does not nest with a DO??")
+            controlBlockNest[#controlBlockNest] = nil
+        elseif s.value == "ENDWH" then
+            assert(statements[controlBlockNest[#controlBlockNest]].type == "WHILE", "ENDWH does not nest with a WHILE??")
+            controlBlockNest[#controlBlockNest] = nil
+        elseif s.type == "GOTO" and not s.elided and #controlBlockNest > 0 then
+            local currentBlock = statements[controlBlockNest[#controlBlockNest]]
+            local breakDest = statements[findStatement(currentBlock.closer) + 1].location
+            local continueDest
+            if currentBlock.value == "DO" then
+                continueDest = currentBlock.closer.location
+            else -- WHILE
+                continueDest = currentBlock.location
+            end
+            if s.dest == breakDest then
+                s.value = "BREAK"
+                gotoLabels[s.dest] = gotoLabels[s.dest] - 1
+            elseif s.dest == continueDest then
+                s.value = "CONTINUE"
+            end
+        end
+        i = i + 1
+    end
+
+    -- A pass to coelesce PRINT statements - do this only after all other statements like ENDIFs have been inserted
+    i = 1
+    while i < #statements do
+        local s = statements[i]
+        local isPrint = s.type == "gPRINT" or s.type == "PRINT" or s.type == "LPRINT"
+        -- Can we merge this with a previous statement?
+        if isPrint and i > 1 and not branchTargets[s.location] then
+            local prevStatement = statements[i - 1]
+            if prevStatement.type == s.type and not prevStatement.isLast then
+                assert(#s == 1)
+                table.insert(prevStatement, s[1])
+                prevStatement.isLast = s.isLast
+                table.remove(statements, i)
+                i = i - 1
+            end
+        end
+        i = i + 1
+    end
+
+    -- Finally, print each statement
+    for i, statement in ipairs(statements) do
+        if (gotoLabels[statement.location] or 0) > 0 then
+            emit("%s", getLabelName(statement.location))
+            gotoLabels[statement.location] = nil
+        end
+        if namedLabels[statement.location] then
+            for _, name in ipairs(namedLabels[statement.location]) do
+                emit("%s", name)
+            end
+            namedLabels[statement.location] = nil
+        end
+        if statement.opener then -- if it has an opener, it's a block closer
+            blockNest[#blockNest] = nil
+        end
+        emit(statement)
+        if statement.closer then -- likewise if it has a closer, it's a block opener
+            table.insert(blockNest, statement)
+        end
+    end
+
+    -- This should really be done earlier but then you have no output to diagnose
+    if #openIfs > 0 then
+        print(dump(openIfs))
+        error("Unclosed IFs at end of parsing!")
+    end
+    for loc, ref in pairs(gotoLabels) do
+        if ref == 0 then
+            gotoLabels[loc] = nil
+        end
+    end
+    if next(gotoLabels) then
+        print(dump(gotoLabels))
+        error("Left over named labels at end of parsing!")
+    end
+    if next(namedLabels) then
+        print(dump(namedLabels))
+        error("Left over named labels at end of parsing!")
+    end
+end
+
+return _ENV

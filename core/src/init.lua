@@ -142,6 +142,11 @@ function isArrayType(t)
     return t & 0x80 > 0
 end
 
+function arrayMemberType(t)
+    assert(isArrayType(t))
+    return t & ~0x80
+end
+
 DefaultSimpleTypes = {
     [DataTypes.EWord] = 0,
     [DataTypes.ELong] = 0,

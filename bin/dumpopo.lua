@@ -33,23 +33,54 @@ function main()
         "startAddr",
         all = true, a = "all",
         help = true, h = "help",
+        decompile = true, d = "decompile",
+        annotate = true, n = "annotate",
     })
     local fnName = args.fnName
     local all = args.all
     if args.help then
-        printf("Syntax: dumpopo.lua <filename> [--all]\n")
-        printf("        dumpopo.lua <filename> [<fnName> [<startAddr>]]\n")
+        printf([=[
+Syntax: dumpopo.lua <filename> [options] [<procName> [<startAddr>]]
+
+Prints information about the specified OPO (compiled OPL) file.
+
+If just a filename is specified, prints information about the file and all the
+procedures it contains. With --all or a <procName>, prints an assembly listing
+of all procedures or the specified procedure, respectively. The <startAddr>
+argument can be used to skip over some amount of the procedure code, which can
+be useful when debugging code using obfuscation techniques.
+
+Options:
+
+    --all, -a
+        Prints assembly listing of all procedures, if neither <procName> or
+        --decompile is specified.
+
+    --decompile, -d
+        Convert the compiled code back to OPL source code and print to stdout.
+        Decompiles all procedures unless <procName> is specified.
+
+    --annotate, -n
+        Adds some annotations to the output of --decompile, such as labels and
+        GOTOs that normally wouldn't appear in the source.
+]=])
         return os.exit(false)
     end
     local data = readFile(args.filename)
     local startAddr = args.startAddr and tonumber(args.startAddr, 16)
-    local verbose = all or fnName == nil
+    local verbose = not args.decompile and (all or fnName == nil)
     opofile = require("opofile")
     runtime = require("runtime")
     local procTable, opxTable, era = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime(nil, era)
     rt:addModule("C:\\module", procTable, opxTable)
-    if fnName then
+    if args.decompile then
+        if fnName then
+            require("decompiler").decompileProc(rt:findProc(fnName:upper()), opxTable, era, args.annotate)
+        else
+            require("decompiler").decompile(procTable, opxTable, era, args.annotate)
+        end
+    elseif fnName then
         opofile.printProc(rt:findProc(fnName:upper()))
         rt:dumpProc(fnName:upper(), startAddr)
     else
