@@ -647,6 +647,12 @@ checkCode('MENU', {
     op"DropInt",
 })
 
+checkCode('OFF : OFF 5', {
+    op"Off",
+    op"StackByteAsWord", 5,
+    op"OffFor",
+})
+
 checkSyntaxError("ALERT()", "1: Zero-argument calls should not have ()")
 
 checkSyntaxError("alert(a$, b$, c$, d$, e$, f$)", "1: Wrong number of arguments to ALERT")
