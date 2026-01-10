@@ -1021,11 +1021,13 @@ function Runtime:dumpProc(procName, startAddr)
             -- Similarly, workaround a [StackByteAsWord] 0, [BranchIfFalse]
             -- Which in TileFall, happens in the middle of a proc.
             local jmp = string.unpack("<i2", self.data, 1 + self.ip + 3)
-            local newIp = self.ip + 2 + jmp
-            print(self:decodeNextInstruction()) -- StackByteAsWord
-            print(self:decodeNextInstruction()) -- BranchIfFalse
-            self:dumpRawBytesUntil(newIp)
-            realCodeStart = newIp
+            if jmp > 0 then
+                local newIp = self.ip + 2 + jmp
+                print(self:decodeNextInstruction()) -- StackByteAsWord
+                print(self:decodeNextInstruction()) -- BranchIfFalse
+                self:dumpRawBytesUntil(newIp)
+                realCodeStart = newIp
+            end
         elseif self.ip == realCodeStart and self.data:sub(1 + self.ip, self.ip + 10):match("[\x00\x08]..\x4F.\x40%\x5B..%\x2B") then
             -- Another variant which does a CompareEqualInt against an extern
             -- variable that's (afaics) always going to be zero.
