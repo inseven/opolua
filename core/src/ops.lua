@@ -286,7 +286,7 @@ codes_er5 = {
     [0xFD] = "IllegalOpCode",
     [0xFE] = "IllegalOpCode",
     [0xFF] = "NextOpcodeTable",
-    [0x100] = "gGrey_epoc",
+    [0x100] = "gGrey_er5",
     [0x101] = "DefaultWin",
     [0x102] = "IllegalOpCode",
     [0x103] = "IllegalOpCode",
@@ -2465,7 +2465,7 @@ function NextOpcodeTable_dump(runtime)
     return fmt("%02X %s %s", extendedCode, fnName, dumpFn and dumpFn(runtime) or "")
 end
 
-function gGrey_epoc(stack, runtime) -- 0x100
+function gGrey_er5(stack, runtime) -- 0x100
     local mode = stack:pop()
     local val = mode == 1 and 0xAA or 0
     runtime:gCOLOR(val, val, val)
