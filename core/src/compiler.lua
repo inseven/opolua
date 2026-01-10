@@ -283,13 +283,14 @@ function lex(prog, source, language)
         elseif tok == "space" or tok == "comment" then
             col = col + #val            
         else
+            local tokenSource = val
             if tok == "identifier" or tok == "label" then
                 val = val:upper()
                 if language.identifierTokens[val] then
                     tok = val
                 end
             end
-            table.insert(tokens, Token { type=tok, val=val, src={source, line, col} })
+            table.insert(tokens, Token { type=tok, val=val, src={source, line, col}, tokenSource = tokenSource })
             col = col + #val
         end
     end
@@ -474,7 +475,7 @@ Callables = {
     GFILL = Op("gFill", {Int, Int, Int}),
     GFONT = Op("gFont", {IntPtr}),
     GGMODE = Op("gGMode", {Int}),
-    GGREY = Op("gGrey_epoc", {Int}),
+    GGREY = Op("gGrey_er5", {Int}),
     GHEIGHT = Fn("gHeight", {}, Int),
     GIDENTITY = Fn("gIdentity", {}, Int),
     GINFO32 = Op("gInfo32", {LongArrayVariable}),
@@ -1089,6 +1090,7 @@ function parseProcDeclaration(declType, tokens, procDecls)
         declType = declType,
         valType = valTypeFromName(name),
         src = nameToken.src,
+        sourceName = procNameFromName(nameToken.tokenSource),
     }
 
     local priorDecl = procDecls and procDecls[name]
@@ -2736,8 +2738,10 @@ function docompile(path, realPath, programText, includePaths)
                 consts[name] = exp
             end
             for name, decl in pairs(prog.procDecls) do
-                synassert(procDecls[decl.name] == nil, decl, "Procedure %s in OPX already defined", decl.name)
-                procDecls[name] = decl
+                if type(name) == "string" then
+                    synassert(procDecls[decl.name] == nil, decl, "Procedure %s in OPX already defined", decl.name)
+                    procDecls[name] = decl
+                end
             end
         elseif token.type == "CONST" then
             local idtoken = tokens:expectNext("identifier")
@@ -2775,9 +2779,10 @@ function docompile(path, realPath, programText, includePaths)
             else
                 local opx = parseOpx(tokens, consts)
                 -- Add all the opx fns to our procDecls
-                for _, decl in ipairs(opx.procDecls) do
+                for i, decl in ipairs(opx.procDecls) do
                     synassert(procDecls[decl.name] == nil, decl, "Procedure %s in OPX already defined", decl.name)
                     procDecls[decl.name] = decl
+                    procDecls[i] = decl
                 end
             end
         elseif token.type == "EXTERNAL" then
