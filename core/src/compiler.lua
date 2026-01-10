@@ -316,6 +316,15 @@ IntPtr = Long -- Like intptr_t - would be Int on the 16-bit sibo, if we ever sup
 -- The following are used by args in Callables. Values are arbitrary as these should be considered opaque.
 
 -- This are for argument variables that are pushed onto the stack but _without_ calling ADDR
+VariablePrefix = "_Var_"
+IntVariable = "_Var_Int"
+LongVariable = "_Var_Long"
+FloatVariable = "_Var_Float"
+StringVariable = "_Var_String"
+IntVariableArray = "_Var_IntArray"
+LongVariableArray = "_Var_LongArray"
+FloatVariableArray = "_Var_FloatArray"
+StringVariableArray = "_Var_StringArray"
 
 -- And these are for args like the above but an ADDR is also generated
 AddressOfPrefix = "_Addr_"
@@ -327,6 +336,7 @@ AddressOfString = "_Addr_String"
 AddressOfIntArray = "_Addr_IntArray"
 AddressOfLongArray = "_Addr_LongArray"
 AddressOfFloatArray = "_Addr_FloatArray"
+AddressOfStringArray = "_Addr_StringArray"
 
 TypeToDataType = enum {
     [Int] = DataTypes.EWord,
@@ -416,26 +426,26 @@ Callables = {
     DAYS = Fn("Days", {Int, Int, Int}, Long),
     DAYSTODATE = Op("DaysToDate", {Long, AddressOfInt, AddressOfInt, AddressOfInt}),
     DBUTTONS = SpecialOp(),
-    DCHECKBOX = SpecialOp({AddressOfInt, String}),
-    DCHOICE = SpecialOp({AddressOfInt, String, String}),
-    DDATE = SpecialOp({AddressOfLong, String, Long, Long}),
-    DEDIT = SpecialOp({AddressOfString, String, Int, numParams = {2, 3}}),
+    DCHECKBOX = Op("dEditCheckbox", {IntVariable, String}),
+    DCHOICE = SpecialOp({IntVariable, String, String}),
+    DDATE = SpecialOp({LongVariable, String, Long, Long}),
+    DEDIT = SpecialOp({StringVariable, String, Int, numParams = {2, 3}}),
     DEDITMULTI = Op("dEditMulti", {IntPtr, String, Int, Int, Long}), -- last param IS a long no matter what docs say
     DEFAULTWIN = Op("DefaultWin", {Int}),
     DEG = Fn("Deg", {Float}, Float),
     DELETE = SpecialOp({String, String, numParams = {1, 2}}),
-    DFILE = SpecialOp({AddressOfString, String, Int, Long, Long, Long, numParams = {3, 6}}),
-    DFLOAT = SpecialOp({AddressOfFloat, String, Float, Float}),
+    DFILE = SpecialOp({StringVariable, String, Int, Long, Long, Long, numParams = {3, 6}}),
+    DFLOAT = SpecialOp({FloatVariable, String, Float, Float}),
     DIALOG = Fn("Dialog", {}, Int),
     DINIT = Op("dInit", {String, Int, numParams = {0, 1, 2}, numFixedParams = 0}),
     ["DIR$"] = Fn("DirStr", {String}, String),
-    DLONG = SpecialOp({AddressOfLong, String, Long, Long}),
+    DLONG = SpecialOp({LongVariable, String, Long, Long}),
     DOW = Fn("Dow", {Int, Int, Int}, Int),
     DPOSITION = SpecialOp({Int, Int}),
     DTEXT = SpecialOp({String, String, Int, numParams = {2, 3}}),
-    DTIME = SpecialOp({AddressOfLong, String, Int, Long, Long}),
-    DXINPUT = SpecialOp({AddressOfString, String}),
-    EDIT = SpecialOp(),
+    DTIME = SpecialOp({LongVariable, String, Int, Long, Long}),
+    DXINPUT = SpecialOp({StringVariable, String}),
+    EDIT = Op("Edit", {StringVariable}),
     EOF = Fn("Eof", {}, Int),
     ERASE = Op("Erase", {}),
     ERR = Fn("Err", {}, Int),
@@ -1147,13 +1157,13 @@ function checkExpressionArguments(args, declArgs, token)
             synassert(arg.type == "call" and arg.valType == Long and arg.args and #arg.args == 0, arg, "Expected Long array var")
         elseif declArgs[i] == AddressOfFloatArray then
             synassert(arg.type == "call" and arg.valType == Float and arg.args and #arg.args == 0, arg, "Expected Float array var")
-        elseif declArgs[i] == AddressOfInt then
+        elseif declArgs[i] == AddressOfInt or declArgs[i] == IntVariable then
             synassert(arg.type == "identifier" and arg.valType == Int, arg, "Expected Int var")
-        elseif declArgs[i] == AddressOfLong then
+        elseif declArgs[i] == AddressOfLong or declArgs[i] == LongVariable then
             synassert(arg.type == "identifier" and arg.valType == Long, arg, "Expected Long var")
-        elseif declArgs[i] == AddressOfFloat then
+        elseif declArgs[i] == AddressOfFloat or declArgs[i] == FloatVariable then
             synassert(arg.type == "identifier" and arg.valType == Float, arg, "Expected Float var")
-        elseif declArgs[i] == AddressOfString then
+        elseif declArgs[i] == AddressOfString or declArgs[i] == StringVariable then
             synassert(arg.type == "identifier" and arg.valType == String, arg, "Expected String var")
         else
             local expType = TypeToDataType[arg.valType]
@@ -1303,6 +1313,13 @@ function ProcState:emitExpression(exp, requiredType)
         local isArray = exp.args ~= nil
         local var = self:getVar(exp, isArray)
         self:emitAddressOfVar(var, exp)
+        return
+    elseif requiredType:match("^"..VariablePrefix) then
+        -- I don't think this syntax is ever used for array variables...?
+        local isArray = exp.args ~= nil
+        assert(not isArray)
+        local var = self:getVar(exp, isArray)
+        self:emitVarLhs(var, exp)
         return
     end
 
@@ -2342,14 +2359,6 @@ function handleOp_DBUTTONS(procState)
     procState:popStack(#args)
 end
 
-function handleOp_DCHECKBOX(procState, args)
-    local var = procState:getVar(args[1], false)
-    procState:emitVarLhs(var, args[1])
-    procState:emitExpression(args[2], String)
-    procState:emit("BB", opcodes.NextOpcodeTable, opcodes.dEditCheckbox - 256)
-    procState:popStack(#args)
-end
-
 function handleOp_DCHOICE(procState, args)
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
@@ -2467,18 +2476,6 @@ function handleOp_DXINPUT(procState, args)
     procState:emitExpression(args[2], String)
     procState:emit("BB", opcodes.dItem, dItemTypes.dXINPUT)
     procState:popStack(#args)
-end
-
-function handleOp_EDIT(procState)
-    local tokens = procState.tokens
-    tokens:advance()
-    local varToken = tokens:current()
-    local var = procState:getVar(varToken, false)
-    synassert(var.valType == String, varToken, "Expected String variable")
-    procState:emitVarLhs(var, varToken)
-    procState:emit("B", opcodes.Edit)
-    tokens:advance()
-    procState:popStack(1)
 end
 
 function handleOp_ESCAPE(procState)

@@ -507,6 +507,12 @@ checkCode('dBUTTONS "OK", 13, "Cancel", -27, "Tab", 9, "A", %a, "B", -%b', {
     op"dItem", 10, 5,
 })
 
+checkCode('dCHECKBOX i%, "Prompt"', {
+    op"SimpleDirectLeftSideInt", h(0x12),
+    ConstantString("Prompt"),
+    op"dEditCheckbox",
+})
+
 -- numParams/qualifier on Ops is so inconsistent...
 -- gBORDER is normal, gPRINTB doesn't include first arg in its numParams (which we represent by numFixedParams=1)
 checkCode("gBORDER 0 : gBORDER 0, 1, 2", {
