@@ -60,6 +60,7 @@ static QStringList validCmds = {
     "opltotext",
     "recognize",
     "runopo",
+    "unittest",
 };
 
 int main(int argc, char *argv[])

@@ -44,6 +44,7 @@
         <file alias="sound.lua">../core/src/sound.lua</file>
         <file alias="stack.lua">../core/src/stack.lua</file>
         <file alias="struct.lua">../core/src/struct.lua</file>
+        <file alias="unittest.lua">../core/src/unittest.lua</file>
         <file alias="includes/bmp_oxh.lua">../core/src/includes/bmp_oxh.lua</file>
         <file alias="includes/const_oph.lua">../core/src/includes/const_oph.lua</file>
         <file alias="includes/date_oxh.lua">../core/src/includes/date_oxh.lua</file>
