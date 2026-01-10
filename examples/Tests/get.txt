@@ -1,6 +1,6 @@
 PROC main:
     LOCAL ch%
-    REPEAT
+    DO
         ch% = GET
         PRINT "got char", ch%
     UNTIL ch% = 27

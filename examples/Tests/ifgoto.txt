@@ -1,0 +1,18 @@
+PROC main:
+    LOCAL x%
+    x% = 0
+    DO
+        IF x% = 0
+            GOTO woop
+        ELSEIF x% = 1
+            PRINT "breaking"
+            BREAK
+        ELSE
+            PRINT "ALSO NOPE"
+        ENDIF
+
+        PRINT "Outside the if"
+        woop::
+        PRINT "woop"
+    UNTIL x% = 0
+ENDP
