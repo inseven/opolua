@@ -153,7 +153,7 @@ function Runtime:makeTemporaryVar(type, len, stringMaxLen)
 end
 
 function Runtime:addModule(path, procTable, opxTable, uid3)
-    printf("addModule: %s\n", path)
+    -- printf("addModule: %s\n", path)
     local name = oplpath.splitext(oplpath.basename(path)):upper()
     local mod = {
         -- Since 'name' isn't a legal procname (they're always uppercase in
