@@ -584,6 +584,7 @@ Callables = {
     MPOPUP = SpecialFn(nil, Int),
     NEXT = Op("Next", {}),
     ["NUM$"] = Fn("NumStr", {Float, Int}, String),
+    OFF = SpecialOp({Int, numParams = {0, 1}}),
     OPEN = SpecialOp(),
     OPENR = SpecialOp(),
     ["PARSE$"] = Fn("ParseStr", {String, String, AddressOfIntArray}, String),
@@ -1955,7 +1956,8 @@ function ProcState:parse()
                     valType = exp.valType,
                 }
             end
-        elseif tokenType == "identifier" then
+        elseif tokenType == "identifier" or tokenType == "OFF" then
+            -- Above is a hack, OFF is both an identifier (as a command) and a reserved word (in commands like CURSOR OFF)
             local callable = Callables[token.val]
             local nextToken = tokens:peekNext()
             if (callable and callable.type == "fn") or procNameFromName(token.val) then
@@ -2642,6 +2644,16 @@ function handleOp_MCASC(procState)
         procState:emitExpression(args[i + 1], Int)
     end
     procState:emit("BBB", opcodes.NextOpcodeTable, opcodes.mCasc - 256, (#args - 1) // 2)
+    procState:popStack(#args)
+end
+
+function handleOp_OFF(procState, args)
+    if args[1] then
+        procState:emitExpression(args[1], Int)
+        procState:emit("B", opcodes.OffFor)
+    else
+        procState:emit("B", opcodes.Off)
+    end
     procState:popStack(#args)
 end
 
