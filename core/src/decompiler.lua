@@ -901,15 +901,14 @@ function decompileProc(proc, opxTable, era, annotate)
             elseif fn == "mPopup" then
                 local numVarArgs = ip8()
                 local args = {}
-                for i = numVarArgs, 4, -2 do
-                    args[i + 1] = evalKeycodeExpr(popExpr(EWord))
-                    args[i] = eval(popExpr(EString))
+                for i = numVarArgs - 1, 4, -2 do
+                    args[i + 1] = popExpr(EWord)
+                    args[i] = popExpr(EString)
                 end
-                args[3] = eval(popExpr(EWord)) -- posType
-                args[2] = eval(popExpr(EWord)) -- y
-                local x = popExpr(EWord)
-                args[1] = eval(x)
-                addStatement(title.location, "mPOPUP %s", table.concat(args, ", "))
+                args[3] = popExpr(EWord) -- posType
+                args[2] = popExpr(EWord) -- y
+                args[1] = popExpr(EWord) -- x
+                pushCall(args[1].location, EWord, "mPOPUP %s", table.unpack(args))
             elseif fn == "Max" then
                 handleMathListFn(location, "MAX")
             elseif fn == "Mean" then
