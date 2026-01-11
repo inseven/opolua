@@ -1278,7 +1278,7 @@ IntToLong = NoOp -- 0x7B
 IntToFloat = NoOp -- 0x7C
 LongToFloat = NoOp -- 0x7D
 LongToUInt = NoOp -- 0x7E
-FloatToUInt = NoOp -- 0x7F
+FloatToUInt = FloatToInt -- 0x7F
 
 function DropUntyped(stack)
     stack:pop()
