@@ -369,7 +369,7 @@ function parseProc(proc, translatorVersion)
 end
 
 function printProc(proc)
-    printf("%s @ 0x%08X code=0x%08X line=%d\n", proc.name, proc.offset, proc.codeOffset, proc.lineNumber)
+    printf("%s @ 0x%08X code=0x%08X size=0x%08X line=%d\n", proc.name, proc.offset, proc.codeOffset, proc.codeSize, proc.lineNumber)
     local numParams = #proc.params
     for _, subproc in ipairs(proc.subprocs) do
         printf('    Subproc "%s" offset=0x%04X nargs=%d\n', subproc.name, subproc.offset, subproc.numParams)

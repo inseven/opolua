@@ -16,7 +16,8 @@ function decompile(procTable, opxTable, era, annotate)
             -- Add empty line between procs
             print("")
         end
-        decompileProc(proc, opxTable, era, annotate)
+        local ok = decompileProc(proc, opxTable, era, annotate)
+        if not ok then break end
     end
 end
 
@@ -334,10 +335,17 @@ function decompileProc(proc, opxTable, era, annotate)
 
     local function popExpr(type)
         local expr = stack:pop()
-        -- if expr.type ~= "expr" or expr.valType ~= type then print(dump(expr)) end
+        if expr.type ~= "expr" then
+            error(fmt("Expected expression on stack, found '%s'", expr.type))
+        end
         assertEquals(expr.type, "expr")
-        if type then
-            assertEquals(expr.valType, type)
+        if type and expr.valType ~= type then
+            -- print(dump(expr), dump(stack))
+            error(fmt("Expected expression type '%s' at 0x%08X, expression has type '%s' instead!",
+                DataTypes[type],
+                expr.location,
+                DataTypes[expr.valType]
+            ))
         end
         return expr
     end
@@ -464,7 +472,9 @@ function decompileProc(proc, opxTable, era, annotate)
         end
         if trap and location then
             value = "TRAP "..value
-            location = trap
+            -- 'trap' is the location of the trap instruction, but the statement location may already be prior to that
+            --  due to other expressions, so need to take the min
+            location = math.min(trap, location)
             trap = nil
         end
         local statement = {
@@ -1001,6 +1011,24 @@ function decompileProc(proc, opxTable, era, annotate)
             if ip == endIdx then
                 s.elided = true
             end
+
+            local maxEpilogSize = 64 -- Arbitrary, just to limit search
+            if ip + maxEpilogSize > endIdx then
+                -- Check if there's any way the following code is reachable, and if not assume it is epilogue junk
+                local reachable = false
+                for offset = ip, endIdx - 1 do
+                    if branchTargets[offset] then
+                        reachable = true
+                        break
+                    end
+                end
+                if not reachable then
+                    if annotate then
+                        addStatement(ip, "REM skipping epilogue junk of length %d", endIdx - ip)
+                    end
+                    ip = endIdx
+                end
+            end
         elseif op == "LongToInt" then
             pushUnaryExpr(ELong, "CAST", EWord)
         elseif op == "FloatToInt" then
@@ -1374,12 +1402,14 @@ function decompileProc(proc, opxTable, era, annotate)
 
     local realCodeStart = proc.codeOffset
     while ip < endIdx do
+        local initialIp = ip
+        -- See Runtime:dumpProc for the origins of these
         if ip == realCodeStart and string.unpack("B", proc.data, 1 + ip) == 0xBF then
             -- Workaround for a main proc starting with a goto that jumps over some non-code
             -- data.
             local jmp = string.unpack("<i2", proc.data, 1 + ip + 1)
             local newIp = ip + jmp
-            -- handleStandardOp(location, standardOps["GoTo"])
+            -- printf("skipping prolog GOTO to 0x%X\n", newIp)
             addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
             realCodeStart = newIp
             ip = newIp
@@ -1388,14 +1418,28 @@ function decompileProc(proc, opxTable, era, annotate)
             local jmp = string.unpack("<i2", proc.data, 1 + ip + 3)
             if jmp > 0 then
                 local newIp = ip + 2 + jmp
+                -- printf("skipping prolog BranchIfFalse(0) to 0x%X\n", newIp)
                 addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
-                realCodeStart = newIp
+                if ip == realCodeStart then
+                    realCodeStart = newIp
+                end
                 ip = newIp
-            else
-                decodeNextStatement()
             end
-        else
-            decodeNextStatement()
+        elseif ip == realCodeStart and proc.data:sub(1 + ip, ip + 10):match("[\x00\x08]..\x4F.\x40%\x5B..%\x2B") then
+            -- Simple[In]DirectRightSideInt, StackByteAsWord, CompareEqualInt, BranchIfFalse, ConstantString
+            local jmp = string.unpack("<i2", proc.data, 1 + ip + 7)
+            local newIp = ip + 6 + jmp 
+            -- printf("skipping prolog CompareEqualInt BranchIfFalse to 0x%X\n", newIp)           
+            addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+            ip = newIp
+        end
+
+        if ip == initialIp then
+            local ok, err = xpcall(decodeNextStatement, debug.traceback)
+            if not ok then
+                printf("Error during decode of proc '%s' at 0x%08X:\n%s\n", proc.name, initialIp, err)
+                return false
+            end
         end
     end
 
@@ -1656,7 +1700,7 @@ function decompileProc(proc, opxTable, era, annotate)
     -- This should really be done earlier but then you have no output to diagnose
     if #openIfs > 0 then
         print(dump(openIfs))
-        error("Unclosed IFs at end of parsing!")
+        error("Unclosed IFs at end of parsing "..proc.name)
     end
     for loc, ref in pairs(gotoLabels) do
         if ref == 0 then
@@ -1665,12 +1709,14 @@ function decompileProc(proc, opxTable, era, annotate)
     end
     if next(gotoLabels) then
         print(dump(gotoLabels))
-        error("Left over named labels at end of parsing!")
+        error("Left over goto label at end of parsing "..proc.name)
     end
     if next(namedLabels) then
         print(dump(namedLabels))
-        error("Left over named labels at end of parsing!")
+        error("Left over named labels at end of parsing "..proc.name)
     end
+
+    return true
 end
 
 return _ENV

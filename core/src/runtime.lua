@@ -1009,6 +1009,7 @@ function Runtime:dumpProc(procName, startAddr)
     end
     local realCodeStart = proc.codeOffset
     while self.ip < endIdx do
+        local initialIp = self.ip
         if self.ip == realCodeStart and string.unpack("B", self.data, 1 + self.ip) == 0xBF then
             -- Workaround for a main proc starting with a goto that jumps over some non-code
             -- data.
@@ -1023,10 +1024,12 @@ function Runtime:dumpProc(procName, startAddr)
             local jmp = string.unpack("<i2", self.data, 1 + self.ip + 3)
             if jmp > 0 then
                 local newIp = self.ip + 2 + jmp
+                if self.ip == realCodeStart then
+                    realCodeStart = newIp
+                end
                 print(self:decodeNextInstruction()) -- StackByteAsWord
                 print(self:decodeNextInstruction()) -- BranchIfFalse
                 self:dumpRawBytesUntil(newIp)
-                realCodeStart = newIp
             end
         elseif self.ip == realCodeStart and self.data:sub(1 + self.ip, self.ip + 10):match("[\x00\x08]..\x4F.\x40%\x5B..%\x2B") then
             -- Another variant which does a CompareEqualInt against an extern
@@ -1040,7 +1043,9 @@ function Runtime:dumpProc(procName, startAddr)
             local newIp = self.ip + jmp            
             print(self:decodeNextInstruction()) -- BranchIfFalse
             self:dumpRawBytesUntil(newIp)
-        else
+        end
+
+        if self.ip == initialIp then -- ie above didn't change anything
             print(self:decodeNextInstruction())
         end
     end
