@@ -381,7 +381,7 @@ function Bitmap:getImageData(expandToBitDepth, resultStride)
             -- Widening the data also widens the stride
             stride = (stride * 8) // self.bpp
         end
-        local wdata = widenTo8bpp(imgData, self.bpp, self.isColor)
+        local wdata = widenTo8bpp(imgData, self.bpp, self.isColor, self.invert)
         local rowWidth = self.width -- since it's now 8bpp
         local rowPad = string.rep("\0", resultStride - rowWidth)
         local trimmed = {}
@@ -485,6 +485,7 @@ function parseMbmHeader(data)
                 width = width,
                 height = height,
                 bpp = 1,
+                invert = true, -- a '1' bit means black, not white which is the default expectation
                 isColor = false,
                 mode = KColorgCreate2GrayMode,
                 stride = stride,
@@ -838,11 +839,13 @@ local function scale2bpp(val)
     return val | (val << 2) | (val << 4) | (val << 6)
 end
 
-local function bitToByte(byte, bitIdx)
-    return (byte & (1 << bitIdx)) > 0 and 0x0 or 0xFF
+local function bitToByte(byte, bitIdx, invert)
+    local bitSetVal = invert and 0 or 0xFF
+    local bitClearVal = invert and 0xFF or 0
+    return (byte & (1 << bitIdx)) > 0 and bitSetVal or bitClearVal
 end
 
-function widenTo8bpp(data, bpp, color)
+function widenTo8bpp(data, bpp, color, invert)
     local pos = 1
     local len = #data
     local bytes = {}
@@ -876,14 +879,14 @@ function widenTo8bpp(data, bpp, color)
         while pos <= len do
             local b = string_unpack("B", data, pos)
             bytes[pos] = string_pack("BBBBBBBB",
-                bitToByte(b, 0),
-                bitToByte(b, 1),
-                bitToByte(b, 2),
-                bitToByte(b, 3),
-                bitToByte(b, 4),
-                bitToByte(b, 5),
-                bitToByte(b, 6),
-                bitToByte(b, 7)
+                bitToByte(b, 0, invert),
+                bitToByte(b, 1, invert),
+                bitToByte(b, 2, invert),
+                bitToByte(b, 3, invert),
+                bitToByte(b, 4, invert),
+                bitToByte(b, 5, invert),
+                bitToByte(b, 6, invert),
+                bitToByte(b, 7, invert)
             )
             pos = pos + 1
         end
