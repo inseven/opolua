@@ -615,8 +615,6 @@ QByteArray OplScreenWidget::peekLine(int drawableId, const QPoint& position, int
     }
     auto img = src->getPixmap().toImage();
     img.convertTo(QImage::Format_Grayscale8); // Simplifies logic
-    auto bits = img.constScanLine(position.y()) + position.x();
-    auto endPtr = bits + numPixels;
     QByteArray result;
     int bitIdx = 0;
     uint8_t currentByte = 0;
@@ -646,8 +644,23 @@ QByteArray OplScreenWidget::peekLine(int drawableId, const QPoint& position, int
             bitIdx = 0;
         }
     };
-    while (bits < endPtr) {
-        addPixel(*bits++);
+
+    // gPEEKLINE is allowed to look outside the bitmap bounds, it's expected to return white for those. And yes there
+    // are things that actually rely on that... (#591)
+    int numValidPixels = qMax(0, qMin(numPixels, img.width() - position.x()));
+    if (position.y() >= img.height()) {
+        numValidPixels = 0;
+    }
+    if (numValidPixels > 0) {
+        auto bits = img.constScanLine(position.y()) + position.x();
+        auto endPtr = bits + numValidPixels;
+        while (bits < endPtr) {
+            addPixel(*bits++);
+        }
+    }
+    while (numValidPixels < numPixels) {
+        addPixel(0xFF);
+        numValidPixels++;
     }
     if (bitIdx != 0) {
         result.append(currentByte);
