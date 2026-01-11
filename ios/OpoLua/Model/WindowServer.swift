@@ -428,6 +428,14 @@ class WindowServer {
             print("Failed to get canvas image!")
             return Data()
         }
+
+        // gPEEKLINE is allowed to look outside the bitmap bounds, it's expected to return white for those. And yes
+        // there are things that actually rely on that... (#591)
+        var numValidPixels = max(0, min(numPixels, image.width - position.x))
+        if position.y >= image.height {
+            numValidPixels = 0
+        }
+
         var result = Data()
         let pixelData = image.dataProvider!.data!
         let ptr: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
@@ -457,18 +465,26 @@ class WindowServer {
             }
         }
 
-        if image.bitsPerPixel == 8 {
-            // We only ever use 8bpp contexts in Canvas for greyscale images
-            for i in 0 ..< numPixels {
-                let px = ptr[offset + i]
-                addPixel(px)
-            }
-        } else {
-            for i in 0 ..< numPixels {
-                let px = UInt32(ptr[offset + i]) + UInt32(ptr[offset + i + 1]) + UInt32(ptr[offset + i + 2])
-                addPixel(UInt8(px / 3))
+        if numValidPixels > 0 {
+            if image.bitsPerPixel == 8 {
+                // We only ever use 8bpp contexts in Canvas for greyscale images
+                for i in 0 ..< numPixels {
+                    let px = ptr[offset + i]
+                    addPixel(px)
+                }
+            } else {
+                for i in 0 ..< numPixels {
+                    let px = UInt32(ptr[offset + i]) + UInt32(ptr[offset + i + 1]) + UInt32(ptr[offset + i + 2])
+                    addPixel(UInt8(px / 3))
+                }
             }
         }
+
+        while numValidPixels < numPixels {
+            addPixel(0xFF)
+            numValidPixels = numValidPixels + 1
+        }
+
         if bitIdx != 0 {
             result.append(currentByte)
         }
