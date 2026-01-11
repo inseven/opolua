@@ -1023,7 +1023,21 @@ int OplRuntime::draw(lua_State* L)
                 cmd.type = OplScreen::circle;
                 cmd.circle.radius = to_int(L, 2, "r");
                 cmd.circle.fill = to_bool(L, 2, "fill");
-                pixelsWritten += 6 * cmd.circle.radius; // Close enough to 2 * pi * r
+                if (cmd.circle.fill) {
+                    pixelsWritten += 3 * cmd.circle.radius * cmd.circle.radius; // Close enough to pi * r^2
+                } else {
+                    pixelsWritten += 6 * cmd.circle.radius; // Close enough to 2 * pi * r
+                }
+            } else if (type == "ellipse") {
+                cmd.type = OplScreen::ellipse;
+                cmd.ellipse.hRadius = to_int(L, 2, "hradius");
+                cmd.ellipse.vRadius = to_int(L, 2, "vradius");
+                cmd.ellipse.fill = to_bool(L, 2, "fill");
+                if (cmd.circle.fill) {
+                    pixelsWritten += 3 * cmd.ellipse.hRadius * cmd.ellipse.vRadius; // Close enough
+                } else {
+                    pixelsWritten += 3 * (cmd.ellipse.hRadius + cmd.ellipse.vRadius); // Close enough
+                }
             } else if (type == "box") {
                 cmd.type = OplScreen::box;
                 cmd.box.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
