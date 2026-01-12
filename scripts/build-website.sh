@@ -25,9 +25,8 @@ set -o pipefail
 set -x
 set -u
 
-SCRIPTS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-ROOT_DIRECTORY="$SCRIPTS_DIRECTORY/.."
+ROOT_DIRECTORY="$( cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )" &> /dev/null && pwd )"
+SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 WEBSITE_DIRECTORY="$ROOT_DIRECTORY/docs"
 WEBSITE_SIMULATOR_DIRECTORY="$ROOT_DIRECTORY/docs/simulator"
 SIMULATOR_WEB_DIRECTORY="$ROOT_DIRECTORY/simulator/web"
@@ -35,16 +34,22 @@ SIMULATOR_WEB_DIRECTORY="$ROOT_DIRECTORY/simulator/web"
 source "$SCRIPTS_DIRECTORY/environment.sh"
 
 cd "$ROOT_DIRECTORY"
+
+# Determine the version and build number.
+VERSION_NUMBER=${VERSION_NUMBER:-0.0.1}
+BUILD_NUMBER=${BUILD_NUMBER:-0}
+
+# Build the release notes.
 "$SCRIPTS_DIRECTORY/update-release-notes.sh"
 
 # Install the Jekyll dependencies.
-export GEM_HOME="${ROOT_DIRECTORY}/.local/ruby"
+export GEM_HOME="$ROOT_DIRECTORY/.local/ruby"
 mkdir -p "$GEM_HOME"
-export PATH="${GEM_HOME}/bin":$PATH
+export PATH="$GEM_HOME/bin":$PATH
 gem install bundler
-cd "${WEBSITE_DIRECTORY}"
+cd "$WEBSITE_DIRECTORY"
 bundle install
 
 # Build the website.
-cd "${WEBSITE_DIRECTORY}"
+cd "$WEBSITE_DIRECTORY"
 bundle exec jekyll build
