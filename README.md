@@ -108,45 +108,6 @@ This interpreter is not 100% behaviour compatible with the original Psion. The m
 * Ability to suspend/resume app execution in the iOS UI
 * Due to the event handling and rendering pipeline for the Qt and Swift versions being completely different, there might be some differences in how apps behave. We will try to fix bugs in both versions to the extent it is possible to do so.
 
-## Command-line example
-
-[simple.txt](examples/Tests/simple.txt) compiled on a Psion Series 5:
-
-```
-$ ./src/runopo.lua --noget examples/Tests/simple.opo
-Hello world!
-Waaaat
-(Skipping get)
-$ ./src/dumpopo.lua examples/Tests/simple.opo --all
-UID2: 0x10000073
-UID3: 0x10000168
-translatorVersion: 0x200A minRunVersion: 0x200A
-Source name: D:\Program
-procTableIdx: 0x0000006B
-1: TEST @ 0x0000001F code=0x00000036 line=0
-    Subproc "WAT" offset=0x0012 nargs=0
-    maxStack: 8
-    iDataSize: 23 (0x00000017)
-    iTotalTableSize: 5 (0x00000005)
-00000036: 2B [ConstantString] "Hello world!"
-00000044: 8B [PrintString]
-00000045: 92 [PrintCarriageReturn]
-00000046: 53 [RunProcedure] 0x0012 (name="WAT" nargs=0)
-00000049: 82 [DropFloat]
-0000004A: 57 [CallFunction] 0x0A (Get)
-0000004C: 80 [DropInt]
-0000004D: 76 [ZeroReturnFloat]
-2: WAT @ 0x0000004E code=0x00000060 line=6
-    maxStack: 0
-    iDataSize: 18 (0x00000012)
-    iTotalTableSize: 0 (0x00000000)
-00000060: 2B [ConstantString] "Waaaat"
-00000068: 8B [PrintString]
-00000069: 92 [PrintCarriageReturn]
-0000006A: 76 [ZeroReturnFloat]
-$
-```
-
 ## Database format
 
 _This is derived from [http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm) with my own analysis added, and represents my best understanding of the format at the time of writing. Where original documentation can be found, I've used Psion terminology for preference. It's not guaranteed to be 100% perfect. -Tomsci_
