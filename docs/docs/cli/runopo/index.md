@@ -10,7 +10,7 @@ Run OPL programs on the command line.
 
 [simple.txt](https://github.com/inseven/opolua/blob/main/examples/Tests/simple.txt) compiled on a Psion Series 5:
 
-```
+```plaintext
 $ ./src/runopo.lua --noget examples/Tests/simple.opo
 Hello world!
 Waaaat

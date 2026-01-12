@@ -9,6 +9,7 @@ gem "base64"
 group :jekyll_plugins do
   gem 'jekyll-environment-variables'
   gem "jekyll-feed", "~> 0.12"
+  gem 'jekyll-gfm-admonitions'
   gem "jekyll-toc"
 end
 
