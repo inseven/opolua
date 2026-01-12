@@ -18,5 +18,13 @@ layout: default
         {% endif %}
         {{ content | toc_only }}
         {{ content | inject_anchors }}
+        {% assign children = page.children %}
+        {% if children.size > 0 %}
+            <ul>
+                {% for child in page.children %}
+                    <li><a href="{{ child.url }}">{{ child.title }}</a></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </main-content>
 </div>

@@ -15,12 +15,18 @@
     <meta property="og:title" content="{{ site.title }}{% if page.title %} - {{ page.title }}{% endif %}">
     <meta property="og:image" content="/images/icon.png">
     <meta name="apple-itunes-app" content="app-id=1604029880">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dark.min.css" media="(prefers-color-scheme: dark)">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
 </head>
 <body>
     {% include navigation.html %}
     <div class="content">
         {{ content }}
     </div>
+    {% include scripts.html %}
     {% include footer.html %}
 </body>
 </html>
