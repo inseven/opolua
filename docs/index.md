@@ -7,6 +7,11 @@
     <p class="tagline">{{ site.tagline }}</p>
 </div>
 
+<p class="download-links">
+    <a href="https://apps.apple.com/app/opolua/id1604029880"><img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" /></a><br/>
+    <a href="https://github.com/inseven/opolua/releases/tag/{{ site.env.VERSION_NUMBER }}">Download for macOS, Windows, and Linux</a>
+</p>
+
 <script>
 
     var index = 0;
@@ -42,8 +47,4 @@
 
 <p class="details">
     View MBM image files, OPL scripts, and AIF resources, listen to sound files, and run OPL scripts and programs from Psion and Psion-compatible computers on iOS and iPadOS.
-</p>
-
-<p class="app-store-link">
-    <a href="https://apps.apple.com/app/opolua/id1604029880"><img src="images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" /></a>
 </p>

@@ -6,6 +6,7 @@ url: ""
 plugins:
   - jekyll-feed
   - jekyll-toc
+  - jekyll-environment-variables
 destination: ../_site
 
 toc:
