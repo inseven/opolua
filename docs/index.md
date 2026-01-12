@@ -46,5 +46,5 @@
 </div>
 
 <p class="details">
-    View MBM image files, OPL scripts, and AIF resources, listen to sound files, and run OPL scripts and programs from Psion and Psion-compatible computers on iOS and iPadOS.
+    View MBM image files, OPL scripts, and AIF resources, listen to sound files, and run OPL scripts and programs from Psion and Psion-compatible computers on iOS, iPadOS, macOS, Windows, and Linux.
 </p>
