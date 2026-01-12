@@ -20,8 +20,10 @@ defaults:
     values:
       layout: "documentation"
       toc: true
+      shows_title: true
   - scope:
       path: "faq"
     values:
       layout: "documentation"
       toc: true
+      shows_title: true
