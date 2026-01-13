@@ -198,38 +198,6 @@ RecordLengthTable = Struct {
     -- Variable length, so no fixed definitions
 }
 
--- This is slightly fancier than the usual hexdump because it aligns the dumped data to the appropriate 16 byte boundary
-function hexdump(data, pos, len)
-    local result = {}
-    local start = pos & ~ 0xF
-    for i = start, pos + len - 1, 16 do
-        local line = {}
-        table.insert(line, string.format("%08X  ", i))
-        local lineDataStart = i
-        if i < pos then
-            table.insert(line, string.rep("   ", pos - i))
-            lineDataStart = pos
-        end
-        local lineEnd = math.min(i + 16, pos + len)
-        local lineLen = lineEnd - lineDataStart
-        for j = 0, lineLen - 1 do
-            table.insert(line, string.format("%02X ", string.byte(data, 1 + lineDataStart + j)))
-        end
-        table.insert(line, string.rep("   ", i + 16 - lineEnd))
-        table.insert(line, " ")
-        if i < pos then
-            table.insert(line, string.rep(" ", pos - i))
-        end
-        for j = 0, lineLen - 1 do
-            table.insert(line, (string.sub(data, 1 + lineDataStart + j, 1 + lineDataStart + j):gsub("[\x00-\x1F\x7F-\xFF]", ".")))
-        end
-        table.insert(result, table.concat(line))
-    end
-    table.insert(result, "")
-    return table.concat(result, "\n")
-end
-
-
 -- Note, zero based. (Name comes from https://frodo.looijaard.name/psifiles/Basic_Elements nomenclature)
 function readExtra(data, pos)
     local result, nextPos = readCardinality(data, 1 + pos)

@@ -3,22 +3,27 @@
 
 _ENV = module()
 
-function decompile(procTable, opxTable, era, annotate)
+function decompile(procTable, options)
+    local opxTable = options.opxTable
     for _, opx in ipairs(opxTable or {}) do
-        printf('INCLUDE "%s.oxh"\n', opx.name:lower())
+        options.printFn('INCLUDE "%s.oxh"\n', opx.name:lower())
     end
     if opxTable and #opxTable > 0 then
-        print("")
+        options.printFn("\n")
     end
 
     for i, proc in ipairs(procTable) do
         if i > 1 then
             -- Add empty line between procs
-            print("")
+            options.printFn("\n")
         end
-        local ok = decompileProc(proc, opxTable, era, annotate)
-        if not ok then break end
+        local ok, err = decompileProc(proc, options)
+        if not ok then
+            return ok, err
+        end
     end
+
+    return true
 end
 
 local sbyte = string.byte
@@ -129,7 +134,9 @@ local function getLabelName(dest)
     return fmt("label_%04X::", dest)
 end
 
-function decompileProc(proc, opxTable, era, annotate)
+function decompileProc(proc, options)
+    local opxTable, era, annotate = options.opxTable, options.era, options.annotate
+    local printf = options.printFn
     assert(era == "er5", "SIBO binaries are not supported yet!")
     local AddrType = era == "sibo" and EWord or ELong
     local ip = proc.codeOffset
@@ -146,7 +153,6 @@ function decompileProc(proc, opxTable, era, annotate)
     end
     local fns = require("fns")
     local fncodes = fns["codes_"..era]
-    local EPtrType = era == "er5" and ELong or EWord
     local compiler = require("compiler")
     local commands = compiler.Callables
     local AddressOfPrefix, AddressOfAny, VariablePrefix =
@@ -354,11 +360,13 @@ function decompileProc(proc, opxTable, era, annotate)
         local expr = stack:pop()
         -- if expr.type ~= "var" or expr.valType ~= type then print(dump(expr)) end
         assertEquals(expr.type, "var")
-        if isArrayType(type) then
-            assertEquals(expr.valType, arrayMemberType(type))
-            assert(expr.arrayIndexExpr ~= nil, "Expected an array index expression for an array variable!")
-        else
-            assertEquals(expr.valType, type)
+        if type then
+            if isArrayType(type) then
+                assertEquals(expr.valType, arrayMemberType(type))
+                assert(expr.arrayIndexExpr ~= nil, "Expected an array index expression for an array variable!")
+            else
+                assertEquals(expr.valType, type)
+            end
         end
         return expr
     end
@@ -366,7 +374,7 @@ function decompileProc(proc, opxTable, era, annotate)
     local function popVarAddr(type)
         -- Syntax for commands like GETEVENT or SCREENINFO is
         -- StackByteAsWord(1), Array[In]DirectLeftSideInt, CallFunction(Addr), COMMAND
-        local addr = popExpr(EPtrType)
+        local addr = popExpr(AddrType)
         assertEquals(addr.call, "ADDR")
         -- Convenience to reuse the popVar logic
         stack:push(addr[1])
@@ -1436,8 +1444,7 @@ function decompileProc(proc, opxTable, era, annotate)
         if ip == initialIp then
             local ok, err = xpcall(decodeNextStatement, debug.traceback)
             if not ok then
-                printf("Error during decode of proc '%s' at 0x%08X:\n%s\n", proc.name, initialIp, err)
-                return false
+                return nil, fmt("Error during decode of proc '%s' at 0x%08X:\n%s\n", proc.name, initialIp, err)
             end
         end
     end
@@ -1518,7 +1525,7 @@ function decompileProc(proc, opxTable, era, annotate)
         else
             prefix = string.rep("    ", #blockNest)
         end
-        print(prefix..str)
+        printf("%s", prefix..str.."\n")
     end
 
     -- We emit variables after parsing the proc so we can benefit from type inference from the variable instructions
