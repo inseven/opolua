@@ -908,7 +908,7 @@ function decompileProc(proc, opxTable, era, annotate)
                 args[3] = popExpr(EWord) -- posType
                 args[2] = popExpr(EWord) -- y
                 args[1] = popExpr(EWord) -- x
-                pushCall(args[1].location, EWord, "mPOPUP %s", table.unpack(args))
+                pushCall(args[1].location, EWord, "mPOPUP", table.unpack(args))
             elseif fn == "Max" then
                 handleMathListFn(location, "MAX")
             elseif fn == "Mean" then
