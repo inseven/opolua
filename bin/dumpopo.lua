@@ -75,10 +75,22 @@ Options:
     local rt = runtime.newRuntime(nil, era)
     rt:addModule("C:\\module", procTable, opxTable)
     if args.decompile then
+        local options = {
+            era = era,
+            opxTable = opxTable,
+            annotate = args.annotate,
+            printFn = printf,
+        }
+        local ok, err
         if fnName then
-            require("decompiler").decompileProc(rt:findProc(fnName:upper()), opxTable, era, args.annotate)
+            ok, err = require("decompiler").decompileProc(rt:findProc(fnName:upper()), options)
         else
-            require("decompiler").decompile(procTable, opxTable, era, args.annotate)
+            ok, err = require("decompiler").decompile(procTable, options)
+        end
+
+        if not ok then
+            print(err)
+            os.exit(false)
         end
     elseif fnName then
         opofile.printProc(rt:findProc(fnName:upper()))

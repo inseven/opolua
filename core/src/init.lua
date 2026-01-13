@@ -551,6 +551,42 @@ function dump(...)
     return dump(...)
 end
 
+function hexdump(data, pos, len)
+    if pos == nil then
+        pos = 0
+    end
+    if len == nil then
+        len = #data - pos
+    end
+    local result = {}
+    local start = pos & ~ 0xF
+    for i = start, pos + len - 1, 16 do
+        local line = {}
+        table.insert(line, string.format("%08X  ", i))
+        local lineDataStart = i
+        if i < pos then
+            table.insert(line, string.rep("   ", pos - i))
+            lineDataStart = pos
+        end
+        local lineEnd = math.min(i + 16, pos + len)
+        local lineLen = lineEnd - lineDataStart
+        for j = 0, lineLen - 1 do
+            table.insert(line, string.format("%02X ", string.byte(data, 1 + lineDataStart + j)))
+        end
+        table.insert(line, string.rep("   ", i + 16 - lineEnd))
+        table.insert(line, " ")
+        if i < pos then
+            table.insert(line, string.rep(" ", pos - i))
+        end
+        for j = 0, lineLen - 1 do
+            table.insert(line, (string.sub(data, 1 + lineDataStart + j, 1 + lineDataStart + j):gsub("[\x00-\x1F\x7F-\xFF]", ".")))
+        end
+        table.insert(result, table.concat(line))
+    end
+    table.insert(result, "")
+    return table.concat(result, "\n")
+end
+
 textReplacementsMatch = "[\x06\x07\x0a\x0b\x10]"
 
 textReplacements = {

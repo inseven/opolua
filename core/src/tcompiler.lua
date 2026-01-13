@@ -27,6 +27,7 @@ SOFTWARE.
 dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 
 local compiler = require("compiler")
+local decompiler = require("decompiler")
 local opofile = require("opofile")
 local Int, Long, Float, String = compiler.Int, compiler.Long, compiler.Float, compiler.String
 local opcodes, fncodes = compiler.opcodes, compiler.fncodes
@@ -201,9 +202,13 @@ local function checkProg(prog, expected)
         local expectedProc = expected[procIdx]
         local code = proc.data:sub(1 + proc.codeOffset, proc.codeOffset + proc.codeSize)
 
-        -- Remove things we don't care about from procInfo (because we validate the more-derived data parseProc adds)
+        -- Remove things we don't care about from proc (because we validate the more-derived data parseProc adds)
+        local minimalProc = {}
+        for k, v in pairs(proc) do
+            minimalProc[k] = v
+        end
         for _, member in ipairs{"source", "offset", "data", "lineNumber", "codeOffset", "codeSize", "maxStack"} do
-            proc[member] = nil
+            minimalProc[member] = nil
         end
 
         for _, member in ipairs{"arrays", "externals", "globals", "params", "strings", "subprocs", "vars"} do
@@ -232,8 +237,8 @@ local function checkProg(prog, expected)
         end
         expectedCode = table.concat(expectedCode)
 
-        if dump(expectedProc) ~= dump(proc) then
-            print(dump(proc))
+        if dump(expectedProc) ~= dump(minimalProc) then
+            print(dump(minimalProc))
             print(dump(expectedProc))
             error("Proc metadata did not match")
         end
@@ -256,20 +261,67 @@ local function checkProg(prog, expected)
 
     assertEquals(progObj.aif, expected.aif)
     assertEquals(opxTable, expected.opxTable)
+
+    -- Now check we can decompile it
+    local output = {}
+    local function printFn(...)
+        table.insert(output, string.format(...))
+    end
+    assert(decompiler.decompile(procTable, {
+        opxTable = opxTable,
+        era = "er5",
+        annotate = false,
+        printFn = printFn,
+    }))
+    local decompiledText = table.concat(output)
+    -- And that the decompiled output compiles, and that when we decompile _that_ we get the same text as from the first
+    -- decompile.
+    ok, recompiledProgObj = xpcall(compiler.docompile, debug.traceback, dummyPath, nil, decompiledText, {})
+    if not ok then
+        print(decompiledText)
+        error(dump(recompiledProgObj))
+    end
+    local recompiledOpoData = opofile.makeOpo(recompiledProgObj)
+    local procTable, opxTable = opofile.parseOpo(opoData)
+    output = {}
+    assert(decompiler.decompile(procTable, {
+        opxTable = opxTable,
+        era = "er5",
+        annotate = false,
+        printFn = printFn,
+    }))
+    local secondDecompileText = table.concat(output)
+    assertEquals(decompiledText, secondDecompileText)
 end
 
 local checkCodeWrapper = [[
     CONST ci%% = -123
     PROC main:
-        LOCAL i%%, l&
+%s
 %s
     ENDP
 ]]
 
 local function checkCodeRet(statement, expectedCode)
-    local prog = string.format(checkCodeWrapper, statement)
     expectedCode.iTotalTableSize = 0
-    expectedCode.iDataSize = 24 -- 18 + sizeof(i%) + sizeof(l&)
+    expectedCode.iDataSize = 18
+    -- Conditionally add i% and/or l& local variables, if statement mentions them
+    local locals = {}
+    local localsDecl
+    if statement:match("i%%") then
+        expectedCode.iDataSize = expectedCode.iDataSize + 2
+        table.insert(locals, "i%")
+    end
+    if statement:match("l&") then
+        expectedCode.iDataSize = expectedCode.iDataSize + 4
+        table.insert(locals, "l&")
+    end
+    if #locals == 0 then
+        localsDecl = ""
+    else
+        localsDecl = "LOCAL "..table.concat(locals, ", ").."\n"
+    end
+    local prog = string.format(checkCodeWrapper, localsDecl, statement)
     checkProg(prog, { expectedCode })
 end
 
@@ -279,7 +331,7 @@ local function checkCode(statement, expectedCode)
 end
 
 local function checkSyntaxError(statement, expectedError)
-    local prog = string.format(checkCodeWrapper, statement)
+    local prog = string.format(checkCodeWrapper, "", statement)
     local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {})
     assert(not ok, "Compile unexpectedly succeeded!")
     assert(err.src, "Error didn't include src!? "..tostring(err))
@@ -562,7 +614,7 @@ checkCode("ADDR(i%)", {
 })
 
 checkCode("ADDR(l&)", {
-    op"SimpleDirectLeftSideLong", h(0x14),
+    op"SimpleDirectLeftSideLong", h(0x12),
     fn"Addr",
     op"DropLong",
 })
