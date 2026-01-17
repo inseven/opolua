@@ -30,7 +30,8 @@ function main()
     local args = getopt({
         "input",
         output = string, o = "output",
-        json = string, j = "json"
+        json = string, j = "json",
+        help = true, h = "help",
     })
 
     if args.help or args.input == nil then

@@ -33,6 +33,7 @@ function main()
         json = true, j = "json",
         unicode = true, u = "unicode",
         ascii = true, a = "ascii",
+        help = true, h = "help",
     })
 
     if args.help or args.filename == nil then

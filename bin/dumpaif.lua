@@ -31,6 +31,7 @@ function main()
         "filename",
         extract = true, e = "extract",
         json = true, j = "json",
+        help = true, h = "help",
     })
 
     if args.help or args.filename == nil then
@@ -45,7 +46,7 @@ Options:
         Extract the icon(s) from the AIF and save them in BMP format. Files
         are written alongside <filename>. The icons are also written to a MBM
         file, for convenience.
-    
+
     --json, -j
         Print AIF info in JSON format.
 ]])
