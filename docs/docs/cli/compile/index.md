@@ -2,6 +2,12 @@
 title: compile
 ---
 
+# Usage
+
+```plaintext
+{% include_relative _help.txt %}
+```
+
 # Overview
 
 There is now support for compiling OPL code, although it is not (yet) integrated into the app. You must clone the repository from github and run the compiler from the command line. You must also have a version of Lua 5.3 or 5.4 installed from somewhere.

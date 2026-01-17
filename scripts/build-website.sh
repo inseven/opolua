@@ -27,20 +27,27 @@ set -u
 
 ROOT_DIRECTORY="$( cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )" &> /dev/null && pwd )"
 SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
+CLI_DIRECTORY="$ROOT_DIRECTORY/bin"
 WEBSITE_DIRECTORY="$ROOT_DIRECTORY/docs"
-WEBSITE_SIMULATOR_DIRECTORY="$ROOT_DIRECTORY/docs/simulator"
-SIMULATOR_WEB_DIRECTORY="$ROOT_DIRECTORY/simulator/web"
+CLI_DOCUMENTATION_DIRECTORY="$WEBSITE_DIRECTORY/docs/cli"
 
 source "$SCRIPTS_DIRECTORY/environment.sh"
+
+function generate_command_usage() {
+    COMMAND=$1
+    # Since OpoLua commands follow the convention of exiting with an error when printing help, we have to temporarily
+    # ignore this error.
+    mkdir -p "$CLI_DOCUMENTATION_DIRECTORY/$COMMAND"
+    set +e
+    lua "$CLI_DIRECTORY/$COMMAND.lua" -h > "$CLI_DOCUMENTATION_DIRECTORY/$COMMAND/_help.txt"
+    set -e
+}
 
 cd "$ROOT_DIRECTORY"
 
 # Determine the version and build number.
 VERSION_NUMBER=${VERSION_NUMBER:-0.0.1}
 BUILD_NUMBER=${BUILD_NUMBER:-0}
-
-# Build the release notes.
-"$SCRIPTS_DIRECTORY/update-release-notes.sh"
 
 # Install the Jekyll dependencies.
 export GEM_HOME="$ROOT_DIRECTORY/.local/ruby"
@@ -49,6 +56,26 @@ export PATH="$GEM_HOME/bin":$PATH
 gem install bundler
 cd "$WEBSITE_DIRECTORY"
 bundle install
+
+# Build the release notes.
+"$SCRIPTS_DIRECTORY/update-release-notes.sh"
+
+# Generate CLI help.
+generate_command_usage "compile"
+generate_command_usage "dumpaif"
+generate_command_usage "dumpdb"
+generate_command_usage "dumpdfs"
+generate_command_usage "dumpfont"
+generate_command_usage "dumpmbm"
+generate_command_usage "dumpopo"
+generate_command_usage "dumprsc"
+generate_command_usage "dumpsis"
+generate_command_usage "fscomp"
+generate_command_usage "makesis"
+generate_command_usage "opltotext"
+generate_command_usage "recognize"
+generate_command_usage "runopo"
+
 
 # Build the website.
 cd "$WEBSITE_DIRECTORY"

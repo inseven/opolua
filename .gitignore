@@ -3,5 +3,6 @@
 .local
 .swiftpm
 /_site
+/docs/docs/cli/*/_help.txt
 /docs/releases
 build
