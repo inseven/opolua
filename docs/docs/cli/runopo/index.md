@@ -2,6 +2,12 @@
 title: runopo
 ---
 
+# Usage
+
+```plaintext
+{% include_relative _help.txt %}
+```
+
 # Overview
 
 Run OPL programs on the command line.
