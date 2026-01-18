@@ -41,6 +41,8 @@ local ELongArray = DataTypes.ELongArray
 local ERealArray = DataTypes.ERealArray
 local EStringArray = DataTypes.EStringArray
 
+local oplFormat = compiler.OplEr5
+
 local function assertEquals(a, b)
     local adump, bdump = dump(a), dump(b)
     if adump ~= bdump then
@@ -89,28 +91,28 @@ local function H(val)
 end
 
 local function ConstantString(val)
-    return string.pack("<Bs1", opcodes.ConstantString, val)
+    return string.pack("<Bs1", opcodes[oplFormat].ConstantString, val)
 end
 
 local function ConstantFloat(val)
-    return string.pack("<Bd", opcodes.ConstantFloat, val)
+    return string.pack("<Bd", opcodes[oplFormat].ConstantFloat, val)
 end
 
 local function ConstantLong(val)
-    return string.pack("<Bi4", opcodes.ConstantLong, val)
+    return string.pack("<Bi4", opcodes[oplFormat].ConstantLong, val)
 end
 
 local function op(name)
-    local opcode = assert(opcodes[name], "Bad opcode name")
+    local opcode = assert(opcodes[oplFormat][name], "Bad opcode name")
     if opcode >= 256 then
-        return string.pack("BB", opcodes.NextOpcodeTable, opcode - 256)
+        return string.pack("BB", opcodes[oplFormat].NextOpcodeTable, opcode - 256)
     else
         return string.pack("B", opcode)
     end
 end
 
 local function fn(name)
-    return string.pack("BB", opcodes.CallFunction, assert(fncodes[name], "Bad fn name"))
+    return string.pack("BB", opcodes[oplFormat].CallFunction, assert(fncodes[oplFormat][name], "Bad fn name"))
 end
 
 local function Global(name, type, offset)
@@ -126,7 +128,7 @@ local function External(name, type)
 end
 
 local function checklex(text, expected)
-    local tokens = compiler.lex(text)
+    local tokens = compiler.lex(text, nil, compiler.OplEr5Language)
     local function assertEquals(a, b)
         local adump, bdump = dump(a), dump(b)
         if adump ~= bdump then
@@ -173,7 +175,8 @@ local function stripTokenSources(expression)
 end
 
 local function checkExpression(text, expected)
-    local tokens = compiler.lex(text)
+    local tokens = compiler.lex(text, nil, compiler.OplEr5Language)
+    tokens.oplFormat = compiler.OplEr5
     local ok, result = xpcall(function() return stripTokenSources(compiler.parseExpression(tokens)) end, debug.traceback)
     if not ok then
         print("Current token", table.unpack(tokens:current()))
@@ -190,7 +193,7 @@ end
 
 local function checkProg(prog, expected)
     local dummyPath = "C:\\module"
-    local ok, progObj = xpcall(compiler.docompile, debug.traceback, dummyPath, nil, prog, {})
+    local ok, progObj = xpcall(compiler.docompile, debug.traceback, dummyPath, nil, prog, {}, oplFormat)
     if not ok then
         error(dump(progObj))
     end
@@ -269,14 +272,14 @@ local function checkProg(prog, expected)
     end
     assert(decompiler.decompile(procTable, {
         opxTable = opxTable,
-        era = "er5",
+        format = compiler.OplEr5,
         annotate = false,
         printFn = printFn,
     }))
     local decompiledText = table.concat(output)
     -- And that the decompiled output compiles, and that when we decompile _that_ we get the same text as from the first
     -- decompile.
-    ok, recompiledProgObj = xpcall(compiler.docompile, debug.traceback, dummyPath, nil, decompiledText, {})
+    ok, recompiledProgObj = xpcall(compiler.docompile, debug.traceback, dummyPath, nil, decompiledText, {}, compiler.OplEr5)
     if not ok then
         print(decompiledText)
         error(dump(recompiledProgObj))
@@ -286,7 +289,7 @@ local function checkProg(prog, expected)
     output = {}
     assert(decompiler.decompile(procTable, {
         opxTable = opxTable,
-        era = "er5",
+        format = compiler.OplEr5,
         annotate = false,
         printFn = printFn,
     }))
@@ -332,7 +335,7 @@ end
 
 local function checkSyntaxError(statement, expectedError)
     local prog = string.format(checkCodeWrapper, "", statement)
-    local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {})
+    local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {}, compiler.OplEr5)
     assert(not ok, "Compile unexpectedly succeeded!")
     assert(err.src, "Error didn't include src!? "..tostring(err))
     -- Line number should always be 4 because that's where checkCodeWrapper puts statement
@@ -356,14 +359,18 @@ for cmd, callable in pairs(compiler.Callables) do
             local handler = "handleFn_"..cmd
             assert(compiler[handler], "Missing implementation of "..handler)
         else
-            assert(compiler.fncodes[callable.name], "No fncode for "..callable.name)
+            local found = compiler.fncodes[compiler.OplEr5][callable.name] or
+                compiler.fncodes[compiler.Opl93][callable.name]
+            assert(found, "No fncode for "..callable.name)
         end
     elseif callable.type == "op" then
         if callable.name == nil then
             local handler = "handleOp_"..cmd
             assert(compiler[handler], "Missing implementation of "..handler)
         else
-            assert(compiler.opcodes[callable.name], "No opcode for "..callable.name)
+            local found = compiler.opcodes[compiler.OplEr5][callable.name] or
+                compiler.opcodes[compiler.Opl93][callable.name]
+            assert(found, "No opcode for "..callable.name)
             if callable.args.numParams then
                 assert(callable.args.numFixedParams, cmd.." specifies numParams but not numFixedParams")
             end
@@ -1381,12 +1388,12 @@ ENDP
 ]]
 
 
-prog = compiler.docompile("D:\\const.oph", nil, require("includes.const_oph"), {})
-prog = compiler.docompile("D:\\beep.opl", nil, beep, {})
-prog = compiler.docompile("D:\\pause.opl", nil, pause, {})
-prog = compiler.docompile("D:\\simple.opl", nil, simple, {})
-prog = compiler.docompile("D:\\globint.opl", nil, globint, {})
-prog = compiler.docompile("D:\\globals.opl", nil, globals, {})
+prog = compiler.docompile("D:\\const.oph", nil, require("includes.const_oph"), {}, compiler.OplEr5)
+prog = compiler.docompile("D:\\beep.opl", nil, beep, {}, compiler.OplEr5)
+prog = compiler.docompile("D:\\pause.opl", nil, pause, {}, compiler.OplEr5)
+prog = compiler.docompile("D:\\simple.opl", nil, simple, {}, compiler.OplEr5)
+prog = compiler.docompile("D:\\globint.opl", nil, globint, {}, compiler.OplEr5)
+prog = compiler.docompile("D:\\globals.opl", nil, globals, {}, compiler.OplEr5)
 
 -- progData = require("opofile").makeOpo(prog)
 -- rt = require("runtime").newRuntime({ fsop = function(op) assert(op=="read"); return progData end })

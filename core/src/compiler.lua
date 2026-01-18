@@ -24,17 +24,60 @@ SOFTWARE.
 
 _ENV = module()
 
+local opofile = require("opofile")
+Opl91 = opofile.EOplTranVersionOplS3
+Opl93 = opofile.EOplTranVersionOpl1993
+OplEr5 = opofile.EOplTranVersionOpler1
+
 do
     local ops = require("ops")
     local fns = require("fns")
     opcodes = {}
-    for k, v in pairs(ops.codes_er5) do
-        opcodes[v] = k
+    local opcodes_er5 = {}
+    for code, name in pairs(ops.codes_er5) do
+        if name ~= "IllegalOpCode" then
+            opcodes_er5[name] = code
+        end
     end
     fncodes = {}
-    for k, v in pairs(fns.codes_er5) do
-        fncodes[v] = k
+    local fncodes_er5 = {}
+    for code, name in pairs(fns.codes_er5) do
+        if name ~= "IllegalFuncOpCode" then
+            fncodes_er5[name] = code
+        end
     end
+
+    local opcodes_sibo = {}
+    for name, code in pairs(opcodes_er5) do
+        opcodes_sibo[name] = code
+    end
+    for code, name in pairs(ops.codes_sibo) do
+        if name == "IllegalOpCode" then
+            opcodes_sibo[ops.codes_er5[code]] = nil
+        else
+            opcodes_sibo[name] = code
+        end
+    end
+
+    local fncodes_sibo = {}
+    for name, code in pairs(fncodes_er5) do
+        fncodes_sibo[name] = code
+    end
+    for code, name in pairs(fns.codes_sibo) do
+        if name == "IllegalFuncOpCode" then
+            fncodes_sibo[fns.codes_er5[code]] = nil
+        else
+            fncodes_sibo[name] = code
+        end
+    end
+
+    opcodes[OplEr5] = opcodes_er5
+    opcodes[Opl91] = opcodes_sibo
+    opcodes[Opl93] = opcodes_sibo
+
+    fncodes[OplEr5] = fncodes_er5
+    fncodes[Opl91] = fncodes_sibo
+    fncodes[Opl93] = fncodes_sibo
 end
 
 local string_find, string_match, string_sub, string_pack = string.find, string.match, string.sub, string.pack
@@ -155,10 +198,26 @@ local function lexmatch(text, tokenStart, pos, sm)
     end
 end
 
-identifierTokens = enum {
+identifierTokens_er5 = enum {
     "INCLUDE", "CONST", "DECLARE", "EXTERNAL",
     "APP", "CAPTION", "ICON", "FLAGS", "ENDA",
     "OPX", "END", "BYREF", -- For DECLARE OPX ... END DECLARE
+    "PROC", "ENDP",
+    "LOCAL", "GLOBAL",
+    "IF", "ELSEIF", "ELSE", "ENDIF",
+    "AND", "OR", "NOT",
+    "WHILE", "ENDWH",
+    "DO", "UNTIL",
+    "BREAK", "CONTINUE", "GOTO",
+    "VECTOR", "ENDV",
+    "TRAP", "ONERR",
+    "ON", "OFF",
+    "RETURN",
+}
+
+identifierTokens_sibo = enum {
+    "INCLUDE", "CONST", -- Technically not allowed by the sibo compiler, but don't break the sibo runtime so why not
+    "APP", "ICON", "PATH", "EXT", "TYPE", "ENDA",
     "PROC", "ENDP",
     "LOCAL", "GLOBAL",
     "IF", "ELSEIF", "ELSE", "ENDIF",
@@ -219,6 +278,10 @@ end
 
 function Tokens:expect(...)
     local allowed = {...}
+    return self:expectTokens(allowed)
+end
+
+function Tokens:expectTokens(allowed)
     local token = self:current()
     for _, val in ipairs(allowed) do
         allowed[val] = true
@@ -250,16 +313,12 @@ function Token:__tostring()
     return string.format("%s:%d:%d: %s", self.src[1], self.src[2], self.src[3], desc)
 end
 
-function lex(prog, source, language)
-    if language == nil then
-        language = {
-            statemachine = statemachine,
-            identifierTokens = identifierTokens,
-            precedences = precedences,
-            unaryOperators = unaryOperators,
-            rightAssociativeOperators = rightAssociativeOperators,
-        }
-    end
+function Token:context()
+    return self.src[4]
+end
+
+function lex(prog, source, language, tokenContext)
+    assert(language, "language parameter must be specified")
     local idx = 1
     local tokens = Tokens { index = 1, language = language }
     local line = 1
@@ -290,7 +349,8 @@ function lex(prog, source, language)
                     tok = val
                 end
             end
-            table.insert(tokens, Token { type=tok, val=val, src={source, line, col}, tokenSource = tokenSource })
+            local src = {source, line, col, tokenContext}
+            table.insert(tokens, Token { type=tok, val=val, src=src, tokenSource = tokenSource })
             col = col + #val
         end
     end
@@ -311,7 +371,7 @@ Int = "%"
 Long = "&"
 Float = ""
 String = "$"
-IntPtr = Long -- Like intptr_t - would be Int on the 16-bit sibo, if we ever support that in the compiler
+IntPtr = "*" -- Like intptr_t - Int on the 16-bit SIBO and Long on the 32-bit Series 5
 
 -- The following are used by args in Callables. Values are arbitrary as these should be considered opaque.
 
@@ -414,6 +474,7 @@ Callables = {
     ["CMD$"] = Fn("CmdStr", {Int}, String),
     COMMITTRANS = Op("CommitTrans", {}),
     COMPACT = Op("Compact", {String}),
+    COMPRESS = Op("Compress", {String, String}),
     COPY = Op("Copy", {String, String}),
     COS = Fn("Cos", {Float}, Float),
     COUNT = Fn("Count", {}, Int),
@@ -475,7 +536,7 @@ Callables = {
     GCOLORINFO = Op("gColorInfo", {AddressOfLongArray}),
     GCOPY = Op("gCopy", {Int, Int, Int, Int, Int, Int}),
     GCREATE = SpecialFn({Int, Int, Int, Int, Int, Int, numParams = {5, 6}}, Int),
-    GCREATEBIT = Fn("gCreateBit", {Int, Int, Int, numParams = {2, 3}}, Int),
+    GCREATEBIT = SpecialFn(nil, Int),
     GELLIPSE = Op("gEllipse", {Int, Int, Int, numParams = {2, 3}, numFixedParams = 2}),
     ["GEN$"] = Fn("GenStr", {Float, Int}, String),
     GET = Fn("Get", {}, Int),
@@ -622,6 +683,7 @@ Callables = {
     SECSTODATE = Op("SecsToDate", {Long, AddressOfInt, AddressOfInt, AddressOfInt, AddressOfInt, AddressOfInt, AddressOfInt, AddressOfInt}),
     SETDOC = Op("SetDoc", {String}),
     SETFLAGS = Op("SetFlags", {Long}),
+    SETNAME = Op("SetName", {String}),
     SETPATH = Op("SetPath", {String}),
     SIN = Fn("Sin", {Float}, Float),
     SPACE = Fn("Space", {}, Long),
@@ -713,7 +775,7 @@ rightAssociativeOperators = {
 
 function parseExpression(tokens)
     local result = parseUntypedExpression(tokens)
-    setExpressionType(result)
+    setExpressionType(result, tokens.oplFormat)
     return result
 end
 
@@ -857,20 +919,28 @@ function parseExpressionList(tokens)
     return result
 end
 
-function setExpressionType(exp)
+function expandPtrType(type, oplFormat)
+    if type == IntPtr then
+        return oplFormat == OplEr5 and Long or Int
+    else
+        return type
+    end
+end
+
+function setExpressionType(exp, oplFormat)
     local op = exp.op
     if exp.valType then
         -- Already set
     elseif op and exp[2].isPercentage then
         -- Percentage expressions always promote to Float
-        setExpressionType(exp[1])
-        setExpressionType(exp[2])
+        setExpressionType(exp[1], oplFormat)
+        setExpressionType(exp[2], oplFormat)
         exp.operandType = Float
         exp.valType = exp.operandType
     elseif op then
         local lhs = unaryOperators[op] and exp[2] or exp[1]
-        local lhsType = TypeToDataType[setExpressionType(lhs)]
-        local rhsType = TypeToDataType[setExpressionType(exp[2])]
+        local lhsType = TypeToDataType[setExpressionType(lhs, oplFormat)]
+        local rhsType = TypeToDataType[setExpressionType(exp[2], oplFormat)]
         local result = math.max(lhsType, rhsType) -- Works thanks to DataTypes being defined in type promotion order
         if result == DataTypes.EString and lhsType ~= rhsType then
             synerror(exp, "Cannot combine string and non-string data types")
@@ -889,7 +959,7 @@ function setExpressionType(exp)
         -- Check if it's a zero-args callable that doesn't obey the suffix convention
         local callable = Callables[exp.val]
         if callable then
-            exp.valType = callable.valType
+            exp.valType = expandPtrType(callable.valType, oplFormat)
         else
             exp.valType = valTypeFromName(exp.val)
         end
@@ -955,8 +1025,9 @@ end
 
 function numberCast(exp, to)
     local fromType = TypeToStr[exp.valType]
-    local toType = TypeToStr[to]
-    return synassert(opcodes[string.format("%sTo%s", fromType, toType)], exp, "Cannot cast from %s to %s", fromType, toType)
+    local toType = assert(TypeToStr[to], "Bad cast 'to' type!")
+    local oplFormat = exp.src[4]
+    return synassert(opcodes[oplFormat][string.format("%sTo%s", fromType, toType)], exp, "Cannot cast from %s to %s", fromType, toType)
 end
 
 function evalConstExpr(requiredType, exp, consts)
@@ -985,13 +1056,21 @@ function parseApp(tokens, consts)
         captions = {},
         icons = {},
     }
+    local appToken = tokens:current()
     tokens:advance() -- Past the APP
     local exps = parseExpressionList(tokens)
-    synassert(#exps == 2, token, "Expected APP name, uid")
+    local validTokens
+    if tokens.oplFormat == OplEr5 then
+        synassert(#exps == 2, appToken, "Expected APP name, uid")
+        aif.uid3 = evalConstExpr(Long, exps[2], consts)
+        validTokens = { "CAPTION", "ICON", "FLAGS", "ENDA", "eos" }
+    else
+        validTokens = { "TYPE", "PATH", "ICON", "EXT", "ENDA", "eos" }
+    end
     local defaultCaption = exps[1].val
-    aif.uid3 = evalConstExpr(Long, exps[2], consts)
 
-    while tokens:expect("CAPTION", "ICON", "FLAGS", "ENDA", "eos").type ~= "ENDA" do
+    local path, ext
+    while tokens:expectTokens(validTokens).type ~= "ENDA" do
         local token = tokens:current()
         if token.type == "eos" then
             tokens:advance()
@@ -1011,13 +1090,28 @@ function parseApp(tokens, consts)
             tokens:advance()
             synassert(aif.flags == nil, token, "Duplicate FLAGS")
             aif.flags = evalConstExpr(Int, parseExpression(tokens), consts)
+        elseif token.type == "TYPE" then
+            tokens:advance()
+            synassert(aif.appType == nil, token, "Duplicate TYPE")
+            aif.appType = evalConstExpr(Int, parseExpression(tokens), consts)
+        elseif token.type == "PATH" then
+            tokens:advance()
+            synassert(path == nil, token, "Duplicate PATH")
+            path = evalConstExpr(String, parseExpression(tokens), consts)
+        elseif token.type == "EXT" then
+            tokens:advance()
+            synassert(ext == nil, token, "Duplicate EXT")
+            ext = evalConstExpr(String, parseExpression(tokens), consts)
         else
-            synerror(token, "Unhandled")
+            synerror(token, "Unhandled token "..token.val)
         end
+    end
+    if tokens.oplFormat < OplEr5 then
+        aif.defaultFile = oplpath.join(path or "\\OPD", defaultCaption .. "." .. (ext or "ODB"))
     end
     tokens:advance()
     if next(aif.captions) == nil then
-        aif.captions[0] = defaultCaption
+        aif.captions[1] = { defaultCaption, 1 } -- 1 = sis.Locales.en_GB
     end
     return aif
 end
@@ -1135,6 +1229,7 @@ function procDeclsMatch(a, b)
 end
 
 function checkExpressionArguments(args, declArgs, token)
+    local oplFormat = token:context()
     local numParams = args and #args or 0
     if declArgs.numParams then
         -- numParams must be one of the numbers in declArgs.numParams
@@ -1167,8 +1262,8 @@ function checkExpressionArguments(args, declArgs, token)
         elseif declArgs[i] == AddressOfString or declArgs[i] == StringVariable then
             synassert(arg.type == "identifier" and arg.valType == String, arg, "Expected String var")
         else
-            local expType = TypeToDataType[arg.valType]
-            local declType = TypeToDataType[declArgs[i]]
+            local expType = TypeToDataType[expandPtrType(arg.valType, oplFormat)]
+            local declType = TypeToDataType[expandPtrType(declArgs[i], oplFormat)]
             -- Have to allow for permissable type promotions
             local maxType = math.max(declType, expType) -- Works thanks to DataTypes being defined in type promotion order
             if maxType == DataTypes.EString and expType ~= declType then
@@ -1276,6 +1371,7 @@ function ProcState:getVar(token, isArray)
 end
 
 function ProcState:emitNumberLiteral(valType, val)
+    local opcodes = opcodes[self.oplFormat]
     if valType == Int then
         if val >= -128 and val <= 127 then
             self:emit("Bb", opcodes.StackByteAsWord, val)
@@ -1308,6 +1404,7 @@ The rule for number type coercion in OPL is:
 ]]
 function ProcState:emitExpression(exp, requiredType)
     assert(requiredType)
+    local opcodes = opcodes[self.oplFormat]
 
     if requiredType:match("^"..AddressOfPrefix) then
         -- Special case, only used by ops which take the address of a variable
@@ -1434,26 +1531,7 @@ function ProcState:emitExpression(exp, requiredType)
             self:popStack(numStackSlots)
             self:pushStack(exp.valType)
         elseif callable then
-            assert(callable.type == "fn") -- If we're in an expression it must be a function...
-            local expArgs = exp.args or {}
-            if callable.args then
-                checkExpressionArguments(exp.args, callable.args, exp)
-            end
-            if callable.name then
-                for i, arg in ipairs(expArgs) do
-                    self:emitExpression(arg, callable.args[i])
-                end
-                self:emit("BB", opcodes.CallFunction, fncodes[callable.name])
-                if callable.args.numParams then
-                    self:emit("B", #expArgs)
-                end
-                self:popStack(#expArgs)
-                self:pushStack(callable.valType)
-            else
-                -- It's a special fn that has a dedicated handler fn for whatever weirdness it has with its arguments
-                local handler = _ENV["handleFn_"..exp.val]
-                handler(exp, self)
-            end
+            self:handleFn(exp, callable)
         else
             -- A variable of some sort
             local isArray = exp.args ~= nil
@@ -1512,6 +1590,7 @@ function ProcState:emitExpression(exp, requiredType)
 end
 
 function ProcState:emitVarLhs(var, token)
+    local opcodes = opcodes[self.oplFormat]
     -- If var is an array, assumes the array index has already been emitted
     local typeStr = TypeToStr[var.valType]
     if var.external then
@@ -1536,6 +1615,7 @@ function ProcState:emitVarLhs(var, token)
 end
 
 function ProcState:emitAddressOfVar(var, token, arraySubscriptExpression)
+    local opcodes = opcodes[self.oplFormat]
     if var.array then
         if arraySubscriptExpression == nil then
             -- The addressof(<array>) op is implemented as addressof(<array>[1])
@@ -1549,9 +1629,9 @@ function ProcState:emitAddressOfVar(var, token, arraySubscriptExpression)
     end
     self:emitVarLhs(var, token)
     if var.valType == String then
-        self:emit("BB", opcodes.CallFunction, fncodes.SAddr)
+        self:emit("BB", opcodes.CallFunction, fncodes[self.oplFormat].SAddr)
     else
-        self:emit("BB", opcodes.CallFunction, fncodes.Addr)
+        self:emit("BB", opcodes.CallFunction, fncodes[self.oplFormat].Addr)
     end
 end
 
@@ -1679,6 +1759,30 @@ function ProcState:resolveOffsets(argExps)
     end
 end
 
+function ProcState:handleFn(exp, callable)
+    local opcodes = opcodes[self.oplFormat]
+    assert(callable and callable.type == "fn")
+    local expArgs = exp.args or {}
+    if callable.args then
+        checkExpressionArguments(exp.args, callable.args, exp)
+    end
+    if callable.name then
+        for i, arg in ipairs(expArgs) do
+            self:emitExpression(arg, expandPtrType(callable.args[i], oplFormat))
+        end
+        self:emit("BB", opcodes.CallFunction, fncodes[self.oplFormat][callable.name])
+        if callable.args.numParams then
+            self:emit("B", #expArgs)
+        end
+        self:popStack(#expArgs)
+        self:pushStack(callable.valType)
+    else
+        -- It's a special fn that has a dedicated handler fn for whatever weirdness it has with its arguments
+        local handler = _ENV["handleFn_"..exp.val]
+        handler(exp, self)
+    end
+end
+
 function handleFn_ADDR(exp, procState)
     synassert(exp.args and #exp.args == 1 and (exp.args[1].type == "identifier" or exp.args[1].type == "call") , exp,
         "Expected 1 variable argument")
@@ -1694,6 +1798,8 @@ function handleFn_ADDR(exp, procState)
 end
 
 function handleFn_GCREATE(exp, procState)
+    local opcodes = opcodes[procState.oplFormat]
+    local fncodes = fncodes[procState.oplFormat]
     for i, arg in ipairs(exp.args) do
         procState:emitExpression(arg, Callables.GCREATE.args[i])
     end
@@ -1706,7 +1812,19 @@ function handleFn_GCREATE(exp, procState)
     procState:pushStack(Int)
 end
 
+function handleFn_GCREATEBIT(exp, procState)
+    local callable
+    if procState.oplFormat == OplEr5 then
+        callable = Fn("gCreateBit", {Int, Int, Int, numParams = {2, 3}}, Int)
+    else
+        -- The important differentiation here is the lack of numParams meaning handleFn will not emit a numParams byte
+        callable = Fn("gCreateBit", {Int, Int}, Int)
+    end
+    procState:handleFn(exp, callable)
+end
+
 local function handleFloatOp(exp, procState, fncode)
+    local opcodes = opcodes[procState.oplFormat]
     -- MIN(a, b, c, ...) or MIN(a(), count%)
     if exp.args and #exp.args == 2 and exp.args[1].type == "call" and #exp.args[1].args == 0 then
         local declArgs = {AddressOfFloatArray, Int}
@@ -1729,14 +1847,18 @@ local function handleFloatOp(exp, procState, fncode)
 end
 
 function handleFn_MAX(exp, procState)
+    local fncodes = fncodes[procState.oplFormat]
     handleFloatOp(exp, procState, fncodes.Max)
 end
 
 function handleFn_MEAN(exp, procState)
+    local fncodes = fncodes[procState.oplFormat]
     handleFloatOp(exp, procState, fncodes.Mean)
 end
 
 function handleFn_MENU(exp, procState)
+    local opcodes = opcodes[procState.oplFormat]
+    local fncodes = fncodes[procState.oplFormat]
     if exp.args and #exp.args > 0 then
         for i, arg in ipairs(exp.args) do
             procState:emitExpression(arg, Callables.MENU.args[i])
@@ -1750,10 +1872,13 @@ function handleFn_MENU(exp, procState)
 end
 
 function handleFn_MIN(exp, procState)
+    local fncodes = fncodes[procState.oplFormat]
     handleFloatOp(exp, procState, fncodes.Min)
 end
 
 function handleFn_MPOPUP(exp, procState)
+    local opcodes = opcodes[procState.oplFormat]
+    local fncodes = fncodes[procState.oplFormat]
     -- (x%,y%,posType%,item1$,key1%,item2$,key2%,...)
     synassert(exp.args and #exp.args >= 5 and (#exp.args & 1) == 1, exp, "Wrong number of arguments to mPOPUP")
     local declArgs = { Int, Int, Int }
@@ -1771,6 +1896,8 @@ function handleFn_MPOPUP(exp, procState)
 end
 
 function handleFn_IOOPEN(exp, procState)
+    local opcodes = opcodes[procState.oplFormat]
+    local fncodes = fncodes[procState.oplFormat]
     synassert(exp.args and #exp.args == 3, exp, "Expected 3 arguments")
     if exp.args[2].valType == IntPtr then
         checkExpressionArguments(exp.args, {AddressOfInt, IntPtr, Int}, exp)
@@ -1790,14 +1917,17 @@ function handleFn_IOOPEN(exp, procState)
 end
 
 function handleFn_STD(exp, procState)
+    local fncodes = fncodes[procState.oplFormat]
     handleFloatOp(exp, procState, fncodes.Std)
 end
 
 function handleFn_SUM(exp, procState)
+    local fncodes = fncodes[procState.oplFormat]
     handleFloatOp(exp, procState, fncodes.Sum)
 end
 
 function handleFn_VAR(exp, procState)
+    local fncodes = fncodes[procState.oplFormat]
     handleFloatOp(exp, procState, fncodes.Var)
 end
 
@@ -1806,6 +1936,7 @@ function parseProc(tokens, consts, procDecls, opxTable, strictExternals)
     assert(tokens:current().type == "PROC")
 
     local procState = ProcState {
+        oplFormat = tokens.oplFormat,
         tokens = tokens,
         consts = consts,
         procDecls = procDecls,
@@ -1831,6 +1962,8 @@ end
 
 function ProcState:parse()
     local tokens = self.tokens
+    local oplFormat = self.oplFormat
+    local opcodes = opcodes[oplFormat]
     tokens:expect("PROC")
     self.src = tokens:current().src
     local lineNumber = self.src[2]
@@ -1964,7 +2097,7 @@ function ProcState:parse()
                 -- It's a fn call used as an statement, so reuse the parseExpression logic then remember to drop the
                 -- result
                 local exp = parseExpression(tokens)
-                local valType = (callable and callable.valType) or valTypeFromName(token.val)
+                local valType = (callable and expandPtrType(callable.valType, oplFormat)) or valTypeFromName(token.val)
                 self:emitExpression(exp, valType)
                 self:emit("B", opcodes["Drop"..TypeToStr[valType]])
                 self:popStack(1)
@@ -1982,10 +2115,13 @@ function ProcState:parse()
                 if callable.name then
                     assert(callable.args)
                     for i, argExp in ipairs(args) do
-                        self:emitExpression(argExp, callable.args[i])
+                        self:emitExpression(argExp, expandPtrType(callable.args[i], oplFormat))
                     end
 
-                    local opcode = assert(opcodes[callable.name])
+                    local opcode = opcodes[callable.name]
+                    if opcode == nil then
+                        synerror(token, "%s is not available in the specified OPL version", token.val)
+                    end
                     if opcode >= 256 then
                         self:emit("BB", opcodes.NextOpcodeTable, opcode - 256)
                     else
@@ -2270,6 +2406,7 @@ function ProcState:parse()
 end
 
 function handleOp_BUSY(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local cmdToken = procState.tokens:current()
     procState.tokens:advance()
     local numParams
@@ -2310,10 +2447,12 @@ local function handleOpenOrCreate(procState, opcode)
 end
 
 function handleOp_CREATE(procState)
+    local opcodes = opcodes[procState.oplFormat]
     handleOpenOrCreate(procState, opcodes.Create)
 end
 
 function handleOp_CURSOR(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local tokens = procState.tokens
     local cmdToken = tokens:current()
     tokens:advance()
@@ -2347,6 +2486,7 @@ function handleOp_CURSOR(procState)
 end
 
 function handleOp_DBUTTONS(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local cmdToken = procState.tokens:current()
     procState.tokens:advance()
     -- Is there any actual limit on number of args?
@@ -2362,6 +2502,7 @@ function handleOp_DBUTTONS(procState)
 end
 
 function handleOp_DCHOICE(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
@@ -2371,6 +2512,7 @@ function handleOp_DCHOICE(procState, args)
 end
 
 function handleOp_DDATE(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
@@ -2381,6 +2523,7 @@ function handleOp_DDATE(procState, args)
 end
 
 function handleOp_DELETE(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     if #args == 1 then
         procState:emitExpression(args[1], String)
         procState:emit("B", opcodes.Delete)
@@ -2394,6 +2537,7 @@ function handleOp_DELETE(procState, args)
 end
 
 function handleOp_DEDIT(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
@@ -2407,23 +2551,29 @@ function handleOp_DEDIT(procState, args)
 end
 
 function handleOp_DFILE(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
     procState:emitExpression(args[3], Int)
+    local numEmittedArgs = 6
     if #args == 6 then
+        synassert(procState.oplFormat == OplEr5, args[4], "dFILE 6 argument overload only introduced in ER5")
         procState:emitExpression(args[4], Long)
         procState:emitExpression(args[5], Long)
         procState:emitExpression(args[6], Long)
-    else
+    elseif procState.oplFormat == OplEr5 then
         procState:emit("BBBBBB", opcodes.StackByteAsLong, 0, opcodes.StackByteAsLong, 0, opcodes.StackByteAsLong, 0)
         procState:pushStack(Long, Long, Long)
+    else
+        numEmittedArgs = 3
     end
     procState:emit("BB", opcodes.dItem, dItemTypes.dFILE)
-    procState:popStack(6)
+    procState:popStack(numEmittedArgs)
 end
 
 function handleOp_DFLOAT(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
@@ -2434,6 +2584,7 @@ function handleOp_DFLOAT(procState, args)
 end
 
 function handleOp_DLONG(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
@@ -2444,6 +2595,7 @@ function handleOp_DLONG(procState, args)
 end
 
 function handleOp_DPOSITION(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     procState:emitExpression(args[1], Int)
     procState:emitExpression(args[2], Int)
     procState:emit("BB", opcodes.dItem, dItemTypes.dPOSITION)
@@ -2451,6 +2603,7 @@ function handleOp_DPOSITION(procState, args)
 end
 
 function handleOp_DTEXT(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     procState:emitExpression(args[1], String)
     procState:emitExpression(args[2], String)
     local hasFlags = args[3] ~= nil
@@ -2462,6 +2615,7 @@ function handleOp_DTEXT(procState, args)
 end
 
 function handleOp_DTIME(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
@@ -2473,6 +2627,7 @@ function handleOp_DTIME(procState, args)
 end
 
 function handleOp_DXINPUT(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     local var = procState:getVar(args[1], false)
     procState:emitVarLhs(var, args[1])
     procState:emitExpression(args[2], String)
@@ -2481,12 +2636,14 @@ function handleOp_DXINPUT(procState, args)
 end
 
 function handleOp_ESCAPE(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local val = procState.tokens:expectNext("ON", "OFF").val
     procState:emit("BB", opcodes.Escape, val == "ON" and 1 or 0)
     procState.tokens:advance()
 end
 
 function handleOp_GCLOCK(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local tokens = procState.tokens
     local cmdToken = tokens:current()
     tokens:advance()
@@ -2518,6 +2675,7 @@ end
 
 local function handlePrint(procState)
     local tokens = procState.tokens
+    local opcodes = opcodes[procState.oplFormat]
     local cmdToken = tokens:current().val
     local gprint = cmdToken == "GPRINT"
     local opPrefix = gprint and "gPrint" or cmdToken == "LPRINT" and "LPrint" or "Print"
@@ -2545,6 +2703,7 @@ local function handlePrint(procState)
 end
 
 function handleOp_GPEEKLINE(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     procState:emitExpression(args[1], Int)
     procState:emitExpression(args[2], Int)
     procState:emitExpression(args[3], Int)
@@ -2567,6 +2726,7 @@ end
 
 function handleOp_GUPDATE(procState)
     local tokens = procState.tokens
+    local opcodes = opcodes[procState.oplFormat]
     tokens:advance()
     local what = tokens:current().type
     local flag
@@ -2584,6 +2744,7 @@ function handleOp_GUPDATE(procState)
 end
 
 function handleOp_GVISIBLE(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local val = procState.tokens:expectNext("ON", "OFF").val
     procState:emit("BB", opcodes.gVisible, val == "ON" and 1 or 0)
     procState.tokens:advance()
@@ -2591,6 +2752,7 @@ end
 
 function handleOp_INPUT(procState)
     local tokens = procState.tokens
+    local opcodes = opcodes[procState.oplFormat]
     tokens:advance()
     local varToken = tokens:current()
     local var = procState:getVar(varToken, false)
@@ -2610,6 +2772,7 @@ function handleOp_INPUT(procState)
 end
 
 function handleOp_LOCK(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local val = procState.tokens:expectNext("ON", "OFF").val
     procState:emit("BB", opcodes.Lock, val == "ON" and 1 or 0)
     procState.tokens:advance()
@@ -2620,6 +2783,7 @@ function handleOp_LPRINT(procState)
 end
 
 function handleOp_MCARD(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local cmdToken = procState.tokens:current()
     procState.tokens:advance()
     local args = parseExpressionList(procState.tokens)
@@ -2634,6 +2798,7 @@ function handleOp_MCARD(procState)
 end
 
 function handleOp_MCASC(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local cmdToken = procState.tokens:current()
     procState.tokens:advance()
     local args = parseExpressionList(procState.tokens)
@@ -2648,6 +2813,7 @@ function handleOp_MCASC(procState)
 end
 
 function handleOp_OFF(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     if args[1] then
         procState:emitExpression(args[1], Int)
         procState:emit("B", opcodes.OffFor)
@@ -2658,10 +2824,12 @@ function handleOp_OFF(procState, args)
 end
 
 function handleOp_OPEN(procState)
+    local opcodes = opcodes[procState.oplFormat]
     handleOpenOrCreate(procState, opcodes.Open)
 end
 
 function handleOp_OPENR(procState)
+    local opcodes = opcodes[procState.oplFormat]
     handleOpenOrCreate(procState, opcodes.OpenR)
 end
 
@@ -2670,6 +2838,7 @@ function handleOp_PRINT(procState)
 end
 
 function handleOp_SCREEN(procState, args)
+    local opcodes = opcodes[procState.oplFormat]
     procState:emitExpression(args[1], Int)
     procState:emitExpression(args[2], Int)
     if args[3] then
@@ -2683,6 +2852,7 @@ function handleOp_SCREEN(procState, args)
 end
 
 function handleOp_USE(procState)
+    local opcodes = opcodes[procState.oplFormat]
     local cmdToken = procState.tokens:current()
     procState.tokens:advance()
     local logExp = parseExpression(procState.tokens)
@@ -2703,8 +2873,26 @@ function readFile(filename, text)
     return data
 end
 
-function docompile(path, realPath, programText, includePaths)
-    local tokens = lex(programText, realPath or path)
+OplEr5Language = {
+    statemachine = statemachine,
+    identifierTokens = identifierTokens_er5,
+    precedences = precedences,
+    unaryOperators = unaryOperators,
+    rightAssociativeOperators = rightAssociativeOperators,
+}
+
+Opl93Language = {
+    statemachine = statemachine,
+    identifierTokens = identifierTokens_sibo,
+    precedences = precedences,
+    unaryOperators = unaryOperators,
+    rightAssociativeOperators = rightAssociativeOperators,
+}
+
+function docompile(path, realPath, programText, includePaths, format)
+    local lang = format == OplEr5 and OplEr5Language or Opl93Language
+    local tokens = lex(programText, realPath or path, lang, format)
+    tokens.oplFormat = assert(format, "OPL version not specified!")
     local procTable = {}
     local opxTable = {}
     local consts = {}
@@ -2745,7 +2933,7 @@ function docompile(path, realPath, programText, includePaths)
                 end
             end
             synassert(includeText, includeTok, 'Include not found "%s"', includeName)
-            local prog = docompile(includeName, foundIncludePath, includeText, nil)
+            local prog = docompile(includeName, foundIncludePath, includeText, nil, format)
             for name, exp in pairs(prog.consts) do
                 synassert(consts[name] == nil, token, "Duplicate definition of const %s", name)
                 consts[name] = exp
@@ -2787,9 +2975,12 @@ function docompile(path, realPath, programText, includePaths)
         elseif token.type == "DECLARE" then
             token = tokens:expectNext("EXTERNAL", "OPX")
             if token.type == "EXTERNAL" then
+                -- Technically not valid earlier, but it doesn't affect the output format so might as well allow it
+                -- assert(format == OplEr5, "EXTERNAL declarations only valid for ER5")
                 strictExternals = true
                 tokens:advance()
             else
+                assert(format == OplEr5, "OPX declarations only valid for ER5")
                 local opx = parseOpx(tokens, consts)
                 -- Add all the opx fns to our procDecls
                 for i, decl in ipairs(opx.procDecls) do
@@ -2799,6 +2990,8 @@ function docompile(path, realPath, programText, includePaths)
                 end
             end
         elseif token.type == "EXTERNAL" then
+            -- Technically not valid earlier, but it doesn't affect the output format so might as well allow it
+            -- assert(format == OplEr5, "EXTERNAL only valid for ER5")
             tokens:advance()
             parseProcDeclaration("EXTERNAL", tokens, procDecls)
         elseif token.type == "PROC" then
@@ -2824,9 +3017,9 @@ function docompile(path, realPath, programText, includePaths)
     end
 end
 
-function compile(path, realPath, programText, includePaths, shouldMakeAif)
-    local compileResult = docompile(path, realPath, programText, includePaths)
-    local opo = require("opofile").makeOpo(compileResult)
+function compile(path, realPath, programText, includePaths, shouldMakeAif, format)
+    local compileResult = docompile(path, realPath, programText, includePaths, format)
+    local opo = require("opofile").makeOpo(compileResult, format)
     local aifData = nil
     if shouldMakeAif and compileResult.aif then
         if compileResult.aif.icons then

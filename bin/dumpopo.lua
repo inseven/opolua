@@ -71,21 +71,21 @@ Options:
     local verbose = not args.decompile and (all or fnName == nil)
     opofile = require("opofile")
     runtime = require("runtime")
-    local procTable, opxTable, era = opofile.parseOpo(data, verbose)
-    local rt = runtime.newRuntime(nil, era)
-    rt:addModule("C:\\module", procTable, opxTable)
+    local prog = opofile.parseOpo2(data, verbose)
+    local rt = runtime.newRuntime(nil, prog.era)
+    rt:addModule("C:\\module", prog.procTable, prog.opxTable)
     if args.decompile then
         local options = {
-            era = era,
-            opxTable = opxTable,
+            opxTable = prog.opxTable,
             annotate = args.annotate,
             printFn = printf,
+            format = prog.translatorVersion,
         }
         local ok, err
         if fnName then
             ok, err = require("decompiler").decompileProc(rt:findProc(fnName:upper()), options)
         else
-            ok, err = require("decompiler").decompile(procTable, options)
+            ok, err = require("decompiler").decompile(prog.procTable, options)
         end
 
         if not ok then
@@ -96,7 +96,7 @@ Options:
         opofile.printProc(rt:findProc(fnName:upper()))
         rt:dumpProc(fnName:upper(), startAddr)
     else
-        for i, proc in ipairs(procTable) do
+        for i, proc in ipairs(prog.procTable) do
             printf("%d: ", i)
             opofile.printProc(proc)
             if all then
