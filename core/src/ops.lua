@@ -553,16 +553,30 @@ codes_sibo = setmetatable({
     [0x102] = "diamInit",
     [0x103] = "diamPos",
     [0x10E] = "rCache",
-    [0x118] = "IllegalOpCode",
-    [0x122] = "IllegalOpCode",
-    [0x123] = "IllegalOpCode",
-    [0x124] = "IllegalOpCode",
-    [0x126] = "IllegalOpCode",
-    [0x128] = "IllegalOpCode",
-    [0x129] = "IllegalOpCode",
-    [0x130] = "IllegalOpCode",
-    [0x133] = "IllegalOpCode",
-    [0x137] = "IllegalOpCode",
+    [0x118] = "IllegalOpCode", -- CallOpxFunc
+    [0x11A] = "IllegalOpCode", -- Modify
+    [0x11B] = "IllegalOpCode", -- Insert
+    [0x11C] = "IllegalOpCode", -- Cancel
+    [0x11D] = "IllegalOpCode", -- Put
+    [0x11E] = "IllegalOpCode", -- DeleteTable
+    [0x11F] = "IllegalOpCode", -- GotoMark
+    [0x120] = "IllegalOpCode", -- KillMark
+    [0x122] = "IllegalOpCode", -- GetEvent32
+    [0x123] = "IllegalOpCode", -- GetEventA32
+    [0x124] = "IllegalOpCode", -- gColor
+    [0x125] = "IllegalOpCode", -- SetFlags
+    [0x126] = "IllegalOpCode", -- SetDoc
+    [0x128] = "IllegalOpCode", -- gInfo32
+    [0x129] = "IllegalOpCode", -- IoWaitStat32
+    [0x12A] = "IllegalOpCode", -- Compact
+    [0x12B] = "IllegalOpCode", -- BeginTrans
+    [0x12C] = "IllegalOpCode", -- CommitTrans
+    [0x12D] = "IllegalOpCode", -- Rollback
+    [0x12E] = "IllegalOpCode", -- ClearFlags
+    [0x12F] = "IllegalOpCode", -- PointerFilter
+    [0x130] = "IllegalOpCode", -- mCasc
+    [0x133] = "IllegalOpCode", -- dEditCheckbox
+    [0x137] = "IllegalOpCode", -- gColorBackground
 }, { __index = codes_er5 })
 
 function IllegalOpCode(stack, runtime)
@@ -2872,10 +2886,6 @@ end
 
 function SetHelp(stack, runtime) -- 0x138
     unimplemented("SetHelp")
-end
-
-function mCardX(stack, runtime) -- 0x137
-    unimplemented("mCardX")
 end
 
 function gColorBackground(stack, runtime) -- ER5: 0x137, ER6: 0x136

@@ -35,6 +35,7 @@ function main()
         source = string, s = "source",
         help = true, h = "help",
         aif = true,
+        format = string, t = "format",
     })
 
     if args.help then
@@ -49,7 +50,8 @@ converted to text as per opltotext.lua.
 
 Options:
     --dump, -d
-        Prints the bytecode of the resulting binary to stdout.
+        Prints the bytecode of the resulting binary to stdout (using
+        dumpopo.lua --all).
 
     --include <dir>, -i <dir>
         Add <dir> to the list of locations to be searched when an INCLUDE
@@ -67,17 +69,30 @@ Options:
     --aif
         If specified, an AIF file will be written alongside <output>.
         The file being compiled must have a "APP .. ENDA" section.
+
+    --format <91|93|er5>
+        What OPL version to compile for. '91' for OPL1991 which targets the
+        Series 3, '93' for OPL1993 targetting the Series 3c, or 'er5' for the
+        Series 5. The default is 'er5' if not specified.
 ]])
         os.exit(false)
     end
 
+    local opofile = require("opofile")
     local compiler = require("compiler")
+    local argToFormat = {
+        ["91"] = compiler.Opl91,
+        ["93"] = compiler.Opl93,
+        ["er5"] = compiler.OplEr5,
+    }
+    local format = assert(argToFormat[args.format or "er5"], "Bad --format argument")
     local progText = readFile(args.filename)
     if progText:sub(1, 4) == string.pack("<I4", KUidDirectFileStore) then
         -- Assume it's a .opl file
         progText = require("recognizer").getOplText(progText)
     end
-    local ok, result, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText, args.include, args.aif)
+    local ok, result, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText,
+        args.include, args.aif, format)
     if not ok then
         if type(result) == "string" then
             print(result)
@@ -93,7 +108,6 @@ Options:
     assert(not args.aif or aif, "No APP section found in OPL source")
 
     if args.dump then
-        opofile = require("opofile")
         runtime = require("runtime")
         local procTable, opxTable, era = opofile.parseOpo(result, true)
         local rt = runtime.newRuntime(nil, era)

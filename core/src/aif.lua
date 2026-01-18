@@ -57,6 +57,7 @@ function parseAif(data)
                 icons = icons,
                 era = "sibo",
                 defaultFile = oplpath.join(path, name),
+                appType = type,
             }
         else
             return nil

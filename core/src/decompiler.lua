@@ -135,12 +135,13 @@ local function getLabelName(dest)
 end
 
 function decompileProc(proc, options)
-    local opxTable, era, annotate = options.opxTable, options.era, options.annotate
+    local opxTable, oplFormat, annotate = options.opxTable, options.format, options.annotate
     local printf = options.printFn
-    assert(era == "er5", "SIBO binaries are not supported yet!")
     local AddrType = era == "sibo" and EWord or ELong
     local ip = proc.codeOffset
     local endIdx = proc.codeOffset + proc.codeSize
+    local compiler = require("compiler")
+    local era = oplFormat >= compiler.OplEr5 and "er5" or "sibo"
     local ops = require("ops")
     local opcodes = {}
     for code, name in pairs(ops.codes_er5) do
@@ -153,7 +154,6 @@ function decompileProc(proc, options)
     end
     local fns = require("fns")
     local fncodes = fns["codes_"..era]
-    local compiler = require("compiler")
     local commands = compiler.Callables
     local AddressOfPrefix, AddressOfAny, VariablePrefix =
         compiler.AddressOfPrefix, compiler.AddressOfAny, compiler.VariablePrefix
@@ -195,10 +195,11 @@ function decompileProc(proc, options)
                 args = command.args
             }
         elseif command.type == "fn" and command.name then
+            local valType = compiler.expandPtrType(command.valType, oplFormat)
             standardFns[command.name] = {
                 name = prettyNames[cmdName] or cmdName,
                 args = command.args,
-                valType = assert(suffToType[command.valType])
+                valType = assert(suffToType[valType])
             }
         end
     end
@@ -230,6 +231,16 @@ function decompileProc(proc, options)
     standardFns["MenuWithMemory"] = {
         name = "MENU",
         args = { AddressOfInt },
+        valType = EWord,
+    }
+    standardFns["gCreateBit"] = {
+        name = "gCREATEBIT",
+        args = {Int, Int, Int, numParams = {2, 3}},
+        valType = EWord,
+    }
+    standardFns["gCreateBit_sibo"] = {
+        name = "gCREATEBIT",
+        args = {Int, Int},
         valType = EWord,
     }
 
@@ -600,7 +611,8 @@ function decompileProc(proc, options)
                 assert(valueType, "Unhandled arg type "..argType)
                 expr = popVar(valueType)
             else
-                valueType = assert(suffToType[argType], "Unhandled arg type "..argType)
+                local expanded = compiler.expandPtrType(argType, oplFormat)
+                valueType = assert(suffToType[expanded], "Unhandled arg type "..argType)
                 expr = popExpr(valueType)
             end
 
@@ -883,7 +895,7 @@ function decompileProc(proc, options)
             pushBinaryExpr(ELong, "/")
         elseif op == "DivideFloat" then
             pushBinaryExpr(EReal, "/")
-        elseif op == "CallFunction" then
+        elseif op == "CallFunction" or op == "CallFunction_sibo" then
             local fnCode = ip8()
             local fn = fncodes[fnCode]
             local standardFn = standardFns[fn]
@@ -1374,7 +1386,7 @@ function decompileProc(proc, options)
             -- built-in OPXes, at least. It's very annoying this info isn't part of the call info, like it is with
             -- RunProcedure.
             local oxh = require("includes."..opx.name:lower().."_oxh")
-            local decls = require("compiler").docompile(modName, nil, oxh, nil).procDecls
+            local decls = compiler.docompile(modName, nil, oxh, nil, oplFormat).procDecls
             local decl = assert(decls[fnIdx], "Function not found in OPX")
             local fnName = decl.sourceName
             local retType = getTypeFromName(fnName)

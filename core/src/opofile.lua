@@ -33,6 +33,7 @@ EOplTranVersionOpler1 = 0x200A
 KUidOpoLuaCompiler = 0x10286F9D
 
 TOpoFileHeader16 = "<c16I2I2"
+TOpoModuleHeader16 = "<i4I2I2i4"
 
 TOpoStoreHeader = "<I4I4I4I4I4"
 TOpoRootStream = "<I4I2I2I4I4I4I2"
@@ -58,17 +59,17 @@ function parseOpo2(data, verbose)
         -- TOpoFileHeader16
         local sig, fileVersion, offset = string.unpack(TOpoFileHeader16, data)
         -- It appears nothing cares about fileVersion (seems to always be 1?)
-        vprintf("OPL1993 version=%d offset=0x%08X\n", fileVersion, offset)
+        vprintf("SIBO version=%d offset=0x%08X\n", fileVersion, offset)
         -- TOpoModuleHeader16
-        local totalSize, translatorVersion, minRunVersion, pti = string.unpack("<i4I2I2i4", data, 1 + offset)
+        local totalSize, translatorVersion, minRunVersion, pti = string.unpack(TOpoModuleHeader16, data, 1 + offset)
         vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
         assert(translatorVersion == EOplTranVersionOplS3 or translatorVersion == EOplTranVersionOpl1993)
         assert(minRunVersion == EOplTranVersionOplS3 or minRunVersion == EOplTranVersionOpl1993)
         procTableIdx = pti
         opxTableIdx = 0 -- not supported in this version
-        srcNameIdx = 0x14
+        srcNameIdx = string.packsize(TOpoFileHeader16)
         result.era = "sibo"
-        tv = translatorVersion
+        result.translatorVersion = translatorVersion
     else
         -- TOpoStoreHeader
         local uid1, uid2, uid3, checksum, rootStreamIdx, pos = string.unpack(TOpoStoreHeader, data)
@@ -94,7 +95,7 @@ function parseOpo2(data, verbose)
         opxTableIdx = oti
         result.era = "er5"
         result.uid3 = uid3
-        tv = translatorVersion
+        result.translatorVersion = translatorVersion
     end
 
     local sourceName
@@ -130,7 +131,7 @@ function parseOpo2(data, verbose)
     end
 
     for i, proc in ipairs(result.procTable) do
-        parseProc(proc, tv)
+        parseProc(proc, result.translatorVersion)
     end
 
     if opxTableIdx ~= 0 then
@@ -400,7 +401,13 @@ function printProc(proc)
     printf("    iTotalTableSize: %d (0x%08X)\n", proc.iTotalTableSize, proc.iTotalTableSize)
 end
 
-function makeOpo(prog)
+function makeOpo(prog, format)
+    if format == nil then
+        format = EOplTranVersionOpler1
+    end
+    assert(prog.opxTable == nil or next(prog.opxTable) == nil or format == EOplTranVersionOpler1,
+        "Cannot use OPXes in this version of OPL")
+
     local result = { sz = 0 }
     local function add(fmt, ...)
         local data
@@ -413,19 +420,17 @@ function makeOpo(prog)
         result.sz = result.sz + #data
     end
 
-    local uid1, uid2, uid3 = KUidDirectFileStore, KUidOPO, KUidOplInterpreter
-    if prog.aif then
-        uid2 = KUidOplApp
-        uid3 = prog.aif.uid3
+    local translatorVersion = format
+    local minRunVersion = translatorVersion
+    local srcNameIdx, procOffset
+    if format == EOplTranVersionOpler1 then
+        local nominalSrcNameIdx = string.packsize(TOpoStoreHeader)
+        srcNameIdx = prog.path and nominalSrcNameIdx or 0
+        procOffset = nominalSrcNameIdx + (prog.path and (#prog.path + 1) or 0)
+    else
+        local srcNameIdx = string.packsize(TOpoFileHeader16) + string.packsize(TOpoModuleHeader16)
+        procOffset = srcNameIdx + 1 + (prog.path and #prog.path or 0)
     end
-    local chk = require("crc").getUidsChecksum(uid1, uid2, uid3)
-    local interpreterUid = KUidOplInterpreter
-    local translatorVersion = EOplTranVersionOpler1
-    local minRunVersion = EOplTranVersionOpler1
-    local nominalSrcNameIdx = string.packsize(TOpoStoreHeader)
-    local srcNameIdx = prog.path and nominalSrcNameIdx or 0
-
-    local procOffset = nominalSrcNameIdx + (prog.path and (#prog.path + 1) or 0)
 
     local procTable = {}
     local procTableSz = 0
@@ -476,7 +481,11 @@ function makeOpo(prog)
         end
         addh("<H", 0)
 
-        local headerData = string.pack("<s2", table.concat(header))
+        local headerData = table.concat(header)
+        if format > EOplTranVersionOplS3 then
+            -- Extra length word (definitionSz) before the rest of the header data
+            headerData = string.pack("<s2", headerData)
+        end
 
         local procData = headerData .. proc.code
         procTable[i] = {
@@ -495,8 +504,10 @@ function makeOpo(prog)
     local opxTableIdx = 0
 
     local opxSz = 0
-    for i, opx in ipairs(prog.opxTable) do
-        opxSz = opxSz + #opx.name + 1 + 4 + 2
+    if prog.opxTable then
+        for i, opx in ipairs(prog.opxTable) do
+            opxSz = opxSz + #opx.name + 1 + 4 + 2
+        end
     end
     if opxSz > 0 then
         opxSz = opxSz + 2 -- For numOpx
@@ -504,10 +515,25 @@ function makeOpo(prog)
         rootStreamIdx = opxTableIdx + opxSz
     end
 
-    add(TOpoStoreHeader, uid1, uid2, uid3, chk, rootStreamIdx)
-
-    if prog.path then
-        add("s1", prog.path)
+    if format == EOplTranVersionOpler1 then
+        local uid1, uid2, uid3 = KUidDirectFileStore, KUidOPO, KUidOplInterpreter
+        if prog.aif then
+            uid2 = KUidOplApp
+            uid3 = prog.aif.uid3
+        end
+        local chk = require("crc").getUidsChecksum(uid1, uid2, uid3)
+        add(TOpoStoreHeader, uid1, uid2, uid3, chk, rootStreamIdx)
+        if prog.path then
+            add("s1", prog.path)
+        end
+    else
+        local pathLen = prog.path and #prog.path or 0
+        -- offset will be bigger once APP data is supported
+        local offset = string.packsize(TOpoFileHeader16) + 1 + pathLen
+        add(TOpoFileHeader16, "OPLObjectFile**\0", 1, offset)
+        add("s1", prog.path or "")
+        local totalSize = rootStreamIdx
+        add(TOpoModuleHeader16, totalSize, translatorVersion, minRunVersion, procTableIdx)
     end
 
     for i, proc in ipairs(procTable) do
@@ -529,10 +555,11 @@ function makeOpo(prog)
         end
     end
 
-    local debugFlag = 0 -- ERelease
-    assert(result.sz == rootStreamIdx, "Mismatch in rootStreamIdx!")
-    add(TOpoRootStream, interpreterUid, translatorVersion, minRunVersion, srcNameIdx, procTableIdx, opxTableIdx, debugFlag)
-
+    if format == EOplTranVersionOpler1 then
+        local debugFlag = 0 -- ERelease
+        assert(result.sz == rootStreamIdx, "Mismatch in rootStreamIdx!")
+        add(TOpoRootStream, KUidOplInterpreter, translatorVersion, minRunVersion, srcNameIdx, procTableIdx, opxTableIdx, debugFlag)
+    end
     return table.concat(result)
 end
 

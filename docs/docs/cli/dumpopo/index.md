@@ -82,5 +82,3 @@ PROC WAT:
     PRINT "Waaaat"
 ENDP
 ```
-
-Note that the `--decompile` option does not yet work on Series 3 programs.
