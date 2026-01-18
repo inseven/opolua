@@ -286,7 +286,7 @@ codes_er5 = {
     [0xFD] = "IllegalOpCode",
     [0xFE] = "IllegalOpCode",
     [0xFF] = "NextOpcodeTable",
-    [0x100] = "gGrey_er5",
+    [0x100] = "gGrey",
     [0x101] = "DefaultWin",
     [0x102] = "IllegalOpCode",
     [0x103] = "IllegalOpCode",
@@ -550,7 +550,6 @@ codes_sibo = setmetatable({
     [0xD0] = "gInfo",
     [0xEE] = "SetName",
     [0xEF] = "StatusWin",
-    [0x100] = "gGrey_sibo",
     [0x102] = "diamInit",
     [0x103] = "diamPos",
     [0x10E] = "rCache",
@@ -2465,18 +2464,17 @@ function NextOpcodeTable_dump(runtime)
     return fmt("%02X %s %s", extendedCode, fnName, dumpFn and dumpFn(runtime) or "")
 end
 
-function gGrey_er5(stack, runtime) -- 0x100
+function gGrey(stack, runtime) -- 0x100
     local mode = stack:pop()
-    local val = mode == 1 and 0xAA or 0
-    runtime:gCOLOR(val, val, val)
-end
-
-function gGrey_sibo(stack, runtime) -- 0x100
-    local mode = stack:pop()
-    local ctx = runtime:getGraphicsContext()
-    assert(ctx.isWindow and ctx.displayMode == KColorgCreate4GrayMode,
-        "Cannot call gGREY on anything other than a 2bpp window")
-    ctx.greyMode = mode
+    if runtime:isSibo() then
+        local ctx = runtime:getGraphicsContext()
+        assert(ctx.isWindow and ctx.displayMode == KColorgCreate4GrayMode,
+            "Cannot call gGREY on anything other than a 2bpp window")
+        ctx.greyMode = mode
+    else
+        local val = mode == 1 and 0xAA or 0
+        runtime:gCOLOR(val, val, val)
+    end
 end
 
 function DefaultWin(stack, runtime) -- 0x101
