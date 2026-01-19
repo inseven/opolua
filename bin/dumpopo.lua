@@ -76,6 +76,7 @@ Options:
     rt:addModule("C:\\module", prog.procTable, prog.opxTable)
     if args.decompile then
         local options = {
+            path = args.filename,
             opxTable = prog.opxTable,
             annotate = args.annotate,
             printFn = printf,
