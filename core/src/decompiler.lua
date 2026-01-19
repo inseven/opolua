@@ -137,11 +137,11 @@ end
 function decompileProc(proc, options)
     local opxTable, oplFormat, annotate = options.opxTable, options.format, options.annotate
     local printf = options.printFn
-    local AddrType = era == "sibo" and EWord or ELong
     local ip = proc.codeOffset
     local endIdx = proc.codeOffset + proc.codeSize
     local compiler = require("compiler")
     local era = oplFormat >= compiler.OplEr5 and "er5" or "sibo"
+    local AddrType = era == "sibo" and EWord or ELong
     local ops = require("ops")
     local opcodes = {}
     for code, name in pairs(ops.codes_er5) do
