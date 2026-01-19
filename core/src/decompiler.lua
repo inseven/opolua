@@ -4,6 +4,19 @@
 _ENV = module()
 
 function decompile(procTable, options)
+    local compiler = require("compiler")
+    local formatToCmdline = {
+        [compiler.Opl91] = "91",
+        [compiler.Opl93] = "93",
+        [compiler.OplEr5] = "er5",
+    }
+
+    options.printFn([[
+REM decompiled from %s
+REM compile with: compile.lua --format %s
+
+]], options.path or "<stdin>", formatToCmdline[options.format])
+
     local opxTable = options.opxTable
     for _, opx in ipairs(opxTable or {}) do
         options.printFn('INCLUDE "%s.oxh"\n', opx.name:lower())
