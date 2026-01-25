@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 TARGET = qluac
-CONFIG -= qt
+CONFIG -= qt debug_and_release debug_and_release_target
 CONFIG += cmdline sdk_no_version_check
 
 !windows:DEFINES += LUA_USE_POSIX
