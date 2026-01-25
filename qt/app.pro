@@ -40,6 +40,8 @@ macx {
     QMAKE_SUBSTITUTES += plist
     QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
     ICON = AppIcon.icns
+} else {
+    TARGET = opolua
 }
 
 windows {
