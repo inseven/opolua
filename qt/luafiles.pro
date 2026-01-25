@@ -103,22 +103,13 @@ defineReplace(getLuaAlias) {
     return ($$repl)
 }
 
-defineReplace(getLuacOutputFilename) {
-    repl = $$getLuaAlias($$1)
-    repl = "luac/$${repl}c"
-    # message("getLuacOutputFilename $$1 -> $$repl")
-    return($$repl)
-}
-
 equals(USE_LUAC, 1) {
     # Compile LUA_FILES
     message("Using luac")
-    mkpath($$OUT_PWD/luac/includes)
-    mkpath($$OUT_PWD/luac/modules)
-    mkpath($$OUT_PWD/luac/opx)
     compilelua.input = LUA_FILES
-    compilelua.output_function = getLuacOutputFilename
+    compilelua.output = ${QMAKE_FILE_BASE}.luac
     compilelua.commands = $$OUT_PWD/qluac ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT}
+    compilelua.variable_out = LUAC_FILES
     compilelua.CONFIG += no_link target_predeps
     QMAKE_EXTRA_COMPILERS += compilelua
 } else {
@@ -133,8 +124,7 @@ makeLuacManifest.commands = $$OUT_PWD/qluac manifest $$LUA_QRC /lua
 for (file, LUA_FILES) {
     alias = $$getLuaAlias($$file)
     equals(USE_LUAC, 1) {
-        luacFile = $$getLuacOutputFilename($$file)
-        path = $$relative_path($$OUT_PWD/$$luacFile, $$PWD)
+    path = $$OUT_PWD/$$basename(file)c
     } else {
         path = $$file
     }
