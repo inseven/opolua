@@ -216,6 +216,7 @@ int load(lua_State* L, const QString& path)
     QFile f(path);
     if (!f.open(QFile::ReadOnly)) {
         // qDebug() << "Couldn't find file" << path;
+        lua_pushfstring(L, "Couldn't find file '%s'", qPrintable(path));
         return LUA_ERRFILE;
     }
     auto data = f.readAll();
@@ -242,7 +243,7 @@ int dofile(lua_State* L, const QString& path)
 {
     int err = load(L, path);
     if (err) {
-        qDebug() << "Error loading file " << path << lua_tostring(L, -1);
+        qDebug() << "Error loading file " << err << luaL_tolstring(L, -1, nullptr);
         lua_pop(L, 1);
     } else {
         err = lua_pcall(L, 0, 0, 0);

@@ -120,7 +120,9 @@ OplRuntime::OplRuntime(QObject *parent)
 
     configureLuaResourceSearcher(L);
 
-    ::dofile(L, ":/lua/init.lua");
+    if (::dofile(L, ":/lua/init.lua")) {
+        qFatal("Couldn't load init.lua, something is really broken");
+    }
 
     lua_pushlightuserdata(L, this);
     lua_pushcclosure(L, printHandler_s, 1);
