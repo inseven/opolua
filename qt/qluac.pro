@@ -14,10 +14,12 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-TEMPLATE = subdirs
-SUBDIRS = qluac luafiles app
-# These aren't actually in subdirectories but Qt doesn't have any nicer syntax for this.
-qluac.file = qluac.pro
-luafiles.file = luafiles.pro
-app.file = app.pro
-app.depends = qluac luafiles
+TARGET = qluac
+CONFIG -= qt
+CONFIG += cmdline sdk_no_version_check
+
+!windows:DEFINES += LUA_USE_POSIX
+
+SOURCES += qluac.c
+
+INCLUDEPATH += ../dependencies/LuaSwift/Sources/CLua/lua
