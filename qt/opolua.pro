@@ -19,5 +19,6 @@ SUBDIRS = qluac luafiles app
 # These aren't actually in subdirectories but Qt doesn't have any nicer syntax for this.
 qluac.file = qluac.pro
 luafiles.file = luafiles.pro
+luafiles.depends = qluac
 app.file = app.pro
 app.depends = qluac luafiles

@@ -124,9 +124,9 @@ makeLuacManifest.commands = $$OUT_PWD/qluac manifest $$LUA_QRC /lua
 for (file, LUA_FILES) {
     alias = $$getLuaAlias($$file)
     equals(USE_LUAC, 1) {
-    path = $$OUT_PWD/$$basename(file)c
+        path = $$OUT_PWD/$$basename(file)c
     } else {
-        path = $$file
+        path = $$absolute_path($$file, $$PWD)
     }
     # message("makeLuacManifest.commands += $$alias = $$path")
     makeLuacManifest.commands += $$alias $$path
