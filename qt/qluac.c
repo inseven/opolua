@@ -42,6 +42,9 @@ int main(int argc, const char* argv[])
 
 static int compile(int argc, const char* argv[])
 {
+    for (int i = 0; i < argc; i++) {
+        fprintf(stderr, "QLUAC: argv[%d] = %s\n", i, argv[i]);
+    }
     const char* filename = argv[2];
     const size_t filenameLen = strlen(filename);
     const char* outfile = argv[3];
@@ -73,7 +76,7 @@ static int compile(int argc, const char* argv[])
     if (ok != LUA_OK) {
         // In theory we just print the error on the top of the stack and call it a day. That however has the
         // potentially-rewritten displayName rather than the actual filesystem path, which is much more useful here.
-        // So reload the file with the original name if it was rewritten
+        // So reload the file with the original name if it was rewritten.
         if (displayName) {
             lua_pop(L, 1);
             luaswift_loadfile(L, filename, filename, "t");
