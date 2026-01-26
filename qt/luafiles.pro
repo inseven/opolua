@@ -108,8 +108,7 @@ equals(USE_LUAC, 1) {
     message("Using luac")
     compilelua.input = LUA_FILES
     compilelua.output = ${QMAKE_FILE_BASE}.luac
-    compilelua.commands = $$OUT_PWD/qluac compile ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT} ../core/src/=:/lua/ ../bin/=:/lua/
-    # compilelua.variable_out = LUAC_FILES
+    compilelua.commands = $$OUT_PWD/qluac compile ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT} /core/src/= /bin/=
     compilelua.CONFIG += no_link target_predeps
     QMAKE_EXTRA_COMPILERS += compilelua
 } else {
