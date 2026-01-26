@@ -234,7 +234,12 @@ int load(lua_State* L, const QString& path)
         data = data.mid(eol);
     }
 
-    auto ctx = QString("@") + path;
+    QString ctx;
+    if (path.startsWith(":/lua/")) {
+        ctx = QString("@") + path.mid(6);
+    } else {
+        ctx = QString("@") + path;
+    }
     int err = luaL_loadbuffer(L, data.data(), data.size(), ctx.toUtf8().data());
     return err;
 }

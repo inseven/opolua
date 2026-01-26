@@ -42,30 +42,38 @@ int main(int argc, const char* argv[])
 
 static int compile(int argc, const char* argv[])
 {
-    for (int i = 0; i < argc; i++) {
-        fprintf(stderr, "QLUAC: argv[%d] = %s\n", i, argv[i]);
-    }
+    // for (int i = 0; i < argc; i++) {
+    //     fprintf(stderr, "QLUAC: argv[%d] = %s\n", i, argv[i]);
+    // }
     const char* filename = argv[2];
     const size_t filenameLen = strlen(filename);
     const char* outfile = argv[3];
     char* displayName = NULL;
 
-    for (int i = 4; i < argc; i++) {
-        const char* prefix = argv[i];
-        const char* eq = strchr(prefix, '=');
+    for (int i = 4; !displayName && i < argc; i++) {
+        char* prefix = strdup(argv[i]);
+        char* eq = strchr(prefix, '=');
         if (!eq) {
             fprintf(stderr, "Prefix rewrites must be of the form PREFIX=NEWPREFIX\n");
             return 1;
         }
+        *eq = 0; // prefix is now null terminated
         size_t prefixLen = eq - prefix;
-        if (filenameLen > prefixLen && memcmp(filename, prefix, prefixLen) == 0) {
+        // The logic here is a bit weird because og how qluac is invoked, via QMAKE_EXTRA_COMPILERS, which prevents us
+        // from controlling the exact format of the <filename> argument. It will have any number of path components
+        // prior to the prefix depending on where the build directory is. So we will treat prefix as having an implicit
+        // "*" at the front (or however you want to consider it).
+        const char* found = strstr(filename, prefix);
+        if (found) {
             const char* newPrefix = eq + 1;
             size_t newPrefixLen = strlen(newPrefix);
-            displayName = malloc(filenameLen + newPrefixLen - prefixLen + 1);
+            size_t filenamePrefixLen = found + prefixLen - filename;
+            displayName = malloc(filenameLen - filenamePrefixLen + newPrefixLen + 1);
             memcpy(displayName, newPrefix, newPrefixLen);
-            memcpy(displayName + newPrefixLen, filename + prefixLen, filenameLen - prefixLen + 1);
-            break;
+            memcpy(displayName + newPrefixLen, filename + filenamePrefixLen, filenameLen - filenamePrefixLen + 1);
+            // fprintf(stderr, "Using displayName %s for %s\n", displayName, filename);
         }
+        free(prefix);
     }
 
     lua_State* L = luaL_newstate();
