@@ -20,6 +20,6 @@ CONFIG += cmdline sdk_no_version_check
 
 !windows:DEFINES += LUA_USE_POSIX
 
-SOURCES += qluac.c
+SOURCES += qluac.c ../dependencies/LuaSwift/Sources/CLua/loadfile.c
 
 INCLUDEPATH += ../dependencies/LuaSwift/Sources/CLua/lua

@@ -19,6 +19,11 @@
 #define MAKE_LIB
 #include "onelua.c"
 
+int luaswift_loadfile(lua_State *L, const char *filename,
+                      const char *displayname,
+                      const char *mode);
+
+static int compile(int argc, const char* argv[]);
 static int filewriter(lua_State *L, const void* p, size_t sz, void* ud);
 static int makeManifest(int argc, const char* argv[]);
 
@@ -26,28 +31,63 @@ int main(int argc, const char* argv[])
 {
     if (argc > 4 && strcmp(argv[1], "manifest") == 0) {
         return makeManifest(argc, argv);
-    }
-
-    if (argc != 3) {
-        fprintf(stderr, "Syntax: %s <luafile> <outfile>\n", argv[0]);
+    } else if (argc >= 4 && strcmp(argv[1], "compile") == 0) {
+        return compile(argc, argv);
+    } else {
+        fprintf(stderr, "Syntax: %s compile <luafile> <outfile> [<prefixRewrite>=<newPrefix>, ...]\n", argv[0]);
         fprintf(stderr, "        %s manifest <outfile> <prefix> <src> <alias> [<src> <alias>...]\n", argv[0]);
         return 1;
     }
+}
 
-    const char* filename = argv[1];
-    const char* outfile = argv[2];
+static int compile(int argc, const char* argv[])
+{
+    const char* filename = argv[2];
+    const size_t filenameLen = strlen(filename);
+    const char* outfile = argv[3];
+    char* displayName = NULL;
 
+    for (int i = 4; i < argc; i++) {
+        const char* prefix = argv[i];
+        const char* eq = strchr(prefix, '=');
+        if (!eq) {
+            fprintf(stderr, "Prefix rewrites must be of the form PREFIX=NEWPREFIX\n");
+            return 1;
+        }
+        size_t prefixLen = eq - prefix;
+        if (filenameLen > prefixLen && memcmp(filename, prefix, prefixLen) == 0) {
+            const char* newPrefix = eq + 1;
+            size_t newPrefixLen = strlen(newPrefix);
+            displayName = malloc(filenameLen + newPrefixLen - prefixLen + 1);
+            memcpy(displayName, newPrefix, newPrefixLen);
+            memcpy(displayName + newPrefixLen, filename + prefixLen, filenameLen - prefixLen + 1);
+            break;
+        }
+    }
 
     lua_State* L = luaL_newstate();
-    int ok = luaL_loadfile(L,filename);
+    // luaL_loadfilex() doesn't let us customise the name that ends up in the debug info (and thus in stacktraces)
+    // fortunately LuaSwift already has a C function that does.
+    int ok = luaswift_loadfile(L, filename, displayName ? displayName : filename, "t");
+    free(displayName);
     if (ok != LUA_OK) {
+        // In theory we just print the error on the top of the stack and call it a day. That however has the
+        // potentially-rewritten displayName rather than the actual filesystem path, which is much more useful here.
+        // So reload the file with the original name if it was rewritten
+        if (displayName) {
+            lua_pop(L, 1);
+            luaswift_loadfile(L, filename, filename, "t");
+        }
+
         fprintf(stderr, "%s\n", luaL_tolstring(L, -1, NULL));
+        lua_close(L);
         return 1;
     }
 
     FILE* f = fopen(outfile, "wb");
     if (!f) {
         fprintf(stderr, "qluac: Cannot open %s\n", outfile);
+        lua_close(L);
         return 1;
     }
 
