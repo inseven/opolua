@@ -43,6 +43,8 @@ public:
     OplRuntimeGui& getRuntime();
     void showLauncher();
 
+    void setScale(int scale);
+
 protected:
     void closeEvent(QCloseEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
@@ -71,7 +73,6 @@ private slots:
 
 private:
     void setDevice(int device);
-    void setScale(int scale);
     void doSetScale(int scale);
     void sizeWindowToFitInterpreter();
     QString getSourceUrlForPath(const QString& path);
