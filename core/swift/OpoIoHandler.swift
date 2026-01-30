@@ -702,6 +702,12 @@ public protocol FileSystemIoHandler {
 }
 
 public struct Sis {
+
+    public enum Target: String, Codable {
+        case epoc16
+        case epoc32
+    }
+
     public struct Version: Codable, Hashable /* also Comparable, CustomStringConvertible */ {
         public let major: Int
         public let minor: Int
@@ -713,6 +719,7 @@ public struct Sis {
     }
 
     public struct File: Codable, Hashable {
+        public let target: Target
         public let name: [String: String]
         public let uid: UInt32
         public let version: Version

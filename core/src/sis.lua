@@ -301,6 +301,11 @@ LangShortCodes = enum {
     [0x0062] = "ZU", -- Zulu
 }
 
+InstVerToTarget = enum {
+    [0x10] = "epoc16",
+    [0x64] = "epoc32",
+}
+
 function parseSisFile(data, verbose)
     local uid1, uid2, uid3, uid4, checksum, nLangs, nFiles, pos = string.unpack("<I4I4I4I4I2I2I2", data)
     if verbose then
@@ -316,7 +321,8 @@ function parseSisFile(data, verbose)
             nReq, lang, instFiles, instDrv, nCaps, instVer)
     end
 
-    assert(instVer == 0x64, "Only ER5 SIS files are supported")
+    local target = InstVerToTarget[instVer]
+    assert(target, "Only EPOC16 or EPOC32 release 5 (ER5) SIS files are supported")
 
     local options, type, verMaj, verMin, variant, langPtr, filesPtr, reqPtr, certPtr, namePtr, pos =
         string.unpack("<I2I2I2I2I4I4I4I4I4I4", data, pos)
@@ -330,6 +336,7 @@ function parseSisFile(data, verbose)
     local endOfStrings = 0
 
     local result = {
+        target = target,
         name = {},
         langs = {},
         installedFiles = instFiles,
@@ -509,6 +516,7 @@ function makeManifest(sisfile, singleLanguage, includeFiles)
 
     local result = {
         type = "sis",
+        target = sisfile.target,
         name = includeLangs and json.Dict(langListToLocaleMap(sisfile.langs, sisfile.name)) or sisfile.name[langIdx],
         version = { major = sisfile.version[1], minor = sisfile.version[2] },
         uid = sisfile.uid,
@@ -890,7 +898,7 @@ function describeSis(sisfile, indent)
     end
 
     printf("%sVersion: %d.%d\n", indent, sisfile.version[1], sisfile.version[2])
-    
+
     printf("%sUid: 0x%08X\n", indent, sisfile.uid)
 
     for _, lang in ipairs(sisfile.langs) do
@@ -928,7 +936,7 @@ function describeSis(sisfile, indent)
 end
 
 function pkgToManifest(pkgData)
-    local manifest = { files = {} }
+    local manifest = { target = "epoc32", files = {} }
 
     for line in pkgData:gmatch("[^\r\n]*") do
         local pos = 1
@@ -962,8 +970,22 @@ function pkgToManifest(pkgData)
             table.insert(manifest.files, file)
         end
 
-        if line == "" or line:match("^;") then
-            -- ignore
+        if line == "" then
+            -- Ignore
+        elseif line:match("^;") then
+            -- Custom Properties
+            local key, value = line:match("^;[ \t]*([a-zA-Z0-9]+)[ \t]*:[ \t]*([a-zA-Z0-9]+)")
+            if key then
+                if key:lower() == "target" then
+                    manifest.target = value:lower()
+                    assert(InstVerToTarget[value:lower()], "Unknown target '"..value.."'")
+                    manifest.target = value
+                else
+                    error("Unknown custom property '"..key.."'")
+                end
+            else
+                -- Ignore
+            end
         elseif line:match("^&") then
             -- Languages
             manifest.languages = {}
@@ -1001,7 +1023,7 @@ function pkgToManifest(pkgData)
             }
             local variant = assert(tonumber(variantStr), "Bad variant "..variantStr)
             assert(variant == 0, "Non-zero variant not supported!")
-            
+
             local optionsStr = line:match(" *,(.*)", pos)
             if optionsStr == "ID" then
                 manifest.options = 2
@@ -1084,7 +1106,7 @@ function makeSis(manifest)
     local function appendData(str)
         parts.sz = parts.sz + #str
         table.insert(parts, str)
-    end        
+    end
     local function appendf(fmt, ...)
         local part = string.pack("<" .. fmt, ...)
         appendData(part)
@@ -1114,7 +1136,7 @@ function makeSis(manifest)
         0, -- instFiles
         0, -- instDrv
         0, -- nCaps
-        0x64, -- instVer
+        InstVerToTarget[manifest.target], -- instVer
 
         manifest.options,
         0, -- type
@@ -1128,7 +1150,7 @@ function makeSis(manifest)
     local filesPtrIdx = #parts
     appendf("I4", 0)
     local reqPtrIdx = #parts
-    
+
     appendf("I4", 0)
     -- certPtr is always zero
 
