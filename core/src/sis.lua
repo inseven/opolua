@@ -893,6 +893,7 @@ local shortFileRunDetails = enum {
 
 function describeSis(sisfile, indent)
     local cp1252 = require("cp1252")
+    printf("Target: %s\n", sisfile.target)
     for _, name in ipairs(sisfile.name) do
         printf("%sName: %s\n", indent, cp1252.toUtf8(name))
     end

@@ -327,6 +327,7 @@ end
 
 function manifestToUtf8(manifest)
     local result = {
+        target = manifest.target,
         type = manifest.type,
         version = manifest.version,
         uid = manifest.uid,
