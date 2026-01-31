@@ -113,7 +113,7 @@ Various useful resources which aided greatly in reverse-engineering the OPL and 
 
 We invite and welcome contributions! There's a pretty comprehensive list of [issues](https://github.com/inseven/opolua/issues) to get you started, and our documentation is always in need of some care and attention.
 
-Please recognise opolua is a labour of love, and be respectful of others in your communications. We will not accept racism, sexism, or any form of discrimination in our community.
+Please recognize OpoLua is a labour of love, and be respectful of others in your communications. We will not accept racism, sexism, or any form of discrimination in our community.
 
 ## License
 
