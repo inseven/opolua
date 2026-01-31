@@ -702,21 +702,39 @@ public protocol FileSystemIoHandler {
 }
 
 public struct Sis {
+
+    public enum Target: String, Codable {
+        case epoc16
+        case epoc32
+    }
+
     public struct Version: Codable, Hashable /* also Comparable, CustomStringConvertible */ {
         public let major: Int
         public let minor: Int
+
+        public static let zero: Version = .init(major: 0, minor: 0)
 
         public init(major: Int, minor: Int) {
             self.major = major
             self.minor = minor
         }
+
     }
 
     public struct File: Codable, Hashable {
+        public let target: Target
         public let name: [String: String]
         public let uid: UInt32
         public let version: Version
         public let languages: [String]
+
+        public init(target: Target, name: [String: String], uid: UInt32, version: Version, languages: [String]) {
+            self.target = target
+            self.name = name
+            self.uid = uid
+            self.version = version
+            self.languages = languages
+        }
     }
 
     public struct Installation: Codable {
