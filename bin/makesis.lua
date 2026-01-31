@@ -61,20 +61,29 @@ Options:
     --version <major>.<minor>
         Override the version specified in the package file.
 
-Path rewriting
+Path Rewriting
 
-Source paths in the package file that are different to the on-disk filesystem
-can be used by specifying one or more --path arguments. Each path argument can
-specify either a single file, for example:
+  Source paths in the package file that are different to the on-disk filesystem
+  can be used by specifying one or more --path arguments. Each path argument
+  can specify either a single file, for example:
 
-makesis.lua [...] --path '\epoc32\RELEASE\MARM\REL\Sysram1.opx'=c/SYSTEM/OPX/Sysram1.opx
+    makesis.lua [...] \
+      --path '\epoc32\RELEASE\MARM\REL\Sysram1.opx'=c/SYSTEM/OPX/Sysram1.opx
 
-or a directory (note the <oplpath> must end in a backslash):
+  or a directory (note the <oplpath> must end in a backslash):
 
-makesis.lua [...] --path '\epoc32\RELEASE\MARM\REL\'=c/SYSTEM/OPX
+    makesis.lua [...] \
+      --path '\epoc32\RELEASE\MARM\REL\'=c/SYSTEM/OPX
 
-Directory substitutions are not done recursively, eg the above would not match
-a file in a subdirectory of REL.
+  Directory substitutions are not done recursively, eg the above would not
+  match a file in a subdirectory of REL.
+
+EPOC16 Support
+
+  If makesis finds a the special comment `; target: epoc16` in a package file,
+  it will generate a SIS file with the installer version 0x10 to mark it as
+  being suitable for EPOC16 devices.
+
 ]])
         os.exit(true)
     end
