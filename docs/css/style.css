@@ -4,6 +4,7 @@
     --secondary-foreground-color: #000;
     --primary-background-color: #ffffff;
     --secondary-background-color: #f0f0f0;
+    --tertiary-background-color: #ddd;
     --navigation-background: rgba(255, 255, 255, 0.7);
     --icon-border-color: rgba(0, 0, 0, 0.2);
     --icon-size: 192px;
@@ -25,7 +26,8 @@
         --primary-foreground-color: #ffffff;
         --secondary-foreground-color: gray;
         --primary-background-color: #181818;
-        --secondary-background-color: #222222;
+        --secondary-background-color: #2c2c2c;
+        --tertiary-background-color: #3a3a3a;
         --navigation-background: rgba(24, 24, 24, 0.7);
         --primary-action-background-color: #0a84ff;
 
@@ -140,10 +142,15 @@ table {
 
 th {
     text-align: left;
+    border-bottom: var(--line-weight) solid var(--primary-foreground-color);
 }
 
 tr:nth-child(even) {
-    background: #eee;
+    background: var(--secondary-background-color);
+}
+
+tr:nth-child(even) pr, tr:nth-child(even) code {
+    background-color: var(--tertiary-background-color);
 }
 
 th, td {

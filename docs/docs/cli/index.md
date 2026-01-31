@@ -1,6 +1,7 @@
 ---
 title: Command Line Interface
 short_title: CLI
+priority: 90
 layout: documentation_toc
 ---
 
