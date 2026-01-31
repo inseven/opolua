@@ -1,7 +1,7 @@
 :root {
     --tint-color: #57C2C0;
     --primary-foreground-color: #000;
-    --secondary-foreground-color: #000;
+    --secondary-foreground-color: #666;
     --primary-background-color: #ffffff;
     --secondary-background-color: #f0f0f0;
     --tertiary-background-color: #ddd;
@@ -16,6 +16,7 @@
     --line-height: 1.7em;
     --h1-size: 3em;
     --h2-size: 1.5em;
+    --h3-size: 1.4em;
 
     --line-weight: 0.5px;
 }
@@ -94,7 +95,13 @@ pre:has(> code.language-mermaid), code.language-mermaid {
 
 hr {
     border: 0;
-    border-bottom: 0.5px solid var(--primary-foreground-color);
+    border-bottom: 0.5px solid var(--secondary-foreground-color);
+}
+
+.footnotes {
+    font-size: 0.85em;
+    border-top: var(--line-weight) solid var(--secondary-foreground-color);
+    color: var(--secondary-foreground-color);
 }
 
 p.center {
@@ -177,7 +184,12 @@ th, td {
     text-align: left;
     border-bottom: var(--line-weight) solid var(--secondary-foreground-color);
     font-size: var(--h2-size);
+    font-weight: 200;
     padding-bottom: 0.5rem;
+}
+
+.content-sidebar h2 {
+    font-size: var(--h3-size);
 }
 
 @media (min-width:768px) {
