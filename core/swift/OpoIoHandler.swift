@@ -724,6 +724,14 @@ public struct Sis {
         public let uid: UInt32
         public let version: Version
         public let languages: [String]
+
+        public init(target: Target, name: [String: String], uid: UInt32, version: Version, languages: [String]) {
+            self.target = target
+            self.name = name
+            self.uid = uid
+            self.version = version
+            self.languages = languages
+        }
     }
 
     public struct Installation: Codable {
