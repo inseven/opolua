@@ -271,6 +271,11 @@ Options:
             printf("; Recreate with (assuming cwd for the install root):\n")
             printf("; dumpsis.lua --allfiles '%s' .\n", args.filename)
             printf("; makesis.lua %s <pkg>\n\n", table.concat(paths, " "))
+
+            if sisfile.target ~= "epoc32" then
+                printf("; target: %s\n\n", sisfile.target)
+            end
+
             local langCodes = {}
             for i, lang in ipairs(sisfile.langs) do
                 langCodes[i] = sis.LangShortCodes[lang]
