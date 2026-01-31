@@ -67,13 +67,11 @@ Path Rewriting
   can be used by specifying one or more --path arguments. Each path argument
   can specify either a single file, for example:
 
-    makesis.lua [...] \
-      --path '\epoc32\RELEASE\MARM\REL\Sysram1.opx'=c/SYSTEM/OPX/Sysram1.opx
+    makesis.lua [...] --path '\epoc32\RELEASE\MARM\REL\Sysram1.opx'=c/SYSTEM/OPX/Sysram1.opx
 
   or a directory (note the <oplpath> must end in a backslash):
 
-    makesis.lua [...] \
-      --path '\epoc32\RELEASE\MARM\REL\'=c/SYSTEM/OPX
+    makesis.lua [...] --path '\epoc32\RELEASE\MARM\REL\'=c/SYSTEM/OPX
 
   Directory substitutions are not done recursively, eg the above would not
   match a file in a subdirectory of REL.
