@@ -4,8 +4,8 @@ toc: true
 shows_title: true
 ---
 
-> [!WARNING]
-> Tom's understanding only, based on reading the opl-dev source code.
+> [!NOTE]
+> My understanding only, based on reading the opl-dev source code.<br/>_---Tomsci_
 
 The OPL bytecode format is called QCode (due to the intermediary parsed code format being called PCode). It is a simple stack machine with variable length commands. Each command consists of an 8-bit opcode followed by variable length parameters. A command like "AddInt" is a single 8-bit opcode, which pops 2 values from the stack and pushes 1 result. The OPO file format defines a collection of procedures with metadata (such as number of arguments, required local variable stack frame size, etc) for each plus the QCode itself.
 

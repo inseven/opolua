@@ -8,7 +8,7 @@ shows_title: true
 
 
 > [!NOTE]
-> This is derived from [http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm) with my own analysis added, and represents my best understanding of the format at the time of writing. Where original documentation can be found, I've used Psion terminology for preference. It's not guaranteed to be 100% perfect. _---Tomsci_
+> This is derived from [http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm](https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm) with my own analysis added, and represents my best understanding of the format at the time of writing. Where original documentation can be found, I've used Psion terminology for preference. It's not guaranteed to be 100% perfect.<br />_---Tomsci_
 
 The base structure of a Database file (leaving aside the layers of implementation that leads to this format) is as follows. Broadly, the file is split into various sections, which are indexed via the TOC (Table Of Contents) section. The header of the file contains the location of the TOC.
 
