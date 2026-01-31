@@ -712,10 +712,13 @@ public struct Sis {
         public let major: Int
         public let minor: Int
 
+        public static let zero: Version = .init(major: 0, minor: 0)
+
         public init(major: Int, minor: Int) {
             self.major = major
             self.minor = minor
         }
+
     }
 
     public struct File: Codable, Hashable {
