@@ -37,6 +37,17 @@ extension Licensable where Self == License {
             licenses: [])
     }
 
+    public static var luaSwift: License {
+        let licenseURL = Bundle.licenses.url(forResource: "luaswift-license", withExtension: nil)!
+        return License(
+            id: "https://github.com/tomsci/LuaSwift",
+            name: "LuaSwift",
+            author: "Tom Sutcliffe",
+            text: try! String(contentsOf: licenseURL),
+            attributes: [],
+            licenses: [])
+    }
+
     public static var opolua: License {
         let licenseURL = Bundle.licenses.url(forResource: "opolua-license", withExtension: nil)!
         return License(
@@ -50,6 +61,7 @@ extension Licensable where Self == License {
             ],
             licenses: [
                 .lua,
+                .luaSwift,
                 .licensable
             ])
     }

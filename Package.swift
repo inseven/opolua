@@ -37,6 +37,7 @@ let package = Package(
             path: "core/licenses",
             resources: [
                 .copy("lua-license"),
+                .copy("luaswift-license"),
                 .copy("opolua-license"),
             ]),
         .target(
