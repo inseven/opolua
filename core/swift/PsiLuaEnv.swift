@@ -505,7 +505,11 @@ public class PsiLuaEnv {
     internal static let sisGetStubs: lua_CFunction = { (L: LuaState!) -> CInt in
         let wrapper: Wrapper<SisInstallIoHandler> = L.touserdata(lua_upvalueindex(1))!
         let iohandler = wrapper.value
-        let result = iohandler.sisGetStubs()
+        guard let info: Sis.File = L.todecodable(1) else {
+            print("Bad SIS info!")
+            return 0
+        }
+        let result = iohandler.sisGetStubs(sis: info)
         switch result {
         case .stubs(let stubs):
             try! L.push(encodable: stubs)
