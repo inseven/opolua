@@ -79,7 +79,16 @@ Options:
             path = args.filename,
             opxTable = prog.opxTable,
             annotate = args.annotate,
-            printFn = printf,
+            outputFn = function(location, ...)
+                if args.annotate then
+                    if location then
+                        printf("%08X: ", location)
+                    else
+                        printf("          ")
+                    end
+                end
+                printf(...)
+            end,
             format = prog.translatorVersion,
         }
         local ok, err

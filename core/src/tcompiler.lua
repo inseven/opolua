@@ -267,14 +267,14 @@ local function checkProg(prog, expected)
 
     -- Now check we can decompile it
     local output = {}
-    local function printFn(...)
+    local function outputFn(location, ...)
         table.insert(output, string.format(...))
     end
     assert(decompiler.decompile(procTable, {
         opxTable = opxTable,
         format = compiler.OplEr5,
         annotate = false,
-        printFn = printFn,
+        outputFn = outputFn,
     }))
     local decompiledText = table.concat(output)
     -- And that the decompiled output compiles, and that when we decompile _that_ we get the same text as from the first
@@ -291,7 +291,7 @@ local function checkProg(prog, expected)
         opxTable = opxTable,
         format = compiler.OplEr5,
         annotate = false,
-        printFn = printFn,
+        outputFn = outputFn,
     }))
     local secondDecompileText = table.concat(output)
     assertEquals(decompiledText, secondDecompileText)

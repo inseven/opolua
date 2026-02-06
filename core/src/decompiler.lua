@@ -3,6 +3,27 @@
 
 _ENV = module()
 
+function decompileFile(data, pathHint)
+    local prog = require("opofile").parseOpo2(data)
+    local result = {}
+    local options = {
+        path = pathHint,
+        opxTable = prog.opxTable,
+        annotate = false,
+        outputFn = function(location, ...)
+            local line = string.format(...)
+            table.insert(result, { location, line })
+        end,
+        format = prog.translatorVersion,
+    }
+    local ok, err = decompile(prog.procTable, options)
+    if ok then
+        return result
+    else
+        return nil, err
+    end
+end
+
 function decompile(procTable, options)
     local compiler = require("compiler")
     local formatToCmdline = {
@@ -11,24 +32,22 @@ function decompile(procTable, options)
         [compiler.OplEr5] = "er5",
     }
 
-    options.printFn([[
-REM decompiled from %s
-REM compile with: compile.lua --format %s
-
-]], options.path or "<stdin>", formatToCmdline[options.format])
+    options.outputFn(nil, "REM decompiled from %s\n", options.path or "<stdin>")
+    options.outputFn(nil, "REM compile with: compile.lua --format %s\n", formatToCmdline[options.format])
+    options.outputFn(nil, "\n")
 
     local opxTable = options.opxTable
     for _, opx in ipairs(opxTable or {}) do
-        options.printFn('INCLUDE "%s.oxh"\n', opx.name:lower())
+        options.outputFn(nil, 'INCLUDE "%s.oxh"\n', opx.name:lower())
     end
     if opxTable and #opxTable > 0 then
-        options.printFn("\n")
+        options.outputFn(nil, "\n")
     end
 
     for i, proc in ipairs(procTable) do
         if i > 1 then
             -- Add empty line between procs
-            options.printFn("\n")
+            options.outputFn(nil, "\n")
         end
         local ok, err = decompileProc(proc, options)
         if not ok then
@@ -149,7 +168,7 @@ end
 
 function decompileProc(proc, options)
     local opxTable, oplFormat, annotate = options.opxTable, options.format, options.annotate
-    local printf = options.printFn
+    local outputFn = options.outputFn
     local ip = proc.codeOffset
     local endIdx = proc.codeOffset + proc.codeSize
     local compiler = require("compiler")
@@ -1488,11 +1507,7 @@ function decompileProc(proc, options)
         argstr = ""
     end
 
-    if annotate then
-        printf("%08X: PROC %s:%s\n", proc.offset, proc.name, argstr)
-    else
-        printf("PROC %s:%s\n", proc.name, argstr)
-    end
+    outputFn(proc.offset, "PROC %s:%s\n", proc.name, argstr)
 
     local blockNest = { { type = "PROC" } } -- Stack of block scopes, where a block here is code inside a IF/ELSEIF/DO/WHILE 
     local function emit(val, ...)
@@ -1544,13 +1559,8 @@ function decompileProc(proc, options)
             end
         end
 
-        local prefix
-        if annotate then
-            prefix = fmt("%s: %s", location and fmt("%08X", location) or "        ", string.rep("    ", #blockNest))
-        else
-            prefix = string.rep("    ", #blockNest)
-        end
-        printf("%s", prefix..str.."\n")
+        local prefix = string.rep("    ", #blockNest)
+        outputFn(location, "%s", prefix..str.."\n")
     end
 
     -- We emit variables after parsing the proc so we can benefit from type inference from the variable instructions
