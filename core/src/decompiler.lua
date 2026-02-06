@@ -83,6 +83,8 @@ local ELongArray = DataTypes.ELongArray
 local ERealArray = DataTypes.ERealArray
 local EStringArray = DataTypes.EStringArray
 
+local CRLF = "\x0D\x0A"
+
 local suffToType = { ["%"] = EWord, ["&"] = ELong, ["$"] = EString, [""] = EReal }
 
 local function getTypeFromName(name)
@@ -1064,7 +1066,7 @@ function decompileProc(proc, options)
             end
 
             local maxEpilogSize = 64 -- Arbitrary, just to limit search
-            if ip + maxEpilogSize > endIdx then
+            if ip + maxEpilogSize > endIdx and not s.elided then
                 -- Check if there's any way the following code is reachable, and if not assume it is epilogue junk
                 local reachable = false
                 for offset = ip, endIdx - 1 do
@@ -1158,14 +1160,14 @@ function decompileProc(proc, options)
             addPrintStatement("PRINT", {
                 type = "expr",
                 location = location, 
-                value = "\x0D\x0A",
+                value = CRLF,
                 valType = EString,
             }, true)
         elseif op == "LPrintCarriageReturn" then
             addPrintStatement("LPRINT", {
                 type = "expr",
                 location = location, 
-                value = "\x0D\x0A",
+                value = CRLF,
                 valType = EString,
             }, true)
         elseif op == "InputInt" then
@@ -1528,7 +1530,10 @@ function decompileProc(proc, options)
                     if part.value == " " and needsSep then
                         table.insert(parts, ",")
                         needsSep = false
-                    elseif part.value == "\x0D\x0A" and needsSep then
+                    elseif part.value == CRLF then
+                        -- Otherwise something is wrong as there's no way to express a literal \r\n in OPL other than via PrintCarriageReturn
+                        assert(statement.isLast)
+                        assert(statement[i + 1] == nil)
                         needsSep = false
                     else
                         if needsSep then
