@@ -1,4 +1,8 @@
 <RCC>
+    <qresource prefix="/luasrc">
+        <file alias="modules/toolbar.lua">../core/src/modules/toolbar.lua</file>
+    </qresource>
+
     <qresource prefix="/fonts">
         <file alias="1/1.json">../resources/fonts/1/1.json</file>
         <file alias="1/1.png">../resources/fonts/1/1.png</file>

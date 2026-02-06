@@ -60,6 +60,7 @@
     <addaction name="actionRestart"/>
     <addaction name="actionStop"/>
     <addaction name="actionSendCloseEvent"/>
+    <addaction name="actionOpenDebugger"/>
     <addaction name="separator"/>
     <addaction name="actionSpeed"/>
     <addaction name="actionSlower"/>
@@ -421,6 +422,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+S</string>
+   </property>
+  </action>
+  <action name="actionOpenDebugger">
+   <property name="text">
+    <string>Open Debugger</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
    </property>
   </action>
  </widget>

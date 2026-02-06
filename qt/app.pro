@@ -56,21 +56,34 @@ DEFINES += OPOLUA_VERSION=$$VERSION
 HEADERS += \
     aboutwindow.h \
     asynchandle.h \
+    codeview.h \
     clockwidget.h \
+    debuggerwindow.h \
     filesystem.h \
+    highlighter.h \
+    linenumberarea.h \
     logwindow.h \
     luasupport.h \
     mainwindow.h \
     oplapplication.h \
+    opldebug.h \
     oplkeycode.h \
     oplruntime.h \
     oplruntimegui.h \
-    oplscreenwidget.h
+    oplscreenwidget.h \
+    opltokenizer.h \
+    stackmodel.h \
+    stackview.h \
+    tokenizer.h
 
 SOURCES += \
     aboutwindow.cpp \
+    codeview.cpp \
     clockwidget.cpp \
+    debuggerwindow.cpp \
     filesystem.cpp \
+    highlighter.cpp \
+    linenumberarea.cpp \
     logwindow.cpp \
     lua.cpp \
     luasupport.cpp \
@@ -81,12 +94,16 @@ SOURCES += \
     oplruntime.cpp \
     oplruntimegui.cpp \
     oplscreenwidget.cpp \
+    opltokenizer.cpp \
+    stackmodel.cpp \
+    stackview.cpp \
     ../core/shared/src/oplfns.c
 
 INCLUDEPATH += ../core/shared/include ../dependencies/LuaSwift/Sources/CLua/lua
 
 FORMS += \
     aboutwindow.ui \
+    debuggerwindow.ui \
     logwindow.ui \
     mainwindow.ui
 

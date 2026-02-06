@@ -71,6 +71,12 @@ private:
 
 #endif // QT_NO_DEBUG
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+#define ASSERT_MAIN_THREAD() Q_ASSERT(QThread::isMainThread())
+#else
+#define ASSERT_MAIN_THREAD()
+#endif
+
 void dumpStack(lua_State *L, const char* where)
 {
     const int n = lua_gettop(L);
@@ -95,11 +101,18 @@ OplRuntime::OplRuntime(QObject *parent)
     , mEventRequest(nullptr)
     , mWaiting(false)
     , mInterrupted(false)
+    , mPaused(false)
+    , mDebugging(false)
+    , mBreakOnErr(false)
+    , mBreakOnNext(None)
     , mSpeed(Fastest)
+    , mDebugInfo{}
+    , mRuntimeRef(LUA_NOREF)
     , mInfoWinId(0)
     , mBusyWinId(0)
     , mCursorDrawn(false)
     , mEscapeOn(true)
+    , mIgnoreFocusEvents(false)
 {
     mFs.reset(new FileSystemIoHandler());
     mStringCodec = QTextCodec::codecForName("Windows-1252");
@@ -129,6 +142,8 @@ OplRuntime::OplRuntime(QObject *parent)
     lua_setglobal(L, "doprint");
 
     mLastOpTime.start();
+
+    connect(this, &OplRuntime::runComplete, this, &OplRuntime::updateDebugInfoOnRunComplete);
 }
 
 void OplRuntime::pushIohandler()
@@ -142,6 +157,7 @@ void OplRuntime::pushIohandler()
         IOHANDLER_FN(createBitmap),
         IOHANDLER_FN(createWindow),
         IOHANDLER_FN(draw),
+        IOHANDLER_FN(debugEvent),
         IOHANDLER_FN(getConfig),
         IOHANDLER_FN(getDeviceInfo),
         IOHANDLER_FN(getTime),
@@ -171,7 +187,8 @@ static int searcher(lua_State *L)
     } else if (err) {
         return lua_error(L);
     }
-    return 1;
+    pushValue(L, name);
+    return 2;
 }
 
 void OplRuntime::configureLuaResourceSearcher(lua_State *L)
@@ -381,6 +398,9 @@ void OplRuntime::interruptAndRun(std::function<void(void)> runNextFn)
     lua_sethook(L, stop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT, 1);
     mMutex.lock();
     mInterrupted = true;
+    if (mPaused) {
+        mPaused = false;
+    }
     if (mCallEvent && mCallEvent->call) {
         mCallEvent->call->interrupt();
         mCallEvent->call = nullptr;
@@ -482,16 +502,44 @@ void OplRuntime::run(const QString& devicePath)
     startThread();
 }
 
+// This exists to behave the same as the static fn runtime.runOpo() (so as to be compatible with how pushRunParams and
+// restartArgs work), but actually instantiate a Runtime object and capture a ref to it before calling Runtime:run()
+int OplRuntime::runOpoHelper(lua_State* L)
+{
+    // Stack is mDeviceOpoPath, iohandler
+
+    require(L, "runtime");
+    rawgetfield(L, -1, "newRuntimeWithFile");
+    lua_remove(L, -2); // runtime
+    lua_insert(L, 1); // stack now newRuntimeWithFile, mDeviceOpoPath, iohandler
+
+    lua_call(L, 2, 1);
+
+    Q_ASSERT(lua_type(L, -1) == LUA_TTABLE);
+    lua_pushvalue(L, -1);
+    mRuntimeRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    Q_ASSERT(lua_gettop(L) == 1);
+
+    int t = luaL_getmetafield(L, 1, "run");
+    Q_ASSERT(t == LUA_TFUNCTION);
+    lua_insert(L, 1); // Move run before runtime obj
+    lua_pushnil(L); // procName
+    lua_call(L, 2, 0);
+    return 0;
+}
+
 void OplRuntime::pushRunParams(const QString& devicePath)
 {
+    luaL_unref(L, LUA_REGISTRYINDEX, mRuntimeRef); // In case there's an old one lying around
+    mRuntimeRef = LUA_NOREF;
+
     lua_settop(L, 0);
     mDeviceOpoPath = devicePath;
     setDeviceType(mDeviceType); // Re-configures Z drive mapping if necessary
-    require(L, "runtime");
-    lua_getfield(L, -1, "runOpo");
-    lua_remove(L, -2); // runtime
+
+    lua_pushlightuserdata(L, this);
+    lua_pushcclosure(L, runOpoHelper_s, 1);
     pushValue(L, mDeviceOpoPath);
-    lua_pushnil(L); // procName
     pushIohandler();
 }
 
@@ -640,6 +688,7 @@ void OplRuntime::threadFn(OplRuntime* self)
     // dumpStack(L, "threadFn");
     Q_ASSERT(lua_type(L, 1) == LUA_TFUNCTION);
     Q_ASSERT(lua_type(L, 2) == LUA_TFUNCTION);
+    self->mLastDebugInfoTime.start();
     self->mRet = lua_pcall(L, lua_gettop(L) - 2, 1, 1);
     lua_sethook(L, nullptr, 0, 0); // in case of interrupt()
 }
@@ -661,6 +710,7 @@ void OplRuntime::onThreadExited()
             errdetail = errdetail + "\n" + lua_tostring(L, -1);
         }
         lua_pop(L, 1);
+        mRet = LUA_OK;
     }
     delete mThread;
     mThread = nullptr;
@@ -689,6 +739,16 @@ void OplRuntime::onThreadExited()
     } else {
         lua_settop(L, 0);
         emit runComplete(errmsg, errdetail);
+    }
+}
+
+void OplRuntime::updateDebugInfoOnRunComplete()
+{
+    // This is such a hack around the fact that runComplete is emitted from a bunch of places to the point where it's
+    // easier just to hook up this slot internally to deal with keeping debug info consistent
+    if (mDebugging) {
+        mDebugInfo = {};
+        emit debugInfoUpdated();
     }
 }
 
@@ -1353,6 +1413,9 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
 
 void OplRuntime::focusEvent(bool focussed)
 {
+    if (mIgnoreFocusEvents) {
+        return;
+    }
     Event e = {
         .code = focussed ? opl::foregrounded : opl::backgrounded,
         .focusevent = {
@@ -1489,10 +1552,19 @@ int OplRuntime::cancelRequest(lua_State* L)
 
 void OplRuntime::unlockAndSignalIfWaiting()
 {
+    if (mPaused) {
+        // When paused, an asynchronous event completing should not signal the Lua thread
+        mMutex.unlock();
+        return;
+    }
+
     bool waitingForEvent = mWaiting;
     // clearing mWaiting indicates that a subsequent addEvent etc shouldn't re-signal mWaitSemaphore (until/unless it waits again)
     mWaiting = false;
     mMutex.unlock();
+    if (mDebugging && mDebugInfo.paused && !mInterrupted) {
+        updateDebugInfo(L);
+    }
     if (waitingForEvent) {
         mWaitSemaphore.release();
     }
@@ -1502,6 +1574,7 @@ void OplRuntime::unlockAndSignalIfWaiting()
 // that could have side-effects due to QObject parenting leading to deadlocks (Qt 5's QAudioOutput, looking at you).
 void OplRuntime::asyncFinished(AsyncHandle* asyncHandle, int code)
 {
+    ASSERT_MAIN_THREAD();
     mMutex.lock();
     asyncFinished_locked(asyncHandle, code);
     unlockAndSignalIfWaiting();
@@ -1630,9 +1703,16 @@ int OplRuntime::waitForAnyRequest(lua_State* L)
         } else {
             // still locked
             mWaiting = true;
+            bool shouldPause = mPaused;
             mMutex.unlock();
             // Wait for something else to happen
             // qDebug("waitForAnyRequest waiting for signal...");
+            if (shouldPause) {
+                call([this, L] {
+                    updateDebugInfo(L);
+                    return 0;
+                });
+            }
             mWaitSemaphore.acquire();
             // qDebug("waitForAnyRequest got signal from mainthread");
         }
@@ -1778,8 +1858,33 @@ void OplRuntime::runSlower()
 const int64_t kOpTime = 3500; // in nanoseconds
 const int64_t kSiboMultiplier = 10;
 
-int OplRuntime::opsync(lua_State *)
+int OplRuntime::opsync(lua_State* L)
 {
+    bool shouldWait = false;
+    mMutex.lock();
+    if (mBreakOnNext == NextOp) {
+        mBreakOnNext = None;
+        mPaused = true;
+        // qDebug("Single step pausing at ip=%x", (unsigned)lua_tointeger(L, 2));
+    }
+    if (mPaused) {
+        mWaiting = true;
+        shouldWait = true;
+    }
+    bool shouldUpdateDebugInfo = shouldWait || debugInfoStale();
+    mMutex.unlock();
+
+    if (shouldUpdateDebugInfo) {
+        call([this, L] {
+            updateDebugInfo(L);
+            return 0;
+        });
+    }
+
+    if (shouldWait) {
+        mWaitSemaphore.acquire();
+    }
+
     auto speed = getSpeed();
     auto optime = kOpTime * (isSibo() ? kSiboMultiplier : 1);
     if (speed != Fastest) {
@@ -1791,6 +1896,36 @@ int OplRuntime::opsync(lua_State *)
             nanosleep(&t, NULL);
         }
         mLastOpTime.start();
+    }
+    return 0;
+}
+
+int OplRuntime::debugEvent(lua_State* L)
+{
+    auto ev = QString(lua_tostring(L, 1));
+    // qDebug("debugEvent %s", qPrintable(ev));
+    QMutexLocker lock(&mMutex);
+    bool shouldBreak = false;
+    bool isErr = false;
+    if (mBreakOnErr && ev == "err") {
+        shouldBreak = true;
+        isErr = true;
+    }
+    if ((mBreakOnNext == NextReturn && ev == "return") ||
+        (mBreakOnNext == NextPushFrame && ev == "pushframe")) {
+        shouldBreak = true;
+        mBreakOnNext = None;
+    }
+
+    if (shouldBreak) {
+        mPaused = true;
+        mWaiting = true;
+        lock.unlock();
+        call([this, L, isErr] {
+            updateDebugInfo(L, isErr);
+            return 0;
+        });
+        mWaitSemaphore.acquire();
     }
     return 0;
 }
@@ -1896,4 +2031,418 @@ int OplRuntime::keysDown(lua_State* L)
     mMutex.unlock();
     lua_pushlstring(L, (char*)bytes, sizeof(bytes));
     return 1;
+}
+
+constexpr int64_t kDebugInterval = 1 * 1000 * 1000 * 1000;
+
+// mMutex must be held
+bool OplRuntime::debugInfoStale() const
+{
+    bool stale = false;
+    if (mRuntimeRef != LUA_NOREF && mDebugging) {
+        stale = mLastDebugInfoTime.nsecsElapsed() > kDebugInterval;
+    }
+    // if (mDebugging) {
+    //     qDebug("debugInfoStale = %d", stale);
+    // }
+    return stale;
+}
+
+void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
+{
+    ASSERT_MAIN_THREAD();
+
+    // qDebug("updateDebugInfo");
+    const int top = lua_gettop(L);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
+    luaL_getmetafield(L, -1, "getDebugInfo");
+    lua_insert(L, -2);
+    int err = lua_pcall(L, 1, 1, 0);
+    if (err) {
+        qFatal("Error fetching debug info: %s", luaL_tolstring(L, -1, NULL));
+    }
+
+    opl::ProgramInfo info {};
+    if (rawgetfield(L, -1, "frames") != LUA_TTABLE) {
+        lua_pop(L, 2);
+        return;
+    }
+    int i = 1;
+    while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+        // Decode frames
+        opl::Frame frame = {
+            .ip = to_uint32(L, -1, "ip"),
+            .ipDecode = to_string(L, -1, "ipDecode"),
+            .procName = to_string(L, -1, "procName"),
+            .procModule = mFs->getNativePath(to_string(L, -1, "procModule")),
+            .variables = {},
+        };
+
+        int varidx = 1;
+        rawgetfield(L, -1, "vars");
+        while (lua_rawgeti(L, -1, varidx++) == LUA_TTABLE) {
+            // Decode variables
+            opl::Variable v = {
+                .type = (opl::Type)to_int(L, -1, "type"),
+                .address = to_uint32(L, -1, "address"),
+                .index = (uint16_t)to_uint32(L, -1, "index"),
+                .name = to_string(L, -1, "name"),
+                .value = {},
+            };
+            rawgetfield(L, -1, "value");
+            switch (v.type) {
+                case opl::EWord:
+                case opl::ELong:
+                    v.value = lua_tointeger(L, -1);
+                    break;
+                case opl::EReal:
+                    v.value = lua_tonumber(L, -1);
+                    break;
+                case opl::EString:
+                    v.value = tolocalstring(L, -1);
+                    break;
+                case opl::EWordArray:
+                case opl::ELongArray: {
+                    QList<QVariant> val;
+                    int i = 1;
+                    while (lua_rawgeti(L, -1, i++) == LUA_TNUMBER) {
+                        val.append(lua_tointeger(L, -1));
+                        lua_pop(L, 1);
+                    }
+                    lua_pop(L, 1);
+                    v.value = val;
+                    break;
+                }
+                case opl::ERealArray: {
+                    QList<QVariant> val;
+                    int i = 1;
+                    while (lua_rawgeti(L, -1, i++) == LUA_TNUMBER) {
+                        val.append(lua_tonumber(L, -1));
+                        lua_pop(L, 1);
+                    }
+                    lua_pop(L, 1);
+                    v.value = val;
+                    break;
+                }
+                case opl::EStringArray: {
+                    QList<QVariant> val;
+                    int i = 1;
+                    while (lua_rawgeti(L, -1, i++) == LUA_TSTRING) {
+                        val.append(tolocalstring(L, -1));
+                        lua_pop(L, 1);
+                    }
+                    lua_pop(L, 1);
+                    v.value = val;
+                    break;
+                }
+            }
+            lua_pop(L, 1); // value
+
+            frame.variables.append(v);
+            lua_pop(L, 1); // var
+        }
+        lua_pop(L, 3); // last var, vars, frame
+        info.frames.append(frame);
+    }
+    lua_pop(L, 2); // Final nil from the lua_rawgeti, frames
+
+    if (rawgetfield(L, -1, "modules") == LUA_TTABLE) {
+        i = 1;
+        while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+            opl::Module m = {
+                .name = to_string(L, -1, "name"),
+                .path = to_string(L, -1, "path"),
+                .nativePath = to_string(L, -1, "nativePath"),
+            };
+            if (m.nativePath.isEmpty()) {
+                m.nativePath = mFs->getNativePath(m.path);
+            }
+            info.modules.append(m);
+            lua_pop(L, 1); // module
+        }
+        lua_pop(L, 1); // final nil from lua_rawgeti
+    }
+    lua_pop(L, 2); // modules, info
+    Q_ASSERT(lua_gettop(L) == top); // Make sure stack is left balanced
+
+    if (errOnStack) {
+        info.err = lua_tointeger(L, -1);
+    }
+
+    mMutex.lock();
+    bool pauseChanged = mDebugInfo.paused != mPaused;
+    info.paused = mPaused;
+    mDebugInfo = std::move(info);
+    mLastDebugInfoTime.start();
+    mMutex.unlock();
+    if (pauseChanged) {
+        emit pauseStateChanged(mDebugInfo.paused);
+    }
+    emit debugInfoUpdated();
+}
+
+static void writePrimitive(QDebug& debug, int type, const QVariant& v)
+{
+    switch (type) {
+        case opl::EWord:
+        case opl::ELong:
+            debug << v.toInt();
+            break;
+        case opl::EReal:
+            debug << v.toDouble();
+            break;
+        case opl::EString:
+            debug << v.toString();
+            break;
+        default:
+            break;
+    }
+}
+
+QDebug operator<<(QDebug debug, const opl::Variable& v)
+{
+    QDebugStateSaver saver(debug);
+    switch (v.type) {
+        case opl::EWord:
+        case opl::ELong:
+        case opl::EReal:
+        case opl::EString:
+            writePrimitive(debug, v.type, v.value);
+            break;
+        case opl::EWordArray:
+        case opl::ELongArray:
+        case opl::ERealArray:
+        case opl::EStringArray: {
+            debug.nospace() << "[";
+            auto list = v.value.toList();
+            for (int i = 0; i < list.count(); i++) {
+                if (i > 0) {
+                    debug << ", ";
+                }
+                writePrimitive(debug, v.type & 0xF, list[i]);
+            }
+            debug << "]";
+            break;
+        }
+        default:
+            break;
+    }
+    return debug;
+}
+
+QString OplRuntime::varToStr(const opl::Variable& v, int idx)
+{
+    // Qt5 didn't have QDebug::toString
+    QString result;
+    if (idx == -1) {
+        QDebug(&result) << v;
+    } else {
+        QDebug d(&result);
+        writePrimitive(d, v.type & 0xF, v.value.toList()[idx]);
+    }
+    return result;
+}
+
+void OplRuntime::updateDebugInfoIfStale()
+{
+    ASSERT_MAIN_THREAD();
+    if (!running()) {
+        return;
+    }
+    QMutexLocker lock(&mMutex);
+    if (!mDebugging) {
+        mDebugging = true;
+    }
+    if (debugInfoStale()) {
+        bool paused = mPaused && mWaiting;
+        if (paused) {
+            // Debug info can't have changed since we hit the pause
+        } else if (mWaiting) {
+            // If mWaiting is true, we can safely unlock because the only thing that could signal it is us
+            // (given we assert we're being called on the main thread)
+            lock.unlock();
+            updateDebugInfo(L);
+            lock.relock();
+        } else {
+            // qDebug("Debug info stale but unable to refresh");
+        }
+    }
+}
+
+opl::ProgramInfo OplRuntime::getDebugInfo()
+{
+    updateDebugInfoIfStale();
+    QMutexLocker lock(&mMutex);
+    return mDebugInfo;
+}
+
+void OplRuntime::printDebugInfo()
+{
+    auto info = getDebugInfo();
+
+    for (const auto& module : info.modules) {
+        qDebug("Module '%s' from '%s'", qPrintable(module.name), qPrintable(module.path));
+    }
+
+    for (int i = 0; i < info.frames.count(); i++) {
+        const auto& frame = info.frames[i];
+        auto indent = QString("|  ").repeated(i);
+        qDebug("%s|- %s()", qPrintable(indent), qPrintable(frame.procName));
+        for (const auto& var : frame.variables) {
+            qDebug("%s|  |  %s = %s", qPrintable(indent), qPrintable(var.name), qPrintable(varToStr(var)));
+        }
+    }
+}
+
+void OplRuntime::debugSetVariable(const opl::Variable& variable, const QString& value)
+{
+    Q_UNUSED(variable);
+    Q_UNUSED(value);
+    QMutexLocker lock(&mMutex);
+    if (mWaiting) {
+        // TODO set directly via mRuntimeRef
+    } else {
+        // TODO batch it until the next wait or opsync
+    }
+
+}
+
+bool OplRuntime::isPaused() const
+{
+    QMutexLocker lock(&mMutex);
+    // We're not actually paused until both mPaused is set and mWaiting
+    return mPaused && mWaiting;
+}
+
+void OplRuntime::pause()
+{
+    ASSERT_MAIN_THREAD();
+    QMutexLocker lock(&mMutex);
+    mPaused = true;
+    bool alreadyWaiting = mWaiting;
+    lock.unlock();
+    if (alreadyWaiting) {
+        // We are now in pause state
+        updateDebugInfo(L);
+    }
+}
+
+void OplRuntime::unpause()
+{
+    ASSERT_MAIN_THREAD();
+    mMutex.lock();
+    if (!mPaused) {
+        mMutex.unlock();
+        return;
+    }
+    mPaused = false;
+    bool wasWaiting = mWaiting;
+    if (mWaiting) {
+        // No need to recalculate debug info it can't've changed since pausing
+        Q_ASSERT(mDebugInfo.paused);
+        mDebugInfo.paused = false;
+        mDebugInfo.err = std::nullopt;
+    }
+    unlockAndSignalIfWaiting();
+    if (wasWaiting) {
+        emit pauseStateChanged(false);
+        emit debugInfoUpdated();
+    }
+}
+
+QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path)
+{
+    Q_ASSERT(!running());
+    QFile f(path);
+    if (!f.open(QFile::ReadOnly)) {
+        qWarning("Failed to open module %s", qPrintable(path));
+        return {};
+    }
+    auto data = f.readAll();
+    f.close();
+    
+    require(L, "decompiler");
+    rawgetfield(L, -1, "decompileFile");
+    lua_remove(L, -2);
+    pushValue(L, data);
+    pushValue(L, path);
+    int err = lua_pcall(L, 2, 2, 0);
+    if (err) {
+        qWarning("decompile errored: %s", luaL_tolstring(L, -1, NULL));
+        lua_pop(L, 1);
+        return {};
+    } else if (lua_isnil(L, -2)) {
+        qWarning("decompile failed: %s", luaL_tolstring(L, -1, NULL));
+        lua_pop(L, 2);
+        return {};
+    }
+    lua_pop(L, 1); // no error so pop the nil errstr
+    QVector<Line> result;
+    int i = 1;
+    while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+        lua_rawgeti(L, -1, 1); // addr
+        int hasAddr = 0;
+        uint32_t addr = (uint32_t)lua_tointegerx(L, -1, &hasAddr);
+        if (!hasAddr) {
+            addr = 0xFFFFFFFF;
+        }
+        lua_pop(L, 1); // addr
+        lua_rawgeti(L, -1, 2); // line text
+        result.append({addr, QString(lua_tostring(L, -1))});
+        lua_pop(L, 2); // line text, line array
+    }
+    lua_pop(L, 1); // decompileFile result
+    return result;
+}
+
+void OplRuntime::setBreakOnError(bool flag)
+{
+    QMutexLocker lock(&mMutex);
+    mBreakOnErr = flag;
+}
+
+bool OplRuntime::breakOnError() const
+{
+    QMutexLocker lock(&mMutex);
+    return mBreakOnErr;
+}
+
+void OplRuntime::stepOut()
+{
+    if (isPaused()) {
+        mMutex.lock();
+        mBreakOnNext = NextReturn;
+        mMutex.unlock();
+        unpause();
+    }
+}
+
+void OplRuntime::stepIn()
+{
+    if (isPaused()) {
+        mMutex.lock();
+        mBreakOnNext = NextPushFrame;
+        mMutex.unlock();
+        unpause();
+    }
+}
+
+void OplRuntime::singleStep()
+{
+    if (isPaused()) {
+        mMutex.lock();
+        mBreakOnNext = NextOp;
+        mMutex.unlock();
+        unpause();
+    }
+}
+
+bool OplRuntime::ignoreFocusEvents() const
+{
+    return mIgnoreFocusEvents;
+}
+
+void OplRuntime::setIgnoreFocusEvents(bool flag)
+{
+    mIgnoreFocusEvents = flag;
 }
