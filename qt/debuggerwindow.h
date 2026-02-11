@@ -31,6 +31,7 @@ private slots:
     void toggleBreakOnError();
     void toggleWindowFocusEnabled();
     void stepOver();
+    void setCurrentEditor(const QString& module);
     void gotoAddressSlot(const QString& module, uint32_t address);
     void toggleBreak();
 

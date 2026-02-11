@@ -2074,9 +2074,12 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
             .ip = to_uint32(L, -1, "ip"),
             .ipDecode = to_string(L, -1, "ipDecode"),
             .procName = to_string(L, -1, "procName"),
-            .procModule = mFs->getNativePath(to_string(L, -1, "procModule")),
+            .procModule = to_string(L, -1, "nativePath"),
             .variables = {},
         };
+        if (frame.procModule.isEmpty()) {
+            frame.procModule = mFs->getNativePath(to_string(L, -1, "procModule"));
+        }
 
         int varidx = 1;
         rawgetfield(L, -1, "vars");

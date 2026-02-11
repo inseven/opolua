@@ -1,48 +1,51 @@
 // Copyright (C) 2021-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
-#include "opltokenizer.h"
+#include "luatokenizer.h"
 #define _CRT_SECURE_NO_WARNINGS
 #include <string.h>
 
 enum ParseState {
     InNothing = 0,
+    Long = 1 << 28, // Goes with either Comment or String
     Comment = 1 << 29,
     String = 1 << 30,
+    InSingleQuotedString = String | (int)'\'',
     InDoubleQuotedString = String | (int)'"',
+    LongNumEqualsMask = 0xFF,
 };
 
 #define SPACECHARS " \f\n\r\t\v"
 #define ENDOFLINE "\n\r"
-#define UNARY_OPS "-+=*/<>."
-#define CONTROL " BREAK CONST CONTINUE DO ELSE ELSEIF ENDA ENDIF ENDP ENDV ENDWH GOTO IF PROC RETURN UNTIL VECTOR WHILE "
-#define RESERVED " AND APP CAPTION FLAGS GLOBAL ICON INCLUDE LOCAL OFF ON OR "
+#define UNARY_OPS "-+=*/<>&|~%^."
+#define CONTROL " break do else elseif end for function goto if repeat return then until while "
+#define RESERVED " and false in local nil not or true "
 #define MAX_RESERVED_LEN 8
 
 
-OplTokenizer::OplTokenizer()
+LuaTokenizer::LuaTokenizer()
 {
     set(InNothing, nullptr);
 }
 
-void OplTokenizer::set(int state, const char* ptr)
+void LuaTokenizer::set(int state, const char* ptr)
 {
     m_state = state;
     m_start = ptr;
     m_ptr = ptr;
 }
 
-void OplTokenizer::skipSpace()
+void LuaTokenizer::skipSpace()
 {
     m_ptr += strspn(m_ptr, SPACECHARS);
 }
 
-int OplTokenizer::offset() const
+int LuaTokenizer::offset() const
 {
     return (int)(m_ptr - m_start);
 }
 
-int OplTokenizer::state() const
+int LuaTokenizer::state() const
 {
     return m_state;
 }
@@ -150,23 +153,41 @@ static NumState isNumChar(char ch, NumState state=NumStart)
     return NumFinished; // won't reach this for legal values of state
 }
 
-OplTokenizer::Token OplTokenizer::next()
+LuaTokenizer::Token LuaTokenizer::next()
 {
     if (!m_ptr || !*m_ptr) return TokenNone;
 
-    if (m_state & String) {
+    if (m_state & Long) {
+        int num_eq = m_state & LongNumEqualsMask;
+        char endseq[258] = "]";
+        int i;
+        for (i = 0; i < num_eq; i++) {
+            endseq[i+1] = '=';
+        }
+        endseq[i+1] = ']';
+        endseq[i+2] = '\0';
+        auto found_end = strstr(m_ptr, endseq);
+        Token ret = (m_state & Comment) ? TokenComment : TokenString;
+        if (found_end) {
+            m_state = InNothing;
+            m_ptr = found_end + strlen(endseq);
+        } else {
+            m_ptr += strlen(m_ptr);
+        }
+        return ret;
+    } else if (m_state & String) {
         // Ie "" or '' string
         char endch = (char)(m_state & 0xFF);
         char last = '\0';
         char ch;
         while ((ch = *m_ptr++)) {
-            if (ch == endch && last != '"') {
+            if (ch == endch && last != '\\') {
                 // Found string terminator
                 m_state = InNothing;
                 break;
-            // } else if (ch == 'z' && last == '\\') {
-            //     skipSpace();
-            } else if ((ch == '\n' || ch == '\r') /*&& last != '\\'*/) {
+            } else if (ch == 'z' && last == '\\') {
+                skipSpace();
+            } else if ((ch == '\n' || ch == '\r') && last != '\\') {
                 // Unterminated string is considered to end at the end of line if there's no \ at the end
                 m_state = InNothing;
                 break;
@@ -185,10 +206,6 @@ OplTokenizer::Token OplTokenizer::next()
             m_ptr++;
         }
         int toklen = (int)(m_ptr - token_start_ptr);
-        if (toklen == 3 && memcmp(token_start_ptr, "REM", 3) == 0) {
-            m_ptr += strcspn(m_ptr, ENDOFLINE);
-            return TokenComment;
-        }
         if (toklen <= MAX_RESERVED_LEN) {
             char buf[MAX_RESERVED_LEN+3] = "";
             strncat(buf, " ", 2);
@@ -203,7 +220,35 @@ OplTokenizer::Token OplTokenizer::next()
         return TokenIdentifier;
     }
 
-    if (ch == '"') {
+    if (ch == '-' && *m_ptr == '-') {
+        // Comment ahoy!
+        m_ptr++; // consume 2nd dash
+        if (*m_ptr != '[') {
+            m_ptr += strcspn(m_ptr, ENDOFLINE);
+            return TokenComment;
+        } else {
+            m_state |= Comment;
+            ch = *m_ptr++; // Move ch up
+            // And drop through to long string handling
+        }
+    }
+    if (ch == '[' && (*m_ptr == '[' || *m_ptr == '=')) {
+        int num_eq = (int)strspn(m_ptr, "=");
+        m_state |= Long | num_eq;
+        if (!(m_state & Comment)) {
+            m_state |= String;
+        }
+        m_ptr += num_eq; // consume equalses
+        if (*m_ptr != '[') {
+            // Invalid
+            m_state = InNothing;
+            return TokenBad;
+        }
+        m_ptr++;
+        return next();
+    }
+
+    if (ch == '"' || ch == '\'') {
         m_state = String | (int)ch;
         return next();
     }

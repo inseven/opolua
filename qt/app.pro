@@ -64,6 +64,7 @@ HEADERS += \
     linenumberarea.h \
     logwindow.h \
     luasupport.h \
+    luatokenizer.h \
     mainwindow.h \
     oplapplication.h \
     opldebug.h \
@@ -87,6 +88,7 @@ SOURCES += \
     logwindow.cpp \
     lua.cpp \
     luasupport.cpp \
+    luatokenizer.cpp \
     main.cpp \
     mainwindow.cpp \
     oplapplication.cpp \

@@ -7,14 +7,16 @@
 #include <QPlainTextEdit>
 
 class Highlighter;
+class TokenizerBase;
 
 class CodeView : public QPlainTextEdit
 {
     Q_OBJECT
 public:
-    CodeView(QWidget *parent = nullptr);
+    CodeView(QWidget *parent, TokenizerBase* tokenizer);
     void setPath(const QString& path);
     QString path() const;
+    void setUseHexLineAddresses(bool flag);
     void setContents(const QVector<std::pair<uint32_t, QString>>& blocks);
     void scrollToAddress(uint32_t addr, bool selectLine = true);
 
@@ -38,6 +40,7 @@ private:
 private:
     QString mPath;
     uint32_t mMaxBlockId;
+    bool mUseHexLineAddresses;
     QWidget* mLineNumberArea;
     Highlighter* mHighlighter;
     // Unlike the output from OplRuntime::decompile(), blocks without an address are represented by duplicating the

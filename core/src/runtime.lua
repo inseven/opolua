@@ -1618,6 +1618,21 @@ function runLauncherCmd(iohandler, cmd, ...)
     return fn(...)
 end
 
+local function findDebugStackIndex(f)
+    local idx = 2 -- 1 is findDebugStackIndex itself
+    while true do
+        local info = debug.getinfo(idx, "f")
+        if info == nil then
+            return nil -- fn not found
+        elseif info.func == f then
+            return idx - 1 -- To the caller, indexes will be one less
+        else
+            idx = idx + 1
+            -- And go round again
+        end
+    end
+end
+
 function Runtime:getDebugInfo()
     local frames = {}
 
@@ -1630,16 +1645,27 @@ function Runtime:getDebugInfo()
         local f = {
             procName = frame.proc.name,
             procModule = frame.proc.module.path,
+            nativePath = frame.proc.module.nativePath, -- Only for Lua modules
             ip = frame.lastIp,
             vars = {},
         }
 
         self:setFrame(frame, frame.lastIp)
+        local luaFrameInfo = nil
+        local luaFrameIdx = nil
         if frame.lastIp then
             f.ipDecode = self:decodeNextInstruction()
         else
             -- Lua fns don't have a lastIp
-            assert(frame.proc.fn, "Unexpected lack of lastIp in non-Lua call frame!")
+            local fn = frame.proc.fn
+            assert(fn, "Unexpected lack of lastIp in non-Lua call frame!")
+
+            luaFrameIdx = findDebugStackIndex(fn)
+            if luaFrameIdx then
+                luaFrameInfo = debug.getinfo(luaFrameIdx, "nlu")
+                f.ip = luaFrameInfo.currentline
+                f.ipDecode = string.format("%s:%d", oplpath.basename(f.nativePath), luaFrameInfo.currentline)
+            end
         end
 
         for index, var in pairs(frame.vars) do
@@ -1657,6 +1683,16 @@ function Runtime:getDebugInfo()
                 end
             else
                 v.value = var()
+            end
+            if luaFrameInfo then
+                -- Check if it's a param we can give a better name to
+                local argNum = tonumber(v.name:match("param_([0-9]+)"))
+                if argNum and argNum <= luaFrameInfo.nparams then
+                    local localName = debug.getlocal(luaFrameIdx, argNum)
+                    if localName then
+                        v.name = localName
+                    end
+                end
             end
             table.insert(f.vars, v)
         end

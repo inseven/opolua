@@ -10,12 +10,13 @@
 #include <QTextBlock>
 #include <QPainter>
 
-CodeView::CodeView(QWidget *parent)
+CodeView::CodeView(QWidget *parent, TokenizerBase* tokenizer)
     : QPlainTextEdit(parent)
     , mMaxBlockId(0)
+    , mUseHexLineAddresses(true)
 {
     mLineNumberArea = new LineNumberArea(this);
-    mHighlighter = new Highlighter(document(), new OplTokenizer);
+    mHighlighter = new Highlighter(document(), tokenizer);
     setCenterOnScroll(true);
 
     QFont f;
@@ -36,6 +37,11 @@ void CodeView::setPath(const QString& path)
 QString CodeView::path() const
 {
     return mPath;
+}
+
+void CodeView::setUseHexLineAddresses(bool flag)
+{
+    mUseHexLineAddresses = flag;
 }
 
 void CodeView::setContents(const QVector<std::pair<uint32_t, QString>>& blocks)
@@ -85,8 +91,8 @@ void CodeView::lineNumberPaintEvent(QPaintEvent* event)
             QString number;
             if (blockNumber < mBlockAddrs.count()) {
                 auto id = mBlockAddrs[blockNumber];
-                if (id != 0 && blockNumber > 0 && id != mBlockAddrs[blockNumber - 1]) {
-                    number = QString::number(id, 16);
+                if (id != 0 && (blockNumber == 0 || id != mBlockAddrs[blockNumber - 1])) {
+                    number = QString::number(id, mUseHexLineAddresses ? 16 : 10);
                 }
             }
             painter.setPen(Qt::black);

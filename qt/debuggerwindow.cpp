@@ -6,6 +6,8 @@
 #include <QPlainTextEdit>
 
 #include "codeview.h"
+#include "luatokenizer.h"
+#include "opltokenizer.h"
 #include "oplruntime.h"
 #include "stackmodel.h"
 
@@ -168,23 +170,37 @@ void DebuggerWindow::moduleSelected()
     if (!item) return;
     auto path = item->data(2, Qt::DisplayRole).toString();
 
-    gotoAddress(path, 0);
+    setCurrentEditor(path);
 }
 
 CodeView* DebuggerWindow::getCodeView(const QString& path)
 {
     auto view = mCodeViews.value(path);
     if (!view) {
-        view = new CodeView(this);
-        // if (path.endsWith(".lua")) {
-        //     // Native module
-        //     QFile f(path);
-        //     if (f.open(QFile
-        // } else {
+        if (path.startsWith(":/lua/")) {
+            view = new CodeView(this, new LuaTokenizer);
+            view->setUseHexLineAddresses(false);
+            // Native module (basically meaning just toolbar.lua), try sources dir
+            QString srcPath(path);
+            srcPath.replace(0, 5, ":/luasrc");
+            QFile f(srcPath);
+            QVector<std::pair<uint32_t, QString>> lines;
+            uint32_t lineNum = 1;
+            if (f.open(QFile::ReadOnly | QIODevice::Text)) {
+                while (!f.atEnd()) {
+                    auto line = QString(f.readLine());
+                    lines.append({ lineNum++, line });
+                }
+                view->setPath(path);
+                view->setContents(lines);
+            }
+        } else {
+            view = new CodeView(this, new OplTokenizer);
+            view->setUseHexLineAddresses(true);
             auto prog = OplRuntime().decompile(path);
             view->setPath(path);
             view->setContents(prog);
-        // }
+        }
         view->setReadOnly(true);
         view->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
         // Ensure stays scrolled to top
@@ -195,6 +211,14 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
     return view;
 }
 
+void DebuggerWindow::setCurrentEditor(const QString& module)
+{
+    auto ed = getCodeView(module);
+    ui->centralwidget->setCurrentWidget(ed);
+    setWindowTitle(QString("%1 - OpoLua Debugger").arg(QFileInfo(module).fileName()));
+    ed->setFocus();
+}
+
 void DebuggerWindow::gotoAddressSlot(const QString& module, uint32_t address)
 {
     gotoAddress(module, address, false);
@@ -202,11 +226,13 @@ void DebuggerWindow::gotoAddressSlot(const QString& module, uint32_t address)
 
 void DebuggerWindow::gotoAddress(const QString& module, uint32_t address, bool isBreakPosition)
 {
+    // Rather than call setCurrentEditor directly, set in the moduleView so its highlight stays in sync
+    auto items = ui->modulesView->findItems(module, Qt::MatchFixedString, 2);
+    if (items.count()) {
+        ui->modulesView->setCurrentItem(items[0]);
+    }
+
     auto ed = getCodeView(module);
-    ui->centralwidget->setCurrentWidget(ed);
-    // ui->actionToggleBreak->setEnabled(true);
-    setWindowTitle(QString("%1 - OpoLua Debugger").arg(QFileInfo(module).fileName()));
-    ed->setFocus();
     if (isBreakPosition) {
         ed->setBreak(address);
     } else {
