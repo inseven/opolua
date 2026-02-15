@@ -131,17 +131,22 @@ function Runtime:getLocalVar(index, type, frame)
         var.name = fmt("local_%04X%s", index, DataTypeSuffix[type])
     end
 
-
     -- Might as well update proc for next time
     if frame.proc and frame.proc.vars then
-        if frame.proc.vars[index] == nil then
-            frame.proc.vars[index] = {
+        local procVar = frame.proc.vars[index]
+        if procVar == nil then
+            procVar = {
                 type = type,
                 directIdx = index,
             }
+            frame.proc.vars[index] = procVar
         end
-        if frame.proc.vars[index].name == nil then
-            frame.proc.vars[index].name = var.name
+        if procVar.name == nil then
+            procVar.name = var.name
+        end
+        assert(procVar.type == nil or procVar.type == var:type(), "Type mismatch on updating proc var!")
+        if procVar.type == nil then
+            procVar.type = var:type()
         end
     end
 
@@ -729,6 +734,17 @@ function Runtime:flushGraphicsOps()
         if err ~= KErrNone then
             error(err)
         end
+    end
+end
+
+function Runtime:getBufferedGraphicsOps()
+    local graphics = self.graphics
+    if graphics and graphics.buffer then
+        local result = graphics.buffer
+        graphics.buffer = {}
+        return result
+    else
+        return {}
     end
 end
 
@@ -1675,6 +1691,7 @@ function Runtime:getDebugInfo()
                 index = index,
                 name = var.name,
                 type = var:type(),
+                global = frame.proc.vars and frame.proc.vars[index].isGlobal,
             }
             if isArrayType(var:type()) then
                 v.value = {}
@@ -1724,6 +1741,61 @@ function Runtime:debugEvent(...)
     local handler = self.ioh.debugEvent
     if handler then
         handler(...)
+    end
+end
+
+function Runtime:renameVariable(procName, index, name)
+    local proc = self:findProc(procName)
+    local var = proc.vars[index]
+    assert(var, "Var not found!")
+    var.name = name..DataTypeSuffix[var.type & 0xF]
+
+    -- Need to also update the var name in the frame, for any frames currently using proc
+    local frame = self.frame
+    while frame ~= nil do
+        if frame.proc == proc then
+            frame.vars[index].name = var.name
+        end
+        frame = frame.prevFrame
+    end
+end
+
+function Runtime:setVariable(procName, index, arrayIndex, newValue)
+    -- Find the frame
+    local frame = self.frame
+    local found = nil
+    while frame ~= nil do
+        if frame.proc.name == procName then
+            found = frame
+            break
+        end
+        frame = frame.prevFrame
+    end
+    assert(found, "Couldn't find frame for procName "..procName)
+
+    local var = found.vars[index]
+    assert(var, "Couldn't find variable for index "..index)
+
+    local varType = var:type()
+    assert((arrayIndex ~= nil) == isArrayType(varType), "Array type mismatch")
+
+    -- The newValue argument is always a string, for simplicity
+    if (varType & 0xF) == DataTypes.EString then
+        -- Check if it's quoted and if so, undo any \x escapes
+        local quoted = newValue:match('^"(.*)"$')
+        if quoted then
+            newValue = quoted:gsub("\\x([A-Fa-f0-9][A-Fa-f0-9])", function(chs)
+                return string.char(tonumber(chs, 16))
+            end)
+        end
+    else
+        newValue = assert(tonumber(newValue), "Bad number value")
+    end
+
+    if arrayIndex then
+        var[arrayIndex](newValue)
+    else
+        var(newValue)
     end
 end
 

@@ -9,6 +9,7 @@
 #include <QFont>
 #include <QTextBlock>
 #include <QPainter>
+#include <QScrollBar>
 
 CodeView::CodeView(QWidget *parent, TokenizerBase* tokenizer)
     : QPlainTextEdit(parent)
@@ -46,6 +47,7 @@ void CodeView::setUseHexLineAddresses(bool flag)
 
 void CodeView::setContents(const QVector<std::pair<uint32_t, QString>>& blocks)
 {
+    const auto scrollPos = verticalScrollBar()->value();
     auto doc = document();
     doc->clear();
     mBlockAddrs.clear();
@@ -65,14 +67,23 @@ void CodeView::setContents(const QVector<std::pair<uint32_t, QString>>& blocks)
         prevId = id;
     }
     mBlockAddrs.append(prevId); // So that it has the same size as the block count
+
+    if (mBreak.has_value()) {
+        setBreak(*mBreak);
+    }
+
+    // Restore scrollbar position (assumes previous content was either empty or the same as now)
+    verticalScrollBar()->setValue(scrollPos);
 }
 
 // LineNumberArea adapted from https://doc.qt.io/qt-5/qtwidgets-widgets-codeView-example.html
 
+const int kBreakBulletWidth = 10;
+
 int CodeView::lineNumberAreaWidth()
 {
     auto maxId = QString::number(mMaxBlockId, 16);
-    int space = 6 + fontMetrics().horizontalAdvance(maxId);
+    int space = 6 + fontMetrics().horizontalAdvance(maxId) + kBreakBulletWidth;
     return space;
 }
 
@@ -89,15 +100,23 @@ void CodeView::lineNumberPaintEvent(QPaintEvent* event)
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
             QString number;
+            uint32_t addr = 0;
             if (blockNumber < mBlockAddrs.count()) {
-                auto id = mBlockAddrs[blockNumber];
-                if (id != 0 && (blockNumber == 0 || id != mBlockAddrs[blockNumber - 1])) {
-                    number = QString::number(id, mUseHexLineAddresses ? 16 : 10);
+                addr = mBlockAddrs[blockNumber];
+                if (addr != 0 && (blockNumber == 0 || addr != mBlockAddrs[blockNumber - 1])) {
+                    number = QString::number(addr, mUseHexLineAddresses ? 16 : 10);
                 }
             }
             painter.setPen(Qt::black);
-            painter.drawText(0, top, mLineNumberArea->width() - 3, fontMetrics().height(),
+            painter.drawText(kBreakBulletWidth, top, mLineNumberArea->width() - 3 - kBreakBulletWidth,
+                             fontMetrics().height(),
                              Qt::AlignRight, number);
+
+            if (!number.isEmpty() && mBreakpoints.contains(addr)) {
+                painter.setPen(Qt::red);
+                painter.setBrush(Qt::red);
+                painter.drawEllipse(QPoint(7, (top + bottom) / 2), 5, 5);
+            }
         }
 
         block = block.next();
@@ -177,6 +196,7 @@ const QTextCursor CodeView::cursorForAddress(uint32_t address) const
 
 void CodeView::setBreak(std::optional<uint32_t> address)
 {
+    mBreak = address;
     if (address.has_value()) {
         scrollToAddress(*address, false);
         QTextEdit::ExtraSelection sel;
@@ -187,4 +207,19 @@ void CodeView::setBreak(std::optional<uint32_t> address)
     } else {
         setExtraSelections({});
     }
+}
+
+void CodeView::toggleBreakpoint()
+{
+    auto c = textCursor();
+    auto addr = mBlockAddrs[c.blockNumber()];
+    // qDebug("toggleBreakpoint %x", addr);
+    bool set = !mBreakpoints.contains(addr);
+    if (set) {
+        mBreakpoints.insert(addr);
+    } else {
+        mBreakpoints.remove(addr);
+    }
+    mLineNumberArea->update();
+    emit breakpointConfigured(mPath, addr, set);
 }

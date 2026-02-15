@@ -743,6 +743,7 @@ void MainWindow::openSoftwareIndex()
 void MainWindow::showDebugger()
 {
     if (!mDebugWindow) {
+        getRuntime().setIgnoreFocusEvents(true);
         mDebugWindow = new DebuggerWindow(ui->screen->getRuntime());
         mDebugWindow->move(pos() + QPoint(100, 100));
     }

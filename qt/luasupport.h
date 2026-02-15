@@ -115,9 +115,6 @@ void setValue(lua_State *L, const char* k, const T& v)
     lua_setfield(L, -2, k);
 }
 
-std::wstring UTF8ToWide(const std::string& str);
-std::string WideToUTF8(const std::wstring& str);
-
 int load(lua_State* L, const QString& path);
 int dofile(lua_State* L, const QString& path);
 void require(lua_State *L, const char* str);

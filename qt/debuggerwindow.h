@@ -6,6 +6,8 @@
 
 #include <QLabel>
 #include <QMainWindow>
+#include <QMap>
+#include <QScopedPointer>
 #include <QTreeWidgetItem>
 
 #include "opldebug.h"
@@ -34,6 +36,7 @@ private slots:
     void setCurrentEditor(const QString& module);
     void gotoAddressSlot(const QString& module, uint32_t address);
     void toggleBreak();
+    void variableRenamed(const QString& module, const QString& proc, const QString& oldName, const QString& newName);
 
 private:
     CodeView* currentCodeView() const;
@@ -55,6 +58,7 @@ private:
     };
     std::optional<SingleStepState> mSteppingOver;
     std::optional<opl::ProgramInfo> mPauseState;
+    QMap<QString, QVector<opl::NameOverride>> mNameOverrides; // Map key is module name same as for mCodeViews
 };
 
 #endif // DEBUGGERWINDOW_H

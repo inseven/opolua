@@ -37,6 +37,8 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     connect(mRuntime, &OplRuntime::debugInfoUpdated, this, &DebuggerWindow::debugInfoUpdated);
 
     auto model = new StackModel(runtime, ui->stackView);
+    connect(model, &StackModel::variableRenamed, this, &DebuggerWindow::variableRenamed);
+
     ui->stackView->setModel(model);
     ui->stackView->expandRecursively(QModelIndex(), 1);
     resizeDocks({ui->variablesDockWidget}, { width() / 3}, Qt::Horizontal);
@@ -53,6 +55,7 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     connect(ui->actionStepOut, &QAction::triggered, runtime, &OplRuntime::stepOut);
     connect(ui->actionStepOver, &QAction::triggered, this, &DebuggerWindow::stepOver);
     connect(ui->actionToggleBreak, &QAction::triggered, this, &DebuggerWindow::toggleBreak);
+    connect(ui->actionFlush, &QAction::triggered, runtime, &OplRuntime::flushGraphicsOps);
     connect(ui->breakOnError, &QAction::triggered, this, &DebuggerWindow::toggleBreakOnError);
     connect(ui->windowFocusEnabled, &QAction::triggered, this, &DebuggerWindow::toggleWindowFocusEnabled);
     connect(ui->stackView, &StackView::gotoAddress, this, &DebuggerWindow::gotoAddressSlot);
@@ -68,9 +71,15 @@ DebuggerWindow::~DebuggerWindow()
 
 void DebuggerWindow::debugInfoUpdated()
 {
-    clearBreaks();
     const auto info = mRuntime->getDebugInfo();
+    if (info.paused && mPauseState.has_value()) {
+        // Nothing can actually have changed that we care about (probably a variable rename or modify)
+        return;
+    }
+
+    clearBreaks();
     if (info.frames.count() == 0) {
+        mPauseState = std::nullopt;
         mStatusLabel->setText("Exited");
         ui->actionPause->setVisible(false);
         ui->actionContinue->setVisible(true);
@@ -79,6 +88,7 @@ void DebuggerWindow::debugInfoUpdated()
         ui->actionStepOver->setEnabled(false);
         ui->actionStepInto->setEnabled(false);
         ui->actionStepOut->setEnabled(false);
+        ui->actionFlush->setEnabled(false);
         return;
     }
     if (info.paused) {
@@ -94,24 +104,45 @@ void DebuggerWindow::debugInfoUpdated()
     ui->actionStepOver->setEnabled(info.paused);
     ui->actionStepInto->setEnabled(info.paused);
     ui->actionStepOut->setEnabled(info.paused);
+    ui->actionFlush->setEnabled(info.paused);
 
     const auto& modules = info.modules;
-    if (modules != mShownModules) {
-        mShownModules = modules;
-        ui->modulesView->clear();
-        while (ui->centralwidget->count()) {
-            ui->centralwidget->removeWidget(ui->centralwidget->widget(0));
-        }
-        mCodeViews.clear();
 
-        for (int i = 0; i < modules.count(); i++) {
-            auto item = new QTreeWidgetItem({modules[i].name, modules[i].path, modules[i].nativePath});
-            ui->modulesView->addTopLevelItems({item});
-            if (i == 0) {
-                ui->modulesView->setCurrentItem(item);
+    // The logic here assumes that module order doesn't change, so that a module not being in the expected place means
+    // it's been unloaded.
+    int modIdx = 0;
+    int newIdx = 0;
+    while (newIdx < modules.count()) {
+        // newIdx always valid here
+        if (modIdx < mShownModules.count() && mShownModules[modIdx].path == modules[newIdx].path) {
+            // Unchanged
+            modIdx++;
+            newIdx++;
+        } else {
+            if (modIdx < mShownModules.count()) {
+                // modIdx has been removed
+                auto editor = mCodeViews.take(mShownModules[modIdx].nativePath);
+                if (editor) {
+                    ui->centralwidget->removeWidget(editor);
+                    delete editor;
+                }
+                delete ui->modulesView->takeTopLevelItem(modIdx);
+                mShownModules.remove(modIdx);
+            } else {
+                // new item
+                auto item = new QTreeWidgetItem({modules[newIdx].name, modules[newIdx].path, modules[newIdx].nativePath});
+                ui->modulesView->addTopLevelItems({item});
+                if (newIdx == 0) {
+                    ui->modulesView->setCurrentItem(item);
+                }
+                mShownModules.append(modules[newIdx]);
+                modIdx++;
+                newIdx++;
             }
         }
     }
+
+    Q_ASSERT(mShownModules.count() == modules.count());
 
     if (info.paused) {
         const auto& topFrame = info.frames.last();
@@ -119,7 +150,7 @@ void DebuggerWindow::debugInfoUpdated()
         if (mSteppingOver.has_value()) {
             auto view = mCodeViews.value(mSteppingOver->module);
             if (!view) {
-                qDebug("Module for step over has gona away??");
+                // qDebug("Module for step over has gona away??");
                 mSteppingOver = std::nullopt;
                 mRuntime->unpause();
             } else if (info.frames.count() > mSteppingOver->frameIdx
@@ -133,17 +164,17 @@ void DebuggerWindow::debugInfoUpdated()
                     // In the same frame
                     auto newLineAddr = view->lineAddressForAddress(topFrame.ip);
                     if (newLineAddr == mSteppingOver->lineAddr) {
-                        qDebug("Continuing step over %x still in same statement %x", topFrame.ip, newLineAddr);
+                        // qDebug("Continuing step over %x still in same statement %x", topFrame.ip, newLineAddr);
                         mRuntime->singleStep();
                     } else {
-                        qDebug("Made it somewhere else %x != %x", newLineAddr, mSteppingOver->lineAddr);
+                        // qDebug("Made it somewhere else %x != %x", newLineAddr, mSteppingOver->lineAddr);
                         mSteppingOver = std::nullopt;
                         gotoAddress(topFrame.procModule, topFrame.ip, true);
                     }
                 }
             } else {
                 // Frame no longer there, stepping over a return should probably be treated as a break
-                qDebug("Frame unwound, breaking");
+                // qDebug("Frame unwound, breaking");
                 mSteppingOver = std::nullopt;
                 gotoAddress(topFrame.procModule, topFrame.ip, true);
             }
@@ -191,20 +222,18 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
                     auto line = QString(f.readLine());
                     lines.append({ lineNum++, line });
                 }
-                view->setPath(path);
                 view->setContents(lines);
             }
         } else {
             view = new CodeView(this, new OplTokenizer);
             view->setUseHexLineAddresses(true);
             auto prog = OplRuntime().decompile(path);
-            view->setPath(path);
             view->setContents(prog);
         }
+        view->setPath(path);
         view->setReadOnly(true);
         view->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
-        // Ensure stays scrolled to top
-        view->setTextCursor(QTextCursor(view->document()));
+        connect(view, &CodeView::breakpointConfigured, mRuntime, &OplRuntime::configureBreakpoint);
         mCodeViews[path] = view;
         ui->centralwidget->addWidget(view);
     }
@@ -216,6 +245,7 @@ void DebuggerWindow::setCurrentEditor(const QString& module)
     auto ed = getCodeView(module);
     ui->centralwidget->setCurrentWidget(ed);
     setWindowTitle(QString("%1 - OpoLua Debugger").arg(QFileInfo(module).fileName()));
+    ui->actionToggleBreak->setEnabled(!module.endsWith(".lua"));
     ed->setFocus();
 }
 
@@ -273,7 +303,7 @@ void DebuggerWindow::stepOver()
     auto view = mCodeViews.value(topFrame.procModule);
     Q_ASSERT(view);
     auto currentAddr = view->lineAddressForAddress(topFrame.ip);
-    qDebug("Stepping over from addr = %x", currentAddr);
+    // qDebug("Stepping over from addr = %x", currentAddr);
     mSteppingOver = {
         .module = topFrame.procModule,
         .proc = topFrame.procName,
@@ -289,5 +319,31 @@ void DebuggerWindow::toggleBreak()
     if (!view) {
         return;
     }
-    //TODO
+    view->toggleBreakpoint();
+}
+
+void DebuggerWindow::variableRenamed(const QString& module, const QString& proc, const QString& oldName, const QString& newName)
+{
+    auto& overrides = mNameOverrides[module];
+    bool found = false;
+    for (int i = 0; i < overrides.count(); i++) {
+        if (overrides[i].proc == proc && overrides[i].newName == oldName) {
+            // Update existing
+            found = true;
+            overrides[i].newName = newName;
+            break;
+        }
+    }
+    if (!found) {
+        // If there's no existing rename, the current name must be the original name
+        overrides.append({
+            .proc = proc,
+            .origName = oldName,
+            .newName = newName
+        });
+    }
+
+    CodeView* view = getCodeView(module);
+    auto prog = OplRuntime().decompile(module, overrides);
+    view->setContents(prog);
 }

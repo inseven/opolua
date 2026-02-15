@@ -35,7 +35,7 @@ void Highlighter::highlightBlock(const QString& text)
         }
         switch(type) {
         case TokenizerBase::TokenNumber:
-            setFormat(start, len, QColor(249, 174, 87));
+            setFormat(start, len, QColor(71, 133, 210));
             break;
         case TokenizerBase::TokenOperator:
             setFormat(start, len, QColor(249, 123, 87));

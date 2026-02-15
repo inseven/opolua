@@ -347,7 +347,7 @@ function parseProc(proc, translatorVersion)
 
     -- Since indirect indexes do not overlap direct indexes, we can safely add the params and externals to vars too
     for i, param in ipairs(proc.params) do
-        local indirectIdx = (i - 1) * 2 + proc.iTotalTableSize + 18 -- inverse of Runtime:getIndirectVar() logic
+        local indirectIdx = getProcParamIndex(proc, i)
         vars[indirectIdx] = {
             name = string.format("param_%d%s", i, DataTypeSuffix[param]),
             indirectIdx = indirectIdx,
@@ -367,6 +367,13 @@ function parseProc(proc, translatorVersion)
     proc.vars = vars
 
     return proc
+end
+
+function getProcParamIndex(proc, param)
+    assert(param > 0 and param <= #proc.params, "Param out of range")
+    -- inverse of Runtime:getIndirectVar() logic, given proc params are always the first indirects
+    local indirectIdx = (param - 1) * 2 + proc.iTotalTableSize + 18
+    return indirectIdx
 end
 
 function printProc(proc)

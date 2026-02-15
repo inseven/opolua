@@ -51,6 +51,7 @@
     <addaction name="separator"/>
     <addaction name="breakOnError"/>
     <addaction name="windowFocusEnabled"/>
+    <addaction name="actionFlush"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDebug"/>
@@ -277,6 +278,14 @@
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionFlush">
+   <property name="text">
+    <string>Flush Graphics Operations</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
    </property>
   </action>
  </widget>

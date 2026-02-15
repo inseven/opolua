@@ -187,18 +187,6 @@ void pushValue(lua_State* L, const QVariant& value)
     }
 }
 
-std::wstring UTF8ToWide(const std::string& str)
-{
-    QString qstr = QString::fromStdString(str);
-    return qstr.toStdWString();
-}
-
-std::string WideToUTF8(const std::wstring& str)
-{
-    QString qstr = QString::fromStdWString(str);
-    return qstr.toStdString();
-}
-
 int load(lua_State* L, const QString& path)
 {
     // Read file ourselves with QFile, rather than just using luaL_loadfile, so

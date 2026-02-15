@@ -36,6 +36,9 @@ private slots:
     void runComplete();
     void startedRunning();
 
+signals:
+    void variableRenamed(const QString& module, const QString& proc, const QString& oldName, const QString& newName);
+
 private:
     const opl::Frame& frameForIndex(const QModelIndex& idx) const;
     const opl::Variable& variableForIndex(const QModelIndex& idx) const;

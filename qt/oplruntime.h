@@ -130,15 +130,11 @@ public: // Debugging APIs
     void setIgnoreFocusEvents(bool flag);
 
     opl::ProgramInfo getDebugInfo();
-    void debugSetVariable(const opl::Variable& variable, const QString& value);
-
-    void addBreakpoint(const QString& moduleNativePath, uint32_t addr);
-    void removeBreakpoint(const QString& moduleNativePath, uint32_t addr);
-
+    void setVariable(const opl::Frame& frame, const opl::Variable& variable, std::optional<int> arrayIndex, const QString& value);
     static QString varToStr(const opl::Variable& v, int idx = -1);
 
     typedef std::pair<uint32_t, QString> Line;
-    QVector<Line> decompile(const QString& path);
+    QVector<Line> decompile(const QString& path, const QVector<opl::NameOverride>& renames={});
 
 protected:
     bool event(QEvent* ev) override;
@@ -160,6 +156,11 @@ public slots: // Debugging-related slots
     void stepIn();
     void stepOut();
     void singleStep();
+    void configureBreakpoint(const QString& moduleNativePath, uint32_t addr, bool set);
+    void setBreakpoint(const QString& moduleNativePath, uint32_t addr);
+    void clearBreakpoint(const QString& moduleNativePath, uint32_t addr);
+    void renameVariable(const QString& proc, uint32_t index, const QString& newName);
+    void flushGraphicsOps();
 
 signals:
     void startedRunning(const QString& path);
@@ -237,6 +238,7 @@ private:
     void doRunInstaller(const QString& file, const QString& displayPath, const QString& lang);
     bool debugInfoStale() const;
     void updateDebugInfo(lua_State* L, bool errOnStack = false);
+    void doRenameVariable(lua_State* L, const QString& proc, uint32_t index, const QString& newName);
 
     DECLARE_IOHANDLER_FN(asyncRequest);
     DECLARE_IOHANDLER_FN(cancelRequest);
@@ -262,6 +264,7 @@ private:
     // Not actually part of iohandler, but behaves similarly
     DECLARE_IOHANDLER_FN(printHandler);
     DECLARE_IOHANDLER_FN(runOpoHelper);
+    DECLARE_IOHANDLER_FN(drawMainThread);
 
 protected:
     lua_State* L;
@@ -296,10 +299,16 @@ private:
     QVector<Completion> mPendingCompletions;
     QSet<int> mKeysDown; // set of scancodes, used for SIBO HwGetScanCodes only
     opl::ProgramInfo mDebugInfo;
-
+    QMap<uint32_t, QVector<QString>> mBreakpoints;
+    QElapsedTimer mLastDebugInfoTime;
     //// END protected by mMutex
     QElapsedTimer mLastOpTime;
-    QElapsedTimer mLastDebugInfoTime;
+    struct IndexedNameOverride {
+        QString proc;
+        uint32_t index;
+        QString name;
+    };
+    QVector<IndexedNameOverride> mPendingVariableRenames;
     int mRuntimeRef;
     std::function<void(void)> mRunNextFn;
     QSemaphore mWaitSemaphore;

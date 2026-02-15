@@ -5,6 +5,8 @@
 #define CODEVIEW_H
 
 #include <QPlainTextEdit>
+#include <QSet>
+#include <QVector>
 
 class Highlighter;
 class TokenizerBase;
@@ -27,9 +29,15 @@ public:
 
     void setBreak(std::optional<uint32_t> address);
 
+public slots:
+    void toggleBreakpoint();
+
 private slots:
     void updateLineNumberAreaWidth();
     void updateLineNumberArea(const QRect &rect, int dy);
+
+signals:
+    void breakpointConfigured(const QString& module, uint32_t addr, bool set);
 
 protected:
     void resizeEvent(QResizeEvent *e) override;
@@ -47,6 +55,8 @@ private:
     // previous element rather than using 0xFFFFFFFF. This is to make it possible to use std::lower_bound to search the
     // list.
     QVector<uint32_t> mBlockAddrs;
+    QSet<uint32_t> mBreakpoints;
+    std::optional<uint32_t> mBreak;
 };
 
 #endif // CODEVIEW_H

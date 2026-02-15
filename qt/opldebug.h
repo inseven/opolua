@@ -33,6 +33,7 @@ struct Variable
     uint16_t index;
     QString name;
     QVariant value;
+    bool global;
 };
 
 struct Module
@@ -63,6 +64,12 @@ static inline bool operator==(const Module &lhs, const Module &rhs)
 {
     return lhs.path == rhs.path;
 }
+
+struct NameOverride {
+    QString proc;
+    QString origName;
+    QString newName;
+};
 
 } // end namespace
 

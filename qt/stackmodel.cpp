@@ -142,8 +142,14 @@ void StackModel::debugInfoUpdated()
 
             const auto& newVar = newInfo.frames[f].variables[newIdx];
             Q_ASSERT(newVar.address == oldVar.address);
+            if (newVar.name != oldVar.name) {
+                // qDebug("Variable renamed %s -> %s", qPrintable(oldVar.name), qPrintable(newVar.name));
+                mInfo.frames[f].variables[newIdx].name = newVar.name;
+                auto idx = createIndex(newIdx, 0, makeId(f, newIdx));
+                emit dataChanged(idx, idx);
+            }
             if (newVar.value != oldVar.value) {
-                // qDebug("Value of %s changed", qPrintable(newInfo.frames[f].variables[v].name));
+                // qDebug("Value of %s changed", qPrintable(newVar.name));
                 mInfo.frames[f].variables[newIdx].value = newVar.value;
                 auto idx = createIndex(newIdx, 1, makeId(f, newIdx));
                 emit dataChanged(idx, idx);
@@ -161,7 +167,18 @@ void StackModel::debugInfoUpdated()
 
             oldIdx = newIdx + 1;
         }
+        // Above loop doesn't handle new vars appended to the end of newInfo
+        for (int idx = oldIdx; idx < newInfo.frames[f].variables.count(); idx++) {
+            const auto& newVar = newInfo.frames[f].variables[idx];
+            qDebug("Adding new variable %s", qPrintable(newVar.name));
+            auto parent = createIndex(f, 0, makeId(f));
+            beginInsertRows(parent, idx, idx);
+            mInfo.frames[f].variables.insert(idx, newVar);
+            endInsertRows();
+        }
     }
+
+    mInfo.paused = newInfo.paused;
 }
 
 const opl::Frame& StackModel::frameForIndex(const QModelIndex& idx) const
@@ -258,27 +275,30 @@ QVariant StackModel::headerData(int section, Qt::Orientation orientation, int ro
     }
 }
 
-QString StackModel::describeStringValue(const QString& value, bool quoted) const
+QString StackModel::describeStringValue(const QString& value, bool quotedIfUsingEscapes) const
 {
     QString result;
     QTextStream str(&result);
-    if (quoted) {
-        str << "\"";
-    }
+    str.setPadChar('0');
+    str.setIntegerBase(16);
+    str.setNumberFlags(QTextStream::UppercaseDigits);
+    bool escapes = false;
     const auto endPtr = value.cend();
     for (auto ptr = value.cbegin(); ptr != endPtr; ptr++) {
         auto ch = ptr->unicode();
         if (ch >= 0x20 && ch <= 0x7F) {
             str << *ptr;
         } else {
-            str << "\\x" << QString::number(ch, 16).toUpper();
+            str << "\\x" << qSetFieldWidth(2) << (int)ch;
+            escapes = true;
         }
     }
 
-    if (quoted) {
-        str << "\"";
+    if (quotedIfUsingEscapes && escapes) {
+        return QString("\"%1\"").arg(result);
+    } else {
+        return result;
     }
-    return result;
 }
 
 QString StackModel::describeValue(const QVariant& value, int role) const
@@ -314,6 +334,14 @@ QString StackModel::describeValue(const QVariant& value, int role) const
     }
 }
 
+QString stripTypeSuffix(const QString& identifier)
+{
+    QString result = identifier;
+    if (result.endsWith("%") || result.endsWith("&") || result.endsWith("$")) {
+        result = result.chopped(1);
+    }
+    return result;
+}
 
 QVariant StackModel::data(const QModelIndex &index, int role) const
 {
@@ -333,9 +361,12 @@ QVariant StackModel::data(const QModelIndex &index, int role) const
     } else if (isVariable(index)) {
         const auto& var = variableForIndex(index);
         if (index.column() == 0) {
-            return var.name;
+            if (role == Qt::EditRole) {
+                return stripTypeSuffix(var.name);
+            } else {
+                return var.name;
+            }
         } else {
-            // return OplRuntime::varToStr(var);
             return describeValue(var.value, role);
         }
     } else {
@@ -344,7 +375,6 @@ QVariant StackModel::data(const QModelIndex &index, int role) const
         if (index.column() == 0) {
             return QString("[%1]").arg(arrayIdx + 1);
         } else {
-            // return OplRuntime::varToStr(var, arrayIdx);
             return describeValue(var.value.toList()[arrayIdx], role);
         }
     }
@@ -353,20 +383,46 @@ QVariant StackModel::data(const QModelIndex &index, int role) const
 Qt::ItemFlags StackModel::flags(const QModelIndex &index) const
 {
     auto flags = QAbstractItemModel::flags(index);
-    // if (isVariable(index) && index.column() == 1) {
-    //     const auto& var = variableForIndex(index);
-    //     if (var.type == opl::EWord || var.type == opl::ELong) {
-    //         flags |= Qt::ItemIsEditable;
-    //     }
-    // }
+    if (isVariable(index) && index.column() == 0) {
+        const auto& var = variableForIndex(index);
+        // Lua variable names cannot be modified, and nor can globals (because that would break variable lookup)
+        if (!frameForIndex(index).procModule.endsWith(".lua") && !var.global) {
+            flags |= Qt::ItemIsEditable;
+        }
+    } else if (mInfo.paused && index.column() == 1
+        && (isArrayMember(index) || (isVariable(index) && !IsArrayType(variableForIndex(index).type)))) {
+        // edit the value of a variable
+        flags |= Qt::ItemIsEditable;
+    }
     return flags;
 }
 
 bool StackModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     Q_UNUSED(role);
-    Q_ASSERT(isVariable(index) /*|| isArrayMember(index)*/);
+    Q_ASSERT(isVariable(index) || isArrayMember(index));
     const auto& var = variableForIndex(index);
-    qDebug("TODO setData %X %s", var.address, qPrintable(value.toString()));
+    if (index.column() == 0) {
+        // It's a variable rename
+        auto newName = value.toString();
+        if (newName != var.name) {
+            const auto& frame = frameForIndex(index);
+            // Copy these so they don't risk getting invalidated by the renameVariable() call
+            QString module = frame.procModule;
+            QString proc = frame.procName;
+            QString oldName = stripTypeSuffix(var.name);
+            mRuntime->renameVariable(proc, var.index, newName);
+            emit variableRenamed(module, proc, oldName, newName);
+            return true;
+        }
+    } else {
+        const auto& frame = frameForIndex(index);
+        std::optional<int> arrayIdx = std::nullopt;
+        if (isArrayMember(index)) {
+            arrayIdx = getArrayIndex(index);
+        }
+        mRuntime->setVariable(frame, var, arrayIdx, value.toString());
+        return true;
+    }
     return false;
 }
