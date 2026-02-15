@@ -275,6 +275,7 @@ local function checkProg(prog, expected)
         format = compiler.OplEr5,
         annotate = false,
         outputFn = outputFn,
+        renames = {},
     }))
     local decompiledText = table.concat(output)
     -- And that the decompiled output compiles, and that when we decompile _that_ we get the same text as from the first
@@ -292,6 +293,7 @@ local function checkProg(prog, expected)
         format = compiler.OplEr5,
         annotate = false,
         outputFn = outputFn,
+        renames = {},
     }))
     local secondDecompileText = table.concat(output)
     assertEquals(decompiledText, secondDecompileText)
