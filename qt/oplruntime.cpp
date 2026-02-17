@@ -71,6 +71,10 @@ private:
 
 #endif // QT_NO_DEBUG
 
+// Technically this asserts that the current thread is the same as the one the OplRuntime object belongs to, which is
+// the thing that matters from OplRuntime's point of view (and generally that will always be the main thread).
+#define ASSERT_MAIN_THREAD() Q_ASSERT(QThread::currentThread() == thread())
+
 void dumpStack(lua_State *L, const char* where)
 {
     const int n = lua_gettop(L);
@@ -95,11 +99,18 @@ OplRuntime::OplRuntime(QObject *parent)
     , mEventRequest(nullptr)
     , mWaiting(false)
     , mInterrupted(false)
+    , mPaused(false)
+    , mDebugging(false)
+    , mBreakOnErr(false)
+    , mBreakOnNext(None)
     , mSpeed(Fastest)
+    , mDebugInfo{}
+    , mRuntimeRef(LUA_NOREF)
     , mInfoWinId(0)
     , mBusyWinId(0)
     , mCursorDrawn(false)
     , mEscapeOn(true)
+    , mIgnoreFocusEvents(false)
 {
     mFs.reset(new FileSystemIoHandler());
     mStringCodec = QTextCodec::codecForName("Windows-1252");
@@ -129,6 +140,8 @@ OplRuntime::OplRuntime(QObject *parent)
     lua_setglobal(L, "doprint");
 
     mLastOpTime.start();
+
+    connect(this, &OplRuntime::runComplete, this, &OplRuntime::updateDebugInfoOnRunComplete);
 }
 
 void OplRuntime::pushIohandler()
@@ -142,6 +155,7 @@ void OplRuntime::pushIohandler()
         IOHANDLER_FN(createBitmap),
         IOHANDLER_FN(createWindow),
         IOHANDLER_FN(draw),
+        IOHANDLER_FN(debugEvent),
         IOHANDLER_FN(getConfig),
         IOHANDLER_FN(getDeviceInfo),
         IOHANDLER_FN(getTime),
@@ -171,7 +185,8 @@ static int searcher(lua_State *L)
     } else if (err) {
         return lua_error(L);
     }
-    return 1;
+    pushValue(L, name);
+    return 2;
 }
 
 void OplRuntime::configureLuaResourceSearcher(lua_State *L)
@@ -381,6 +396,9 @@ void OplRuntime::interruptAndRun(std::function<void(void)> runNextFn)
     lua_sethook(L, stop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT, 1);
     mMutex.lock();
     mInterrupted = true;
+    if (mPaused) {
+        mPaused = false;
+    }
     if (mCallEvent && mCallEvent->call) {
         mCallEvent->call->interrupt();
         mCallEvent->call = nullptr;
@@ -482,16 +500,44 @@ void OplRuntime::run(const QString& devicePath)
     startThread();
 }
 
+// This exists to behave the same as the static fn runtime.runOpo() (so as to be compatible with how pushRunParams and
+// restartArgs work), but actually instantiate a Runtime object and capture a ref to it before calling Runtime:run()
+int OplRuntime::runOpoHelper(lua_State* L)
+{
+    // Stack is mDeviceOpoPath, iohandler
+
+    require(L, "runtime");
+    rawgetfield(L, -1, "newRuntimeWithFile");
+    lua_remove(L, -2); // runtime
+    lua_insert(L, 1); // stack now newRuntimeWithFile, mDeviceOpoPath, iohandler
+
+    lua_call(L, 2, 1);
+
+    Q_ASSERT(lua_type(L, -1) == LUA_TTABLE);
+    lua_pushvalue(L, -1);
+    mRuntimeRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    Q_ASSERT(lua_gettop(L) == 1);
+
+    int t = luaL_getmetafield(L, 1, "run");
+    Q_ASSERT(t == LUA_TFUNCTION);
+    lua_insert(L, 1); // Move run before runtime obj
+    lua_pushnil(L); // procName
+    lua_call(L, 2, 0);
+    return 0;
+}
+
 void OplRuntime::pushRunParams(const QString& devicePath)
 {
+    luaL_unref(L, LUA_REGISTRYINDEX, mRuntimeRef); // In case there's an old one lying around
+    mRuntimeRef = LUA_NOREF;
+
     lua_settop(L, 0);
     mDeviceOpoPath = devicePath;
     setDeviceType(mDeviceType); // Re-configures Z drive mapping if necessary
-    require(L, "runtime");
-    lua_getfield(L, -1, "runOpo");
-    lua_remove(L, -2); // runtime
+
+    lua_pushlightuserdata(L, this);
+    lua_pushcclosure(L, runOpoHelper_s, 1);
     pushValue(L, mDeviceOpoPath);
-    lua_pushnil(L); // procName
     pushIohandler();
 }
 
@@ -661,6 +707,7 @@ void OplRuntime::onThreadExited()
             errdetail = errdetail + "\n" + lua_tostring(L, -1);
         }
         lua_pop(L, 1);
+        mRet = LUA_OK;
     }
     delete mThread;
     mThread = nullptr;
@@ -689,6 +736,16 @@ void OplRuntime::onThreadExited()
     } else {
         lua_settop(L, 0);
         emit runComplete(errmsg, errdetail);
+    }
+}
+
+void OplRuntime::updateDebugInfoOnRunComplete()
+{
+    // This is such a hack around the fact that runComplete is emitted from a bunch of places to the point where it's
+    // easier just to hook up this slot internally to deal with keeping debug info consistent
+    if (mDebugging) {
+        mDebugInfo = {};
+        emit debugInfoUpdated();
     }
 }
 
@@ -989,144 +1046,149 @@ static uint32_t to_rgb(lua_State* L, int idx, const char* name)
 int OplRuntime::draw(lua_State* L)
 {
     // qDebug("draw top=%d", lua_gettop(L));
-    int pixelsWritten = 0;
-    return call([this, L, &pixelsWritten] {
-        mScreen->beginBatchDraw();
-        for (int i = 0; ; i++) {
-            // qDebug("draw[mainthread] i=%d top=%d", i, lua_gettop(L));
-            int t = lua_rawgeti(L, 1, i + 1);
-            // qDebug("draw %d t=%d", i, t);
-            if (t != LUA_TTABLE) {
-                break;
-            }
-            OplScreen::DrawCmd cmd = {
-                .type = OplScreen::fill, // Just to shut up compiler warning
-                .drawableId = to_int(L, 2, "id"),
-                .mode = (OplScreen::DrawCmdMode)to_int(L, 2, "mode"),
-                .origin = QPoint(to_int(L, 2, "x"), to_int(L, 2, "y")),
-                .color = to_rgb(L, 2, "color"),
-                .bgcolor = to_rgb(L, 2, "bgcolor"),
-                .penWidth = to_int(L, 2, "penwidth"),
-                .greyMode = (OplScreen::GreyMode)to_int(L, 2, "greyMode"),
-                .shutUpCompiler = 0,
-            };
-            if (cmd.penWidth == 0) cmd.penWidth = 1;
-            QString type = to_string(L, 2, "type");
-            if (type == "fill") {
-                cmd.type = OplScreen::fill;
-                cmd.fill.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
-                pixelsWritten += cmd.fill.size.width() * cmd.fill.size.height();
-            } else if (type == "line") {
-                cmd.type = OplScreen::line;
-                cmd.line.endPoint = QPoint(to_int(L, 2, "x2"), to_int(L, 2, "y2"));
-                // Manhattan approximation
-                pixelsWritten += qAbs(cmd.origin.x() - cmd.line.endPoint.x()) + qAbs(cmd.origin.y() - cmd.line.endPoint.y());
-            } else if (type == "circle") {
-                cmd.type = OplScreen::circle;
-                cmd.circle.radius = to_int(L, 2, "r");
-                cmd.circle.fill = to_bool(L, 2, "fill");
-                if (cmd.circle.fill) {
-                    pixelsWritten += 3 * cmd.circle.radius * cmd.circle.radius; // Close enough to pi * r^2
-                } else {
-                    pixelsWritten += 6 * cmd.circle.radius; // Close enough to 2 * pi * r
-                }
-            } else if (type == "ellipse") {
-                cmd.type = OplScreen::ellipse;
-                cmd.ellipse.hRadius = to_int(L, 2, "hradius");
-                cmd.ellipse.vRadius = to_int(L, 2, "vradius");
-                cmd.ellipse.fill = to_bool(L, 2, "fill");
-                if (cmd.circle.fill) {
-                    pixelsWritten += 3 * cmd.ellipse.hRadius * cmd.ellipse.vRadius; // Close enough
-                } else {
-                    pixelsWritten += 3 * (cmd.ellipse.hRadius + cmd.ellipse.vRadius); // Close enough
-                }
-            } else if (type == "box") {
-                cmd.type = OplScreen::box;
-                cmd.box.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
-                pixelsWritten += 2 * cmd.box.size.width() + 2 * cmd.box.size.height();
-            } else if (type == "mcopy") {
-                OplScreen::CopyMultipleCmd cpycmd = {
-                    .srcId = to_int(L, 2, "srcid"),
-                    .destId = cmd.drawableId,
-                    .color = cmd.bgcolor,
-                    .invert = cmd.mode == OplScreen::invert,
-                    .greyMode = cmd.greyMode,
-                };
-                QVector<QRect> rects;
-                QVector<QPoint> points;
-                int numPixels = 0;
-                for (int i = 1; ; i += 6) {
-                    lua_rawgeti(L, 2, i);
-                    lua_rawgeti(L, 2, i+1);
-                    lua_rawgeti(L, 2, i+2);
-                    lua_rawgeti(L, 2, i+3);
-                    lua_rawgeti(L, 2, i+4);
-                    if (lua_rawgeti(L, 2, i+5) != LUA_TNUMBER) {
-                        lua_pop(L, 6);
-                        break;
-                    }
-                    QRect r(lua_tointeger(L, -6), lua_tointeger(L, -5), lua_tointeger(L, -4), lua_tointeger(L, -3));
-                    numPixels += r.width() * r.height();
-                    rects.append(r);
-                    points.append(QPoint(lua_tointeger(L, -2), lua_tointeger(L, -1)));
-                    lua_pop(L, 6);
-                }
-                pixelsWritten += numPixels;
-                mScreen->copyMultiple(cpycmd, rects, points);
-                lua_pop(L, 1); // cmd
-                continue;
-            } else if (type == "bitblt") {
-                rawgetfield(L, 2, "bitmap");
-                int width = to_int(L, -1, "width");
-                int height = to_int(L, -1, "height");
-                bool color = to_bool(L, -1, "isColor");
-                auto data = to_bytearray(L, -1, "normalizedImgData");
-                lua_pop(L, 1); // bitmap
-
-                mScreen->bitBlt(cmd.drawableId, color, width, height, data);
-                pixelsWritten += width * height;
-                lua_pop(L, 1); // cmd
-                continue;
-            } else if (type == "scroll") {
-                cmd.type = OplScreen::scroll;
-                cmd.scroll.dx = to_int(L, 2, "dx");
-                cmd.scroll.dy = to_int(L, 2, "dy");
-                rawgetfield(L, 2, "rect");
-                cmd.scroll.rect = QRect(to_int(L, -1, "x"), to_int(L, -1, "y"), to_int(L, -1, "w"), to_int(L, -1, "h"));
-                pixelsWritten += cmd.scroll.rect.width() * cmd.scroll.rect.height(); // Close enough?
-                lua_pop(L, 1);
-            } else if (type == "border") {
-                cmd.type = OplScreen::border;
-                cmd.border.borderType = to_int(L, 2, "btype");
-                cmd.border.rect = QRect(cmd.origin.x(), cmd.origin.y(), to_int(L, 2, "width"), to_int(L, 2, "height"));
-                // TODO pixelsWritten
-            } else if (type == "copy") {
-                cmd.type = OplScreen::copy;
-                cmd.copy.srcDrawableId = to_int(L, 2, "srcid");
-                cmd.copy.maskDrawableId = to_int(L, 2, "mask");
-                cmd.copy.srcRect = QRect(to_int(L, 2, "srcx"), to_int(L, 2, "srcy"), to_int(L, 2, "width"), to_int(L, 2, "height"));
-                pixelsWritten += cmd.copy.srcRect.width() * cmd.copy.srcRect.height(); // Doesn't account for clipping, close enough
-            } else if (type == "patt") {
-                cmd.type = OplScreen::pattern;
-                cmd.pattern.srcDrawableId = to_int(L, 2, "srcid");
-                cmd.pattern.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
-                pixelsWritten += cmd.pattern.size.width() * cmd.pattern.size.height();
-            } else if (type == "invert") {
-                cmd.type = OplScreen::cmdInvert;
-                cmd.invert.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
-                pixelsWritten += cmd.invert.size.width() * cmd.invert.size.height();
-            } else {
-                qWarning("Unhandled draw cmd %s", qPrintable(type));
-                lua_pop(L, 1); // cmd
-                continue;
-            }
-            mScreen->draw(cmd);
-            lua_pop(L, 1); // cmd
-        }
-        mScreen->endBatchDraw();
-        didWritePixels(pixelsWritten);
-        return 0;
+    return call([this, L/*, &pixelsWritten*/] {
+        return drawMainThread(L);
     });
+}
+
+int OplRuntime::drawMainThread(lua_State* L)
+{
+    int pixelsWritten = 0;
+    mScreen->beginBatchDraw();
+    for (int i = 0; ; i++) {
+        // qDebug("draw[mainthread] i=%d top=%d", i, lua_gettop(L));
+        int t = lua_rawgeti(L, 1, i + 1);
+        // qDebug("draw %d t=%d", i, t);
+        if (t != LUA_TTABLE) {
+            break;
+        }
+        OplScreen::DrawCmd cmd = {
+            .type = OplScreen::fill, // Just to shut up compiler warning
+            .drawableId = to_int(L, 2, "id"),
+            .mode = (OplScreen::DrawCmdMode)to_int(L, 2, "mode"),
+            .origin = QPoint(to_int(L, 2, "x"), to_int(L, 2, "y")),
+            .color = to_rgb(L, 2, "color"),
+            .bgcolor = to_rgb(L, 2, "bgcolor"),
+            .penWidth = to_int(L, 2, "penwidth"),
+            .greyMode = (OplScreen::GreyMode)to_int(L, 2, "greyMode"),
+            .shutUpCompiler = 0,
+        };
+        if (cmd.penWidth == 0) cmd.penWidth = 1;
+        QString type = to_string(L, 2, "type");
+        if (type == "fill") {
+            cmd.type = OplScreen::fill;
+            cmd.fill.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
+            pixelsWritten += cmd.fill.size.width() * cmd.fill.size.height();
+        } else if (type == "line") {
+            cmd.type = OplScreen::line;
+            cmd.line.endPoint = QPoint(to_int(L, 2, "x2"), to_int(L, 2, "y2"));
+            // Manhattan approximation
+            pixelsWritten += qAbs(cmd.origin.x() - cmd.line.endPoint.x()) + qAbs(cmd.origin.y() - cmd.line.endPoint.y());
+        } else if (type == "circle") {
+            cmd.type = OplScreen::circle;
+            cmd.circle.radius = to_int(L, 2, "r");
+            cmd.circle.fill = to_bool(L, 2, "fill");
+            if (cmd.circle.fill) {
+                pixelsWritten += 3 * cmd.circle.radius * cmd.circle.radius; // Close enough to pi * r^2
+            } else {
+                pixelsWritten += 6 * cmd.circle.radius; // Close enough to 2 * pi * r
+            }
+        } else if (type == "ellipse") {
+            cmd.type = OplScreen::ellipse;
+            cmd.ellipse.hRadius = to_int(L, 2, "hradius");
+            cmd.ellipse.vRadius = to_int(L, 2, "vradius");
+            cmd.ellipse.fill = to_bool(L, 2, "fill");
+            if (cmd.circle.fill) {
+                pixelsWritten += 3 * cmd.ellipse.hRadius * cmd.ellipse.vRadius; // Close enough
+            } else {
+                pixelsWritten += 3 * (cmd.ellipse.hRadius + cmd.ellipse.vRadius); // Close enough
+            }
+        } else if (type == "box") {
+            cmd.type = OplScreen::box;
+            cmd.box.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
+            pixelsWritten += 2 * cmd.box.size.width() + 2 * cmd.box.size.height();
+        } else if (type == "mcopy") {
+            OplScreen::CopyMultipleCmd cpycmd = {
+                .srcId = to_int(L, 2, "srcid"),
+                .destId = cmd.drawableId,
+                .color = cmd.bgcolor,
+                .invert = cmd.mode == OplScreen::invert,
+                .greyMode = cmd.greyMode,
+            };
+            QVector<QRect> rects;
+            QVector<QPoint> points;
+            int numPixels = 0;
+            for (int i = 1; ; i += 6) {
+                lua_rawgeti(L, 2, i);
+                lua_rawgeti(L, 2, i+1);
+                lua_rawgeti(L, 2, i+2);
+                lua_rawgeti(L, 2, i+3);
+                lua_rawgeti(L, 2, i+4);
+                if (lua_rawgeti(L, 2, i+5) != LUA_TNUMBER) {
+                    lua_pop(L, 6);
+                    break;
+                }
+                QRect r(lua_tointeger(L, -6), lua_tointeger(L, -5), lua_tointeger(L, -4), lua_tointeger(L, -3));
+                numPixels += r.width() * r.height();
+                rects.append(r);
+                points.append(QPoint(lua_tointeger(L, -2), lua_tointeger(L, -1)));
+                lua_pop(L, 6);
+            }
+            pixelsWritten += numPixels;
+            mScreen->copyMultiple(cpycmd, rects, points);
+            lua_pop(L, 1); // cmd
+            continue;
+        } else if (type == "bitblt") {
+            rawgetfield(L, 2, "bitmap");
+            int width = to_int(L, -1, "width");
+            int height = to_int(L, -1, "height");
+            bool color = to_bool(L, -1, "isColor");
+            auto data = to_bytearray(L, -1, "normalizedImgData");
+            lua_pop(L, 1); // bitmap
+
+            mScreen->bitBlt(cmd.drawableId, color, width, height, data);
+            pixelsWritten += width * height;
+            lua_pop(L, 1); // cmd
+            continue;
+        } else if (type == "scroll") {
+            cmd.type = OplScreen::scroll;
+            cmd.scroll.dx = to_int(L, 2, "dx");
+            cmd.scroll.dy = to_int(L, 2, "dy");
+            rawgetfield(L, 2, "rect");
+            cmd.scroll.rect = QRect(to_int(L, -1, "x"), to_int(L, -1, "y"), to_int(L, -1, "w"), to_int(L, -1, "h"));
+            pixelsWritten += cmd.scroll.rect.width() * cmd.scroll.rect.height(); // Close enough?
+            lua_pop(L, 1);
+        } else if (type == "border") {
+            cmd.type = OplScreen::border;
+            cmd.border.borderType = to_int(L, 2, "btype");
+            cmd.border.rect = QRect(cmd.origin.x(), cmd.origin.y(), to_int(L, 2, "width"), to_int(L, 2, "height"));
+            // TODO pixelsWritten
+        } else if (type == "copy") {
+            cmd.type = OplScreen::copy;
+            cmd.copy.srcDrawableId = to_int(L, 2, "srcid");
+            cmd.copy.maskDrawableId = to_int(L, 2, "mask");
+            cmd.copy.srcRect = QRect(to_int(L, 2, "srcx"), to_int(L, 2, "srcy"), to_int(L, 2, "width"), to_int(L, 2, "height"));
+            pixelsWritten += cmd.copy.srcRect.width() * cmd.copy.srcRect.height(); // Doesn't account for clipping, close enough
+        } else if (type == "patt") {
+            cmd.type = OplScreen::pattern;
+            cmd.pattern.srcDrawableId = to_int(L, 2, "srcid");
+            cmd.pattern.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
+            pixelsWritten += cmd.pattern.size.width() * cmd.pattern.size.height();
+        } else if (type == "invert") {
+            cmd.type = OplScreen::cmdInvert;
+            cmd.invert.size = QSize(to_int(L, 2, "width"), to_int(L, 2, "height"));
+            pixelsWritten += cmd.invert.size.width() * cmd.invert.size.height();
+        } else {
+            qWarning("Unhandled draw cmd %s", qPrintable(type));
+            lua_pop(L, 1); // cmd
+            continue;
+        }
+        mScreen->draw(cmd);
+        lua_pop(L, 1); // cmd
+    }
+    mScreen->endBatchDraw();
+    didWritePixels(pixelsWritten);
+    return 0;
 }
 
 int OplRuntime::createWindow(lua_State* L)
@@ -1353,6 +1415,9 @@ void OplRuntime::mouseEvent(const QMouseEvent& event, int windowId)
 
 void OplRuntime::focusEvent(bool focussed)
 {
+    if (mIgnoreFocusEvents) {
+        return;
+    }
     Event e = {
         .code = focussed ? opl::foregrounded : opl::backgrounded,
         .focusevent = {
@@ -1489,10 +1554,19 @@ int OplRuntime::cancelRequest(lua_State* L)
 
 void OplRuntime::unlockAndSignalIfWaiting()
 {
+    if (mPaused) {
+        // When paused, an asynchronous event completing should not signal the Lua thread
+        mMutex.unlock();
+        return;
+    }
+
     bool waitingForEvent = mWaiting;
     // clearing mWaiting indicates that a subsequent addEvent etc shouldn't re-signal mWaitSemaphore (until/unless it waits again)
     mWaiting = false;
     mMutex.unlock();
+    if (mDebugging && mDebugInfo.paused && !mInterrupted) {
+        updateDebugInfo(L);
+    }
     if (waitingForEvent) {
         mWaitSemaphore.release();
     }
@@ -1502,6 +1576,7 @@ void OplRuntime::unlockAndSignalIfWaiting()
 // that could have side-effects due to QObject parenting leading to deadlocks (Qt 5's QAudioOutput, looking at you).
 void OplRuntime::asyncFinished(AsyncHandle* asyncHandle, int code)
 {
+    ASSERT_MAIN_THREAD();
     mMutex.lock();
     asyncFinished_locked(asyncHandle, code);
     unlockAndSignalIfWaiting();
@@ -1630,9 +1705,16 @@ int OplRuntime::waitForAnyRequest(lua_State* L)
         } else {
             // still locked
             mWaiting = true;
+            bool shouldPause = mPaused;
             mMutex.unlock();
             // Wait for something else to happen
             // qDebug("waitForAnyRequest waiting for signal...");
+            if (shouldPause) {
+                call([this, L] {
+                    updateDebugInfo(L);
+                    return 0;
+                });
+            }
             mWaitSemaphore.acquire();
             // qDebug("waitForAnyRequest got signal from mainthread");
         }
@@ -1778,8 +1860,43 @@ void OplRuntime::runSlower()
 const int64_t kOpTime = 3500; // in nanoseconds
 const int64_t kSiboMultiplier = 10;
 
-int OplRuntime::opsync(lua_State *)
+int OplRuntime::opsync(lua_State* L)
 {
+    bool shouldWait = false;
+    uint32_t addr = (uint32_t)lua_tointeger(L, 2);
+    // qDebug("opsync %s ip=%x", lua_tostring(L, 1), addr);
+    mMutex.lock();
+    if (mBreakOnNext == NextOp) {
+        mBreakOnNext = None;
+        mPaused = true;
+        // qDebug("Single step pausing at ip=%x", addr);
+    }
+    auto brkiter = mBreakpoints.find(addr);
+    if (brkiter != mBreakpoints.end()) {
+        auto mod = lua_tostring(L, 1);
+        if (mod && brkiter->contains(mFs->getNativePath(QString(mod)))) {
+            mPaused = true;
+        }
+    }
+
+    if (mPaused) {
+        mWaiting = true;
+        shouldWait = true;
+    }
+    bool shouldUpdateDebugInfo = shouldWait || debugInfoStale();
+    mMutex.unlock();
+
+    if (shouldUpdateDebugInfo) {
+        call([this, L] {
+            updateDebugInfo(L);
+            return 0;
+        });
+    }
+
+    if (shouldWait) {
+        mWaitSemaphore.acquire();
+    }
+
     auto speed = getSpeed();
     auto optime = kOpTime * (isSibo() ? kSiboMultiplier : 1);
     if (speed != Fastest) {
@@ -1791,6 +1908,36 @@ int OplRuntime::opsync(lua_State *)
             nanosleep(&t, NULL);
         }
         mLastOpTime.start();
+    }
+    return 0;
+}
+
+int OplRuntime::debugEvent(lua_State* L)
+{
+    auto ev = QString(lua_tostring(L, 1));
+    // qDebug("debugEvent %s", qPrintable(ev));
+    QMutexLocker lock(&mMutex);
+    bool shouldBreak = false;
+    bool isErr = false;
+    if (mBreakOnErr && ev == "err") {
+        shouldBreak = true;
+        isErr = true;
+    }
+    if ((mBreakOnNext == NextReturn && ev == "return") ||
+        (mBreakOnNext == NextPushFrame && ev == "pushframe")) {
+        shouldBreak = true;
+        mBreakOnNext = None;
+    }
+
+    if (shouldBreak) {
+        mPaused = true;
+        mWaiting = true;
+        lock.unlock();
+        call([this, L, isErr] {
+            updateDebugInfo(L, isErr);
+            return 0;
+        });
+        mWaitSemaphore.acquire();
     }
     return 0;
 }
@@ -1896,4 +2043,559 @@ int OplRuntime::keysDown(lua_State* L)
     mMutex.unlock();
     lua_pushlstring(L, (char*)bytes, sizeof(bytes));
     return 1;
+}
+
+constexpr int64_t kDebugInterval = 1 * 1000 * 1000 * 1000;
+
+// mMutex must be held
+bool OplRuntime::debugInfoStale() const
+{
+    bool stale = false;
+    if (mRuntimeRef != LUA_NOREF && mDebugging) {
+        stale = !mLastDebugInfoTime.isValid() || mLastDebugInfoTime.nsecsElapsed() > kDebugInterval;
+    }
+    // if (mDebugging) {
+    //     qDebug("debugInfoStale = %d", stale);
+    // }
+    return stale;
+}
+
+void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
+{
+    ASSERT_MAIN_THREAD();
+
+    // qDebug("updateDebugInfo");
+    const int top = lua_gettop(L);
+
+    // Check for any renames still pending
+    for (const auto& rename : mPendingVariableRenames) {
+        doRenameVariable(L, rename.proc, rename.index, rename.name);
+    }
+    mPendingVariableRenames.clear();
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
+    luaL_getmetafield(L, -1, "getDebugInfo");
+    lua_insert(L, -2);
+    int err = lua_pcall(L, 1, 1, 0);
+    if (err) {
+        qFatal("Error fetching debug info: %s", luaL_tolstring(L, -1, NULL));
+    }
+
+    opl::ProgramInfo info {};
+    if (rawgetfield(L, -1, "frames") != LUA_TTABLE) {
+        lua_pop(L, 2);
+        return;
+    }
+    int i = 1;
+    while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+        // Decode frames
+        opl::Frame frame = {
+            .ip = to_uint32(L, -1, "ip"),
+            .ipDecode = to_string(L, -1, "ipDecode"),
+            .procName = to_string(L, -1, "procName"),
+            .procModule = to_string(L, -1, "nativePath"),
+            .variables = {},
+        };
+        if (frame.procModule.isEmpty()) {
+            frame.procModule = mFs->getNativePath(to_string(L, -1, "procModule"));
+        }
+
+        int varidx = 1;
+        rawgetfield(L, -1, "vars");
+        while (lua_rawgeti(L, -1, varidx++) == LUA_TTABLE) {
+            // Decode variables
+            opl::Variable v = {
+                .type = (opl::Type)to_int(L, -1, "type"),
+                .address = to_uint32(L, -1, "address"),
+                .index = (uint16_t)to_uint32(L, -1, "index"),
+                .name = to_string(L, -1, "name"),
+                .value = {},
+                .global = to_bool(L, -1, "global"),
+            };
+            rawgetfield(L, -1, "value");
+            switch (v.type) {
+                case opl::EWord:
+                case opl::ELong:
+                    v.value = lua_tointeger(L, -1);
+                    break;
+                case opl::EReal:
+                    v.value = lua_tonumber(L, -1);
+                    break;
+                case opl::EString:
+                    v.value = tolocalstring(L, -1);
+                    break;
+                case opl::EWordArray:
+                case opl::ELongArray: {
+                    QList<QVariant> val;
+                    int i = 1;
+                    while (lua_rawgeti(L, -1, i++) == LUA_TNUMBER) {
+                        val.append(lua_tointeger(L, -1));
+                        lua_pop(L, 1);
+                    }
+                    lua_pop(L, 1);
+                    v.value = val;
+                    break;
+                }
+                case opl::ERealArray: {
+                    QList<QVariant> val;
+                    int i = 1;
+                    while (lua_rawgeti(L, -1, i++) == LUA_TNUMBER) {
+                        val.append(lua_tonumber(L, -1));
+                        lua_pop(L, 1);
+                    }
+                    lua_pop(L, 1);
+                    v.value = val;
+                    break;
+                }
+                case opl::EStringArray: {
+                    QList<QVariant> val;
+                    int i = 1;
+                    while (lua_rawgeti(L, -1, i++) == LUA_TSTRING) {
+                        val.append(tolocalstring(L, -1));
+                        lua_pop(L, 1);
+                    }
+                    lua_pop(L, 1);
+                    v.value = val;
+                    break;
+                }
+            }
+            lua_pop(L, 1); // value
+
+            frame.variables.append(v);
+            lua_pop(L, 1); // var
+        }
+        lua_pop(L, 3); // last var, vars, frame
+        info.frames.append(frame);
+    }
+    lua_pop(L, 2); // Final nil from the lua_rawgeti, frames
+
+    if (rawgetfield(L, -1, "modules") == LUA_TTABLE) {
+        i = 1;
+        while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+            opl::Module m = {
+                .name = to_string(L, -1, "name"),
+                .path = to_string(L, -1, "path"),
+                .nativePath = to_string(L, -1, "nativePath"),
+            };
+            if (m.nativePath.isEmpty()) {
+                m.nativePath = mFs->getNativePath(m.path);
+            }
+            info.modules.append(m);
+            lua_pop(L, 1); // module
+        }
+        lua_pop(L, 1); // final nil from lua_rawgeti
+    }
+    lua_pop(L, 2); // modules, info
+    Q_ASSERT(lua_gettop(L) == top); // Make sure stack is left balanced
+
+    if (errOnStack) {
+        info.err = lua_tointeger(L, -1);
+    }
+
+    mMutex.lock();
+    bool pauseChanged = mDebugInfo.paused != mPaused;
+    info.paused = mPaused;
+    mDebugInfo = std::move(info);
+    mLastDebugInfoTime.start();
+    mMutex.unlock();
+    if (pauseChanged) {
+        emit pauseStateChanged(mDebugInfo.paused);
+    }
+    emit debugInfoUpdated();
+}
+
+static void writePrimitive(QDebug& debug, int type, const QVariant& v)
+{
+    switch (type) {
+        case opl::EWord:
+        case opl::ELong:
+            debug << v.toInt();
+            break;
+        case opl::EReal:
+            debug << v.toDouble();
+            break;
+        case opl::EString:
+            debug << v.toString();
+            break;
+        default:
+            break;
+    }
+}
+
+QDebug operator<<(QDebug debug, const opl::Variable& v)
+{
+    QDebugStateSaver saver(debug);
+    switch (v.type) {
+        case opl::EWord:
+        case opl::ELong:
+        case opl::EReal:
+        case opl::EString:
+            writePrimitive(debug, v.type, v.value);
+            break;
+        case opl::EWordArray:
+        case opl::ELongArray:
+        case opl::ERealArray:
+        case opl::EStringArray: {
+            debug.nospace() << "[";
+            auto list = v.value.toList();
+            for (int i = 0; i < list.count(); i++) {
+                if (i > 0) {
+                    debug << ", ";
+                }
+                writePrimitive(debug, v.type & 0xF, list[i]);
+            }
+            debug << "]";
+            break;
+        }
+        default:
+            break;
+    }
+    return debug;
+}
+
+QString OplRuntime::varToStr(const opl::Variable& v, int idx)
+{
+    // Qt5 didn't have QDebug::toString
+    QString result;
+    if (idx == -1) {
+        QDebug(&result) << v;
+    } else {
+        QDebug d(&result);
+        writePrimitive(d, v.type & 0xF, v.value.toList()[idx]);
+    }
+    return result;
+}
+
+void OplRuntime::updateDebugInfoIfStale()
+{
+    ASSERT_MAIN_THREAD();
+    if (!running()) {
+        return;
+    }
+    QMutexLocker lock(&mMutex);
+    if (!mDebugging) {
+        mDebugging = true;
+    }
+    if (debugInfoStale()) {
+        bool paused = mPaused && mWaiting;
+        if (paused) {
+            // Debug info can't have changed since we hit the pause
+        } else if (mWaiting) {
+            // If mWaiting is true, we can safely unlock because the only thing that could signal it is us
+            // (given we assert we're being called on the main thread)
+            lock.unlock();
+            updateDebugInfo(L);
+            lock.relock();
+        } else {
+            // qDebug("Debug info stale but unable to refresh");
+        }
+    }
+}
+
+opl::ProgramInfo OplRuntime::getDebugInfo()
+{
+    updateDebugInfoIfStale();
+    QMutexLocker lock(&mMutex);
+    return mDebugInfo;
+}
+
+void OplRuntime::printDebugInfo()
+{
+    auto info = getDebugInfo();
+
+    for (const auto& module : info.modules) {
+        qDebug("Module '%s' from '%s'", qPrintable(module.name), qPrintable(module.path));
+    }
+
+    for (int i = 0; i < info.frames.count(); i++) {
+        const auto& frame = info.frames[i];
+        auto indent = QString("|  ").repeated(i);
+        qDebug("%s|- %s()", qPrintable(indent), qPrintable(frame.procName));
+        for (const auto& var : frame.variables) {
+            qDebug("%s|  |  %s = %s", qPrintable(indent), qPrintable(var.name), qPrintable(varToStr(var)));
+        }
+    }
+}
+
+void OplRuntime::setVariable(const opl::Frame& frame, const opl::Variable& variable, std::optional<int> arrayIndex, const QString& value)
+{
+    ASSERT_MAIN_THREAD();
+    if (!isPaused()) {
+        qWarning("Cannot set variables when not paused");
+        return;
+    }
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
+    luaL_getmetafield(L, -1, "setVariable");
+    lua_insert(L, -2);
+    pushValue(L, frame.procName);
+    pushValue(L, variable.index);
+    if (arrayIndex.has_value()) {
+        pushValue(L, *arrayIndex);
+    } else {
+        lua_pushnil(L);
+    }
+    pushValue(L, value);
+
+    int err = lua_pcall(L, 5, 0, 0);
+    if (err) {
+        qWarning("Error setting variable: %s", luaL_tolstring(L, -1, NULL));
+        lua_pop(L, 1);
+    }
+
+    mLastDebugInfoTime.invalidate(); // Marks debug info as stale
+    updateDebugInfo(L);
+}
+
+void OplRuntime::renameVariable(const QString& proc, uint32_t index, const QString& newName)
+{
+    ASSERT_MAIN_THREAD();
+    QMutexLocker lock(&mMutex);
+    mLastDebugInfoTime.invalidate(); // Marks debug info as stale
+    bool waiting = mWaiting;
+    lock.unlock();
+    if (waiting) {
+        doRenameVariable(L, proc, index, newName);
+        updateDebugInfo(L);
+    } else {
+        // mPendingVariableRenames only ever touched by updateDebugInfo which is also main thread so no locking needed
+        mPendingVariableRenames.append({
+            .proc = proc,
+            .index = index,
+            .name = newName
+        });
+    }
+}
+
+void OplRuntime::doRenameVariable(lua_State* L, const QString& proc, uint32_t index, const QString& newName)
+{
+    lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
+    luaL_getmetafield(L, -1, "renameVariable");
+    lua_insert(L, -2);
+    pushValue(L, proc);
+    pushValue(L, index);
+    pushValue(L, newName);
+    int err = lua_pcall(L, 4, 0, 0);
+    if (err) {
+        qWarning("Error renaming variable: %s", luaL_tolstring(L, -1, NULL));
+        lua_pop(L, 1);
+    }
+}
+
+bool OplRuntime::isPaused() const
+{
+    QMutexLocker lock(&mMutex);
+    // We're not actually paused until both mPaused is set and mWaiting
+    return mPaused && mWaiting;
+}
+
+void OplRuntime::pause()
+{
+    ASSERT_MAIN_THREAD();
+    QMutexLocker lock(&mMutex);
+    mPaused = true;
+    bool alreadyWaiting = mWaiting;
+    lock.unlock();
+    if (alreadyWaiting) {
+        // We are now in pause state
+        updateDebugInfo(L);
+    }
+}
+
+void OplRuntime::unpause()
+{
+    ASSERT_MAIN_THREAD();
+    mMutex.lock();
+    if (!mPaused) {
+        mMutex.unlock();
+        return;
+    }
+    mPaused = false;
+    bool wasWaiting = mWaiting;
+    if (mWaiting) {
+        // No need to recalculate debug info it can't've changed since pausing
+        Q_ASSERT(mDebugInfo.paused);
+        mDebugInfo.paused = false;
+        mDebugInfo.err = std::nullopt;
+        mLastDebugInfoTime.start();
+    }
+    unlockAndSignalIfWaiting();
+    if (wasWaiting) {
+        emit pauseStateChanged(false);
+        emit debugInfoUpdated();
+    }
+}
+
+QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVector<opl::NameOverride>& renames)
+{
+    Q_ASSERT(!running());
+    QFile f(path);
+    if (!f.open(QFile::ReadOnly)) {
+        qWarning("Failed to open module %s", qPrintable(path));
+        return {};
+    }
+    auto data = f.readAll();
+    f.close();
+    
+    require(L, "decompiler");
+    rawgetfield(L, -1, "decompileFile");
+    lua_remove(L, -2);
+    pushValue(L, data);
+    pushValue(L, path);
+
+    lua_newtable(L); // renames
+    if (renames.count()) {
+        for (const auto& override : renames) {
+            if (rawgetfield(L, -1, qPrintable(override.proc)) == LUA_TNIL) {
+                lua_pop(L, 1); // the nil
+                lua_newtable(L);
+                pushValue(L, override.proc);
+                lua_pushvalue(L, -2); // pushes the new table
+                lua_rawset(L, -4); // renames[override.proc] = {}
+            }
+            pushValue(L, override.origName);
+            pushValue(L, override.newName);
+            lua_rawset(L, -3); // renames[proc][origName] = override.newName
+            lua_pop(L, 1); // renames[proc]
+        }
+    }
+
+    int err = lua_pcall(L, 3, 2, 0);
+    if (err) {
+        qWarning("decompile errored: %s", luaL_tolstring(L, -1, NULL));
+        lua_pop(L, 1);
+        return {};
+    } else if (lua_isnil(L, -2)) {
+        qWarning("decompile failed: %s", luaL_tolstring(L, -1, NULL));
+        lua_pop(L, 2);
+        return {};
+    }
+    lua_pop(L, 1); // no error so pop the nil errstr
+    QVector<Line> result;
+    int i = 1;
+    while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+        lua_rawgeti(L, -1, 1); // addr
+        int hasAddr = 0;
+        uint32_t addr = (uint32_t)lua_tointegerx(L, -1, &hasAddr);
+        if (!hasAddr) {
+            addr = 0xFFFFFFFF;
+        }
+        lua_pop(L, 1); // addr
+        lua_rawgeti(L, -1, 2); // line text
+        result.append({addr, QString(lua_tostring(L, -1))});
+        lua_pop(L, 2); // line text, line array
+    }
+    lua_pop(L, 1); // decompileFile result
+    return result;
+}
+
+void OplRuntime::setBreakOnError(bool flag)
+{
+    QMutexLocker lock(&mMutex);
+    mBreakOnErr = flag;
+}
+
+bool OplRuntime::breakOnError() const
+{
+    QMutexLocker lock(&mMutex);
+    return mBreakOnErr;
+}
+
+void OplRuntime::stepOut()
+{
+    if (isPaused()) {
+        mMutex.lock();
+        mBreakOnNext = NextReturn;
+        mMutex.unlock();
+        unpause();
+    }
+}
+
+void OplRuntime::stepIn()
+{
+    if (isPaused()) {
+        mMutex.lock();
+        mBreakOnNext = NextPushFrame;
+        mMutex.unlock();
+        unpause();
+    }
+}
+
+void OplRuntime::singleStep()
+{
+    if (isPaused()) {
+        mMutex.lock();
+        mBreakOnNext = NextOp;
+        mMutex.unlock();
+        unpause();
+    }
+}
+
+bool OplRuntime::ignoreFocusEvents() const
+{
+    return mIgnoreFocusEvents;
+}
+
+void OplRuntime::setIgnoreFocusEvents(bool flag)
+{
+    mIgnoreFocusEvents = flag;
+}
+
+void OplRuntime::setBreakpoint(const QString& moduleNativePath, uint32_t addr)
+{
+    QMutexLocker lock(&mMutex);
+    auto addrListIter = mBreakpoints.find(addr);
+    if (addrListIter == mBreakpoints.end()) {
+        QVector<QString> addrList;
+        addrList.append(moduleNativePath);
+        mBreakpoints.insert(addr, std::move(addrList));
+    } else {
+        addrListIter->append(moduleNativePath);
+    }
+}
+
+void OplRuntime::clearBreakpoint(const QString& moduleNativePath, uint32_t addr)
+{
+    QMutexLocker lock(&mMutex);
+    auto addrListIter = mBreakpoints.find(addr);
+    if (addrListIter != mBreakpoints.end()) {
+        auto found = addrListIter->indexOf(moduleNativePath);
+        if (found != -1) {
+            addrListIter->remove(found);
+        }
+    }
+}
+
+void OplRuntime::configureBreakpoint(const QString& moduleNativePath, uint32_t addr, bool set)
+{
+    qDebug("configureBreakpoint %s %d %d", qPrintable(moduleNativePath), addr, (int)set);
+    if (set) {
+        setBreakpoint(moduleNativePath, addr);
+    } else {
+        clearBreakpoint(moduleNativePath, addr);
+    }
+}
+
+void OplRuntime::flushGraphicsOps()
+{
+    ASSERT_MAIN_THREAD();
+    if (!isPaused()) {
+        qWarning("Cannot flush unless paused");
+        return;
+    }
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
+    luaL_getmetafield(L, -1, "getBufferedGraphicsOps");
+    lua_insert(L, -2);
+    int err = lua_pcall(L, 1, 1, 0);
+    if (err) {
+        qWarning("Error fetching graphics ops: %s", luaL_tolstring(L, -1, NULL));
+        lua_pop(L, 1);
+    }
+    
+    // For simplicity (read: don't wanna refactor drawMainThread to work on relative indexes) push a new stack frame
+    lua_pushlightuserdata(L, this);
+    lua_pushcclosure(L, drawMainThread_s, 1);
+    lua_insert(L, -2); // Push fn behind ops
+    lua_call(L, 1, 0);
 }

@@ -29,17 +29,18 @@ dofile(arg[0]:match("^(.-)[a-z]+%.lua$").."cmdline.lua")
 function main()
     local args = getopt({
         "filename",
-        "fnName",
+        "procName",
         "startAddr",
         all = true, a = "all",
         help = true, h = "help",
         decompile = true, d = "decompile",
-        annotate = true, n = "annotate",
+        annotate = true, t = "annotate",
+        name = table, n = "name",
     })
-    local fnName = args.fnName
+    local procName = args.procName
     local all = args.all
     if args.help then
-        printf([=[
+        printf("%s", [=[
 Syntax: dumpopo.lua <filename> [options] [<procName> [<startAddr>]]
 
 Prints information about the specified OPO (compiled OPL) file.
@@ -63,28 +64,56 @@ Options:
     --annotate, -n
         Adds some annotations to the output of --decompile, such as labels and
         GOTOs that normally wouldn't appear in the source.
+
+    --name <proc>:<name>=<newname>
+        Manually specify a name for a local in the given proc. Can be used
+        multiple times for multiple variables. For example to rename local_00AC%
+        to event% in the MAIN proc, specify --name MAIN:local_00AC=event
 ]=])
         return os.exit(false)
     end
     local data = readFile(args.filename)
     local startAddr = args.startAddr and tonumber(args.startAddr, 16)
-    local verbose = not args.decompile and (all or fnName == nil)
+    local verbose = not args.decompile and (all or procName == nil)
     opofile = require("opofile")
     runtime = require("runtime")
     local prog = opofile.parseOpo2(data, verbose)
     local rt = runtime.newRuntime(nil, prog.era)
     rt:addModule("C:\\module", prog.procTable, prog.opxTable)
     if args.decompile then
+        local names = {} -- map of module name to table of name->newname
+        for _, rename in ipairs(args.name) do
+            local proc, oldName, newName = rename:match("(.*):([A-Za-z0-9_]+)%=(.*)")
+            if not proc then
+                io.stderr:write("Syntax: --name PROCNAME:<oldname>=<newname>")
+                return os.exit(false)
+            end
+            if not names[proc] then
+                names[proc] = {}
+            end
+            names[proc][oldName] = newName
+        end
+
         local options = {
             path = args.filename,
             opxTable = prog.opxTable,
             annotate = args.annotate,
-            printFn = printf,
+            outputFn = function(location, ...)
+                if args.annotate then
+                    if location then
+                        printf("%08X: ", location)
+                    else
+                        printf("          ")
+                    end
+                end
+                printf(...)
+            end,
             format = prog.translatorVersion,
+            renames = names,
         }
         local ok, err
-        if fnName then
-            ok, err = require("decompiler").decompileProc(rt:findProc(fnName:upper()), options)
+        if procName then
+            ok, err = require("decompiler").decompileProc(rt:findProc(procName:upper()), options)
         else
             ok, err = require("decompiler").decompile(prog.procTable, options)
         end
@@ -93,9 +122,9 @@ Options:
             print(err)
             os.exit(false)
         end
-    elseif fnName then
-        opofile.printProc(rt:findProc(fnName:upper()))
-        rt:dumpProc(fnName:upper(), startAddr)
+    elseif procName then
+        opofile.printProc(rt:findProc(procName:upper()))
+        rt:dumpProc(procName:upper(), startAddr)
     else
         for i, proc in ipairs(prog.procTable) do
             printf("%d: ", i)

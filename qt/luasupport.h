@@ -32,12 +32,10 @@
 #define SET_FN(L, name, val) lua_pushcfunction(L, val); lua_setfield(L, -2, name)
 #define SET_BOOL(L, name, val) lua_pushboolean(L, val); lua_setfield(L, -2, name)
 
-void registerMetatable(lua_State* L, const char* metatable_name, QVector<luaL_Reg>&& fns);
-void registerMetatable(lua_State* L, const char* metatable_name, const luaL_Reg* fns);
-
 int rawgetfield(lua_State* L, int index, const char* k);
 bool to_bool(lua_State* L, int idx, const char* name);
 int to_int(lua_State* L, int idx, const char* name);
+uint32_t to_uint32(lua_State* L, int idx, const char* name);
 double to_double(lua_State* L, int idx, const char* name);
 QString to_string(lua_State* L, int idx, const char* name);
 QByteArray to_bytearray(lua_State* L, int idx, const char* name);
@@ -116,9 +114,6 @@ void setValue(lua_State *L, const char* k, const T& v)
     pushValue(L, v);
     lua_setfield(L, -2, k);
 }
-
-std::wstring UTF8ToWide(const std::string& str);
-std::string WideToUTF8(const std::wstring& str);
 
 int load(lua_State* L, const QString& path);
 int dofile(lua_State* L, const QString& path);

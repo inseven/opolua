@@ -97,6 +97,7 @@ function Runtime:getLocalVar(index, type, frame)
     if not frame then
         frame = self.frame
     end
+
     local vars = frame.vars
     local var = vars[index]
     if not var then
@@ -117,11 +118,38 @@ function Runtime:getLocalVar(index, type, frame)
         vars[index] = var
         if frame.proc then
             local procVar = frame.proc.vars[index]
-            if procVar then
+            if procVar and procVar.type then
+                -- Don't use the name from the proc info unless it also had a type (excludes local arrays that couldn't
+                -- be typed just from the proc info)
                 var.name = procVar.name
             end
         end
     end
+
+    if not var.name then
+        -- We now have its type so we can name it
+        var.name = fmt("local_%04X%s", index, DataTypeSuffix[type])
+    end
+
+    -- Might as well update proc for next time
+    if frame.proc and frame.proc.vars then
+        local procVar = frame.proc.vars[index]
+        if procVar == nil then
+            procVar = {
+                type = type,
+                directIdx = index,
+            }
+            frame.proc.vars[index] = procVar
+        end
+        if procVar.name == nil then
+            procVar.name = var.name
+        end
+        assert(procVar.type == nil or procVar.type == var:type(), "Type mismatch on updating proc var!")
+        if procVar.type == nil then
+            procVar.type = var:type()
+        end
+    end
+
     return var
 end
 
@@ -152,7 +180,7 @@ function Runtime:makeTemporaryVar(type, len, stringMaxLen)
     return result
 end
 
-function Runtime:addModule(path, procTable, opxTable, uid3)
+function Runtime:addModule(path, procTable, opxTable)
     -- printf("addModule: %s\n", path)
     local name = oplpath.splitext(oplpath.basename(path)):upper()
     local mod = {
@@ -162,8 +190,8 @@ function Runtime:addModule(path, procTable, opxTable, uid3)
         -- procnames.
         name = name,
         path = path,
+        procTable = procTable,
         opxTable = opxTable,
-        uid3 = uid3,
     }
     for _, proc in ipairs(procTable) do
         if mod[proc.name] then
@@ -193,12 +221,14 @@ function Runtime:addModule(path, procTable, opxTable, uid3)
         local drive, dir, base, ext = oplpath.parse(path)
         self.cwd = drive.."\\"
     end
+    return mod
 end
 
 function Runtime:unloadModule(path)
     local canonPath = oplpath.canon(path)
     for i, mod in ipairs(self.modules) do
         if oplpath.canon(mod.path) == canonPath then
+            self:debugEvent("unloadm", mod.path)
             table.remove(self.modules, i)
             return
         end
@@ -242,6 +272,7 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         indirects = {},
         globals = proc.globals or {}, -- Lua procs don't have a 'globals'
         dataSize = proc.iDataSize or 0,
+        lastIp = proc.codeOffset,
     }
     frame.framePtr = assert(self.chunk:allocz(math.max(4, frame.dataSize)), "Failed to allocate stack frame memory!")
     self:setFrame(frame, proc.codeOffset)
@@ -251,8 +282,15 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         return
     end
 
-    -- We don't need to define any globals, arrays or strings at this point,
-    -- they are constructed when needed.
+    -- We don't *need* to define any globals, arrays or strings at this point,
+    -- they are constructed when needed, but for the purposes of debugging it's
+    -- better if we construct as much as we can up front.
+    for index, var in pairs(proc.vars or {}) do
+        if var.directIdx and var.type then
+            -- This is enough to populate everything
+            self:getLocalVar(index, var.type)
+        end
+    end
 
     -- COplRuntime leaves parameters stored on the stack and allocates a
     -- pointer in iIndirectTbl to access them. Since they're accessed the
@@ -280,6 +318,22 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         printf("+%s(%s) initstacksz=%d\n", proc.name, table.concat(args, ", "), frame.returnStackSize)
     end
 
+    if proc.fn then
+        -- Lua fns don't have indirect indexes so it doesn't really matter what we put here, we just have to put
+        -- _something_ (which will no doubt break when editing vars in the debugger is enabled...)
+        for i, var in ipairs(frame.indirects) do
+            frame.vars[i] = var
+            var.name = string.format("param_%d", i)
+        end
+    else
+        -- This is another duplication of the magic number logic for indirect indexes...
+        for i, var in ipairs(frame.indirects) do -- indirects currently contains just the proc params
+            local indirectIdx = (i - 1) * 2 + proc.iTotalTableSize + 18
+            frame.vars[indirectIdx] = var
+            var.name = proc.vars[indirectIdx].name
+        end
+    end
+
     for _, external in ipairs(proc.externals or {}) do
         -- Now resolve externals in the new fn by walking up the frame procs until
         -- we find a global with a matching name and type
@@ -303,6 +357,8 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         --     printf("Indirect %i: %s\n", i, var())
         -- end
     end
+
+    self:debugEvent("pushframe")
 
     if proc.fn then
         -- It's a Lua-implemented proc meaning we don't just set ip and return
@@ -344,6 +400,7 @@ function Runtime:returnFromFrame(stack, val)
     if prevFrame then
         stack:push(val)
     end
+    self:debugEvent("return")
 end
 
 function Runtime:setFrame(newFrame, ip)
@@ -680,6 +737,17 @@ function Runtime:flushGraphicsOps()
     end
 end
 
+function Runtime:getBufferedGraphicsOps()
+    local graphics = self.graphics
+    if graphics and graphics.buffer then
+        local result = graphics.buffer
+        graphics.buffer = {}
+        return result
+    else
+        return {}
+    end
+end
+
 function Runtime:setGraphicsAutoFlush(flag)
     local graphics = self:getGraphics()
     if flag then
@@ -905,9 +973,10 @@ function newModuleInstance(moduleName)
         return instance
     end
 
-    local loader = package.searchers[2](moduleName)
+    local loader, realPath = package.searchers[2](moduleName)
     assert(type(loader) == "function", loader)
     local instance = loader()
+    instance.__nativePath = realPath
     return instance
 end
 
@@ -953,7 +1022,7 @@ function newRuntime(handler, era)
     return rt
 end
 
--- Returns true when emulating SIBO (Series 3/3a/3c)
+-- Returns true when emulating SIBO (Series 3/3a/3c) instruction set
 function Runtime:isSibo()
     return self.era == "sibo"
 end
@@ -1056,6 +1125,7 @@ local function run(self, stack)
     local opsync = self.ioh.opsync
     while self.ip do
         self.frame.lastIp = self.ip
+        opsync(self.frame.proc.module.path, self.frame.lastIp)
         local opCode, op = self:nextOp()
         local opFn = ops[op]
         if not opFn then
@@ -1068,7 +1138,6 @@ local function run(self, stack)
             self.ip = savedIp
         end
         ops[op](stack, self)
-        opsync()
     end
 end
 
@@ -1199,6 +1268,8 @@ function Runtime:pcallProc(procName, ...)
             if err.code and err.code ~= KStopErr and not self.haltOnAnyError then
                 self.errorValue = err.code
                 -- An error code that might potentially be handled by a Trap or OnErr
+                self:debugEvent("err", err.code)
+
                 if self.trap then
                     self.trap = false
                     -- And continue to next instruction
@@ -1271,14 +1342,17 @@ function Runtime:loadModule(path)
 
     local procTable = {}
     for k, v in pairs(mod) do
-        assert(type(v) == "function", "Unexpected top-level value in module that isn't a function")
-        local proc = {
-            name = k:upper(),
-            fn = v
-        }
-        table.insert(procTable, proc)
+        if k ~= "__nativePath" then
+            assert(type(v) == "function", "Unexpected top-level value in module that isn't a function")
+            local proc = {
+                name = k:upper(),
+                fn = v
+            }
+            table.insert(procTable, proc)
+        end
     end
-    self:addModule(path, procTable)
+    local m = self:addModule(path, procTable)
+    m.nativePath = mod.__nativePath
     -- finally, import all the helper fns from opl.lua into mod's environment
     for name, fn in pairs(self.opl) do
         if not name:match("^_") then
@@ -1316,6 +1390,7 @@ function Runtime:declareGlobal(name, arrayLen)
 
     -- For simplicity we'll assume any strings should be 255 max len
     local var = self.chunk:allocVariable(type, 255, arrayLen)
+    var.name = name
     frame.globals[name] = { offset = index, type = type }
     frame.vars[index] = var
     table.insert(frame.frameAllocs, var)
@@ -1507,14 +1582,16 @@ function Runtime:getAppUid()
 end
 
 function runOpo(fileName, procName, iohandler, verbose)
-    local data, err = iohandler.fsop("read", fileName)
-    if not data then
-        error("Failed to read opo file data")
-    end
-    runOpoFileData(fileName, data, procName, iohandler, verbose)
+    local rt = newRuntimeWithFile(fileName, iohandler)
+    rt:setInstructionDebug(verbose)
+    -- rt:setHaltOnAnyError(true) -- DEBUG
+    rt:run(procName)
 end
 
-function runOpoFileData(fileName, data, procName, iohandler, verbose)
+function newRuntimeWithFile(fileName, iohandler)
+    local data, err = iohandler.fsop("read", fileName)
+    assert(data, "Failed to read opo file data")
+
     -- parseOpo will bail if the UID1 is wrong, but with a less useful error
     if string.unpack("<I4", data) == KDynamicLibraryUid or data:sub(1, 16) == "ImageFileType**\0" then
         error({ msg = "File is a native binary and not compiled OPL.", notOpl = true })
@@ -1523,11 +1600,14 @@ function runOpoFileData(fileName, data, procName, iohandler, verbose)
     local module = require("opofile").parseOpo2(data, verbose)
     iohandler.setEra(module.era) -- Needed to set the default string encoding
     local rt = newRuntime(iohandler, module.era)
-    rt:setInstructionDebug(verbose)
-    -- rt:setHaltOnAnyError(true) -- DEBUG
-    rt:addModule(fileName, module.procTable, module.opxTable, module.uid3)
-    local procToCall = procName and procName:upper() or module.procTable[1].name
-    local err = rt:pcallProc(procToCall)
+    local mod = rt:addModule(fileName, module.procTable, module.opxTable)
+    mod.uid3 = module.uid3
+    return rt
+end
+
+function Runtime:run(procName)
+    local procToCall = procName and procName:upper() or self.modules[1].procTable[1].name
+    local err = self:pcallProc(procToCall)
     if err and err.code == KStopErr then
         -- Don't care about the distinction
         err = nil
@@ -1552,6 +1632,171 @@ function runLauncherCmd(iohandler, cmd, ...)
     rt:setCwd("C:\\")
     local fn = rt:require("launcher")[cmd]
     return fn(...)
+end
+
+local function findDebugStackIndex(f)
+    local idx = 2 -- 1 is findDebugStackIndex itself
+    while true do
+        local info = debug.getinfo(idx, "f")
+        if info == nil then
+            return nil -- fn not found
+        elseif info.func == f then
+            return idx - 1 -- To the caller, indexes will be one less
+        else
+            idx = idx + 1
+            -- And go round again
+        end
+    end
+end
+
+function Runtime:getDebugInfo()
+    local frames = {}
+
+    -- Save these because we unwind the stack while walking it, in order to do instruction decode
+    local savedFrame = self.frame
+    local savedIp = self.ip
+    
+    local frame = savedFrame
+    while frame ~= nil do
+        local f = {
+            procName = frame.proc.name,
+            procModule = frame.proc.module.path,
+            nativePath = frame.proc.module.nativePath, -- Only for Lua modules
+            ip = frame.lastIp,
+            vars = {},
+        }
+
+        self:setFrame(frame, frame.lastIp)
+        local luaFrameInfo = nil
+        local luaFrameIdx = nil
+        if frame.lastIp then
+            f.ipDecode = self:decodeNextInstruction()
+        else
+            -- Lua fns don't have a lastIp
+            local fn = frame.proc.fn
+            assert(fn, "Unexpected lack of lastIp in non-Lua call frame!")
+
+            luaFrameIdx = findDebugStackIndex(fn)
+            if luaFrameIdx then
+                luaFrameInfo = debug.getinfo(luaFrameIdx, "nlu")
+                f.ip = luaFrameInfo.currentline
+                f.ipDecode = string.format("%s:%d", oplpath.basename(f.nativePath), luaFrameInfo.currentline)
+            end
+        end
+
+        for index, var in pairs(frame.vars) do
+            -- printf("%s: %s\n", var.name, var())
+            local v = {
+                address = var:addressOf():intValue(),
+                index = index,
+                name = var.name,
+                type = var:type(),
+                global = frame.proc.vars and frame.proc.vars[index].isGlobal,
+            }
+            if isArrayType(var:type()) then
+                v.value = {}
+                for i = 1, var:arrayLen() do
+                    v.value[i] = var[i]()
+                end
+            else
+                v.value = var()
+            end
+            if luaFrameInfo then
+                -- Check if it's a param we can give a better name to
+                local argNum = tonumber(v.name:match("param_([0-9]+)"))
+                if argNum and argNum <= luaFrameInfo.nparams then
+                    local localName = debug.getlocal(luaFrameIdx, argNum)
+                    if localName then
+                        v.name = localName
+                    end
+                end
+            end
+            table.insert(f.vars, v)
+        end
+        table.sort(f.vars, function(l, r) return l.index < r.index end)
+
+        table.insert(frames, 1, f) -- Frame one is always the main fn, current frame is frames[#frames]
+        frame = frame.prevFrame
+    end
+
+    -- Restore frame
+    self:setFrame(savedFrame, savedIp)
+
+    local modules = {}
+    for i, module in ipairs(self.modules) do
+        modules[i] = {
+            name = module.name,
+            path = module.path,
+            nativePath = module.nativePath, -- Only for Lua modules
+        }
+    end
+
+    return {
+        frames = frames,
+        modules = modules,
+    }
+end
+
+function Runtime:debugEvent(...)
+    local handler = self.ioh.debugEvent
+    if handler then
+        handler(...)
+    end
+end
+
+function Runtime:renameVariable(procName, index, name)
+    local proc = self:findProc(procName)
+    local var = proc.vars[index]
+    assert(var, "Var not found!")
+    var.name = name..DataTypeSuffix[var.type & 0xF]
+
+    -- Need to also update the var name in the frame, for any frames currently using proc
+    local frame = self.frame
+    while frame ~= nil do
+        if frame.proc == proc then
+            frame.vars[index].name = var.name
+        end
+        frame = frame.prevFrame
+    end
+end
+
+function Runtime:setVariable(procName, index, arrayIndex, newValue)
+    -- Find the frame
+    local frame = self.frame
+    local found = nil
+    while frame ~= nil do
+        if frame.proc.name == procName then
+            found = frame
+            break
+        end
+        frame = frame.prevFrame
+    end
+    assert(found, "Couldn't find frame for procName "..procName)
+
+    local var = found.vars[index]
+    assert(var, "Couldn't find variable for index "..index)
+
+    local varType = var:type()
+    assert((arrayIndex ~= nil) == isArrayType(varType), "Array type mismatch")
+
+    -- The newValue argument is always a string, for simplicity
+    if (varType & 0xF) == DataTypes.EString then
+        -- Check if it's quoted and if so, undo any \x escapes
+        local quoted = newValue:match('^"(.*)"$')
+        if quoted then
+            newValue = quoted:gsub("\\x([A-Fa-f0-9][A-Fa-f0-9])", function(chs)
+                return string.char(tonumber(chs, 16))
+            end)
+        end
+    else
+        newValue = assert(tonumber(newValue), "Bad number value")
+    end
+
+    if arrayIndex then
+        var[arrayIndex](newValue)
+    else
+        var(newValue)
+    end
 end
 
 return _ENV

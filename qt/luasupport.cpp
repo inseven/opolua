@@ -40,6 +40,14 @@ int to_int(lua_State* L, int idx, const char* name)
     return result;
 }
 
+uint32_t to_uint32(lua_State* L, int idx, const char* name)
+{
+    rawgetfield(L, idx, name);
+    uint32_t result = (uint32_t)lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    return result;
+}
+
 double to_double(lua_State* L, int idx, const char* name)
 {
     rawgetfield(L, idx, name);
@@ -177,36 +185,6 @@ void pushValue(lua_State* L, const QVariant& value)
         qWarning("Unhandled QVariant type %d", t);
         lua_pushnil(L);
     }
-}
-
-void registerMetatable(lua_State* L, const char* metatable_name, QVector<luaL_Reg>&& fns)
-{
-    fns.push_back({nullptr, nullptr});
-    registerMetatable(L, metatable_name, fns.data());
-}
-
-void registerMetatable(lua_State* L, const char* metatable_name, const luaL_Reg* fns)
-{
-    if (luaL_newmetatable(L, metatable_name)) {
-        lua_pushvalue(L, -1);  // push metatable
-        lua_setfield(L, -2, "__index");  // metatable.__index = metatable
-        if (fns) {
-            luaL_setfuncs(L, fns, 0);
-        }
-    }
-    lua_pop(L, 1);
-}
-
-std::wstring UTF8ToWide(const std::string& str)
-{
-    QString qstr = QString::fromStdString(str);
-    return qstr.toStdWString();
-}
-
-std::string WideToUTF8(const std::wstring& str)
-{
-    QString qstr = QString::fromStdWString(str);
-    return qstr.toStdString();
 }
 
 int load(lua_State* L, const QString& path)

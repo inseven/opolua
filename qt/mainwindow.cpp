@@ -36,6 +36,7 @@
 #include "ui_mainwindow.h"
 #include "oplapplication.h"
 #include "oplruntimegui.h"
+#include "debuggerwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -120,11 +121,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionScale1x, &QAction::triggered, this, [this] { setScale(1); });
     connect(ui->actionScale2x, &QAction::triggered, this, [this] { setScale(2); });
     connect(ui->actionScale3x, &QAction::triggered, this, [this] { setScale(3); });
-    connect(ui->actionScale4x, &QAction::triggered, this, [this] { setScale(4); });
+    connect(ui->actionScale4x, &QAction::triggered, this, [this] { setScale(3); });
     connect(ui->actionReportIssue, &QAction::triggered, this, &MainWindow::reportIssue);
     connect(ui->actionSoftwareIndex, &QAction::triggered, this, &MainWindow::openSoftwareIndex);
+    connect(ui->actionOpenDebugger, &QAction::triggered, this, &MainWindow::showDebugger);
     connect(runtime, &OplRuntime::debugLog, gApp, &OplApplication::appendLogging);
     connect(runtime, &OplRuntimeGui::startedRunningApp, this, &MainWindow::startedRunning);
+    connect(runtime, &OplRuntime::pauseStateChanged, this, &MainWindow::pauseStateChanged);
     connect(runtime, &OplRuntime::titleChanged, this, &MainWindow::setTitle);
     connect(runtime, &OplRuntime::runComplete, this, &MainWindow::runComplete);
     connect(runtime, &OplRuntime::installationComplete, this, &MainWindow::installationComplete);
@@ -209,6 +212,11 @@ void MainWindow::startedRunning(const OplAppInfo& info)
         gApp->addRecentFile(path);
     }
     mAppInfo.reset(new OplAppInfo(info));
+}
+
+void MainWindow::pauseStateChanged(bool paused)
+{
+    statusLabel->setText(paused ? "Paused" : "Running");
 }
 
 void MainWindow::setTitle(const QString& title)
@@ -730,4 +738,16 @@ void MainWindow::openSoftwareIndex()
 {
     QUrl indexUrl("https://software.psion.community/", QUrl::StrictMode);
     QDesktopServices::openUrl(indexUrl);
+}
+
+void MainWindow::showDebugger()
+{
+    if (!mDebugWindow) {
+        getRuntime().setIgnoreFocusEvents(true);
+        mDebugWindow = new DebuggerWindow(ui->screen->getRuntime());
+        mDebugWindow->move(pos() + QPoint(100, 100));
+    }
+    mDebugWindow->show();
+    mDebugWindow->raise();
+    mDebugWindow->activateWindow();
 }

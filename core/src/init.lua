@@ -28,6 +28,7 @@ _G.io = nil
 package.loaded.io = nil
 _G.debug = {
     getinfo = debug.getinfo,
+    getlocal = debug.getlocal,
     traceback = debug.traceback,
 }
 package.loaded.debug = _G.debug

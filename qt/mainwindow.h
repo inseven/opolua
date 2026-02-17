@@ -22,6 +22,7 @@
 #include <QAction>
 #include <QLabel>
 #include <QMainWindow>
+#include <QPointer>
 #include <QScopedPointer>
 #include <QStringList>
 
@@ -29,6 +30,7 @@ namespace Ui {
 class MainWindow;
 }
 
+class DebuggerWindow;
 class OplRuntimeGui;
 struct OplAppInfo;
 
@@ -43,6 +45,8 @@ public:
     OplRuntimeGui& getRuntime();
     void showLauncher();
 
+    void setScale(int scale);
+
 protected:
     void closeEvent(QCloseEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
@@ -56,11 +60,14 @@ public slots:
     void setTitle(const QString& title);
     void installSis();
     void openFile(const QString& path);
+    void showDebugger();
 
 private slots:
     void closeActiveWindow();
     void forceClose();
     void startedRunning(const OplAppInfo& info);
+    void pauseStateChanged(bool paused);
+
     void runComplete(const QString& errMsg, const QString& errDetail);
     void installationComplete(const QString& sisPath);
     void updateRecents(const QStringList& recentFiles);
@@ -71,7 +78,6 @@ private slots:
 
 private:
     void setDevice(int device);
-    void setScale(int scale);
     void doSetScale(int scale);
     void sizeWindowToFitInterpreter();
     QString getSourceUrlForPath(const QString& path);
@@ -95,6 +101,7 @@ private:
     QString mErrMsg;
     QString mErrDetail;
     QString mSourceUrl;
+    QPointer<DebuggerWindow> mDebugWindow;
 };
 
 #endif // MAINWINDOW_H

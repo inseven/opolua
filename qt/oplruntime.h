@@ -34,6 +34,7 @@
 #include <optional>
 
 #include "oplscreen.h"
+#include "opldebug.h"
 
 #include "opldevicetype.h"
 typedef OplDeviceType DeviceType;
@@ -118,6 +119,23 @@ public:
 
     QString getFont(uint32_t uid, OplScreen::FontMetrics& metrics) override;
 
+public: // Debugging APIs
+
+    bool isPaused() const;
+    
+    bool breakOnError() const;
+    void setBreakOnError(bool flag);
+
+    bool ignoreFocusEvents() const;
+    void setIgnoreFocusEvents(bool flag);
+
+    opl::ProgramInfo getDebugInfo();
+    void setVariable(const opl::Frame& frame, const opl::Variable& variable, std::optional<int> arrayIndex, const QString& value);
+    static QString varToStr(const opl::Variable& v, int idx = -1);
+
+    typedef std::pair<uint32_t, QString> Line;
+    QVector<Line> decompile(const QString& path, const QVector<opl::NameOverride>& renames={});
+
 protected:
     bool event(QEvent* ev) override;
 
@@ -130,8 +148,23 @@ public slots:
     void runSlower();
     void closeEvent();
 
+public slots: // Debugging-related slots
+    void printDebugInfo();
+    void updateDebugInfoIfStale();
+    void pause();
+    void unpause();
+    void stepIn();
+    void stepOut();
+    void singleStep();
+    void configureBreakpoint(const QString& moduleNativePath, uint32_t addr, bool set);
+    void setBreakpoint(const QString& moduleNativePath, uint32_t addr);
+    void clearBreakpoint(const QString& moduleNativePath, uint32_t addr);
+    void renameVariable(const QString& proc, uint32_t index, const QString& newName);
+    void flushGraphicsOps();
+
 signals:
     void startedRunning(const QString& path);
+    void pauseStateChanged(bool paused);
     void titleChanged(const QString& title);
     void runComplete(const QString& errMsg, const QString& errDetail);
     void installationComplete(const QString& sisPath);
@@ -141,10 +174,12 @@ signals:
     void debugLog(const QString& str);
     void closeEventProcessed();
     void deviceTypeChanged();
+    void debugInfoUpdated();
 
 private slots:
     void onThreadExited();
     void drawCursor();
+    void updateDebugInfoOnRunComplete();
 
 private:
     struct Event {
@@ -199,9 +234,11 @@ private:
 
     static OplRuntime* getSelf(lua_State *L);
     QString tolocalstring(lua_State *L, int index);
-
     void setEscape(bool flag);
     void doRunInstaller(const QString& file, const QString& displayPath, const QString& lang);
+    bool debugInfoStale() const;
+    void updateDebugInfo(lua_State* L, bool errOnStack = false);
+    void doRenameVariable(lua_State* L, const QString& proc, uint32_t index, const QString& newName);
 
     DECLARE_IOHANDLER_FN(asyncRequest);
     DECLARE_IOHANDLER_FN(cancelRequest);
@@ -209,6 +246,7 @@ private:
     DECLARE_IOHANDLER_FN(createBitmap);
     DECLARE_IOHANDLER_FN(createWindow);
     DECLARE_IOHANDLER_FN(draw);
+    DECLARE_IOHANDLER_FN(debugEvent);
     DECLARE_IOHANDLER_FN(getConfig);
     DECLARE_IOHANDLER_FN(getDeviceInfo);
     DECLARE_IOHANDLER_FN(getTime);
@@ -223,7 +261,10 @@ private:
     DECLARE_IOHANDLER_FN(utctime);
     DECLARE_IOHANDLER_FN(waitForAnyRequest);
 
-    DECLARE_IOHANDLER_FN(printHandler); // Not actually part of iohandler, but behaves similarly
+    // Not actually part of iohandler, but behaves similarly
+    DECLARE_IOHANDLER_FN(printHandler);
+    DECLARE_IOHANDLER_FN(runOpoHelper);
+    DECLARE_IOHANDLER_FN(drawMainThread);
 
 protected:
     lua_State* L;
@@ -244,12 +285,31 @@ private:
     AsyncHandle* mEventRequest;
     bool mWaiting;
     bool mInterrupted;
+    bool mPaused;
+    bool mDebugging;
+    bool mBreakOnErr;
+    enum {
+        None,
+        NextReturn,
+        NextOp,
+        NextPushFrame
+    } mBreakOnNext;
     uint8_t mSpeed;
-    QElapsedTimer mLastOpTime;
     QMap<int, AsyncHandle*> mPendingRequests;
     QVector<Completion> mPendingCompletions;
     QSet<int> mKeysDown; // set of scancodes, used for SIBO HwGetScanCodes only
+    opl::ProgramInfo mDebugInfo;
+    QMap<uint32_t, QVector<QString>> mBreakpoints;
+    QElapsedTimer mLastDebugInfoTime;
     //// END protected by mMutex
+    QElapsedTimer mLastOpTime;
+    struct IndexedNameOverride {
+        QString proc;
+        uint32_t index;
+        QString name;
+    };
+    QVector<IndexedNameOverride> mPendingVariableRenames;
+    int mRuntimeRef;
     std::function<void(void)> mRunNextFn;
     QSemaphore mWaitSemaphore;
 
@@ -267,6 +327,7 @@ private:
     QString mGetCmd;
 
     bool mEscapeOn;
+    bool mIgnoreFocusEvents;
 };
 
 #endif // OPLRUNTIME_H
