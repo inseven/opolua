@@ -78,7 +78,7 @@ extension Installer: SisInstallIoHandler {
         return fileSystem.perform(op)
     }
 
-    func sisGetStubs() -> Sis.GetStubsResult {
+    func sisGetStubs(sis: Sis.File) -> Sis.GetStubsResult {
         return .notImplemented
     }
 
