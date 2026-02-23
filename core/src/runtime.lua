@@ -28,6 +28,7 @@ local ops = require("ops")
 local newStack = require("stack").newStack
 local database = require("database")
 local memory = require("memory")
+local opofile = require("opofile")
 
 Runtime = class {}
 
@@ -128,7 +129,7 @@ function Runtime:getLocalVar(index, type, frame)
 
     if not var.name then
         -- We now have its type so we can name it
-        var.name = fmt("local_%04X%s", index, DataTypeSuffix[type])
+        var.name = opofile.makeLocalName(frame.proc, index, type)
     end
 
     -- Might as well update proc for next time
@@ -1325,7 +1326,7 @@ function Runtime:loadModule(path)
         data = self.ioh.fsop("read", path)
     end
     if data then
-        local procTable, opxTable = require("opofile").parseOpo(data, self.instructionDebug)
+        local procTable, opxTable = opofile.parseOpo(data, self.instructionDebug)
         self:addModule(path, procTable, opxTable)
         return
     end
@@ -1597,7 +1598,7 @@ function newRuntimeWithFile(fileName, iohandler)
         error({ msg = "File is a native binary and not compiled OPL.", notOpl = true })
     end
 
-    local module = require("opofile").parseOpo2(data, verbose)
+    local module = opofile.parseOpo2(data, verbose)
     iohandler.setEra(module.era) -- Needed to set the default string encoding
     local rt = newRuntime(iohandler, module.era)
     local mod = rt:addModule(fileName, module.procTable, module.opxTable)
