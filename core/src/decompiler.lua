@@ -390,7 +390,7 @@ function decompileProc(proc, options)
         -- but since indexes don't get reused for different vars we now know its
         -- type and can make a var entry.
         if vars[index] == nil then
-            local undecoratedName = fmt("local_%04X", index)
+            local undecoratedName = opofile.makeLocalName(proc, index)
             if renames[undecoratedName] then
                 undecoratedName = renames[undecoratedName]
             end
@@ -404,7 +404,7 @@ function decompileProc(proc, options)
             if isArrayType(type) and vars[index].type == nil then
                 vars[index].type = type
                 -- And recalculate name with the type suffix
-                local undecoratedName = fmt("local_%04X", index)
+                local undecoratedName = opofile.makeLocalName(proc, index)
                 if renames[undecoratedName] then
                     undecoratedName = renames[undecoratedName]
                 end

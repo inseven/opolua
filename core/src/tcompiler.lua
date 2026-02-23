@@ -225,6 +225,9 @@ local function checkProg(prog, expected)
         if not expectedProc.iTotalTableSize then
             expectedProc.iTotalTableSize = 0
         end
+        if not expectedProc.translatorVersion then
+            expectedProc.translatorVersion = opofile.EOplTranVersionOpler1
+        end
         if procIdx == 1 and expectedProc.name == nil then
             expectedProc.name = "MAIN"
         end

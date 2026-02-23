@@ -154,8 +154,13 @@ function parseOpo2(data, verbose)
     return result
 end
 
-local function makeLocalName(index, type)
-    return string.format("local_%04X%s", index, DataTypeSuffix[type] or "")
+function makeLocalName(proc, index, type)
+    if proc == nil or proc.translatorVersion >= EOplTranVersionOpler1 then
+        return string.format("local_%04X%s", index, DataTypeSuffix[type] or "")
+    else
+        -- Limited to 8 characters
+        return string.format("loc%04X%s", index, DataTypeSuffix[type] or "")
+    end
 end
 
 function parseProc(proc, translatorVersion)
@@ -166,7 +171,7 @@ function parseProc(proc, translatorVersion)
     proc.externals = {}
     proc.strings = {}
     proc.arrays = {}
-
+    proc.translatorVersion = translatorVersion
 
     local definitionsSz, dataStart
     if translatorVersion == EOplTranVersionOplS3 then
@@ -298,7 +303,7 @@ function parseProc(proc, translatorVersion)
             -- knowing that here so we will fix this up below when we iterate proc.strings.
             local directIdx = offset + 2
             var = {
-                name = makeLocalName(directIdx),
+                name = makeLocalName(proc, directIdx),
                 directIdx = directIdx,
                 -- No type because we don't know if it's a word, float etc
             }
@@ -321,7 +326,7 @@ function parseProc(proc, translatorVersion)
             if arrayVar then
                 vars[offset] = nil
                 var = {
-                    name = makeLocalName(directIdx, DataTypes.EStringArray),
+                    name = makeLocalName(proc, directIdx, DataTypes.EStringArray),
                     directIdx = directIdx,
                     arraySz = arrayVar.arraySz,
                 }
@@ -331,7 +336,7 @@ function parseProc(proc, translatorVersion)
         if var == nil then
             -- Can't be a string array as that would've been handled above, must be a local string
             var = {
-                name = makeLocalName(directIdx, DataTypes.EString),
+                name = makeLocalName(proc, directIdx, DataTypes.EString),
                 directIdx = directIdx,
             }
             vars[var.directIdx] = var
