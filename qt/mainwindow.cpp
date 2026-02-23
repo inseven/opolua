@@ -121,7 +121,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionScale1x, &QAction::triggered, this, [this] { setScale(1); });
     connect(ui->actionScale2x, &QAction::triggered, this, [this] { setScale(2); });
     connect(ui->actionScale3x, &QAction::triggered, this, [this] { setScale(3); });
-    connect(ui->actionScale4x, &QAction::triggered, this, [this] { setScale(3); });
+    connect(ui->actionScale4x, &QAction::triggered, this, [this] { setScale(4); });
     connect(ui->actionReportIssue, &QAction::triggered, this, &MainWindow::reportIssue);
     connect(ui->actionSoftwareIndex, &QAction::triggered, this, &MainWindow::openSoftwareIndex);
     connect(ui->actionOpenDebugger, &QAction::triggered, this, &MainWindow::showDebugger);
