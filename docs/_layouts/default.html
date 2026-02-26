@@ -10,16 +10,19 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:100,200,300,400,500">
-    <link rel="stylesheet" href="/css/style.css">
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <meta property="og:title" content="{{ site.title }}{% if page.title %} - {{ page.title }}{% endif %}">
     <meta property="og:image" content="/images/icon.png">
     <meta name="apple-itunes-app" content="app-id=1604029880">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dark.min.css" media="(prefers-color-scheme: dark)">
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>hljs.highlightAll();</script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/plaintext.min.js"></script>
+    <script>
+        hljs.highlightAll();
+    </script>
 
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     {% include navigation.html %}

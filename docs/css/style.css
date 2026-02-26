@@ -9,7 +9,7 @@
     --icon-border-color: rgba(0, 0, 0, 0.2);
     --icon-size: 192px;
     --navigation-padding: 1em;
-    --content-width: 900px;
+    --content-width: 1000px;
     --content-padding: 2em;
     --details-width: 600px;
     --vertical-spacing: 20px;
@@ -24,13 +24,13 @@
 @media (prefers-color-scheme: dark) {
 
     :root {
+        --tint-color: #3f9594;
         --primary-foreground-color: #ffffff;
         --secondary-foreground-color: gray;
         --primary-background-color: #181818;
         --secondary-background-color: #2c2c2c;
         --tertiary-background-color: #3a3a3a;
         --navigation-background: rgba(24, 24, 24, 0.7);
-        --primary-action-background-color: #0a84ff;
 
         --primary-highlight-color: #22221a;
         --secondary-highlight-color: #3c3a1f;
@@ -84,7 +84,6 @@ pre, code {
 }
 
 code {
-    /* font-size: 0.8em; */
     padding: 0.1em 0.2em;
     border-radius: 0.2em;
 }
@@ -173,11 +172,13 @@ th, td {
 }
 
 .content-sidebar {
-    max-width: var(--content-width);
-    margin: auto;
-    padding: 0 calc(2 * var(--vertical-spacing));
+    box-sizing: border-box;
     display: grid;
     grid-template-areas: 'left-sidebar' 'main-content';
+    grid-template-columns: minmax(0, 1fr);
+    margin: auto;
+    max-width: var(--content-width);
+    padding: 0 calc(2 * var(--vertical-spacing));
 }
 
 .content-sidebar h1 {
@@ -195,7 +196,7 @@ th, td {
 @media (min-width:768px) {
 
     .content-sidebar {
-        grid-template-columns: 200px auto;
+        grid-template-columns: 200px minmax(0, 1fr);
         grid-template-areas:
             'left-sidebar main-content';
         grid-gap: 1rem;
@@ -245,6 +246,19 @@ main-content {
     max-width: var(--details-width);
     margin: 2em auto;
     text-align: center;
+}
+
+.button, .button:hover {
+    color: white;
+    background-color: var(--tint-color);
+    border-radius: 100vh;
+    padding: 1rem 1.6rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.button:hover {
+    background-color: color-mix(in srgb, var(--tint-color) 90%, black);
 }
 
 .banner {
