@@ -210,8 +210,8 @@ build-tools add-artifact manifest.json \
 # Debian.
 
 QT_DEBIAN_TRIXIE_ARM64_NAME="opolua-${VERSION_NUMBER}-trixie${BUILD_NUMBER}_arm64.deb"
-QT_UBUNTU_2510_ARM64_PATH="$BUILD_DIRECTORY/$QT_DEBIAN_TRIXIE_ARM64_NAME"
-cp "$ARTIFACTS_DIRECTORY/opolua-qt-debian-trixie-arm64/opolua.deb" "$QT_UBUNTU_2510_ARM64_PATH"
+QT_DEBIAN_TRIXIE_ARM64_PATH="$BUILD_DIRECTORY/$QT_DEBIAN_TRIXIE_ARM64_NAME"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-debian-trixie-arm64/opolua.deb" "$QT_DEBIAN_TRIXIE_ARM64_PATH"
 
 build-tools add-artifact manifest.json \
     --project opolua-qt \
@@ -226,8 +226,8 @@ build-tools add-artifact manifest.json \
     --supports-architecture arm64
 
 QT_DEBIAN_TRIXIE_AMD64_NAME="opolua-${VERSION_NUMBER}-trixie${BUILD_NUMBER}_amd64.deb"
-QT_UBUNTU_2510_AMD64_PATH="$BUILD_DIRECTORY/$QT_DEBIAN_TRIXIE_AMD64_NAME"
-cp "$ARTIFACTS_DIRECTORY/opolua-qt-debian-trixie-amd64/opolua.deb" "$QT_UBUNTU_2510_AMD64_PATH"
+QT_DEBIAN_TRIXIE_AMD64_PATH="$BUILD_DIRECTORY/$QT_DEBIAN_TRIXIE_AMD64_NAME"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-debian-trixie-amd64/opolua.deb" "$QT_DEBIAN_TRIXIE_AMD64_PATH"
 
 build-tools add-artifact manifest.json \
     --project opolua-qt \
@@ -301,6 +301,7 @@ if $RELEASE ; then
         "$QT_UBUNTU_2404_ARM64_PATH" "$QT_UBUNTU_2404_AMD64_PATH" \
         "$QT_UBUNTU_2504_ARM64_PATH" "$QT_UBUNTU_2504_AMD64_PATH" \
         "$QT_UBUNTU_2510_ARM64_PATH" "$QT_UBUNTU_2510_AMD64_PATH" \
+        "$QT_DEBIAN_TRIXIE_ARM64_PATH" "$QT_DEBIAN_TRIXIE_AMD64_PATH" \
         "$QT_ARCH_ROLLING_X86_64_PATH"
 
 fi
