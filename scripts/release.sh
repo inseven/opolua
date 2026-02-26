@@ -207,6 +207,40 @@ build-tools add-artifact manifest.json \
     --supports-codename questing \
     --supports-architecture amd64
 
+# Debian.
+
+QT_DEBIAN_TRIXIE_ARM64_NAME="opolua-${VERSION_NUMBER}-trixie${BUILD_NUMBER}_arm64.deb"
+QT_UBUNTU_2510_ARM64_PATH="$BUILD_DIRECTORY/$QT_DEBIAN_TRIXIE_ARM64_NAME"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-debian-trixie-arm64/opolua.deb" "$QT_UBUNTU_2510_ARM64_PATH"
+
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_DEBIAN_TRIXIE_ARM64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os debian \
+    --supports-version 13 \
+    --supports-codename trixie \
+    --supports-architecture arm64
+
+QT_DEBIAN_TRIXIE_AMD64_NAME="opolua-${VERSION_NUMBER}-trixie${BUILD_NUMBER}_amd64.deb"
+QT_UBUNTU_2510_AMD64_PATH="$BUILD_DIRECTORY/$QT_DEBIAN_TRIXIE_AMD64_NAME"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-debian-trixie-amd64/opolua.deb" "$QT_UBUNTU_2510_AMD64_PATH"
+
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_DEBIAN_TRIXIE_AMD64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os debian \
+    --supports-version 13 \
+    --supports-codename trixie \
+    --supports-architecture amd64
+
 ## Arch.
 
 QT_ARCH_ROLLING_X86_64_NAME="opolua-bin-arch-rolling-x86_64-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
