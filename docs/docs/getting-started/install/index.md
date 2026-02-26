@@ -13,7 +13,11 @@ Download from the App Store:
 
 Download from [GitHub](https://github.com/inseven/opolua/releases/tag/{{ site.env.VERSION_NUMBER }}).
 
-# Ubuntu
+# Linux
+
+## Debian and Ubuntu
+
+There are currently pre-built amd64 and arm64 binaries for Ubuntu 24.04 (Noble Numbat), 25.04 (Plucky Puffin), 25.10 (Questing Quokka), and Debian 13 (Trixie).
 
 Install from our apt repository:
 
@@ -23,6 +27,12 @@ echo "deb https://releases.jbmorley.co.uk/apt $(lsb_release -sc) main" | sudo te
 sudo apt update
 sudo apt install opolua
 ```
+
+You can also download these from [GitHub](https://github.com/inseven/opolua/releases/tag/{{ site.env.VERSION_NUMBER }}).
+
+## Arch
+
+Download from [GitHub](https://github.com/inseven/opolua/releases/tag/{{ site.env.VERSION_NUMBER }}).
 
 # Windows
 

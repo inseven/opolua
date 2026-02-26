@@ -110,6 +110,8 @@ jobs:
       matrix:
         include:
 
+        # Ubuntu.
+
         - name: ubuntu-25.10-amd64
           os: ubuntu-24.04
           container: ubuntu:questing
@@ -143,6 +145,24 @@ jobs:
 
         - name: ubuntu-24.04-arm64
           os: ubuntu-24.04-arm
+
+        # Debian.
+
+        - name: debian-trixie-amd64
+          os: ubuntu-24.04
+          container: debian:trixie
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
+
+        - name: debian-trixie-arm64
+          os: ubuntu-24.04-arm
+          container: debian:trixie
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
+
+        # Arch.
 
         - name: arch-latest-x86_64
           os: ubuntu-24.04
