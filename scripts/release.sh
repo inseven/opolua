@@ -95,6 +95,8 @@ find "$ARTIFACTS_DIRECTORY"
 
 # Copy the Qt builds.
 
+GIT_SHA=`git rev-parse HEAD`
+
 # macOS.
 QT_MACOS_PATH="$BUILD_DIRECTORY/OpoLua-Qt-macOS-$VERSION_NUMBER-$BUILD_NUMBER.zip"
 cp "$ARTIFACTS_DIRECTORY/opolua-qt-macos/build.zip" "$QT_MACOS_PATH"
@@ -105,35 +107,115 @@ cp "$ARTIFACTS_DIRECTORY/opolua-qt-windows/build.zip" "$QT_WINDOWS_PATH"
 
 # Linux.
 
-QT_UBUNTU_2404_ARM64_NAME="opolua-ubuntu-24.04-arm64-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+cd "$BUILD_DIRECTORY"
+
+## Ubuntu.
+
+QT_UBUNTU_2404_ARM64_NAME="opolua-${VERSION_NUMBER}-noble${BUILD_NUMBER}_arm64.deb"
 QT_UBUNTU_2404_ARM64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2404_ARM64_NAME"
-cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-24.04-arm64/$QT_UBUNTU_2404_ARM64_NAME" "$QT_UBUNTU_2404_ARM64_PATH"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-24.04-arm64/opolua.deb" "$QT_UBUNTU_2404_ARM64_PATH"
 
-QT_UBUNTU_2404_AMD64_NAME="opolua-ubuntu-24.04-amd64-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_UBUNTU_2404_ARM64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os ubuntu \
+    --supports-version 24.04 \
+    --supports-codename noble \
+    --supports-architecture arm64
+
+QT_UBUNTU_2404_AMD64_NAME="opolua-${VERSION_NUMBER}-noble${BUILD_NUMBER}_amd64.deb"
 QT_UBUNTU_2404_AMD64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2404_AMD64_NAME"
-cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-24.04-amd64/$QT_UBUNTU_2404_AMD64_NAME" "$QT_UBUNTU_2404_AMD64_PATH"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-24.04-amd64/opolua.deb" "$QT_UBUNTU_2404_AMD64_PATH"
 
-QT_UBUNTU_2504_ARM64_NAME="opolua-ubuntu-25.04-arm64-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_UBUNTU_2404_AMD64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os ubuntu \
+    --supports-version 24.04 \
+    --supports-codename noble \
+    --supports-architecture amd64
+
+QT_UBUNTU_2504_ARM64_NAME="opolua-${VERSION_NUMBER}-plucky${BUILD_NUMBER}_arm64.deb"
 QT_UBUNTU_2504_ARM64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2504_ARM64_NAME"
-cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-25.04-arm64/$QT_UBUNTU_2504_ARM64_NAME" "$QT_UBUNTU_2504_ARM64_PATH"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-25.04-arm64/opolua.deb" "$QT_UBUNTU_2504_ARM64_PATH"
 
-QT_UBUNTU_2504_AMD64_NAME="opolua-ubuntu-25.04-amd64-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_UBUNTU_2504_ARM64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os ubuntu \
+    --supports-version 25.04 \
+    --supports-codename plucky \
+    --supports-architecture arm64
+
+QT_UBUNTU_2504_AMD64_NAME="opolua-${VERSION_NUMBER}-plucky${BUILD_NUMBER}_amd64.deb"
 QT_UBUNTU_2504_AMD64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2504_AMD64_NAME"
-cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-25.04-amd64/$QT_UBUNTU_2504_AMD64_NAME" "$QT_UBUNTU_2504_AMD64_PATH"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-25.04-amd64/opolua.deb" "$QT_UBUNTU_2504_AMD64_PATH"
 
-QT_UBUNTU_2510_ARM64_NAME="opolua-ubuntu-25.10-arm64-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_UBUNTU_2504_AMD64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os ubuntu \
+    --supports-version 25.04 \
+    --supports-codename plucky \
+    --supports-architecture amd64
+
+QT_UBUNTU_2510_ARM64_NAME="opolua-${VERSION_NUMBER}-questing${BUILD_NUMBER}_arm64.deb"
 QT_UBUNTU_2510_ARM64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2510_ARM64_NAME"
-cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-25.10-arm64/$QT_UBUNTU_2510_ARM64_NAME" "$QT_UBUNTU_2510_ARM64_PATH"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-25.10-arm64/opolua.deb" "$QT_UBUNTU_2510_ARM64_PATH"
 
-QT_UBUNTU_2510_AMD64_NAME="opolua-ubuntu-25.10-amd64-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_UBUNTU_2510_ARM64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os ubuntu \
+    --supports-version 25.10 \
+    --supports-codename questing \
+    --supports-architecture arm64
+
+QT_UBUNTU_2510_AMD64_NAME="opolua-${VERSION_NUMBER}-questing${BUILD_NUMBER}_amd64.deb"
 QT_UBUNTU_2510_AMD64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2510_AMD64_NAME"
-cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-25.10-amd64/$QT_UBUNTU_2510_AMD64_NAME" "$QT_UBUNTU_2510_AMD64_PATH"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-25.10-amd64/opolua.deb" "$QT_UBUNTU_2510_AMD64_PATH"
+
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_UBUNTU_2510_AMD64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os ubuntu \
+    --supports-version 25.10 \
+    --supports-codename questing \
+    --supports-architecture amd64
+
+## Arch.
 
 QT_ARCH_ROLLING_X86_64_NAME="opolua-bin-arch-rolling-x86_64-$VERSION_NUMBER-$BUILD_NUMBER.pkg.tar.zst"
 QT_ARCH_ROLLING_X86_64_PATH="$BUILD_DIRECTORY/$QT_ARCH_ROLLING_X86_64_NAME"
 cp "$ARTIFACTS_DIRECTORY/opolua-qt-arch-latest-x86_64/$QT_ARCH_ROLLING_X86_64_NAME" "$QT_ARCH_ROLLING_X86_64_PATH"
 
 # Unpack the iOS and Mac Catalyst builds.
+
+cd "$ROOT_DIRECTORY"
 
 unzip "$ARTIFACTS_DIRECTORY/opolua-ios/build.zip" -d "$BUILD_DIRECTORY"
 IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"

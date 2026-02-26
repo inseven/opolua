@@ -28,7 +28,6 @@ set -u
 ROOT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 
 SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
-FPM_OPTIONS_DIRECTORY="$SCRIPTS_DIRECTORY/fpm-options"
 SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
 INSTALL_DIRECTORY="$BUILD_DIRECTORY/install"
@@ -67,13 +66,13 @@ case $DISTRO in
         ARCHITECTURE=`dpkg --print-architecture`
         source /etc/lsb-release
         OS_VERSION="$DISTRIB_RELEASE"
-        PACKAGE_FILENAME="opolua-$DISTRO-$OS_VERSION-$ARCHITECTURE-$VERSION_NUMBER-$BUILD_NUMBER.deb"
+        PACKAGE_FILENAME="opolua.deb"
         fpm \
             -s dir \
             -t deb \
             -p "$PACKAGE_FILENAME" \
             --name "opolua" \
-            --version $VERSION_NUMBER \
+            --version "${VERSION_NUMBER}~${DISTRIB_CODENAME}${BUILD_NUMBER}" \
             --architecture "$ARCHITECTURE" \
             --description "$DESCRIPTION" \
             --url "$URL" \
