@@ -93,8 +93,9 @@ end
 
 function SPRITECREATE(runtime, winId, x, y, flags)
     local graphics = runtime:getGraphics()
+    local context = runtime:getGraphicsContext(winId)
     -- printf("SPRITECREATE(winId=%d, x=%d, y=%d, flags=%X)", winId, x, y, flags)
-    assert(graphics[winId] and graphics[winId].isWindow, "id is not a window")
+    assert(context and context.isWindow, "id is not a window")
     local spriteId = #graphics.sprites + 1
     local sprite = {
         origin = { x = x, y = y },
