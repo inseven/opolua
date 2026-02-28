@@ -2063,7 +2063,8 @@ function ProcState:parse()
                         synassert(exp.maxLen > 0 and exp.maxLen < 256, maxLenExp, "String is too long")
                     end
                 end
-                synassert(#exp.val <= 32, exp, "Variable name is too long")
+                local maxIdentifierLen = (oplFormat >= OplEr5) and 32 or 8
+                synassert(#exp.val <= maxIdentifierLen, exp, "Variable name is too long")
                 synassert(self.locals[exp.val] == nil and self.externalDecls[exp.val] == nil, exp,
                     "Duplicate definition of %s", exp.val)
                 self.locals[exp.val] = exp

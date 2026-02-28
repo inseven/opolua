@@ -338,9 +338,9 @@ local function checkCode(statement, expectedCode)
     checkCodeRet(statement, expectedCode)
 end
 
-local function checkSyntaxError(statement, expectedError)
+local function checkSyntaxError(statement, expectedError, oplFormat)
     local prog = string.format(checkCodeWrapper, "", statement)
-    local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {}, compiler.OplEr5)
+    local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {}, oplFormat or compiler.OplEr5)
     assert(not ok, "Compile unexpectedly succeeded!")
     assert(err.src, "Error didn't include src!? "..tostring(err))
     -- Line number should always be 4 because that's where checkCodeWrapper puts statement
@@ -733,6 +733,8 @@ checkSyntaxError(" ASC(A$, B$)", "2: Expected 1 args to ASC, not 2")
 checkSyntaxError("LOCAL a1234567890123456789012345678901, a12345678901234567890123456789012", "41: Variable name is too long")
 
 checkSyntaxError("a12345678901234567890123456789012 = 1", "1: Variable name is too long")
+
+checkSyntaxError("LOCAL a1234567%", "7: Variable name is too long", compiler.Opl93)
 
 checkSyntaxError("LOCAL f$(256)", "10: String is too long")
 
