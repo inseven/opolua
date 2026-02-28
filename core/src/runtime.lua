@@ -493,6 +493,14 @@ function Runtime:getMenu()
     return self.menu
 end
 
+local function nextFreeIndex(tbl)
+    local i = 1
+    while tbl[i] ~= nil do
+        i = i + 1
+    end
+    return i
+end
+
 function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
     local graphics = self:getGraphics()
 
@@ -505,8 +513,8 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
             limit = limit + 1
         end
         local count = 0
-        for k, v in pairs(graphics) do
-            if type(k) == "number" and v.isWindow then
+        for k, v in pairs(graphics.contexts) do
+            if v.isWindow then
                 count = count + 1
             end
         end
@@ -516,9 +524,9 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
         end
     end
 
-    -- #graphics+1 will always be the first free id, which is the same
-    -- strategy as the Series 5 appears to use.
-    local id = #graphics + 1
+    -- This appears to be the same strategy as the Series 5 uses.
+    local id = nextFreeIndex(graphics.contexts)
+
     local newCtx = {
         id = id,
         displayMode = displayMode,
@@ -534,7 +542,7 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
         style = 0, -- normal text style
         penwidth = 1,
     }
-    graphics[id] = newCtx
+    graphics.contexts[id] = newCtx
     self:setResource("ginfo", nil)
     return newCtx
 end
@@ -547,6 +555,7 @@ function Runtime:getGraphics()
             screenHeight = h,
             screenMode = mode,
             sprites = {},
+            contexts = {},
         }
         self.deviceName = device
         local id = self:gCREATE(0, 0, w, h, true, mode)
@@ -582,7 +591,7 @@ end
 function Runtime:getGraphicsContext(id)
     local graphics = self:getGraphics()
     if id then
-        return graphics[id]
+        return graphics.contexts[id]
     else
         return graphics.current
     end
@@ -591,7 +600,7 @@ end
 function Runtime:setGraphicsContext(id)
     -- printf("setGraphicsContext %d\n", id)
     local graphics = self:getGraphics()
-    local context = graphics[id]
+    local context = graphics.contexts[id]
     assert(context, KErrDrawNotOpen)
     graphics.current = context
 end
@@ -599,9 +608,9 @@ end
 function Runtime:closeGraphicsContext(id)
     local graphics = self:getGraphics()
     if id == graphics.current.id then
-        graphics.current = graphics[1]
+        graphics.current = graphics.contexts[1]
     end
-    graphics[id] = nil
+    graphics.contexts[id] = nil
     self:flushGraphicsOps()
     -- Clean up any native resources dependant on this window
     local cursor = self:getResource("cursor")

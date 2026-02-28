@@ -125,8 +125,8 @@ function gSTYLE(style)
 end
 
 function gORDER(id, pos)
-    local graphics = runtime:getGraphics()
-    assert(graphics[id] and graphics[id].isWindow, KErrInvalidWindow)
+    local ctx = runtime:getGraphicsContext(id)
+    assert(ctx and ctx.isWindow, KErrInvalidWindow)
     runtime:iohandler().graphicsop("order", id, pos)
 end
 
@@ -455,7 +455,7 @@ function gSCROLL(dx, dy, x, y, w, h)
     if x then
         rect = { x = x, y = y, w = w, h = h }
     else
-        local ctx = runtime:getGraphics().current
+        local ctx = runtime:getGraphicsContext()
         rect = { x = 0, y = 0, w = ctx.width, h = ctx.height }
     end
     -- printf("gSCROLL(dx=%d dy=%d x=%d y=%d w=%d h=%d)\n", dx, dy, rect.x, rect.y, rect.w, rect.h)
