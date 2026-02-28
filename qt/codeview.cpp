@@ -90,7 +90,7 @@ int CodeView::lineNumberAreaWidth()
 void CodeView::lineNumberPaintEvent(QPaintEvent* event)
 {
     QPainter painter(mLineNumberArea);
-    painter.fillRect(event->rect(), QColor(0xE0, 0xE0, 0xE0));
+    painter.fillRect(event->rect(), palette().window().color());
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
@@ -107,7 +107,7 @@ void CodeView::lineNumberPaintEvent(QPaintEvent* event)
                     number = QString::number(addr, mUseHexLineAddresses ? 16 : 10);
                 }
             }
-            painter.setPen(Qt::black);
+            painter.setPen(palette().windowText().color());
             painter.drawText(kBreakBulletWidth, top, mLineNumberArea->width() - 3 - kBreakBulletWidth,
                              fontMetrics().height(),
                              Qt::AlignRight, number);
@@ -201,7 +201,9 @@ void CodeView::setBreak(std::optional<uint32_t> address)
         scrollToAddress(*address, false);
         QTextEdit::ExtraSelection sel;
         sel.cursor = cursorForAddress(*address);
-        sel.format.setBackground(QColor(Qt::red).lighter(175));
+        QColor background = Qt::red;
+        background.setAlphaF(0.3);
+        sel.format.setBackground(background);
         sel.format.setProperty(QTextFormat::FullWidthSelection, true);
         setExtraSelections({sel});
     } else {
