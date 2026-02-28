@@ -14,6 +14,18 @@ Run OPL programs on the command line. This is only suitable for simple programs 
 
 # Example
 
+```opl
+PROC test:
+    PRINT "hello world"
+    wat:
+    GET
+ENDP
+
+PROC wat:
+    PRINT "Waaaat"
+ENDP
+```
+
 [simple.txt](https://github.com/inseven/opolua/blob/main/examples/Tests/simple.txt) compiled on a Psion Series 5:
 
 ```plaintext
