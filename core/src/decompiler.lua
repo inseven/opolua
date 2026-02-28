@@ -1244,7 +1244,7 @@ function decompileProc(proc, options)
             local vector = addStatement(location, "VECTOR %s", eval(expr))
             for i = 1, ncases do
                 local dest = location + ips16()
-                local label = fmt("vector_%04X_case_%d", location, i)
+                local label = fmt(era == "sibo" and "v%04X_%d" or "vector_%04X_case_%d", location, i)
                 addNamedLabel(dest, label.."::")
                 addStatement(location + i * 2, label)
             end
@@ -1257,7 +1257,7 @@ function decompileProc(proc, options)
                 addStatement(location, "ONERR OFF")
             else
                 local dest = location + offset
-                local label = fmt("errhandler_%04X", dest)
+                local label = fmt(era == "sibo" and "err_%04X" or "errhandler_%04X", dest)
                 addNamedLabel(dest, label.."::")
                 addStatement(location, "ONERR %s", label)
             end
