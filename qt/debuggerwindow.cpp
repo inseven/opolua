@@ -3,11 +3,14 @@
 
 #include "debuggerwindow.h"
 
+#include <QFileDialog>
 #include <QPlainTextEdit>
 
 #include "codeview.h"
 #include "differ.h"
+#include "drawableview.h"
 #include "luatokenizer.h"
+#include "oplapplication.h"
 #include "opltokenizer.h"
 #include "oplruntime.h"
 #include "stackmodel.h"
@@ -21,33 +24,21 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     ui->setupUi(this);
-    mStatusLabel = new QLabel(this);
-    ui->statusbar->addWidget(mStatusLabel);
-    setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
-    setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+    connect(mRuntime, &OplRuntime::debugInfoUpdated, this, &DebuggerWindow::debugInfoUpdated);
+    gApp->updateWindowMenu(this, ui->menuWindow);
+
+    // Toolbar/menu
+
     ui->actionContinue->setVisible(false);
     ui->actionToggleBreak->setEnabled(false);
-    connect(ui->modulesView, &QTreeWidget::itemSelectionChanged, this, &DebuggerWindow::moduleSelected);
-
+    ui->breakOnError->setChecked(runtime->breakOnError());
+    ui->windowFocusEnabled->setChecked(!runtime->ignoreFocusEvents());
 #ifdef Q_OS_MAC
     ui->actionRestart->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+R", nullptr));
     ui->actionClose->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+W", nullptr));
 #endif
-    ui->modulesView->setHeaderLabels({"Name", "Path", "Native Path"});
-
-    connect(mRuntime, &OplRuntime::debugInfoUpdated, this, &DebuggerWindow::debugInfoUpdated);
-
-    auto model = new StackModel(runtime, ui->stackView);
-    connect(model, &StackModel::variableRenamed, this, &DebuggerWindow::variableRenamed);
-
-    ui->stackView->setModel(model);
-    ui->stackView->expandRecursively(QModelIndex(), 1);
-    resizeDocks({ui->variablesDockWidget}, { width() / 3}, Qt::Horizontal);
-    resizeDocks({ui->modulesDockWidget}, { 150 }, Qt::Vertical);
-
-    ui->breakOnError->setChecked(runtime->breakOnError());
-    ui->windowFocusEnabled->setChecked(!runtime->ignoreFocusEvents());
-
+    connect(ui->actionAbout, &QAction::triggered, gApp, &OplApplication::showAboutWindow);
+    connect(ui->actionClose, &QAction::triggered, gApp, &OplApplication::closeActiveWindow);
     connect(ui->actionPause, &QAction::triggered, runtime, &OplRuntime::pause);
     connect(ui->actionContinue, &QAction::triggered, runtime, &OplRuntime::unpause);
     connect(ui->actionRestart, &QAction::triggered, runtime, &OplRuntime::restart);
@@ -60,6 +51,36 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     connect(ui->breakOnError, &QAction::triggered, this, &DebuggerWindow::toggleBreakOnError);
     connect(ui->windowFocusEnabled, &QAction::triggered, this, &DebuggerWindow::toggleWindowFocusEnabled);
     connect(ui->stackView, &StackView::gotoAddress, this, &DebuggerWindow::gotoAddressSlot);
+    connect(ui->actionExportBitmap, &QAction::triggered, this, &DebuggerWindow::exportBitmap);
+
+    // Dock widgets
+
+    setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+    resizeDocks({ui->variablesDockWidget}, { width() / 3}, Qt::Horizontal);
+    resizeDocks({ui->modulesDockWidget}, { 150 }, Qt::Vertical);
+
+    // Modules dock widget
+
+    connect(ui->modulesView, &QTreeWidget::itemSelectionChanged, this, &DebuggerWindow::moduleSelected);
+    ui->modulesView->setHeaderLabels({"Name", "Path", "Native Path"});
+
+    // Drawables dock widget
+
+    connect(ui->drawablesView, &QTreeWidget::itemSelectionChanged, this, &DebuggerWindow::drawableSelected);
+    ui->drawablesView->setHeaderLabels({"Id", "Info"});
+
+    // Status bar
+
+    mStatusLabel = new QLabel(this);
+    ui->statusbar->addWidget(mStatusLabel);
+
+    // Stack info dock widget (do this last as it triggers a debugInfoUpdated)
+
+    auto model = new StackModel(runtime, ui->stackView);
+    connect(model, &StackModel::variableRenamed, this, &DebuggerWindow::variableRenamed);
+    ui->stackView->setModel(model);
+    ui->stackView->expandRecursively(QModelIndex(), 1);
 }
 
 DebuggerWindow::~DebuggerWindow()
@@ -70,16 +91,29 @@ DebuggerWindow::~DebuggerWindow()
     delete ui;
 }
 
+static QString describeDrawable(const opl::Drawable& d)
+{
+    if (d.isWindow) {
+        return QString("Window (%1, %2) %3x%4 %5bpp")
+            .arg(d.rect.x())
+            .arg(d.rect.y())
+            .arg(d.rect.width())
+            .arg(d.rect.height())
+            .arg(d.bitDepth);
+    } else {
+        return QString("Bitmap %1x%2 %3bpp")
+            .arg(d.rect.width())
+            .arg(d.rect.height())
+            .arg(d.bitDepth);
+    }
+}
+
 void DebuggerWindow::debugInfoUpdated()
 {
     const auto info = mRuntime->getDebugInfo();
-    if (info.paused && mPauseState.has_value()) {
-        // Nothing can actually have changed that we care about (probably a variable rename or modify)
-        return;
-    }
 
-    clearBreaks();
     if (info.frames.count() == 0) {
+        clearBreaks();
         mPauseState = std::nullopt;
         mStatusLabel->setText("Exited");
         ui->actionPause->setVisible(false);
@@ -92,6 +126,11 @@ void DebuggerWindow::debugInfoUpdated()
         ui->actionFlush->setEnabled(false);
         return;
     }
+    if (info.paused && mPauseState.has_value()) {
+        // Nothing can actually have changed that we care about (probably a variable rename or modify)
+        return;
+    }
+    clearBreaks();
     if (info.paused) {
         mPauseState = info;
     } else {
@@ -131,6 +170,36 @@ void DebuggerWindow::debugInfoUpdated()
         }
     );
     Q_ASSERT(mShownModules.count() == info.modules.count());
+
+    Differ<opl::Drawable>::diff(mShownDrawables, info.drawables,
+        [](const auto& a, const auto& b) { return a.id == b.id; },
+        [this](int deletedIdx) {
+            // qDebug("Drawable %d removed", mShownDrawables[deletedIdx].id);
+            auto view = mDrawableViews.take(mShownDrawables[deletedIdx].id);
+            if (view) {
+                ui->centralwidget->removeWidget(view);
+                delete view;
+            }
+            delete ui->drawablesView->takeTopLevelItem(deletedIdx);
+        },
+        [this](int addedIdx, const auto& newDrawable) {
+            QString desc = describeDrawable(newDrawable);
+            auto item = new QTreeWidgetItem({ QString("%1").arg(newDrawable.id), desc });
+            ui->drawablesView->insertTopLevelItems(addedIdx, {item});
+            if (addedIdx == 0) {
+                // Qt seems to select the first item added after the list was empty
+                ui->drawablesView->clearSelection();
+            }
+        },
+        [this](int updatedIdx, const auto& drawable) {
+            ui->drawablesView->topLevelItem(updatedIdx)->setData(1, Qt::DisplayRole, describeDrawable(drawable));
+            auto currentDrawable = currentDrawableView();
+            if (currentDrawable && currentDrawable->drawable().id == drawable.id) {
+                currentDrawable->update(drawable, mRuntime);
+            }
+        }
+    );
+    Q_ASSERT(mShownDrawables.count() == info.drawables.count());
 
     if (info.paused) {
         const auto& topFrame = info.frames.last();
@@ -192,6 +261,15 @@ void DebuggerWindow::moduleSelected()
     setCurrentEditor(path);
 }
 
+void DebuggerWindow::drawableSelected()
+{
+    auto selection = ui->drawablesView->selectedItems();
+    auto item = selection.count() ? selection[0] : nullptr;
+    if (!item) return;
+    const auto& drawable = mShownDrawables[ui->drawablesView->indexOfTopLevelItem(item)];
+    setCurrentDrawable(drawable);
+}
+
 CodeView* DebuggerWindow::getCodeView(const QString& path)
 {
     auto view = mCodeViews.value(path);
@@ -228,13 +306,40 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
     return view;
 }
 
+DrawableView* DebuggerWindow::getDrawableView(const opl::Drawable& drawable)
+{
+    auto view = mDrawableViews.value(drawable.id);
+    if (!view) {
+        view = new DrawableView(drawable, this);
+        mDrawableViews[drawable.id] = view;
+        ui->centralwidget->addWidget(view);
+        view->update(drawable, mRuntime);
+    }
+    return view;
+}
+
 void DebuggerWindow::setCurrentEditor(const QString& module)
 {
+    ui->drawablesView->clearSelection();
     auto ed = getCodeView(module);
     ui->centralwidget->setCurrentWidget(ed);
     setWindowTitle(QString("%1 - OpoLua Debugger").arg(QFileInfo(module).fileName()));
     ui->actionToggleBreak->setEnabled(!module.endsWith(".lua"));
+    ui->actionExportBitmap->setVisible(false);
     ed->setFocus();
+}
+
+void DebuggerWindow::setCurrentDrawable(const opl::Drawable& drawable)
+{
+    ui->modulesView->clearSelection();
+    auto view = getDrawableView(drawable);
+    view->update(drawable, mRuntime);
+
+    ui->centralwidget->setCurrentWidget(view);
+    setWindowTitle(QString("%1 %2 - OpoLua Debugger")
+        .arg(drawable.isWindow ? "Window" : "Bitmap")
+        .arg(drawable.id));
+    ui->actionExportBitmap->setVisible(true);
 }
 
 void DebuggerWindow::gotoAddressSlot(const QString& module, uint32_t address)
@@ -280,6 +385,11 @@ void DebuggerWindow::toggleWindowFocusEnabled()
 CodeView* DebuggerWindow::currentCodeView() const
 {
     return qobject_cast<CodeView*>(ui->centralwidget->currentWidget());
+}
+
+DrawableView* DebuggerWindow::currentDrawableView() const
+{
+    return qobject_cast<DrawableView*>(ui->centralwidget->currentWidget());
 }
 
 void DebuggerWindow::stepOver()
@@ -334,4 +444,24 @@ void DebuggerWindow::variableRenamed(const QString& module, const QString& proc,
     CodeView* view = getCodeView(module);
     auto prog = OplRuntime().decompile(module, overrides);
     view->setContents(prog);
+}
+
+void DebuggerWindow::exportBitmap()
+{
+    auto view = currentDrawableView();
+    if (!view) {
+        qWarning("No drawable!");
+        return;
+    }
+
+    auto defaultName = QString("%1_%2.png")
+        .arg(view->drawable().isWindow ? "window" : "bitmap")
+        .arg(view->drawable().id);
+    auto path = QFileDialog::getSaveFileName(this, "Save bitmap as PNG", defaultName, "PNG (*.png)");
+    if (path.isEmpty()) return;
+
+    QImage img = view->getImage();
+    if (!img.save(path, "PNG")) {
+        qWarning("Failed to save image");
+    }
 }

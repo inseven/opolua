@@ -396,14 +396,18 @@ void OplRuntime::interruptAndRun(std::function<void(void)> runNextFn)
     lua_sethook(L, stop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT, 1);
     mMutex.lock();
     mInterrupted = true;
-    if (mPaused) {
-        mPaused = false;
-    }
+    bool wasPaused = mPaused;
+    mPaused = false;
+    mDebugInfo.paused = false;
     if (mCallEvent && mCallEvent->call) {
         mCallEvent->call->interrupt();
         mCallEvent->call = nullptr;
     }
     unlockAndSignalIfWaiting();
+    if (wasPaused) {
+        emit pauseStateChanged(false);
+        emit debugInfoUpdated();
+    }
 }
 
 void OplRuntime::restart()
@@ -2090,7 +2094,7 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
     while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
         // Decode frames
         opl::Frame frame = {
-            .ip = to_uint32(L, -1, "ip"),
+            .ip = to_intt<uint32_t>(L, -1, "ip"),
             .ipDecode = to_string(L, -1, "ipDecode"),
             .procName = to_string(L, -1, "procName"),
             .procModule = to_string(L, -1, "nativePath"),
@@ -2106,8 +2110,8 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
             // Decode variables
             opl::Variable v = {
                 .type = (opl::Type)to_int(L, -1, "type"),
-                .address = to_uint32(L, -1, "address"),
-                .index = (uint16_t)to_uint32(L, -1, "index"),
+                .address = to_intt<uint32_t>(L, -1, "address"),
+                .index = to_intt<uint16_t>(L, -1, "index"),
                 .name = to_string(L, -1, "name"),
                 .value = {},
                 .global = to_bool(L, -1, "global"),
@@ -2185,7 +2189,26 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
         }
         lua_pop(L, 1); // final nil from lua_rawgeti
     }
-    lua_pop(L, 2); // modules, info
+    lua_pop(L, 1); // modules
+
+    if (rawgetfield(L, -1, "drawables") == LUA_TTABLE) {
+        i = 1;
+        while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+            opl::Drawable d = {
+                .id = to_int(L, -1, "id"),
+                .isWindow = to_bool(L, -1, "isWindow"),
+                .isColor = to_bool(L, -1, "isColor"),
+                .bitDepth = to_int(L, -1, "bitDepth"),
+                .rect = QRect(to_int(L, -1, "x"), to_int(L, -1, "y"), to_int(L, -1, "w"), to_int(L, -1, "h")),
+                .opCount = to_intt<uint32_t>(L, -1, "opCount"),
+            };
+            info.drawables.append(d);
+            lua_pop(L, 1); // drawable
+        }
+        lua_pop(L, 1); // final nil from lua_rawgeti
+    }       
+
+    lua_pop(L, 2); // drawables, info
     Q_ASSERT(lua_gettop(L) == top); // Make sure stack is left balanced
 
     if (errOnStack) {

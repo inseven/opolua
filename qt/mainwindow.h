@@ -63,7 +63,6 @@ public slots:
     void showDebugger();
 
 private slots:
-    void closeActiveWindow();
     void forceClose();
     void startedRunning(const OplAppInfo& info);
     void pauseStateChanged(bool paused);

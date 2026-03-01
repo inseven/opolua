@@ -346,6 +346,19 @@ KColorgCreate16MColorMode = 0x0007
 KColorgCreateRGBColorMode = 0x0008
 KColorgCreate4KColorMode = 0x0009
 
+GCreateModeToBpp = {
+    [KColorgCreate2GrayMode] = 1,
+    [KColorgCreate4GrayMode] = 2,
+    [KColorgCreate16GrayMode] = 4,
+    [KColorgCreate256GrayMode] = 8,
+    [KColorgCreate16ColorMode] = 4,
+    [KColorgCreate256ColorMode] = 8,
+    [KColorgCreate4KColorMode] = 12,
+    [KColorgCreate64KColorMode] = 16,
+    [KColorgCreate16MColorMode] = 24,
+    [KColorgCreateRGBColorMode] = 32,
+}
+
 function sortedKeys(tbl)
     local result = {}
     for k in pairs(tbl) do

@@ -93,7 +93,8 @@ MainWindow::MainWindow(QWidget *parent)
     runtime->setSpeed(OplRuntime::DefaultSpeed);
 
     connect(ui->actionAbout, &QAction::triggered, gApp, &OplApplication::showAboutWindow);
-    connect(ui->actionClose, &QAction::triggered, this, &MainWindow::closeActiveWindow);
+    // Don't just use QWidget::close() because there might be about windows etc without menubars
+    connect(ui->actionClose, &QAction::triggered, gApp, &OplApplication::closeActiveWindow);
     connect(ui->actionForceClose, &QAction::triggered, this, &MainWindow::forceClose);
     connect(ui->actionSendCloseEvent, &QAction::triggered, runtime, &OplRuntime::closeEvent);
     connect(ui->actionNewWindow, &QAction::triggered, this, &MainWindow::newWindow);
@@ -152,15 +153,6 @@ MainWindow::~MainWindow()
 OplRuntimeGui& MainWindow::getRuntime()
 {
     return *ui->screen->getRuntime();
-}
-
-void MainWindow::closeActiveWindow()
-{
-    // Don't just call this->close() because there might be about windows etc without menubars
-    auto w = qApp->activeWindow();
-    if (w) {
-        w->close();
-    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

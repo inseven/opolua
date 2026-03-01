@@ -48,6 +48,7 @@ signals:
 
 public slots:
     void showAboutWindow();
+    void closeActiveWindow();
     void updateWindowMenus();
     void showLogWindow();
     void appendLogging(const QString& str);

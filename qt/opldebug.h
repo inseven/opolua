@@ -4,6 +4,7 @@
 #ifndef OPLDEBUG_H
 #define OPLDEBUG_H
 
+#include <QRect>
 #include <QString>
 #include <QVariant>
 #include <QVector>
@@ -52,10 +53,21 @@ struct Frame
     QVector<Variable> variables;
 };
 
+struct Drawable
+{
+    int id;
+    bool isWindow;
+    bool isColor;
+    int bitDepth;
+    QRect rect; // For bitmaps, origin will always be 0,0
+    uint32_t opCount;
+};
+
 struct ProgramInfo
 {
     QVector<Frame> frames;
     QVector<Module> modules;
+    QVector<Drawable> drawables;
     bool paused;
     std::optional<int> err;
 };
@@ -63,6 +75,16 @@ struct ProgramInfo
 static inline bool operator==(const Module &lhs, const Module &rhs)
 {
     return lhs.path == rhs.path;
+}
+
+static inline bool operator==(const Drawable &lhs, const Drawable &rhs)
+{
+    return lhs.id == rhs.id &&
+        lhs.isWindow == rhs.isWindow &&
+        lhs.isColor == rhs.isColor &&
+        lhs.bitDepth == rhs.bitDepth &&
+        lhs.rect == rhs.rect &&
+        lhs.opCount == rhs.opCount;
 }
 
 struct NameOverride {

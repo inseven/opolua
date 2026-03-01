@@ -14,7 +14,10 @@
    <string>OpoLua Debugger</string>
   </property>
   <property name="toolButtonStyle">
-   <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+   <enum>Qt::ToolButtonStyle::ToolButtonTextUnderIcon</enum>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
   </property>
   <property name="unifiedTitleAndToolBarOnMac">
    <bool>true</bool>
@@ -26,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>1077</width>
-     <height>37</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -34,6 +37,7 @@
      <string>File</string>
     </property>
     <addaction name="actionClose"/>
+    <addaction name="actionExportBitmap"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -53,8 +57,15 @@
     <addaction name="windowFocusEnabled"/>
     <addaction name="actionFlush"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDebug"/>
+   <addaction name="menuWindow"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="variablesDockWidget">
@@ -102,6 +113,7 @@
    <addaction name="actionStepOver"/>
    <addaction name="actionStepInto"/>
    <addaction name="actionStepOut"/>
+   <addaction name="actionExportBitmap"/>
   </widget>
   <widget class="QDockWidget" name="modulesDockWidget">
    <property name="features">
@@ -123,6 +135,32 @@
     <attribute name="headerDefaultSectionSize">
      <number>200</number>
     </attribute>
+    <column>
+     <property name="text">
+      <string notr="true">1</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string notr="true">2</string>
+     </property>
+    </column>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="drawablesDockWidget">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="windowTitle">
+    <string>Drawables</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QTreeWidget" name="drawablesView">
+    <property name="columnCount">
+     <number>2</number>
+    </property>
     <column>
      <property name="text">
       <string notr="true">1</string>
@@ -286,6 +324,28 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+U</string>
+   </property>
+  </action>
+  <action name="actionExportBitmap">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::ImageLoading"/>
+   </property>
+   <property name="text">
+    <string>Export Bitmap</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::AboutRole</enum>
    </property>
   </action>
  </widget>

@@ -40,14 +40,6 @@ int to_int(lua_State* L, int idx, const char* name)
     return result;
 }
 
-uint32_t to_uint32(lua_State* L, int idx, const char* name)
-{
-    rawgetfield(L, idx, name);
-    uint32_t result = (uint32_t)lua_tointeger(L, -1);
-    lua_pop(L, 1);
-    return result;
-}
-
 double to_double(lua_State* L, int idx, const char* name)
 {
     rawgetfield(L, idx, name);

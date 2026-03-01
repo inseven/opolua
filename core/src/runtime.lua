@@ -541,6 +541,7 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
         fontUid = self:isSibo() and KDefaultFontUid_sibo or KDefaultFontUid_er5,
         style = 0, -- normal text style
         penwidth = 1,
+        opCount = 0, -- always mod 2^30
     }
     graphics.contexts[id] = newCtx
     self:setResource("ginfo", nil)
@@ -726,6 +727,8 @@ function Runtime:drawCmd(type, op)
         end
     end
 
+    self:incrementOpCount(context)
+
     if graphics.buffer then
         table.insert(graphics.buffer, op)
     else
@@ -734,6 +737,10 @@ function Runtime:drawCmd(type, op)
             error(err)
         end
     end
+end
+
+function Runtime:incrementOpCount(context)
+    context.opCount = (context.opCount + 1) % (1 << 30)
 end
 
 function Runtime:flushGraphicsOps()
@@ -1741,9 +1748,28 @@ function Runtime:getDebugInfo()
         }
     end
 
+    local drawables = {}
+    -- Note, don't call getGraphics, that could cause a gCREATE if we're being called very early on
+    local contexts = self.graphics and self.graphics.contexts or {}
+    for _, ctx in pairs(contexts) do
+        table.insert(drawables, {
+            id = ctx.id,
+            isWindow = ctx.isWindow,
+            isColor = ctx.displayMode >= KColorgCreate256ColorMode,
+            bitDepth = GCreateModeToBpp[ctx.displayMode],
+            w = ctx.width,
+            h = ctx.height,
+            x = ctx.pos.x,
+            y = ctx.pos.y,
+            opCount = ctx.opCount,
+        })
+    end
+    table.sort(drawables, function(a, b) return a.id < b.id end)
+
     return {
         frames = frames,
         modules = modules,
+        drawables = drawables,
     }
 end
 
