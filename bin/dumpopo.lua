@@ -62,7 +62,7 @@ Options:
         Convert the compiled code back to OPL source code and print to stdout.
         Decompiles all procedures unless <procName> is specified.
 
-    --annotate, -n
+    --annotate, -t
         Adds some annotations to the output of --decompile, such as labels and
         GOTOs that normally wouldn't appear in the source.
 

@@ -1060,8 +1060,8 @@ function decompileProc(proc, options)
 
             if jmp < 0 then
                 -- I think the only thing that can produce a backwards BranchIfFalse is DO...UNTIL
-                local doStatement = insertPriorStatement(jmpDest, "DO")
                 local untilStatement = addStatement(expr.location, "UNTIL %s", eval(expr))
+                local doStatement = insertPriorStatement(jmpDest, "DO")
                 doStatement.closer = untilStatement
                 untilStatement.type = "UNTIL"
                 untilStatement.opener = doStatement
