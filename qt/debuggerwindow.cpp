@@ -6,6 +6,7 @@
 #include <QPlainTextEdit>
 
 #include "codeview.h"
+#include "differ.h"
 #include "luatokenizer.h"
 #include "opltokenizer.h"
 #include "oplruntime.h"
@@ -106,43 +107,30 @@ void DebuggerWindow::debugInfoUpdated()
     ui->actionStepOut->setEnabled(info.paused);
     ui->actionFlush->setEnabled(info.paused);
 
-    const auto& modules = info.modules;
-
-    // The logic here assumes that module order doesn't change, so that a module not being in the expected place means
-    // it's been unloaded.
-    int modIdx = 0;
-    int newIdx = 0;
-    while (newIdx < modules.count()) {
-        // newIdx always valid here
-        if (modIdx < mShownModules.count() && mShownModules[modIdx].path == modules[newIdx].path) {
-            // Unchanged
-            modIdx++;
-            newIdx++;
-        } else {
-            if (modIdx < mShownModules.count()) {
-                // modIdx has been removed
-                auto editor = mCodeViews.take(mShownModules[modIdx].nativePath);
-                if (editor) {
-                    ui->centralwidget->removeWidget(editor);
-                    delete editor;
-                }
-                delete ui->modulesView->takeTopLevelItem(modIdx);
-                mShownModules.remove(modIdx);
-            } else {
-                // new item
-                auto item = new QTreeWidgetItem({modules[newIdx].name, modules[newIdx].path, modules[newIdx].nativePath});
-                ui->modulesView->addTopLevelItems({item});
-                if (newIdx == 0) {
-                    ui->modulesView->setCurrentItem(item);
-                }
-                mShownModules.append(modules[newIdx]);
-                modIdx++;
-                newIdx++;
+    Differ<opl::Module>::diff(mShownModules, info.modules,
+        [](const auto& a, const auto& b) { return a.path == b.path; },
+        [this](int deletedIdx) {
+            // qDebug("Deleted module %s", qPrintable(mShownModules[deletedIdx].nativePath));
+            auto editor = mCodeViews.take(mShownModules[deletedIdx].nativePath);
+            if (editor) {
+                ui->centralwidget->removeWidget(editor);
+                delete editor;
             }
+            delete ui->modulesView->takeTopLevelItem(deletedIdx);
+        },
+        [this](int addedIdx, const auto& newModule) {
+            auto item = new QTreeWidgetItem({newModule.name, newModule.path, newModule.nativePath});
+            ui->modulesView->insertTopLevelItems(addedIdx, {item});
+            if (addedIdx == 0) {
+                ui->modulesView->setCurrentItem(item);
+            }
+        },
+        [](int updatedIdx, const auto& module) {
+            // This shouldn't happen as modules don't mutate
+            qWarning("Unexpected update of module %d path=%s!", updatedIdx, qPrintable(module.path));
         }
-    }
-
-    Q_ASSERT(mShownModules.count() == modules.count());
+    );
+    Q_ASSERT(mShownModules.count() == info.modules.count());
 
     if (info.paused) {
         const auto& topFrame = info.frames.last();

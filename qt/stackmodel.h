@@ -48,7 +48,8 @@ private:
 
 private:
     OplRuntime* mRuntime;
-    opl::ProgramInfo mInfo;
+    QVector<opl::Frame> mFrames;
+    bool mPaused;
     QTimer mUpdateTimer;
 };
 

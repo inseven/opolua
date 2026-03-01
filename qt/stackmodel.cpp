@@ -1,6 +1,7 @@
 // Copyright (C) 2021-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
+#include "differ.h"
 #include "stackmodel.h"
 #include "oplruntime.h"
 
@@ -53,8 +54,11 @@ static quintptr makeId(int frameIdx, int variableIdx = 0xFFFF, int arrayIdx = 0x
 StackModel::StackModel(OplRuntime* runtime, QObject* parent)
     : QAbstractItemModel(parent)
     , mRuntime(runtime)
+    , mPaused(false)
 {
-    mInfo = mRuntime->getDebugInfo();
+    auto info = mRuntime->getDebugInfo();
+    mFrames = info.frames;
+    mPaused = info.paused;
     connect(mRuntime, &OplRuntime::debugInfoUpdated, this, &StackModel::debugInfoUpdated);
     connect(mRuntime, &OplRuntime::startedRunning, this, &StackModel::startedRunning);
     connect(mRuntime, &OplRuntime::runComplete, this, &StackModel::runComplete);
@@ -71,7 +75,8 @@ void StackModel::startedRunning()
 {
     // If we get one of these after construction, it means the runtime restarted and everything needs throwing away
     beginResetModel();
-    mInfo = {};
+    mFrames.clear();
+    mPaused = false;
     endResetModel();
     mUpdateTimer.start(1100);
 }
@@ -83,108 +88,120 @@ void StackModel::debugInfoUpdated()
     // (well, it's by design for exactly this reason...) the runtime will cache inferred variable types in the
     // procTable meaning variables should never be able to disappear.
 
-    // Because of how model updates have to work, we can't just replace mInfo, instead we have to massage it a change
+    // Because of how model updates have to work, we can't just replace mFrames, instead we have to massage it a change
     // at a time (with appropriate model change notifications) until it matches newInfo.
-
-    const auto oldInfo = mInfo;
     const auto newInfo = mRuntime->getDebugInfo();
-    int unchangedFrameCount = qMin(oldInfo.frames.count(), newInfo.frames.count());
-    for (int i = 0; i < unchangedFrameCount; i++) {
-        // Two different modules can have the same name, although you can't call both of them at once (proc lookup is
-        // performed by name) you can unload one module and load another with a proc of the same name in between
-        // debugInfoUpdated calls, so we have to check both proc name and module name here.
-        if (newInfo.frames[i].procName != oldInfo.frames[i].procName ||
-            newInfo.frames[i].procModule != oldInfo.frames[i].procModule ) {
-            unchangedFrameCount = i;
-            break;
-        }
-    }
-    // qDebug("unchangedFrameCount = %d", unchangedFrameCount);
-    if (unchangedFrameCount < mInfo.frames.count()) {
-        beginRemoveRows(QModelIndex(), unchangedFrameCount, mInfo.frames.count() - 1);
-        // Temporarily massage mInfo to keep the model internally consistent
-        mInfo.frames.resize(unchangedFrameCount);
-        endRemoveRows();
-    }
 
-    if (mInfo.frames.count() < newInfo.frames.count()) {
-        beginInsertRows(QModelIndex(), mInfo.frames.count(), newInfo.frames.count() - 1);
-        for (int i = mInfo.frames.count(); i < newInfo.frames.count(); i++) {
-            mInfo.frames.append(newInfo.frames[i]);
-        }
-        endInsertRows();
-    }
+    // Do not specify equals, because we don't want to test for updated-ness because we need to processes the variables
+    // in a separate pass
+    Differ<opl::Frame> frameDiff = {
+        .prev = mFrames,
+        .next = newInfo.frames,
+        .sameItem = [](const auto& a, const auto& b) {
+            return a.procName == b.procName && a.procModule == b.procModule;
+        },
+        .equals = nullptr,
+        .willDelete = [this](int row) {
+            beginRemoveRows(QModelIndex(), row, row);
+        },
+        .didDelete = [this](int) {
+            endRemoveRows();
+        },
+        .willAdd = [this](int row, const auto&) {
+            beginInsertRows(QModelIndex(), row, row);
+        },
+        .didAdd = [this](int, const auto&) {
+            endInsertRows();
+        },
+        .willUpdate = nullptr,
+        .didUpdate = nullptr,
+    };
+    frameDiff.diff();
 
-    // Now check each var in each (unchanged) frame and update
-    for (int f = 0; f < unchangedFrameCount; f++) {
-        if (newInfo.frames[f].ip != mInfo.frames[f].ip) {
-            mInfo.frames[f].ip = newInfo.frames[f].ip;
-            auto idx = createIndex(f, 1, makeId(f));
-            emit dataChanged(idx, idx);
-        }
-
-        int oldIdx = 0;
-        while (oldIdx < mInfo.frames[f].variables.count()) {
-            const opl::Variable oldVar = mInfo.frames[f].variables[oldIdx]; // copy this as the loop below may invalidate a reference
-            int newIdx = oldIdx;
-            // Potentially new vars may have been added...
-            while (newInfo.frames[f].variables[newIdx].address != oldVar.address) {
-                const auto& newVar = newInfo.frames[f].variables[newIdx];
+    // The mFrames and newInfo.frames arrays are now in sync as far as the frames themselves are concerned - now check
+    // each frame's vars.
+    for (int f = 0; f < mFrames.count(); f++) {
+        auto& frame = mFrames[f];
+        Differ<opl::Variable> varsDiff = {
+            .prev = frame.variables,
+            .next = newInfo.frames[f].variables,
+            .sameItem = [](const auto& a, const auto& b) {
+                return a.address == b.address;
+            },
+            .equals = [](const auto& a, const auto& b) {
+                return a.name == b.name && a.value == b.value;
+            },
+            .willDelete = nullptr, // Variables are never deleted
+            .didDelete = nullptr, // ditto
+            .willAdd = [this, f](int index, const auto& newVar) {
+                Q_UNUSED(newVar);
                 // qDebug("Adding new variable %s", qPrintable(newVar.name));
                 auto parent = createIndex(f, 0, makeId(f));
-                beginInsertRows(parent, newIdx, newIdx);
-                mInfo.frames[f].variables.insert(newIdx, newVar);
+                beginInsertRows(parent, index, index);
+            },
+            .didAdd = [this](int, const auto&) {
                 endInsertRows();
-                newIdx++;
-                Q_ASSERT(newIdx < newInfo.frames[f].variables.count());
-            }
-            // At this point oldIdx is (potentially) stale and newIdx is valid in mInfo
-
-            const auto& newVar = newInfo.frames[f].variables[newIdx];
-            Q_ASSERT(newVar.address == oldVar.address);
-            if (newVar.name != oldVar.name) {
-                // qDebug("Variable renamed %s -> %s", qPrintable(oldVar.name), qPrintable(newVar.name));
-                mInfo.frames[f].variables[newIdx].name = newVar.name;
-                auto idx = createIndex(newIdx, 0, makeId(f, newIdx));
-                emit dataChanged(idx, idx);
-            }
-            if (newVar.value != oldVar.value) {
-                // qDebug("Value of %s changed", qPrintable(newVar.name));
-                mInfo.frames[f].variables[newIdx].value = newVar.value;
-                auto idx = createIndex(newIdx, 1, makeId(f, newIdx));
-                emit dataChanged(idx, idx);
-                if (IsArrayType(oldVar.type)) {
-                    auto oldVal = oldVar.value.toList();
-                    auto newVal = newVar.value.toList();
-                    for (int a = 0; a < oldVal.count(); a++) {
-                        if (newVal[a] != oldVal[a]) {
-                            auto arridx = createIndex(a, 1, makeId(f, newIdx, a));
-                            emit dataChanged(arridx, arridx);
+            },
+            .willUpdate = nullptr,
+            .didUpdate = [this, f](int varIdx, const auto& oldVar, const auto& newVar) {
+                if (newVar.name != oldVar.name) {
+                    // qDebug("Variable renamed %s -> %s", qPrintable(oldVar.name), qPrintable(newVar.name));
+                    // mInfo.frames[f].variables[varIdx].name = newVar.name;
+                    auto idx = createIndex(varIdx, 0, makeId(f, varIdx));
+                    emit dataChanged(idx, idx);
+                }
+                if (newVar.value != oldVar.value) {
+                    // qDebug("Value of %s changed", qPrintable(newVar.name));
+                    // mInfo.frames[f].variables[varIdx].value = newVar.value;
+                    auto idx = createIndex(varIdx, 1, makeId(f, varIdx));
+                    emit dataChanged(idx, idx);
+                    if (IsArrayType(oldVar.type)) {
+                        auto oldVal = oldVar.value.toList();
+                        auto newVal = newVar.value.toList();
+                        for (int a = 0; a < oldVal.count(); a++) {
+                            if (newVal[a] != oldVal[a]) {
+                                auto arridx = createIndex(a, 1, makeId(f, varIdx, a));
+                                emit dataChanged(arridx, arridx);
+                            }
                         }
                     }
                 }
-            }
-
-            oldIdx = newIdx + 1;
-        }
-        // Above loop doesn't handle new vars appended to the end of newInfo
-        for (int idx = oldIdx; idx < newInfo.frames[f].variables.count(); idx++) {
-            const auto& newVar = newInfo.frames[f].variables[idx];
-            qDebug("Adding new variable %s", qPrintable(newVar.name));
-            auto parent = createIndex(f, 0, makeId(f));
-            beginInsertRows(parent, idx, idx);
-            mInfo.frames[f].variables.insert(idx, newVar);
-            endInsertRows();
-        }
+            },
+        };
+        varsDiff.diff();
+        Q_ASSERT(frame.variables.count() == newInfo.frames[f].variables.count());
     }
 
-    mInfo.paused = newInfo.paused;
+    // And a final pass through frames to handle updates to ip, which we couldn't do before because the diff() call
+    // would've overwriteen the variables.
+    Differ<opl::Frame> frameIpDiff = {
+        .prev = mFrames,
+        .next = newInfo.frames,
+        .sameItem = [](const auto& a, const auto& b) {
+            return a.procName == b.procName && a.procModule == b.procModule;
+        },
+        .equals = [](const auto& a, const auto& b) {
+            return a.ip == b.ip;
+        },
+        .willDelete = nullptr,
+        .didDelete = nullptr,
+        .willAdd = nullptr,
+        .didAdd = nullptr,
+        .willUpdate = nullptr,
+        .didUpdate = [this](int f, const auto& /*oldFrame*/, const auto& /*newFrame*/) {
+            auto idx = createIndex(f, 1, makeId(f));
+            emit dataChanged(idx, idx);
+        },
+    };
+    frameIpDiff.diff();
+
+    mPaused = newInfo.paused;
 }
 
 const opl::Frame& StackModel::frameForIndex(const QModelIndex& idx) const
 {
     int i = getFrameIndex(idx);
-    return mInfo.frames[i];
+    return mFrames[i];
 }
 
 std::optional<opl::Frame> StackModel::getFrameForIndex(const QModelIndex& idx) const
@@ -211,7 +228,7 @@ int StackModel::rowCount(const QModelIndex &parent) const
 {
     // qDebug() << "rowCount" << parent;
     if (!parent.isValid()) {
-        return mInfo.frames.count();
+        return mFrames.count();
     } else if (isFrame(parent)) {
         return frameForIndex(parent).variables.count();
     } else if (isVariable(parent)) {
@@ -253,7 +270,7 @@ QModelIndex StackModel::parent(const QModelIndex &index) const
     } else if (isVariable(index)) {
         // It's a variable, parent is frame
         int frameIdx = getFrameIndex(index);
-        Q_ASSERT(frameIdx >= 0 && frameIdx < mInfo.frames.count());
+        Q_ASSERT(frameIdx >= 0 && frameIdx < mFrames.count());
         return createIndex(frameIdx, 0, makeId(frameIdx));
     } else {
         // Array member, parent is variable
@@ -389,7 +406,7 @@ Qt::ItemFlags StackModel::flags(const QModelIndex &index) const
         if (!frameForIndex(index).procModule.endsWith(".lua") && !var.global) {
             flags |= Qt::ItemIsEditable;
         }
-    } else if (mInfo.paused && index.column() == 1
+    } else if (mPaused && index.column() == 1
         && (isArrayMember(index) || (isVariable(index) && !IsArrayType(variableForIndex(index).type)))) {
         // edit the value of a variable
         flags |= Qt::ItemIsEditable;
