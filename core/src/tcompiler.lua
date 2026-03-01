@@ -964,7 +964,8 @@ checkProg(aiftest, {
     aif = {
         uid3 = 0x10286F9C,
         captions = {
-            { 2, "Welcome" },
+            "fr_FR",
+            fr_FR = "Welcome",
         },
         icons = {
             { path = "welc.mbm" },
