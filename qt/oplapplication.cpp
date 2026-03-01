@@ -216,3 +216,11 @@ void OplApplication::unregisterApp()
     hkcu.remove("SOFTWARE/Classes/.oplsys/OpenWithList/opolua.exe");
 #endif
 }
+
+void OplApplication::closeActiveWindow()
+{
+    auto w = activeWindow();
+    if (w) {
+        w->close();
+    }
+}

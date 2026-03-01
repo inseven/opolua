@@ -60,6 +60,7 @@ HEADERS += \
     clockwidget.h \
     debuggerwindow.h \
     differ.h \
+    drawableview.h \
     filesystem.h \
     highlighter.h \
     linenumberarea.h \
@@ -83,6 +84,7 @@ SOURCES += \
     codeview.cpp \
     clockwidget.cpp \
     debuggerwindow.cpp \
+    drawableview.cpp \
     filesystem.cpp \
     highlighter.cpp \
     linenumberarea.cpp \

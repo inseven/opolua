@@ -35,11 +35,35 @@
 int rawgetfield(lua_State* L, int index, const char* k);
 bool to_bool(lua_State* L, int idx, const char* name);
 int to_int(lua_State* L, int idx, const char* name);
-uint32_t to_uint32(lua_State* L, int idx, const char* name);
 double to_double(lua_State* L, int idx, const char* name);
 QString to_string(lua_State* L, int idx, const char* name);
 QByteArray to_bytearray(lua_State* L, int idx, const char* name);
 QPoint to_point(lua_State* L, int idx, const char* name);
+
+template <typename T>
+T to_intt(lua_State* L, int idx, const char* name)
+{
+    rawgetfield(L, idx, name);
+    T result = static_cast<T>(lua_tointeger(L, -1));
+    lua_pop(L, 1);
+    return result;
+}
+
+template <typename T>
+T to_enum(lua_State* L, int idx, const char* name, const QVector<QString>& opts, T defaultValue)
+{
+    QString opt = to_string(L, idx, name);
+    if (opt.isEmpty()) {
+        return defaultValue;
+    }
+
+    for (int i = 0; i < opts.count(); i++) {
+        if (opt == opts[i]) {
+            return static_cast<T>(i);
+        }
+    }
+    return defaultValue; 
+}
 
 void pushValue(lua_State* L, bool v);
 void pushValue(lua_State* L, int v);

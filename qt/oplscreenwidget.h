@@ -65,6 +65,7 @@ public:
 
     void mouseEvent(QMouseEvent* event, Window* window);
     Drawable* getBitmap(int drawableId) const;
+    QPixmap getPixmap(int drawableId) const;
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override;

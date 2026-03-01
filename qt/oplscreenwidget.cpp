@@ -125,6 +125,15 @@ Drawable* OplScreenWidget::getBitmap(int drawableId) const
     return mDrawables.value(drawableId);
 }
 
+QPixmap OplScreenWidget::getPixmap(int drawableId) const
+{
+    auto drawable = mDrawables.value(drawableId);
+    if (!drawable) {
+        return QPixmap();
+    }
+    return drawable->getPixmap();
+}
+
 void OplScreenWidget::keyPressEvent(QKeyEvent *event)
 {
     mRuntime->keyEvent(*event);

@@ -79,6 +79,7 @@ public:
     explicit OplRuntime(QObject *parent = nullptr);
     ~OplRuntime();
     void setScreen(OplScreen* screen) { mScreen = screen; }
+    OplScreen* getScreen() const { return mScreen; }
     QSize screenSize() const;
     bool running() const;
     QString lastLauncherCommand() const { return mLauncherCmd; }

@@ -514,6 +514,7 @@ function gSETWIN(x, y, w, h)
     end
     if w == 0 then w = 1 end
     if h == 0 then h = 1 end
+    runtime:incrementOpCount(ctx)
     runtime:iohandler().graphicsop("setwin", ctx.id, x, y, w, h)
 end
 

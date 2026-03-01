@@ -532,18 +532,7 @@ function parseMbmHeader(data)
     return bitmaps
 end
 
-local ModeToBpp = {
-    [KColorgCreate2GrayMode] = 1,
-    [KColorgCreate4GrayMode] = 2,
-    [KColorgCreate16GrayMode] = 4,
-    [KColorgCreate256GrayMode] = 8,
-    [KColorgCreate16ColorMode] = 4,
-    [KColorgCreate256ColorMode] = 8,
-    [KColorgCreate4KColorMode] = 12,
-    [KColorgCreate64KColorMode] = 16,
-    [KColorgCreate16MColorMode] = 24,
-    [KColorgCreateRGBColorMode] = 32,
-}
+local ModeToBpp = GCreateModeToBpp
 
 local SEpocBitmapHeader = "<I4I4I4I4I4I4I4I4I4I4"
 
