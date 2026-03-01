@@ -59,6 +59,7 @@ HEADERS += \
     codeview.h \
     clockwidget.h \
     debuggerwindow.h \
+    differ.h \
     filesystem.h \
     highlighter.h \
     linenumberarea.h \
