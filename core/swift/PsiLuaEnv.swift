@@ -620,10 +620,12 @@ internal extension LuaState {
         let encoding = era == .er5 ? kDefaultEpocEncoding : kSiboEncoding
         L.rawget(index, key: "captions")
         var captions: [PsiLuaEnv.LocalizedString] = []
-        for (languageIndex, captionIndex) in L.pairs(-1) {
-            guard let language = L.tostring(languageIndex),
-                  let caption = L.tostring(captionIndex, encoding: encoding)
-            else {
+        for _ in L.ipairs(-1) {
+            guard let language = L.tostringUtf8(-1) else {
+                return nil
+            }
+            L.rawget(-2, utf8Key: language)
+            guard let caption = L.tostring(-1, encoding: encoding) else {
                 return nil
             }
             captions.append(.init(caption, locale: Locale(identifier: language)))

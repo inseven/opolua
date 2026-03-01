@@ -2449,6 +2449,24 @@ void OplRuntime::unpause()
     }
 }
 
+QString OplRuntime::aifForAppPath(const QString& path)
+{
+    auto lpath = path.toLower();
+    if (lpath.endsWith(".opa")) {
+        return path; // The OPA is also the 'AIF'
+    }
+    if (lpath.endsWith(".app")) {
+        QDir dir = QFileInfo(path).dir();
+        dir.setFilter(QDir::Readable | QDir::Files);
+        dir.setNameFilters({"*.aif"}); // Name filters are case insensitive
+        auto aifs = dir.entryList();
+        if (aifs.count() == 1) {
+            return QFileInfo(dir, aifs[0]).filePath();
+        }
+    }
+    return QString();
+}
+
 QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVector<opl::NameOverride>& renames)
 {
     Q_ASSERT(!running());
@@ -2459,6 +2477,8 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
     }
     auto data = f.readAll();
     f.close();
+
+    QString aifPath = aifForAppPath(path);
     
     require(L, "decompiler");
     rawgetfield(L, -1, "decompileFile");
@@ -2483,7 +2503,21 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
         }
     }
 
-    int err = lua_pcall(L, 3, 2, 0);
+    if (aifPath.isEmpty()) {
+        lua_pushnil(L);
+    } else {
+        QFile af(aifPath);
+        if (!af.open(QFile::ReadOnly)) {
+            qWarning("Failed to open AIF file %s", qPrintable(aifPath));
+            lua_pushnil(L);
+        } else {
+            auto aifData = af.readAll();
+            af.close();
+            pushValue(L, aifData);
+        }
+    }
+
+    int err = lua_pcall(L, 4, 2, 0);
     if (err) {
         qWarning("decompile errored: %s", luaL_tolstring(L, -1, NULL));
         lua_pop(L, 1);

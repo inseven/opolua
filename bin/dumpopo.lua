@@ -36,6 +36,7 @@ function main()
         decompile = true, d = "decompile",
         annotate = true, t = "annotate",
         name = table, n = "name",
+        aif = string, i = "aif",
     })
     local procName = args.procName
     local all = args.all
@@ -68,7 +69,12 @@ Options:
     --name <proc>:<name>=<newname>
         Manually specify a name for a local in the given proc. Can be used
         multiple times for multiple variables. For example to rename local_00AC%
-        to event% in the MAIN proc, specify --name MAIN:local_00AC=event
+        to event% in the MAIN proc, specify --name MAIN:local_00AC=event. Has
+        no effect unless --decompile is specified.
+
+    --aif <path>, -i <path>
+        Adds an APP...ENDA block to the decompile output based on the given AIF
+        file.
 ]=])
         return os.exit(false)
     end
@@ -94,6 +100,12 @@ Options:
             names[proc][oldName] = newName
         end
 
+        local aif = nil
+        if args.aif then
+            local aifData = readFile(args.aif)
+            aif = require("aif").parseAif(aifData)
+        end
+
         local options = {
             path = args.filename,
             opxTable = prog.opxTable,
@@ -110,6 +122,7 @@ Options:
             end,
             format = prog.translatorVersion,
             renames = names,
+            aif = aif,
         }
         local ok, err
         if procName then

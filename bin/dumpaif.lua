@@ -72,6 +72,12 @@ Options:
             end
             printf("\n")
         end
+        if info.defaultFile then
+            printf("DefaultFile: %s\n", info.defaultFile)
+        end
+        if info.opaType then
+            printf("OpaType: %d\n", info.opaType);
+        end
     end
 
     if args.extract then
@@ -109,6 +115,8 @@ Options:
             era = info.era,
             icons = icons,
             captions = utf8Captions,
+            opaType = info.opaType,
+            defaultFile = info.defaultFile,
         }
         print(json.encode(jsonResult))
     end

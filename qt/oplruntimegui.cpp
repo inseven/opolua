@@ -75,14 +75,18 @@ OplAppInfo OplRuntimeGui::getAppInfo(const QString& aifPath)
     result.uid = (uint32_t)to_int(L, -1, "uid3");
 
     rawgetfield(L, -1, "captions");
-    QMap<QString, QString> captions;
-    lua_pushnil(L);
-    while (lua_next(L, -2)) {
-        captions[lua_tostring(L, -2)] = lua_tostring(L, -1);
+    if (rawgetfield(L, -1, "en_GB") == LUA_TSTRING) {
+        result.appName = lua_tostring(L, -1);
         lua_pop(L, 1);
+    } else {
+        lua_pop(L, 1);
+        lua_rawgeti(L, -1, 1); // captions[1]
+        const char* firstLang = lua_tostring(L, -1);
+        rawgetfield(L, -1, firstLang); // captions[captions[1]]
+        result.appName = lua_tostring(L, -1);
+        lua_pop(L, 2); // appName, firstLang
     }
     lua_pop(L, 1); // captions
-    result.appName = captions["en_GB"]; // TODO
     if (nativePath.toLower().endsWith(".opa")) {
         result.deviceAppPath = aifPath;
     } else {

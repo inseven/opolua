@@ -52,12 +52,13 @@ function parseAif(data)
                 type = "opa",
                 uid3 = 0,
                 captions = {
+                    "en_GB",
                     en_GB = caption,
                 },
                 icons = icons,
                 era = "sibo",
                 defaultFile = oplpath.join(path, name),
-                appType = type,
+                opaType = type,
             }
         else
             return nil
@@ -70,13 +71,14 @@ function parseAif(data)
     assert(require("crc").getUidsChecksum(uid1, uid2, uid3) == checksum, "Bad UID checksum!")
 
     local nCaptions, pos = string.unpack("<B", data, 1 + trailerOffset)
-    local captions = {} -- keyed by locale
+    local captions = {} -- array of locales, map of locale to caption
     for i = 1, (nCaptions // 2) do
         local offset, langCode
         offset, langCode, pos = string.unpack("<I4I2", data, pos)
         local captionLen = (string.unpack("B", data, 1 + offset) - 2) // 4
         local caption = data:sub(1 + offset + 1, offset + 1 + captionLen)
         local locale = assert(sis.Locales[langCode], "Unknown lang code "..langCode)
+        table.insert(captions, locale)
         captions[locale] = caption
     end
 
@@ -149,9 +151,9 @@ function makeAif(info)
     end
 
     local captionOffsets = {}
-    for _, cap in ipairs(info.captions) do
+    for _, lang in ipairs(info.captions) do
         table.insert(captionOffsets, parts.n)
-        local caption = cap[2]
+        local caption = info.captions[lang]
         addf("B", #caption * 4 + 2) -- I don't know why the length is stored like this, but it is...
         add(caption)
     end
@@ -160,8 +162,8 @@ function makeAif(info)
 
     local nCaptions = #info.captions * 2 -- Again, unsure why nCaptions is doubled here
     addf("B", nCaptions) 
-    for i, cap in ipairs(info.captions) do
-        local langId = cap[1]
+    for i, lang in ipairs(info.captions) do
+        local langId = assert(sis.Locales[lang])
         addf("<I4I2", captionOffsets[i], langId)
     end
 
