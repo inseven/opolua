@@ -58,9 +58,6 @@ enum NumState {
     NumDecimalExponent,
     NumLeadingHex,
     NumHex,
-    NumHexFraction,
-    NumLeadingHexExponent,
-    NumHexExponent,
 };
 
 inline bool isDecimal(char ch)
@@ -80,7 +77,7 @@ static bool isIdentifierStart(char ch)
 
 static bool isIdentifierChar(char ch)
 {
-    return isIdentifierStart(ch) || isDecimal(ch) || ch == '_';
+    return isIdentifierStart(ch) || isDecimal(ch) || ch == '_' || ch == '%' || ch == '&' || ch == '$';
 }
 
 static NumState isNumChar(char ch, NumState state=NumStart)
@@ -91,14 +88,13 @@ static NumState isNumChar(char ch, NumState state=NumStart)
             return NumLeadingZero;
         } else if (isDecimal(ch)) {
             return NumDecimal;
+        } else if (ch == '&' || ch == '$') {
+            return NumLeadingHex;
         } else {
             return NumFinished;
         }
     case NumLeadingZero:
-        if (ch == 'x' || ch == 'X') {
-            return NumLeadingHex;
-        }
-        [[fallthrough]]; // Otherwise drop through
+        [[fallthrough]];
     case NumDecimal:
         if (isDecimal(ch)) {
             return NumDecimal;
@@ -127,23 +123,7 @@ static NumState isNumChar(char ch, NumState state=NumStart)
         // fraction or exponent not allowed immediately after the "0x"
         return isHex(ch) ? NumHex : NumFinished;
     case NumHex:
-        if (ch == '.') {
-            return NumHexFraction;
-        }
-        [[fallthrough]]; // Otherwise drop through
-    case NumHexFraction:
-        if (ch == 'p' || ch == 'P') {
-            return NumLeadingHexExponent;
-        }
         return isHex(ch) ? state : NumFinished;
-    case NumLeadingHexExponent:
-        if (ch == '+' || ch == '-') {
-            return NumHexExponent;
-        }
-        [[fallthrough]]; // Otherwise drop through
-    case NumHexExponent:
-        // TIL Hex exponents are expressed in decimal
-        return isDecimal(ch) ? NumHexExponent : NumFinished;
     case NumFinished:
         return NumFinished;
     }
@@ -164,10 +144,8 @@ OplTokenizer::Token OplTokenizer::next()
                 // Found string terminator
                 m_state = InNothing;
                 break;
-            // } else if (ch == 'z' && last == '\\') {
-            //     skipSpace();
-            } else if ((ch == '\n' || ch == '\r') /*&& last != '\\'*/) {
-                // Unterminated string is considered to end at the end of line if there's no \ at the end
+            } else if ((ch == '\n' || ch == '\r')) {
+                // Unterminated string is considered to end at the end of line
                 m_state = InNothing;
                 break;
             }
