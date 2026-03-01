@@ -1052,6 +1052,7 @@ function evalConstExpr(requiredType, exp, consts)
 end
 
 function parseApp(tokens, consts)
+    local sis = require("sis")
     local aif = {
         captions = {},
         icons = {},
@@ -1078,7 +1079,12 @@ function parseApp(tokens, consts)
             tokens:advance()
             local exps = parseExpressionList(tokens)
             synassert(#exps == 2, token, "Expected CAPTION name, lang")
-            table.insert(aif.captions, { evalConstExpr(Int, exps[2], consts), evalConstExpr(String, exps[1], consts) })
+            local caption = evalConstExpr(String, exps[1], consts)
+            local langId = evalConstExpr(Int, exps[2], consts)
+            local langName = sis.Locales[langId]
+            synassert(langName, exps[2], "Unknown language ID in CAPTION")
+            table.insert(aif.captions, langName)
+            aif.captions[langName] = caption
         elseif token.type == "ICON" then
             tokens:advance()
             local iconToken = tokens:current()
@@ -1092,8 +1098,8 @@ function parseApp(tokens, consts)
             aif.flags = evalConstExpr(Int, parseExpression(tokens), consts)
         elseif token.type == "TYPE" then
             tokens:advance()
-            synassert(aif.appType == nil, token, "Duplicate TYPE")
-            aif.appType = evalConstExpr(Int, parseExpression(tokens), consts)
+            synassert(aif.opaType == nil, token, "Duplicate TYPE")
+            aif.opaType = evalConstExpr(Int, parseExpression(tokens), consts)
         elseif token.type == "PATH" then
             tokens:advance()
             synassert(path == nil, token, "Duplicate PATH")
@@ -1110,8 +1116,11 @@ function parseApp(tokens, consts)
         aif.defaultFile = oplpath.join(path or "\\OPD", defaultCaption .. "." .. (ext or "ODB"))
     end
     tokens:advance()
-    if next(aif.captions) == nil then
-        aif.captions[1] = { defaultCaption, 1 } -- 1 = sis.Locales.en_GB
+    if aif.captions[1] == nil then
+        aif.captions = {
+            "en_GB",
+            en_GB = defaultCaption
+        }
     end
     return aif
 end
@@ -3039,8 +3048,10 @@ function compile(path, realPath, programText, includePaths, shouldMakeAif, forma
                     end
                 end
             end
-            synassert(#iconBitmaps % 2 == 0, compileResult.aif.icons[#compileResult.aif.icons].token,
-                "ICONs must have an even number of bitmaps in total")
+            if #iconBitmaps > 0 then
+                synassert(#iconBitmaps % 2 == 0, compileResult.aif.icons[#compileResult.aif.icons].token,
+                    "ICONs must have an even number of bitmaps in total")
+            end
 
             for i = 1, #iconBitmaps, 2 do
                 synassert(iconBitmaps[i].width == iconBitmaps[i+1].width,

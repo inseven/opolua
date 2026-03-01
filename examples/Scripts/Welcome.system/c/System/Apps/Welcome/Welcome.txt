@@ -8,7 +8,7 @@ INCLUDE "system.oxh"
 INCLUDE "toolbar.oph"
 
 APP Welcome, &10286F9C
-	CAPTION "Welcome", 1
+	CAPTION "Welcome", KLangEnglish%
 ENDA
 
 CONST numCards% = 3
