@@ -12,7 +12,6 @@ DrawableView::DrawableView(const opl::Drawable& drawable, QWidget *parent)
 {
     setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     auto label = new QLabel;
-    label->resize(drawable.rect.size());
     setWidget(label);
 }
 
@@ -25,6 +24,7 @@ void DrawableView::update(const opl::Drawable& info, OplRuntime* runtime)
     mInfo = info;
     auto screen = static_cast<OplScreenWidget*>(runtime->getScreen());
     auto px = screen->getPixmap(mInfo.id);
+    label()->resize(info.rect.size());
     label()->setPixmap(px);
 }
 
