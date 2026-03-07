@@ -1166,7 +1166,8 @@ int OplRuntime::drawMainThread(lua_State* L)
             cmd.type = OplScreen::border;
             cmd.border.borderType = to_int(L, 2, "btype");
             cmd.border.rect = QRect(cmd.origin.x(), cmd.origin.y(), to_int(L, 2, "width"), to_int(L, 2, "height"));
-            // TODO pixelsWritten
+            cmd.border.epoc32 = !isSibo();
+            pixelsWritten += cmd.border.rect.width() * 2 + cmd.border.rect.height() * 2; // Close enough
         } else if (type == "copy") {
             cmd.type = OplScreen::copy;
             cmd.copy.srcDrawableId = to_int(L, 2, "srcid");

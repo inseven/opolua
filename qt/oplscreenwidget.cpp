@@ -775,7 +775,8 @@ void Drawable::draw(const OplScreen::DrawCmd& cmd)
     }
     case OplScreen::border: {
         auto id = QString("%1").arg(cmd.border.borderType, 5, 16, QLatin1Char('0')).toUpper();
-        auto borderPath = QString(":/borders/%1.png").arg(id);
+        QString borderEra(cmd.border.epoc32 ? "epoc32" : "sibo");
+        auto borderPath = QString(":/borders/%1/%2.png").arg(borderEra).arg(id);
         QPixmap px(borderPath, "PNG");
         if (px.isNull()) {
             qDebug("Failed to load border %s w=%d", qPrintable(borderPath), px.width());

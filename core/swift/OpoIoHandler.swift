@@ -275,7 +275,7 @@ public struct Graphics {
             case mcopy(DrawableId, [Rect], [Point])
             case pattern(CopySource)
             case scroll(Int, Int, Rect) // dx, dy, rect
-            case border(Rect, Int) // border type
+            case border(Rect, Int, Bool) // rect, borderType, isEpoc32
             case invert(Size)
         }
         public let drawableId: DrawableId

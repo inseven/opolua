@@ -203,8 +203,8 @@ extension CGContext {
                 fill(clearRect)
                 drawUnflippedImage(img, in: newRect)
             }
-        case .border(let rect, let type):
-            gXBorder(type: type, frame: rect.cgRect())
+        case .border(let rect, let type, let isEpoc32):
+            gXBorder(type: type, frame: rect.cgRect(), isEpoc32: isEpoc32)
         }
         return nil
     }

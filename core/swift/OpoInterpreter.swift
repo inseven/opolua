@@ -68,7 +68,8 @@ private func textEditor(_ L: LuaState!) -> CInt {
 }
 
 private func draw(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
+    let interpreter = getInterpreterUpval(L)
+    let iohandler = interpreter.iohandler
     var ops: [Graphics.DrawCommand] = []
     for _ in L.ipairs(1) {
         let id = Graphics.DrawableId(value: L.toint(-1, key: "id") ?? 1)
@@ -172,7 +173,7 @@ private func draw(_ L: LuaState!) -> CInt {
             let size = Graphics.Size(width: L.toint(-1, key: "width") ?? 0, height: L.toint(-1, key: "height") ?? 0)
             let rect = Graphics.Rect(origin: origin, size: size)
             let borderType = L.toint(-1, key: "btype") ?? 0
-            optype = .border(rect, borderType)
+            optype = .border(rect, borderType, !interpreter.isSibo())
         default:
             print("Unknown Graphics.DrawCommand.OpType \(t)")
             continue
@@ -995,7 +996,7 @@ public class OpoInterpreter: PsiLuaEnv {
         hooks.setHook(forState: L, mask: [.call, .ret, .line, .count], count: 1, function: stop)
     }
 
-    private func isSibo() -> Bool {
+    public func isSibo() -> Bool {
         return era == .sibo
     }
 
