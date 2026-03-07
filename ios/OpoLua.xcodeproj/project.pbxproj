@@ -18,7 +18,7 @@
 		D8C679BD27484BF400BD8720 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = D8C679BC27484BF400BD8720 /* examples */; };
 		D8EA52EF2EE62D01000750C9 /* z-s7 in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52EE2EE62D01000750C9 /* z-s7 */; };
 		D8EA52F12EE62D21000750C9 /* z-s5 in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52F02EE62D21000750C9 /* z-s5 */; };
-		D8EA52F32EE62D3A000750C9 /* Borders in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52F22EE62D3A000750C9 /* Borders */; };
+		D8EA52F32EE62D3A000750C9 /* borders in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52F22EE62D3A000750C9 /* borders */; };
 		D8EA52F52EE62D6B000750C9 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52F42EE62D6B000750C9 /* fonts */; };
 /* End PBXBuildFile section */
 
@@ -40,7 +40,7 @@
 		D8C679BC27484BF400BD8720 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../examples; sourceTree = "<group>"; };
 		D8EA52EE2EE62D01000750C9 /* z-s7 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-s7"; path = "../resources/z-s7"; sourceTree = "<group>"; };
 		D8EA52F02EE62D21000750C9 /* z-s5 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "z-s5"; path = "../resources/z-s5"; sourceTree = "<group>"; };
-		D8EA52F22EE62D3A000750C9 /* Borders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Borders; path = ../resources/Borders; sourceTree = "<group>"; };
+		D8EA52F22EE62D3A000750C9 /* borders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = borders; path = ../resources/borders; sourceTree = "<group>"; };
 		D8EA52F42EE62D6B000750C9 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../resources/fonts; sourceTree = "<group>"; };
 		DB79FFA62742D88A005E904F /* OpoLua.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpoLua.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -88,7 +88,7 @@
 		DB79FE5627428292005E904F = {
 			isa = PBXGroup;
 			children = (
-				D8EA52F22EE62D3A000750C9 /* Borders */,
+				D8EA52F22EE62D3A000750C9 /* borders */,
 				D8C679BC27484BF400BD8720 /* examples */,
 				D8EA52F42EE62D6B000750C9 /* fonts */,
 				D895332D2EEB62BD00BFCD8A /* z-revo */,
@@ -184,7 +184,7 @@
 			files = (
 				D895332E2EEB62BD00BFCD8A /* z-revo in Resources */,
 				D8EA52F52EE62D6B000750C9 /* fonts in Resources */,
-				D8EA52F32EE62D3A000750C9 /* Borders in Resources */,
+				D8EA52F32EE62D3A000750C9 /* borders in Resources */,
 				D8EA52F12EE62D21000750C9 /* z-s5 in Resources */,
 				D8EA52EF2EE62D01000750C9 /* z-s7 in Resources */,
 				D8C679BD27484BF400BD8720 /* examples in Resources */,

@@ -23,10 +23,11 @@ import CoreGraphics
 
 extension CGContext {
 
-    func gXBorder(type: Int, frame: CGRect) {
+    func gXBorder(type: Int, frame: CGRect, isEpoc32: Bool) {
         let filename = String(format: "%05X", type)
+        let subdir = "borders/" + (isEpoc32 ? "epoc32" : "sibo")
 
-        guard let url = Bundle.main.url(forResource: filename, withExtension: "png", subdirectory: "Borders") else {
+        guard let url = Bundle.main.url(forResource: filename, withExtension: "png", subdirectory: subdir) else {
             print("No resource found for border type \(type) (\(filename).png)")
             return
         }

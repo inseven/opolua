@@ -128,6 +128,7 @@ public:
             struct {
                 QRect rect;
                 uint32_t borderType;
+                bool epoc32; // Series 5 and later redefined the original series 3 borders...
             } border;
             struct {
                 QSize size;
