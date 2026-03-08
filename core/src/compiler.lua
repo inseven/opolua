@@ -1770,6 +1770,7 @@ end
 
 function ProcState:handleFn(exp, callable)
     local opcodes = opcodes[self.oplFormat]
+    local fncodes = fncodes[self.oplFormat]
     assert(callable and callable.type == "fn")
     local expArgs = exp.args or {}
     if callable.args then
@@ -1779,7 +1780,8 @@ function ProcState:handleFn(exp, callable)
         for i, arg in ipairs(expArgs) do
             self:emitExpression(arg, expandPtrType(callable.args[i], oplFormat))
         end
-        self:emit("BB", opcodes.CallFunction, fncodes[self.oplFormat][callable.name])
+        synassert(fncodes[callable.name], exp, "%s not available in the specified OPL version", exp.val)
+        self:emit("BB", opcodes.CallFunction, fncodes[callable.name])
         if callable.args.numParams then
             self:emit("B", #expArgs)
         end
@@ -1895,13 +1897,9 @@ function handleFn_MPOPUP(exp, procState)
         table.insert(declArgs, String)
         table.insert(declArgs, Int)
     end
-    checkExpressionArguments(exp.args, declArgs, exp)
-    for i, decl in ipairs(declArgs) do
-        procState:emitExpression(exp.args[i], decl)
-    end
-    procState:emit("BBB", opcodes.CallFunction, fncodes.mPopup, #exp.args)
-    procState:popStack(#exp.args)
-    procState:pushStack(Int)
+    declArgs.numParams = { #declArgs }
+    local callable = Fn("mPopup", declArgs, Int)
+    procState:handleFn(exp, callable)
 end
 
 function handleFn_IOOPEN(exp, procState)
