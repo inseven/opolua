@@ -261,10 +261,11 @@ codes_sibo = setmetatable({
     [0x27] = "gCreateBit_sibo",
     [0x35] = "Os",
     [0x53] = "StatWinInfo",
-    [0xD9] = "IllegalFuncOpCode",
-    [0xDA] = "IllegalFuncOpCode",
-    [0xDB] = "IllegalFuncOpCode",
-    [0xDC] = "IllegalFuncOpCode",
+    [0x58] = "IllegalFuncOpCode", -- mPopup
+    [0xD9] = "IllegalFuncOpCode", -- GetDocStr
+    [0xDA] = "IllegalFuncOpCode", -- Size
+    [0xDB] = "IllegalFuncOpCode", -- LocWithCase
+    [0xDC] = "IllegalFuncOpCode", -- gPixel
 }, { __index = codes_er5 })
 
 local function numParams_dump(runtime)

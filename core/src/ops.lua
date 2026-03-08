@@ -548,6 +548,8 @@ codes_sibo = setmetatable({
     [0x57] = "CallFunction_sibo",
     [0xA3] = "Compress",
     [0xD0] = "gInfo",
+    [0xDC] = "IllegalOpCode", -- gCircle
+    [0xDD] = "IllegalOpCode", -- gEllipse
     [0xEE] = "SetName",
     [0xEF] = "StatusWin",
     [0x102] = "diamInit",
@@ -576,6 +578,7 @@ codes_sibo = setmetatable({
     [0x12F] = "IllegalOpCode", -- PointerFilter
     [0x130] = "IllegalOpCode", -- mCasc
     [0x133] = "IllegalOpCode", -- dEditCheckbox
+    [0x135] = "IllegalOpCode", -- dEditMulti
     [0x137] = "IllegalOpCode", -- gColorBackground
 }, { __index = codes_er5 })
 
