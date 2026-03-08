@@ -1759,8 +1759,8 @@ function Runtime:getDebugInfo()
             bitDepth = GCreateModeToBpp[ctx.displayMode],
             w = ctx.width,
             h = ctx.height,
-            x = ctx.pos.x,
-            y = ctx.pos.y,
+            x = ctx.winX or 0,
+            y = ctx.winY or 0,
             opCount = ctx.opCount,
         })
     end
