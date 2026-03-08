@@ -1305,7 +1305,7 @@ end
 
 function ProcState:pushStack(...)
     for i = 1, select("#", ...) do
-        local val = select(i, ...)
+        local val = expandPtrType(select(i, ...), self.oplFormat)
         local sz
         if val:match("^"..AddressOfPrefix) then
             sz = 6 -- Apparently...
@@ -1413,6 +1413,7 @@ The rule for number type coercion in OPL is:
 ]]
 function ProcState:emitExpression(exp, requiredType)
     assert(requiredType)
+    requiredType = expandPtrType(assert(requiredType), self.oplFormat)
     local opcodes = opcodes[self.oplFormat]
 
     if requiredType:match("^"..AddressOfPrefix) then
@@ -1637,11 +1638,13 @@ function ProcState:emitAddressOfVar(var, token, arraySubscriptExpression)
         assert(arraySubscriptExpression == nil)
     end
     self:emitVarLhs(var, token)
+    self:popStack(1)
     if var.valType == String then
         self:emit("BB", opcodes.CallFunction, fncodes[self.oplFormat].SAddr)
     else
         self:emit("BB", opcodes.CallFunction, fncodes[self.oplFormat].Addr)
     end
+    self:pushStack(IntPtr)
 end
 
 --[[
@@ -2004,12 +2007,12 @@ function ProcState:parse()
         if exp.valType == Long then
             -- `if &1` really means `if &1 <> 0`
             self:emit("BBB", opcodes.StackByteAsLong, 0, opcodes.CompareNotEqualLong)
-            self:popStack()
+            self:popStack(1)
             self:pushStack(Int)
         elseif exp.valType == Float then
             -- Similar
             self:emit("Bd", opcodes.ConstantFloat, 0, opcodes.CompareNotEqualFloat)
-            self:popStack()
+            self:popStack(1)
             self:pushStack(Int)
         elseif exp.valType == String then
             synerror(exp, "Type mismatch, cannot cast string to int")
