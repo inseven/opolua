@@ -29,20 +29,16 @@ _ENV = module()
 
 local View = class {}
 
-local kDialogFont = KFontArialNormal15
-local kButtonFont = KFontArialBold11
-local kButtonShortcutFont = KFontArialNormal11
 local kButtonDefaultHeight = 23
-local kButtonYOffset = 9
-local kButtonMinWidth = 50
+local kSeries5ButtonMinWidth = 50
 local kButtonSpacing = 10
-local kButtonLabelHeight = 12
 local kDialogLineHeight = 22 -- ?
 local kDialogTightLineHeight = 18
 local kDialogLineGap = 1
-local kDialogLineTextYOffset = 4
 local kChoiceLeftArrow = "3" -- in KFontEiksym15
 local kChoiceRightArrow = "1" -- in KFontEiksym15
+local kSiboLeftArrow = "\x11"
+local kSiboRightArrow = "\x10"
 local kTickMark = "." -- in KFontEiksym15
 
 local function wrapIndex(i, n)
@@ -55,7 +51,8 @@ end
 
 -- Returns nil if the view doesn't layout with a prompt area (ie if it spans the entire dialog width)
 function View:getPromptWidth()
-    return self.prompt and gTWIDTH(self.prompt, kDialogFont) or nil
+    local prompt = self:getPrompt()
+    return prompt and gTWIDTH(prompt, self.font) or nil
 end
 
 function View:setHeightHint(hint)
@@ -180,21 +177,41 @@ function View:setPromptWidth(w)
     self.promptWidth = w
 end
 
+function View:getPrompt()
+    if self.prompt == nil then
+        return nil
+    end
+    if runtime:isSeries3() and self.prompt ~= "" then
+        return "\xFA"..self.prompt
+    else
+        return self.prompt
+    end
+end
+
 function View:drawPrompt()
     local x = self.x
-    if not self.prompt then
+    local prompt = self:getPrompt()
+    if not prompt then
         return x
     end
-    local texty = self.y + kDialogLineTextYOffset
+    local texty = self.y + self.textYOffset
     black()
     gAT(x, texty - 1)
-    gFILL(gTWIDTH(self.prompt), self.charh + 2, self.hasFocus and KgModeSet or KgModeClear)
-    if self.hasFocus then
-        white()
+    local fillw, fillh = gTWIDTH(prompt, self.font), self.charh + 2
+    if runtime:isSeries3() then
+        fillw = fillw + 2
+        gMOVE(-1, 0)
     end
-    drawText(self.prompt, x, texty)
+    gFILL(fillw, fillh, KgModeClear)
+    drawText(prompt, x, texty)
+    if self.hasFocus then
+        if runtime:isSeries3() then
+            gINVERT(fillw, fillh)
+        else
+            gFILL(fillw, fillh, KgModeInvert)
+        end
+    end
     x = x + self.promptWidth
-    black()
     return x
 end
 
@@ -247,18 +264,14 @@ function PlaceholderView:draw()
     gAT(self.x, self.y)
     gFILL(self.w, self.h)
     black()
-    drawText(string.format("TODO dItem type %d", self.type), self.x, self.y + kDialogLineTextYOffset)
+    drawText(string.format("TODO dItem type %d", self.type), self.x, self.y + self.textYOffset)
     View.draw(self)
 end
 
 local DialogTitleBar = class { _super = View }
 
 function DialogTitleBar:contentSize()
-    local h = self.heightHint
-    if self.lineBelow then
-        h = h + 2
-    end
-    return gTWIDTH(self.value, kDialogFont), h
+    return gTWIDTH(self.value, self.font), self.heightHint
 end
 
 function DialogTitleBar:draw()
@@ -268,6 +281,8 @@ function DialogTitleBar:draw()
     else
         if runtime:isColor() then
             gCOLOR(0, 0, 0x82)
+        elseif runtime:isSeries3() then
+            white()
         else
             lightGrey()
         end
@@ -282,8 +297,19 @@ function DialogTitleBar:draw()
     else
         black()
     end
-    drawText(self.value, self.x + self.hMargin, self.y + 2)
+    gFONT(self.font)
+    local shouldCentre = runtime:isSeries3()
+    if shouldCentre then
+        drawText(self.value, self.x + (self.w - self:contentSize()) // 2, self.y + 2)
+    else
+        drawText(self.value, self.x + self.hMargin, self.y + 2)
+    end
     black()
+    if runtime:isSeries3() then
+        -- Ignore our own boundaries here, because the line has to go all the way across the dialog
+        gAT(1, self.y + self.h - 1)
+        gLINEBY(self.parent.w - 4, 0)
+    end
     View.draw(self)
 end
 
@@ -315,18 +341,18 @@ local DialogItemText = class { _super = View }
 function DialogItemText:contentSize()
     local h = self.heightHint
     if self.lineBelow then
-        if h == kDialogTightLineHeight then
+        if self.densePack then
             h = h + 2
         else
             h = h + 1
         end
     end
-    return gTWIDTH(self.value, kDialogFont), h
+    return gTWIDTH(self.value, self.font), h
 end
 
 function DialogItemText:draw()
     local x = self:drawPrompt()
-    local texty = self.y + kDialogLineTextYOffset
+    local texty = self.y + self.textYOffset
 
     if not self.prompt then
         -- See if we need to check (and honour) alignment
@@ -339,13 +365,7 @@ function DialogItemText:draw()
     end
     drawText(self.value, x, texty)
     if self.lineBelow then
-        local y
-        if self.heightHint == kDialogTightLineHeight then
-            y = self.y + self.heightHint + 2
-        else
-            y = self.y + self.heightHint + 1
-        end
-        gAT(self.x, y)
+        gAT(self.x, self.y + self.h - 1)
         gLINEBY(self.w, 0)
     end
     View.draw(self)
@@ -386,22 +406,27 @@ local kEditTextSpace = 2
 function DialogItemEdit:contentSize()
     -- The @ sign is an example of the widest character in the dialog font (we
     -- should really have an easy API for getting max font width...)
-    return gTWIDTH(string.rep("@", self.len), kDialogFont) + 2 * kEditTextSpace, self.heightHint
+    return gTWIDTH(string.rep("@", self.len), self.font) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEdit:drawPromptAndBox()
     local x = self:drawPrompt()
-    local texty = self.y + kDialogLineTextYOffset
+    local texty = self.y + self.textYOffset
 
     local boxWidth = math.min(self:contentSize(), self.w - (x - self.x))
-    lightGrey()
-    gAT(x, texty - 2)
-    gBOX(boxWidth, self.charh + 3)
-    white()
-    gAT(x + 1, texty - 1)
-    gFILL(boxWidth - 2, self.charh + 1)
-    black()
-    gAT(x + 1, texty)
+    if runtime:isSeries3() then
+        gAT(x, texty - 1)
+        gFILL(boxWidth, self.charh + 1, KgModeClear)
+    else
+        lightGrey()
+        gAT(x, texty - 2)
+        gBOX(boxWidth, self.charh + 3)
+        white()
+        gAT(x + 1, texty - 1)
+        gFILL(boxWidth - 2, self.charh + 1)
+        black()
+        gAT(x + 1, texty)
+    end
     return x, texty
 end
 
@@ -425,8 +450,8 @@ function DialogItemEdit:drawValue(val)
 end
 
 function DialogItemEdit:getCursorPos()
-    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1), kDialogFont)
-    return self.x + self.promptWidth + kEditTextSpace + textw, self.y + kDialogLineTextYOffset - 1
+    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1), self.font)
+    return self.x + self.promptWidth + kEditTextSpace + textw, self.y + self.textYOffset - 1
 end
 
 function DialogItemEdit:posToCharPos(x, y)
@@ -434,7 +459,7 @@ function DialogItemEdit:posToCharPos(x, y)
 
     -- Is there a better way to do this?
     local result = 1
-    while gTWIDTH(self.editor.value:sub(1, result), kDialogFont) < tx do
+    while gTWIDTH(self.editor.value:sub(1, result), self.font) < tx do
         result = result + 1
         if result >= #self.editor.value + 1 then
             break
@@ -543,7 +568,7 @@ function DialogItemEditLong:contentSize()
     -- The @ sign is an example of the widest character in the dialog font (we
     -- should really have an easy API for getting max font width...)
     local maxChars = math.max(#tostring(self.min), #tostring(self.max))
-    return gTWIDTH(string.rep("@", maxChars), kDialogFont) + 2 * kEditTextSpace, self.heightHint
+    return gTWIDTH(string.rep("@", maxChars), self.font) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEditLong:inputType()
@@ -599,7 +624,7 @@ local DialogItemEditFloat = class {
 }
 
 function DialogItemEditFloat:contentSize()
-    return gTWIDTH(string.rep("0", self.maxChars), kDialogFont) + 2 * kEditTextSpace, self.heightHint
+    return gTWIDTH(string.rep("0", self.maxChars), self.font) + 2 * kEditTextSpace, self.heightHint
 end
 
 function DialogItemEditFloat:inputType()
@@ -646,7 +671,7 @@ local DialogItemEditPass = class { _super = DialogItemEdit }
 function DialogItemEditPass:init(lineHeight)
     DialogItemEditPass._super.init(self, lineHeight)
     self.editor.movableCursor = false
-    self.cursorWidth = gTWIDTH("*", kDialogFont)
+    self.cursorWidth = gTWIDTH("*", self.font)
     -- Don't select the contents (undo what DialogItemEdit:init() did)
     self.editor:setCursorPos(#self.editor.value + 1)
 end
@@ -662,8 +687,8 @@ end
 
 function DialogItemEditPass:getCursorPos()
     local val = string.rep("*", #self.editor.value)
-    local textw, texth = gTWIDTH(val:sub(1, self.editor.cursorPos - 1), kDialogFont)
-    return self.x + self.promptWidth + kEditTextSpace + textw, self.y + kDialogLineTextYOffset - 1
+    local textw, texth = gTWIDTH(val:sub(1, self.editor.cursorPos - 1), self.font)
+    return self.x + self.promptWidth + kEditTextSpace + textw, self.y + self.textYOffset - 1
 end
 
 local DialogItemPartEditor = class {
@@ -798,9 +823,9 @@ function DialogItemPartEditor:contentSize()
             sz = sz + part.width
         else
             if part.prefix then
-                sz = sz + gTWIDTH(part.prefix, kDialogFont)
+                sz = sz + gTWIDTH(part.prefix, self.font)
             end
-            sz = sz + (part.maxValueWidth or gTWIDTH(string.rep("0", part.maxChars), kDialogFont))
+            sz = sz + (part.maxValueWidth or gTWIDTH(string.rep("0", part.maxChars), self.font))
         end
     end
     return sz + 2 * kEditTextSpace, self.heightHint
@@ -844,13 +869,13 @@ function DialogItemPartEditor:updateCursorIfFocussed()
 end
 
 function DialogItemPartEditor:getCursorPos()
-    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1), kDialogFont)
+    local textw, texth = gTWIDTH(self.editor.value:sub(1, self.editor.cursorPos - 1), self.font)
     local currentPart = self.parts[self.currentPart]
     local x = currentPart.startx + textw
     if currentPart.prefix then
-        x = x + gTWIDTH(currentPart.prefix, kDialogFont)
+        x = x + gTWIDTH(currentPart.prefix, self.font)
     end
-    local y = self.y + kDialogLineTextYOffset - 1
+    local y = self.y + self.textYOffset - 1
     return x, y
 end
 
@@ -997,7 +1022,7 @@ function DialogItemEditTime:init(lineHeight)
         prefix = " ",
         am = am,
         pm = pm,
-        maxValueWidth = math.max(gTWIDTH(am, kDialogFont), gTWIDTH(pm, kDialogFont)),
+        maxValueWidth = math.max(gTWIDTH(am, self.font), gTWIDTH(pm, self.font)),
     }
 
     self.parts = {}
@@ -1145,7 +1170,7 @@ end
 
 function DialogItemEditMulti:contentSize()
     local h = self:lineHeight() * self.numLines + 3
-    return gTWIDTH(string.rep("M", self.widthChars), kDialogFont) + 2 * kEditTextSpace, h
+    return gTWIDTH(string.rep("M", self.widthChars), self.font) + 2 * kEditTextSpace, h
 end
 
 local function withoutNewline(line)
@@ -1171,7 +1196,7 @@ function DialogItemEditMulti:getCursorPos()
         return nil
     end
     local lineInfo = self.lines[line]
-    local textw = gTWIDTH(withoutNewline(lineInfo.text):sub(1, col - 1), kDialogFont)
+    local textw = gTWIDTH(withoutNewline(lineInfo.text):sub(1, col - 1), self.font)
     local x = lineInfo.x + textw
     local y = lineInfo.y - self:scrollOffset() - 1
     return x, y
@@ -1182,7 +1207,7 @@ function DialogItemEditMulti:charPosToLineColumn(pos)
     for i, line in ipairs(self.lines) do
         if pos < line.charPos + #line.text or self.lines[i + 1] == nil then
             -- It's on this line
-            local textw = gTWIDTH(withoutNewline(line.text):sub(1, pos - line.charPos - 1), kDialogFont)
+            local textw = gTWIDTH(withoutNewline(line.text):sub(1, pos - line.charPos - 1), self.font)
             -- printf("charPosToLineColumn(%d) = %d, %d\n", pos, i, pos - line.charPos + 1)
             return i, pos - line.charPos + 1
         end
@@ -1191,13 +1216,13 @@ end
 
 function DialogItemEditMulti:posToCharPos(x, y)
     local tx = x - self.x - kEditTextSpace - self.promptWidth
-    local ty = y - self.y - kDialogLineTextYOffset + self:scrollOffset()
+    local ty = y - self.y - self.textYOffset + self:scrollOffset()
     local lineNumber = math.min(math.max(1, 1 + (ty // self:lineHeight())), #self.lines)
     local lineInfo = self.lines[lineNumber]
     local line = withoutNewline(lineInfo.text)
 
     local result = 0
-    while gTWIDTH(line:sub(1, result), kDialogFont) < tx do
+    while gTWIDTH(line:sub(1, result), self.font) < tx do
         result = result + 1
         if result >= #line then
             break
@@ -1290,12 +1315,12 @@ end
 
 function DialogItemEditMulti:formatTextIntoLines()
     local function widthFn(text)
-        return gTWIDTH(text, kDialogFont)
+        return gTWIDTH(text, self.font)
     end
     local lines = formatText(self.editor.value, self:getTextWidth(), widthFn)
     self.lines = {}
 
-    local texty = self.y + kDialogLineTextYOffset
+    local texty = self.y + self.textYOffset
     local lineHeight = self:lineHeight()
     local charPos = 1
     for i, line in ipairs(lines) do
@@ -1326,7 +1351,7 @@ function DialogItemEditMulti:draw()
         CURSOR(nil)
     end
     local x = self:drawPrompt()
-    local texty = self.y + kDialogLineTextYOffset
+    local texty = self.y + self.textYOffset
 
     local boxWidth = math.min(self:contentSize(), self.w - x)
     local lineHeight = self:lineHeight()
@@ -1561,20 +1586,21 @@ function DialogChoiceList:init(lineHeight)
         print("Empty choices list in dCHOICE!")
         error(KErrInvalidArgs)
     end
+    self.arrowSize = runtime:isSeries3() and gTWIDTH("\x10", 1) or kChoiceArrowSize
     DialogChoiceList._super.init(self, lineHeight)
 end
 
 function DialogChoiceList:getChoicesWidth()
     local maxWidth = 0
     for _, choice in ipairs(self.choices) do
-        maxWidth = math.max(gTWIDTH(choice, kDialogFont), maxWidth)
+        maxWidth = math.max(gTWIDTH(choice, self.font), maxWidth)
     end
     return maxWidth + 2 * self.choiceTextSpace
 end
 
 function DialogChoiceList:contentSize()
     local maxWidth = self:getChoicesWidth()
-    return maxWidth + kChoiceArrowSize, self.heightHint
+    return maxWidth + self.arrowSize, self.heightHint
 end
 
 function DialogChoiceList:focussable()
@@ -1588,13 +1614,15 @@ function DialogChoiceList:draw()
     end
 
     local x = self:drawPrompt()
-    local texty = self.y + kDialogLineTextYOffset
-    self.leftArrowX = x - kChoiceArrowSize -- Left arrow draws before content area
+    local texty = self.y + self.textYOffset
+    self.leftArrowX = x - self.arrowSize -- Left arrow draws before content area
 
     local choicesWidth = self:getChoicesWidth()
-    lightGrey()
-    gAT(x, texty - 2)
-    gBOX(choicesWidth, self.charh + 3)
+    if not runtime:isSeries3() then
+        lightGrey()
+        gAT(x, texty - 2)
+        gBOX(choicesWidth, self.charh + 3)
+    end
     gAT(x + 1, texty - 1)
     white()
     gFILL(choicesWidth - 2, self.charh + 1)
@@ -1606,11 +1634,19 @@ function DialogChoiceList:draw()
     drawText(text, x + self.choiceTextSpace, texty)
 
     self.rightArrowX = x + choicesWidth + kChoiceArrowSpace
-    gFONT(KFontEiksym15)
+    local leftArrow, rightArrow
+    if runtime:isSeries3() then
+        leftArrow = kSiboLeftArrow
+        rightArrow = kSiboRightArrow
+    else
+        gFONT(KFontEiksym15)
+        leftArrow = kChoiceLeftArrow
+        rightArrow = kChoiceRightArrow
+    end
     local arrowMode = self.hasFocus and KgModeSet or KgModeClear
-    drawText(kChoiceLeftArrow, self.leftArrowX, texty, arrowMode)
-    drawText(kChoiceRightArrow, self.rightArrowX, texty, arrowMode)
-    gFONT(kDialogFont)
+    drawText(leftArrow, self.leftArrowX, texty, arrowMode)
+    drawText(rightArrow, self.rightArrowX, texty, arrowMode)
+    gFONT(self.font)
 
     if self.typeable and self.hasFocus then
         local cursorx, cursory = self:getCursorPos()
@@ -1623,10 +1659,10 @@ end
 
 function DialogChoiceList:getCursorPos()
     if self.typeable then
-        local texty = self.y + kDialogLineTextYOffset
+        local texty = self.y + self.textYOffset
         local text = self.choices[self.index]
         local cursorx = self.x + self.promptWidth + self.choiceTextSpace + gTWIDTH(text:sub(1, self.cursorPos - 1))
-        local cursory = self.y + kDialogLineTextYOffset
+        local cursory = self.y + self.textYOffset
         return cursorx, cursory
     else
         return nil
@@ -2029,25 +2065,41 @@ function Button:contentSize()
     local texth = 0
     local _, descent, lineh
     for line in self.text:gmatch("[^\n]*") do
-        local w, h, _, d = gTWIDTH(line, kButtonFont)
+        local w, h, _, d = gTWIDTH(line, self.buttonFont)
         textw = math.max(textw, w)
         texth = texth + h
         descent = d
         lineh = h
+        if self.oneline then
+            break
+        end
     end
 
-    local w = math.max(textw + 8, kButtonMinWidth)
-    local h = math.max(texth + 12, kButtonDefaultHeight) -- kButtonDefaultHeight is also the min height
+    local w, h
+    if runtime:isSeries3() then
+        w = 40
+        h = 14
+    else
+        w = math.max(textw + 8, kSeries5ButtonMinWidth)
+        h = math.max(texth + 12, kButtonDefaultHeight) -- kButtonDefaultHeight is also the min height
+    end
     -- printf("Button '%s' textw=%d texth=%d w=%d h=%d\n", self.text, textw, texth, w, h)
     return w, h
 end
 
 function Button:draw()
-    gFONT(kButtonFont)
+    gFONT(self.buttonFont)
+    -- printf("Button %s actual height = %d\n", self.text, self.h)
     gAT(self.x, self.y)
     local state = self.pressed and 1 or 0
-    gBUTTON(self.text, KButtS5, self.w, self.h, state)
-    gFONT(kDialogFont)
+    local text
+    if runtime:isSeries3() then
+        text = assert(self:getLabel(), "No key shortcut for series 3 button??")
+    else
+        text = self.text
+    end
+    gBUTTON(text, self.type, self.w, self.h, state)
+    gFONT(self.font)
     View.draw(self)
 end
 
@@ -2152,6 +2204,20 @@ end
 
 local DialogButtonGroup = class { _super = View }
 
+function DialogButtonGroup:init(lineHeight, dialogFont)
+    DialogButtonGroup._super.init(self, lineHeight)
+    self.font = dialogFont
+    if runtime:isSeries3() then
+        self.shortcutFont = dialogFont
+        self.buttonYOffset = 0
+        self.labelHeight = 14
+    else
+        self.shortcutFont = KFontArialNormal11
+        self.buttonYOffset = 9
+        self.labelHeight = 12
+    end
+end
+
 function DialogButtonGroup:contentSize()
     -- In normal mode, all buttons are the same size, and the width is that of the longest button text. In vertical
     -- mode, the button height is additionally allowed to be variable to allow multi-line buttons.
@@ -2159,17 +2225,19 @@ function DialogButtonGroup:contentSize()
     local numButtons = #self
     local hasLabels = false
     local sideh = 0
+    local buttonsHeight = 0
     for _, button in ipairs(self) do
         local butw, buth = button:contentSize()
+        buttonsHeight = math.max(buttonsHeight, buth)
         maxButtonWidth = math.max(butw, maxButtonWidth)
         local label = button:getLabel()
         if label then
             hasLabels = true
         end
         if self.side then
-            sideh = sideh + kButtonYOffset + buth
+            sideh = sideh + self.buttonYOffset + buth
             if label then
-                sideh = sideh + kButtonLabelHeight
+                sideh = sideh + self.labelHeight
             end
         end
     end
@@ -2178,33 +2246,38 @@ function DialogButtonGroup:contentSize()
         -- printf("DialogButtonGroup:contentSize() = (%d, %d)\n", maxButtonWidth + kButtonSpacing, sideh)
         return maxButtonWidth + kButtonSpacing, sideh, maxButtonWidth
     else
-        local h = kButtonYOffset + kButtonDefaultHeight
+        -- printf("buttonsHeight = %d\n", buttonsHeight)
+        local h = self.buttonYOffset + buttonsHeight -- kButtonDefaultHeight
         if hasLabels then
-           h = h + kButtonLabelHeight
+           h = h + self.labelHeight
         end
         local buttonsWidth = maxButtonWidth * numButtons + kButtonSpacing * (numButtons - 1)
-        return buttonsWidth, h, maxButtonWidth
+        return buttonsWidth, h, maxButtonWidth, buttonsHeight
     end
 end
 
 function DialogButtonGroup:addButtonsToView()
-    local cw, ch, buttonWidth = self:contentSize()
+    local cw, ch, buttonWidth, buttonHeight = self:contentSize()
     if self.side then
         local x = self.x
         local y = self.y
         for _, button in ipairs(self) do
             local _, buttonHeight = button:contentSize()
             self:addSubview(button, x, y, buttonWidth, buttonHeight)
-            y = y + buttonHeight + kButtonYOffset
+            y = y + buttonHeight + self.buttonYOffset
             if button:getLabel() then
-                y = y + kButtonLabelHeight
+                y = y + self.labelHeight
             end
         end
     else
         local x = self.x + ((self.w - cw) // 2)
-        local buttonY = self.y + kButtonYOffset
+        local buttonY = self.y + self.buttonYOffset
+        if runtime:isSeries3() then
+            -- Labels are above the buttons
+            buttonY = buttonY + self.labelHeight
+        end
         for _, button in ipairs(self) do
-            self:addSubview(button, x, buttonY, buttonWidth, kButtonDefaultHeight)
+            self:addSubview(button, x, buttonY, buttonWidth, buttonHeight)
             x = x + buttonWidth + kButtonSpacing
         end
     end
@@ -2223,23 +2296,39 @@ function DialogButtonGroup:draw()
     -- Draw the actual buttons (which are subviews)
     View.draw(self)
     -- And any shortcut labels they may have
-    gFONT(kButtonShortcutFont)
-    for _, button in ipairs(self) do
-        local label = button:getLabel()
-        if label then
-            local textw = gTWIDTH(label)
-            gAT(button.x + (button.w - textw) // 2, button.y + button.h + 2)
-            drawText(label)
+    gFONT(self.shortcutFont)
+    if runtime:isSeries3() then
+        for _, button in ipairs(self) do
+            local text = button.text
+            local textw, texth = gTWIDTH(text)
+            gAT(button.x + (button.w - textw) // 2, button.y - texth - 2)
+            drawText(text)
+        end
+    else
+        for _, button in ipairs(self) do
+            local label = button:getLabel()
+            if label then
+                local textw = gTWIDTH(label)
+                gAT(button.x + (button.w - textw) // 2, button.y + button.h + 2)
+                drawText(label)
+            end
         end
     end
-    gFONT(kDialogFont)
+    gFONT(self.font)
 end
 
 local DialogWindow = class { _super = View }
 
 function DialogWindow.new(titleBar, items, x, y, w, h)
-    local mode = runtime:isColor() and KColorgCreate256ColorMode or KColorgCreate4GrayMode
-    local id = gCREATE(x, y, w, h, false, mode | KgCreateHasShadow | 0x200)
+    local mode
+    if runtime:isColor() then
+        mode = KColorgCreate256ColorMode | KgCreateHasShadow | 0x200
+    elseif runtime:isSeries3() then
+        mode = KColorgCreate2GrayMode
+    else
+        mode = KColorgCreate4GrayMode | KgCreateHasShadow | 0x200
+    end
+    local id = gCREATE(x, y, w, h, false, mode)
     return DialogWindow {
         x = x,
         y = y,
@@ -2397,29 +2486,58 @@ function DIALOG(dialog)
 
     local state = runtime:saveGraphicsState()
 
-    local borderWidth = 4 -- 1 px black box plus 3 px for the gXBORDER
+    local dialogFont, buttonFont, buttonType, border, titleBarInset, bottomMargin
+
+    local titleBarSpace -- extra gap between title bar and first item
+
+    local lineHeight, titleBarLineHeight, lineTextYOffset
+
+    local densePack = (dialog.flags & KDlgDensePack) ~= 0
+
+    if runtime:isSeries3() then
+        dialogFont = 1
+        buttonFont = 1
+        buttonType = KButtS3
+        border = { top = 2, left = 3, bottom = 4, right = 5 }
+        titleBarSpace = 2
+        lineHeight = 9
+        titleBarLineHeight = 13
+        titleBarInset = { left = 6, right = 8 }
+        bottomMargin = 0
+        lineTextYOffset = 0
+    else
+        dialogFont = KFontArialNormal15
+        buttonFont = KFontArialBold11
+        buttonType = KButtS5
+        -- 1 px black box plus 3 px for the gXBORDER
+        border = { top = 4, left = 4, bottom = 4, right = 4 }
+        titleBarSpace = 4
+        lineHeight = densePack and kDialogTightLineHeight or kDialogLineHeight
+        titleBarLineHeight = lineHeight
+        titleBarInset = { left = border.left, right = border.right }
+        bottomMargin = 4
+        lineTextYOffset = 4
+    end
+
     local hMargin = (dialog.flags & KDlgDensePack) == 0 and 8 or 2
-    local bottomMargin = 4
-    -- local titleIndent = 3
-    local titleBarSpace = 4 -- extra gap between title bar and first item
     local maxPromptWidth = 0
     local maxContentWidth = 0
     local maxWidth = 0 -- For anything that doesn't split into prompt and content
     local maxButtonWidth = 30 -- ?
     local promptGap = 22 -- Must be at least as big as kChoiceArrowSize because the lefthand arrow goes in the prompt gap
-    local lineHeight = (dialog.flags & KDlgDensePack) == 0 and kDialogLineHeight or kDialogTightLineHeight
 
-    gFONT(kDialogFont)
+    gFONT(dialogFont)
     View.charh = gINFO().fontHeight
     local titleBar
-    local h = borderWidth
+    local h = border.top
     if dialog.flags & KDlgNoTitle == 0 then
         titleBar = DialogTitleBar {
+            font = dialogFont,
             hMargin = hMargin,
             value = dialog.title,
             draggable = (dialog.flags & KDlgNoDrag) == 0,
         }
-        titleBar:init(lineHeight)
+        titleBar:init(titleBarLineHeight)
         local cw, ch = titleBar:contentSize()
         maxWidth = math.max(cw, maxWidth)
         h = h + ch + titleBarSpace
@@ -2429,6 +2547,9 @@ function DIALOG(dialog)
     for i, item in ipairs(dialog.items) do
         -- printf("Item %i is type %d\n", i, item.type)
         setmetatable(item, itemTypes[item.type] or PlaceholderView)
+        item.font = dialogFont
+        item.textYOffset = lineTextYOffset
+        item.densePack = densePack
         item:init(lineHeight)
         local cw, ch = item:contentSize()
         local promptWidth = item:getPromptWidth()
@@ -2440,7 +2561,7 @@ function DIALOG(dialog)
         end
         h = h + ch + kDialogLineGap
     end
-    h = h + bottomMargin + borderWidth
+    h = h + bottomMargin + border.bottom
 
     -- All buttons are the same size, which can grow to fit the longest button text
     local butw, buth
@@ -2448,13 +2569,18 @@ function DIALOG(dialog)
     if numButtons > 0 then
         dialog.buttons.side = dialog.flags & KDlgButRight ~= 0
         setmetatable(dialog.buttons, DialogButtonGroup)
+        dialog.buttons:init(lineHeight, dialogFont)
         for i, button in ipairs(dialog.buttons) do
             setmetatable(button, Button)
+            button.font = dialogFont
+            button.buttonFont = buttonFont
+            button.type = buttonType
+            button.oneline = not dialog.buttons.side
             -- printf("Button %i key: %d text: %s\n", i, button.key, button.text)
         end
         butw, buth = dialog.buttons:contentSize()
         if dialog.buttons.side then
-            h = math.max(h, titleBarHeight + buth + bottomMargin + borderWidth)
+            h = math.max(h, titleBarHeight + buth + bottomMargin + border.bottom)
         else
             maxWidth = math.max(butw, maxWidth)
             h = h + buth + kDialogLineGap
@@ -2468,7 +2594,7 @@ function DIALOG(dialog)
     maxWidth = math.max(maxPromptWidth + maxContentWidth, maxWidth)
 
     local screenWidth, screenHeight = runtime:getScreenInfo()
-    local w = maxWidth + (borderWidth + hMargin) * 2
+    local w = maxWidth + border.left + border.right + (hMargin * 2)
     local rightHandButtonWidth = 0
     if numButtons > 0 and dialog.buttons.side then
         rightHandButtonWidth = butw + hMargin
@@ -2497,7 +2623,7 @@ function DIALOG(dialog)
     end
 
     local win = DialogWindow.new(titleBar, dialog.items, winX, winY, w, h)
-    gFONT(kDialogFont)
+    gFONT(dialogFont)
     if runtime:isColor() then
         gCOLORBACKGROUND(0xCC, 0xCC, 0xCC)
     else
@@ -2507,23 +2633,28 @@ function DIALOG(dialog)
     -- Now we have our window and prompt area sizes we can actually lay out the items
 
     gFILL(w, h, KgModeClear)
-    gBOX(w, h)
-    gAT(1, 1)
-    gXBORDER(2, 0x94, w - 2, h - 2)
+    if runtime:isSeries3() then
+        gAT(1, 1)
+        gBORDER(KBordDblShadow | KBordRoundCorners, w - 2, h - 2)
+    else
+        gBOX(w, h)
+        gAT(1, 1)
+        gXBORDER(2, 0x94, w - 2, h - 2)
+    end
 
-    local y = borderWidth
+    local y = border.top
     if titleBar then
         local ch = titleBar:contentHeight()
-        win:addSubview(titleBar, borderWidth, y, w - borderWidth * 2, ch)
+        win:addSubview(titleBar, titleBarInset.left, y, w - titleBarInset.left - titleBarInset.right, ch)
         y = y + ch + titleBarSpace
     end
 
-    local itemWidth = w - (borderWidth + hMargin) * 2 - rightHandButtonWidth
+    local itemWidth = w - border.left - border.right - (hMargin * 2) - rightHandButtonWidth
     for i, item in ipairs(dialog.items) do
         item:setPromptWidth(maxPromptWidth)
         local ch = item:contentHeight()
         item.focusOrderIndex = i
-        win:addSubview(item, borderWidth + hMargin, y, itemWidth, ch)
+        win:addSubview(item, border.left + hMargin, y, itemWidth, ch)
         if win.focussedItemIndex == nil and item:focussable() then
             win:moveFocusTo(item)
         end
@@ -2533,9 +2664,9 @@ function DIALOG(dialog)
     if numButtons > 0 then
         win.buttons = dialog.buttons
         if dialog.buttons.side then
-            win:addSubview(dialog.buttons, w - borderWidth - butw, h - bottomMargin - borderWidth - buth, butw, buth)
+            win:addSubview(dialog.buttons, w - border.right - butw, h - bottomMargin - border.bottom - buth, butw, buth)
         else
-            win:addSubview(dialog.buttons, borderWidth + hMargin, y, itemWidth, buth)
+            win:addSubview(dialog.buttons, border.left + hMargin, y, itemWidth, buth)
         end
         win.buttons:addButtonsToView()
     end

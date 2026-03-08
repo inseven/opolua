@@ -37,39 +37,56 @@ function Scrollbar:draw()
 
     local barOffset = self:barOffset()
     local barAreaHeight = self:barAreaHeight()
-    -- printf("x=%d y=%d widgetHeight=%d, barOffset=%d\n", x, y, widgetHeight, barOffset)
-    if barOffset > 0 then
-        gFILL(w, barOffset, KgModeClear)
-        gMOVE(0, barOffset)
-    end
-    gFILL(w, widgetHeight, KgModeClear)
-    gBUTTON("", KButtS5, w, widgetHeight, self.tracking and KButtS5SemiPressed or KButtS5Raised)
-    if barOffset + widgetHeight < barAreaHeight then
-        gAT(x, y + barOffset + widgetHeight)
-        gFILL(w, barAreaHeight - (barOffset + widgetHeight), KgModeClear)
-    end
-
-    local kStripeGap = 5
-    -- Make sure we don't draw any more strips than fill half the widgetHeight
-    local numStripes = math.min(10, (widgetHeight // 2) // kStripeGap)
-    local stripeWidth = w // 2
-    gAT(x + (w // 4) + 1, y + barOffset + (widgetHeight // 2) - ((numStripes * kStripeGap) // 2))
-    for i = 1, numStripes do
-        white()
-        gLINEBY(stripeWidth, 0)
-        gMOVE(-stripeWidth, 1)
+    -- printf("x=%d y=%d widgetHeight=%d, barOffset=%d contentOffset=%d maxContentOffset=%d\n", x, y, widgetHeight,
+    --     barOffset, self.contentOffset, self:maxContentOffset())
+    if runtime:isSeries3() then
+        gFILL(w, h, KgModeClear)
+        local up = "\x1E"
+        local down = "\x0D"
         black()
-        gLINEBY(stripeWidth, 0)
-        gMOVE(-stripeWidth, kStripeGap - 1)
-    end
+        if barOffset > 0 then
+            gFONT(1)
+            runtime:drawText(up)
+        end
+        if self.contentOffset ~= self:maxContentOffset() then
+            local _, th = gTWIDTH(down)
+            gAT(x, y + h - th)
+            runtime:drawText(down)
+        end
+    else
+        if barOffset > 0 then
+            gFILL(w, barOffset, KgModeClear)
+            gMOVE(0, barOffset)
+        end
+        gFILL(w, widgetHeight, KgModeClear)
+        gBUTTON("", KButtS5, w, widgetHeight, self.tracking and KButtS5SemiPressed or KButtS5Raised)
+        if barOffset + widgetHeight < barAreaHeight then
+            gAT(x, y + barOffset + widgetHeight)
+            gFILL(w, barAreaHeight - (barOffset + widgetHeight), KgModeClear)
+        end
 
-    -- Draw up and down arrows
-    black()
-    gFONT(KFontEiksym15)
-    gAT(x, y + barAreaHeight)
-    gBUTTON(kChoiceUpArrow, KButtS5, w, w, 0)
-    gMOVE(0, w - 1) -- -1 because the buttons overlap by a pixel so the border between them isn't so heavy
-    gBUTTON(kChoiceDownArrow, KButtS5, w, w, 0)
+        local kStripeGap = 5
+        -- Make sure we don't draw any more strips than fill half the widgetHeight
+        local numStripes = math.min(10, (widgetHeight // 2) // kStripeGap)
+        local stripeWidth = w // 2
+        gAT(x + (w // 4) + 1, y + barOffset + (widgetHeight // 2) - ((numStripes * kStripeGap) // 2))
+        for i = 1, numStripes do
+            white()
+            gLINEBY(stripeWidth, 0)
+            gMOVE(-stripeWidth, 1)
+            black()
+            gLINEBY(stripeWidth, 0)
+            gMOVE(-stripeWidth, kStripeGap - 1)
+        end
+
+        -- Draw up and down arrows
+        black()
+        gFONT(KFontEiksym15)
+        gAT(x, y + barAreaHeight)
+        gBUTTON(kChoiceUpArrow, KButtS5, w, w, 0)
+        gMOVE(0, w - 1) -- -1 because the buttons overlap by a pixel so the border between them isn't so heavy
+        gBUTTON(kChoiceDownArrow, KButtS5, w, w, 0)
+    end
     runtime:restoreGraphicsState(state)
 end
 
@@ -156,7 +173,12 @@ function Scrollbar:widgetHeight()
 end
 
 function Scrollbar.newVertical(x, y, h, visibleContentHeight, contentHeight)
-    local w = 23
+    local w
+    if runtime:isSeries3() then
+        w = 8
+    else
+        w = 23
+    end
     local barAreaHeight = h - (w * 2)
     local scrollbar = Scrollbar {
         x = x,

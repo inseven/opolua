@@ -75,8 +75,8 @@ function MenuPane:drawBorder()
     black()
     gAT(0, 0)
     if runtime:isSeries3() then
-        gMOVE(1, 0)
-        gBORDER(1, self.w - 2, self.h - 1)
+        gMOVE(1, 1)
+        gBORDER(1, self.w - 2, self.h - 2)
     else
         gBOX(self.w, self.h)
         gMOVE(1, 1)
@@ -171,7 +171,7 @@ function MenuPane:itemAtLeastPartiallyVisible(i)
     local visibleContentHeight = self:visibleContentHeight()
     local item = self.items[i]
     return inrange(start, item.contentOffset, visibleContentHeight) or
-        inrange(start, item.contentOffset + item.h, visibleContentHeight)
+        inrange(start, item.contentOffset + item.h - 1, visibleContentHeight)
 end
 
 function MenuPane:firstFullyVisibleItem()
@@ -331,11 +331,9 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
 
     local shortcutFont, menuFont, createFlags, shadowHeight, lineGap
 
-    -- local device = runtime:getDeviceName()
-    -- if device == "psion-series-3" then
     if runtime:isSeries3() then
         -- todo 3a/3c
-        border = { top = 2, left = 3, bottom = 4, right = 4 }
+        border = { top = 3, left = 3, bottom = 4, right = 4 }
         inset = border
         margin = { top = 1, left = 2, bottom = 1, right = 2 }
         contentOffset = 0
@@ -430,7 +428,14 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
 
     local maxHeight = (pos == nil) and (screenHeight - shadowHeight - y) or screenHeight
     if h > maxHeight then
-        h = maxHeight
+        if runtime:isSeries3() then
+            -- Must be a whole number of items. We can hopefully ignore lineafter and thus variable height of items as
+            -- we should only really be hitting this for dialog choicelists.
+            local numItems = (maxHeight - inset.top - inset.bottom) // lineHeight
+            h = (numItems * lineHeight) + inset.top + inset.bottom
+        else
+            h = maxHeight
+        end
         local scrollbarTop = border.top
         local scrollbarHeight = h - border.top - border.bottom -- Note, larger than visibleContentHeight!
         local visibleContentHeight = h - inset.top - inset.bottom -- Same defn as MenuPane:visibleContentHeight()
@@ -469,7 +474,7 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
     end
 
     local win = gCREATE(x, y, w, h, false, createFlags)
-    if scrollbar then
+    if scrollbar and not runtime:isSeries3() then
         darkGrey()
         gAT(scrollbar.x - 1, scrollbar.y)
         gLINEBY(0, scrollbar.h)
@@ -770,12 +775,12 @@ function MENU(menubar)
     if runtime:isSeries3() then
         local x = (runtime:getGraphics().screenWidth - barWidth) // 2
         barWin = gCREATE(x, 0, barWidth, barHeight, false, barCreateFlags)
-        gFONT(1)
+        gFONT(menuFont)
         gAT(1, 1)
         gBORDER(1, barWidth - 2, barHeight - 2)
     else
         barWin = gCREATE(2, 2, barWidth, barHeight, false, barCreateFlags)
-        gFONT(kMenuFont)
+        gFONT(menuFont)
         lightGrey()
         gFILL(barWidth, barHeight)
         black()
