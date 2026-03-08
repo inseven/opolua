@@ -151,13 +151,12 @@ local function sisInstallQuery(sisFile, text, queryType)
     return ret == KKeyEnter
 end
 
-function installSis(hostPath, devicePath, hostDest, preselectedLang)
+function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
     runtime:iohandler().system("setAppTitle", "Installer")
 
     local sis = require("sis")
 
     local seenApps = {}
-    local drive = "C"
     local changeDevice
     local selectedLang
 
@@ -195,18 +194,34 @@ function installSis(hostPath, devicePath, hostDest, preselectedLang)
             end
         end
 
-        local deviceNames = {
-            "Series 5",
-            "Series 7",
-            "Geofox One",
-            "Revo",
-        }
-        local devices = {
-            "psion-series-5",
-            "psion-series-7",
-            "geofox-one",
-            "psion-revo",
-        }
+        local deviceNames = ({
+            epoc16 = {
+                "Series 3",
+                "Series 3c",
+                "Siena",
+                "Osaris",
+            },
+            epoc32 = {
+                "Series 5",
+                "Series 7",
+                "Geofox One",
+                "Revo",
+            },
+        })[sisFile.target]
+        local devices = ({
+            epoc16 = {
+                "psion-series-3",
+                "psion-series-3c",
+                "psion-siena",
+                "oregon-osaris",
+            },
+            epoc32 = {
+                "psion-series-5",
+                "psion-series-7",
+                "geofox-one",
+                "psion-revo",
+            },
+        })[sisFile.target]
         local deviceVar = runtime:makeTemporaryVar(DataTypes.EWord)
         local currentDevice = runtime:getDeviceName()
         local deviceIdx

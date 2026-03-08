@@ -37,15 +37,18 @@ public:
 
     void makeFsIoHandlerBridge(lua_State *L) const;
     QString getNativePath(const QString& devicePath, bool* writable=nullptr) const;
-
-private:
-    static int fsop(lua_State* L);
+    QString mappingForDrive(char drive) const;
 
 private:
     struct Drive {
         bool writable;
+        mutable bool createChecked;
         QString path;
     };
+    static int fsop(lua_State* L);
+    QString getNativePathLocked(const QString& devicePath, const Drive*& mapping) const;
+
+private:
     mutable QMutex mMutex;
     QMap<char, Drive> mPaths;
     QMap<QString, QString> mSimulatedPaths;
