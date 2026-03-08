@@ -2134,7 +2134,7 @@ local dialogKeyNames = {
 
 function Button:getLabel()
     local key = self:getKey()
-    if key & KDButtonNoLabel == 0 then
+    if key & KDButtonNoLabel == 0 or runtime:isSeries3() then
         local rawKey = key & 0xFF
         local keyName = dialogKeyNames[rawKey] or string.char(rawKey):upper()
         if keyName:match("^[A-Z]$") and key & KDButtonPlainKey == 0 then

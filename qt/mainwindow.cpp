@@ -384,14 +384,14 @@ void MainWindow::installSis()
 
 void MainWindow::doInstallSis(const QString& file)
 {
-    if (getRuntime().running() && getRuntime().writableCDrive()) {
-        QString uiPath = QFileInfo(getRuntime().getNativePath("C:\\")).dir().path();
+    if (getRuntime().running() && getRuntime().writableMainDrive()) {
+        // Install into the same virtual disk (but using a separate runtime and window)
+        auto drvPath = getRuntime().mappingForDrive(getRuntime().mainDrive());
+        QString sysDir = QFileInfo(drvPath).dir().path();
         auto m = new MainWindow();
         m->getRuntime().setDeviceType(getRuntime().getDeviceType());
         m->show();
-        m->getRuntime().setDrive(Drive::C, getRuntime().getNativePath("C:\\"));
-        m->getRuntime().setDrive(Drive::D, getSharedDrive());
-        m->getRuntime().runInstaller(file, uiPath);
+        m->getRuntime().runInstaller(file, sysDir);
     } else {
         openFile(file);
     }
@@ -414,6 +414,8 @@ void MainWindow::openFile(const QString& path)
 
     QFileInfo info(path);
     QString extension = info.suffix().toLower();
+    getRuntime().removeAllDrives();
+    getRuntime().setDrive(Drive::D, getSharedDrive());
 
     if (extension == "sis") {
         QFileInfo fileInfo(path);
@@ -430,8 +432,6 @@ void MainWindow::openFile(const QString& path)
             i++;
         } while (QFileInfo(dest).exists());
 
-        getRuntime().setDrive(Drive::C, dest + "/c");
-        getRuntime().setDrive(Drive::D, getSharedDrive());
         getRuntime().runInstaller(path, dest);
     } else if (extension == "app" || extension == "opa" || extension == "oplsys") {
         QString drive = driveForApp(path);
@@ -443,16 +443,11 @@ void MainWindow::openFile(const QString& path)
             }
 
             auto mainDrv = Drive::C;
-            std::optional<Drive> sharedDrv = Drive::D;
             if (drive.endsWith("/m") || extension == "opa") {
                 mainDrv = Drive::M;
-                sharedDrv = std::nullopt;
             }
 
             getRuntime().setDrive(mainDrv, drive);
-            if (sharedDrv.has_value()) {
-                getRuntime().setDrive(*sharedDrv, getSharedDrive());
-            }
 
             QString appPath;
             if (extension == "app" && mainDrv == Drive::C) {
@@ -495,7 +490,7 @@ void MainWindow::installationComplete(const QString& sisPath)
 
 void MainWindow::updateManifest(const QString& sourceUrl)
 {
-    if (mManifest.isEmpty() || !getRuntime().writableCDrive()) {
+    if (mManifest.isEmpty() || !getRuntime().writableMainDrive()) {
         return;
     }
 

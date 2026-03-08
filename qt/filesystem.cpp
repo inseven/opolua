@@ -34,14 +34,8 @@ void FileSystemIoHandler::addMapping(char drive, const QDir& path, bool writable
 {
     removeMapping(drive);
     QMutexLocker lock(&mMutex);
-    // qDebug("mapping: %c -> %s", drive, qPrintable(path.absolutePath()));
-    mPaths[drive] = { writable, path.absolutePath() };
-    if (writable && !path.exists()) {
-        // It's important that writeable mapping paths always exist because there's no way for OPL code to create them
-        // without creating a subdir.
-        QFileInfo info(path.absolutePath());
-        info.dir().mkpath(info.fileName());
-    }
+    // qDebug("mapping: %c -> %s writable=%d", drive, qPrintable(path.absolutePath()), (int)writable);
+    mPaths[drive] = { writable, false, path.absolutePath() };
 }
 
 void FileSystemIoHandler::removeMapping(char drive)
@@ -81,6 +75,12 @@ bool FileSystemIoHandler::isWritable(char drive) const
     return !driveInfo.path.isEmpty() && driveInfo.writable;
 }
 
+QString FileSystemIoHandler::mappingForDrive(char drive) const
+{
+    QMutexLocker lock(&mMutex);
+    return mPaths.value(drive).path;
+}
+
 void FileSystemIoHandler::makeFsIoHandlerBridge(lua_State *L) const
 {
     lua_newtable(L);
@@ -110,16 +110,23 @@ QMap<QString, QString> getEntryListLowerMap(QDir& dir)
 
 QString FileSystemIoHandler::getNativePath(const QString& devicePath, bool* writable) const
 {
+    QMutexLocker lock(&mMutex);
+    const Drive* mapping = nullptr;
+    auto result = getNativePathLocked(devicePath, mapping);
     if (writable) {
-        *writable = false;
+        *writable = mapping ? mapping->writable : false;
     }
+    return result;
+}
+
+QString FileSystemIoHandler::getNativePathLocked(const QString& devicePath, const Drive*& mapping) const
+{
     auto components = devicePath.split("\\", Qt::SkipEmptyParts);
     if (!(components.size() >= 1 && components[0].size() > 1 && components[0][1] == ':')) {
         return QString();
     }
 
     char drive = components[0].toUpper()[0].toLatin1();
-    QMutexLocker lock(&mMutex);
     if (mSimulatedDrive && drive == mSimulatedDrive) {
         if (components.size() != 2) {
             // Don't support directories on dummy drive
@@ -128,19 +135,16 @@ QString FileSystemIoHandler::getNativePath(const QString& devicePath, bool* writ
         return mSimulatedPaths.value(components[1].toLower());
     }
 
-    Drive driveStruct = mPaths.value(drive);
-    lock.unlock();
-    if (!driveStruct.path.isEmpty()) {
-        if (writable) {
-            *writable = driveStruct.writable;
-        }
+    auto drvIter = mPaths.find(drive);
+    mapping = (drvIter == mPaths.end()) ? nullptr : &*drvIter;
+    if (mapping) {
 
-        QDir dir(driveStruct.path);
+        QDir dir(mapping->path);
 
         // Now walk through components[1...] doing case-insensitive corrections where necessary
         const int n = components.count();
         if (n == 1) {
-            return driveStruct.path;
+            return mapping->path;
         }
         for (int i = 1; i < n; i++) {
             const QString& component = components[i];
@@ -181,9 +185,6 @@ int FileSystemIoHandler::fsop(lua_State* L)
     auto self = reinterpret_cast<const FileSystemIoHandler*>(lua_touserdata(L, lua_upvalueindex(1)));
     QString cmd(lua_tostring(L, 1));
     QString path(lua_tostring(L, 2));
-    bool writable = false;
-    QString nativePath = self->getNativePath(path, &writable);
-    qDebug("fsop %s '%s' -> '%s'", qPrintable(cmd), qPrintable(path), qPrintable(nativePath));
 
     const bool cmdReturnsResult = cmd == "read" || cmd == "dir" || cmd == "stat" || cmd == "disks" || cmd == "getNativePath";
     auto err = [L, cmdReturnsResult](int err) {
@@ -212,7 +213,10 @@ int FileSystemIoHandler::fsop(lua_State* L)
             return err(KErrNone);
         }
     }
-    lock.unlock();
+
+    const Drive* mapping = nullptr;
+    QString nativePath = self->getNativePathLocked(path, mapping);
+    qDebug("fsop %s '%s' -> '%s'", qPrintable(cmd), qPrintable(path), qPrintable(nativePath));
 
     if (nativePath.isEmpty() && cmd != "disks") {
         // disks cmd doesn't use path so nativePath is irrelevant
@@ -220,9 +224,20 @@ int FileSystemIoHandler::fsop(lua_State* L)
     }
 
     bool isWriteOp = cmd == "write" || cmd == "delete" || cmd == "mkdir" || cmd == "rmdir" || cmd == "rename";
-    if (isWriteOp && !writable) {
+    if (isWriteOp && !mapping->writable) {
         return err(KErrAccess);
     }
+
+    // We delay auto-creating the mapping dir until the first time something tries to write to it
+    if ((cmd == "write" || cmd == "mkdir") && !mapping->createChecked) {
+        mapping->createChecked = true;
+        QFileInfo info(mapping->path);
+        if (!info.exists()) {
+            info.dir().mkpath(info.fileName());
+        }
+    }
+    lock.unlock();
+    mapping = nullptr; // Make sure it's not used after unlocking
 
     if (cmd == "read") {
         QFile f(nativePath);
@@ -256,8 +271,8 @@ int FileSystemIoHandler::fsop(lua_State* L)
         for (auto i = self->mPaths.cbegin(), end = self->mPaths.cend(); i != end; ++i) {
             result.append(QString(QChar(i.key())));
         }
-        if (!self->mSimulatedPaths.isEmpty()) {
-            result.append("C");
+        if (self->mSimulatedDrive) {
+            result.append(QString(QChar(self->mSimulatedDrive)));
         }
         lock.unlock();
         pushValue(L, result);
@@ -306,11 +321,12 @@ int FileSystemIoHandler::fsop(lua_State* L)
         return 1;
     } else if (cmd == "rename") {
         QString dest(lua_tostring(L, 3));
-        QString destNative = self->getNativePath(dest, &writable);
+        bool destWritable = false;
+        QString destNative = self->getNativePath(dest, &destWritable);
         if (destNative.isEmpty()) {
             qDebug("Failed to map %s", qPrintable(dest));
             return err(KErrNotReady);
-        } else if (!writable) {
+        } else if (!destWritable) {
             return err(KErrAccess);
         }
         QFile f(nativePath);

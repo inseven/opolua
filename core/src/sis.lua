@@ -361,7 +361,7 @@ function parseSisFile(data, verbose)
         elseif recordType == FileRecordType.MultiLangRecord then
             file, pos, maxStringOffset = parseSimpleFileRecord(data, pos, nLangs, verbose)
         else
-            error("Unknown record type "..tostring(recordType))
+            error(string.format("Unknown record type %d at 0x%08X", recordType, pos - 5))
         end
         if file.type ~= FileType.FileNull and file.data == nil and file.langData == nil then
             result.isTruncated = true
@@ -585,11 +585,13 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
     -- This is compatible with struct SisFile in Swift (plus some other stuff that doesn't matter)
     local callbackContext = makeManifest(sisfile)
 
-    local drive = "C"
+    local mainDrive = sisfile.target == "epoc16" and "M" or "C"
+    local mainDriveRoot = mainDrive..":\\"
+    local drive = mainDrive -- Unless overridden
     local function getPath(file)
         local result = file.dest:gsub("^!", drive):gsub("^(.)", function(ch) return ch:upper() end)
         -- You're not supposed to, but non-absolute paths aren't explicitly disallowed by the Psion 5 (see #520)
-        return oplpath.abs(result, "C:\\")
+        return oplpath.abs(result, mainDriveRoot)
     end
 
     local writeStub
@@ -688,17 +690,19 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
     end
 
     writeStub = function(instFiles)
+        -- Note, we mustn't signal a failure if we're already in the process of writing a partial stub (as indicated by
+        -- instFiles being non-nil).
         local stub = makeStub(data, sisfile.langs[langIdx], drive, instFiles)
-        local dir = oplpath.join(ret.stubDir or [[C:\System\install]], "")
+        local dir = oplpath.join(ret.stubDir or string.format([[%s:\System\install]], mainDrive), "")
         if iohandler.fsop("exists", dir) ~= KErrNone then
             local err = iohandler.fsop("mkdir", dir)
-            if err ~= KErrNone then
+            if err ~= KErrNone and instFiles == nil then
                 return failInstall(0, "epocerr", err, dir)
             end
         end
         local stubPath = oplpath.join(dir, oplpath.basename(filename))
         local err = iohandler.fsop("write", stubPath, stub)
-        if err ~= KErrNone then
+        if err ~= KErrNone and instFiles == nil then
             return failInstall(0, "epocerr", err, stubPath)
         end
         return nil -- meaning success

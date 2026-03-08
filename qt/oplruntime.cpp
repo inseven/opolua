@@ -218,6 +218,10 @@ int OplRuntime::dofile(lua_State *L)
 void OplRuntime::setDeviceType(DeviceType type)
 {
     mDeviceType = type;
+
+    // In case we are switching families, remove any inappropriate main drive mapping
+    mFs->removeMapping(isSibo() ? 'C' : 'M');
+
     switch (mDeviceType) {
     case psionSeries3:
     case psionSeries3c:
@@ -272,6 +276,11 @@ void OplRuntime::removeAllDrives()
 QString OplRuntime::getNativePath(const QString& devicePath) const
 {
     return mFs->getNativePath(devicePath);
+}
+
+QString OplRuntime::mappingForDrive(Drive drive) const
+{
+    return mFs->mappingForDrive((char)drive);
 }
 
 QSize OplRuntime::screenSize() const
@@ -479,9 +488,14 @@ bool OplRuntime::running() const
     return mThread != nullptr;
 }
 
-bool OplRuntime::writableCDrive() const
+bool OplRuntime::writableMainDrive() const
 {
-    return mFs->isWritable('C') || mFs->isWritable('M');
+    return mFs->isWritable((char)mainDrive());
+}
+
+Drive OplRuntime::mainDrive() const
+{
+    return isSibo() ? Drive::M : Drive::C;
 }
 
 void OplRuntime::setEscape(bool flag) {
@@ -582,22 +596,38 @@ void OplRuntime::startThread()
 
 void OplRuntime::runOpo(const QString& path)
 {
-    mFs->addSimulatedDrive('C', {path});
-    pushRunParams(QString("C:\\") + QFileInfo(path).fileName());
+    auto drv = (char)mainDrive();
+    mFs->addSimulatedDrive(drv, {path});
+    pushRunParams(QString("%1:\\%2").arg(drv).arg(QFileInfo(path).fileName()));
     startThread();
 }
 
 // This fn overwrites the filesystem mappings
-void OplRuntime::runInstaller(const QString& file, const QString& displayPath)
+void OplRuntime::runInstaller(const QString& file, const QString& sysDir)
 {
-    doRunInstaller(file, displayPath, QString());
+    doRunInstaller(file, sysDir, QString());
 }
 
-void OplRuntime::doRunInstaller(const QString& file, const QString& displayPath, const QString& lang)
+void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, const QString& lang)
 {
-    Q_ASSERT(mThread == nullptr);
+    Q_ASSERT(!running());
+
+    // Pre-parse the SIS file so we can set the initial device type to the correct era, if necessary
+    auto sisinfo = getSisInfo(file);
+    if (sisinfo.has_value()) {
+        bool epoc16 = (sisinfo->target == SisInfo::Epoc16);
+        if (epoc16 != isSibo()) {
+            setDeviceType(epoc16 ? psionSeries3c : psionSeries5);
+        }
+    }
+
     mLauncherCmd = "installSis";
+    mFs->removeAllMappings();
+
     mFs->addSimulatedDrive('I', {file});
+    QString drive = QString("%1").arg((char)mainDrive());
+    QString drvPath = QFileInfo(QDir(sysDir), drive.toLower()).filePath();
+    mFs->addMapping((char)mainDrive(), drvPath, true);
     lua_settop(L, 0);
     require(L, "runtime");
     lua_getfield(L, -1, "runLauncherCmd");
@@ -606,11 +636,12 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& displayPath,
     pushValue(L, mLauncherCmd);
     pushValue(L, file);
     pushValue(L, QString("I:\\" + QFileInfo(file).fileName()));
-    pushValue(L, displayPath);
+    pushValue(L, sysDir);
+    pushValue(L, drive);
     if (!lang.isEmpty()) {
         pushValue(L, lang);
     }
-    mRunNextFn = [this, file, displayPath]() {
+    mRunNextFn = [this, file, sysDir]() {
         mFs->removeMapping('I');
         if (lua_type(L, -1) != LUA_TTABLE) {
             emit runComplete(QString(), QString());
@@ -623,7 +654,7 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& displayPath,
             auto lang = to_string(L, -1, "lang");
             lua_pop(L, 1);
             setDeviceType(toDeviceType(changeDevice));
-            doRunInstaller(file, displayPath, lang);
+            doRunInstaller(file, sysDir, lang);
             return;
         }
 
@@ -637,6 +668,70 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& displayPath,
         }
     };
     startThread();
+}
+
+std::optional<SisInfo> OplRuntime::getSisInfo(const QString& nativePath)
+{
+    Q_ASSERT(!running());
+    QFile f(nativePath);
+    if (!f.open(QFile::ReadOnly)) {
+        qWarning("Failed to open file %s", qPrintable(nativePath));
+        return std::nullopt;
+    }
+    auto data = f.readAll();
+    f.close();
+    
+    require(L, "sis");
+    rawgetfield(L, -1, "parseSisFile");
+    pushValue(L, data);
+    int err = lua_pcall(L, 1, 1, 0);
+    if (err) {
+        qWarning("Failed to parse sis file: %s", lua_tolstring(L, -1, nullptr));
+        lua_pop(L, 2); // err, sis
+        return std::nullopt;
+    }
+
+    rawgetfield(L, -2, "makeManifest");
+    lua_insert(L, -2);
+    err = lua_pcall(L, 1, 1, 0);
+    if (err) {
+        qWarning("Error from makeManifest! %s", lua_tolstring(L, -1, nullptr));
+        lua_pop(L, 2); // err, sis
+        return std::nullopt;
+    }
+
+    SisInfo result{};
+    result.target = to_enum(L, -1, "target", { "epoc16", "epoc32" }, SisInfo::Epoc32);
+    if (rawgetfield(L, -1, "version") == LUA_TTABLE) {
+        result.versionMajor = to_intt<uint16_t>(L, -1, "major");
+        result.versionMinor = to_intt<uint16_t>(L, -1, "minor");
+    }
+    lua_pop(L, 1); // version
+
+    if (rawgetfield(L, -1, "languages") == LUA_TTABLE) {
+        for (int i = 1; ; i++) {
+            lua_rawgeti(L, -1, i);
+            auto str = lua_tostring(L, -1);
+            lua_pop(L, 1); // str
+            if (!str) {
+                break;
+            }
+            result.languages.append(str);
+        }
+    }
+    lua_pop(L, 1); // languages
+
+    if (rawgetfield(L, -1, "name") == LUA_TTABLE) {
+        lua_pushnil(L);
+        while (lua_next(L, -2) != 0) {
+            // key at -2, value at -1
+            result.name[lua_tostring(L, -2)] = lua_tostring(L, -1);
+            lua_pop(L, 1); // pop val, keep key for next iter
+        }
+    }
+    lua_pop(L, 1); // name
+
+    return result;
 }
 
 void OplRuntime::runLauncher()

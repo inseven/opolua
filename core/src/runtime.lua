@@ -559,6 +559,7 @@ function Runtime:getGraphics()
             contexts = {},
         }
         self.deviceName = device
+        self.iss3 = device:match("^psion%-series%-3") or device == "psion-siena"
         local id = self:gCREATE(0, 0, w, h, true, mode)
         assert(id == KDefaultWin)
         self:FONT(KFontCourierNormal11, 0)
@@ -1045,7 +1046,11 @@ function Runtime:isSibo()
 end
 
 function Runtime:isSeries3()
-    return self.deviceName:match("^psion%-series%-3") or self.deviceName == "psion-siena"
+    if not self.graphics then
+        -- Device info not fetched until getGraphics()
+        self:getGraphics()
+    end
+    return self.iss3
 end
 
 -- Returns the datatype for parameters to opcodes that deal with addresses

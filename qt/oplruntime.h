@@ -22,6 +22,7 @@
 #include <QDir>
 #include <QElapsedTimer>
 #include <QKeyEvent>
+#include <QMap>
 #include <QMutex>
 #include <QObject>
 #include <QScopedPointer>
@@ -59,6 +60,18 @@ enum class Drive : char {
     M = 'M',
 };
 
+struct SisInfo
+{
+    enum Target { Epoc16, Epoc32 };
+
+    Target target;
+    uint32_t uid;
+    uint16_t versionMajor;
+    uint16_t versionMinor;
+    QVector<QString> languages;
+    QMap<QString, QString> name;
+};
+
 class OplRuntime : public QObject, public OplFontProvider
 {
     Q_OBJECT
@@ -84,7 +97,6 @@ public:
     bool running() const;
     QString lastLauncherCommand() const { return mLauncherCmd; }
     QString runningLauncherCommand() const { return running() ? mLauncherCmd : QString(); }
-    bool writableCDrive() const;
     void setDeviceType(DeviceType type);
     void setIgnoreOpoEra(bool flag);
     DeviceType getDeviceType() const;
@@ -99,12 +111,15 @@ public:
 
     void setDrive(Drive drive, const QString& path);
     void removeAllDrives();
+    Drive mainDrive() const;
+    bool writableMainDrive() const;
     QString getNativePath(const QString& devicePath) const;
+    QString mappingForDrive(Drive drive) const;
 
     void run(const QString& devicePath);
     void run(const QDir& cDrive, const QString& devicePath); // convenience
     void runOpo(const QString& path); // convenience, sets up dummy C drive
-    void runInstaller(const QString& file, const QString& displayPath);
+    void runInstaller(const QString& file, const QString& sysDir);
     void runLauncher();
     void runAppSelector();
 
@@ -115,6 +130,8 @@ public:
     void asyncFinished(AsyncHandle* handle, int code);
 
     void interruptAndRun(std::function<void(void)> runNextFn);
+
+    std::optional<SisInfo> getSisInfo(const QString& nativePath);
 
     static void configureLuaResourceSearcher(lua_State *L);
     static int dofile(lua_State *L);
@@ -237,7 +254,7 @@ private:
     static OplRuntime* getSelf(lua_State *L);
     QString tolocalstring(lua_State *L, int index);
     void setEscape(bool flag);
-    void doRunInstaller(const QString& file, const QString& displayPath, const QString& lang);
+    void doRunInstaller(const QString& file, const QString& sysDir, const QString& lang);
     bool debugInfoStale() const;
     void updateDebugInfo(lua_State* L, bool errOnStack = false);
     void doRenameVariable(lua_State* L, const QString& proc, uint32_t index, const QString& newName);
