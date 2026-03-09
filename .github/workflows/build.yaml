@@ -176,6 +176,22 @@ jobs:
             apt-get update -y
             apt-get install -y build-essential git
 
+        # Mint.
+
+        - name: mint-xia-amd64
+          os: ubuntu-24.04
+          container: mint:xia
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
+
+        - name: mint-xia-arm64
+          os: ubuntu-24.04-arm
+          container: mint:xia
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
+
         # Arch.
 
         - name: arch-latest-x86_64
