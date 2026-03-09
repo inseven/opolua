@@ -162,6 +162,20 @@ jobs:
             apt-get update -y
             apt-get install -y build-essential git
 
+        - name: debian-bookworm-amd64
+          os: ubuntu-24.04
+          container: debian:bookworm
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
+
+        - name: debian-bookworm-arm64
+          os: ubuntu-24.04-arm
+          container: debian:bookworm
+          setup: |
+            apt-get update -y
+            apt-get install -y build-essential git
+
         # Arch.
 
         - name: arch-latest-x86_64
