@@ -171,6 +171,7 @@ local prettyNames = {
     GGREY = "gGREY",
     GHEIGHT = "gHEIGHT",
     GIDENTITY = "gIDENTITY",
+    GINFO = "gINFO",
     GINFO32 = "gINFO32",
     GINVERT = "gINVERT",
     GIPRINT = "gIPRINT",
@@ -488,10 +489,21 @@ function decompileProc(proc, options)
         -- Syntax for commands like GETEVENT or SCREENINFO is
         -- StackByteAsWord(1), Array[In]DirectLeftSideInt, CallFunction(Addr), COMMAND
         local addr = popExpr(AddrType)
-        assertEquals(addr.call, "ADDR")
-        -- Convenience to reuse the popVar logic
-        stack:push(addr[1])
-        return popVar(type)
+        if addr.call == "ADDR" then
+            -- Convenience to reuse the popVar logic
+            stack:push(addr[1])
+            return popVar(type)
+        else
+            -- If there's no ADDR call then the original source must be using # syntax
+            local expr = {
+                type = "expr",
+                location = addr.location,
+                valType = AddrType,
+                operand = "#",
+                addr,
+            }
+            return expr
+        end
     end
 
     local function pushVar(isLeft, type, isLocal)
@@ -1005,7 +1017,8 @@ function decompileProc(proc, options)
                 handleStandardFn(location, standardFn)
             elseif fn == "Addr" then
                 -- If this is implicit it will be dropped by the op it's associated with
-                pushCall(location, AddrType, "ADDR", stack:pop())
+                local expr = stack:pop()
+                pushCall(expr.location, AddrType, "ADDR", expr)
             elseif fn == "IoOpen" then
                 handleStandardFn(location, {
                     name = "IOOPEN",
@@ -1013,7 +1026,8 @@ function decompileProc(proc, options)
                     valType = EWord,
                 })
             elseif fn == "SAddr" then
-                pushCall(location, AddrType, "ADDR", stack:pop())
+                local expr = stack:pop()
+                pushCall(expr.location, AddrType, "ADDR", expr)
             elseif fn == "IoOpenUnique" then
                 handleStandardFn(location, {
                     name = "IOOPEN",
@@ -1512,6 +1526,16 @@ function decompileProc(proc, options)
             local title = popExpr(EString)
             args[1] = eval(title)
             addStatement(title.location, "mCASC %s", table.concat(args, ", "))
+        elseif op == "rCache" then
+            local param = ip8()
+            if param < 2 then
+                addStatement(location, "CACHE %s", param == 1 and "ON" or "OFF")
+            else
+                handleStandardOp(location, {
+                    name = "CACHE",
+                    args = { Int, Int },
+                })
+            end
         else
             error("Unhandled op "..(op or fmt("0x%02X", opCode)))
         end
