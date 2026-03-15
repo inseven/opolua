@@ -98,6 +98,10 @@ local function ConstantFloat(val)
     return string.pack("<Bd", opcodes[oplFormat].ConstantFloat, val)
 end
 
+local function ConstantInt(val)
+    return string.pack("<Bi2", opcodes[oplFormat].ConstantInt, val)
+end
+
 local function ConstantLong(val)
     return string.pack("<Bi4", opcodes[oplFormat].ConstantLong, val)
 end
@@ -671,12 +675,39 @@ checkCode("gVISIBLE ON", {
     op"gVisible", 1,
 })
 
+checkCode("BUSY OFF", {
+    op"Busy", 0
+})
+
+checkCode('BUSY "busy"', {
+    ConstantString("busy"),
+    op"Busy", 1,
+})
+
+checkCode('BUSY "busy", 3', {
+    ConstantString("busy"),
+    op"StackByteAsWord", 3,
+    op"Busy", 2,
+})
+
+checkCode('BUSY "busy", 3, 1234', {
+    ConstantString("busy"),
+    op"StackByteAsWord", 3,
+    ConstantInt(1234),
+    op"Busy", 3,
+})
+
 checkCode("CURSOR OFF", {
     op"Cursor", 0,
 })
 
 checkCode("CURSOR ON", {
     op"Cursor", 1,
+})
+
+checkCode("CURSOR 1", {
+    op"StackByteAsWord", 1,
+    op"Cursor", 2,
 })
 
 checkCode("CURSOR 1, 2, 3, 4", {

@@ -466,6 +466,8 @@ Callables = {
     BEGINTRANS = Op("BeginTrans", {}),
     BOOKMARK = Fn("Bookmark", {}, Int),
     BUSY = SpecialOp(),
+    CACHE = SpecialOp(),
+    CALL = Fn("Call", {Int, Int, Int, Int, Int, Int, numParams = {1, 2, 3, 4, 5, 6}}, Int),
     CANCEL = Op("Cancel", {}),
     ["CHR$"] = Fn("ChrStr", {Int}, String),
     CLOSE = Op("Close", {}),
@@ -553,6 +555,7 @@ Callables = {
     GGREY = Op("gGrey", {Int}),
     GHEIGHT = Fn("gHeight", {}, Int),
     GIDENTITY = Fn("gIdentity", {}, Int),
+    GINFO = Op("gInfo", {AddressOfIntArray}),
     GINFO32 = Op("gInfo32", {AddressOfLongArray}),
     GINVERT = Op("gInvert", {Int, Int}),
     GIPRINT = Op("gIPrint", {String, Int, numParams = {1, 2}, numFixedParams = 1}),
@@ -2113,42 +2116,7 @@ function ProcState:parse()
                 self:emit("B", opcodes["Drop"..TypeToStr[valType]])
                 self:popStack(1)
             elseif callable then
-                -- Must be an op (that's the only other non-fn thing in Callables)
-                assert(callable.type == "op")
-                assert(callable.valType == nil) -- There are no op Callables with a return type
-                local args
-                if callable.args then
-                    -- We can parse args now
-                    tokens:advance()
-                    args = parseExpressionList(tokens)
-                    checkExpressionArguments(args, callable.args, token)
-                end
-                if callable.name then
-                    assert(callable.args)
-                    for i, argExp in ipairs(args) do
-                        self:emitExpression(argExp, expandPtrType(callable.args[i], oplFormat))
-                    end
-
-                    local opcode = opcodes[callable.name]
-                    if opcode == nil then
-                        synerror(token, "%s is not available in the specified OPL version", token.val)
-                    end
-                    if opcode >= 256 then
-                        self:emit("BB", opcodes.NextOpcodeTable, opcode - 256)
-                    else
-                        self:emit("B", opcode)
-                    end
-                    if callable.args.numParams then
-                        local numParams = #args - callable.args.numFixedParams
-                        self:emit("B", numParams)
-                    end
-                    self:popStack(#args)
-                else
-                    -- It's a special op that has a dedicated handler fn for whatever weirdness it has with its arguments
-                    local handler = _ENV["handleOp_"..token.val]
-                    handler(self, args)
-                end
-
+                self:handleOp(callable, token)
                 tokens:expect("eos", "colon")
                 tokens:advance()
             elseif nextToken.type == "eq" or nextToken.type == "oparen" then
@@ -2416,25 +2384,78 @@ function ProcState:parse()
     return result
 end
 
+function ProcState:handleOp(callable, callableToken)
+    local tokens = self.tokens
+    -- On entry, tokens:current() is immediately before the args (ie usually callableToken), args have not
+    -- been parsed.
+
+    -- Must be an op (that's the only other non-fn thing in Callables)
+    assert(callable.type == "op")
+    assert(callable.valType == nil) -- There are no op Callables with a return type
+    local args
+    if callable.args then
+        -- We can parse args now
+        tokens:advance()
+        args = parseExpressionList(tokens)
+        checkExpressionArguments(args, callable.args, callableToken)
+    end
+    if callable.name then
+        self:handleStandardOp(callable, args)
+    else
+        -- It's a special op that has a dedicated handler fn for whatever weirdness it has with its arguments
+        local handler = _ENV["handleOp_"..callableToken.val]
+        handler(self, args)
+    end
+end
+
+function ProcState:handleStandardOp(callable, args)
+    local opcodes = opcodes[self.oplFormat]
+    assert(callable.args)
+    for i, argExp in ipairs(args) do
+        self:emitExpression(argExp, expandPtrType(callable.args[i], oplFormat))
+    end
+
+    local opcode = opcodes[callable.name]
+    if opcode == nil then
+        synerror(token, "%s is not available in the specified OPL version", token.val)
+    end
+    if opcode >= 256 then
+        self:emit("BB", opcodes.NextOpcodeTable, opcode - 256)
+    else
+        self:emit("B", opcode)
+    end
+    if callable.args.numParams then
+        local numParams = #args - callable.args.numFixedParams
+        self:emit("B", numParams)
+    end
+    self:popStack(#args)
+end
+
 function handleOp_BUSY(procState)
     local opcodes = opcodes[procState.oplFormat]
     local cmdToken = procState.tokens:current()
-    procState.tokens:advance()
-    local numParams
-    if procState.tokens:current().type == "OFF" then
-        numParams = 0
-        procState.tokens:advance()
+    if procState.tokens:peekNext().type == "OFF" then
+        procState.tokens:advance() -- to the OFF
+        procState.tokens:advance() -- consume the OFF
+        procState:emit("BB", opcodes.Busy, 0)
     else
-        local args = parseExpressionList(procState.tokens)
-        local declArgs = {String, Int, Int, numParams = {1, 2, 3}}
-        checkExpressionArguments(args, declArgs, cmdToken)
-        for i, arg in ipairs(args) do
-            procState:emitExpression(arg, declArgs[i])
-        end
-        numParams = #args
+        local op = Op("Busy", {String, Int, Int, numParams = {1, 2, 3}, numFixedParams = 0})
+        procState:handleOp(op, cmdToken)
     end
-    procState:emit("BB", opcodes.Busy, numParams)
-    procState:popStack(numParams)
+end
+
+function handleOp_CACHE(procState)
+    local tokens = procState.tokens
+    local cmdToken = procState.tokens:current()
+    local next = tokens:peekNext()
+    if next.type == "OFF" or next.type == "ON" then
+        tokens:advance() -- to the OFF/ON
+        tokens:advance() -- consume the OFF/ON
+        procState:emit("BB", opcodes[procState.oplFormat].rCache, next.type == "ON" and 1 or 0)
+    else
+        local op = Op("rCache", {Int, Int, numParams = {2}, numFixedParams = 0})
+        procState:handleOp(op, cmdToken)
+    end
 end
 
 local function handleOpenOrCreate(procState, opcode)
