@@ -51,6 +51,7 @@ void FileSystemIoHandler::removeMapping(char drive)
 
 void FileSystemIoHandler::removeAllMappings()
 {
+    // qDebug("removeAllMappings");
     QMutexLocker lock(&mMutex);
     mPaths.clear();
     mSimulatedDrive = 0;

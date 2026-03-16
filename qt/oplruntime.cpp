@@ -217,6 +217,7 @@ int OplRuntime::dofile(lua_State *L)
 
 void OplRuntime::setDeviceType(DeviceType type)
 {
+    // qDebug("setDeviceType %s -> %s", qPrintable(deviceTypeToString(mDeviceType)), qPrintable(deviceTypeToString(type)));
     mDeviceType = type;
 
     // In case we are switching families, remove any inappropriate main drive mapping
@@ -596,6 +597,12 @@ void OplRuntime::startThread()
 
 void OplRuntime::runOpo(const QString& path)
 {
+    // guh, kinda need to know the right device type in advance so we can select the appropriate drive, otherwise it'll
+    // risk getting nuked if a corrective device switch happens subsequently.
+    bool isSiboFormat = opoIsSibo(path);
+    if (isSiboFormat != isSibo()) {
+        setDeviceType(isSiboFormat ? psionSeries3c : psionSeries5);
+    }
     auto drv = (char)mainDrive();
     mFs->addSimulatedDrive(drv, {path});
     pushRunParams(QString("%1:\\%2").arg(drv).arg(QFileInfo(path).fileName()));
@@ -2579,6 +2586,16 @@ QString OplRuntime::aifForAppPath(const QString& path)
         }
     }
     return QString();
+}
+
+bool OplRuntime::opoIsSibo(const QString& nativePath)
+{
+    QFile f(nativePath);
+    if (f.open(QFile::ReadOnly)) {
+        auto header = f.read(15);
+        return header == "OPLObjectFile**";
+    }
+    return false;
 }
 
 QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVector<opl::NameOverride>& renames)

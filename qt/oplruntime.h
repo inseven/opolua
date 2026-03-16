@@ -105,6 +105,7 @@ public:
     static DeviceType toDeviceType(const QString& device);
     static bool isSiboDeviceType(DeviceType type);
     static QString aifForAppPath(const QString& path);
+    static bool opoIsSibo(const QString& nativePath);
 
     Speed getSpeed() const;
     void setSpeed(Speed speed);
