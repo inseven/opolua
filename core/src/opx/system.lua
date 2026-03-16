@@ -567,7 +567,7 @@ function MainBatteryStatus(stack, runtime) -- 69
 end
 
 function BackupBatteryStatus(stack, runtime) -- 70
-    unimplemented("opx.system.BackupBatteryStatus")
+    stack:push(0) -- Zero
 end
 
 function CaptureKey(stack, runtime) -- 71

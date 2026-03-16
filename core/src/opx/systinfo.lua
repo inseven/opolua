@@ -127,7 +127,19 @@ function SIHiddenVisible(stack, runtime) -- 2
 end
 
 function SICurrencyFormat(stack, runtime) -- 3
-    unimplemented("opx.systinfo.SICurrencyFormat")
+    local triadsAllowed = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local symbolPosition = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local spaceBetween = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local negativeInBrackets = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local decimalPlaces = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local currencySymbol = "\xA3" -- pound sign in CP1250
+
+    decimalPlaces(2)
+    negativeInBrackets(0)
+    spaceBetween(1)
+    symbolPosition(0)
+    triadsAllowed(0)
+    stack:push(currencySymbol)
 end
 
 function SIDateFormat(stack, runtime) -- 4
@@ -166,7 +178,7 @@ function SITimeFormat(stack, runtime) -- 5
 end
 
 function SIUTCOffset(stack, runtime) -- 6
-    unimplemented("opx.systinfo.SIUTCOffset")
+    stack:push(0)
 end
 
 function SIWorkday(stack, runtime) -- 7
@@ -235,7 +247,20 @@ function SIBatteryVolts(stack, runtime) -- 18
 end
 
 function SIBatteryCurrent(stack, runtime) -- 19
-    unimplemented("opx.systinfo.SIBatteryCurrent")
+    local batteryInsertionTime = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local externalPowerPresent = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local externalPowerInUseSeconds = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local mainBatteryInUseSeconds = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local mainBatteryUsedMilliAmpSeconds = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+    local currentConsumptionMilliAmps = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
+
+    currentConsumptionMilliAmps(0)
+    mainBatteryUsedMilliAmpSeconds(0)
+    mainBatteryInUseSeconds(0)
+    externalPowerInUseSeconds(0)
+    externalPowerPresent(1)
+    batteryInsertionTime(0) -- this should be a datetime handle...
+    stack:push(0)
 end
 
 function SIMemory(stack, runtime) -- 20
@@ -331,11 +356,12 @@ function SIXYInputPresent(stack, runtime) -- 38
 end
 
 function SIKeyboardPresent(stack, runtime) -- 39
-    unimplemented("opx.systinfo.SIKeyboardPresent")
+    stack:push(true)
 end
 
 function SIMaximumColors(stack, runtime) -- 40
-    unimplemented("opx.systinfo.SIMaximumColors")
+    local bits = GCreateModeToBpp[runtime:getGraphics().screenMode]
+    stack:push(1 << bits)
 end
 
 function SIProcessorClock(stack, runtime) -- 41
@@ -375,7 +401,9 @@ function SIPWSetEnabled(stack, runtime) -- 49
 end
 
 function SIPWIsValid(stack, runtime) -- 50
-    unimplemented("opx.systinfo.SIPWIsValid")
+    local pw = stack:pop()
+    printf("SIPWIsValid(%s)\n", pw)
+    stack:push(false)
 end
 
 function SIPWSet(stack, runtime) -- 51
