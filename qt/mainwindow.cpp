@@ -547,7 +547,9 @@ void MainWindow::applyManifest()
     auto manifest = QJsonDocument::fromJson(f.readAll());
     QString device = manifest["device"].toString();
 
-    getRuntime().setDeviceType(OplRuntime::toDeviceType(device));
+    if (!device.isEmpty()) {
+        getRuntime().setDeviceType(OplRuntime::toDeviceType(device));
+    }
     doSetScale(manifest["scale"].toInt(1));
 
     mSourceUrl = manifest["sourceUrl"].toString();
