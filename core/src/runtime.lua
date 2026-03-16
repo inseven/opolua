@@ -1314,6 +1314,7 @@ function Runtime:pcallProc(procName, ...)
                     end
                 end
             else
+                self:debugEvent("error", err.msg)
                 repeat
                     local prevFrame = self:popFrame(stack)
                 until prevFrame == callingFrame

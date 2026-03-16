@@ -180,6 +180,7 @@ public slots: // Debugging-related slots
     void clearBreakpoint(const QString& moduleNativePath, uint32_t addr);
     void renameVariable(const QString& proc, uint32_t index, const QString& newName);
     void flushGraphicsOps();
+    void stopDebugging();
 
 signals:
     void startedRunning(const QString& path);

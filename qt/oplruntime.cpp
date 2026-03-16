@@ -2020,6 +2020,12 @@ int OplRuntime::debugEvent(lua_State* L)
     bool shouldBreak = false;
     bool isErr = false;
     if (mBreakOnErr && ev == "err") {
+        // An epoc error has occurred (eg a RAISE or a leave)
+        shouldBreak = true;
+        isErr = true;
+    }
+    if (ev == "error") {
+        // An opolua untrappable doom condition
         shouldBreak = true;
         isErr = true;
     }
@@ -2029,7 +2035,7 @@ int OplRuntime::debugEvent(lua_State* L)
         mBreakOnNext = None;
     }
 
-    if (shouldBreak) {
+    if (shouldBreak && mDebugging) {
         mPaused = true;
         mWaiting = true;
         lock.unlock();
@@ -2308,7 +2314,12 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
     Q_ASSERT(lua_gettop(L) == top); // Make sure stack is left balanced
 
     if (errOnStack) {
-        info.err = lua_tointeger(L, -1);
+        if (lua_type(L, -1) == LUA_TNUMBER) {
+            info.err = lua_tointeger(L, -1);
+        } else {
+            info.exitingError = lua_tostring(L, -1);
+        }
+        lua_pop(L, 1);
     }
 
     mMutex.lock();
@@ -2388,12 +2399,12 @@ QString OplRuntime::varToStr(const opl::Variable& v, int idx)
 void OplRuntime::updateDebugInfoIfStale()
 {
     ASSERT_MAIN_THREAD();
-    if (!running()) {
-        return;
-    }
     QMutexLocker lock(&mMutex);
     if (!mDebugging) {
         mDebugging = true;
+    }
+    if (!running()) {
+        return;
     }
     if (debugInfoStale()) {
         bool paused = mPaused && mWaiting;
@@ -2416,6 +2427,13 @@ opl::ProgramInfo OplRuntime::getDebugInfo()
     updateDebugInfoIfStale();
     QMutexLocker lock(&mMutex);
     return mDebugInfo;
+}
+
+void OplRuntime::stopDebugging()
+{
+    // qDebug("stopDebugging");
+    QMutexLocker lock(&mMutex);
+    mDebugging = false;
 }
 
 void OplRuntime::printDebugInfo()

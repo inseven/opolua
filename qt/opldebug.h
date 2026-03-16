@@ -70,6 +70,7 @@ struct ProgramInfo
     QVector<Drawable> drawables;
     bool paused;
     std::optional<int> err;
+    QString exitingError;
 };
 
 static inline bool operator==(const Module &lhs, const Module &rhs)
