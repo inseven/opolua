@@ -33,6 +33,7 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     ui->actionToggleBreak->setEnabled(false);
     ui->breakOnError->setChecked(runtime->breakOnError());
     ui->windowFocusEnabled->setChecked(!runtime->ignoreFocusEvents());
+    ui->actionExportBitmap->setVisible(false);
 #ifdef Q_OS_MAC
     ui->actionRestart->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+R", nullptr));
     ui->actionClose->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+W", nullptr));
@@ -89,6 +90,7 @@ DebuggerWindow::~DebuggerWindow()
         mRuntime->unpause();
     }
     delete ui;
+    mRuntime->stopDebugging();
 }
 
 static QString describeDrawable(const opl::Drawable& d)
@@ -241,7 +243,9 @@ void DebuggerWindow::debugInfoUpdated()
     }
 
     QString status;
-    if (info.err.has_value()) {
+    if (!info.exitingError.isEmpty()) {
+        status = info.exitingError;
+    } else if (info.err.has_value()) {
         status = QString("Error raised: %1").arg(*info.err);
     } else if (info.paused) {
         status = "Paused";
