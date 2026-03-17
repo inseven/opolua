@@ -239,10 +239,10 @@ function SIBatteryVolts(stack, runtime) -- 18
     local mainMax = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
     local mainCur = runtime:addrAsVariable(stack:pop(), DataTypes.ELong)
 
-    mainCur(3300)
-    mainMax(3300)
-    backupCur(3100)
-    backupMax(3100)
+    mainCur(3000)
+    mainMax(3000)
+    backupCur(0)
+    backupMax(3000)
     stack:push(0)
 end
 
