@@ -31,7 +31,7 @@ jobs:
         git submodule update --init --depth 1 scripts/changes
 
     - name: Install the tool dependencies
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v4
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -99,7 +99,7 @@ jobs:
         scripts/build-ios.sh
 
     - name: Archive the binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: opolua-ios
         path: build/build.zip
@@ -214,7 +214,7 @@ jobs:
       run: scripts/build-qt-linux.sh
 
     - name: Archive the binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: opolua-qt-${{ matrix.name }}
         path: qt/build/artifacts/*
@@ -241,7 +241,7 @@ jobs:
 
     - name: Cache Qt
       id: cache-qt
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: qt-install
         key: qt-${{ runner.os }}-${{ hashFiles('scripts/install-qt.sh') }}
@@ -256,7 +256,7 @@ jobs:
       run: scripts/build-qt-windows.sh
 
     - name: Archive the binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: opolua-qt-windows
         path: qt/build/build.zip
@@ -280,7 +280,7 @@ jobs:
         submodules: recursive
 
     - name: Install the tool dependencies
-      uses: jdx/mise-action@v2
+      uses: jdx/mise-action@v4
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -308,7 +308,7 @@ jobs:
         scripts/build-qt-mac.sh
 
     - name: Archive the binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: opolua-qt-macos
         path: qt/build/build.zip
@@ -362,7 +362,7 @@ jobs:
       run: scripts/release.sh
 
     - name: Archive the binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: build
         path: build/*
@@ -392,7 +392,7 @@ jobs:
           git submodule update --init --depth 1 scripts/changes
 
       - name: Install the tool dependencies
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
