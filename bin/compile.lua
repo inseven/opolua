@@ -36,14 +36,15 @@ function main()
         help = true, h = "help",
         aif = true,
         format = string, t = "format",
+        stdout = true, o = "stdout",
     })
 
     if args.help then
         print([[
 Syntax: compile.lua [options] <filename> [<output>]
 
-Compile a Series 5 era OPL program. If neither <output> nor --dump are
-specified, the result is written to <filename>.opo alongside <filename>.
+Compile a Series 5 era OPL program. If neither <output>, --stdout, nor --dump
+are specified, the result is written to <filename>.opo alongside <filename>.
 
 <filename> can be either a plain text file, or an OPL file. OPL files are
 converted to text as per opltotext.lua. 
@@ -52,6 +53,10 @@ Options:
     --dump, -d
         Prints the bytecode of the resulting binary to stdout (using
         dumpopo.lua --all).
+
+    --stdout, -o
+        Prints the resulting binary to stdout. Useful for piping directly to
+        dumpopo.lua --stdin. Cannot be combined with --aif, <output> or --dump.
 
     --include <dir>, -i <dir>
         Add <dir> to the list of locations to be searched when an INCLUDE
@@ -86,6 +91,11 @@ Options:
         ["er5"] = compiler.OplEr5,
     }
     local format = assert(argToFormat[args.format or "er5"], "Bad --format argument")
+    if args.stdout then
+        assert(args.output == nil, "Cannot specify both --stdout and <output>")
+        assert(args.dump == nil, "Cannot specify both --stdout and --dump")
+    end
+
     local progText = readFile(args.filename)
     if progText:sub(1, 4) == string.pack("<I4", KUidDirectFileStore) then
         -- Assume it's a .opl file
@@ -117,8 +127,9 @@ Options:
             opofile.printProc(proc)
             rt:dumpProc(proc.name)
         end
-    end
-    if args.output or not args.dump then
+    elseif args.stdout then
+        io.stdout:write(result)
+    else
         local outName = args.output or (oplpath.splitext(args.filename) .. ".opo")
         writeFile(outName, result)
         if args.aif then

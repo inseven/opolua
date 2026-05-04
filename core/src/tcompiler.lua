@@ -1434,11 +1434,31 @@ prog = compiler.docompile("D:\\simple.opl", nil, simple, {}, compiler.OplEr5)
 prog = compiler.docompile("D:\\globint.opl", nil, globint, {}, compiler.OplEr5)
 prog = compiler.docompile("D:\\globals.opl", nil, globals, {}, compiler.OplEr5)
 
--- progData = require("opofile").makeOpo(prog)
--- rt = require("runtime").newRuntime({ fsop = function(op) assert(op=="read"); return progData end })
--- rt.instructionDebug = true
--- rt:loadModule(prog.path)
--- opofile.printProc(rt:findProc("MAIN"))
--- rt:dumpProc("MAIN")
+
+-- The trick with this one is there's a goto after the "REM Inner if" which serves to terminate both
+-- ENDIFs, so we need to ensure we only elide it once. Checking the program bytecode is incidental
+-- to the fact that checkProg also attempts to decompile it, which exercises the logic in question.
+doubleEndif = [[
+PROC main:
+    IF 1
+        IF 2
+            REM Inner if
+            REM GOTO gets inserted here because of the ELSE
+        ELSE
+            REM Nope
+        ENDIF
+    ENDIF
+ENDP
+]]
+checkProg(doubleEndif, {
+    {
+        op"StackByteAsWord", 1,
+        op"BranchIfFalse", h(11),
+        op"StackByteAsWord", 2,
+        op"BranchIfFalse", h(6),
+        op"GoTo", h(3),
+        op"ZeroReturnFloat",
+    }
+})
 
 print("All tests passed.")
