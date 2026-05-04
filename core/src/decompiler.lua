@@ -650,6 +650,17 @@ function decompileProc(proc, options)
         return statements[index].location
     end
 
+    local function decrementGotoRefCount(target)
+        local ref = gotoLabels[target]
+        if not ref then
+            error(string.format("No GOTO target %04X", target))
+        end
+        if ref <= 0 then
+            error(string.format("Reference count imbalance for target 0x%04X ref=%d", target, ref))
+        end
+        gotoLabels[target] = ref - 1
+    end
+
     local function locationIsControlFlowTarget(location)
         return (gotoLabels[location] or 0) > 0
             or namedLabels[location] ~= nil
@@ -668,9 +679,8 @@ function decompileProc(proc, options)
     local function elideGotoStatement(idx)
         local s = statements[idx]
         assert(s.type == "GOTO", dump(s))
-        assert(gotoLabels[s.dest])
         s.elided = true
-        gotoLabels[s.dest] = gotoLabels[s.dest] - 1
+        decrementGotoRefCount(s.dest)
         -- Note this doesn't remove from branchTargets because it _is_ still a target even if it's not a target of an
         -- explicit GOTO.
     end
@@ -1721,7 +1731,9 @@ function decompileProc(proc, options)
                 s.opener.endifLocation = s.endifLocation
 
                 -- And we can remove the GOTO, providing it was a straightforward end-of-if-block jump and not a BREAK
-                if prevStatement.dest == s.endifLocation then
+                -- We also have to check it's not already been elided by a previous ENDIF if multiple blocks terminate
+                -- at the same place (see doubleEndif in tcompiler.lua)
+                if prevStatement.dest == s.endifLocation and not prevStatement.elided then
                     elideGotoStatement(prevRealStatementIdx)
                 end
             end
@@ -1787,7 +1799,7 @@ function decompileProc(proc, options)
             end
             if s.dest == breakDest then
                 s.value = "BREAK"
-                gotoLabels[s.dest] = gotoLabels[s.dest] - 1
+                decrementGotoRefCount(s.dest)
             elseif s.dest == continueDest then
                 s.value = "CONTINUE"
             end

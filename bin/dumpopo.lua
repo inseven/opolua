@@ -37,12 +37,13 @@ function main()
         annotate = true, t = "annotate",
         name = table, n = "name",
         aif = string, i = "aif",
+        stdin = true,
     })
     local procName = args.procName
     local all = args.all
     if args.help then
         printf("%s", [=[
-Syntax: dumpopo.lua <filename> [options] [<procName> [<startAddr>]]
+Syntax: dumpopo.lua <filename>|--stdin [options] [<procName> [<startAddr>]]
 
 Prints information about the specified OPO (compiled OPL) file.
 
@@ -75,10 +76,24 @@ Options:
     --aif <path>, -i <path>
         Adds an APP...ENDA block to the decompile output based on the given AIF
         file.
+
+    --stdin
+        Read from stdin rather than a file. <filename> must not be specified.
 ]=])
         return os.exit(false)
     end
-    local data = readFile(args.filename)
+
+    local data
+    if args.stdin then
+        -- Our argparser doesn't handle optional positional args, so need to manually shuffle
+        -- everything.
+        args.startAddr = args.procName
+        args.procName = args.filename
+        args.filename = "<stdin>" -- for options.path
+        data = io.stdin:read("a")
+    else
+        data = readFile(args.filename)
+    end
     local startAddr = args.startAddr and tonumber(args.startAddr, 16)
     local verbose = not args.decompile and (all or procName == nil)
     opofile = require("opofile")
