@@ -652,7 +652,7 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
     local isRootInstall = (stubs == nil)
     if stubs == nil then
         local err
-        stubs, err = getStubs(iohandler)
+        stubs, err = getStubs(iohandler, callbackContext)
         if stubs == nil then
             return failInstall(nil, "epocerr", err)
         end
@@ -849,8 +849,8 @@ function uninstallSis(stubMap, uid, iohandler, upgrading)
     delete(sisfile.path) -- the stub
 end
 
-function getStubs(iohandler)
-    local result, err = iohandler.sisGetStubs()
+function getStubs(iohandler, callbackContext)
+    local result, err = iohandler.sisGetStubs(callbackContext)
     if result == "notimplemented" then
         result = {}
         local disks = assert(iohandler.fsop("disks", ""))

@@ -810,7 +810,7 @@ public struct Sis {
 
 public protocol SisInstallIoHandler: FileSystemIoHandler {
 
-    func sisGetStubs() -> Sis.GetStubsResult
+    func sisGetStubs(sis: Sis.File) -> Sis.GetStubsResult
 
     func sisInstallBegin(sis: Sis.File, context: Sis.BeginContext) -> Sis.BeginResult
 
