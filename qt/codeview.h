@@ -7,6 +7,7 @@
 #include <QPlainTextEdit>
 #include <QSet>
 #include <QVector>
+#include <optional>
 
 class Highlighter;
 class TokenizerBase;
