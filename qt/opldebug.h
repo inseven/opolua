@@ -8,6 +8,7 @@
 #include <QString>
 #include <QVariant>
 #include <QVector>
+#include <optional>
 
 namespace opl {
 
