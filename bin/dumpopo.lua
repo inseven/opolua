@@ -38,6 +38,7 @@ function main()
         name = table, n = "name",
         aif = string, i = "aif",
         stdin = true,
+        option = table, o = "option",
     })
     local procName = args.procName
     local all = args.all
@@ -64,8 +65,9 @@ Options:
         Decompiles all procedures unless <procName> is specified.
 
     --annotate, -t
-        Adds some annotations to the output of --decompile, such as labels and
-        GOTOs that normally wouldn't appear in the source.
+        In addition to setting the annotate and show-elided options (see below),
+        also prefixes each line with the address of the start of the first
+        statement on that line.
 
     --name <proc>:<name>=<newname>
         Manually specify a name for a local in the given proc. Can be used
@@ -79,8 +81,61 @@ Options:
 
     --stdin
         Read from stdin rather than a file. <filename> must not be specified.
+
+    --option <opt>, -o <opt>
+        Pass an option to the decompiler to customise its output.
+        Options include:
+            annotate
+                Adds comments about inferred block structure.
+            show-elided
+                Add comments for control statements that are normally not
+                shown, such as implicit returns, and GOTOs that are part of
+                block structures.
+            no-elide
+                Like show-elided, but leave the statements in place rather than
+                commenting them.
+            no-merge-prints
+                Do not recombine print commands into compound print statements.
+            no-breaks
+                Do not convert GOTOs into BREAKs and CONTINUEs where applicable.
+            no-elses
+                Do not convert non-dropping-through IF...ENDIF into
+                IF...ELSE...ENDIF. Implies no-elseifs.
+            no-elseifs
+                Do not combine ELSE + IF... into ELSEIF.
+            no-whiles
+                Do not convert applicable IF...ENDIF into WHILE...ENDWH. Due to
+                the way ELSE blocks are calculated requiring the WHILE transform
+                to have taken place, this option implies no-elses and
+                no-elseifs.
 ]=])
         return os.exit(false)
+    end
+
+    -- Options are actually added to options table later, this is just to check for unknowns
+    local knownOptions = {
+        annotate = true,
+        ["no-breaks"] = true,
+        ["no-elide"] = true,
+        ["no-elses"] = true,
+        ["no-elseifs"] = true,
+        ["no-merge-prints"] = true,
+        ["no-whiles"] = true,
+        ["show-elided"] = true,
+    }
+    for _, option in ipairs(args.option) do
+        if not knownOptions[option] then
+            printf("Warning: Unknown option '%s'\n", option)
+        end
+    end
+
+    local function hasOption(opt)
+        for _, option in ipairs(args.option) do
+            if option == opt then
+                return true
+            end
+        end
+        return false
     end
 
     local data
@@ -106,7 +161,7 @@ Options:
         for _, rename in ipairs(args.name) do
             local proc, oldName, newName = rename:match("(.*):([A-Za-z0-9_]+)%=(.*)")
             if not proc then
-                io.stderr:write("Syntax: --name PROCNAME:<oldname>=<newname>")
+                io.stderr:write("Syntax: --name PROCNAME:<oldname>=<newname>\n")
                 return os.exit(false)
             end
             if not names[proc] then
@@ -124,7 +179,7 @@ Options:
         local options = {
             path = args.filename,
             opxTable = prog.opxTable,
-            annotate = args.annotate,
+            annotate = args.annotate or hasOption("annotate"),
             outputFn = function(location, ...)
                 if args.annotate then
                     if location then
@@ -138,7 +193,30 @@ Options:
             format = prog.translatorVersion,
             renames = names,
             aif = aif,
+            showElided = hasOption("show-elided") or args.annotate,
         }
+        if hasOption("no-merge-prints") then
+            options.mergePrints = false
+        end
+        if hasOption("no-elide") then
+            options.elide = false
+        end
+        if hasOption("no-breaks") then
+            options.addBreaksAndContinues = false
+        end
+        if hasOption("no-whiles") then
+            options.addWhiles = false
+            options.addElseifs = false
+            options.addElses = false
+        end
+        if hasOption("no-elseifs") then
+            options.addElseifs = false
+            options.addElses = false
+        end
+        if hasOption("no-elses") then
+            options.addElses = false
+        end
+
         local ok, err
         if procName then
             ok, err = require("decompiler").decompileProc(rt:findProc(procName:upper()), options)

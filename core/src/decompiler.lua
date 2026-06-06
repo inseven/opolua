@@ -127,7 +127,9 @@ local ELongArray = DataTypes.ELongArray
 local ERealArray = DataTypes.ERealArray
 local EStringArray = DataTypes.EStringArray
 
-local CRLF = "\x0D\x0A"
+-- These are used by compound print expressions
+local kExprCrLf = "\x0D\x0A"
+local kExprSpace = '" "'
 
 local suffToType = { ["%"] = EWord, ["&"] = ELong, ["$"] = EString, [""] = EReal }
 
@@ -208,10 +210,6 @@ local prettyNames = {
     GXPRINT = "gXPRINT",
     GY = "gY",
 }
-
-local function getLabelName(dest)
-    return fmt("label_%04X::", dest)
-end
 
 function decompileProc(proc, options)
     local opofile = require("opofile")
@@ -453,6 +451,11 @@ function decompileProc(proc, options)
         end
     end
 
+    local function getLabelName(dest)
+        local name = fmt("label_%04X", dest)
+        return (renames[name] or name).."::"
+    end
+
     local function popExpr(type)
         local expr = stack:pop()
         if expr.type ~= "expr" then
@@ -640,9 +643,21 @@ function decompileProc(proc, options)
         return nil
     end
 
-    -- This is the location of the code that would be executed after hitting a given endif
-    local function endifStatementNextLocation(index)
-        assertEquals(statements[index].value, "ENDIF")
+    local function prevRealStatement(i)
+        local prevRealStatementIdx = i - 1
+        while statements[prevRealStatementIdx] and statements[prevRealStatementIdx].location == nil do
+             prevRealStatementIdx = prevRealStatementIdx - 1
+        end
+        if statements[prevRealStatementIdx] == nil then
+            error("No real statement found prior to "..tostring(i))
+        end
+        return statements[prevRealStatementIdx], prevRealStatementIdx
+    end
+
+    -- This is the location of the code that would be executed after hitting a given endif, or after exiting a given
+    -- while loop.
+    local function endStatementNextLocation(index)
+        assert(statements[index].value == "ENDIF" or statements[index].value == "ENDWH")
         index = index + 1
         while statements[index].location == nil do
             index = index + 1
@@ -677,6 +692,9 @@ function decompileProc(proc, options)
     end
 
     local function elideGotoStatement(idx)
+        if options.elide == false then
+            return
+        end
         local s = statements[idx]
         assert(s.type == "GOTO", dump(s))
         s.elided = true
@@ -1153,15 +1171,15 @@ function decompileProc(proc, options)
             pushBinaryExpr(EReal, "/%")
         elseif op == "ZeroReturnInt" or op == "ZeroReturnLong" or op == "ZeroReturnFloat" or op == "NullReturnString" then
             local s = addStatement(location, "RETURN")
-            if ip == endIdx then
+            if ip == endIdx and options.elide ~= false then
                 s.elided = true
             end
 
             local maxEpilogSize = 64 -- Arbitrary, just to limit search
-            if ip + maxEpilogSize > endIdx and not s.elided then
+            if ip < endIdx then
                 -- Check if there's any way the following code is reachable, and if not assume it is epilogue junk
                 local reachable = false
-                for offset = ip, endIdx - 1 do
+                for offset = ip, math.min(ip + maxEpilogSize, endIdx - 1) do
                     if branchTargets[offset] then
                         reachable = true
                         break
@@ -1238,28 +1256,28 @@ function decompileProc(proc, options)
             addPrintStatement("PRINT", {
                 type = "expr",
                 location = location, 
-                value = " ",
+                value = kExprSpace,
                 valType = EString,
             })
         elseif op == "LPrintSpace" then
             addPrintStatement("LPRINT", {
                 type = "expr",
                 location = location, 
-                value = " ",
+                value = kExprSpace,
                 valType = EString,
             })
         elseif op == "PrintCarriageReturn" then
             addPrintStatement("PRINT", {
                 type = "expr",
                 location = location, 
-                value = CRLF,
+                value = kExprCrLf,
                 valType = EString,
             }, true)
         elseif op == "LPrintCarriageReturn" then
             addPrintStatement("LPRINT", {
                 type = "expr",
                 location = location, 
-                value = CRLF,
+                value = kExprCrLf,
                 valType = EString,
             }, true)
         elseif op == "InputInt" then
@@ -1306,6 +1324,7 @@ function decompileProc(proc, options)
             for i = 1, ncases do
                 local dest = location + ips16()
                 local label = fmt(era == "sibo" and "v%04X_%d" or "vector_%04X_case_%d", location, i)
+                label = renames[label] or label
                 addNamedLabel(dest, label.."::")
                 addStatement(location + i * 2, label)
             end
@@ -1319,6 +1338,7 @@ function decompileProc(proc, options)
             else
                 local dest = location + offset
                 local label = fmt(era == "sibo" and "err_%04X" or "errhandler_%04X", dest)
+                label = renames[label] or label
                 addNamedLabel(dest, label.."::")
                 addStatement(location, "ONERR %s", label)
             end
@@ -1565,7 +1585,9 @@ function decompileProc(proc, options)
             local jmp = string.unpack("<i2", proc.data, 1 + ip + 1)
             local newIp = ip + jmp
             -- printf("skipping prolog GOTO to 0x%X\n", newIp)
-            addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+            if annotate then
+                addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+            end
             realCodeStart = newIp
             ip = newIp
         elseif string.unpack("c3", proc.data, 1 + ip) == "\x4F\x00\x5B" then
@@ -1574,7 +1596,9 @@ function decompileProc(proc, options)
             if jmp > 0 then
                 local newIp = ip + 2 + jmp
                 -- printf("skipping prolog BranchIfFalse(0) to 0x%X\n", newIp)
-                addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+                if annotate then
+                    addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+                end
                 if ip == realCodeStart then
                     realCodeStart = newIp
                 end
@@ -1584,8 +1608,10 @@ function decompileProc(proc, options)
             -- Simple[In]DirectRightSideInt, StackByteAsWord, CompareEqualInt, BranchIfFalse, ConstantString
             local jmp = string.unpack("<i2", proc.data, 1 + ip + 7)
             local newIp = ip + 6 + jmp 
-            -- printf("skipping prolog CompareEqualInt BranchIfFalse to 0x%X\n", newIp)           
-            addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+            -- printf("skipping prolog CompareEqualInt BranchIfFalse to 0x%X\n", newIp)
+            if annotate then
+                addStatement(ip, "REM skipping prolog junk to 0x%X", newIp)
+            end
             ip = newIp
         end
 
@@ -1615,24 +1641,24 @@ function decompileProc(proc, options)
 
     local blockNest = { { type = "PROC" } } -- Stack of block scopes, where a block here is code inside a IF/ELSEIF/DO/WHILE 
     local function emit(val, ...)
-        local str, location, elided
+        local str, location
         if type(val) == "string" then
             str = fmt(val, ...)
             location = nil
         else
             local statement = val
             location = statement.location
-            if statement.elided and not annotate then
+            if statement.elided and not options.showElided then
                 return
             end
             if statement.type == "PRINT" or statement.type == "gPRINT" or statement.type == "LPRINT" then
                 local parts = { statement.type }
                 local needsSep = false
                 for i, part in ipairs(statement) do
-                    if part.value == " " and needsSep then
+                    if part.value == kExprSpace and needsSep then
                         table.insert(parts, ",")
                         needsSep = false
-                    elseif part.value == CRLF then
+                    elseif part.value == kExprCrLf then
                         -- Otherwise something is wrong as there's no way to express a literal \r\n in OPL other than via PrintCarriageReturn
                         assert(statement.isLast)
                         assert(statement[i + 1] == nil)
@@ -1657,6 +1683,10 @@ function decompileProc(proc, options)
                         str = fmt("%s :rem endif=%04X", str, statement.endifLocation)
                     elseif statement.value == "ENDIF" then
                         str = fmt("%s :rem if=%04X", str, statement.opener.location)
+                    -- elseif statement.type == "WHILE" then
+                    --     str = fmt("%s :rem endwh=%04X", str, statement.closer.location)
+                    elseif statement.value == "ENDWH" then
+                        str = fmt("%s :rem while=%04X", str, statement.opener.location)
                     end
                 end
             end
@@ -1686,27 +1716,58 @@ function decompileProc(proc, options)
         end
     end
 
+    -- for i, stmt in ipairs(statements) do
+    --     printf("%d: %s\n", i, dump(stmt))
+    -- end
+
+    -- Pass to translate GOTO...ENDIF to ENDWH. Doing this first makes ELSE transforming easier because there's no risk
+    -- that an ENDIF generated by transforming a non-dropping-through IF..ENDIF..code into IF..ELSE..code..ENDIF causes
+    -- the GOTO and ENDIF to become separated. Because not getting separated is essential to correctly establishing
+    -- whether the GOTO at the end of a non-dropping-through IF..ENDIF is a BREAK or not, if this pass is skipped,
+    -- the expandIfs pass must be too.
+    local i = options.addWhiles == false and #statements or 1
+    while i < #statements do
+        local s = statements[i]
+        if s.value == "ENDIF" then
+            local prevStatement = prevRealStatement(i)
+
+            if prevStatement.type == "GOTO" and prevStatement.dest == s.opener.location then
+                -- It's a WHILE...ENDWH not an IF...ENDIF
+                -- Remove the ENDIF (since it was a simulated statement with no location) and transform the GOTO into
+                -- an ENDWH. This is the same as what we do for GOTOs that end up as CONTINUE, and ENDWH is effectively
+                -- CONTINUE followed by ENDIF.
+                decrementGotoRefCount(prevStatement.dest)
+                prevStatement.value = "ENDWH"
+                prevStatement.type = "ENDWH"
+                local opener = s.opener
+                prevStatement.opener = opener
+                opener.closer = prevStatement
+                opener.type = "WHILE"
+                opener.value = fmt("WHILE %s", eval(opener.cond))
+
+                table.remove(statements, i)
+                i = i - 1
+            end
+        end
+        i = i + 1
+    end
+
     -- Do a pass to transform IF statements into something more legible. At this point the only control structures we
-    -- have are IF...ENDIF and DO...UNTIL.
-    local i = 1
+    -- have are IF...ENDIF, as well as DO...UNTIL and WHILE...ENDWH
+    local i = options.expandIfs == false and #statements or 1
     while i < #statements do
         local s = statements[i]
         if s.value == "ENDIF" then
             local ifStatement = s.opener
-            local nextStatement = statements[i + 1]
             -- For previous statement here, we're only interested in statements with actual code, ie ignoring any ENDIFs
             -- that happen to be there, or similar (there probably can't be any here in the case of the GOTO on an
             -- actual ENDIF but possibly an ENDIF that's due to be transformed into an ENDWH, it could have been
             -- hoisted before a nested ENDIF).
-            local prevRealStatementIdx = i - 1
-            while statements[prevRealStatementIdx].location == nil do
-                 prevRealStatementIdx = prevRealStatementIdx - 1
-            end
-            local prevStatement = statements[prevRealStatementIdx]
+            local prevStatement, prevRealStatementIdx = prevRealStatement(i)
 
-            if s.elseStatement == nil and prevStatement.type == "GOTO" and prevStatement.dest > prevStatement.location then
+            if options.addElses ~= false and s.elseStatement == nil and prevStatement.type == "GOTO" and prevStatement.dest > prevStatement.location then
                 -- Execution does not drop through the current ENDIF so we can hoist up to the prevStatement GOTO dest,
-                -- or a higher nested ENDIF/UNTIL, whichever occurs first (this last caveat is to handle BREAKs)
+                -- or a higher nested ENDIF/UNTIL/ENDWH, whichever occurs first (this last caveat is to handle BREAKs)
 
                 local endifStatement = {
                     value = "ENDIF",
@@ -1727,7 +1788,7 @@ function decompileProc(proc, options)
                     -- stmt.opener == true is the hack used by ENDP so make sure we don't blast past that
                 until stmt.location == prevStatement.dest or stmt.opener == true or (stmt.opener and stmt.opener.location < s.opener.location)
                 table.insert(statements, endifIndex, endifStatement)
-                s.endifLocation = endifStatementNextLocation(endifIndex)
+                s.endifLocation = endStatementNextLocation(endifIndex)
                 s.opener.endifLocation = s.endifLocation
 
                 -- And we can remove the GOTO, providing it was a straightforward end-of-if-block jump and not a BREAK
@@ -1738,15 +1799,7 @@ function decompileProc(proc, options)
                 end
             end
 
-            if s.value == "ENDIF" and prevStatement.type == "GOTO" and prevStatement.dest == s.opener.location then
-                -- It's a WHILE...ENDWH not an IF...ENDIF
-                s.value = "ENDWH"
-                s.opener.type = "WHILE"
-                s.opener.value = fmt("WHILE %s", eval(s.opener.cond))
-                elideGotoStatement(prevRealStatementIdx)
-            end
-
-            if s.value == "ENDIF" then -- ie none of the previous checks changed this to not be an ENDIF
+            if options.addElseifs ~= false and s.value == "ENDIF" then -- ie none of the previous checks changed this to not be an ENDIF
                 -- Now we've fully figured out the final location for this ENDIF, look at its IF to see if there's a
                 -- prior ELSE we can combine into a ELSEIF. This is only valid to do if the previous ELSE's ENDIF
                 -- location is identical to this IF's.
@@ -1756,7 +1809,7 @@ function decompileProc(proc, options)
                 local ifIdx = assert(findStatement(ifStatement))
                 local endifIdx = assert(findStatement(endifStatement))
                 local prevStatement = statements[ifIdx - 1]
-                if prevStatement and prevStatement.value == "ELSE" and endifStatementNextLocation(endifIdx) == endifStatementNextLocation(findStatement(prevStatement.closer)) then
+                if prevStatement and prevStatement.value == "ELSE" and endStatementNextLocation(endifIdx) == endStatementNextLocation(findStatement(prevStatement.closer)) then
                     -- Transform the inner IF into an ELSEIF subordinate to the outer IF
                     ifStatement.value = "ELSE"..ifStatement.value
                     ifStatement.opener = prevStatement.opener
@@ -1776,7 +1829,7 @@ function decompileProc(proc, options)
     end
 
     -- And a pass analysing DO...UNTIL and WHILE...ENDWH for GOTOs that are actually BREAKs or CONTINUEs
-    i = 1
+    i = options.addBreaksAndContinues == false and #statements or 1
     local controlBlockNest = {}
     while i < #statements do
         local s = statements[i]
@@ -1790,7 +1843,7 @@ function decompileProc(proc, options)
             controlBlockNest[#controlBlockNest] = nil
         elseif s.type == "GOTO" and not s.elided and #controlBlockNest > 0 then
             local currentBlock = statements[controlBlockNest[#controlBlockNest]]
-            local breakDest = statements[findStatement(currentBlock.closer) + 1].location
+            local breakDest = endStatementNextLocation(findStatement(currentBlock.closer))
             local continueDest
             if currentBlock.value == "DO" then
                 continueDest = currentBlock.closer.location
@@ -1802,13 +1855,14 @@ function decompileProc(proc, options)
                 decrementGotoRefCount(s.dest)
             elseif s.dest == continueDest then
                 s.value = "CONTINUE"
+                decrementGotoRefCount(s.dest)
             end
         end
         i = i + 1
     end
 
     -- A pass to coelesce PRINT statements - do this only after all other statements like ENDIFs have been inserted
-    i = 1
+    i = options.mergePrints == false and #statements or 1
     while i < #statements do
         local s = statements[i]
         local isPrint = s.type == "gPRINT" or s.type == "PRINT" or s.type == "LPRINT"
