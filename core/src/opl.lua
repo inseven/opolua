@@ -1019,7 +1019,6 @@ end
 
 function FONT(id, style)
     -- printf("FONT(0x%08X, %d)\n", id, style)
-    local screen = runtime:getGraphics().screen
     local defaultWin = runtime:getGraphicsContext(KDefaultWin)
     local font = runtime:getFont(id)
     assert(font, KErrFontNotLoaded)
@@ -1039,7 +1038,6 @@ function FONT(id, style)
         charh = charh,
         charw = charw,
         fontUid = font.uid,
-        style = 0,
     }
     STYLE(style)
 end
@@ -1126,7 +1124,8 @@ function PRINT(str)
     local screen = runtime:getGraphics().screen
     gCOLOR(0, 0, 0)
     gFONT(screen.fontUid)
-    gSTYLE(screen.style)
+    local style = screen.style | KgStyleMonoFont -- mono style needed on series 3 where the console font isn't monospaced by default
+    gSTYLE(style)
     gTMODE(KtModeReplace)
     local strPos = 1
     local strLen = #str

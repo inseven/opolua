@@ -309,24 +309,51 @@ dItemTypes = enum {
     dFILEDISK = 262,
 }
 
-KDefaultFontUid_er5 = KFontArialNormal15
-KDefaultFontUid_sibo = KFontArialNormal13
+KFontSysNorm = 1 -- "Series 3 normal" aka "Sys$norm"
+KFontSysBold = 2
+KFontDefault = 0x9A
 
-FontAliases_er5 = {
-    [4] = KFontCourierNormal8,
-    [5] = KFontTimesNormal8,
-    [6] = KFontTimesNormal11,
-    [7] = KFontTimesNormal13,
-    [8] = KFontTimesNormal15,
-    [9] = KFontArialNormal8,
-    [10] = KFontArialNormal11,
-    [11] = KFontArialNormal13,
-    [12] = KFontArialNormal15,
-    [13] = KFontTiny4,
-    [0x9A] = KDefaultFontUid_er5,
+-- This is a collection of bits of device-specific data that the native code doesn't need to know about (hence isn't
+-- part of opldevicetype.h)
+DeviceInfo = {
+    ["psion-series-3"] = {
+        defaultFont = KFontSysNorm,
+        consoleFont = KFontSysNorm,
+    },
+    ["psion-series-3c"] = {
+        defaultFont = KFontArialNormal13, -- Should be Swiss 13
+        consoleFont = KFontCourierNormal8, -- Should be Mono 8x8
+    },
+    ["psion-siena"] = {
+        defaultFont = KFontArialNormal11, -- Should be Swiss 11
+        consoleFont = KFontSysNorm,
+    },
+    -- All the later devices are probably the same...?
+    ["oregon-osaris"] = {
+        defaultFont = KFontArialNormal15,
+        consoleFont = KFontCourierNormal11,
+    },
+    ["psion-series-5"] = {
+        defaultFont = KFontArialNormal15,
+        consoleFont = KFontCourierNormal11,
+    },
+    ["psion-revo"] = {
+        defaultFont = KFontArialNormal15,
+        consoleFont = KFontCourierNormal11,
+    },
+    ["psion-series-7"] = {
+        defaultFont = KFontArialNormal15,
+        consoleFont = KFontCourierNormal11,
+    },
+    ["geofox-one"] = {
+        defaultFont = KFontArialNormal15,
+        consoleFont = KFontCourierNormal11,
+    },
 }
 
-FontAliases_sibo = {
+-- Strictly speaking, these should only apply on series 5, but until we have full font coverage we'll use them as fallbacks
+-- on series 3 as well.
+FontAliases = {
     [4] = KFontCourierNormal8,
     [5] = KFontTimesNormal8,
     [6] = KFontTimesNormal11,
@@ -337,7 +364,6 @@ FontAliases_sibo = {
     [11] = KFontArialNormal13,
     [12] = KFontArialNormal15,
     [13] = KFontTiny4,
-    [0x9A] = KDefaultFontUid_sibo,
 }
 
 -- These aren't defined in the const.oph version we're using as our baseline

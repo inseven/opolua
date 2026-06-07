@@ -538,7 +538,7 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
         height = height,
         pos = { x = 0, y = 0 },
         isWindow = isWindow,
-        fontUid = self:isSibo() and KDefaultFontUid_sibo or KDefaultFontUid_er5,
+        fontUid = graphics.defaultFont,
         style = 0, -- normal text style
         penwidth = 1,
         opCount = 0, -- always mod 2^30
@@ -550,18 +550,20 @@ end
 function Runtime:getGraphics()
     if not self.graphics then
         local w, h, mode, device = self.ioh.getDeviceInfo()
+        local info = assert(DeviceInfo[device], "No device info for "..device)
         self.graphics = {
             screenWidth = w,
             screenHeight = h,
             screenMode = mode,
             sprites = {},
             contexts = {},
+            defaultFont = info.defaultFont,
         }
         self.deviceName = device
         self.iss3 = device:match("^psion%-series%-3") or device == "psion-siena"
         local id = self:gCREATE(0, 0, w, h, true, mode)
         assert(id == KDefaultWin)
-        self:FONT(KFontCourierNormal11, 0)
+        self:FONT(info.consoleFont, 0)
     end
     return self.graphics
 end
@@ -660,10 +662,10 @@ function Runtime:getFont(fontId)
         fontId = self:getGraphicsContext().fontUid
     end
     local uid
-    if self:isSibo() then
-        uid = FontAliases_sibo[fontId] or fontId
+    if fontId == KFontDefault then
+        uid = self:getGraphics().defaultFont
     else
-        uid = FontAliases_er5[fontId] or fontId
+        uid = FontAliases[fontId] or fontId
     end
     local fonts = self:getResource("fonts")
     if not fonts then
