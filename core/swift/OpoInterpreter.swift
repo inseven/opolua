@@ -211,6 +211,7 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
         }
     case .fontMetrics(let metrics):
         L.newtable()
+        L.rawset(-1, key: "name", value: metrics.name)
         L.rawset(-1, key: "height", value: metrics.height)
         L.rawset(-1, key: "ascent", value: metrics.ascent)
         L.rawset(-1, key: "descent", value: metrics.descent)

@@ -1892,6 +1892,17 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
 
     local ginfo = runtime:gINFO()
 
+    local fontName = runtime:getFont().name
+    local function fontWord(idx)
+        if idx == 0 then
+            return string.unpack("I2", string.pack("BB", #fontName, fontName:byte(1)))
+        else
+            local frag = fontName:sub(idx*2, idx*2 + 1)
+            frag = frag..string.rep("\0", 2 - #frag)
+            return string.unpack("I2", frag)
+        end
+    end
+
     local data = {
         0, -- 1 lowest character code (??)
         255, -- 2 highest character code (??)
@@ -1901,15 +1912,15 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
         ginfo.fontZeroWidth, -- 6 width of '0' (really?)
         ginfo.fontMaxWidth, -- 7 max character width
         17, -- 8 font flags
-        0, -- 9-11 font name TODO
-        0, -- 10
-        0, -- 11
-        0, -- 12
-        0, -- 13
-        0, -- 14
-        0, -- 15
-        0, -- 16
-        0, -- 17
+        fontWord(0), -- 9
+        fontWord(1), -- 10
+        fontWord(2), -- 11
+        fontWord(3), -- 12
+        fontWord(4), -- 13
+        fontWord(5), -- 14
+        fontWord(6), -- 15
+        fontWord(7), -- 16
+        fontWord(8), -- 17
         ginfo.gmode, -- 18 gMode
         ginfo.tmode, -- 19 gTMode
         ginfo.style, -- 20 gStyle

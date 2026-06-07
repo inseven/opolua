@@ -986,6 +986,8 @@ int OplRuntime::graphicsop(lua_State* L)
 
             mScreen->loadPng(drawableId, pngPath);
             lua_newtable(L);
+            setValue(L, "name", metrics.name);
+            SET_INT(L, "height", metrics.height);
             SET_INT(L, "height", metrics.height);
             SET_INT(L, "ascent", metrics.ascent);
             SET_INT(L, "descent", metrics.descent);
@@ -2121,6 +2123,7 @@ QString OplRuntime::getFont(uint32_t uid, OplScreen::FontMetrics& metrics)
     auto manifest = QJsonDocument::fromJson(f.readAll());
     f.close();
 
+    metrics.name = manifest["name"].toString();
     metrics.height = manifest["charh"].toInt();
     metrics.ascent = manifest["ascent"].toInt();
     metrics.descent = metrics.height - metrics.ascent; // Why do we still have this??

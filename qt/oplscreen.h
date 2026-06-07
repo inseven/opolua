@@ -146,6 +146,7 @@ public:
     };
 
     struct FontMetrics {
+        QString name;
         int height;
         int maxwidth;
         int ascent;

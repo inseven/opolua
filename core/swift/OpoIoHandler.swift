@@ -378,13 +378,15 @@ public struct Graphics {
     }
 
     public struct FontMetrics: Codable {
+        public let name: String
         public let height: Int
         public let maxwidth: Int
         public let ascent: Int
         public let descent: Int
         public let widths: [Int] // Always 256 elements
 
-        public init(height: Int, maxwidth: Int, ascent: Int, descent: Int, widths: [Int]) {
+        public init(name: String, height: Int, maxwidth: Int, ascent: Int, descent: Int, widths: [Int]) {
+            self.name = name
             self.height = height
             self.maxwidth = maxwidth
             self.ascent = ascent

@@ -32,6 +32,7 @@ struct BitmapFontInfo {
         let widths: [Int]
     }
     let bitmapName: String
+    let fontName: String
     // Although it is not explicitly stated that String.Encoding values are
     // completely interchangeable with NSStringEncoding UInts it is heavily
     // implied by the fact that the compiler (somehow) knows more about this
@@ -62,12 +63,14 @@ struct BitmapFontInfo {
         let nsenc = CFStringConvertEncodingToNSStringEncoding(cfenc)
         let encoding = String.Encoding(rawValue: nsenc)
 
-        self.init(bitmapName: uidstr, encoding: encoding, startIndex: metadata.firstch, charw: metadata.maxwidth,
-            charh: metadata.charh, ascent: metadata.ascent, widths: metadata.widths)
+        self.init(bitmapName: uidstr, fontName: metadata.name, encoding: encoding, startIndex: metadata.firstch,
+            charw: metadata.maxwidth, charh: metadata.charh, ascent: metadata.ascent, widths: metadata.widths)
     }
 
-    init(bitmapName: String, encoding: String.Encoding, startIndex: UInt32, charw: Int, charh: Int, ascent: Int, widths: [Int]) {
+    init(bitmapName: String, fontName: String, encoding: String.Encoding, startIndex: UInt32, charw: Int, charh: Int,
+            ascent: Int, widths: [Int]) {
         self.bitmapName = bitmapName
+        self.fontName = fontName
         self.encoding = encoding
         self.startIndex = startIndex
         self.charw = charw
