@@ -227,6 +227,7 @@ function gTWIDTH(text, fontId, style)
     end
     local bold = (style & KgStyleBold) ~= 0
     local doubleHeight = (style & KgStyleDoubleHeight) ~= 0
+    local mono = (style & KgStyleMonoFont) ~= 0
     local height, ascent, descent = font.height, font.ascent, font.descent
     if doubleHeight then
         height = height * 2
@@ -236,6 +237,10 @@ function gTWIDTH(text, fontId, style)
     local width = 0
     for i = 1, #text do
         local chw = font.widths[1 + string_byte(text, i)]
+        if mono and chw > 0 then
+            -- How are zero-width chars handled? Don't know!
+            chw = font.widths[1 + string.byte("0")]
+        end
         width = width + chw
         if bold and chw > 0 then
             width = width + 1
@@ -1189,6 +1194,7 @@ function drawText(str, x, y, mode, xflags)
     local italic = (ctx.style & KgStyleItalic) ~= 0
     local inverse = (ctx.style & KgStyleInverse) ~= 0 -- Note, different to KtModeInvert
     local doubleHeight = (ctx.style & KgStyleDoubleHeight) ~= 0
+    local mono = (ctx.style & KgStyleMonoFont) ~= 0
     local xflagsInverse = xflags and xflags >= KgXPrintInverse and xflags <= KgXPrintThinInverseRound
     local thin = xflags == KgXPrintThinInverse or xflags == KgXPrintThinInverseRound or xflags == KgXPrintThinUnderlined
 
@@ -1302,7 +1308,7 @@ function drawText(str, x, y, mode, xflags)
         local ch = string_byte(str, i)
         local bmpx = (ch % 32) * maxwidth
         local bmpy = (ch // 32) * h
-        local chw = font.widths[1 + ch]
+        local chw = mono and font.widths[1 + string.byte("0")] or font.widths[1 + ch]
         if chw > 0 then
             addChar(bmpx, bmpy, chw, h, x, y)
             if bold then
