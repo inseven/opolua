@@ -157,10 +157,22 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="QTreeWidget" name="drawablesView">
-    <property name="columnCount">
-     <number>2</number>
+   <widget class="DrawablesTreeWidget" name="drawablesView">
+    <property name="uniformRowHeights">
+     <bool>true</bool>
     </property>
+    <property name="sortingEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="columnCount">
+     <number>3</number>
+    </property>
+    <attribute name="headerDefaultSectionSize">
+     <number>50</number>
+    </attribute>
+    <attribute name="headerShowSortIndicator" stdset="0">
+     <bool>false</bool>
+    </attribute>
     <column>
      <property name="text">
       <string notr="true">1</string>
@@ -169,6 +181,11 @@
     <column>
      <property name="text">
       <string notr="true">2</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string notr="true">3</string>
      </property>
     </column>
    </widget>
@@ -354,6 +371,11 @@
    <class>StackView</class>
    <extends>QTreeView</extends>
    <header>stackview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DrawablesTreeWidget</class>
+   <extends>QTreeWidget</extends>
+   <header>drawablestreewidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

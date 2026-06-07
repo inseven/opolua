@@ -13,6 +13,7 @@
 #include "oplapplication.h"
 #include "opltokenizer.h"
 #include "oplruntime.h"
+#include "oplscreenwidget.h"
 #include "stackmodel.h"
 
 #include "ui_debuggerwindow.h"
@@ -69,7 +70,9 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     // Drawables dock widget
 
     connect(ui->drawablesView, &QTreeWidget::itemSelectionChanged, this, &DebuggerWindow::drawableSelected);
-    ui->drawablesView->setHeaderLabels({"Id", "Info"});
+    connect(ui->drawablesView, &DrawablesTreeWidget::highlightWindow, this, &DebuggerWindow::highlightWindow);
+    ui->drawablesView->setHeaderLabels({"Id", "Rank", "Info"});
+    ui->drawablesView->sortByColumn(0, Qt::AscendingOrder);
 
     // Status bar
 
@@ -186,7 +189,11 @@ void DebuggerWindow::debugInfoUpdated()
         },
         [this](int addedIdx, const auto& newDrawable) {
             QString desc = describeDrawable(newDrawable);
-            auto item = new QTreeWidgetItem({ QString("%1").arg(newDrawable.id), desc });
+            auto item = new QTreeWidgetItem({
+                QString("%1").arg(newDrawable.id),
+                newDrawable.isWindow ? QString("%1").arg(newDrawable.rank) : QString(),
+                desc
+            });
             ui->drawablesView->insertTopLevelItems(addedIdx, {item});
             if (addedIdx == 0) {
                 // Qt seems to select the first item added after the list was empty
@@ -194,7 +201,11 @@ void DebuggerWindow::debugInfoUpdated()
             }
         },
         [this](int updatedIdx, const auto& drawable) {
-            ui->drawablesView->topLevelItem(updatedIdx)->setData(1, Qt::DisplayRole, describeDrawable(drawable));
+            auto item = ui->drawablesView->topLevelItem(updatedIdx);
+            if (drawable.isWindow) {
+                item->setData(1, Qt::DisplayRole, QString("%1").arg(drawable.rank));
+            }
+            item->setData(2, Qt::DisplayRole, describeDrawable(drawable));
             auto currentDrawable = currentDrawableView();
             if (currentDrawable && currentDrawable->drawable().id == drawable.id) {
                 currentDrawable->update(drawable, mRuntime);
@@ -272,6 +283,12 @@ void DebuggerWindow::drawableSelected()
     if (!item) return;
     const auto& drawable = mShownDrawables[ui->drawablesView->indexOfTopLevelItem(item)];
     setCurrentDrawable(drawable);
+}
+
+void DebuggerWindow::highlightWindow(int drawableId)
+{
+    auto screen = static_cast<OplScreenWidget*>(mRuntime->getScreen());
+    screen->highlightWindow(drawableId);
 }
 
 CodeView* DebuggerWindow::getCodeView(const QString& path)

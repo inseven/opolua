@@ -282,6 +282,17 @@ int OplScreenWidget::showWindow(int drawableId, bool flag)
     return KErrNone;
 }
 
+void OplScreenWidget::highlightWindow(int drawableId)
+{
+    auto win = mWindows.value(drawableId, nullptr);
+    if (!win) {
+        qWarning("highlightWindow called on non-existent window id %d", drawableId);
+        return;
+    }
+    win->setHighlighted(true);
+    QTimer::singleShot(300, win, [win] { win->setHighlighted(false); });
+}
+
 int OplScreenWidget::setWindowRect(int drawableId, const QPoint& position, const QSize* size)
 {
     // qDebug("setwin id=%d (%d,%d) %dx%d", drawableId, position.x(), position.y(), size ? size->width() : 0, size ? size->height() : 0);
@@ -971,6 +982,7 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
     , mShadow(nullptr)
     , mShadowSize(shadowSize)
     , mGreyPlane(nullptr)
+    , mHighlight(nullptr)
 {
     mUnscaledRect = rect;
     setGeometry(rect);
@@ -1160,6 +1172,9 @@ void Window::setSize(const QSize& size)
     if (mGreyPlane) {
         mGreyPlane->setSize(size);
     }
+    if (mHighlight) {
+        mHighlight->resize(scaledSize);
+    }
 }
 
 void Window::setScale(int scale)
@@ -1217,6 +1232,20 @@ void Window::animateSprites(int64_t interval_us)
     }
 }
 
+void Window::setHighlighted(bool flag)
+{
+    if (!mHighlight && flag) {
+        QColor col(255, 0, 0, 128); // 50% transparent red
+        mHighlight = new WindowShadow(this, col);
+        auto rect = scaledRect();
+        mHighlight->setGeometry(0, 0, rect.width(), rect.height());
+    }
+
+    if (mHighlight) {
+        mHighlight->setVisible(flag);
+    }
+}
+
 //
 
 SpriteWidget::SpriteWidget(OplScreenWidget* screen)
@@ -1250,14 +1279,18 @@ void SpriteWidget::resizeEvent(QResizeEvent *event)
 
 //
 
-WindowShadow::WindowShadow(QWidget* parent)
+WindowShadow::WindowShadow(QWidget* parent, QColor color)
     : QWidget(parent)
+    , mColor(color)
 {
+    if (!mColor.isValid()) {
+        mColor = QColor(128, 128, 128, 128); // 50% transparent grey
+    }
 }
 
 void WindowShadow::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
-    QBrush brush(QColor(128, 128, 128, 128)); // 50% transparent grey
+    QBrush brush(mColor);
     painter.fillRect(event->rect(), brush);
 }
