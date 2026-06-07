@@ -41,6 +41,7 @@ private slots:
     void toggleBreak();
     void variableRenamed(const QString& module, const QString& proc, const QString& oldName, const QString& newName);
     void exportBitmap();
+    void highlightWindow(int drawableId);
 
 private:
     CodeView* currentCodeView() const;

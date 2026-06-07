@@ -62,6 +62,7 @@ struct Drawable
     int bitDepth;
     QRect rect; // For bitmaps, origin will always be 0,0
     uint32_t opCount;
+    int rank;
 };
 
 struct ProgramInfo
@@ -86,7 +87,8 @@ static inline bool operator==(const Drawable &lhs, const Drawable &rhs)
         lhs.isColor == rhs.isColor &&
         lhs.bitDepth == rhs.bitDepth &&
         lhs.rect == rhs.rect &&
-        lhs.opCount == rhs.opCount;
+        lhs.opCount == rhs.opCount &&
+        lhs.rank == rhs.rank;
 }
 
 struct NameOverride {

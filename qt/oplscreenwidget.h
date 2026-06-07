@@ -67,6 +67,8 @@ public:
     Drawable* getBitmap(int drawableId) const;
     QPixmap getPixmap(int drawableId) const;
 
+    void highlightWindow(int drawableId);
+
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override;
     virtual void keyReleaseEvent(QKeyEvent *event) override;
@@ -180,6 +182,8 @@ public:
     void animateSprites(int64_t interval_us);
     void updateSprites(QPainter& painter);
 
+    void setHighlighted(bool flag);
+
 protected:
     virtual void mousePressEvent(QMouseEvent *event) override;
     virtual void mouseMoveEvent(QMouseEvent *event) override;
@@ -198,6 +202,7 @@ private:
     WindowShadow* mShadow;
     int mShadowSize;
     QScopedPointer<Drawable> mGreyPlane;
+    WindowShadow* mHighlight;
 };
 
 class SpriteWidget : public QLabel
@@ -220,10 +225,13 @@ class WindowShadow : public QWidget
     Q_OBJECT
 
 public:
-    explicit WindowShadow(QWidget* parent);
+    explicit WindowShadow(QWidget* parent, QColor color = QColor());
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+
+private:
+    QColor mColor;
 
 };
 

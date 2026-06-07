@@ -2324,6 +2324,7 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
                 .rect = QRect(to_int(L, -1, "x"), to_int(L, -1, "y"), to_int(L, -1, "w"), to_int(L, -1, "h")),
                 .opCount = to_intt<uint32_t>(L, -1, "opCount"),
             };
+            d.rank = d.isWindow ? mScreen->getRank(d.id) : 0;
             info.drawables.append(d);
             lua_pop(L, 1); // drawable
         }

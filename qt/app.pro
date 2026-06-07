@@ -60,6 +60,7 @@ HEADERS += \
     clockwidget.h \
     debuggerwindow.h \
     differ.h \
+    drawablestreewidget.h \
     drawableview.h \
     filesystem.h \
     highlighter.h \
@@ -84,6 +85,7 @@ SOURCES += \
     codeview.cpp \
     clockwidget.cpp \
     debuggerwindow.cpp \
+    drawablestreewidget.cpp \
     drawableview.cpp \
     filesystem.cpp \
     highlighter.cpp \

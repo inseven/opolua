@@ -13,6 +13,7 @@
 // The bottom 16 bits are the array index, for array items (or 0xFFFF otherwise).
 // Therefore a frame has the bottom 32 bits 0xFFFFFFFF.
 // Yes this will break on 32-bit systems. A better scheme is, at present, left as an exercise for the reader.
+static_assert(sizeof(quintptr) == 8, "StackModel requires 64-bit pointers, sorry!");
 
 static bool isFrame(const QModelIndex& idx)
 {
