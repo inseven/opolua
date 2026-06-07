@@ -235,7 +235,7 @@ int OplScreenWidget::setOrder(int drawableId, int order)
     int orderNorm = qMin(qMax(1, order), mWindows.count());
     int currentPos = children.indexOf(win);
     int newPos = mWindows.count() - orderNorm;
-    // qDebug("order %d pos %d -> %d count=%d", order, currentPos, newPos, children.count());
+    // qDebug("order %d pos %d -> %d count=%d", order, currentPos, newPos, (int)children.count());
 
     if (newPos == mWindows.count() - 1) {
         win->raise();

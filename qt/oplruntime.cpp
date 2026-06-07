@@ -953,12 +953,15 @@ int OplRuntime::graphicsop(lua_State* L)
         });
     } else if (cmd == "order") {
         int drawableId = lua_tointeger(L, 2);
-        int pos = lua_tointeger(L, 3);
-        if (mInfoWinId && drawableId != mInfoWinId) {
+        int pos = qMax(lua_tointeger(L, 3), 1);
+        if (mInfoWinId) {
             // Make sure nothing can sneak in front of the info win (which will always be rank=1)
-            pos = qMax(pos, 1) + 1;
-            mScreen->setOrder(drawableId, pos);
+            if (drawableId == mInfoWinId) {
+                return 0;
+            }
+            pos++;
         }
+        mScreen->setOrder(drawableId, pos);
         return 0;
     } else if (cmd == "rank") {
         int drawableId = lua_tointeger(L, 2);
