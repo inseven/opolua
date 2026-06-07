@@ -343,6 +343,13 @@ static int traceHandler(lua_State *L)
     return 1;
 }
 
+// The basic traceback for things that only throw strings
+static int traceback(lua_State* L)
+{
+    luaL_traceback(L, L, lua_tostring(L, 1), 1);
+    return 1;
+}
+
 // Lives on the stack of the Lua thread (thus owned by it)
 struct MainThreadCall
 {
@@ -2648,7 +2655,10 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
         }
     }
 
-    int err = lua_pcall(L, 4, 2, 0);
+    lua_pushcfunction(L, traceback);
+    lua_insert(L, 1);
+    int err = lua_pcall(L, 4, 2, 1);
+    lua_remove(L, 1); // remove traceback
     if (err) {
         qWarning("decompile errored: %s", luaL_tolstring(L, -1, NULL));
         lua_pop(L, 1);

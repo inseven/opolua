@@ -657,7 +657,8 @@ function decompileProc(proc, options)
     -- This is the location of the code that would be executed after hitting a given endif, or after exiting a given
     -- while loop.
     local function endStatementNextLocation(index)
-        assert(statements[index].value == "ENDIF" or statements[index].value == "ENDWH")
+        local s = statements[index]
+        assert(s.value == "ENDIF" or s.value == "ENDWH" or s.type == "UNTIL")
         index = index + 1
         while statements[index].location == nil do
             index = index + 1
