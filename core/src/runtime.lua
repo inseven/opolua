@@ -544,7 +544,6 @@ function Runtime:newGraphicsContext(width, height, isWindow, displayMode)
         opCount = 0, -- always mod 2^30
     }
     graphics.contexts[id] = newCtx
-    self:setResource("ginfo", nil)
     return newCtx
 end
 
@@ -714,19 +713,6 @@ function Runtime:drawCmd(type, op)
     end
     op.penwidth = context.penwidth
     op.greyMode = context.greyMode
-
-    if type == "text" then
-        op.tmode = context.tmode
-        op.fontinfo = {
-            uid = context.font.uid,
-            face = context.font.face,
-            size = context.font.size,
-            flags = context.style,
-        }
-        if context.font.bold then
-            op.fontinfo.flags = op.fontinfo.flags | 64 -- boldHint
-        end
-    end
 
     self:incrementOpCount(context)
 

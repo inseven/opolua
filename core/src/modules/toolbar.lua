@@ -123,7 +123,7 @@ end
 
 local function drawTitle()
     gUSE(tbWinId)
-    gSTYLE(1) -- bold everything
+    gSTYLE(KgStyleBold) -- bold everything
     gAT(0, 0)
     gFILL(tbWidth, appTitleHeight, KgModeClear)
     gBOX(tbWidth, toolbarHeight)
