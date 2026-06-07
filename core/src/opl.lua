@@ -89,7 +89,6 @@ end
 function gUSE(id)
     -- printf("gUSE(%d)\n", id)
     runtime:setGraphicsContext(id)
-    runtime:setResource("ginfo", nil)
 end
 
 function gVISIBLE(show)
@@ -106,22 +105,18 @@ function gFONT(id)
         error(KErrFontNotLoaded)
     end
     runtime:getGraphicsContext().fontUid = font.uid
-    runtime:setResource("ginfo", nil)
 end
 
 function gGMODE(mode)
     runtime:getGraphicsContext().mode = mode
-    runtime:setResource("ginfo", nil)
 end
 
 function gTMODE(tmode)
     runtime:getGraphicsContext().tmode = tmode
-    runtime:setResource("ginfo", nil)
 end
 
 function gSTYLE(style)
     runtime:getGraphicsContext().style = style
-    runtime:setResource("ginfo", nil)
 end
 
 function gORDER(id, pos)
@@ -211,7 +206,7 @@ end
 
 function gXPRINT(text, flags)
     local context = runtime:getGraphicsContext()
-    local ascent = runtime:getFont().ascent
+    local _, _, ascent = gTWIDTH(text)
     -- gXPRINT always behaves like mode is replace
     runtime:drawText(text, context.pos.x, context.pos.y - ascent, KtModeReplace, flags)
     -- Note, doesn't increment context.pos.x
@@ -231,6 +226,13 @@ function gTWIDTH(text, fontId, style)
         style = context.style
     end
     local bold = (style & KgStyleBold) ~= 0
+    local doubleHeight = (style & KgStyleDoubleHeight) ~= 0
+    local height, ascent, descent = font.height, font.ascent, font.descent
+    if doubleHeight then
+        height = height * 2
+        ascent = ascent * 2
+        descent = descent * 2
+    end
     local width = 0
     for i = 1, #text do
         local chw = font.widths[1 + string_byte(text, i)]
@@ -239,7 +241,7 @@ function gTWIDTH(text, fontId, style)
             width = width + 1
         end
     end
-    return width, font.height, font.ascent, font.descent
+    return width, height, ascent, descent
 end
 
 function gLINEBY(dx, dy)
@@ -494,12 +496,10 @@ end
 function gCOLOR(red, green, blue)
     -- printf("gCOLOR(id=%d, r=%x, g=%x, b=%x)\n", gIDENTITY(), red, green, blue) 
     runtime:getGraphicsContext().color = { r = red, g = green, b = blue }
-    runtime:setResource("ginfo", nil)
 end
 
 function gCOLORBACKGROUND(red, green, blue)
     runtime:getGraphicsContext().bgcolor = { r = red, g = green, b = blue }
-    runtime:setResource("ginfo", nil)
 end
 
 function gSETWIN(x, y, w, h)
@@ -961,7 +961,6 @@ end
 function CURSOR(id, x, y, w, h, t)
     -- printf("CURSOR id=%s, x=%s, y=%s, w=%s, h=%s, t=%s\n", id, x, y, w, h, t)
     runtime:flushGraphicsOps()
-    runtime:setResource("ginfo", nil)
 
     local isTextCursor = false
     if id == true then
@@ -1189,6 +1188,7 @@ function drawText(str, x, y, mode, xflags)
     local underlined = (ctx.style & KgStyleUnder) ~= 0
     local italic = (ctx.style & KgStyleItalic) ~= 0
     local inverse = (ctx.style & KgStyleInverse) ~= 0 -- Note, different to KtModeInvert
+    local doubleHeight = (ctx.style & KgStyleDoubleHeight) ~= 0
     local xflagsInverse = xflags and xflags >= KgXPrintInverse and xflags <= KgXPrintThinInverseRound
     local thin = xflags == KgXPrintThinInverse or xflags == KgXPrintThinInverseRound or xflags == KgXPrintThinUnderlined
 
@@ -1231,7 +1231,7 @@ function drawText(str, x, y, mode, xflags)
             gMOVE(0, -1)
         end
 
-        local bx, by, bw, bh = x, y, gTWIDTH(str), font.height
+        local bx, by, bw, bh = x, y, gTWIDTH(str)
 
         gGMODE(KgModeClear)
         -- Non-thin gXPRINT styles draw an extra pixel all round (except for underlined which for padding purposes also
@@ -1290,15 +1290,23 @@ function drawText(str, x, y, mode, xflags)
         --     bgcolor = opcol,
         -- })
     end
+    local function addDbl(srcx, srcy, w, h, x, y)
+        -- We have to rasterise the character into rows, and draw each row twice
+        for i = 0, h - 1 do
+            opadd(srcx, srcy + i, w, 1, x, y + (i * 2))
+            opadd(srcx, srcy + i, w, 1, x, y + (i * 2) + 1)
+        end
+    end
+    local addChar = doubleHeight and addDbl or opadd
     for i = 1, #str do
         local ch = string_byte(str, i)
         local bmpx = (ch % 32) * maxwidth
         local bmpy = (ch // 32) * h
         local chw = font.widths[1 + ch]
         if chw > 0 then
-            opadd(bmpx, bmpy, chw, h, x, y)
+            addChar(bmpx, bmpy, chw, h, x, y)
             if bold then
-                opadd(bmpx, bmpy, chw, h, x + 1, y)
+                addChar(bmpx, bmpy, chw, h, x + 1, y)
                 x = x + 1
             end
             x = x + chw
