@@ -531,7 +531,8 @@ class WindowServer {
         let img = CommonImage(named: "fonts/\(font.bitmapName)/\(font.bitmapName)")!.cgImage!
         canvas.draw(image: img)
 
-        return Graphics.FontMetrics(height: font.charh, maxwidth: font.charw, ascent: font.ascent, descent: font.descent, widths: font.widths)
+        return Graphics.FontMetrics(name: font.fontName, height: font.charh, maxwidth: font.charw, ascent: font.ascent,
+            descent: font.descent, widths: font.widths)
     }
 
 }

@@ -1,0 +1,9 @@
+PROC main:
+    LOCAL i%(32)
+    GINFO i%()
+
+    PRINT "Font height="; i%(3), "descent="; i%(4), "ascent="; i%(5)
+    PRINT "Font name:", PEEK$(ADDR(i%(9)))
+    PRINT "gmode="; i%(18), "tmode="; i%(19), "gstyle="; i%(20)
+    GET
+ENDP
