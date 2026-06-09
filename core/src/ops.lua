@@ -1420,7 +1420,6 @@ function Append(stack, runtime) -- 0x9D
     local db = runtime:getDb()
     db:appendRecord()
     runtime:saveDbIfModified()
-    runtime:setTrap(false)
 end
 
 function At(stack, runtime) -- 0x9E
@@ -1431,7 +1430,6 @@ end
 function Back(stack, runtime) -- 0x9F
     local db = runtime:getDb()
     db:setPos(db:getPos() - 1)
-    runtime:setTrap(false)
 end
 
 function Beep(stack, runtime) -- 0xA0
@@ -1483,7 +1481,6 @@ end
 
 function Close(stack, runtime) -- 0xA1
     runtime:closeDb()
-    runtime:setTrap(false)
 end
 
 function Cls(stack, runtime) -- 0xA2
@@ -1501,7 +1498,6 @@ function Copy(stack, runtime) -- 0xA4
     end
     err = runtime:iohandler().fsop("write", dest, data)
     assert(err == KErrNone, err)
-    runtime:setTrap(false)
 end
 
 local function parseOpenOrCreate(runtime)
@@ -1522,7 +1518,6 @@ function Create(stack, runtime) -- 0xA5
     local logName, fields = parseOpenOrCreate(runtime)
     local tableSpec = stack:pop()
     runtime:openDb(logName, tableSpec, fields, "Create")
-    runtime:setTrap(false)
 end
 
 function Create_dump(runtime)
@@ -1573,13 +1568,11 @@ function Delete(stack, runtime) -- 0xA7
     if err ~= 0 then
         error(err)
     end
-    runtime:setTrap(false)
 end
 
 function Erase(stack, runtime) -- 0xA8
     local db = runtime:getDb()
     db:deleteRecord()
-    runtime:setTrap(false)
 end
 
 function Escape(stack, runtime) -- 0xA9
@@ -1592,7 +1585,6 @@ Escape_dump = IPflag_dump
 function First(stack, runtime) -- 0xAA
     local db = runtime:getDb()
     db:setPos(1)
-    runtime:setTrap(false)
 end
 
 function Vector(stack, runtime) -- 0xAB
@@ -1622,7 +1614,6 @@ end
 function Last(stack, runtime) -- 0xAC
     local db = runtime:getDb()
     db:setPos(db:getCount())
-    runtime:setTrap(false)
 end
 
 function LClose(stack, runtime) -- 0xAD
@@ -1634,7 +1625,6 @@ function LClose(stack, runtime) -- 0xAD
             error(err)
         end
     end
-    runtime:setTrap(false)
 end
 
 local function resolveModuleName(runtime, name)
@@ -1654,7 +1644,6 @@ end
 function LoadM(stack, runtime) -- 0xAE
     local path = resolveModuleName(runtime, stack:pop())
     runtime:loadModule(path)
-    runtime:setTrap(false)
 end
 
 function LOpen(stack, runtime) -- 0xAF
@@ -1666,13 +1655,11 @@ function LOpen(stack, runtime) -- 0xAF
     local handle, err = runtime:IOOPEN(name, mode)
     assert(handle, err)
     runtime:setResource("lopen", handle)
-    runtime:setTrap(false)
 end
 
 function Next(stack, runtime) -- 0xB0
     local db = runtime:getDb()
     db:setPos(db:getPos() + 1)
-    runtime:setTrap(false)
 end
 
 local function decodeOnErr(runtime)
@@ -1705,7 +1692,6 @@ function Open(stack, runtime) -- 0xB4
     local logName, fields = parseOpenOrCreate(runtime)
     local tableSpec = stack:pop()
     runtime:openDb(logName, tableSpec, fields, "Open")
-    runtime:setTrap(false)
 end
 
 Open_dump = Create_dump
@@ -1719,7 +1705,6 @@ function Position(stack, runtime) -- 0xB6
     local pos = stack:pop()
     local db = runtime:getDb()
     db:setPos(pos)
-    runtime:setTrap(false)
 end
 
 function IoSignal(stack, runtime) -- 0xB7
@@ -1744,7 +1729,6 @@ function Rename(stack, runtime) -- 0xBA
     if err ~= 0 then
         error(err)
     end
-    runtime:setTrap(false)
 end
 
 function Stop(stack, runtime) -- 0xBB
@@ -1763,12 +1747,10 @@ function Update(stack, runtime) -- 0xBD
     local db = runtime:getDb()
     db:updateRecord()
     runtime:saveDbIfModified()
-    runtime:setTrap(false)
 end
 
 function Use(stack, runtime) -- 0xBE
     runtime:useDb(runtime:IP8())
-    runtime:setTrap(false)
 end
 
 Use_dump = logName_dump
@@ -1793,7 +1775,6 @@ end
 function UnLoadM(stack, runtime) -- 0xC1
     local path = resolveModuleName(runtime, stack:pop())
     runtime:unloadModule(path)
-    runtime:setTrap(false)
 end
 
 function Edit(stack, runtime) -- 0xC2
@@ -1810,7 +1791,6 @@ function OpenR(stack, runtime) -- 0xC4
     local logName, fields = parseOpenOrCreate(runtime)
     local tableSpec = stack:pop()
     runtime:openDb(logName, tableSpec, fields, "OpenR")
-    runtime:setTrap(false)
 end
 
 OpenR_dump = Open_dump
@@ -1822,7 +1802,6 @@ function gSaveBit(stack, runtime) -- 0xC5
         w, h = stack:popXY()
     end
     runtime:gSAVEBIT(stack:pop(), w, h)
-    runtime:setTrap(false)
 end
 
 gSaveBit_dump = qualifier_dump
@@ -1831,12 +1810,10 @@ function gClose(stack, runtime) -- 0xC6
     local id = stack:pop()
     assert(id ~= KDefaultWin, KErrInvalidArgs) -- Cannot close the console
     runtime:closeGraphicsContext(id)
-    runtime:setTrap(false)
 end
 
 function gUse(stack, runtime) -- 0xC7
     runtime:gUSE(stack:pop())
-    runtime:setTrap(false)
 end
 
 function gSetWin(stack, runtime) -- 0xC8
@@ -1861,12 +1838,10 @@ gVisible_dump = IPflag_dump
 function gFont(stack, runtime) -- 0xCA
     local id = stack:pop()
     runtime:gFONT(id)
-    runtime:setTrap(false)
 end
 
 function gUnloadFont(stack, runtime) -- 0xCB
     unimplemented("gUnloadFont")
-    runtime:setTrap(false)
 end
 
 function gGMode(stack, runtime) -- 0xCC
@@ -2054,7 +2029,6 @@ function gPatt(stack, runtime) -- 0xE0
     local width = stack:pop()
     local id = stack:pop()
     runtime:gPATT(id, width, height, mode)
-    runtime:setTrap(false)
 end
 
 function gCopy(stack, runtime) -- 0xE1
@@ -2062,7 +2036,6 @@ function gCopy(stack, runtime) -- 0xE1
     local x, y, w, h = stack:popRect()
     local srcId = stack:pop()
     runtime:gCOPY(srcId, x, y, w, h, mode)
-    runtime:setTrap(false)
 end
 
 function gScroll(stack, runtime) -- 0xE2
@@ -2436,13 +2409,11 @@ gClock_dump = qualifier_dump
 function MkDir(stack, runtime) -- 0xF8
     local path = stack:pop()
     runtime:MKDIR(path)
-    runtime:setTrap(false)
 end
 
 function RmDir(stack, runtime) -- 0xF9
     local path = stack:pop()
     runtime:RMDIR(path)
-    runtime:setTrap(false)
 end
 
 function SetPath(stack, runtime) -- 0xFA
@@ -2652,24 +2623,20 @@ end
 
 function Modify(stack, runtime) -- 0x11A
     runtime:getDb():modify()
-    runtime:setTrap(false)
 end
 
 function Insert(stack, runtime) -- 0x11B
     runtime:getDb():insert()
-    runtime:setTrap(false)
 end
 
 function Cancel(stack, runtime) -- 0x11C
     runtime:getDb():cancel()
-    runtime:setTrap(false)
 end
 
 function Put(stack, runtime) -- 0x11D
     local db = runtime:getDb()
     db:put()
     runtime:saveDbIfModified()
-    runtime:setTrap(false)
 end
 
 function DeleteTable(stack, runtime) -- 0x11E

@@ -873,7 +873,6 @@ function INPUT(var, initVal)
                 printf("? ")
             end
         end
-        runtime:setTrap(false)
         return
     end
 
@@ -958,7 +957,6 @@ function INPUT(var, initVal)
     else
         var(editor.value)
     end
-    runtime:setTrap(false)
 end
 
 -- Unlike the OPL CURSOR command, the x and y coordinates are explicit and indicate the top left of the cursor.

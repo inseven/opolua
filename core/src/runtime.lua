@@ -1148,6 +1148,7 @@ local function run(self, stack)
             self.ip = savedIp
         end
         ops[op](stack, self)
+        self.trap = false
     end
 end
 
