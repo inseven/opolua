@@ -209,6 +209,7 @@
         <file alias="ifgoto.opo">../examples/Tests/ifgoto.opo</file>
         <file alias="input.opo">../examples/Tests/input.opo</file>
         <file alias="key.opo">../examples/Tests/key.opo</file>
+        <file alias="makefont16.opo">../examples/Tests/makefont16.opo</file>
         <file alias="makefont.opo">../examples/Tests/makefont.opo</file>
         <file alias="menu.opo">../examples/Tests/menu.opo</file>
         <file alias="mpopup.opo">../examples/Tests/mpopup.opo</file>

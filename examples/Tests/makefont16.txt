@@ -1,0 +1,62 @@
+PROC main:
+    LOCAL info%(32), ch%, x%, w%, charh%, f%, scrw%
+    
+    INPUT f%
+    gCLS
+
+    gFONT f%
+    gAT 0, 8
+    gINFO info%()
+    charh% = info%(3)
+    REM don't trust info%(7), it can lie about the actual max character width.
+    REM Possibly this is for characters that intentionally overlap the next
+    REM character?
+
+    ch% = 0
+    WHILE ch% < 256
+        x% = gTWIDTH(CHR$(ch%))
+        w% = MAX(w%, x%)
+        gFONT 1
+        REM delimit with '-' instead of eg space here, because my OCR software
+        REM seems to get less confused by it than any other punctuation or
+        REM whitespace.
+        IF gX + gTWIDTH(NUM$(x%, 2) + "-") > gWIDTH
+            gAT 20, gY + 10
+        ENDIF
+        gPRINT NUM$(x%, 2) + "-"
+        gFONT f%
+        ch% = ch% + 1
+        IF (ch% AND 31) = 0
+            gAT 0, gY + 10
+        ENDIF
+    ENDWH
+    gAT 0, gHEIGHT
+    gPRINT "h", info%(3), "a", info%(5), "maxw", w%, PEEK$(ADDR(info%(9)))
+
+    GET
+
+    REM make sure window is big enough, in case of the larger fonts
+    scrw% = gWIDTH
+    gSETWIN 0, 0, w% * 32, gHEIGHT
+    gCLS
+
+    ch% = 0
+    gAT 0, info%(5)
+    WHILE ch% < 256
+        x% = gX
+        gPRINT CHR$(ch%)
+        gAT x% + w%, gY
+        ch% = ch% + 1
+        IF (ch% AND 31) = 0
+            gAT 0, gY + charh%
+        ENDIF
+    ENDWH
+
+    IF gWIDTH > scrw%
+        REM show the rest of the window
+        GET
+        gSETWIN -scrw%, 0
+    ENDIF
+
+    GET
+ENDP
