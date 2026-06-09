@@ -322,6 +322,11 @@ function decompileProc(proc, options)
         args = {Int, Int},
         valType = EWord,
     }
+    standardFns["Usr"] = {
+        name = "USR",
+        args = {Int, Int, Int, Int, Int},
+        valType = EWord,
+    }
 
     local statements = {}
     local gotoLabels = {}
