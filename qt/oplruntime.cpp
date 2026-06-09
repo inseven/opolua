@@ -953,7 +953,7 @@ int OplRuntime::graphicsop(lua_State* L)
         });
     } else if (cmd == "order") {
         int drawableId = lua_tointeger(L, 2);
-        int pos = qMax(lua_tointeger(L, 3), 1);
+        int pos = qMax((int)lua_tointeger(L, 3), 1);
         if (mInfoWinId) {
             // Make sure nothing can sneak in front of the info win (which will always be rank=1)
             if (drawableId == mInfoWinId) {
@@ -2323,6 +2323,7 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
                 .bitDepth = to_int(L, -1, "bitDepth"),
                 .rect = QRect(to_int(L, -1, "x"), to_int(L, -1, "y"), to_int(L, -1, "w"), to_int(L, -1, "h")),
                 .opCount = to_intt<uint32_t>(L, -1, "opCount"),
+                .rank = 0,
             };
             d.rank = d.isWindow ? mScreen->getRank(d.id) : 0;
             info.drawables.append(d);
