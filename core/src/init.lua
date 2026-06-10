@@ -311,6 +311,17 @@ dItemTypes = enum {
 
 KFontSysNorm = 1 -- "Series 3 normal" aka "Sys$norm"
 KFontSysBold = 2
+KFontSysDigits = 3
+KFontMono8x8 = 4
+KFontRoman8 = 5 -- This is just Sys$norm and even calls itself that
+KFontRoman11 = 6
+KFontRoman13 = 7
+KFontRoman16 = 8
+KFontSwiss8 = 9 -- This is also the same as Sys$norm but actually does call itself "Swiss 8"
+KFontSwiss11 = 10
+KFontSwiss13 = 11
+KFontSwiss16 = 12
+KFontMono6x6 = 13
 KFontDefault = 0x9A
 
 -- This is a collection of bits of device-specific data that the native code doesn't need to know about (hence isn't
@@ -321,11 +332,11 @@ DeviceInfo = {
         consoleFont = KFontSysNorm,
     },
     ["psion-series-3c"] = {
-        defaultFont = KFontArialNormal13, -- Should be Swiss 13
-        consoleFont = KFontCourierNormal8, -- Should be Mono 8x8
+        defaultFont = KFontSwiss13,
+        consoleFont = KFontMono8x8,
     },
     ["psion-siena"] = {
-        defaultFont = KFontArialNormal11, -- Should be Swiss 11
+        defaultFont = KFontSwiss11,
         consoleFont = KFontSysNorm,
     },
     -- All the later devices are probably the same...?
@@ -351,8 +362,7 @@ DeviceInfo = {
     },
 }
 
--- Strictly speaking, these should only apply on series 5, but until we have full font coverage we'll use them as fallbacks
--- on series 3 as well.
+-- These only apply on series 5 now we have full coverage of the series 3 fonts.
 FontAliases = {
     [4] = KFontCourierNormal8,
     [5] = KFontTimesNormal8,

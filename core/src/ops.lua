@@ -1870,7 +1870,7 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
     local fontName = runtime:getFont().name
     local function fontWord(idx)
         if idx == 0 then
-            return string.unpack("I2", string.pack("BB", #fontName, fontName:byte(1)))
+            return string.unpack("I2", string.pack("BB", #fontName, fontName:byte(1) or 0))
         else
             local frag = fontName:sub(idx*2, idx*2 + 1)
             frag = frag..string.rep("\0", 2 - #frag)
