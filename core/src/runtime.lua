@@ -664,6 +664,8 @@ function Runtime:getFont(fontId)
     local uid
     if fontId == KFontDefault then
         uid = self:getGraphics().defaultFont
+    elseif self:isSeries3() then
+        uid = fontId
     else
         uid = FontAliases[fontId] or fontId
     end
