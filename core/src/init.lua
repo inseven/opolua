@@ -646,3 +646,7 @@ textReplacements = {
     [string.char(KNonBreakingTab)] = "\t", -- Close enough
     [string.char(KNonBreakingHyphen)] = "-", -- Close enough
 }
+
+EOplTranVersionOplS3 = 0x110F -- No idea what this should be called officially, it was the version used on the Series 3
+EOplTranVersionOpl1993 = 0x111F -- Series 3a/3c and I think Siena
+EOplTranVersionOpler1 = 0x200A -- Series 5

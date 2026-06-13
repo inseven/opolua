@@ -28,10 +28,10 @@ local fmt = string.format
 
 local sibosyscalls
 
-codes_er5 = {
+codes_s3 = {
     [0x00] = "Addr",
     [0x01] = "Asc",
-    [0x02] = "IllegalFuncOpCode",
+    [0x02] = "Call",
     [0x03] = "Count",
     [0x04] = "Day",
     [0x05] = "Dow",
@@ -58,7 +58,7 @@ codes_er5 = {
     [0x1A] = "Pos",
     [0x1B] = "IllegalFuncOpCode",
     [0x1C] = "Second",
-    [0x1D] = "IllegalFuncOpCode",
+    [0x1D] = "Usr",
     [0x1E] = "Year",
     [0x1F] = "SAddr",
     [0x20] = "Week",
@@ -68,7 +68,7 @@ codes_er5 = {
     [0x24] = "KeyC",
     [0x25] = "IoOpenUnique",
     [0x26] = "gCreate",
-    [0x27] = "gCreateBit",
+    [0x27] = "gCreateBit_sibo",
     [0x28] = "gLoadBit",
     [0x29] = "gLoadFont",
     [0x2A] = "gRank",
@@ -82,7 +82,7 @@ codes_er5 = {
     [0x32] = "gTWidth",
     [0x33] = "gPrintClip",
     [0x34] = "TestEvent",
-    [0x35] = "IllegalFuncOpCode",
+    [0x35] = "Os",
     [0x36] = "Menu",
     [0x37] = "Dialog",
     [0x38] = "Alert",
@@ -104,20 +104,20 @@ codes_er5 = {
     [0x48] = "IllegalFuncOpCode",
     [0x49] = "IllegalFuncOpCode",
     [0x4A] = "IllegalFuncOpCode",
-    [0x4B] = "Alloc",
-    [0x4C] = "ReAlloc",
-    [0x4D] = "AdjustAlloc",
-    [0x4E] = "LenAlloc",
+    [0x4B] = "IllegalFuncOpCode",
+    [0x4C] = "IllegalFuncOpCode",
+    [0x4D] = "IllegalFuncOpCode",
+    [0x4E] = "IllegalFuncOpCode",
     [0x4F] = "Ioc",
-    [0x50] = "Uadd",
-    [0x51] = "Usub",
+    [0x50] = "IllegalFuncOpCode",
+    [0x51] = "IllegalFuncOpCode",
     [0x52] = "IoCancel",
-    [0x53] = "IllegalFuncOpCode",
+    [0x53] = "StatWinInfo",
     [0x54] = "FindField",
     [0x55] = "Bookmark",
     [0x56] = "GetEventC",
-    [0x57] = "InTrans",
-    [0x58] = "mPopup",
+    [0x57] = "IllegalFuncOpCode",
+    [0x58] = "IllegalFuncOpCode",
     [0x59] = "IllegalFuncOpCode",
     [0x5A] = "IllegalFuncOpCode",
     [0x5B] = "IllegalFuncOpCode",
@@ -246,27 +246,61 @@ codes_er5 = {
     [0xD6] = "CmdStr",
     [0xD7] = "ParseStr",
     [0xD8] = "ErrxStr",
-    [0xD9] = "GetDocStr",
-    [0xDA] = "Size",
-    [0xDB] = "LocWithCase",
-    [0xDC] = "gPixel",
+    [0xD9] = "IllegalFuncOpCode",
+    [0xDA] = "IllegalFuncOpCode",
+    [0xDB] = "IllegalFuncOpCode",
+    [0xDC] = "IllegalFuncOpCode",
     [0xDD] = "IllegalFuncOpCode",
     [0xDE] = "IllegalFuncOpCode",
     [0xDF] = "IllegalFuncOpCode",
 }
 
-codes_sibo = setmetatable({
-    [0x02] = "Call",
-    [0x1D] = "Usr",
-    [0x27] = "gCreateBit_sibo",
-    [0x35] = "Os",
-    [0x53] = "StatWinInfo",
-    [0x58] = "IllegalFuncOpCode", -- mPopup
-    [0xD9] = "IllegalFuncOpCode", -- GetDocStr
-    [0xDA] = "IllegalFuncOpCode", -- Size
-    [0xDB] = "IllegalFuncOpCode", -- LocWithCase
-    [0xDC] = "IllegalFuncOpCode", -- gPixel
-}, { __index = codes_er5 })
+codes_s3a = {
+    [0x4B] = "Alloc",
+    [0x4C] = "ReAlloc",
+    [0x4D] = "AdjustAlloc",
+    [0x4E] = "LenAlloc",
+    [0x50] = "Uadd",
+    [0x51] = "Usub",
+}
+
+codes_s5 = {
+    [0x02] = "IllegalFuncOpCode", -- was Call
+    [0x1D] = "IllegalFuncOpCode", -- was Usr
+    [0x27] = "gCreateBit",
+    [0x35] = "IllegalFuncOpCode", -- was Os
+    [0x53] = "IllegalFuncOpCode", -- was StatWinInfo
+    [0x57] = "InTrans",
+    [0x58] = "mPopup",
+    [0xD9] = "GetDocStr",
+    [0xDA] = "Size",
+    [0xDB] = "LocWithCase",
+    [0xDC] = "gPixel",
+}
+
+codes = {
+    [EOplTranVersionOplS3] = codes_s3,
+    [EOplTranVersionOpl1993] = {}, -- filled in below
+    [EOplTranVersionOpler1] = {}, -- filled in below
+}
+
+-- Fill in codes s3 -> s3a -> s5
+for code, op in pairs(codes_s3) do
+    codes[EOplTranVersionOpl1993][code] = op
+    codes[EOplTranVersionOpler1][code] = op
+end
+for code, op in pairs(codes_s3a) do
+    codes[EOplTranVersionOpl1993][code] = op
+    codes[EOplTranVersionOpler1][code] = op
+end
+for code, op in pairs(codes_s5) do
+    codes[EOplTranVersionOpler1][code] = op
+end
+
+function IllegalFuncOpCode(stack, runtime)
+    printf("Illegal func opcode at:\n%s\n", runtime:getOpoStacktrace())
+    error(KErrIllegal)
+end
 
 local function numParams_dump(runtime)
     local numParams = runtime:IP8()
@@ -276,11 +310,6 @@ end
 function Addr(stack, runtime) -- 0x00
     local var = stack:pop()
     stack:push(var:addressOf():intValue())
-end
-
-function IllegalFuncOpCode(stack, runtime)
-    printf("Illegal func opcode at:\n%s\n", runtime:getOpoStacktrace())
-    error(KErrIllegal)
 end
 
 function Asc(stack, runtime) -- 0x01

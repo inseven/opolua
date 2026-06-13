@@ -222,17 +222,9 @@ function decompileProc(proc, options)
     local era = oplFormat >= compiler.OplEr5 and "er5" or "sibo"
     local AddrType = era == "sibo" and EWord or ELong
     local ops = require("ops")
-    local opcodes = {}
-    for code, name in pairs(ops.codes_er5) do
-        opcodes[code] = name
-    end
-    if era == "sibo" then
-        for code, name in pairs(ops.codes_sibo) do
-            opcodes[code] = name
-        end
-    end
+    local opcodes = ops.codes[oplFormat]
     local fns = require("fns")
-    local fncodes = fns["codes_"..era]
+    local fncodes = fns.codes[oplFormat]
     local commands = compiler.Callables
     local AddressOfPrefix, AddressOfAny, VariablePrefix =
         compiler.AddressOfPrefix, compiler.AddressOfAny, compiler.VariablePrefix
@@ -1043,7 +1035,7 @@ function decompileProc(proc, options)
             pushBinaryExpr(ELong, "/")
         elseif op == "DivideFloat" then
             pushBinaryExpr(EReal, "/")
-        elseif op == "CallFunction" or op == "CallFunction_sibo" then
+        elseif op == "CallFunction" then
             local fnCode = ip8()
             local fn = fncodes[fnCode]
             local standardFn = standardFns[fn]

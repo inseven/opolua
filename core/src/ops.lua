@@ -29,7 +29,7 @@ local fmt = string.format
 local Word, Long, Real, String = DataTypes.EWord, DataTypes.ELong, DataTypes.EReal, DataTypes.EString
 local WordArray, LongArray, RealArray, StringArray = DataTypes.EWordArray, DataTypes.ELongArray, DataTypes.ERealArray, DataTypes.EStringArray
 
-codes_er5 = {
+codes_s3 = {
     [0x00] = "SimpleDirectRightSideInt",
     [0x01] = "SimpleDirectRightSideLong",
     [0x02] = "SimpleDirectRightSideFloat",
@@ -193,7 +193,7 @@ codes_er5 = {
     [0xA0] = "Beep",
     [0xA1] = "Close",
     [0xA2] = "Cls",
-    [0xA3] = "IllegalOpCode",
+    [0xA3] = "Compress",
     [0xA4] = "Copy",
     [0xA5] = "Create",
     [0xA6] = "Cursor",
@@ -238,7 +238,7 @@ codes_er5 = {
     [0xCD] = "gTMode",
     [0xCE] = "gStyle",
     [0xCF] = "gOrder",
-    [0xD0] = "IllegalOpCode",
+    [0xD0] = "gInfo",
     [0xD1] = "gCls",
     [0xD2] = "gAt",
     [0xD3] = "gMove",
@@ -250,8 +250,8 @@ codes_er5 = {
     [0xD9] = "gPrintBoxText",
     [0xDA] = "gLineBy",
     [0xDB] = "gBox",
-    [0xDC] = "gCircle",
-    [0xDD] = "gEllipse",
+    [0xDC] = "IllegalOpCode",
+    [0xDD] = "IllegalOpCode",
     [0xDE] = "gPoly",
     [0xDF] = "gFill",
     [0xE0] = "gPatt",
@@ -268,8 +268,8 @@ codes_er5 = {
     [0xEB] = "mCard",
     [0xEC] = "dInit",
     [0xED] = "dItem",
-    [0xEE] = "IllegalOpCode",
-    [0xEF] = "IllegalOpCode",
+    [0xEE] = "SetName",
+    [0xEF] = "StatusWin",
     [0xF0] = "Busy",
     [0xF1] = "Lock",
     [0xF2] = "gInvert",
@@ -286,66 +286,66 @@ codes_er5 = {
     [0xFD] = "IllegalOpCode",
     [0xFE] = "IllegalOpCode",
     [0xFF] = "NextOpcodeTable",
-    [0x100] = "gGrey",
-    [0x101] = "DefaultWin",
+    [0x100] = "IllegalOpCode",
+    [0x101] = "IllegalOpCode",
     [0x102] = "IllegalOpCode",
     [0x103] = "IllegalOpCode",
-    [0x104] = "Font",
-    [0x105] = "Style",
+    [0x104] = "IllegalOpCode",
+    [0x105] = "IllegalOpCode",
     [0x106] = "IllegalOpCode",
     [0x107] = "IllegalOpCode",
     [0x108] = "IllegalOpCode",
     [0x109] = "IllegalOpCode",
     [0x10A] = "IllegalOpCode",
     [0x10B] = "IllegalOpCode",
-    [0x10C] = "FreeAlloc",
+    [0x10C] = "IllegalOpCode",
     [0x10D] = "IllegalOpCode",
     [0x10E] = "IllegalOpCode",
-    [0x10F] = "gButton",
-    [0x110] = "gXBorder",
+    [0x10F] = "IllegalOpCode",
+    [0x110] = "IllegalOpCode",
     [0x111] = "IllegalOpCode",
     [0x112] = "IllegalOpCode",
     [0x113] = "IllegalOpCode",
-    [0x114] = "ScreenInfo",
+    [0x114] = "IllegalOpCode",
     [0x115] = "IllegalOpCode",
     [0x116] = "IllegalOpCode",
     [0x117] = "IllegalOpCode",
-    [0x118] = "CallOpxFunc",
-    [0x119] = "Statement32",
-    [0x11A] = "Modify",
-    [0x11B] = "Insert",
-    [0x11C] = "Cancel",
-    [0x11D] = "Put",
-    [0x11E] = "DeleteTable",
-    [0x11F] = "GotoMark",
-    [0x120] = "KillMark",
-    [0x121] = "ReturnFromEval",
-    [0x122] = "GetEvent32",
-    [0x123] = "GetEventA32",
-    [0x124] = "gColor",
-    [0x125] = "SetFlags",
-    [0x126] = "SetDoc",
-    [0x127] = "DaysToDate",
-    [0x128] = "gInfo32",
-    [0x129] = "IoWaitStat32",
-    [0x12A] = "Compact",
-    [0x12B] = "BeginTrans",
-    [0x12C] = "CommitTrans",
-    [0x12D] = "Rollback",
-    [0x12E] = "ClearFlags",
-    [0x12F] = "PointerFilter",
-    [0x130] = "mCasc",
-    [0x131] = "EvalExternalRightSideRef",
-    [0x132] = "EvalExternalLeftSideRef",
-    [0x133] = "dEditCheckbox", -- In 6.0 this opcode has actually been REDEFINED to gSetPenWidth
-    [0x134] = "gSetPenWidth", -- in ER6 is "dEditMulti",
-    [0x135] = "dEditMulti", --"gColorInfo",
-    [0x136] = "gColorInfo", --"gColorBackground",
-    [0x137] = "gColorBackground", -- ER6 "mCardX",
-    [0x138] = "SetHelp",
-    [0x139] = "ShowHelp",
-    [0x13A] = "SetHelpUid",
-    [0x13B] = "gXBorder32",
+    [0x118] = "IllegalOpCode",
+    [0x119] = "IllegalOpCode",
+    [0x11A] = "IllegalOpCode",
+    [0x11B] = "IllegalOpCode",
+    [0x11C] = "IllegalOpCode",
+    [0x11D] = "IllegalOpCode",
+    [0x11E] = "IllegalOpCode",
+    [0x11F] = "IllegalOpCode",
+    [0x120] = "IllegalOpCode",
+    [0x121] = "IllegalOpCode",
+    [0x122] = "IllegalOpCode",
+    [0x123] = "IllegalOpCode",
+    [0x124] = "IllegalOpCode",
+    [0x125] = "IllegalOpCode",
+    [0x126] = "IllegalOpCode",
+    [0x127] = "IllegalOpCode",
+    [0x128] = "IllegalOpCode",
+    [0x129] = "IllegalOpCode",
+    [0x12A] = "IllegalOpCode",
+    [0x12B] = "IllegalOpCode",
+    [0x12C] = "IllegalOpCode",
+    [0x12D] = "IllegalOpCode",
+    [0x12E] = "IllegalOpCode",
+    [0x12F] = "IllegalOpCode",
+    [0x130] = "IllegalOpCode",
+    [0x131] = "IllegalOpCode",
+    [0x132] = "IllegalOpCode",
+    [0x133] = "IllegalOpCode",
+    [0x134] = "IllegalOpCode",
+    [0x135] = "IllegalOpCode",
+    [0x136] = "IllegalOpCode",
+    [0x137] = "IllegalOpCode",
+    [0x138] = "IllegalOpCode",
+    [0x139] = "IllegalOpCode",
+    [0x13A] = "IllegalOpCode",
+    [0x13B] = "IllegalOpCode",
     [0x13C] = "IllegalOpCode",
     [0x13D] = "IllegalOpCode",
     [0x13E] = "IllegalOpCode",
@@ -544,43 +544,86 @@ codes_er5 = {
     [0x1FF] = "IllegalOpCode",
 }
 
-codes_sibo = setmetatable({
-    [0x57] = "CallFunction_sibo",
-    [0xA3] = "Compress",
-    [0xD0] = "gInfo",
-    [0xDC] = "IllegalOpCode", -- gCircle
-    [0xDD] = "IllegalOpCode", -- gEllipse
-    [0xEE] = "SetName",
-    [0xEF] = "StatusWin",
+codes_s3a = {
+    [0x100] = "gGrey",
+    [0x101] = "DefaultWin",
     [0x102] = "diamInit",
     [0x103] = "diamPos",
+    [0x104] = "Font",
+    [0x105] = "Style",
+    [0x10C] = "FreeAlloc",
     [0x10E] = "rCache",
-    [0x118] = "IllegalOpCode", -- CallOpxFunc
-    [0x11A] = "IllegalOpCode", -- Modify
-    [0x11B] = "IllegalOpCode", -- Insert
-    [0x11C] = "IllegalOpCode", -- Cancel
-    [0x11D] = "IllegalOpCode", -- Put
-    [0x11E] = "IllegalOpCode", -- DeleteTable
-    [0x11F] = "IllegalOpCode", -- GotoMark
-    [0x120] = "IllegalOpCode", -- KillMark
-    [0x122] = "IllegalOpCode", -- GetEvent32
-    [0x123] = "IllegalOpCode", -- GetEventA32
-    [0x124] = "IllegalOpCode", -- gColor
-    [0x125] = "IllegalOpCode", -- SetFlags
-    [0x126] = "IllegalOpCode", -- SetDoc
-    [0x128] = "IllegalOpCode", -- gInfo32
-    [0x129] = "IllegalOpCode", -- IoWaitStat32
-    [0x12A] = "IllegalOpCode", -- Compact
-    [0x12B] = "IllegalOpCode", -- BeginTrans
-    [0x12C] = "IllegalOpCode", -- CommitTrans
-    [0x12D] = "IllegalOpCode", -- Rollback
-    [0x12E] = "IllegalOpCode", -- ClearFlags
-    [0x12F] = "IllegalOpCode", -- PointerFilter
-    [0x130] = "IllegalOpCode", -- mCasc
-    [0x133] = "IllegalOpCode", -- dEditCheckbox
-    [0x135] = "IllegalOpCode", -- dEditMulti
-    [0x137] = "IllegalOpCode", -- gColorBackground
-}, { __index = codes_er5 })
+    [0x10F] = "gButton",
+    [0x110] = "gXBorder",
+    [0x114] = "ScreenInfo",
+}
+
+codes_s5 = {
+    [0xA3] = "IllegalOpCode", -- was Compress
+    [0xD0] = "IllegalOpCode", -- was gInfo
+    [0xDC] = "gCircle",
+    [0xDD] = "gEllipse",
+    [0xEE] = "IllegalOpCode", -- was SetName
+    [0xEF] = "IllegalOpCode", -- was StatusWin
+    [0x102] = "IllegalOpCode", -- was diamInit
+    [0x103] = "IllegalOpCode", -- was diamPos
+    [0x10E] = "IllegalOpCode", -- was rCache
+    [0x118] = "CallOpxFunc",
+    [0x119] = "Statement32",
+    [0x11A] = "Modify",
+    [0x11B] = "Insert",
+    [0x11C] = "Cancel",
+    [0x11D] = "Put",
+    [0x11E] = "DeleteTable",
+    [0x11F] = "GotoMark",
+    [0x120] = "KillMark",
+    [0x121] = "ReturnFromEval",
+    [0x122] = "GetEvent32",
+    [0x123] = "GetEventA32",
+    [0x124] = "gColor",
+    [0x125] = "SetFlags",
+    [0x126] = "SetDoc",
+    [0x127] = "DaysToDate",
+    [0x128] = "gInfo32",
+    [0x129] = "IoWaitStat32",
+    [0x12A] = "Compact",
+    [0x12B] = "BeginTrans",
+    [0x12C] = "CommitTrans",
+    [0x12D] = "Rollback",
+    [0x12E] = "ClearFlags",
+    [0x12F] = "PointerFilter",
+    [0x130] = "mCasc",
+    [0x131] = "EvalExternalRightSideRef",
+    [0x132] = "EvalExternalLeftSideRef",
+    [0x133] = "dEditCheckbox", -- In 6.0 this opcode has actually been REDEFINED to gSetPenWidth
+    [0x134] = "gSetPenWidth", -- in ER6 is "dEditMulti",
+    [0x135] = "dEditMulti", --"gColorInfo",
+    [0x136] = "gColorInfo", --"gColorBackground",
+    [0x137] = "gColorBackground", -- ER6 "mCardX",
+    -- [0x138] = "SetHelp",
+    -- [0x139] = "ShowHelp",
+    -- [0x13A] = "SetHelpUid",
+    -- [0x13B] = "gXBorder32",
+}
+
+codes = {
+    [EOplTranVersionOplS3] = codes_s3,
+    [EOplTranVersionOpl1993] = {}, -- filled in below
+    [EOplTranVersionOpler1] = {}, -- filled in below
+}
+
+-- Fill in codes s3 -> s3a -> s5
+for code, op in pairs(codes_s3) do
+    codes[EOplTranVersionOpl1993][code] = op
+    codes[EOplTranVersionOpler1][code] = op
+end
+for code, op in pairs(codes_s3a) do
+    codes[EOplTranVersionOpl1993][code] = op
+    codes[EOplTranVersionOpler1][code] = op
+end
+for code, op in pairs(codes_s5) do
+    codes[EOplTranVersionOpler1][code] = op
+end
 
 function IllegalOpCode(stack, runtime)
     printf("Illegal opcode at:\n%s\n", runtime:getOpoStacktrace())
@@ -1087,28 +1130,14 @@ end
 
 function CallFunction(stack, runtime) -- 0x57
     local fnIdx = runtime:IP8()
-    local fnName = fns.codes_er5[fnIdx]
+    local fnName = fns.codes[runtime.translatorVersion][fnIdx]
     local fn = assert(fns[fnName], "Function "..fnName.. " not implemented!")
     fn(stack, runtime)
 end
 
 function CallFunction_dump(runtime)
     local fnIdx = runtime:IP8()
-    local fnName = fns.codes_er5[fnIdx]
-    local dumpFn = fns[fnName.."_dump"]
-    return fmt("0x%02X (%s)%s", fnIdx, fnName or "?", dumpFn and dumpFn(runtime) or "")
-end
-
-function CallFunction_sibo(stack, runtime) -- 0x57
-    local fnIdx = runtime:IP8()
-    local fnName = fns.codes_sibo[fnIdx]
-    local fn = assert(fns[fnName], "Function "..fnName.. " not implemented!")
-    fn(stack, runtime)
-end
-
-function CallFunction_sibo_dump(runtime)
-    local fnIdx = runtime:IP8()
-    local fnName = fns.codes_sibo[fnIdx]
+    local fnName = fns.codes[runtime.translatorVersion][fnIdx]
     local dumpFn = fns[fnName.."_dump"]
     return fmt("0x%02X (%s)%s", fnIdx, fnName or "?", dumpFn and dumpFn(runtime) or "")
 end
@@ -2853,21 +2882,21 @@ function dEditMulti(stack, runtime) -- 0x135
     table.insert(dialog.items, item)
 end
 
-function gXBorder32(stack, runtime) -- 0x13B
-    unimplemented("gXBorder32")
-end
+-- function gXBorder32(stack, runtime) -- 0x13B
+--     unimplemented("gXBorder32")
+-- end
 
-function SetHelpUid(stack, runtime) -- 0x13A
-    unimplemented("SetHelpUid")
-end
+-- function SetHelpUid(stack, runtime) -- 0x13A
+--     unimplemented("SetHelpUid")
+-- end
 
-function ShowHelp(stack, runtime) -- 0x139
-    unimplemented("ShowHelp")
-end
+-- function ShowHelp(stack, runtime) -- 0x139
+--     unimplemented("ShowHelp")
+-- end
 
-function SetHelp(stack, runtime) -- 0x138
-    unimplemented("SetHelp")
-end
+-- function SetHelp(stack, runtime) -- 0x138
+--     unimplemented("SetHelp")
+-- end
 
 function gColorBackground(stack, runtime) -- ER5: 0x137, ER6: 0x136
     local r, g, b = stack:pop(3)

@@ -24,60 +24,33 @@ SOFTWARE.
 
 _ENV = module()
 
-local opofile = require("opofile")
-Opl91 = opofile.EOplTranVersionOplS3
-Opl93 = opofile.EOplTranVersionOpl1993
-OplEr5 = opofile.EOplTranVersionOpler1
+Opl91 = EOplTranVersionOplS3
+Opl93 = EOplTranVersionOpl1993
+OplEr5 = EOplTranVersionOpler1
 
 do
     local ops = require("ops")
     local fns = require("fns")
     opcodes = {}
-    local opcodes_er5 = {}
-    for code, name in pairs(ops.codes_er5) do
-        if name ~= "IllegalOpCode" then
-            opcodes_er5[name] = code
-        end
-    end
     fncodes = {}
-    local fncodes_er5 = {}
-    for code, name in pairs(fns.codes_er5) do
-        if name ~= "IllegalFuncOpCode" then
-            fncodes_er5[name] = code
+
+    for translatorVersion, codes in pairs(ops.codes) do
+        opcodes[translatorVersion] = {}
+        for code, name in pairs(codes) do
+            if name ~= "IllegalOpCode" then
+                opcodes[translatorVersion][name] = code
+            end
         end
     end
 
-    local opcodes_sibo = {}
-    for name, code in pairs(opcodes_er5) do
-        opcodes_sibo[name] = code
-    end
-    for code, name in pairs(ops.codes_sibo) do
-        if name == "IllegalOpCode" then
-            opcodes_sibo[ops.codes_er5[code]] = nil
-        else
-            opcodes_sibo[name] = code
+    for translatorVersion, codes in pairs(fns.codes) do
+        fncodes[translatorVersion] = {}
+        for code, name in pairs(codes) do
+            if name ~= "IllegalFuncOpCode" then
+                fncodes[translatorVersion][name] = code
+            end
         end
     end
-
-    local fncodes_sibo = {}
-    for name, code in pairs(fncodes_er5) do
-        fncodes_sibo[name] = code
-    end
-    for code, name in pairs(fns.codes_sibo) do
-        if name == "IllegalFuncOpCode" then
-            fncodes_sibo[fns.codes_er5[code]] = nil
-        else
-            fncodes_sibo[name] = code
-        end
-    end
-
-    opcodes[OplEr5] = opcodes_er5
-    opcodes[Opl91] = opcodes_sibo
-    opcodes[Opl93] = opcodes_sibo
-
-    fncodes[OplEr5] = fncodes_er5
-    fncodes[Opl91] = fncodes_sibo
-    fncodes[Opl93] = fncodes_sibo
 end
 
 local string_find, string_match, string_sub, string_pack = string.find, string.match, string.sub, string.pack
@@ -243,6 +216,11 @@ local function synassert(test, symbol, ...)
     else
         synerror(symbol, ...)
     end
+end
+
+-- Helper for synassert/synerror
+function notAvailable(val)
+    return "%s not available in the specified OPL version", val
 end
 
 Tokens = class {}
@@ -1786,7 +1764,7 @@ function ProcState:handleFn(exp, callable)
         for i, arg in ipairs(expArgs) do
             self:emitExpression(arg, expandPtrType(callable.args[i], oplFormat))
         end
-        synassert(fncodes[callable.name], exp, "%s not available in the specified OPL version", exp.val)
+        synassert(fncodes[callable.name], exp, notAvailable(exp.val))
         self:emit("BB", opcodes.CallFunction, fncodes[callable.name])
         if callable.args.numParams then
             self:emit("B", #expArgs)
@@ -2400,7 +2378,7 @@ function ProcState:handleOp(callable, callableToken)
         checkExpressionArguments(args, callable.args, callableToken)
     end
     if callable.name then
-        self:handleStandardOp(callable, args)
+        self:handleStandardOp(callable, callableToken, args)
     else
         -- It's a special op that has a dedicated handler fn for whatever weirdness it has with its arguments
         local handler = _ENV["handleOp_"..callableToken.val]
@@ -2408,7 +2386,7 @@ function ProcState:handleOp(callable, callableToken)
     end
 end
 
-function ProcState:handleStandardOp(callable, args)
+function ProcState:handleStandardOp(callable, opToken, args)
     local opcodes = opcodes[self.oplFormat]
     assert(callable.args)
     for i, argExp in ipairs(args) do
@@ -2417,7 +2395,7 @@ function ProcState:handleStandardOp(callable, args)
 
     local opcode = opcodes[callable.name]
     if opcode == nil then
-        synerror(token, "%s is not available in the specified OPL version", token.val)
+        synerror(opToken, notAvailable(opToken.val))
     end
     if opcode >= 256 then
         self:emit("BB", opcodes.NextOpcodeTable, opcode - 256)
