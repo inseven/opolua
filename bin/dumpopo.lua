@@ -154,7 +154,7 @@ Options:
     opofile = require("opofile")
     runtime = require("runtime")
     local prog = opofile.parseOpo2(data, verbose)
-    local rt = runtime.newRuntime(nil, prog.era)
+    local rt = runtime.newRuntime(nil, prog.translatorVersion)
     rt:addModule("C:\\module", prog.procTable, prog.opxTable)
     if args.decompile then
         local names = {} -- map of module name to table of name->newname

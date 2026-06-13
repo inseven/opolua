@@ -26,10 +26,6 @@ _ENV = module()
 
 -- POS MEANS 1-BASED LUA STRING POSITION. OFFSET OR INDEX MEANS ZERO BASED
 
-EOplTranVersionOplS3 = 0x110F -- No idea what this should be called officially, I _think_ it's for pre-Series 3a devices
-EOplTranVersionOpl1993 = 0x111F
-EOplTranVersionOpler1 = 0x200A
-
 KUidOpoLuaCompiler = 0x10286F9D
 
 TOpoFileHeader16 = "<c16I2I2"

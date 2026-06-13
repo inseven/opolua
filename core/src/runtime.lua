@@ -988,12 +988,12 @@ function newModuleInstance(moduleName)
     return instance
 end
 
-function newRuntime(handler, era)
-    if not era then
-        era = "er5"
+function newRuntime(handler, translatorVersion)
+    if not translatorVersion then
+        translatorVersion = EOplTranVersionOpler1
     end
-    local codes = ops["codes_"..era]
-    assert(codes, "Unrecognised era " .. era)
+    local codes = ops.codes[translatorVersion]
+    assert(codes, "Unrecognised translatorVersion " .. tostring(translatorVersion))
     local rt = Runtime {
         opcodes = codes,
         frameBase = 0, -- Where in the chunk we start the stack frames' memory
@@ -1001,7 +1001,7 @@ function newRuntime(handler, era)
         dbs = {
             open = {},
         },
-        era = era,
+        translatorVersion = translatorVersion,
         modules = {},
         luaModules = {}, -- modules that use opl.lua thus have to be tracked per-runtime
         files = {},
@@ -1032,7 +1032,7 @@ end
 
 -- Returns true when emulating SIBO (Series 3/3a/3c) instruction set
 function Runtime:isSibo()
-    return self.era == "sibo"
+    return self.translatorVersion <= EOplTranVersionOpl1993
 end
 
 function Runtime:isSeries3()
@@ -1063,11 +1063,6 @@ function Runtime:decodeNextInstruction()
     self.ip = currentIp + 1
     local opDump = op and op.."_dump"
     local extra = ops[opDump] and ops[opDump](self)
-    if op == "CallFunction_sibo" then
-        -- Special case how this is displayed, because CallFunction is not itself sibo specific (although the function
-        -- being called may be)
-        op = "CallFunction"
-    end
     return fmt("%08X: %02X [%s]%s", currentIp, opCode, op or "?", extra and (" "..extra) or "")
 end
 
@@ -1613,7 +1608,7 @@ function newRuntimeWithFile(fileName, iohandler)
 
     local module = opofile.parseOpo2(data, verbose)
     iohandler.setEra(module.era) -- Needed to set the default string encoding
-    local rt = newRuntime(iohandler, module.era)
+    local rt = newRuntime(iohandler, module.translatorVersion)
     local mod = rt:addModule(fileName, module.procTable, module.opxTable)
     mod.uid3 = module.uid3
     return rt

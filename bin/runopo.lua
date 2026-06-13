@@ -83,12 +83,12 @@ function main()
         error("Don't recognize "..path)
     end
 
-    local procTable, opxTable, era = opofile.parseOpo(progData)
-    local rt = require("runtime").newRuntime(iohandler, era)
+    local module = opofile.parseOpo2(progData)
+    local rt = require("runtime").newRuntime(iohandler, module.translatorVersion)
     rt:setInstructionDebug(args.verbose)
-    rt:addModule(devicePath, procTable, opxTable)
+    rt:addModule(devicePath, module.procTable, module.opxTable)
 
-    local procToCall = procName and procName:upper() or procTable[1].name
+    local procToCall = procName and procName:upper() or module.procTable[1].name
     local err = rt:pcallProc(procToCall)
     if err then
         print("Error: "..tostring(err))

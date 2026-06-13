@@ -119,10 +119,10 @@ Options:
 
     if args.dump then
         runtime = require("runtime")
-        local procTable, opxTable, era = opofile.parseOpo(result, true)
-        local rt = runtime.newRuntime(nil, era)
-        rt:addModule("C:\\module", procTable, opxTable)
-        for i, proc in ipairs(procTable) do
+        local module = opofile.parseOpo2(result, true)
+        local rt = runtime.newRuntime(nil, module.translatorVersion)
+        rt:addModule("C:\\module", module.procTable, module.opxTable)
+        for i, proc in ipairs(module.procTable) do
             printf("%d: ", i)
             opofile.printProc(proc)
             rt:dumpProc(proc.name)
