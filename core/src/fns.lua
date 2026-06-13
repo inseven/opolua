@@ -112,7 +112,7 @@ codes_s3 = {
     [0x50] = "IllegalFuncOpCode",
     [0x51] = "IllegalFuncOpCode",
     [0x52] = "IoCancel",
-    [0x53] = "StatWinInfo",
+    [0x53] = "IllegalFuncOpCode",
     [0x54] = "FindField",
     [0x55] = "Bookmark",
     [0x56] = "GetEventC",
@@ -262,6 +262,7 @@ codes_s3a = {
     [0x4E] = "LenAlloc",
     [0x50] = "Uadd",
     [0x51] = "Usub",
+    [0x53] = "StatWinInfo",
 }
 
 codes_s5 = {

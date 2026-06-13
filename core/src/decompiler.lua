@@ -1564,6 +1564,19 @@ function decompileProc(proc, options)
                     args = { Int, Int },
                 })
             end
+        elseif op == "StatusWin" then
+            local flag = ip8()
+            if flag == 0 then
+                addStatement(location, "STATUSWIN OFF")
+            elseif flag == 1 then
+                addStatement(location, "STATUSWIN ON")
+            else
+                ip = ip - 1
+                handleStandardOp(location, {
+                    name = "STATUSWIN ON,",
+                    args = { Int },
+                })
+            end
         else
             error("Unhandled op "..(op or fmt("0x%02X", opCode)))
         end
