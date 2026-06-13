@@ -669,6 +669,8 @@ Callables = {
     SIN = Fn("Sin", {Float}, Float),
     SPACE = Fn("Space", {}, Long),
     SQR = Fn("Sqr", {Float}, Float),
+    STATUSWIN = SpecialOp(),
+    STATWININFO = Fn("StatWinInfo", {Int, AddressOfIntArray}, Int),
     STOP = Op("Stop", {}),
     STD = SpecialFn(nil, Float),
     STYLE = Op("Style", {Int}),
@@ -2859,6 +2861,39 @@ function handleOp_SCREEN(procState, args)
         procState:emit("B", opcodes.Screen2)
     end
     procState:popStack(#args)
+end
+
+function handleOp_STATUSWIN(procState)
+    local tokens = procState.tokens
+    local opcodes = opcodes[procState.oplFormat]
+    synassert(procState.oplFormat <= Opl93, tokens:current(), notAvailable("STATUSWIN"))
+    assert(opcodes.StatusWin) -- Otherwise the check above is broken
+
+    local cmdToken = tokens:current()
+    local what = procState.tokens:expectNext("ON", "OFF").val
+    local flag, arg
+    if what == "ON" then
+        tokens:advance()
+        flag = 1
+        if tokens:current().type == "comma" then
+            synassert(procState.oplFormat == Opl93, tokens:current(), notAvailable("STATUSWIN ON, type%"))
+            tokens:advance()
+            local args = parseExpressionList(tokens)
+            checkExpressionArguments(args, { Int }, cmdToken)
+            arg = args[1]
+            flag = 2
+        end
+    elseif what == "OFF" then
+        tokens:advance()
+        flag = 0
+    end
+    if arg then
+        procState:emitExpression(arg, Int)
+    end
+    procState:emit("BB", opcodes.StatusWin, flag)
+    if arg then
+        procState:popStack(1)
+    end
 end
 
 function handleOp_USE(procState)
