@@ -2429,9 +2429,13 @@ function handleOp_CACHE(procState)
     local cmdToken = procState.tokens:current()
     local next = tokens:peekNext()
     if next.type == "OFF" or next.type == "ON" then
+        synassert(opcodes[procState.oplFormat].rCache, cmdToken, notAvailable("CACHE"))
         tokens:advance() -- to the OFF/ON
         tokens:advance() -- consume the OFF/ON
-        procState:emit("BB", opcodes[procState.oplFormat].rCache, next.type == "ON" and 1 or 0)
+        procState:emit("BBB",
+            opcodes[procState.oplFormat].NextOpcodeTable,
+            opcodes[procState.oplFormat].rCache & 0xFF,
+            next.type == "ON" and 1 or 0)
     else
         local op = Op("rCache", {Int, Int, numParams = {2}, numFixedParams = 0})
         procState:handleOp(op, cmdToken)
@@ -2540,7 +2544,7 @@ function handleOp_DELETE(procState, args)
         procState:emitExpression(args[1], String)
         procState:emit("B", opcodes.Delete)
     else
-        assert(#args == 2)
+        synassert(procState.oplFormat >= OplEr5, args[2], notAvailable("DELETE dbase$, table$"));
         procState:emitExpression(args[1], String)
         procState:emitExpression(args[2], String)
         procState:emit("BB", opcodes.NextOpcodeTable, opcodes.DeleteTable - 256)
@@ -2935,6 +2939,13 @@ Opl93Language = {
 }
 
 function docompile(path, realPath, programText, includePaths, format)
+    -- Some fixups based on format that aren't handled by either checking the valid opcodes, or by the command being
+    -- special and having its own handling function.
+    if format == OplEr5 then
+        Callables.DINIT.args.numParams = {0, 1, 2}
+    else
+        Callables.DINIT.args.numParams = {0, 1}
+    end
     local lang = format == OplEr5 and OplEr5Language or Opl93Language
     local tokens = lex(programText, realPath or path, lang, format)
     tokens.oplFormat = assert(format, "OPL version not specified!")
