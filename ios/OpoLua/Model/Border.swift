@@ -34,7 +34,7 @@ extension CGContext {
         let image = CommonImage(contentsOfFile: url.path)!
         // I don't really understand why we have to limit the inset size so agressively here, but
         // limiting to half the frame size is not sufficient to avoid some weird artifacts
-        let inset = min(min(frame.width, frame.height) / 3, 10)
+        let inset = min(min(frame.width, frame.height) / 3, 11)
 #if canImport(UIKit)
         let button = image.resizableImage(withCapInsets: .init(top: inset, left: inset, bottom: inset, right: inset), resizingMode: .stretch)
 #else
