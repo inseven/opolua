@@ -607,7 +607,7 @@ void OplRuntime::runOpo(const QString& path)
     // guh, kinda need to know the right device type in advance so we can select the appropriate drive, otherwise it'll
     // risk getting nuked if a corrective device switch happens subsequently.
     bool isSiboFormat = opoIsSibo(path);
-    if (isSiboFormat != isSibo()) {
+    if (isSiboFormat != isSibo() && !mIgnoreOpoEra) {
         setDeviceType(isSiboFormat ? psionSeries3c : psionSeries5);
     }
     auto drv = (char)mainDrive();
