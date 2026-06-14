@@ -305,10 +305,15 @@ function DialogTitleBar:draw()
         drawText(self.value, self.x + self.hMargin, self.y + 2)
     end
     black()
-    if runtime:isSeries3() then
+    if runtime:getDeviceName() == "psion-series-3" then
         -- Ignore our own boundaries here, because the line has to go all the way across the dialog
         gAT(1, self.y + self.h - 1)
         gLINEBY(self.parent.w - 4, 0)
+    elseif runtime:isSeries3() then
+        -- The titleBarInset being 11 is to keep the title out the way of the rounded corners, but the line needs to
+        -- start at 9 (2 pixels away from the vertical bit of the border) meaning inset from self.x by -2.
+        gAT(self.x - 2, self.y + self.h - 1)
+        gLINEBY(self.w + 4, 0)
     end
     View.draw(self)
 end
@@ -2076,9 +2081,12 @@ function Button:contentSize()
     end
 
     local w, h
-    if runtime:isSeries3() then
+    if runtime:getDeviceName() == "psion-series-3" then
         w = 40
         h = 14
+    elseif runtime:isSeries3() then
+        w = 70
+        h = 20
     else
         w = math.max(textw + 8, kSeries5ButtonMinWidth)
         h = math.max(texth + 12, kButtonDefaultHeight) -- kButtonDefaultHeight is also the min height
@@ -2210,7 +2218,8 @@ function DialogButtonGroup:init(lineHeight, dialogFont)
     if runtime:isSeries3() then
         self.shortcutFont = dialogFont
         self.buttonYOffset = 0
-        self.labelHeight = 14
+        local _, fonth = gTWIDTH("", self.shortcutFont)
+        self.labelHeight = fonth + 6
     else
         self.shortcutFont = KFontArialNormal11
         self.buttonYOffset = 9
@@ -2486,7 +2495,9 @@ function DIALOG(dialog)
 
     local state = runtime:saveGraphicsState()
 
-    local dialogFont, buttonFont, buttonType, border, titleBarInset, bottomMargin
+    local dialogFont = DeviceInfo[runtime:getDeviceName()].defaultFont
+
+    local buttonFont, buttonType, border, titleBarInset, bottomMargin
 
     local titleBarSpace -- extra gap between title bar and first item
 
@@ -2494,19 +2505,28 @@ function DIALOG(dialog)
 
     local densePack = (dialog.flags & KDlgDensePack) ~= 0
 
-    if runtime:isSeries3() then
-        dialogFont = 1
-        buttonFont = 1
+    if runtime:getDeviceName() == "psion-series-3" then
+        buttonFont = dialogFont
         buttonType = KButtS3
-        border = { top = 2, left = 3, bottom = 4, right = 5 }
+        border = { type = 0, top = 2, left = 3, bottom = 4, right = 5 }
         titleBarSpace = 2
         lineHeight = 9
         titleBarLineHeight = 13
         titleBarInset = { left = 6, right = 8 }
         bottomMargin = 0
         lineTextYOffset = 0
+    elseif runtime:isSeries3() then
+        buttonFont = dialogFont
+        buttonType = KButtS3a
+        border = { type = 1, top = 9, left = 9, bottom = 9, right = 9 }
+        titleBarSpace = 2
+        local _, h = gTWIDTH("", dialogFont)
+        lineHeight = h + 1
+        titleBarLineHeight = lineHeight + 4
+        titleBarInset = { left = 11, right = 11 }
+        bottomMargin = 0
+        lineTextYOffset = 0
     else
-        dialogFont = KFontArialNormal15
         buttonFont = KFontArialBold11
         buttonType = KButtS5
         -- 1 px black box plus 3 px for the gXBORDER
@@ -2635,7 +2655,7 @@ function DIALOG(dialog)
     gFILL(w, h, KgModeClear)
     if runtime:isSeries3() then
         gAT(1, 1)
-        gBORDER(KBordDblShadow | KBordRoundCorners, w - 2, h - 2)
+        gXBORDER(border.type, KBordDblShadow | KBordRoundCorners, w - 2, h - 2)
     else
         gBOX(w, h)
         gAT(1, 1)

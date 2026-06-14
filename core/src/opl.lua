@@ -344,6 +344,9 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
 
     -- The Series 5 appears to ignore type and treat 1 as 2 the same
     -- printf("gBUTTON %s type=%d state=%d\n", text, type, state)
+    if not runtime:isSeries3() then
+        type = KButtS5
+    end
 
     local textw = 0
     local texth = 0
@@ -359,7 +362,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
     gCOLORBACKGROUND(0xFF, 0xFF, 0xFF)
     if runtime:isColor() then
         gCOLOR(0x99, 0x99, 0xCC)
-    elseif runtime:isSeries3() then
+    elseif type == KButtS3 then
         -- Doesn't look like S3 buttons are drawable with gBORDER commands
         black()
         gFILL(width, height, KgModeClear)
@@ -381,6 +384,37 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         -- The -2 is because of the extra two pixels at the bottom for the button 'shadow'
         local texty = s.pos.y + state + (height - 2 - texth) // 2
         runtime:drawText(text, textx, texty) 
+        return
+    elseif type == KButtS3a then
+        -- There's no gXBORDER that exactly matches the S3a buttons either.
+        gFILL(width, height, KgModeClear)
+        
+        -- Button rect minus the corner pixels (except the bottom right one)
+        black()
+        gMOVE(1, 0)
+        gLINEBY(width - 3, 0)
+        gMOVE(0, 1)
+        gLINEBY(0, height - 3)
+        gLINEBY(0, 0)
+        gLINEBY(-(width - 3), 0)
+        gMOVE(-1, 0)
+        gLINEBY(0, -(height - 3))
+
+        -- Shadow
+        gAT(s.pos.x + 2, s.pos.y + height - 1)
+        gLINEBY(width - 3, 0)
+        gAT(s.pos.x + width - 1, s.pos.y + 2)
+        gLINEBY(0, height - 3)
+
+        -- button background
+        gAT(s.pos.x + 2, s.pos.y + 2)
+        lightGrey()
+        gFILL(width - 4, height - 4)
+
+        black()
+        local textx = s.pos.x + state + (width - textw) // 2
+        local texty = s.pos.y + state + (height - 1 - texth) // 2
+        runtime:drawText(text, textx, texty)
         return
     else
         lightGrey()
