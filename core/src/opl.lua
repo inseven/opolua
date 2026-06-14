@@ -249,13 +249,24 @@ function gTWIDTH(text, fontId, style)
     return width, height, ascent, descent
 end
 
+local function drawLine(x1, y1, x2, y2)
+    if runtime:isSeries3() then
+        -- If necessary, swap 1 and 2 so the line is going rightwards/downwards, to abstract out the series 3
+        -- differences from the "don't draw the end pixel" logic in the native backend.
+        if x2 < x1 or y2 < y1 then
+            x1, y1, x2, y2 = x2, y2, x1, y1
+        end
+    end
+    runtime:drawCmd("line", { x = x1, y = y1, x2 = x2, y2 = y2 })
+end
+
 function gLINEBY(dx, dy)
     local context = runtime:getGraphicsContext()
-    local x = context.pos.x + dx
-    local y = context.pos.y + dy
-    runtime:drawCmd("line", { x2 = x, y2 = y })
-    context.pos.x = x
-    context.pos.y = y
+    local x2 = context.pos.x + dx
+    local y2 = context.pos.y + dy
+    drawLine(context.pos.x, context.pos.y, x2, y2)
+    context.pos.x = x2
+    context.pos.y = y2
 end
 
 function gBOX(width, height)
@@ -357,6 +368,7 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         gLINEBY(0, 0)
         gMOVE(1, 1)
         gLINEBY(0, height - 3)
+        gLINEBY(0, 0)
         gLINEBY(-(width - 3), 0)
         gMOVE(-1, -1)
         gLINEBY(0, 0)
@@ -495,7 +507,7 @@ end
 
 function gLINETO(x, y)
     local context = runtime:getGraphicsContext()
-    runtime:drawCmd("line", { x2 = x, y2 = y })
+    drawLine(context.pos.x, context.pos.y, x, y)
     context.pos.x = x
     context.pos.y = y
 end
