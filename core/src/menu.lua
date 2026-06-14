@@ -52,13 +52,6 @@ function MenuPane:draw()
     for i, item in ipairs(self.items) do
         if self:itemAtLeastPartiallyVisible(i) then
             self:drawItem(i, i == self.selected)
-            if item.lineAfter then
-                black()
-                gAT(self.inset.left, self:drawPosForContentOffset(item.contentOffset) + self.lineHeight)
-                gFILL(self.contentWidth, self.lineGap, KgModeClear)
-                gMOVE(0, self.lineGap // 2)
-                gLINEBY(self.contentWidth, 0)
-            end
         end
     end
 
@@ -75,8 +68,8 @@ function MenuPane:drawBorder()
     black()
     gAT(0, 0)
     if runtime:isSeries3() then
-        gMOVE(1, 1)
-        gBORDER(1, self.w - 2, self.h - 2)
+        gMOVE(1, self.border.yoffset)
+        gXBORDER(self.border.type, 1, self.w - 2, self.h - 1 - self.border.yoffset)
     else
         gBOX(self.w, self.h)
         gMOVE(1, 1)
@@ -152,6 +145,26 @@ function MenuPane:drawItem(i, style)
         gAT(inset.left, y)
         gINVERT(contentWidth, lineHeight)
     end
+
+    -- This has to be done as part of drawItem because on the 3a/3c the line overlaps the item area, so we don't
+    -- draw it for the 3a/3c when highlighted
+    local is3ac = runtime:isSeries3() and runtime:getDeviceName() ~= "psion-series-3"
+    if item.lineAfter and not (is3ac and style == DrawStyle.highlighted) then
+        if is3ac then
+            lightGrey()
+        else
+            black()
+        end
+        gAT(self.inset.left, self:drawPosForContentOffset(item.contentOffset) + self.lineHeight)
+        if self.lineGap == 0 then
+            gMOVE(0, -1)
+        else
+            gFILL(self.contentWidth, self.lineGap, KgModeClear)
+            gMOVE(0, self.lineGap // 2)
+        end
+        gLINEBY(self.contentWidth, 0)
+    end
+
 end
 
 local function inrange(min, val, rangeLen)
@@ -331,18 +344,34 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
 
     local shortcutFont, menuFont, createFlags, shadowHeight, lineGap
 
-    if runtime:isSeries3() then
-        -- todo 3a/3c
-        border = { top = 3, left = 3, bottom = 4, right = 4 }
+    menuFont = DeviceInfo[runtime:getDeviceName()].defaultFont
+    if runtime:getDeviceName() == "psion-series-3" then
+        border = { type = 0, yoffset = 1, top = 3, left = 3, bottom = 4, right = 4 }
         inset = border
         margin = { top = 1, left = 2, bottom = 1, right = 2 }
         contentOffset = 0
         textGap = 14
         lineGap = 2 -- No space above line, one below
-        menuFont = 1
-        shortcutFont = 1
+        shortcutFont = menuFont
         shadowHeight = 0
         createFlags = KColorgCreate2GrayMode
+    elseif runtime:isSeries3() then
+        border = { type = 1, yoffset = 1, top = 7, left = 7, bottom = 7, right = 7 }
+        if cutoutLen then
+            -- I forget what cutoutLen was supposed to be for originally, and it's not currently used, but it's set
+            -- only for a menu coming off the menubar which is where we want to adjust the yoffset to cut off the top
+            -- of the border.
+            border.yoffset = -4
+            border.top = 3
+        end
+        inset = border
+        margin = { top = 1, left = 2, bottom = 1, right = 2 }
+        contentOffset = 0
+        textGap = 14
+        lineGap = 0 -- There's no gap, it's drawn into the bottom pixel of the previous item
+        shortcutFont = menuFont
+        shadowHeight = 0
+        createFlags = KColorgCreate4GrayMode
     else
         border = { top = 4, left = 4, bottom = 4, right = 4 }
         inset = { top = 5, left = 5, bottom = 5, right = 5 }
@@ -350,7 +379,6 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         contentOffset = 2
         textGap = 6
         lineGap = 5 -- 2 pixels space each side of the horizontal line
-        menuFont = kMenuFont
         shortcutFont = kShortcutFont
         shadowHeight = 8
         createFlags = KColorgCreate4GrayMode | KgCreateHasShadow | ((shadowHeight // 2) << 4)
@@ -379,6 +407,10 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         local lineAfter = key < 0
         if lineAfter then
             key = -key
+        end
+        if runtime:isSeries3() then
+            -- Ignore series 5 flags (generally this is for convenience of running the series 5 test menu.opo)
+            key = key & 0xFF
         end
         local keyNoFlags = key & 0xFF
         local shortcutText
@@ -736,15 +768,20 @@ function MENU(menubar)
     -- Draw the menu bar
     local barGap, barCreateFlags, menuFont
     local border, textPad, firstItemGap
-    if runtime:isSeries3() then
-        menuFont = 1
+    menuFont = DeviceInfo[runtime:getDeviceName()].defaultFont
+    if runtime:getDeviceName() == "psion-series-3" then
         barGap = 21
         firstItemGap = 9
-        border = { top = 3, left = 3, bottom = 4, right = 4 }
+        border = { type = 0, top = 3, left = 3, bottom = 4, right = 4 }
         textPad = { top = 0, bottom = 1 }
         barCreateFlags = KColorgCreate2GrayMode
+    elseif runtime:isSeries3() then
+        barGap = 30
+        firstItemGap = barGap
+        border = { type = 1, top = 7, left = 7, bottom = 7, right = 7 }
+        textPad = { top = 1, bottom = 1 }
+        barCreateFlags = KColorgCreate4GrayMode
     else
-        menuFont = kMenuFont
         barGap = 21
         firstItemGap = barGap
         border = { top = 5, left = 5, bottom = 5, right = 5 }
@@ -777,7 +814,7 @@ function MENU(menubar)
         barWin = gCREATE(x, 0, barWidth, barHeight, false, barCreateFlags)
         gFONT(menuFont)
         gAT(1, 1)
-        gBORDER(1, barWidth - 2, barHeight - 2)
+        gXBORDER(border.type, 1, barWidth - 2, barHeight - 2)
     else
         barWin = gCREATE(2, 2, barWidth, barHeight, false, barCreateFlags)
         gFONT(menuFont)
@@ -788,6 +825,7 @@ function MENU(menubar)
         gAT(1, 1)
         gXBORDER(2, 0x94, barWidth - 2, barHeight - 2)
     end
+    local barScreenPos = { x = gORIGINX(), y = gORIGINY() }
     for _, item in ipairs(barItems) do
         gAT(item.textx, item.y)
         runtime:drawText(item.text)
@@ -812,9 +850,9 @@ function MENU(menubar)
     if runtime:isSeries3() then
         -- 3 being one less than the height of the bottom of a gBORDER(1), such that firstMenuY is in line with the top
         -- pixel of the bottom of the gBORDER
-        firstMenuY = gORIGINY() + barHeight - 3
+        firstMenuY = barScreenPos.y + barHeight - (border.bottom - 1)
     else
-        firstMenuY = gORIGINY() + barHeight - border.top
+        firstMenuY = barScreenPos.y + barHeight - border.top
     end
     local initBarIdx = menubar.highlight and (1 + (menubar.highlight // 256)) or 1
     if initBarIdx > #bar.items then
@@ -833,8 +871,12 @@ function MENU(menubar)
         gUSE(bar.id)
         local x = gORIGINX() + item.x
         local y = gORIGINY()
+        if runtime:isSeries3() and runtime:getDeviceName() ~= "psion-series-3" then
+            -- On Series 3a/3c, the hightlight doesn't cover the border area
+            y = y + 4
+        end
         local w = item.w
-        local h = firstMenuY --TODO?? - bar.y
+        local h = firstMenuY - y
         gUSE(bar.selectionWin)
         gFONT(menuFont)
         gSETWIN(x, y, w, h)
@@ -849,7 +891,7 @@ function MENU(menubar)
             gAT(1, 1)
             gXBORDER(2, 0x94, w - 2, h + 5)
         end
-        runtime:drawText(item.text, item.textx - item.x, item.y)
+        runtime:drawText(item.text, item.textx - item.x, item.y - (gORIGINY() - barScreenPos.y))
     end
 
     bar.moveSelectionTo = function(i)
