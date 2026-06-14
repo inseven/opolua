@@ -794,7 +794,9 @@ void Drawable::draw(const OplScreen::DrawCmd& cmd)
         }
         const QRect& r = cmd.border.rect;
         // gXBORDER(1, 3) needs nine pixels, most other borders only 5 or 6
-        int d = qMin(9, qMin(r.width(), r.height()) / 2);
+        // gXBORDER(1, $203) on S3a (round corners, double shadow) takes 11!
+        int d = qMin(11, qMin(r.width(), r.height()) / 2);
+        // qDebug("border (%d, %d, %dx%d) d=%d using %s", r.x(), r.y(), r.width(), r.height(), d, qPrintable(borderPath));
         // TODO these operations don't take into account the current colour. Should they...?
         painter.drawPixmap(r.x(), r.y(), px, 0, 0, d, d); // tl
         painter.drawPixmap(r.x() + r.width() - d, r.y(), px, px.width() - d, 0, d, d); // tr

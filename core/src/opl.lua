@@ -310,7 +310,7 @@ function gXBORDER(type, flags, w, h)
     elseif type == 1 then
         flags = flags & ~(KBordGapAllRound) -- The only flag that has an effect on type 1 is KBordRoundCorners
         runtime:drawCmd("border", { x = x, y = y, width = w, height = h, btype = (type << 16) | flags })
-    elseif type == 2 then
+    elseif type == 2 and not runtime:isSeries3() then
         if flags == 0 then
             return -- It's a no-op
         end
@@ -322,6 +322,8 @@ function gXBORDER(type, flags, w, h)
             flags = (flags & ~KBordRoundCorners) | KBordGapAllRound
         end
         runtime:drawCmd("border", { x = x, y = y, width = w, height = h, btype = (type << 16) | flags })
+    else
+        error(KErrInvalidArgs)
     end
 end
 

@@ -157,6 +157,16 @@
         <file alias="00202.png">../resources/borders/sibo/00202.png</file>
         <file alias="00203.png">../resources/borders/sibo/00203.png</file>
         <file alias="00204.png">../resources/borders/sibo/00204.png</file>
+        <file alias="10000.png">../resources/borders/sibo/10000.png</file>
+        <file alias="10001.png">../resources/borders/sibo/10001.png</file>
+        <file alias="10002.png">../resources/borders/sibo/10002.png</file>
+        <file alias="10003.png">../resources/borders/sibo/10003.png</file>
+        <file alias="10004.png">../resources/borders/sibo/10004.png</file>
+        <file alias="10200.png">../resources/borders/sibo/10200.png</file>
+        <file alias="10201.png">../resources/borders/sibo/10201.png</file>
+        <file alias="10202.png">../resources/borders/sibo/10202.png</file>
+        <file alias="10203.png">../resources/borders/sibo/10203.png</file>
+        <file alias="10204.png">../resources/borders/sibo/10204.png</file>
     </qresource>
 
     <qresource prefix="/welcome">
