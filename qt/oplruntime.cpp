@@ -1199,7 +1199,19 @@ int OplRuntime::drawMainThread(lua_State* L)
             pixelsWritten += cmd.fill.size.width() * cmd.fill.size.height();
         } else if (type == "line") {
             cmd.type = OplScreen::line;
-            cmd.line.endPoint = QPoint(to_int(L, 2, "x2"), to_int(L, 2, "y2"));
+            QPoint p(to_int(L, 2, "x2"), to_int(L, 2, "y2"));
+
+            // Line drawing has some pretty weird semantics. Where QPainter draws every pixel of the requested line,
+            // Series 5 never draws the end pixel, and Series 3 never draws the lowest x/y coordinate pixel. Which
+            // is really hard to figure how to correct for in the case of oblique lines when you're not doing the line
+            // scanning yourself. The Lua code normalises the series 3 vs 5 difference, so we just need to avoid
+            // drawing the last pixel, as accurately as possible - we will only handle the vertical/horizonal cases.
+            if (p.x() == cmd.origin.x() && p.y() > cmd.origin.y()) {
+                p.ry() -= 1;
+            } else if (p.y() == cmd.origin.y() && p.x() > cmd.origin.x()) {
+                p.rx() -= 1;
+            }
+            cmd.line.endPoint = p;
             // Manhattan approximation
             pixelsWritten += qAbs(cmd.origin.x() - cmd.line.endPoint.x()) + qAbs(cmd.origin.y() - cmd.line.endPoint.y());
         } else if (type == "circle") {
