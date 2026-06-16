@@ -1376,7 +1376,7 @@ function decompileProc(proc, options)
             addPrintStatement("gPRINT", {
                 type = "expr",
                 location = location, 
-                value = " ",
+                value = kExprSpace,
                 valType = EString,
             })
         elseif op == "gUpdate" then
