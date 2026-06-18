@@ -188,3 +188,9 @@ enum TEventModifiers {
     teventFn = 0x2800, // EModifierLeftFunc | EModifierFunc
     teventDoubleClick = 0x80000,
 } CLOSED_ENUM;
+
+enum TranslatorVersion {
+    oplS3 = 0x110F,
+    opl1993 = 0x111F,
+    opler1 = 0x200A,
+} CLOSED_ENUM;
