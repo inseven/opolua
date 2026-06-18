@@ -183,13 +183,13 @@ end
 
 function Runtime:addModule(path, procTable, opxTable)
     -- printf("addModule: %s\n", path)
-    local name = oplpath.splitext(oplpath.basename(path)):upper()
+    local name = oplpath.splitext(oplpath.basename(path))
     local mod = {
         -- Since 'name' isn't a legal procname (they're always uppercase in
         -- definitions, even though they're not necessarily when they are
         -- called) it is safe to use the same namespace as for the module's
         -- procnames.
-        name = name,
+        name = name:upper(),
         path = path,
         procTable = procTable,
         opxTable = opxTable,
@@ -221,6 +221,9 @@ function Runtime:addModule(path, procTable, opxTable)
         assert(oplpath.isabs(path), "Bad path for initial module!")
         local drive, dir, base, ext = oplpath.parse(path)
         self.cwd = drive.."\\"
+    end
+    if #self.modules == 1 then
+        self:setAppName(name)
     end
     return mod
 end
@@ -589,6 +592,11 @@ function Runtime:getDeviceName()
         self:getGraphics()
     end
     return self.deviceName
+end
+
+function Runtime:getDeviceInfo()
+    self:getGraphics() -- Ensure this is initialised
+    return DeviceInfo[self.deviceName]
 end
 
 function Runtime:getGraphicsContext(id)
@@ -1456,6 +1464,15 @@ function Runtime:setCwd(cwd)
     assert(oplpath.isabs(cwd), "Cannot set a non-absolute CWD!")
     assert(cwd:match("\\$"), "Cannot set a non-dir path as CWD!")
     self.cwd = cwd
+end
+
+function Runtime:setAppName(name)
+    self.appName = name
+    self.ioh.system("setAppTitle", name)
+end
+
+function Runtime:getAppName()
+    return self.appName
 end
 
 function Runtime:abs(path)

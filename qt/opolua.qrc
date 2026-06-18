@@ -248,6 +248,7 @@
         <file alias="pause.opo">../examples/Tests/pause.opo</file>
         <file alias="penwidth.opo">../examples/Tests/penwidth.opo</file>
         <file alias="screeninfo.opo">../examples/Tests/screeninfo.opo</file>
+        <file alias="statuswin.opo">../examples/Tests/statuswin.opo</file>
         <file alias="style.opo">../examples/Tests/style.opo</file>
     </qresource>
 </RCC>

@@ -1577,6 +1577,19 @@ function decompileProc(proc, options)
                     args = { Int },
                 })
             end
+        elseif op == "diamInit" then
+            local nargs = ip8()
+            local args = {}
+            if nargs > 0 then
+                args[1] = Int
+            end
+            for i = 2, nargs do
+                args[i] = String
+            end
+            handleStandardOp(location, {
+                name = "DIAMINIT",
+                args = args
+            })
         else
             error("Unhandled op "..(op or fmt("0x%02X", opCode)))
         end

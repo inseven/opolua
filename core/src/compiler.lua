@@ -478,6 +478,8 @@ Callables = {
     DFILE = SpecialOp({StringVariable, String, Int, Long, Long, Long, numParams = {3, 6}}),
     DFLOAT = SpecialOp({FloatVariable, String, Float, Float}),
     DIALOG = Fn("Dialog", {}, Int),
+    DIAMINIT = SpecialOp(),
+    DIAMPOS = Op("diamPos", {Int}),
     DINIT = Op("dInit", {String, Int, numParams = {0, 1, 2}, numFixedParams = 0}),
     ["DIR$"] = Fn("DirStr", {String}, String),
     DLONG = SpecialOp({LongVariable, String, Long, Long}),
@@ -2596,6 +2598,28 @@ function handleOp_DFLOAT(procState, args)
     procState:emitExpression(args[3], Float)
     procState:emitExpression(args[4], Float)
     procState:emit("BB", opcodes.dItem, dItemTypes.dFLOAT)
+    procState:popStack(#args)
+end
+
+function handleOp_DIAMINIT(procState)
+    local opcodes = opcodes[procState.oplFormat]
+    local cmdToken = procState.tokens:current()
+    synassert(opcodes.diamInit, cmdToken, notAvailable("DIAMINIT"))
+    procState.tokens:advance()
+    -- Is there any actual limit on number of args?
+    local args = parseExpressionList(procState.tokens)
+    if #args > 0 then
+        local expectedTypes = { Int }
+        for i = 2, #args do
+            expectedTypes[i] = String
+        end
+        checkExpressionArguments(args, expectedTypes, cmdToken)
+        procState:emitExpression(args[1], Int)
+        for i = 2, #args do
+            procState:emitExpression(args[i], String)
+        end
+    end
+    procState:emit("BBB", opcodes.NextOpcodeTable, opcodes.diamInit & 0xFF, #args)
     procState:popStack(#args)
 end
 
