@@ -1888,6 +1888,18 @@ end
 function gOrder(stack, runtime) -- 0xCF
     local pos = stack:pop()
     local id = stack:pop()
+
+    if statuswin and statuswin.id then
+        -- Ordering the statuswin is allowed from Lua code calling gORDER but shouldn't be from OPL.
+        if id == statuswin.id then
+            error(KErrInvalidWindow)
+        end
+
+        -- Nothing can be put behind the status window, and annoyingly we have to make an extra native call to figure
+        -- out its rank (I suppose we could count the current number of windows, which _should_ line up...)
+        pos = math.min(pos, runtime:gRANK(statuswin.id))
+    end
+
     runtime:gORDER(id, pos)
 end
 
@@ -2347,18 +2359,21 @@ end
 
 function SetName(stack, runtime) -- 0xEE (SIBO)
     local name = stack:pop()
-    printf("SETNAME '%s'\n", name)
-    -- TODO show this in the statuswin
-    -- runtime:iohandler().system("setAppTitle", title)
+    runtime:setAppName(name)
 end
 
 function StatusWin(stack, runtime) -- 0xEF (SIBO)
-    -- unimplemented("StatusWin")
     local type = runtime:IP8()
-    if type > 1 then
-        type = stack:pop()
+    local opt
+    if type == 0 then
+        opt = false
+    elseif type == 1 then
+        opt = true
+    else
+        opt = stack:pop()
     end
-    printf("TODO: STATUSWIN %d\n", type)
+
+    runtime:STATUSWIN(opt)
 end
 
 StatusWin_dump = qualifier_dump
@@ -2516,13 +2531,36 @@ function DefaultWin(stack, runtime) -- 0x101
 end
 
 function diamInit(stack, runtime) -- 0x102 (SIBO)
-    unimplemented("diamInit")
+    -- DIAMINIT -1, ... means remove diamond bar entirely
+    -- DIAMINIT 0, ... or DIAMINIT with no args means an empty bar
+    -- (unlike DIAMPOS 0 which means "remove the diamond")
+
+    local nargs = runtime:IP8()
+    local list = {}
+    for i = nargs, 2, -1 do
+        list[i - 1] = stack:pop()
+    end
+    local pos = nil
+    if nargs > 0 then
+        pos = stack:pop()
+    end
+    if pos == -1 then
+        runtime:DIAMINIT(nil)
+    elseif pos == nil then
+        runtime:DIAMINIT({})
+    else
+        runtime:DIAMINIT(list, pos)
+    end
 end
 
 diamInit_dump = qualifier_dump
 
 function diamPos(stack, runtime) -- 0x103 (SIBO)
-    unimplemented("diamPos")
+    local pos = stack:pop(1)
+    if pos == 0 then
+        pos = nil
+    end
+    runtime:DIAMPOS(pos)
 end
 
 function Font(stack, runtime) -- 0x104

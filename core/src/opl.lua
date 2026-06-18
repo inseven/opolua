@@ -196,9 +196,17 @@ function gPRINTB(text, width, align, top, bottom, margin)
     runtime:drawText(text, textX, context.pos.y - fontAscent, KgModeSet)
 end
 
-function gPRINTCLIP(text, width)
-    while #text > 0 and gTWIDTH(text) > width do
+function gPRINTCLIP(text, width, align)
+    -- align is a opolua extension
+    local twidth = gTWIDTH(text)
+    while #text > 0 and twidth > width do
         text = text:sub(1, -2)
+        twidth = gTWIDTH(text)
+    end
+    if align == "right" then
+        gMOVE(width - twidth, 0)
+    elseif align == "centre" then
+        gMOVE((width - twidth) // 2, 0)
     end
     gPRINT(text)
     return #text
@@ -1066,6 +1074,23 @@ end
 function FONT(id, style)
     -- printf("FONT(0x%08X, %d)\n", id, style)
     local defaultWin = runtime:getGraphicsContext(KDefaultWin)
+    
+    if runtime:isSeries3() and id == -0x3FFF and style == 0 then
+        -- This is a weird bit of magic to resize the default win to account for the status window
+        local prev = gIDENTITY()
+        local w = 0
+        local statuswin = runtime:getResource("statuswin")
+        if statuswin then
+            w = runtime:getDeviceInfo().statusWinSizes[statuswin.type]
+        end
+        local graphics = runtime:getGraphics()
+        gUSE(KDefaultWin)
+        gSETWIN(0, 0, graphics.screenWidth - w, graphics.screenHeight)
+        SCREEN(gWIDTH() // graphics.screen.charw, gHEIGHT() // graphics.screen.charh, 1, 1)
+        gUSE(prev)
+        return
+    end
+
     local font = runtime:getFont(id)
     assert(font, KErrFontNotLoaded)
 
@@ -1985,6 +2010,126 @@ function DAYSTODATE(days)
     local t = (days * 24 * 60 * 60) - kSecsFrom1900to1970
     local result = os.date("!*t", t)
     return result.year, result.month, result.day
+end
+
+-- Series 3 status window
+
+local function redrawStatusWindow()
+    local state = runtime:saveGraphicsState()
+    local win = runtime:getResource("statuswin")
+    gUSE(win.id)
+    gUPDATE(false)
+    gCLS()
+    gAT(1, 0)
+    if runtime:getDeviceName() == "psion-series-3" then
+        gBORDER(KBordRoundCorners, gWIDTH() - 1, gHEIGHT())
+    else
+        gBORDER(0, gWIDTH() - 1, gHEIGHT())
+        local _, texth, ascent = gTWIDTH("")
+        gAT(3, 2 + ascent)
+        gPRINTCLIP(runtime:getAppName(), gWIDTH() - 4, "centre")
+        gAT(1, 2 + texth + 1)
+        gLINEBY(gWIDTH(), 0)
+
+        if win.diamList then
+            local diamw = gTWIDTH("\x04 ")
+            gAT(3, gY() + 2 + ascent)
+            for i, item in ipairs(win.diamList) do
+                if win.diamPos == i then
+                    gPRINT("\x04 ")
+                else
+                    gMOVE(diamw, 0)
+                end
+                gPRINTCLIP(item, gWIDTH() - 5 - diamw)
+                gAT(3, gY() + texth)
+            end
+            gMOVE(-2, -ascent + 1)
+            gLINEBY(gWIDTH(), 0)
+        end
+    end
+
+    gAT(3, gHEIGHT() - 50)
+    -- TODO series 3 clock support
+    -- gCLOCK(3)
+
+    runtime:restoreGraphicsState(state)
+end
+
+function STATUSWIN(opt)
+    local win = runtime:getResource("statuswin")
+    if (win == nil or win.id == nil) and opt == false then
+        return
+    end
+    
+    local prev = gIDENTITY()
+    local type
+    if opt == true then
+        type = 2
+    else
+        type = opt
+    end
+
+    local deviceInfo = DeviceInfo[runtime:getDeviceName()]
+    if deviceInfo.statusWinSizes[type] == nil then
+        type = 1
+    end
+
+    local graphics = runtime:getGraphics()
+    if win == nil then
+        win = {}
+        runtime:setResource("statuswin", win)
+    end
+
+    if win.id == nil then
+        local w = deviceInfo.statusWinSizes[type]
+        win.id = gCREATE(graphics.screenWidth - w, 0, w, graphics.screenHeight, true, KColorgCreate4GrayMode)
+        win.type = type
+        gFONT(KFontSwiss11)
+        -- Status win is always below everything else
+        gORDER(win.id, KgRankBackGround)
+    else
+        gUSE(win.id)
+    end
+
+    if opt == false then
+        gVISIBLE(false)
+        gUSE(prev)
+        return
+    end
+
+    if type ~= win.type then
+        local w = deviceInfo.statusWinSizes[type]
+        gSETWIN(graphics.screenWidth - w, 0, w, graphics.screenHeight)
+    end
+    gUSE(prev)
+
+    redrawStatusWindow()
+end
+
+function DIAMINIT(list, pos)
+    local statuswin = runtime:getResource("statuswin")
+    if statuswin == nil then
+        if list == nil then
+            return
+        else
+            statuswin = {}
+            runtime:setResource("statuswin")
+        end
+    end
+
+    statuswin.diamList = list
+    statuswin.diamPos = pos
+    redrawStatusWindow()
+end
+
+function DIAMPOS(pos)
+    local statuswin = runtime:getResource("statuswin")
+    if statuswin == nil or statuswin.diamList == nil then
+        return
+    end
+
+    statuswin.diamPos = 1 + ((pos - 1) % #statuswin.diamList) 
+    redrawStatusWindow()
 end
 
 return _ENV

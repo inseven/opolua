@@ -1,0 +1,22 @@
+PROC main:
+    LOCAL stwinf%(4), k%, d%
+    STATUSWIN ON
+    FONT -$3FFF, 0
+    REM gGREY 1
+    REM gFILL gWIDTH, gHEIGHT, 0
+    gBORDER 0
+    gAT 2, 10
+    gFONT 4
+    gPRINT "Status win is", STATWININFO(-1, stwinf%()), stwinf%(1), stwinf%(2), stwinf%(3), stwinf%(4)
+    GET
+    d% = 1
+    DIAMINIT d%, "Hello", "World", "Woop"
+    
+    DO
+        k% = GET
+        IF k% = 292
+            d% = d% + 1
+            DIAMPOS d%
+        ENDIF
+    UNTIL k% = %q
+ENDP

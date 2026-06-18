@@ -181,7 +181,7 @@ function TBarSetTitle(name)
     local prevId = gIDENTITY()
     gUSE(tbWinId)
     drawTitle()
-    runtime:iohandler().system("setAppTitle", title)
+    runtime:setAppName(title)
     gUSE(prevId)
 end
 

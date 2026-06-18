@@ -1002,7 +1002,30 @@ function IoCancel(stack, runtime) -- 0x52
 end
 
 function StatWinInfo(stack, runtime) -- 0x53 (SIBO)
-    unimplemented("fns.StatWinInfo")
+    local addr = runtime:addrFromInt(stack:pop())
+    local type = stack:pop()
+
+    local win = runtime:getResource("statuswin")
+    local deviceInfo = DeviceInfo[runtime:getDeviceName()]
+    if type == -1 then
+        if win == nil or win.type == nil then
+            type = #deviceInfo.statusWinSizes
+        else
+            type = win.type
+        end
+    end
+
+    local graphics = runtime:getGraphics()
+    local width = deviceInfo.statusWinSizes[type]
+
+    local info = {
+        graphics.screenWidth - width, -- x
+        0, -- y
+        width, -- w
+        graphics.screenHeight -- h
+    }
+    addr:writeArray(info, DataTypes.EWord)
+    stack:push(win and win.type or 0)
 end
 
 function FindField(stack, runtime) -- 0x54

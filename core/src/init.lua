@@ -330,14 +330,17 @@ DeviceInfo = {
     ["psion-series-3"] = {
         defaultFont = KFontSysNorm,
         consoleFont = KFontSysNorm,
+        statusWinSizes = { 50 },
     },
     ["psion-series-3c"] = {
         defaultFont = KFontSwiss13,
         consoleFont = KFontMono8x8,
+        statusWinSizes = { 31, 63 },
     },
     ["psion-siena"] = {
         defaultFont = KFontSwiss11,
         consoleFont = KFontSysNorm,
+        statusWinSizes = { 35 },
     },
     -- All the later devices are probably the same...?
     ["oregon-osaris"] = {
