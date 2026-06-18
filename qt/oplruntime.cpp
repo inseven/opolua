@@ -1920,6 +1920,7 @@ int OplRuntime::utctime(lua_State *L)
 int OplRuntime::setEra(lua_State *L)
 {
     QString era(lua_tostring(L, 1));
+    int translatorVersion = lua_tointeger(L, 2);
     bool eraIsSibo = era == "sibo";
     if (eraIsSibo) {
         mStringCodec = QTextCodec::codecForName("IBM 850"); // Is this the right name...?
@@ -1928,7 +1929,21 @@ int OplRuntime::setEra(lua_State *L)
     }
 
     if (eraIsSibo != isSibo() && !mIgnoreOpoEra) {
-        setDeviceType(eraIsSibo ? psionSeries3c : psionSeries5);
+        auto deviceType = eraIsSibo ? psionSeries3c : psionSeries5;
+        switch (translatorVersion) {
+        case opl::oplS3:
+            deviceType = psionSeries3;
+            break;
+        case opl::opl1993:
+            deviceType = psionSeries3c;
+            break;
+        case opl::opler1:
+            deviceType = psionSeries5;
+            break;
+        default:
+            break;
+        }
+        setDeviceType(deviceType);
     }
     return 0;
 }

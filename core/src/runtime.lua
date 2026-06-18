@@ -1624,7 +1624,7 @@ function newRuntimeWithFile(fileName, iohandler)
     end
 
     local module = opofile.parseOpo2(data, verbose)
-    iohandler.setEra(module.era) -- Needed to set the default string encoding
+    iohandler.setEra(module.era, module.translatorVersion) -- Needed to set the default string encoding
     local rt = newRuntime(iohandler, module.translatorVersion)
     local mod = rt:addModule(fileName, module.procTable, module.opxTable)
     mod.uid3 = module.uid3
