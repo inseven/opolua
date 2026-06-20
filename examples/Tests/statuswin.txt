@@ -11,6 +11,9 @@ PROC main:
     GET
     d% = 1
     DIAMINIT d%, "Hello", "World", "Woop"
+
+    REM do a setname after showing the window to check it updates
+    SETNAME "Stat Win"
     
     DO
         k% = GET

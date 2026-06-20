@@ -2092,7 +2092,8 @@ function STATUSWIN(opt)
     end
 
     if opt == false then
-        gVISIBLE(false)
+        gCLOSE(win.id)
+        win.id = nil
         gUSE(prev)
         return
     end
