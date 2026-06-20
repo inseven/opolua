@@ -414,7 +414,10 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         end
         local keyNoFlags = key & 0xFF
         local shortcutText
-        if keyNoFlags <= 32 then
+        if keyNoFlags == 4 and runtime:getDeviceInfo().hasDiamondKey then
+            -- Using the diamond key as a menu shortcut implicitly adds the shift key to the displayed shortcut
+            shortcutText = "Shift\x02\x04"
+        elseif keyNoFlags <= 32 then
             shortcutText = nil
         elseif keyNoFlags >= 0x41 and keyNoFlags <= 0x5A then
             if runtime:isSeries3() then
@@ -714,6 +717,16 @@ local function runMenuEventLoop(bar, pane, shortcuts)
                     end
                 end
             end
+        elseif runtime:isSeries3() then
+            if k == KKeyDiamond then
+                -- Diamond key has a different keycode to shortcut code...
+                k = 4
+            end
+            if shortcuts[k] then
+                -- Pressing the shortcut without the psion key (but including any shift) jumps to that item, but only on
+                -- the Series 3/3a/3c
+                bar.highlightShortcut(k)
+            end
         end
         gUPDATE()
     end
@@ -914,6 +927,18 @@ function MENU(menubar)
         bar.pane = MenuPane.new(gORIGINX() + item.x, firstMenuY, nil, menubar[bar.selected], 1, item.w)
     end
 
+    bar.highlightShortcut = function(shortcut)
+        for barIdx, card in ipairs(menubar) do
+            for itemIdx, item in ipairs(card) do
+                if item.key == shortcut then
+                    bar.moveSelectionTo(barIdx)
+                    bar.pane:moveSelectionTo(itemIdx)
+                    return
+                end
+            end
+        end
+    end
+
     bar.moveSelectionTo(initBarIdx)
     bar.pane:moveSelectionTo(initPaneIdx)
 
@@ -925,7 +950,7 @@ function MENU(menubar)
             if key < 0 then
                 key = -key
             end
-            if key > 32 then
+            if key > 32 or (key == 4 and runtime:getDeviceInfo().hasDiamondKey) then
                 shortcuts[key & 0xFF] = true
             end
         end

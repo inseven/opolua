@@ -22,7 +22,7 @@ ENDP
 PROC simplemenu%:
 	LOCAL ret%
 	mINIT
-	mCARD "File", "A", %A, "B", %B, "C", %C, "D", %D, "E", %E, "F", %F
+	mCARD "File", "A", %A, "B", %B, "C", %C, "D", %D, "E", %E, "F", %F, "Diamond", 4
 	mCARD "Edit", "Cut", %x, "Copy", %c, "Paste", %v
 	ret% = MENU(selected%)
 	RETURN ret%

@@ -2,6 +2,6 @@ PROC main:
     LOCAL ch%
     DO
         ch% = GET
-        PRINT "got char", ch%
+        PRINT "got char", ch%, "mod", KMOD
     UNTIL ch% = 27
 ENDP
