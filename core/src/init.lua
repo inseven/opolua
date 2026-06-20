@@ -336,11 +336,13 @@ DeviceInfo = {
         defaultFont = KFontSwiss13,
         consoleFont = KFontMono8x8,
         statusWinSizes = { 31, 63 },
+        hasDiamondKey = true,
     },
     ["psion-siena"] = {
         defaultFont = KFontSwiss11,
         consoleFont = KFontSysNorm,
         statusWinSizes = { 35 },
+        hasDiamondKey = true,
     },
     -- All the later devices are probably the same...?
     ["oregon-osaris"] = {
@@ -534,6 +536,8 @@ function hexUnescape(str)
     return str:gsub("\\x(%x%x)", function(hexcode) return string.char(tonumber(hexcode, 16)) end)
 end
 
+KKeyDiamond = 292
+
 local charCodeMap = {
     [KKeyPageLeft32] = KKeyPageLeft, -- Home
     [KKeyPageRight32] = KKeyPageRight, -- End
@@ -555,7 +559,7 @@ function keycodeToCharacterCode(rawKeycode)
         return ch | psionBit
     elseif keycode < 256 then
         return rawKeycode
-    elseif keycode == 292 then
+    elseif keycode == KKeyDiamond then
         -- diamond key, there is no "32" code because the key was removed in epoc32, so no translation needed.
         return rawKeycode
     else
