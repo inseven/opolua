@@ -1469,6 +1469,10 @@ end
 function Runtime:setAppName(name)
     self.appName = name
     self.ioh.system("setAppTitle", name)
+    -- Force status window to redraw, if currently visible
+    if (self:getResource("statuswin") or {}).id then
+        self:STATUSWIN(true)
+    end
 end
 
 function Runtime:getAppName()
