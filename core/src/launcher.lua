@@ -199,13 +199,13 @@ function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
                 "Series 3",
                 "Series 3c",
                 "Siena",
-                "Osaris",
             },
             epoc32 = {
                 "Series 5",
                 "Series 7",
                 "Geofox One",
                 "Revo",
+                "Osaris",
             },
         })[sisFile.target]
         local devices = ({
@@ -213,13 +213,13 @@ function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
                 "psion-series-3",
                 "psion-series-3c",
                 "psion-siena",
-                "oregon-osaris",
             },
             epoc32 = {
                 "psion-series-5",
                 "psion-series-7",
                 "geofox-one",
                 "psion-revo",
+                "oregon-osaris",
             },
         })[sisFile.target]
         local deviceVar = runtime:makeTemporaryVar(DataTypes.EWord)
