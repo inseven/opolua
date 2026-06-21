@@ -330,17 +330,20 @@ DeviceInfo = {
     ["psion-series-3"] = {
         defaultFont = KFontSysNorm,
         consoleFont = KFontSysNorm,
+        iprintFont = KFontSysNorm,
         statusWinSizes = { 50 },
     },
     ["psion-series-3c"] = {
         defaultFont = KFontSwiss13,
         consoleFont = KFontMono8x8,
+        iprintFont = KFontSwiss11,
         statusWinSizes = { 31, 63 },
         hasDiamondKey = true,
     },
     ["psion-siena"] = {
         defaultFont = KFontSwiss11,
         consoleFont = KFontSysNorm,
+        iprintFont = KFontSwiss11,
         statusWinSizes = { 35 },
         hasDiamondKey = true,
     },
@@ -348,22 +351,27 @@ DeviceInfo = {
     ["oregon-osaris"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
+        iprintFont = KFontArialNormal15,
     },
     ["psion-series-5"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
+        iprintFont = KFontArialNormal15,
     },
     ["psion-revo"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
+        iprintFont = KFontArialNormal15,
     },
     ["psion-series-7"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
+        iprintFont = KFontArialNormal15,
     },
     ["geofox-one"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
+        iprintFont = KFontArialNormal15,
     },
 }
 
