@@ -727,6 +727,13 @@ checkCode("CURSOR 1, 2, 3, 4, 5", {
     op"Cursor", 4,
 })
 
+-- This really is what the series 5 does, it doesn't use StackByteAsLong
+checkCode("gFONT 1", {
+    op"StackByteAsWord", 1,
+    op"IntToLong",
+    op"gFont",
+})
+
 checkCode('mPOPUP(1, 2, 0, "a", 0)', {
     op"StackByteAsWord", 1,
     op"StackByteAsWord", 2,

@@ -905,6 +905,7 @@ function parseExpressionList(tokens)
 end
 
 function expandPtrType(type, oplFormat)
+    assert(oplFormat, "Missing oplFormat arg!")
     if type == IntPtr then
         return oplFormat == OplEr5 and Long or Int
     else
@@ -1766,7 +1767,7 @@ function ProcState:handleFn(exp, callable)
     end
     if callable.name then
         for i, arg in ipairs(expArgs) do
-            self:emitExpression(arg, expandPtrType(callable.args[i], oplFormat))
+            self:emitExpression(arg, expandPtrType(callable.args[i], self.oplFormat))
         end
         synassert(fncodes[callable.name], exp, notAvailable(exp.val))
         self:emit("BB", opcodes.CallFunction, fncodes[callable.name])
@@ -2394,7 +2395,7 @@ function ProcState:handleStandardOp(callable, opToken, args)
     local opcodes = opcodes[self.oplFormat]
     assert(callable.args)
     for i, argExp in ipairs(args) do
-        self:emitExpression(argExp, expandPtrType(callable.args[i], oplFormat))
+        self:emitExpression(argExp, expandPtrType(callable.args[i], self.oplFormat))
     end
 
     local opcode = opcodes[callable.name]
