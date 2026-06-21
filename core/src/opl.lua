@@ -782,18 +782,18 @@ end
 -- Screen APIs
 
 local function drawInfoPrint(drawable, text, corner)
-    local sibo = runtime:isSibo()
+    local sibo = runtime:isSeries3()
     gUPDATE(false)
     gUSE(drawable)
+    gFONT(runtime:getDeviceInfo().iprintFont)
     local screenWidth, screenHeight = runtime:getScreenInfo()
     local winHeight, cornerInset, inset
     if sibo then
-        gFONT(1)
-        winHeight = 12
-        cornerInset = 2
-        inset = 2 -- ...?
+        local _, h = gTWIDTH("")
+        cornerInset = 0
+        inset = 2
+        winHeight = h + inset * 2
     else
-        gFONT(KFontArialNormal15)
         winHeight = 23 -- 15 plus 4 pixels top and bottom
         cornerInset = 5
         inset = 6
