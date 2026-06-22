@@ -95,27 +95,6 @@ extension Device {
         return .init(rawValue: Int(oplGetScreenMode(self)))!
     }
 
-    var analogClockImage: CommonImage {
-        switch self {
-        case .psionSeries3:
-            return .clockMedium()
-        case .psionSeries3c:
-            return .clockMedium()
-        case .psionSiena:
-            return .clockMedium()
-        case .oregonOsaris:
-            return .clockMedium()
-        case .psionSeries5:
-            return .clockMedium()
-        case .psionRevo:
-            return .clockMedium()
-        case .psionSeries7:
-            return .clockMediumC()
-        case .geofoxOne:
-            return .clockMedium()
-        }
-    }
-
     var isSibo: Bool {
         return oplIsSiboDevice(self)
     }

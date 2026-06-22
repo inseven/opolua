@@ -236,7 +236,8 @@ func doGraphicsOp(_ L: LuaState!, _ iohandler: OpoIoHandler, _ op: Graphics.Oper
 // graphicsop("getimg", drawableId, {x=, y=, w=, h=})
 // graphicsop("loadfont", drawableId, uid)
 private func graphicsop(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
+    let interpreter = getInterpreterUpval(L)
+    let iohandler = interpreter.iohandler
     let cmd = L.tostring(1) ?? ""
     switch cmd {
     case "close":
@@ -317,7 +318,23 @@ private func graphicsop(_ L: LuaState!) -> CInt {
         return doGraphicsOp(L, iohandler, .sprite(window, spriteId, sprite))
     case "clock":
         let drawableId = Graphics.DrawableId(value: L.toint(2) ?? 0)
-        let clockInfo: Graphics.ClockInfo? = L.todecodable(3)
+        guard let rawInfo: Graphics.RawClockInfo = L.todecodable(3) else {
+            print("Bad clock info")
+            break
+        }
+        let mode = rawInfo.mode
+        let showSeconds = (mode & 0x20) != 0
+        let showDate = (mode & 0x10) != 0
+        var offset = rawInfo.offset
+        if (mode & 0x100) == 0 {
+            offset = offset * 60 // 0x100 means offset in seconds rather than minutes
+        }
+        // It's unfortunate that OpoInterpreter doesn't actually know the device type, but I'm not refactoring it now.
+        let (_, _, deviceName) = iohandler.getDeviceInfo()
+        let device = OplCore.OplDeviceType(rawValue: UInt32(oplGetDeviceFromName(deviceName)))!
+        let sysDigital = iohandler.getConfig(key: .clockFormat) == "1"
+        let clockType = oplModeToClockType(mode & 0xF, device, sysDigital)
+        let clockInfo = Graphics.ClockInfo(mode: mode, type: clockType, offset: offset, position: rawInfo.position, showSeconds: showSeconds, showDate: showDate)
         return doGraphicsOp(L, iohandler, .clock(drawableId, clockInfo))
     case "peekline":
         if let id = L.toint(2),

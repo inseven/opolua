@@ -180,9 +180,15 @@
     </qresource>
 
     <qresource prefix="/images">
-        <file alias="clock_medium.png">../ios/OpoLua/Assets.xcassets/ClockMedium.imageset/clock_med.png</file>
-        <file alias="clock_medium_color.png">../ios/OpoLua/Assets.xcassets/ClockMediumC.imageset/image.png</file>
         <file alias="dither_pattern.png">../ios/OpoLua/Assets.xcassets/DitherPattern.imageset/pattern.png</file>
+        <file alias="clock_analogSmall.png">../resources/clocks/analogSmall.png</file>
+        <file alias="clock_analogMediumBlack.png">../resources/clocks/analogMediumBlack.png</file>
+        <file alias="clock_analogMediumS3a.png">../resources/clocks/analogMediumS3a.png</file>
+        <file alias="clock_analogMediumS5.png">../resources/clocks/analogMediumS5.png</file>
+        <file alias="clock_analogMediumColor.png">../resources/clocks/analogMediumColor.png</file>
+        <file alias="clock_analogLargeS3a.png">../resources/clocks/analogLargeS3a.png</file>
+        <file alias="clock_analogLargeS5.png">../resources/clocks/analogLargeS5.png</file>
+        <file alias="clock_analogLargeColor.png">../resources/clocks/analogLargeColor.png</file>
         <file>opolua.png</file>
     </qresource>
 
@@ -218,6 +224,7 @@
         <file alias="alert.opo">../examples/Tests/alert.opo</file>
         <file alias="bench.opo">../examples/Tests/bench.opo</file>
         <file alias="border.opo">../examples/Tests/border.opo</file>
+        <file alias="clock.opo">../examples/Tests/clock.opo</file>
         <file alias="cmd.opo">../examples/Tests/cmd.opo</file>
         <file alias="cursor.opo">../examples/Tests/cursor.opo</file>
         <file alias="datetest.opo">../examples/Tests/datetest.opo</file>

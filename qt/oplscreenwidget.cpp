@@ -20,6 +20,7 @@
 #include "oplruntimegui.h"
 #include "clockwidget.h"
 #include "asynchandle.h"
+#include "oplfns.h"
 
 #include <QAudioFormat>
 #include <QBuffer>
@@ -48,6 +49,7 @@ OplScreenWidget::OplScreenWidget(QWidget *parent)
     mRuntime->setScreen(this);
     connect(mRuntime, &OplRuntime::runComplete, this, &OplScreenWidget::onStopped);
     connect(mRuntime, &OplRuntime::deviceTypeChanged, this, &OplScreenWidget::onDeviceTypeChanged);
+    connect(mRuntime, &OplRuntime::systemClockChanged, this, &OplScreenWidget::onSystemClockChanged);
 
     setFocusPolicy(Qt::StrongFocus);
 }
@@ -434,9 +436,8 @@ void OplScreenWidget::clock(int drawableId, const OplScreen::ClockInfo* info)
     auto win = mWindows.value(drawableId, nullptr);
     if (win) {
         if (info && !win->mClock) {
-            win->mClock = new ClockWidget(win, getRuntime(), info->color);
+            win->mClock = new ClockWidget(win, getRuntime());
             win->mClock->setScale(mScale);
-            connect(getRuntime(), &OplRuntime::systemClockChanged, win->mClock, &ClockWidget::systemClockChanged);
             // God DAMN that cast is nasty. Needed because QWidget has overloads of update making the slot kinda
             // broken.
             connect(this, &OplScreenWidget::clockTimeChanged, win->mClock, static_cast<void(QWidget::*)()>(&QWidget::update));
@@ -475,6 +476,20 @@ void OplScreenWidget::clockTick()
 {
     emit clockTimeChanged();
     startClockTimer();
+}
+
+void OplScreenWidget::onSystemClockChanged(bool digital)
+{
+    for (Window* w : mWindows) {
+        if (w->mClock) {
+            ClockInfo info = w->mClock->getInfo();
+            auto newType = oplModeToClockType(info.mode, mRuntime->getDeviceType(), digital);
+            if (newType != info.type) {
+                info.type = newType;
+                w->mClock->updateClockInfo(info);
+            }
+        }
+    }
 }
 
 void OplScreenWidget::playSound(AsyncHandle* handle, const QByteArray& data)

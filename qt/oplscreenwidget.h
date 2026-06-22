@@ -104,6 +104,7 @@ private slots:
     void onStopped();
     void clockTick();
     void onDeviceTypeChanged();
+    void onSystemClockChanged(bool digital);
 
 signals:
     void clockTimeChanged();

@@ -24,8 +24,10 @@
 #include <stdbool.h>
 
 #include "opldevicetype.h"
+#include "opldefs.h" // For OplClockType
 
 #ifdef __cplusplus
+
 extern "C" {
 #endif
 
@@ -46,6 +48,10 @@ int oplGetDeviceFromName(const char* name);
 void oplGetScreenSize(OplDeviceType device, int* width, int* height);
 int oplGetScreenMode(OplDeviceType device);
 bool oplIsSiboDevice(OplDeviceType device);
+
+OplClockType oplModeToClockType(int mode, OplDeviceType device, bool systemClockIsDigital);
+
+OplClockMetrics oplGetClockMetrics(OplClockType type);
 
 #ifdef __cplusplus
 } // extern "C"

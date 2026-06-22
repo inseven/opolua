@@ -20,6 +20,7 @@
 
 import Foundation
 import Lua
+import OplCore
 
 public struct Graphics {
 
@@ -37,8 +38,8 @@ public struct Graphics {
         public static let icon = Self(width: 48, height: 48)
         public static let zero = Self(width: 0, height: 0)
 
-        public let width: Int
-        public let height: Int
+        public var width: Int
+        public var height: Int
 
         public init(width: Int, height: Int) {
             self.width = width
@@ -59,8 +60,8 @@ public struct Graphics {
 
         public static let zero = Self(x: 0, y: 0)
 
-        public let x: Int
-        public let y: Int
+        public var x: Int
+        public var y: Int
 
         public init(x: Int, y: Int) {
             self.x = x
@@ -147,7 +148,7 @@ public struct Graphics {
 
         public static let black = Self(r: 0, g: 0, b: 0)
         public static let white = Self(r: 255, g: 255, b: 255)
-        public static let midGray = Self(r: 0x80, g: 0x80, b: 0x80)
+        public static let gray = Self(r: 0xAA, g: 0xAA, b: 0xAA)
         public static let alphaMask: UInt32 = 0xFF000000
 
         var greyValue: UInt8 {
@@ -331,19 +332,29 @@ public struct Graphics {
         }
     }
 
-    public struct ClockInfo: Codable {
-        public enum Mode: Int, Codable {
-            case systemSetting = 6
-            case analog = 7
-            case digital = 8
-        }
-        public let mode: Mode
-        public let position: Point
-        // TODO offset, format, etc
+    public typealias ClockType = OplCore.OplClockType
 
-        public init(mode: Mode, position: Point) {
+    public struct RawClockInfo: Codable {
+        public let mode: CInt
+        public let offset: Int
+        public let position: Point
+    }
+
+    public struct ClockInfo {
+        public let mode: CInt
+        public let type: ClockType
+        public let offset: Int
+        public let position: Point
+        public let showSeconds: Bool
+        public let showDate: Bool
+
+        public init(mode: CInt, type: ClockType, offset: Int, position: Point, showSeconds: Bool, showDate: Bool) {
             self.mode = mode
+            self.type = type
+            self.offset = offset
             self.position = position
+            self.showSeconds = showSeconds
+            self.showDate = showDate
         }
     }
 

@@ -625,4 +625,8 @@ extension Program: WindowServerDelegate {
         sendKey(key)
     }
 
+    func getDevice() -> Device {
+        return configuration.device
+    }
+
 }

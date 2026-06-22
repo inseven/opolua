@@ -22,6 +22,7 @@ import Foundation
 import CoreGraphics
 
 import OpoLuaCore
+import OplCore
 
 protocol WindowServerDelegate: CanvasViewDelegate {
 
@@ -31,6 +32,7 @@ protocol WindowServerDelegate: CanvasViewDelegate {
     func windowServerDeleteBackward(_ windowServer: WindowServer)
     func windowServer(_ windowServer: WindowServer, sendKey key: OplKeyCode)
 
+    func getDevice() -> Device
 }
 
 class WindowServer {
@@ -221,7 +223,7 @@ class WindowServer {
         cancelCursorTimer()
         if let cursor {
             let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
-            let col: Graphics.Color = cursor.flags.contains(.grey) ? .midGray : .black
+            let col: Graphics.Color = cursor.flags.contains(.grey) ? .gray : .black
             cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert,
                 origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
             let _ = window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
@@ -261,9 +263,7 @@ class WindowServer {
 
         if let clockInfo = info {
             if view.clockView == nil {
-                let v = ClockView(analogClockImage: device.analogClockImage,
-                                  clockInfo: clockInfo,
-                                  systemClockDigital: delegate!.windowServerClockIsDigital(self))
+                let v = ClockView(clockInfo: clockInfo)
                 view.clockView = v
                 view.addSubview(v)
             }
@@ -412,8 +412,22 @@ class WindowServer {
     @objc func clocksChanged() {
         let isDigital = delegate!.windowServerClockIsDigital(self)
         for (_, window) in windows {
-            window.clockView?.systemClockDigital = isDigital
-            window.clockView?.clockChanged()
+            if let clockView = window.clockView {
+                // Recalculate clock type
+                let device = delegate!.getDevice()
+                let info = clockView.clockInfo
+                let newType = oplModeToClockType(info.mode & 0xF, device, isDigital)
+                if newType != clockView.clockInfo.type {
+                    clockView.clockInfo = Graphics.ClockInfo(mode: info.mode,
+                        type: newType,
+                        offset: info.offset,
+                        position: info.position,
+                        showSeconds: info.showSeconds,
+                        showDate: info.showDate)
+                } else {
+                    clockView.setNeedsDisplay()
+                }
+            }
         }
     }
 

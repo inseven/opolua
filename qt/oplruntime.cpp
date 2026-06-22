@@ -1088,11 +1088,18 @@ int OplRuntime::graphicsop(lua_State* L)
             int drawableId = lua_tointeger(L, 2);
             if (lua_type(L, 3) == LUA_TTABLE) {
                 rawgetfield(L, 3, "position");
+                int mode = to_int(L, 3, "mode");
+                int offset = to_int(L, 3, "offset");
+                if ((mode & 0x100) == 0) {
+                    offset = offset * 60; // 0x100 means offset in seconds rather than minutes
+                }
                 OplScreen::ClockInfo info = {
-                    .mode = (OplScreen::ClockType)to_int(L, 3, "mode"),
-                    .systemIsDigital = mConfig["clockFormat"] == "1",
-                    .color = mDeviceType >= psionSeries7,
+                    .mode = mode,
+                    .type = oplModeToClockType(mode & 0xF, mDeviceType, mConfig["clockFormat"] == "1"),
+                    .offset = offset,
                     .pos = QPoint(to_int(L, 4, "x"), to_int(L, 4, "y")),
+                    .showSeconds = (mode & 0x20) != 0,
+                    .showDate = (mode & 0x10) != 0,
                 };
                 mScreen->clock(drawableId, &info);
             } else {
@@ -1931,13 +1938,13 @@ int OplRuntime::setEra(lua_State *L)
     if (eraIsSibo != isSibo() && !mIgnoreOpoEra) {
         auto deviceType = eraIsSibo ? psionSeries3c : psionSeries5;
         switch (translatorVersion) {
-        case opl::oplS3:
+        case oplS3:
             deviceType = psionSeries3;
             break;
-        case opl::opl1993:
+        case opl1993:
             deviceType = psionSeries3c;
             break;
-        case opl::opler1:
+        case opler1:
             deviceType = psionSeries5;
             break;
         default:
