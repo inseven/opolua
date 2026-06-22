@@ -2444,8 +2444,7 @@ function gClock(stack, runtime) -- 0xF5
         mode = stack:pop()
     end
 
-    -- TODO support the rest of the params
-    runtime:gCLOCK(mode, offset or 0, format, font, style)
+    runtime:gCLOCK(mode, offset, format, font, style)
 end
 
 gClock_dump = qualifier_dump

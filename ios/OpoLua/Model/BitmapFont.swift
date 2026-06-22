@@ -79,6 +79,17 @@ struct BitmapFontInfo {
         self.widths = widths
     }
 
+    func textWidth(_ text: String) -> Int {
+        guard let data = text.data(using: self.encoding) else {
+            return 0
+        }
+        var w = 0
+        for b in data {
+            w = w + self.widths[Int(b)]
+        }
+        return w
+    }
+
     static var digit: BitmapFontInfo = {
         return BitmapFontInfo(uid: 0x10000128)!
     }()

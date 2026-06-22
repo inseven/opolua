@@ -56,14 +56,6 @@ extension NSImage {
 
 extension CommonImage {
 
-    static func clockMedium() -> CommonImage {
-        return CommonImage(named: "ClockMedium")!
-    }
-
-    static func clockMediumC() -> CommonImage {
-        return CommonImage(named: "ClockMediumC")!
-    }
-
     static func dataIcon() -> CommonImage {
         return CommonImage(named: "DataIcon")!
     }

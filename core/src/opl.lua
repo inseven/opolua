@@ -767,6 +767,7 @@ function gCLOCK(mode, offset, format, font, style)
     if mode then
         info = {
             mode = mode,
+            offset = offset or 0,
             position = {
                 x = context.pos.x,
                 y = context.pos.y,

@@ -20,6 +20,7 @@
 #define CLOCKWIDGET_H
 
 #include <QPainter>
+#include <QPen>
 #include <QPixmap>
 #include <QWidget>
 
@@ -29,30 +30,33 @@ class ClockWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ClockWidget(QWidget *parent, OplFontProvider* fontProvider, bool color);
+    explicit ClockWidget(QWidget *parent, OplFontProvider* fontProvider);
 
     void updateClockInfo(const OplScreen::ClockInfo& info);
+    const OplScreen::ClockInfo& getInfo() const { return mInfo; }
     void setScale(int scale);
-
-public slots:
-    void systemClockChanged(bool digital);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
+    void drawText(QPainter& painter, int x, int y, const QString& text, const QPixmap& font, const OplScreen::FontMetrics& metrics);
     void drawCenteredText(QPainter& painter, int y, const QString& text, const QPixmap& font, const OplScreen::FontMetrics& metrics);
-    bool isDigital() const;
+    void drawHands(QPainter& painter, double hAngle, double mAngle, QPen pen=QPen(), QColor shadow=Qt::transparent);
 
 private:
+    QSize mSize; // Unscaled
     int mScale;
     QPixmap mClock;
     OplFontProvider* mFontProvider;
-    QPixmap mDigitalFont;
-    OplScreen::FontMetrics mDigitalFontMetrics;
-    QPixmap mArialFont;
-    OplScreen::FontMetrics mArialFontMetrics;
+    QPixmap mTimeFont;
+    OplScreen::FontMetrics mTimeFontMetrics;
+    QPixmap mDateFont;
+    OplScreen::FontMetrics mDateFontMetrics;
     OplScreen::ClockInfo mInfo;
+    double mHourHandLen;
+    double mMinuteHandLen;
+
 };
 
 #endif // CLOCKWIDGET_H

@@ -21,9 +21,9 @@
 
 #include <Qt>
 
-namespace opl {
-
 #include "opldefs.h"
+
+namespace opl {
 
 Q_DECLARE_FLAGS(Modifiers, OplModifier)
 Q_DECLARE_OPERATORS_FOR_FLAGS(Modifiers)

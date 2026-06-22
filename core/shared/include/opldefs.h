@@ -18,11 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#pragma once
 
 #ifdef __clang__
 #define CLOSED_ENUM __attribute__((enum_extensibility(closed)))
 #else
 #define CLOSED_ENUM
+#endif
+
+#ifdef __cplusplus
+namespace opl {
 #endif
 
 // Some of these these aren't strictly keycodes in that they don't generate
@@ -189,8 +194,27 @@ enum TEventModifiers {
     teventDoubleClick = 0x80000,
 } CLOSED_ENUM;
 
+#ifdef __cplusplus
+} // end namespace opl
+#endif
+
+// The following are deliberately not in the opl:: namespace
+
 enum TranslatorVersion {
     oplS3 = 0x110F,
     opl1993 = 0x111F,
     opler1 = 0x200A,
 } CLOSED_ENUM;
+
+typedef struct OplClockMetrics {
+    const char* name; // name of clock png, NULL means digital
+    unsigned int timeFont; // 0 means analog
+    unsigned int dateFont;
+    int hourHandLen;
+    int minuteHandLen;
+} OplClockMetrics;
+
+const unsigned int KFontSysNorm = 1;
+const unsigned int KFontSwiss11 = 10;
+const unsigned int KFontDigital35 = 0x10000128;
+const unsigned int KFontArialNormal15 = 0x100001F5;

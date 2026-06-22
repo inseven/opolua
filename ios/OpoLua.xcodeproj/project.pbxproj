@@ -20,6 +20,7 @@
 		D8EA52F12EE62D21000750C9 /* z-s5 in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52F02EE62D21000750C9 /* z-s5 */; };
 		D8EA52F32EE62D3A000750C9 /* borders in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52F22EE62D3A000750C9 /* borders */; };
 		D8EA52F52EE62D6B000750C9 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = D8EA52F42EE62D6B000750C9 /* fonts */; };
+		DB9C84CC2FE88314001F2D52 /* clocks in Resources */ = {isa = PBXBuildFile; fileRef = DB9C84CB2FE88314001F2D52 /* clocks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -43,6 +44,7 @@
 		D8EA52F22EE62D3A000750C9 /* borders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = borders; path = ../resources/borders; sourceTree = "<group>"; };
 		D8EA52F42EE62D6B000750C9 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../resources/fonts; sourceTree = "<group>"; };
 		DB79FFA62742D88A005E904F /* OpoLua.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpoLua.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DB9C84CB2FE88314001F2D52 /* clocks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = clocks; path = ../resources/clocks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +90,7 @@
 		DB79FE5627428292005E904F = {
 			isa = PBXGroup;
 			children = (
+				DB9C84CB2FE88314001F2D52 /* clocks */,
 				D8EA52F22EE62D3A000750C9 /* borders */,
 				D8C679BC27484BF400BD8720 /* examples */,
 				D8EA52F42EE62D6B000750C9 /* fonts */,
@@ -182,6 +185,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DB9C84CC2FE88314001F2D52 /* clocks in Resources */,
 				D895332E2EEB62BD00BFCD8A /* z-revo in Resources */,
 				D8EA52F52EE62D6B000750C9 /* fonts in Resources */,
 				D8EA52F32EE62D3A000750C9 /* borders in Resources */,

@@ -25,6 +25,8 @@
 #include <QRect>
 #include <QVector>
 
+#include "opldevicetype.h"
+
 enum OplError {
     KErrNone = 0,
     KErrGenFail = -1,
@@ -32,9 +34,6 @@ enum OplError {
     KErrIOCancelled = -48,
     KErrDrawNotOpen = -118,
 };
-
-constexpr uint32_t KFontDigital35 = 0x10000128;
-constexpr uint32_t KFontArialNormal15 = 0x100001F5;
 
 class AsyncHandle;
 class OplFontProvider;
@@ -154,17 +153,14 @@ public:
         int widths[256];
     };
 
-    enum ClockType {
-        system = 6,
-        analog = 7,
-        digital = 8,
-    };
-
     struct ClockInfo {
-        ClockType mode;
-        bool systemIsDigital;
-        bool color;
+        int mode;
+        OplClockType type;
+        int offset; // in seconds
         QPoint pos;
+        // Note, some clock types ignore the following settings
+        bool showSeconds;
+        bool showDate;
     };
 
     struct SpriteFrame {

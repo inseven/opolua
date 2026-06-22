@@ -436,6 +436,7 @@ int32_t oplUnicodeToKeycode(uint32_t ch)
 // Must be in same order as OplDeviceType enum
 static char const * const DeviceNames[] = {
     "psion-series-3",
+    // "psion-series-3a",
     "psion-series-3c",
     "psion-siena",
     "oregon-osaris",
@@ -472,6 +473,7 @@ void oplGetScreenSize(OplDeviceType device, int* width, int* height)
             *width = 240;
             *height = 80;
             break;
+        // case psionSeries3a:
         case psionSeries3c:
             *width = 480;
             *height = 160;
@@ -515,6 +517,7 @@ int oplGetScreenMode(OplDeviceType device)
 {
     switch (device) {
         case psionSeries3:
+        // case psionSeries3a:
         case psionSeries3c:
         case psionSiena:
             return KColorgCreate4GrayMode;
@@ -534,10 +537,160 @@ bool oplIsSiboDevice(OplDeviceType device)
 {
     switch (device) {
         case psionSeries3:
+        // case psionSeries3a:
         case psionSeries3c:
         case psionSiena:
             return true;
         default:
             return false;
+    }
+}
+
+
+OplClockType oplModeToClockType(int mode, OplDeviceType device, bool systemClockIsDigital)
+{
+    // if ((mode >= 6 && device == psionSeries3) || (mode < 6 && device >= oregonOsaris)) {
+    //     return invalidClock;
+    // }
+
+    switch (mode) {
+    case 1:
+        return digitalSmall;
+    case 2:
+        return systemClockIsDigital ? digitalMedium : analogSmall;
+    case 3:
+        return analogSmall;
+    case 4:
+        return digitalMedium;
+    case 5:
+        return analogMediumBlack;
+    case 6:
+        if (systemClockIsDigital) {
+            return oplModeToClockType(8, device, systemClockIsDigital);
+        } else {
+            return oplModeToClockType(7, device, systemClockIsDigital);
+        }
+    case 7:
+        if (oplIsSiboDevice(device)) {
+            return analogMediumS3a;
+        } else if (oplGetScreenMode(device) >= KColorgCreate256ColorMode) {
+            return analogMediumColor;
+        } else {
+            return analogMediumS5;
+        }
+    case 8:
+        if (oplIsSiboDevice(device)) {
+            return digitalFontShadowed;
+        } else {
+            return digitalFont;
+        }
+    case 9:
+        if (oplIsSiboDevice(device)) {
+            return analogLargeS3a;
+        } else if (oplGetScreenMode(device) >= KColorgCreate256ColorMode) {
+            return analogLargeColor;
+        } else {
+            return analogLargeS5;
+        }
+    default:
+        return invalidClock;
+    }
+}
+
+static const OplClockMetrics metrics[] = {
+    { // digitalSmall,
+        .name = NULL,
+        .timeFont = KFontSysNorm,
+        .dateFont = KFontSysNorm,
+        .hourHandLen = 0,
+        .minuteHandLen = 0,
+    },
+    { // analogSmall,
+        .name = "analogSmall",
+        .timeFont = 0,
+        .dateFont = KFontSysNorm,
+        .hourHandLen = 7,
+        .minuteHandLen = 11,
+    },
+    { // digitalMedium,
+        .name = NULL,
+        .timeFont = KFontSysNorm,
+        .dateFont = KFontSysNorm,
+        .hourHandLen = 0,
+        .minuteHandLen = 0,
+    },
+    { // analogMediumBlack,
+        .name = "analogMediumBlack",
+        .timeFont = 0,
+        .dateFont = KFontSysNorm,
+        .hourHandLen = 16,
+        .minuteHandLen = 22,
+    },
+    { // analogMediumS3a,
+        .name = "analogMediumS3a",
+        .timeFont = 0,
+        .dateFont = KFontSwiss11,
+        .hourHandLen = 15,
+        .minuteHandLen = 19,
+    },
+    { // analogMediumS5,
+        .name = "analogMediumS5",
+        .timeFont = 0,
+        .dateFont = 0,
+        .hourHandLen = 18,
+        .minuteHandLen = 25,
+    },
+    { // analogMediumColor,
+        .name = "analogMediumColor",
+        .timeFont = 0,
+        .dateFont = 0,
+        .hourHandLen = 18,
+        .minuteHandLen = 25,
+    },
+    { // digitalFont,
+        .name = NULL,
+        .timeFont = KFontDigital35,
+        .dateFont = KFontArialNormal15,
+        .hourHandLen = 0,
+        .minuteHandLen = 0,
+    },
+    { // digitalFontShadowed,
+        .name = NULL,
+        .timeFont = KFontDigital35,
+        .dateFont = KFontSwiss11,
+        .hourHandLen = 0,
+        .minuteHandLen = 0,
+    },
+    { // analogLargeS3a,
+        .name = "analogLargeS3a",
+        .timeFont = 0,
+        .dateFont = 0,
+        .hourHandLen = 26,
+        .minuteHandLen = 37,
+    },
+    { // analogLargeS5,
+        .name = "analogLargeS5",
+        .timeFont = 0,
+        .dateFont = 0,
+        .hourHandLen = 45,
+        .minuteHandLen = 65,
+    },
+    { // analogLargeColor,
+        .name = "analogLargeColor",
+        .timeFont = 0,
+        .dateFont = 0,
+        .hourHandLen = 45,
+        .minuteHandLen = 65,
+    },
+};
+
+static const OplClockMetrics invalidClockMetrics = {};
+
+OplClockMetrics oplGetClockMetrics(OplClockType type)
+{
+    if (type < 0 || (size_t)type >= (sizeof(metrics) / sizeof(OplClockMetrics))) {
+        return invalidClockMetrics;
+    } else {
+        return metrics[type];
     }
 }

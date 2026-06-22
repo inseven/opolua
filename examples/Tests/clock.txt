@@ -1,0 +1,102 @@
+PROC main:
+    GLOBAL w%, h%, clkType%(8), clockId%(8)
+    GLOBAL numClks%
+    GLOBAL shwDate%, gray%, offset%
+    LOCAL k%
+
+    w% = gWIDTH / 4
+    h% = gHEIGHT / 2
+    numClks% = 0
+
+    makeClocks:
+
+    DO
+        k% = GET
+        IF k% = %d
+            shwDate% = NOT shwDate%
+            gIPRINT "Date " + bool$:(shwDate%)
+            updateClocks:
+        ELSEIF k% = %g
+            gray% = NOT gray%
+            gIPRINT "Gray " + bool$:(gray%)
+            makeClocks:
+        ELSEIF k% = %o
+            IF offset% = 0
+                gIPRINT "Offset 1hr"
+                offset% = 60
+            ELSE
+                gIPRINT "Offset 0"
+                offset% = 0
+            ENDIF
+            updateClocks:
+        ENDIF
+    UNTIL k% = %q
+ENDP
+
+PROC makeClocks:
+    LOCAL i%
+    i% = 1
+    WHILE i% <= numClks%
+        gCLOSE clockId%(i%)
+        i% = i% + 1
+    ENDWH
+    numClks% = 0
+
+    newClock:(1)
+    newClock:(3)
+    newClock:(4)
+    newClock:(9)
+    newClock:(5)
+    newClock:(7)
+    newClock:(8)
+ENDP
+
+PROC newClock:(mode%)
+    gCREATE((numClks% AND 3) * w%, (numClks% / 4) * h%, w%, h%, 1, 1)
+    IF mode% = 9
+        REM needs the extra height
+        gSETWIN gORIGINX, gORIGINY, w%, h% * 2
+    ENDIF
+    numClks% = numClks% + 1
+    clockId%(numClks%) = gIDENTITY
+    clkType%(numClks%) = mode%
+    IF gray%
+        gGREY 1
+        gFILL gWIDTH, gHEIGHT, 0
+        gGREY 0
+    ENDIF
+    gBORDER 0
+    gFONT 1
+    gAT gWIDTH - 36, gHEIGHT - 2
+    gPRINT "mode", mode%
+    gAT 2, 2
+    gCLOCK ON, getClockMode%:(numClks%)
+ENDP
+
+PROC updateClocks:
+    LOCAL i%
+    i% = 1
+
+    WHILE i% <= numClks%
+        gUSE clockId%(i%)
+        gCLOCK ON, getClockMode%:(i%), offset%
+        i% = i% + 1
+    ENDWH
+ENDP
+
+PROC getClockMode%:(i%)
+    LOCAL result%
+    result% = clkType%(i%)
+    IF shwDate%
+        result% = result% OR $10
+    ENDIF
+    RETURN result%
+ENDP
+
+PROC bool$:(arg%)
+    IF arg%
+        RETURN "ON"
+    ELSE
+        RETURN "OFF"
+    ENDIF
+ENDP
