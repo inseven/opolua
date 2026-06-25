@@ -52,7 +52,7 @@ tar xf "qt-everywhere-src-$QT_VERSION.tar.xz"
 mkdir -p qt-build
 cd qt-build
 
-../qt-everywhere-src-6.8.3/configure.bat \
+../qt-everywhere-src-$QT_VERSION/configure.bat \
     -prefix "$INSTALL_DIRECTORY" \
     -static \
     -static-runtime \
