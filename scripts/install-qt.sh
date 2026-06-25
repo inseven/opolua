@@ -45,7 +45,7 @@ mkdir -p "$INSTALL_DIRECTORY"
 
 # Build
 cd "$BUILD_DIRECTORY"
-QT_VERSION="6.8.8"
+QT_VERSION="6.9.3"
 QT_MAJOR_MINOR="${QT_VERSION%.*}"
 curl -O "https://qt.mirror.constant.com/archive/qt/$QT_MAJOR_MINOR/$QT_VERSION/single/qt-everywhere-src-$QT_VERSION.tar.xz"
 tar xf "qt-everywhere-src-$QT_VERSION.tar.xz"
