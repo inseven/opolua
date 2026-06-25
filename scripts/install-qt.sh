@@ -45,8 +45,9 @@ mkdir -p "$INSTALL_DIRECTORY"
 
 # Build
 cd "$BUILD_DIRECTORY"
-curl -O https://qt.mirror.constant.com/archive/qt/6.8/6.8.3/single/qt-everywhere-src-6.8.3.tar.xz
-tar xf qt-everywhere-src-6.8.3.tar.xz
+QT_VERSION="6.8.8"
+curl -O "https://qt.mirror.constant.com/archive/qt/6.8/6.8.3/single/qt-everywhere-src-$QT_VERSION.tar.xz"
+tar xf "qt-everywhere-src-$QT_VERSION.tar.xz"
 mkdir -p qt-build
 cd qt-build
 
