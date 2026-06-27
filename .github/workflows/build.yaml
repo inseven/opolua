@@ -290,6 +290,7 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
+        version: '6.9.3'
         modules: 'qtmultimedia qt5compat'
 
     - name: Test Lua
