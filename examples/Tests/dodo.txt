@@ -1,0 +1,14 @@
+PROC dodo:
+    LOCAL i%
+    DO
+        DO
+            PRINT "Loop!"
+            i% = i% + 1
+        UNTIL i% = 5
+    UNTIL 1 = 1
+ENDP
+
+PROC dountil:
+    DO
+    UNTIL GET = %q
+ENDP
