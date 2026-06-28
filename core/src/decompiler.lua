@@ -211,7 +211,34 @@ local prettyNames = {
     GY = "gY",
 }
 
+local endStatements = {
+    ENDIF = true,
+    ENDP = true,
+    ENDV = true,
+    ENDWH = true,
+    UNTIL = true,
+}
+
 function decompileProc(proc, options)
+    --[[
+    The parse step breaks down the proc into statements, and then blocks. A statement is anything that can be written
+    on a single line of OPL without using a colon ':', including for example a GLOBAL variable declaration, or an
+    assignment like 'x% = GET'.
+
+    A block is a collection of statements following an 'opener' statement. For example the following code:
+
+        IF x% = 1
+            PRINT "Yep"
+        ENDIF
+
+    is represented by an IF block, which has two child statements, PRINT and ENDIF. Note how any closer statement
+    (ENDIF, here) is part of the child statements and not a top-level statement alongside the IF. Blocks can nest, to
+    follow the logical concept of nested IF/WHILE/etc blocks. The entire procedure is a single block, with the PROC
+    statement as the opener and the the ENDP as the last statement in its children. IF..ELSEIF..ELSE..ENDIF is
+    represented with a top-level blocks for each of the IF, ELSEIF and ELSEs. Note that only the last top-level block
+    in the IF..ELSEIF..ELSE chain has a child ENDIF statement.
+    ]]
+
     local opofile = require("opofile")
     local opxTable, oplFormat, annotate = options.opxTable, options.format, options.annotate
     local outputFn = options.outputFn
@@ -320,10 +347,6 @@ function decompileProc(proc, options)
         valType = EWord,
     }
 
-    local statements = {}
-    local gotoLabels = {}
-    local namedLabels = {} -- Used for VECTOR and ONERR
-    local branchTargets = {}
     local vars = proc.vars
     -- We don't necessarily have all the names yet (because of locals) but we need to process all the renames we can now
     local varsByOldName = {} -- this uses undecorated names to match what renames does.
@@ -338,11 +361,80 @@ function decompileProc(proc, options)
             -- Otherwise we wait until declareLocalVar to apply the rename
         end
     end
+    local args = {}
+    for i, type in ipairs(proc.params) do
+        args[i] = vars[opofile.getProcParamIndex(proc, i)].name
+    end
+    local argstr
+    if #args > 0 then
+        argstr = fmt("(%s)", table.concat(args, ", "))
+    else
+        argstr = ""
+    end
+
+    local procBlock = {
+        type = "PROC",
+        value = fmt("PROC %s:%s", proc.name, argstr),
+        level = 1,
+        statements = {}
+    }
+    local currentBlock = procBlock
+    local gotoLabels = {}
+    local namedLabels = {} -- Used for VECTOR and ONERR
+    local branchTargets = {}
     local stack = require("stack").newStack()
-    local openIfs = {}
     local trap = nil
 
     -- Helper fns (which have access to all the above state)
+
+    local function allStatements()
+        -- iterfn returns block, index, statement
+        local iterfn = function(state)
+            local n = #state.blocks
+            local block = state.blocks[n]
+            local i = state.indexes[n]
+
+            local statement = block.statements[i]
+            if statement and statement.delete then
+                -- Magic syntax to allow an allStatements() for loop to delete the current statement
+                -- The delete is actioned here the next time the iterator is called.
+                table.remove(block.statements, i)
+                statement = nil
+                i = i - 1
+            end
+
+            if statement and statement.statements and #statement.statements > 0 then
+                -- Next iteration should be of the block's first statement
+                table.insert(state.blocks, statement)
+                table.insert(state.indexes, 1)
+                return statement, 1, statement.statements[1]
+            end
+
+            i = i + 1
+            state.indexes[n] = i
+            statement = block.statements[i]
+
+            if statement == nil and n > 1 then
+                -- Gone past the last statement in the block, unwind
+                state.blocks[n] = nil
+                state.indexes[n] = nil
+                n = n - 1
+                state.indexes[n] = state.indexes[n] + 1
+                block = state.blocks[n]
+                i = state.indexes[n]
+                statement = block.statements[i]
+            end
+
+            if statement then
+                return block, state.indexes[n], statement
+            else
+                return nil
+            end
+        end
+        local initBlock = { level = 0, statements = { procBlock } }
+        local initState = { blocks = { initBlock }, indexes = { 0 } }
+        return iterfn, initState
+    end
 
     local function eval(expr, needsBrackets)
         -- needs brackets is more "needs brackets if it's a compound expression"
@@ -587,16 +679,106 @@ function decompileProc(proc, options)
         stack:push(expr)
     end
 
+    local function closeBlock()
+        local parent = currentBlock.parent
+        assert(parent, "Cannot close the root block!")
+        currentBlock = parent
+    end
+
+    local function checkOpenIfs(location)
+        while true do
+            if currentBlock.type == "IF" and currentBlock.endifLocation == location then
+                table.insert(currentBlock.statements, { type = "ENDIF", value = "ENDIF" })
+                closeBlock()
+                -- And go round and see if the next outermost block is also an IF we can close
+            else
+                break
+            end
+        end
+    end
+
+    -- This is for debugging clarity only, where parent can be massive
+    local function unparentedBlock(block)
+        local result = {}
+        for k, v in pairs(block) do
+            if k ~= "parent" then
+                if type(v) == "table" then
+                    result[k] = unparentedBlock(v)
+                else
+                    result[k] = v
+                end
+            end
+        end
+        return result
+    end
+
+    local function effectiveLocation(block, statementIdx)
+        local statement
+        if statementIdx then
+             statement = assert(block.statements[statementIdx], "Bad statementIdx!")
+        else
+            statement = block
+        end
+        local result = statement.location
+        if result then
+            return result
+        elseif statement.statements then
+            -- This clause (and the entire function) is to handle DO statements that don't strictly speaking have a
+            -- location, but effectively do for the purposes of seeking past the statement when looking for a location.
+            -- Another way of defining it would be what is the next code location that execute when this statement is
+            -- hit. It also handles (non-empty) ELSE statements, which behave similarly, although that is less useful.
+            local result, err = effectiveLocation(statement, 1)
+            return result, err
+        else
+            -- If some code is trying to seek past, say, an ENDIF, this is usually an error
+            return nil, "No effective location possible for this statement index!"
+        end
+    end
+
+    -- Moves all statements between index and endIndex (inclusive) in parentBlock into a new block
+    local function openBlock(parentBlock, index, endIndex, type, ...)
+        local value
+        if select("#", ...) > 0 then
+            value = fmt(...)
+        else
+            value = type
+        end
+        local newBlock = {
+            type = type,
+            statements = {},
+            parent = parentBlock,
+            value = value
+        }
+
+        if endIndex == nil then
+            endIndex = #parentBlock.statements
+        end
+        if index == nil then
+            index = endIndex + 1
+        end
+
+        -- printf("Inserting openBlock %s indexes %d-%d in %s\n", type, index, endIndex, dump(parentBlock.statements))
+        for i = index, endIndex do
+            local s = parentBlock.statements[i]
+            if s.parent then
+                s.parent = newBlock
+            end
+            table.insert(newBlock.statements, s)
+        end
+        for i = endIndex, index, -1 do
+            table.remove(parentBlock.statements, i)
+        end
+
+        table.insert(parentBlock.statements, index, newBlock)
+        if currentBlock then
+            currentBlock = newBlock
+        end
+        return newBlock
+    end
+
     local function addStatement(location, ...)
         if location then
-            -- Close any open IFs for this address in reverse order
-            while (openIfs[#openIfs] or {}).endifLocation == location do
-                local openIf = openIfs[#openIfs]
-                local endif = addStatement(nil, "ENDIF")
-                endif.opener = openIf
-                openIf.closer = endif
-                openIfs[#openIfs] = nil
-            end
+            checkOpenIfs(location)
         end
 
         local value = nil
@@ -614,53 +796,79 @@ function decompileProc(proc, options)
             location = location,
             value = value
         }
-        table.insert(statements, statement)
+        table.insert(currentBlock.statements, statement)
         return statement
     end
 
-    local function insertPriorStatement(location, ...)
-        local statement = {
-            location = location,
-            value = fmt(...)
-        }
-        local i = #statements
-        while i > 1 and statements[i].location == nil or statements[i].location > location do
-            i = i - 1
-        end
-        table.insert(statements, i, statement)
-        return statement
-    end
-
-    local function findStatement(statement)
-        for i, s in ipairs(statements) do
+    local function statementIndex(statement)
+        local parent = assert(statement.parent)
+        for i, s in ipairs(parent.statements) do
             if s == statement then
                 return i
+            end
+        end
+        error("Statement not found in parent!")
+    end
+
+    local function blockEndLocation(block)
+        -- This is a not the most efficient to calculate because it requires looking at the parent block (and
+        -- potentially its parent etc) to figure out what follows it
+        if block.parent == nil then
+            -- Must be the proc block, end is the ENDP location which is the last statement
+            return block.statements[#block.statements].location
+        end
+        local idx = statementIndex(block) + 1
+        local nextStatement = block.parent.statements[idx]
+        while nextStatement do
+            local result, err = effectiveLocation(nextStatement)
+            if result then
+                return result
+            else
+                -- An ELSE or ENDIF, skip over
+                idx = idx + 1
+                nextStatement = block.parent.statements[idx]
+            end
+        end
+
+        -- We hit the end of the block, so move up a level
+        return blockEndLocation(block.parent)
+    end
+
+    local function rfindLocation(block, startIndex, location)
+        local result = nil
+        for i = startIndex, 1, -1 do
+            local loc = assert(effectiveLocation(block, i))
+            if loc == location then
+                return i
+            end
+        end
+        error(fmt("Could not find location 0x%X", location))
+    end
+
+    -- Returns the innermost control block (ie a thing you can BREAK/CONTINUE from)
+    local function getControlBlock(block)
+        while block do
+            if block.type == "DO" or block.type == "WHILE" then
+                return block
+            else
+                block = block.parent
             end
         end
         return nil
     end
 
-    local function prevRealStatement(i)
-        local prevRealStatementIdx = i - 1
-        while statements[prevRealStatementIdx] and statements[prevRealStatementIdx].location == nil do
-             prevRealStatementIdx = prevRealStatementIdx - 1
+    -- Returns the index (into parent.statements) of the next statement after the IF and any associated ELSEIFs/ELSE.
+    -- May return #parent.statements+1 if there is no next statement.
+    local function indexOfIfEnd(ifStatement)
+        assert(ifStatement.type == "IF")
+        local parent = ifStatement.parent
+        local ifIdx = statementIndex(ifStatement)
+        local result = ifIdx + 1
+        local n = #parent.statements
+        while result <= n and parent.statements[result].type == "ELSEIF" or parent.statements[result].type == "ELSE" do
+            result = result + 1
         end
-        if statements[prevRealStatementIdx] == nil then
-            error("No real statement found prior to "..tostring(i))
-        end
-        return statements[prevRealStatementIdx], prevRealStatementIdx
-    end
-
-    -- This is the location of the code that would be executed after hitting a given endif, or after exiting a given
-    -- while loop.
-    local function endStatementNextLocation(index)
-        local s = statements[index]
-        assert(s.value == "ENDIF" or s.value == "ENDWH" or s.type == "UNTIL")
-        index = index + 1
-        while statements[index].location == nil do
-            index = index + 1
-        end
-        return statements[index].location
+        return result
     end
 
     local function decrementGotoRefCount(target)
@@ -671,13 +879,12 @@ function decompileProc(proc, options)
         if ref <= 0 then
             error(string.format("Reference count imbalance for target 0x%04X ref=%d", target, ref))
         end
-        gotoLabels[target] = ref - 1
-    end
 
-    local function locationIsControlFlowTarget(location)
-        return (gotoLabels[location] or 0) > 0
-            or namedLabels[location] ~= nil
-            or (openIfs[#openIfs] or {}).endifLocation == location
+        if ref == 1 then
+            gotoLabels[target] = nil
+        else
+            gotoLabels[target] = ref - 1
+        end
     end
 
     local function addGotoStatement(location, dest)
@@ -689,14 +896,13 @@ function decompileProc(proc, options)
         s.dest = dest
     end
 
-    local function elideGotoStatement(idx)
+    local function elideGotoStatement(statement)
         if options.elide == false then
             return
         end
-        local s = statements[idx]
-        assert(s.type == "GOTO", dump(s))
-        s.elided = true
-        decrementGotoRefCount(s.dest)
+        assert(statement.type == "GOTO", dump(s))
+        statement.elided = true
+        decrementGotoRefCount(statement.dest)
         -- Note this doesn't remove from branchTargets because it _is_ still a target even if it's not a target of an
         -- explicit GOTO.
     end
@@ -713,6 +919,7 @@ function decompileProc(proc, options)
         local s = addStatement(expr.location)
         s.type = type
         s.isLast = isLast
+        s.value = fmt("%s %s", type, hexEscape(eval(expr))) -- For debugging only
         s[1] = expr
     end
 
@@ -1097,24 +1304,27 @@ function decompileProc(proc, options)
             local jmpDest = location + jmp
             branchTargets[jmpDest] = true
             local expr = popExpr(EWord)
+            checkOpenIfs(expr.location) -- openBlock doesn't do this any more, for simplicity
 
             if jmp < 0 then
                 -- I think the only thing that can produce a backwards BranchIfFalse is DO...UNTIL
+                -- Add the UNTIL first, in case the DO is an empty loop meaning there'll be nothing else for jmpDest
+                -- to point to hence the rfind to get jmpDestIndex would fail. The openBlock will pull it into the DO
+                -- block.
                 local untilStatement = addStatement(expr.location, "UNTIL %s", eval(expr))
-                local doStatement = insertPriorStatement(jmpDest, "DO")
-                doStatement.closer = untilStatement
                 untilStatement.type = "UNTIL"
-                untilStatement.opener = doStatement
+                local jmpDestIdx = rfindLocation(currentBlock, #currentBlock.statements, jmpDest)
+                local doStatement = openBlock(currentBlock, jmpDestIdx, nil, "DO")
+                closeBlock()
             else
                 -- it must be an IF (or an ELSEIF, or a WHILE). Here we will assume all BranchIfFalses are independent
                 -- IF...ENDIF statements, and we will convert IFs to ELSEIFs/WHILEs (and hoist code outside into ELSE)
                 -- based on the flow control at the end of each block (drop through, or not), once we've fully parsed
                 -- it.
-                local ifStatement = addStatement(expr.location, "IF %s", eval(expr))
-                ifStatement.type = "IF"
+                local ifStatement = openBlock(currentBlock, nil, nil, "IF", "IF %s", eval(expr))
+                ifStatement.location = expr.location
                 ifStatement.endifLocation = jmpDest
                 ifStatement.cond = expr
-                table.insert(openIfs, ifStatement)
             end
         elseif op == "AndInt" then
             pushBinaryExpr(EWord, "AND")
@@ -1318,7 +1528,8 @@ function decompileProc(proc, options)
         elseif op == "Vector" then
             local expr = popExpr(EWord)
             local ncases = ip16()
-            local vector = addStatement(location, "VECTOR %s", eval(expr))
+            local vector = openBlock(currentBlock, nil, nil, "VECTOR", "VECTOR %s", eval(expr))
+            vector.location = location
             for i = 1, ncases do
                 local dest = location + ips16()
                 local label = fmt(era == "sibo" and "v%04X_%d" or "vector_%04X_case_%d", location, i)
@@ -1327,8 +1538,8 @@ function decompileProc(proc, options)
                 addStatement(location + i * 2, label)
             end
             local endv = addStatement(location + 2 + ncases * 2, "ENDV")
-            endv.opener = vector
-            vector.closer = endv
+            endv.type = "ENDV"
+            closeBlock()
         elseif op == "OnErr" then
             local offset = ips16()
             if offset == 0 then
@@ -1595,7 +1806,7 @@ function decompileProc(proc, options)
         end
 
         if op ~= "Trap" then
-            trap = false
+            trap = nil
         end
     end
 
@@ -1647,25 +1858,16 @@ function decompileProc(proc, options)
         end
     end
 
+    assert(currentBlock == procBlock, "Unterminated block "..currentBlock.type)
+    assert(trap == nil, "Dangling TRAP")
     local endp = addStatement(proc.codeOffset + proc.codeSize, "ENDP")
-    endp.opener = true -- trust me bro
+    endp.type = "ENDP"
+    -- From this point on all transformations are done over the entire program, there's no in-progress block
+    currentBlock = nil
 
-    local args = {}
-    for i, type in ipairs(proc.params) do
-        args[i] = vars[opofile.getProcParamIndex(proc, i)].name
-    end
-    local argstr
-    if #args > 0 then
-        argstr = fmt("(%s)", table.concat(args, ", "))
-    else
-        argstr = ""
-    end
-
-    outputFn(proc.offset, "PROC %s:%s\n", proc.name, argstr)
-
-    local blockNest = { { type = "PROC" } } -- Stack of block scopes, where a block here is code inside a IF/ELSEIF/DO/WHILE 
-    local function emit(val, ...)
+    local function emit(block, val, ...)
         local str, location
+        local level = block.level
         if type(val) == "string" then
             str = fmt(val, ...)
             location = nil
@@ -1702,46 +1904,54 @@ function decompileProc(proc, options)
                 str = fmt("%s", table.concat(parts, ""))
             else
                 str = fmt("%s", statement.value)
-                if annotate then
-                    if statement.type == "IF" or statement.value == "ELSE" then
-                        str = fmt("%s :rem endif=%04X", str, statement.endifLocation)
-                    elseif statement.value == "ENDIF" then
-                        str = fmt("%s :rem if=%04X", str, statement.opener.location)
-                    -- elseif statement.type == "WHILE" then
-                    --     str = fmt("%s :rem endwh=%04X", str, statement.closer.location)
-                    elseif statement.value == "ENDWH" then
-                        str = fmt("%s :rem while=%04X", str, statement.opener.location)
-                    end
-                end
             end
 
             if statement.elided then
                 str = "REM "..str
             end
+
+            if endStatements[statement.type] then
+                -- These should not be indented
+                level = level - 1
+            end
         end
 
-        local prefix = string.rep("    ", #blockNest)
+        local prefix = string.rep("    ", level)
         outputFn(location, "%s", prefix..str.."\n")
     end
 
     -- We emit variables after parsing the proc so we can benefit from type inference from the variable instructions
     -- to set variable types (and declare locals) that wouldn't otherwise be known.
-    local sortedVars = sortedKeys(vars)
-    for _, index in ipairs(sortedVars) do
-        local var = vars[index]
-        if var.isGlobal then
-            emit("GLOBAL %s", makeDecl(var))
+    do
+        local sortedVars = sortedKeys(vars)
+        local varIdx = 1
+        for _, index in ipairs(sortedVars) do
+            local var = vars[index]
+            if var.isGlobal then
+                table.insert(procBlock.statements, varIdx, { value = "GLOBAL "..makeDecl(var) })
+                varIdx = varIdx + 1
+            end
         end
-    end
-    for _, index in ipairs(sortedVars) do
-        local var = vars[index]
-        if var.directIdx and not var.isGlobal then
-            emit("LOCAL %s", makeDecl(var))
+        for _, index in ipairs(sortedVars) do
+            local var = vars[index]
+            if var.directIdx and not var.isGlobal then
+                table.insert(procBlock.statements, varIdx, { value = "LOCAL "..makeDecl(var) })
+                varIdx = varIdx + 1
+            end
         end
     end
 
-    -- for i, stmt in ipairs(statements) do
-    --     printf("%d: %s\n", i, dump(stmt))
+    -- for block, i, s in allStatements() do
+    --     local idxStr = "0"
+    --     if s ~= procBlock then
+    --         idxStr = tostring(i)
+    --         local b = block
+    --         while b.parent do
+    --             idxStr = fmt("%d.%s", statementIndex(b), idxStr)
+    --             b = b.parent
+    --         end
+    --     end
+    --     printf("%s: %s\n", idxStr, s.value)
     -- end
 
     -- Pass to translate GOTO...ENDIF to ENDWH. Doing this first makes ELSE transforming easier because there's no risk
@@ -1749,192 +1959,175 @@ function decompileProc(proc, options)
     -- the GOTO and ENDIF to become separated. Because not getting separated is essential to correctly establishing
     -- whether the GOTO at the end of a non-dropping-through IF..ENDIF is a BREAK or not, if this pass is skipped,
     -- the expandIfs pass must be too.
-    local i = options.addWhiles == false and #statements or 1
-    while i < #statements do
-        local s = statements[i]
-        if s.value == "ENDIF" then
-            local prevStatement = prevRealStatement(i)
-
-            if prevStatement.type == "GOTO" and prevStatement.dest == s.opener.location then
-                -- It's a WHILE...ENDWH not an IF...ENDIF
-                -- Remove the ENDIF (since it was a simulated statement with no location) and transform the GOTO into
-                -- an ENDWH. This is the same as what we do for GOTOs that end up as CONTINUE, and ENDWH is effectively
-                -- CONTINUE followed by ENDIF.
-                decrementGotoRefCount(prevStatement.dest)
-                prevStatement.value = "ENDWH"
-                prevStatement.type = "ENDWH"
-                local opener = s.opener
-                prevStatement.opener = opener
-                opener.closer = prevStatement
-                opener.type = "WHILE"
-                opener.value = fmt("WHILE %s", eval(opener.cond))
-
-                table.remove(statements, i)
-                i = i - 1
-            end
-        end
-        i = i + 1
-    end
-
-    -- Do a pass to transform IF statements into something more legible. At this point the only control structures we
-    -- have are IF...ENDIF, as well as DO...UNTIL and WHILE...ENDWH
-    local i = options.expandIfs == false and #statements or 1
-    while i < #statements do
-        local s = statements[i]
-        if s.value == "ENDIF" then
-            local ifStatement = s.opener
-            -- For previous statement here, we're only interested in statements with actual code, ie ignoring any ENDIFs
-            -- that happen to be there, or similar (there probably can't be any here in the case of the GOTO on an
-            -- actual ENDIF but possibly an ENDIF that's due to be transformed into an ENDWH, it could have been
-            -- hoisted before a nested ENDIF).
-            local prevStatement, prevRealStatementIdx = prevRealStatement(i)
-
-            if options.addElses ~= false and s.elseStatement == nil and prevStatement.type == "GOTO" and prevStatement.dest > prevStatement.location then
-                -- Execution does not drop through the current ENDIF so we can hoist up to the prevStatement GOTO dest,
-                -- or a higher nested ENDIF/UNTIL/ENDWH, whichever occurs first (this last caveat is to handle BREAKs)
-
-                local endifStatement = {
-                    value = "ENDIF",
-                    opener = s.opener,
-                    elseStatement = s,
-                }
-                -- Transform the current ENDIF into an ELSE
-                s.value = "ELSE"
-                ifStatement.closer = endifStatement
-                s.closer = endifStatement
-                s.opener.closer = endifStatement
-
-                -- And add the new ENDIF, being sure not to extend past an outer block boundary
-                local endifIndex = i
-                repeat
-                    endifIndex = endifIndex + 1
-                    local stmt = statements[endifIndex]
-                    -- stmt.opener == true is the hack used by ENDP so make sure we don't blast past that
-                until stmt.location == prevStatement.dest or stmt.opener == true or (stmt.opener and stmt.opener.location < s.opener.location)
-                table.insert(statements, endifIndex, endifStatement)
-                s.endifLocation = endStatementNextLocation(endifIndex)
-                s.opener.endifLocation = s.endifLocation
-
-                -- And we can remove the GOTO, providing it was a straightforward end-of-if-block jump and not a BREAK
-                -- We also have to check it's not already been elided by a previous ENDIF if multiple blocks terminate
-                -- at the same place (see doubleEndif in tcompiler.lua)
-                if prevStatement.dest == s.endifLocation and not prevStatement.elided then
-                    elideGotoStatement(prevRealStatementIdx)
-                end
-            end
-
-            if options.addElseifs ~= false and s.value == "ENDIF" then -- ie none of the previous checks changed this to not be an ENDIF
-                -- Now we've fully figured out the final location for this ENDIF, look at its IF to see if there's a
-                -- prior ELSE we can combine into a ELSEIF. This is only valid to do if the previous ELSE's ENDIF
-                -- location is identical to this IF's.
-                local ifStatement = s.opener
-                local endifStatement = ifStatement.closer
-                assert(endifStatement == s)
-                local ifIdx = assert(findStatement(ifStatement))
-                local endifIdx = assert(findStatement(endifStatement))
-                local prevStatement = statements[ifIdx - 1]
-                if prevStatement and prevStatement.value == "ELSE" and endStatementNextLocation(endifIdx) == endStatementNextLocation(findStatement(prevStatement.closer)) then
-                    -- Transform the inner IF into an ELSEIF subordinate to the outer IF
-                    ifStatement.value = "ELSE"..ifStatement.value
-                    ifStatement.opener = prevStatement.opener
-                    ifStatement.closer = prevStatement.closer
-                    -- Remove the dead ENDIF
-                    table.remove(statements, i)
-                    i = i - 1
-
-                    -- And the ELSE
-                    table.remove(statements, ifIdx - 1)
-                    i = i - 1
+    if options.addWhiles ~= false then
+        for block, i, s in allStatements() do
+            if s.type == "IF" then
+                local endif = s.statements[#s.statements]
+                assert(endif.value == "ENDIF")
+                local prevStatement = s.statements[#s.statements - 1]
+                if prevStatement and prevStatement.type == "GOTO" and prevStatement.dest == s.location then
+                    -- It's a WHILE...ENDWH not an IF...ENDIF
+                    -- Remove the ENDIF (since it was a simulated statement with no location) and transform the GOTO
+                    -- into an ENDWH. This is the same as what we do for GOTOs that end up as CONTINUE, and ENDWH is
+                    -- effectively CONTINUE followed by ENDIF.
+                    decrementGotoRefCount(prevStatement.dest)
+                    prevStatement.value = "ENDWH"
+                    prevStatement.type = "ENDWH"
+                    s.type = "WHILE"
+                    s.value = fmt("WHILE %s", eval(s.cond))
+                    -- Remove the ENDIF. It is safe to do this here because it is not the statement allStatements() is
+                    -- currently iterating.
+                    s.statements[#s.statements] = nil
                 end
             end
         end
-
-        i = i + 1
     end
 
-    -- And a pass analysing DO...UNTIL and WHILE...ENDWH for GOTOs that are actually BREAKs or CONTINUEs
-    i = options.addBreaksAndContinues == false and #statements or 1
-    local controlBlockNest = {}
-    while i < #statements do
-        local s = statements[i]
-        if s.value == "DO" or s.type == "WHILE" then
-            table.insert(controlBlockNest, i)
-        elseif s.type == "UNTIL" then
-            assert(statements[controlBlockNest[#controlBlockNest]].value == "DO", "UNTIL does not nest with a DO??")
-            controlBlockNest[#controlBlockNest] = nil
-        elseif s.value == "ENDWH" then
-            assert(statements[controlBlockNest[#controlBlockNest]].type == "WHILE", "ENDWH does not nest with a WHILE??")
-            controlBlockNest[#controlBlockNest] = nil
-        elseif s.type == "GOTO" and not s.elided and #controlBlockNest > 0 then
-            local currentBlock = statements[controlBlockNest[#controlBlockNest]]
-            local breakDest = endStatementNextLocation(findStatement(currentBlock.closer))
-            local continueDest
-            if currentBlock.value == "DO" then
-                continueDest = currentBlock.closer.location
-            else -- WHILE
-                continueDest = currentBlock.location
-            end
-            if s.dest == breakDest then
-                s.value = "BREAK"
-                decrementGotoRefCount(s.dest)
-            elseif s.dest == continueDest then
-                s.value = "CONTINUE"
-                decrementGotoRefCount(s.dest)
+    -- Do a pass to add ELSE statement to IFs that don't drop through. At this point the only control structures we
+    -- have are IF...ENDIF, as well as DO...UNTIL and possibly WHILE...ENDWH (depending on options.addWhiles)
+    if options.addElses ~= false then
+        for block, i, s in allStatements() do
+            if s.type == "IF" then
+                local endifStatement = s.statements[#s.statements]
+                assert(endifStatement and endifStatement.type == "ENDIF",
+                    "All IFs should have ENDIFs at this point in the parse!")
+
+                local prevStatement = s.statements[#s.statements - 1] -- the statement previous to the endif
+                -- printf("Considering IF at %X\n", s.location)
+                -- printf("Which is in block %s\n", dump(unparentedBlock(block)))
+                local blockEnd = blockEndLocation(block)
+                if prevStatement and prevStatement.type == "GOTO" and prevStatement.dest > prevStatement.location
+                    and prevStatement.dest <= blockEnd then
+                    -- Execution does not drop through the current ENDIF so we can hoist up to the prevStatement GOTO dest,
+                    -- providing it doesn't exit the block (which it could in the case of eg a BREAK)
+                    table.remove(s.statements, #s.statements) -- Remove the ENDIF
+
+                    local lastElseIdx = i
+                    -- local endifLocation
+                    -- while (block.statements[lastElseIdx + 1] or {}).location <
+                    while true do
+                        local nextStmt = block.statements[lastElseIdx + 1]
+                        -- Have to have a check for endStatements here because we don't want to blast past eg an ENDWH
+                        -- which is techically within the block statements (as we've defined it) but not logically.
+                        if nextStmt == nil or endStatements[nextStmt.type] then
+                            break
+                        end
+                    local location = effectiveLocation(nextStmt)
+                        if location == nil or location >= prevStatement.dest then
+                            break
+                        end
+                        lastElseIdx = lastElseIdx + 1
+                        -- endifLocation = location
+                    end
+
+                    local elseBlock = openBlock(block, i + 1, lastElseIdx, "ELSE")
+                    table.insert(elseBlock.statements, { value = "ENDIF", type = "ENDIF" })
+
+                    -- And we can remove the GOTO, providing it was a straightforward end-of-if-block jump and not a BREAK
+                    -- We also have to check it's not already been elided by a previous ENDIF if multiple blocks terminate
+                    -- at the same place (see doubleEndif in tcompiler.lua)
+                    if prevStatement.dest == blockEndLocation(elseBlock) and not prevStatement.elided then
+                        elideGotoStatement(prevStatement)
+                    end
+                end
             end
         end
-        i = i + 1
+    end
+
+    if options.addElseifs ~= false then
+        for block, i, s in allStatements() do
+            if s.type == "ELSE" then
+                -- See if there's a single IF in the ELSE clause (potentially with its own ELSEIFs/ELSE) and if so,
+                -- hoist it out and place it after the current else (deleting the current ELSE in the process)
+                if #s.statements > 0 and s.statements[1].type == "IF" then
+                    local ifStatement = s.statements[1]
+                    local ifEnd = indexOfIfEnd(ifStatement)
+                    if ifEnd == #s.statements then
+                        assert(s.statements[ifEnd].type == "ENDIF") -- This should be the only remaining statement
+                        ifStatement.type = "ELSEIF"
+                        ifStatement.value = "ELSE"..ifStatement.value
+                        for ifidx, stmt in ipairs(s.statements) do
+                            if ifidx == ifEnd then
+                                -- Skip the final ENDIF that closed the ELSE we're removing
+                                break
+                            end
+                            stmt.parent = block
+                            table.insert(block.statements, i + ifidx, stmt)
+                        end
+                        s.delete = true
+                    end
+                end
+            end
+        end
+    end
+
+    if options.addBreaksAndContinues ~= false then
+        for block, i, s in allStatements() do
+            if s.type == "GOTO" and not s.elided then
+                local controlBlock = getControlBlock(block)
+                if controlBlock then
+                    local breakDest = blockEndLocation(controlBlock)
+                    local continueDest
+                    if controlBlock.type == "DO" then
+                        local closer = controlBlock.statements[#controlBlock.statements]
+                        assert(closer.type == "UNTIL")
+                        continueDest = closer.location
+                    else
+                        continueDest = controlBlock.location
+                    end
+
+                    if s.dest == breakDest then
+                        s.value = "BREAK"
+                        decrementGotoRefCount(s.dest)
+                    elseif s.dest == continueDest then
+                        s.value = "CONTINUE"
+                        decrementGotoRefCount(s.dest)
+                    end
+                end
+            end
+        end
     end
 
     -- A pass to coelesce PRINT statements - do this only after all other statements like ENDIFs have been inserted
     i = options.mergePrints == false and #statements or 1
-    while i < #statements do
-        local s = statements[i]
-        local isPrint = s.type == "gPRINT" or s.type == "PRINT" or s.type == "LPRINT"
-        -- Can we merge this with a previous statement?
-        if isPrint and i > 1 and not branchTargets[s.location] then
-            local prevStatement = statements[i - 1]
-            if prevStatement.type == s.type and not prevStatement.isLast then
-                assert(#s == 1)
-                table.insert(prevStatement, s[1])
-                prevStatement.isLast = s.isLast
-                table.remove(statements, i)
-                i = i - 1
+    if options.mergePrints ~= false then
+        for block, i, s in allStatements() do
+            local isPrint = s.type == "gPRINT" or s.type == "PRINT" or s.type == "LPRINT"
+            -- Can we merge this with a previous statement?
+            if isPrint and i > 1 and not branchTargets[s.location] then
+                local prevStatement = block.statements[i - 1]
+                if prevStatement.type == s.type and not prevStatement.isLast then
+                    assert(#s == 1)
+                    table.insert(prevStatement, s[1])
+                    prevStatement.isLast = s.isLast
+                    s.delete = true -- removes the statement
+                end
             end
         end
-        i = i + 1
+    end
+    
+    -- Work out indent levels now any block shuffling is complete
+    for block, i, statement in allStatements() do
+        if statement.statements then
+            statement.level = block.level + 1
+        end
     end
 
     -- Finally, print each statement
-    for i, statement in ipairs(statements) do
+    for block, i, statement in allStatements() do
         if (gotoLabels[statement.location] or 0) > 0 then
-            emit("%s", getLabelName(statement.location))
+            emit(block, "%s", getLabelName(statement.location))
             gotoLabels[statement.location] = nil
         end
         if namedLabels[statement.location] then
             for _, name in ipairs(namedLabels[statement.location]) do
-                emit("%s", name)
+                emit(block, "%s", name)
             end
             namedLabels[statement.location] = nil
         end
-        if statement.opener then -- if it has an opener, it's a block closer
-            blockNest[#blockNest] = nil
-        end
-        emit(statement)
-        if statement.closer then -- likewise if it has a closer, it's a block opener
-            table.insert(blockNest, statement)
-        end
+        emit(block, statement)
     end
 
-    -- This should really be done earlier but then you have no output to diagnose
-    if #openIfs > 0 then
-        print(dump(openIfs))
-        error("Unclosed IFs at end of parsing "..proc.name)
-    end
-    for loc, ref in pairs(gotoLabels) do
-        if ref == 0 then
-            gotoLabels[loc] = nil
-        end
-    end
     if next(gotoLabels) then
         print(dump(gotoLabels))
         error("Left over goto label at end of parsing "..proc.name)

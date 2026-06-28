@@ -211,7 +211,6 @@ Options:
         end
         if hasOption("no-elseifs") then
             options.addElseifs = false
-            options.addElses = false
         end
         if hasOption("no-elses") then
             options.addElses = false
