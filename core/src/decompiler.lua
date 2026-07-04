@@ -1666,7 +1666,7 @@ function decompileProc(proc, options)
                     args = { StringVariable, String },
                 })
             elseif itemType == dItemTypes.dFILE then
-                local uidsuff = ""
+                local uidSuff = ""
                 -- Unlike so many commands that got a new opcode when extended, they just straight up changed the number
                 -- of arguments dFILE takes (although I'm unsure if this was sibo->er5 or something the 3c-era did)
                 if era == "er5" then
