@@ -1818,7 +1818,7 @@ function handleFn_GCREATEBIT(exp, procState)
         callable = Fn("gCreateBit", {Int, Int, Int, numParams = {2, 3}}, Int)
     else
         -- The important differentiation here is the lack of numParams meaning handleFn will not emit a numParams byte
-        callable = Fn("gCreateBit", {Int, Int}, Int)
+        callable = Fn("gCreateBit_sibo", {Int, Int}, Int)
     end
     procState:handleFn(exp, callable)
 end
