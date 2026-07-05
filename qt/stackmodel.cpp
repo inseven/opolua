@@ -1,70 +1,124 @@
 // Copyright (C) 2021-2026 Jason Morley, Tom Sutcliffe
 // See LICENSE file for license information.
 
-#include "differ.h"
+#include <vector>
+
 #include "stackmodel.h"
+#include "differ.h"
 #include "oplruntime.h"
 
 #include <QTextStream>
 
-// Each frame is a top level item (ie parent is the invalid index)
-// All valid indexes have a 48-bit id where the top 16 bits are the index of the frame.
-// The middle 16 bits are the variable index (or 0xFFFF for frames).
-// The bottom 16 bits are the array index, for array items (or 0xFFFF otherwise).
-// Therefore a frame has the bottom 32 bits 0xFFFFFFFF.
-// Yes this will break on 32-bit systems. A better scheme is, at present, left as an exercise for the reader.
-static_assert(sizeof(quintptr) == 8, "StackModel requires 64-bit pointers, sorry!");
+class ModelIdx {
+public:
+    explicit ModelIdx(ModelIdx* parent)
+        : mParent(parent)
+    {
+    }
+
+    bool isRoot() const {
+        return mParent == nullptr;
+    }
+
+    bool isFrame() const {
+        return mParent && mParent->isRoot();
+    }
+
+    bool isVariable() const {
+        return mParent && mParent->isFrame();
+    }
+
+    bool isArrayMember() const {
+        return mParent && mParent->isVariable();
+    }
+
+    int index() const {
+        Q_ASSERT(mParent);
+        const auto& children = mParent->children;
+        auto result = std::find_if(children.begin(), children.end(),
+            [this](const std::unique_ptr<ModelIdx>& val) { return val.get() == this; });
+        Q_ASSERT(result != children.end());
+        return (int)std::distance(children.begin(), result);
+    }
+
+    const ModelIdx* getFrame() const {
+        Q_ASSERT(!isRoot());
+        if (isFrame()) {
+            return this;
+        } else {
+            return mParent->getFrame();
+        }
+    }
+
+    const ModelIdx* getVariable() const {
+        if (isVariable()) {
+            return this;
+        } else {
+            Q_ASSERT(!isRoot() && !isFrame());
+            return mParent->getVariable();
+        }
+    }
+
+    std::vector<std::unique_ptr<ModelIdx>> children;
+
+private:
+    ModelIdx* mParent;
+};
 
 static bool isFrame(const QModelIndex& idx)
 {
-    return (idx.internalId() & 0xFFFFFFFF) == 0xFFFFFFFF;
+    auto modelIdx = reinterpret_cast<ModelIdx*>(idx.internalPointer());
+    return modelIdx->isFrame();
 }
 
 static bool isArrayMember(const QModelIndex& idx)
 {
-    return (idx.internalId() & 0xFFFF) != 0xFFFF;
+    auto modelIdx = reinterpret_cast<ModelIdx*>(idx.internalPointer());
+    return modelIdx->isArrayMember();
 }
 
 static bool isVariable(const QModelIndex& idx)
 {
-    return !isFrame(idx) && !isArrayMember(idx);
+    auto modelIdx = reinterpret_cast<ModelIdx*>(idx.internalPointer());
+    return modelIdx->isVariable();
 }
 
 static int getFrameIndex(const QModelIndex& idx)
 {
-    return static_cast<int>((idx.internalId() >> 32) & 0xFFFFFFFF);
+    auto modelIdx = reinterpret_cast<ModelIdx*>(idx.internalPointer())->getFrame();
+    return modelIdx->index();
 }
 
 static int getVariableIndex(const QModelIndex& idx)
 {
-    Q_ASSERT(!isFrame(idx));
-    return static_cast<int>((idx.internalId() >> 16) & 0xFFFF);
+    auto modelIdx = reinterpret_cast<ModelIdx*>(idx.internalPointer())->getVariable();
+    return modelIdx->index();
 }
 
 static int getArrayIndex(const QModelIndex& idx)
 {
     Q_ASSERT(isArrayMember(idx));
-    return static_cast<int>(idx.internalId() & 0xFFFF);
-}
-
-static quintptr makeId(int frameIdx, int variableIdx = 0xFFFF, int arrayIdx = 0xFFFF)
-{
-    return (((quintptr)frameIdx) << 32) | (((quintptr)variableIdx) << 16) | arrayIdx;
+    auto modelIdx = reinterpret_cast<ModelIdx*>(idx.internalPointer());
+    return modelIdx->index();
 }
 
 StackModel::StackModel(OplRuntime* runtime, QObject* parent)
     : QAbstractItemModel(parent)
     , mRuntime(runtime)
+    , mRootIndex(new ModelIdx(nullptr))
     , mPaused(false)
 {
-    auto info = mRuntime->getDebugInfo();
-    mFrames = info.frames;
-    mPaused = info.paused;
+    debugInfoUpdated();
+
     connect(mRuntime, &OplRuntime::debugInfoUpdated, this, &StackModel::debugInfoUpdated);
     connect(mRuntime, &OplRuntime::startedRunning, this, &StackModel::startedRunning);
     connect(mRuntime, &OplRuntime::runComplete, this, &StackModel::runComplete);
     connect(&mUpdateTimer, &QTimer::timeout, mRuntime, &OplRuntime::updateDebugInfoIfStale);
     mUpdateTimer.start(1100);
+}
+
+StackModel::~StackModel()
+{
 }
 
 void StackModel::runComplete()
@@ -105,13 +159,20 @@ void StackModel::debugInfoUpdated()
         .willDelete = [this](int row) {
             beginRemoveRows(QModelIndex(), row, row);
         },
-        .didDelete = [this](int) {
+        .didDelete = [this](int row) {
+            // qDebug("Deleted frame %d", row);
+            mRootIndex->children.erase(mRootIndex->children.begin() + row);
             endRemoveRows();
         },
         .willAdd = [this](int row, const auto&) {
             beginInsertRows(QModelIndex(), row, row);
         },
-        .didAdd = [this](int, const auto&) {
+        .didAdd = [this](int row, const auto&) {
+            auto at = mRootIndex->children.begin() + row;
+            mRootIndex->children.insert(at, std::make_unique<ModelIdx>(mRootIndex.get()));
+            // Don't add vars here, do them in the loop below (to reduce duplication logic)
+            mFrames[row].variables.clear();
+            // qDebug("Added frame %d", row);
             endInsertRows();
         },
         .willUpdate = nullptr,
@@ -137,10 +198,22 @@ void StackModel::debugInfoUpdated()
             .willAdd = [this, f](int index, const auto& newVar) {
                 Q_UNUSED(newVar);
                 // qDebug("Adding new variable %s", qPrintable(newVar.name));
-                auto parent = createIndex(f, 0, makeId(f));
+                auto parent = createIndex(f, 0, modelIndexFor(f));
                 beginInsertRows(parent, index, index);
             },
-            .didAdd = [this](int, const auto&) {
+            .didAdd = [this, f](int row, const auto& variable) {
+                auto parent = modelIndexFor(f);
+                // qDebug("Added variable %d to frame %d", row, f);
+                auto modelIdx = std::make_unique<ModelIdx>(parent);
+                if (IsArrayType(variable.type)) {
+                    // And create model indexes for the array members too
+                    auto val = variable.value.toList();
+                    for (int i = 0; i < val.count(); i++) {
+                        modelIdx->children.push_back(std::make_unique<ModelIdx>(modelIdx.get()));
+                    }
+                }
+                auto at = parent->children.begin() + row;
+                parent->children.insert(at, std::move(modelIdx));
                 endInsertRows();
             },
             .willUpdate = nullptr,
@@ -148,20 +221,20 @@ void StackModel::debugInfoUpdated()
                 if (newVar.name != oldVar.name) {
                     // qDebug("Variable renamed %s -> %s", qPrintable(oldVar.name), qPrintable(newVar.name));
                     // mInfo.frames[f].variables[varIdx].name = newVar.name;
-                    auto idx = createIndex(varIdx, 0, makeId(f, varIdx));
+                    auto idx = createIndex(varIdx, 0, modelIndexFor(f, varIdx));
                     emit dataChanged(idx, idx);
                 }
                 if (newVar.value != oldVar.value) {
                     // qDebug("Value of %s changed", qPrintable(newVar.name));
                     // mInfo.frames[f].variables[varIdx].value = newVar.value;
-                    auto idx = createIndex(varIdx, 1, makeId(f, varIdx));
+                    auto idx = createIndex(varIdx, 1, modelIndexFor(f, varIdx));
                     emit dataChanged(idx, idx);
                     if (IsArrayType(oldVar.type)) {
                         auto oldVal = oldVar.value.toList();
                         auto newVal = newVar.value.toList();
                         for (int a = 0; a < oldVal.count(); a++) {
                             if (newVal[a] != oldVal[a]) {
-                                auto arridx = createIndex(a, 1, makeId(f, varIdx, a));
+                                auto arridx = createIndex(a, 1, modelIndexFor(f, varIdx, a));
                                 emit dataChanged(arridx, arridx);
                             }
                         }
@@ -190,13 +263,29 @@ void StackModel::debugInfoUpdated()
         .didAdd = nullptr,
         .willUpdate = nullptr,
         .didUpdate = [this](int f, const auto& /*oldFrame*/, const auto& /*newFrame*/) {
-            auto idx = createIndex(f, 1, makeId(f));
+            auto idx = createIndex(f, 1, modelIndexFor(f));
             emit dataChanged(idx, idx);
         },
     };
     frameIpDiff.diff();
 
     mPaused = newInfo.paused;
+}
+
+ModelIdx* StackModel::modelIndexFor(int frameIndex, int variableIndex, int arrayIndex) const
+{
+    // qDebug("modelIndexFor(%d,%d,%d)", frameIndex, variableIndex, arrayIndex);
+    Q_ASSERT(frameIndex >= 0 && (size_t)frameIndex < mRootIndex->children.size());
+    ModelIdx* result = mRootIndex->children[frameIndex].get();
+    if (variableIndex >= 0) {
+        Q_ASSERT((size_t)variableIndex < result->children.size());
+        result = result->children[variableIndex].get();
+        if (arrayIndex >= 0) {
+            Q_ASSERT((size_t)arrayIndex < result->children.size());
+            result = result->children[arrayIndex].get();
+        }
+    }
+    return result;
 }
 
 const opl::Frame& StackModel::frameForIndex(const QModelIndex& idx) const
@@ -250,15 +339,15 @@ QModelIndex StackModel::index(int row, int column, const QModelIndex &parent) co
 
     if (!parent.isValid()) {
         // these are indexes for the top-level frame items
-        auto ret = createIndex(row, column, makeId(row));
+        auto ret = createIndex(row, column, modelIndexFor(row));
         return ret;
     } else if (isFrame(parent)) {
         // Create a variable index
-        return createIndex(row, column, makeId(getFrameIndex(parent), row));
+        return createIndex(row, column, modelIndexFor(getFrameIndex(parent), row));
     } else {
         const auto& var = variableForIndex(parent);
         Q_ASSERT(IsArrayType(var.type));
-        return createIndex(row, column, makeId(getFrameIndex(parent), getVariableIndex(parent), row));
+        return createIndex(row, column, modelIndexFor(getFrameIndex(parent), getVariableIndex(parent), row));
     }
 }
 
@@ -272,12 +361,12 @@ QModelIndex StackModel::parent(const QModelIndex &index) const
         // It's a variable, parent is frame
         int frameIdx = getFrameIndex(index);
         Q_ASSERT(frameIdx >= 0 && frameIdx < mFrames.count());
-        return createIndex(frameIdx, 0, makeId(frameIdx));
+        return createIndex(frameIdx, 0, modelIndexFor(frameIdx));
     } else {
         // Array member, parent is variable
         int frameIdx = getFrameIndex(index);
         int varIdx = getVariableIndex(index);
-        return createIndex(varIdx, 0, makeId(frameIdx, varIdx));
+        return createIndex(varIdx, 0, modelIndexFor(frameIdx, varIdx));
     }
 }
 

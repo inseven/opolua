@@ -4,11 +4,14 @@
 #ifndef STACKMODEL_H
 #define STACKMODEL_H
 
+#include <memory>
+
 #include <QAbstractItemModel>
 #include <QTimer>
 #include "opldebug.h"
 
 class OplRuntime;
+class ModelIdx;
 
 class StackModel : public QAbstractItemModel
 {
@@ -16,6 +19,7 @@ class StackModel : public QAbstractItemModel
 
 public:
     StackModel(OplRuntime* runtime, QObject* parent = nullptr);
+    ~StackModel();
 
     std::optional<opl::Frame> getFrameForIndex(const QModelIndex& idx) const;
 
@@ -46,9 +50,12 @@ private:
     QString describeValue(const QVariant& value, int role) const;
     QString describeStringValue(const QString& value, bool quoted) const;
 
+    ModelIdx* modelIndexFor(int frameIndex, int variableIndex = -1, int arrayIndex = -1) const;
+
 private:
     OplRuntime* mRuntime;
     QVector<opl::Frame> mFrames;
+    std::unique_ptr<ModelIdx> mRootIndex;
     bool mPaused;
     QTimer mUpdateTimer;
 };
