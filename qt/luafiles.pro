@@ -116,9 +116,8 @@ equals(USE_LUAC, 1) {
 }
 
 # Generate the .qrc resource file for the compiled .luac files (or the .lua files)
-
-makeLuacManifest.target = makeLuacManifest
-makeLuacManifest.commands = $$OUT_PWD/qluac manifest $$LUA_QRC /lua
+QRC_DATA = "<!DOCTYPE RCC><RCC version=\"1.0\">"
+QRC_DATA += "<qresource prefix=\"/lua\">"
 
 for (file, LUA_FILES) {
     alias = $$getLuaAlias($$file)
@@ -127,9 +126,10 @@ for (file, LUA_FILES) {
     } else {
         path = $$absolute_path($$file, $$PWD)
     }
-    # message("makeLuacManifest.commands += $$alias = $$path")
-    makeLuacManifest.commands += $$alias $$path
+    QRC_DATA += "<file alias=\"$$alias\">$$path</file>"
 }
 
-QMAKE_EXTRA_TARGETS += makeLuacManifest
-PRE_TARGETDEPS += makeLuacManifest
+QRC_DATA += "</qresource>"
+QRC_DATA += "</RCC>"
+
+write_file($$LUA_QRC, QRC_DATA)
