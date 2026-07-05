@@ -4,9 +4,14 @@
 #include "codeview.h"
 #include "linenumberarea.h"
 #include "highlighter.h"
+#include "gotopopup.h"
 #include "opltokenizer.h"
 
+#include <QApplication>
+#include <QClipboard>
 #include <QFont>
+#include <QInputDialog>
+#include <QLatin1String>
 #include <QTextBlock>
 #include <QPainter>
 #include <QScrollBar>
@@ -15,6 +20,7 @@ CodeView::CodeView(QWidget *parent, TokenizerBase* tokenizer)
     : QPlainTextEdit(parent)
     , mMaxBlockId(0)
     , mUseHexLineAddresses(true)
+    , mGotoPopup(nullptr)
 {
     mLineNumberArea = new LineNumberArea(this);
     mHighlighter = new Highlighter(document(), tokenizer);
@@ -225,3 +231,114 @@ void CodeView::toggleBreakpoint()
     mLineNumberArea->update();
     emit breakpointConfigured(mPath, addr, set);
 }
+
+void CodeView::toggleGotoPopup()
+{
+    if (mGotoPopup && mGotoPopup->isVisible()) {
+        hideGotoPopup();
+    } else {
+        showGotoPopup();
+    }
+}
+
+void CodeView::hideGotoPopup()
+{
+    if (mGotoPopup) {
+        mGotoPopup->hide();
+    }
+}
+
+void CodeView::showGotoPopup()
+{
+    if (!mGotoPopup) {
+        mGotoPopup = new GotoPopup(this);
+        connect(mGotoPopup, &GotoPopup::symbolSelected, this, &CodeView::symbolSelected);
+        connect(mGotoPopup, &GotoPopup::addressEntered, this, &CodeView::addressEntered);
+        auto text = toPlainText().toUtf8();
+        QStringList symbolList;
+        OplTokenizer tok;
+        tok.set(OplTokenizer::TokenNone, text.constData());
+        while (true) {
+            tok.skipSpace();
+            int start = tok.offset();
+            auto type = tok.next();
+            int len = tok.offset() - start;
+            if (type == TokenizerBase::TokenNone) {
+                break;
+            }
+            auto token = std::string(text.constData() + start, len);
+            if (type == TokenizerBase::TokenControl && token == "PROC") {
+                tok.skipSpace();
+                start = tok.offset();
+                type = tok.next();
+                if (type == TokenizerBase::TokenIdentifier) {
+                    // Technically the colon is part of the identifier but the tokenizer doesn't bother separating that,
+                    // hence the +1
+                    auto procName = QLatin1String(text.constData() + start, (tok.offset() - start) + 1);
+                    // qDebug("got proc %s", qPrintable(procName));
+                    symbolList.append(procName);
+                    mSymbolToCharOffset[procName] = start;
+                }
+            }
+        }
+        mGotoPopup->setSymbols(symbolList);
+    }
+    QRect winRect = geometry();
+    QSize sz = mGotoPopup->sizeHint();
+    mGotoPopup->setGeometry(winRect.center().x() - sz.width() / 2, winRect.top(), sz.width(), sz.height());
+    mGotoPopup->show();
+    mGotoPopup->setFocus(Qt::PopupFocusReason);
+}
+
+void CodeView::symbolSelected(const QString& symbol)
+{
+    auto offset = mSymbolToCharOffset[symbol];
+    auto cursor = QTextCursor(document());
+    // There is a hack here, offset is a byte offset in UTF-8, whereas setPosition is in QChars.
+    // It probably matters in some corner case of program strings with non-ASCII in them...
+    cursor.setPosition(offset);
+    setTextCursor(cursor);
+    centerCursor();
+    mGotoPopup->hide();
+    setFocus();
+}
+
+void CodeView::addressEntered(uint32_t address)
+{
+    scrollToAddress(address, false);
+    mGotoPopup->hide();
+    setFocus();
+}
+
+QString CodeView::showFindDialog(const QString& initialText)
+{
+    bool ok = false;
+    auto text = QInputDialog::getText(this, "Find", "Search for text:", QLineEdit::Normal, initialText, &ok);
+    if (ok) {
+        if (!text.isEmpty()) {
+            find(text);
+        }
+    }
+    return text;
+}
+
+void CodeView::findNext(const QString& text)
+{
+    if (!text.isEmpty()) {
+        find(text);
+    }
+}
+
+void CodeView::findPrevious(const QString& text)
+{
+    if (!text.isEmpty()) {
+        find(text, QTextDocument::FindBackward);
+    }
+}
+
+void CodeView::hideEvent(QHideEvent *event)
+{
+    Q_UNUSED(event);
+    hideGotoPopup();
+}
+

@@ -9,6 +9,7 @@
 #include <QVector>
 #include <optional>
 
+class GotoPopup;
 class Highlighter;
 class TokenizerBase;
 
@@ -32,8 +33,16 @@ public:
 
 public slots:
     void toggleBreakpoint();
+    void toggleGotoPopup();
+    void showGotoPopup();
+    void hideGotoPopup();
+    QString showFindDialog(const QString& text);
+    void findNext(const QString& text);
+    void findPrevious(const QString& text);
 
 private slots:
+    void symbolSelected(const QString& symbol);
+    void addressEntered(uint32_t address);
     void updateLineNumberAreaWidth();
     void updateLineNumberArea(const QRect &rect, int dy);
 
@@ -42,6 +51,7 @@ signals:
 
 protected:
     void resizeEvent(QResizeEvent *e) override;
+    void hideEvent(QHideEvent *event) override;
 
 private:
     const QTextCursor cursorForAddress(uint32_t address) const;
@@ -58,6 +68,9 @@ private:
     QVector<uint32_t> mBlockAddrs;
     QSet<uint32_t> mBreakpoints;
     std::optional<uint32_t> mBreak;
+    GotoPopup* mGotoPopup;
+    QMap<QString, int> mSymbolToCharOffset;
+
 };
 
 #endif // CODEVIEW_H

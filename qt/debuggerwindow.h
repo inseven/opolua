@@ -38,10 +38,16 @@ private slots:
     void stepOver();
     void setCurrentEditor(const QString& module);
     void gotoAddressSlot(const QString& module, uint32_t address);
+    void gotoSymbol();
+    void showFindDialog();
+    void findNext();
+    void findPrevious();
+    void useSelectionForFind();
     void toggleBreak();
     void variableRenamed(const QString& module, const QString& proc, const QString& oldName, const QString& newName);
     void exportBitmap();
     void highlightWindow(int drawableId);
+    void copy();
 
 private:
     CodeView* currentCodeView() const;
@@ -51,6 +57,8 @@ private:
     DrawableView* currentDrawableView() const;
     DrawableView* getDrawableView(const opl::Drawable& drawable);
     void setCurrentDrawable(const opl::Drawable& drawable);
+    QString getSearchText() const;
+    void setSearchText(const QString& text);
 
 private:
     Ui::DebuggerWindow *ui;
@@ -69,6 +77,9 @@ private:
     std::optional<SingleStepState> mSteppingOver;
     std::optional<opl::ProgramInfo> mPauseState;
     QMap<QString, QVector<opl::NameOverride>> mNameOverrides; // Map key is module name same as for mCodeViews
+#ifndef Q_OS_MAC
+    QString mSearchText;
+#endif
 };
 
 #endif // DEBUGGERWINDOW_H

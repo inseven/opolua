@@ -439,7 +439,7 @@ void OplScreenWidget::clock(int drawableId, const OplScreen::ClockInfo* info)
             win->mClock = new ClockWidget(win, getRuntime());
             win->mClock->setScale(mScale);
             // God DAMN that cast is nasty. Needed because QWidget has overloads of update making the slot kinda
-            // broken.
+            // broken. In Qt 6 we can use qOverload<> but that's not available in Qt 5...
             connect(this, &OplScreenWidget::clockTimeChanged, win->mClock, static_cast<void(QWidget::*)()>(&QWidget::update));
         } else if (win->mClock && !info) {
             win->mClock->hide();
