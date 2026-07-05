@@ -3,6 +3,7 @@
 
 #include "debuggerwindow.h"
 
+#include <QClipboard>
 #include <QFileDialog>
 #include <QPlainTextEdit>
 
@@ -36,8 +37,12 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     ui->windowFocusEnabled->setChecked(!runtime->ignoreFocusEvents());
     ui->actionExportBitmap->setVisible(false);
 #ifdef Q_OS_MAC
+    ui->actionDebugLog->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+D", nullptr));
     ui->actionRestart->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+R", nullptr));
     ui->actionClose->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+W", nullptr));
+    ui->actionGotoSymbol->setShortcut(QCoreApplication::translate("DebuggerWindow", "Meta+G", nullptr));
+    ui->actionFindNext->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+G", nullptr));
+    ui->actionFindPrevious->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+Shift+G", nullptr));
 #endif
     connect(ui->actionAbout, &QAction::triggered, gApp, &OplApplication::showAboutWindow);
     connect(ui->actionClose, &QAction::triggered, gApp, &OplApplication::closeActiveWindow);
@@ -53,7 +58,14 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     connect(ui->breakOnError, &QAction::triggered, this, &DebuggerWindow::toggleBreakOnError);
     connect(ui->windowFocusEnabled, &QAction::triggered, this, &DebuggerWindow::toggleWindowFocusEnabled);
     connect(ui->stackView, &StackView::gotoAddress, this, &DebuggerWindow::gotoAddressSlot);
+    connect(ui->actionDebugLog, &QAction::triggered, gApp, &OplApplication::showLogWindow);
     connect(ui->actionExportBitmap, &QAction::triggered, this, &DebuggerWindow::exportBitmap);
+    connect(ui->actionGotoSymbol, &QAction::triggered, this, &DebuggerWindow::gotoSymbol);
+    connect(ui->actionCopy, &QAction::triggered, this, &DebuggerWindow::copy);
+    connect(ui->actionFind, &QAction::triggered, this, &DebuggerWindow::showFindDialog);
+    connect(ui->actionFindNext, &QAction::triggered, this, &DebuggerWindow::findNext);
+    connect(ui->actionFindPrevious, &QAction::triggered, this, &DebuggerWindow::findPrevious);
+    connect(ui->actionUseSelectionForFind, &QAction::triggered, this, &DebuggerWindow::useSelectionForFind);
 
     // Dock widgets
 
@@ -319,6 +331,7 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
         }
         view->setPath(path);
         view->setReadOnly(true);
+        view->moveCursor(QTextCursor::Start);
         view->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
         connect(view, &CodeView::breakpointConfigured, mRuntime, &OplRuntime::configureBreakpoint);
         mCodeViews[path] = view;
@@ -347,6 +360,11 @@ void DebuggerWindow::setCurrentEditor(const QString& module)
     setWindowTitle(QString("%1 - OpoLua Debugger").arg(QFileInfo(module).fileName()));
     ui->actionToggleBreak->setEnabled(!module.endsWith(".lua"));
     ui->actionExportBitmap->setVisible(false);
+    ui->actionGotoSymbol->setEnabled(true);
+    ui->actionFind->setEnabled(true);
+    ui->actionFindNext->setEnabled(true);
+    ui->actionFindPrevious->setEnabled(true);
+    ui->actionUseSelectionForFind->setEnabled(true);
     ed->setFocus();
 }
 
@@ -361,6 +379,11 @@ void DebuggerWindow::setCurrentDrawable(const opl::Drawable& drawable)
         .arg(drawable.isWindow ? "Window" : "Bitmap")
         .arg(drawable.id));
     ui->actionExportBitmap->setVisible(true);
+    ui->actionGotoSymbol->setEnabled(false);
+    ui->actionFind->setEnabled(false);
+    ui->actionFindNext->setEnabled(false);
+    ui->actionFindPrevious->setEnabled(false);
+    ui->actionUseSelectionForFind->setEnabled(false);
 }
 
 void DebuggerWindow::gotoAddressSlot(const QString& module, uint32_t address)
@@ -485,4 +508,82 @@ void DebuggerWindow::exportBitmap()
     if (!img.save(path, "PNG")) {
         qWarning("Failed to save image");
     }
+}
+
+void DebuggerWindow::gotoSymbol()
+{
+    auto codeview = currentCodeView();
+    if (codeview) {
+        codeview->toggleGotoPopup();
+    }    
+}
+
+void DebuggerWindow::showFindDialog()
+{
+    auto codeview = currentCodeView();
+    if (codeview) {
+        codeview->setFocus();
+        auto text = codeview->showFindDialog(getSearchText());
+        if (!text.isEmpty()) {
+            setSearchText(text);
+        }
+    }    
+}
+
+void DebuggerWindow::copy()
+{
+    auto codeview = currentCodeView();
+    if (codeview) {
+        codeview->copy();
+    } else {
+        auto view = currentDrawableView();
+        if (view) {
+            qApp->clipboard()->setImage(view->getImage());
+        }
+    }
+}
+
+void DebuggerWindow::findPrevious()
+{
+    auto codeview = currentCodeView();
+    if (codeview) {
+        codeview->findPrevious(getSearchText());
+    }
+}
+
+void DebuggerWindow::findNext()
+{
+    auto codeview = currentCodeView();
+    if (codeview) {
+        codeview->findNext(getSearchText());
+    }
+}
+
+void DebuggerWindow::useSelectionForFind()
+{
+    auto codeview = currentCodeView();
+    if (codeview) {
+        auto selection = codeview->textCursor().selectedText();
+        if (!selection.isEmpty()) {
+            setSearchText(selection.replace(QChar(0x2029), "\n"));
+        }
+    }
+}
+
+void DebuggerWindow::setSearchText(const QString& text)
+{
+#ifdef Q_OS_MAC
+    qApp->clipboard()->setText(text, QClipboard::FindBuffer);
+#else
+    mSearchText = text;
+#endif
+}
+
+QString DebuggerWindow::getSearchText() const
+{
+#ifdef Q_OS_MAC
+    return qApp->clipboard()->text(QClipboard::FindBuffer);
+#else
+    return mSearchText;
+#endif
 }

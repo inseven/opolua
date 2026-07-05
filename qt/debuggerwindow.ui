@@ -36,8 +36,11 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionClose"/>
+    <addaction name="actionDebugLog"/>
     <addaction name="actionExportBitmap"/>
+    <addaction name="actionGotoSymbol"/>
+    <addaction name="separator"/>
+    <addaction name="actionClose"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -63,7 +66,20 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionCopy"/>
+    <addaction name="actionSelectAll"/>
+    <addaction name="separator"/>
+    <addaction name="actionFind"/>
+    <addaction name="actionFindNext"/>
+    <addaction name="actionFindPrevious"/>
+    <addaction name="actionUseSelectionForFind"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuDebug"/>
    <addaction name="menuWindow"/>
   </widget>
@@ -113,6 +129,7 @@
    <addaction name="actionStepOver"/>
    <addaction name="actionStepInto"/>
    <addaction name="actionStepOut"/>
+   <addaction name="actionGotoSymbol"/>
    <addaction name="actionExportBitmap"/>
   </widget>
   <widget class="QDockWidget" name="modulesDockWidget">
@@ -310,7 +327,10 @@
     <string>Break on Error</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+E</string>
+    <string>Ctrl+B</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
   <action name="windowFocusEnabled">
@@ -321,7 +341,10 @@
     <string>Send Window Focus Events</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+F</string>
+    <string>Ctrl+N</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
   <action name="actionToggleBreak">
@@ -341,6 +364,9 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+U</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
   <action name="actionExportBitmap">
@@ -363,6 +389,91 @@
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::AboutRole</enum>
+   </property>
+  </action>
+  <action name="actionDebugLog">
+   <property name="text">
+    <string>Open Debug Log</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+D</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGotoSymbol">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::SystemSearch"/>
+   </property>
+   <property name="text">
+    <string>Go To...</string>
+   </property>
+   <property name="toolTip">
+    <string>Go To Symbol</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionFind">
+   <property name="text">
+    <string>Find...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionUseSelectionForFind">
+   <property name="text">
+    <string>Use Selection for Find</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionSelectAll">
+   <property name="text">
+    <string>Select All</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionFindNext">
+   <property name="text">
+    <string>Find Next</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionFindPrevious">
+   <property name="text">
+    <string>Find Previous</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F3</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

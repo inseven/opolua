@@ -63,6 +63,7 @@ HEADERS += \
     drawablestreewidget.h \
     drawableview.h \
     filesystem.h \
+    gotopopup.h \
     highlighter.h \
     linenumberarea.h \
     logwindow.h \
@@ -78,7 +79,8 @@ HEADERS += \
     opltokenizer.h \
     stackmodel.h \
     stackview.h \
-    tokenizer.h
+    tokenizer.h \
+    updownlineedit.h
 
 SOURCES += \
     aboutwindow.cpp \
@@ -88,6 +90,7 @@ SOURCES += \
     drawablestreewidget.cpp \
     drawableview.cpp \
     filesystem.cpp \
+    gotopopup.cpp \
     highlighter.cpp \
     linenumberarea.cpp \
     logwindow.cpp \
@@ -104,6 +107,7 @@ SOURCES += \
     opltokenizer.cpp \
     stackmodel.cpp \
     stackview.cpp \
+    updownlineedit.cpp \
     ../core/shared/src/oplfns.c
 
 INCLUDEPATH += ../core/shared/include ../dependencies/LuaSwift/Sources/CLua/lua
@@ -111,6 +115,7 @@ INCLUDEPATH += ../core/shared/include ../dependencies/LuaSwift/Sources/CLua/lua
 FORMS += \
     aboutwindow.ui \
     debuggerwindow.ui \
+    gotopopup.ui \
     logwindow.ui \
     mainwindow.ui
 
