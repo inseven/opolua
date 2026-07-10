@@ -38,3 +38,8 @@ for attachment in "$@"
 do
     gh release upload "$CHANGES_TAG" "$attachment"
 done
+
+# Signal to the CI job that a release was successfully created.
+if [ -n "${GITHUB_OUTPUT:-}" ] ; then
+    echo "released=true" >> "$GITHUB_OUTPUT"
+fi
