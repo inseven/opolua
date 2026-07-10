@@ -112,6 +112,12 @@ jobs:
 
         # Ubuntu.
 
+        - name: ubuntu-26.04-amd64
+          os: ubuntu-26.04
+
+        - name: ubuntu-26.04-arm64
+          os: ubuntu-26.04-arm
+
         - name: ubuntu-25.10-amd64
           os: ubuntu-24.04
           container: ubuntu:questing

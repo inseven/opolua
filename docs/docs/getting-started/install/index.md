@@ -17,7 +17,7 @@ Download from [GitHub](https://github.com/inseven/opolua/releases/tag/{{ site.en
 
 ## Debian and Ubuntu
 
-There are currently pre-built amd64 and arm64 binaries for Ubuntu 24.04 (Noble Numbat), 25.04 (Plucky Puffin), 25.10 (Questing Quokka), and Debian 13 (Trixie).
+There are currently pre-built amd64 and arm64 binaries for Ubuntu 24.04 (Noble Numbat), 25.04 (Plucky Puffin), 25.10 (Questing Quokka), 26.04 (Resolute Raccoon), and Debian 13 (Trixie).
 
 Install from our apt repository:
 
