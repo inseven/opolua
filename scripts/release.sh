@@ -111,6 +111,38 @@ cd "$BUILD_DIRECTORY"
 
 ## Ubuntu.
 
+QT_UBUNTU_2604_ARM64_NAME="opolua-${VERSION_NUMBER}-resolute${BUILD_NUMBER}_arm64.deb"
+QT_UBUNTU_2604_ARM64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2604_ARM64_NAME"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-26.04-arm64/opolua.deb" "$QT_UBUNTU_2604_ARM64_PATH"
+
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_UBUNTU_2604_ARM64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os ubuntu \
+    --supports-version 26.04 \
+    --supports-codename resolute \
+    --supports-architecture arm64
+
+QT_UBUNTU_2604_AMD64_NAME="opolua-${VERSION_NUMBER}-resolute${BUILD_NUMBER}_amd64.deb"
+QT_UBUNTU_2604_AMD64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2604_AMD64_NAME"
+cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-26.04-amd64/opolua.deb" "$QT_UBUNTU_2604_AMD64_PATH"
+
+build-tools add-artifact manifest.json \
+    --project opolua-qt \
+    --version "$VERSION_NUMBER" \
+    --build-number "$BUILD_NUMBER" \
+    --path "$QT_UBUNTU_2604_AMD64_NAME" \
+    --format deb \
+    --git-sha "$GIT_SHA" \
+    --supports-os ubuntu \
+    --supports-version 26.04 \
+    --supports-codename resolute \
+    --supports-architecture amd64
+
 QT_UBUNTU_2404_ARM64_NAME="opolua-${VERSION_NUMBER}-noble${BUILD_NUMBER}_arm64.deb"
 QT_UBUNTU_2404_ARM64_PATH="$BUILD_DIRECTORY/$QT_UBUNTU_2404_ARM64_NAME"
 cp "$ARTIFACTS_DIRECTORY/opolua-qt-ubuntu-24.04-arm64/opolua.deb" "$QT_UBUNTU_2404_ARM64_PATH"
@@ -330,6 +362,7 @@ if $RELEASE ; then
         "$QT_MACOS_PATH" \
         "$QT_WINDOWS_PATH" \
         "$BUILD_DIRECTORY/manifest.json" \
+        "$QT_UBUNTU_2604_ARM64_PATH" "$QT_UBUNTU_2604_AMD64_PATH" \
         "$QT_UBUNTU_2404_ARM64_PATH" "$QT_UBUNTU_2404_AMD64_PATH" \
         "$QT_UBUNTU_2504_ARM64_PATH" "$QT_UBUNTU_2504_AMD64_PATH" \
         "$QT_UBUNTU_2510_ARM64_PATH" "$QT_UBUNTU_2510_AMD64_PATH" \
