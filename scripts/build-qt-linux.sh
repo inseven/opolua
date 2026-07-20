@@ -51,6 +51,7 @@ mkdir -p "$ARTIFACTS_DIRECTORY"
 cd "$BUILD_DIRECTORY"
 qmake6 "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ../opolua.pro
 make
+make check
 make install INSTALL_ROOT="$INSTALL_DIRECTORY"
 
 # Package.

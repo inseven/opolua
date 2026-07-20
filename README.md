@@ -43,7 +43,7 @@ sudo make install
 On mac:
 
 ```
-brew install qt@5
+brew install qt@6
 git clone https://github.com/inseven/opolua.git
 cd opolua/qt
 git submodule update --init --recursive
@@ -51,7 +51,7 @@ qmake opolua.pro
 make
 ```
 
-Both Qt 5 and Qt 6 are supported and in theory should run on all platforms supported by Qt. Only macOS, Linux and Windows are tested, however.
+Both Qt 5 and Qt 6 are supported and in theory should run on all platforms supported by Qt. Only macOS, Linux and Windows are tested, however. Qt 6 is recommended on mac due to better OS integration. 6.11.1 is required to compile (any Qt project) on latest macOS.
 
 ## SIBO/EPOC16/Series 3 support
 

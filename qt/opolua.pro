@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 TEMPLATE = subdirs
-SUBDIRS = qluac luafiles app
+SUBDIRS = qluac luafiles app test
 
 # These aren't actually in subdirectories but Qt doesn't have any nicer syntax for this.
 qluac.file = qluac.pro
@@ -25,3 +25,6 @@ luafiles.depends = qluac
 
 app.file = app.pro
 app.depends = luafiles
+
+test.file = test.pro
+test.depends = luafiles

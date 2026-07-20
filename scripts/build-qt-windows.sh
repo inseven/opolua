@@ -44,6 +44,7 @@ mkdir -p "$BUILD_DIRECTORY"
 cd "$BUILD_DIRECTORY"
 qmake "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ../opolua.pro
 make
+make check
 
 # Package the app.
 # We use `tar` here as `zip` isn't installed on Windows runners.

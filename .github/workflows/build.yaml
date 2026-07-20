@@ -299,9 +299,6 @@ jobs:
         version: '6.11.1'
         modules: 'qtmultimedia qt5compat'
 
-    - name: Test Lua
-      run: scripts/test.sh
-
     - name: Build, test, and release
       env:
         DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64: ${{ secrets.PERSONAL_DEVELOPER_ID_APPLICATION_CERTIFICATE_BASE64 }}

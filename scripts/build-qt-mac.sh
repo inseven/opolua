@@ -84,6 +84,7 @@ BUILD_NUMBER=${BUILD_NUMBER:-0}
 cd "$BUILD_DIRECTORY"
 qmake "VERSION=$VERSION_NUMBER" "BUILD_NUMBER=$BUILD_NUMBER" ../opolua.pro
 make
+make check
 
 # Rename the app.
 mv "OpoLua.app" "OpoLua Qt.app"
