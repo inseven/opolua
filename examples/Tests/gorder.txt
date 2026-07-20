@@ -1,27 +1,63 @@
 INCLUDE "const.oph"
 
+REM DECLARE EXTERNAL
+
+EXTERNAL updateWindows:
+REM this is needed to make sure id% is typed correctly when called with a long integer argument from ev&
+EXTERNAL getWindowIndex%:(id%)
+EXTERNAL checkWindowDrag:(i%, gx%, gy%)
+
 CONST numWin% = 5
+
+PROC tbar:
+    LOADM "Z:\System\OPL\TOOLBAR.OPO"
+    TBarLink:("main")
+ENDP
 
 PROC main:
     GLOBAL ids%(numWin%)
-    LOCAL info%(10), i%, k%, current%
+    LOCAL info%(10), i%, k%, current%, ev&(16), x%, y%
 
     SCREENINFO info%()
     SCREEN info%(3) / 2, info%(4), info%(3) / 2, 1
 
+    TBarInit:("gOrder", gWIDTH, gHEIGHT)
+    TBarShow:
+
     i% = 1
     WHILE i% <= numWin%
-        ids%(i%) = gCREATE(i% * 20, i% * 20 - 5, 100, 100, 1)
+        IF i% = 1 OR i% = 5
+            k% = $410
+        ELSE
+            k% = 0
+        ENDIF
+        ids%(i%) = gCREATE(i% * 20, i% * 20 - 5, 100, 100, 1, k%)
         i% = i% + 1
     ENDWH
     current% = 1
     updateWindows:
 
     WHILE 1
-        k% = GET
-        IF k% > $30 AND k% <= $30 + numWin%
-            current% = k% - $30
-            PRINT "Selecting window", current%
+        GETEVENT32 ev&()
+        k% = ev&(KEvAType%)
+
+        IF k% = KEvPtr&
+            x% = ev&(KEvAPtrPositionX%)
+            y% = ev&(KEvAPtrPositionY%)
+            i% = getWindowIndex%:(ev&(KEvAPtrWindowId%))
+            IF i% <> 0
+                IF i% <> current%
+                    current% = i%
+                    PRINT "Selecting window", current%
+                ENDIF
+                checkWindowDrag:(i%, ev&(KEvAPtrScreenPosX%), ev&(KEvAPtrScreenPosY%))
+            ENDIF
+        ELSEIF k% > $30 AND k% <= $30 + numWin%
+            i% = k% - $30
+            IF i% <> current%
+                current% = i%
+                PRINT "Selecting window", current%
+            ENDIF
         ELSEIF k% = %f
             PRINT "Moving window", current%, "to the front"
             gORDER ids%(current%), 1
@@ -42,13 +78,24 @@ PROC main:
             updateWindows:        
         ELSEIF k% = %i
             gIPRINT "Info print!", 0
-        ELSE
+        ELSEIF k% = %s
+            PRINT "Making window", current%, "visible"
+            gUSE ids%(current%)
+            gVISIBLE ON
+        ELSEIF k% = %h
+            PRINT "Making window", current%, "invisible"
+            gUSE ids%(current%)
+            gVISIBLE OFF
+        REM ELSEIF k% = KEvKeyDown& OR k% = KEvKeyUp& OR k% = KEvPtrEnter& OR k% = KEvPtrExit&
+            REM don't care
+        ELSEIF k% AND KEvNotKeyMask& = 0
             PRINT "Key", k%
         ENDIF
     ENDWH
 ENDP
 
 PROC updateWindows:
+    EXTERNAL ids%()
     LOCAL i%, j%, r%, orig%
     i% = 1
     WHILE i% <= numWin%
@@ -66,5 +113,38 @@ PROC updateWindows:
         gAT 0, 0
         gBOX 100, 100
         i% = i% + 1
+    ENDWH
+ENDP
+
+PROC getWindowIndex%:(id%)
+    EXTERNAL ids%()
+    LOCAL i%
+    i% = 1
+    WHILE i% <= numWin%
+        IF ids%(i%) = id%
+            RETURN i%
+        ENDIF
+        i% = i% + 1
+    ENDWH
+    RETURN 0
+ENDP
+
+PROC checkWindowDrag:(i%, gx%, gy%)
+    EXTERNAL ids%()
+    LOCAL ev&(16), k&, dx%, dy%
+    gUSE ids%(i%)
+    REM dx and dy are window coords of the press event (which in screen coords is gx%, gy%)
+    dx% = gx% - gORIGINX
+    dy% = gy% - gORIGINY
+    REM PRINT "gx="; gx%, "gy="; gy%, "dx="; dx%, "dy=", dy%
+    WHILE 1
+        GETEVENT32 ev&()
+        k& = ev&(KEvAType%)
+        IF k& = KEvPtr& AND ev&(KEvAPtrType%) = KEvPtrPenUp&
+            RETURN
+        ELSEIF k& = KEvPtr&
+            REM dx% = ev&(KEvAPtrScreenPosX%) - gx%
+            gSETWIN ev&(KEvAPtrScreenPosX%) - dx%, ev&(KEvAPtrScreenPosY%) - dy%
+        ENDIF
     ENDWH
 ENDP
