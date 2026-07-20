@@ -54,7 +54,6 @@ LUA_FILES = \
     ../core/src/sound.lua \
     ../core/src/stack.lua \
     ../core/src/struct.lua \
-    ../core/src/unittest.lua \
     ../core/src/includes/bmp_oxh.lua \
     ../core/src/includes/const_oph.lua \
     ../core/src/includes/date_oxh.lua \
@@ -88,7 +87,13 @@ LUA_FILES = \
     ../bin/recognize.lua \
     ../bin/runopo.lua
 
+LUA_TEST_FILES = \
+    ../core/src/tcompiler.lua \
+    ../core/src/unittest.lua
+
 LUA_QRC = $$OUT_PWD/luafiles.qrc
+
+LUA_TEST_QRC = $$OUT_PWD/luafiles_test.qrc
 
 isEmpty(USE_LUAC) {
     USE_LUAC = 1
@@ -106,7 +111,8 @@ defineReplace(getLuaAlias) {
 equals(USE_LUAC, 1) {
     # Compile LUA_FILES
     message("Using luac")
-    compilelua.input = LUA_FILES
+    ALL_LUA_FILES = $$LUA_FILES $$LUA_TEST_FILES
+    compilelua.input = ALL_LUA_FILES
     compilelua.output = ${QMAKE_FILE_BASE}.luac
     compilelua.commands = $$OUT_PWD/qluac compile ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT} /core/src/= /bin/=
     compilelua.CONFIG += no_link target_predeps
@@ -116,8 +122,12 @@ equals(USE_LUAC, 1) {
 }
 
 # Generate the .qrc resource file for the compiled .luac files (or the .lua files)
-QRC_DATA = "<!DOCTYPE RCC><RCC version=\"1.0\">"
-QRC_DATA += "<qresource prefix=\"/lua\">"
+QRC_DATA_PREFIX = "<!DOCTYPE RCC><RCC version=\"1.0\">"
+QRC_DATA_PREFIX += "<qresource prefix=\"/lua\">"
+QRC_DATA_SUFFIX = "</qresource>"
+QRC_DATA_SUFFIX += "</RCC>"
+
+QRC_DATA = $$QRC_DATA_PREFIX
 
 for (file, LUA_FILES) {
     alias = $$getLuaAlias($$file)
@@ -129,7 +139,20 @@ for (file, LUA_FILES) {
     QRC_DATA += "<file alias=\"$$alias\">$$path</file>"
 }
 
-QRC_DATA += "</qresource>"
-QRC_DATA += "</RCC>"
+QRC_DATA += $$QRC_DATA_SUFFIX
+
+# And do same for test files
+QRC_TEST_DATA = $$QRC_DATA_PREFIX
+for (file, LUA_TEST_FILES) {
+    alias = $$getLuaAlias($$file)
+    equals(USE_LUAC, 1) {
+        path = $$OUT_PWD/$$basename(file)c
+    } else {
+        path = $$absolute_path($$file, $$PWD)
+    }
+    QRC_TEST_DATA += "<file alias=\"$$alias\">$$path</file>"
+}
+QRC_TEST_DATA += $$QRC_DATA_SUFFIX
 
 write_file($$LUA_QRC, QRC_DATA)
+write_file($$LUA_TEST_QRC, QRC_TEST_DATA)
