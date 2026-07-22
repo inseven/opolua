@@ -1,12 +1,15 @@
 [submodule "scripts/changes"]
 	path = scripts/changes
 	url = https://github.com/jbmorley/changes.git
+	branch = main
 [submodule "scripts/build-tools"]
 	path = scripts/build-tools
 	url = https://github.com/jbmorley/build-tools.git
+	branch = main
 [submodule "diligence"]
 	path = ios/diligence
 	url = https://github.com/inseven/diligence.git
+	branch = main
 [submodule "LuaSwift"]
 	path = dependencies/LuaSwift
 	url = https://github.com/tomsci/LuaSwift.git
