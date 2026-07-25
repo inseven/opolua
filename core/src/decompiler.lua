@@ -1331,7 +1331,7 @@ function decompileProc(proc, options)
         elseif op == "AndLong" then
             pushBinaryExpr(ELong, "AND")
         elseif op == "AndFloat" then
-            pushBinaryExpr(EReal, "AND")
+            pushBinaryExpr(EReal, "AND", EWord)
         elseif op == "StackByteAsLong" then
             pushValue(location, ELong, "%d", ips8())
         elseif op == "OrInt" then
