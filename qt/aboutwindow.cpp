@@ -19,7 +19,9 @@
 #include "aboutwindow.h"
 #include "ui_aboutwindow.h"
 
+#include <QDateTime>
 #include <QDesktopServices>
+#include <QTimeZone>
 #include <QUrl>
 
 #define STR(x) #x
@@ -30,7 +32,36 @@ AboutWindow::AboutWindow(QWidget *parent)
     , ui(new Ui::AboutWindow)
 {
     ui->setupUi(this);
-    ui->versionLabel->setText("OpoLua v" QUOTE(OPOLUA_VERSION));
+    setAttribute(Qt::WA_DeleteOnClose);
+
+    // OPOLUA_BUILD_NUM is an 18 char string yyMMddhhmmss12345678 being a 10-digit datetime and the last 8
+    // digits are the decimal representation of the 6-hex-digit commit SHA
+    auto build = QString::fromLatin1(QUOTE(OPOLUA_BUILD_NUM));
+    auto url = QString::fromLatin1("-");
+    auto formattedDate = QString::fromLatin1("-");
+    if (build.length() == 18) {
+        auto datestr = build.left(10);
+        auto sha = build.right(8);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+        auto date = QDateTime::fromString(datestr, "yyMMddHHmm", 2000);
+#else
+        auto date = QDateTime::fromString(datestr, "yyMMddHHmm");
+        date = date.addYears(100);
+#endif
+        date.setTimeZone(QTimeZone::utc());
+        formattedDate = date.toString();
+
+        url = QString("<a href=\"https://github.com/inseven/opolua/commit/%1\">%1</a>")
+            .arg(sha.toInt(), 6, 16, QLatin1Char('0'));
+    }
+
+    ui->text->setText(ui->text->text()
+        .arg(QUOTE(OPOLUA_VERSION))
+        .arg(build)
+        .arg(formattedDate)
+        .arg(url)
+    );
+
     connect(ui->aboutQtButton, &QPushButton::clicked, qApp, &QApplication::aboutQt);
     connect(ui->websiteButton, &QPushButton::clicked, this, [] {
         QDesktopServices::openUrl(QUrl("https://opolua.org"));

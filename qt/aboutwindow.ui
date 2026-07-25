@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>384</width>
-    <height>364</height>
+    <width>476</width>
+    <height>428</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,9 +21,9 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="sizeConstraint">
-    <enum>QLayout::SetFixedSize</enum>
+    <enum>QLayout::SizeConstraint::SetFixedSize</enum>
    </property>
-   <item alignment="Qt::AlignHCenter">
+   <item alignment="Qt::AlignmentFlag::AlignHCenter">
     <widget class="QLabel" name="icon">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -49,31 +49,18 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="versionLabel">
-     <property name="font">
-      <font>
-       <pointsize>18</pointsize>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>OpoLua</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="textInteractionFlags">
-      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="text">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Copyright © 2021-2026 Jason Morley, Tom Sutcliffe&lt;/p&gt;&lt;p&gt;Thanks:&lt;br/&gt;Fabrice Cappaert&lt;br/&gt;Lukas Fittl&lt;br/&gt;Sara Frederixon&lt;br/&gt;Sarah Barbour&lt;br/&gt;Shawn Leedy&lt;/p&gt;&lt;p&gt;OpoLua (Qt version) uses the following components:&lt;/p&gt;&lt;p&gt;Lua Copyright © 1994–2025 Lua.org, PUC-Rio.&lt;br/&gt;Qt Copyright © The Qt Company Ltd. and other contributors&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; font-weight:700;&quot;&gt;OpoLua v%1&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Copyright © 2021-2026 Jason Morley, Tom Sutcliffe&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Build id&lt;/span&gt;: %2&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Build date&lt;/span&gt;: %3&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Commit hash&lt;/span&gt;: %4&lt;/p&gt;&lt;p&gt;Thanks:&lt;br/&gt;Fabrice Cappaert&lt;br/&gt;Lukas Fittl&lt;br/&gt;Sara Frederixon&lt;br/&gt;Sarah Barbour&lt;br/&gt;Shawn Leedy&lt;/p&gt;&lt;p&gt;OpoLua (Qt version) uses the following components:&lt;/p&gt;&lt;p&gt;Lua Copyright © 1994–2025 Lua.org, PUC-Rio.&lt;br/&gt;Qt Copyright © The Qt Company Ltd. and other contributors&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::TextFormat::RichText</enum>
+     </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
      </property>
      <property name="textInteractionFlags">
-      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+      <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
      </property>
     </widget>
    </item>
@@ -105,7 +92,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>

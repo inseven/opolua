@@ -5,7 +5,10 @@ QT += testlib
 
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
-CONFIG += testcase no_testcase_installs cmdline sdk_no_version_check
+CONFIG += c++17 testcase no_testcase_installs cmdline
+
+# On mac generally it's _always_ the case that Xcode is more recent than Qt is happy with...
+macx:CONFIG += sdk_no_version_check
 
 TARGET = opolua-unittest
 

@@ -28,11 +28,15 @@ QT += core gui widgets multimedia
 
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
-CONFIG += c++17 sdk_no_version_check
+CONFIG += c++17
 
 !windows:DEFINES += LUA_USE_POSIX
 
 macx {
+
+    # On mac generally it's _always_ the case that Xcode is more recent than Qt is happy with...
+    CONFIG += sdk_no_version_check
+
     TARGET = OpoLua
     QMAKE_APPLICATION_BUNDLE_NAME = "OpoLua"
     plist.input = Info.plist.in
@@ -51,7 +55,7 @@ windows {
     RC_ICONS = "AppIcon.ico"
 }
 
-DEFINES += OPOLUA_VERSION=$$VERSION
+DEFINES += OPOLUA_VERSION=$$VERSION OPOLUA_BUILD_NUM=$$BUILD_NUMBER
 
 HEADERS += \
     aboutwindow.h \
