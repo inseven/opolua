@@ -109,6 +109,9 @@ void OplScreenWidget::setScale(int scale)
     if (mStoppedShadow) {
         mStoppedShadow->resize(sz);
     }
+    if (mShadowOverlay) {
+        mShadowOverlay->resize(sz);
+    }
     updateGeometry();
 }
 
@@ -178,11 +181,9 @@ void OplScreenWidget::closeDrawable(int drawableId)
 {
     auto win = mWindows.value(drawableId, nullptr);
     if (win) {
-        if (win->shadow()) {
-            delete win->shadow();
-        }
         delete win;
         mWindows.remove(drawableId);
+        updateShadows();
     } else {
         auto drawable = mDrawables.value(drawableId, nullptr);
         if (drawable) {
@@ -199,6 +200,11 @@ int OplScreenWidget::createWindow(int drawableId, const QRect& rect, BitmapMode 
     win->setScale(mScale);
     mWindows.insert(drawableId, win);
     mDrawables.insert(drawableId, win);
+    if (mShadowOverlay) {
+        updateShadows();
+    } else {
+        mShadowOverlay = new ShadowOverlay(this);
+    }
     return KErrNone;
 }
 
@@ -224,7 +230,7 @@ int OplScreenWidget::loadPng(int drawableId, const QString& path)
 
 /**
  N.B. In OPL terms position=1 means the front and position=n means the back, whereas child[0] is at the back and
- subviews[n-1] the front.
+ child[n-1] the front.
  */
 int OplScreenWidget::setOrder(int drawableId, int order)
 {
@@ -251,9 +257,7 @@ int OplScreenWidget::setOrder(int drawableId, int order)
         }
         win->stackUnder(children[newPos]);
     }
-    if (win->shadow()) {
-        win->shadow()->stackUnder(win);
-    }
+    updateShadows();
     return KErrNone;
 }
 
@@ -278,9 +282,7 @@ int OplScreenWidget::showWindow(int drawableId, bool flag)
         return KErrDrawNotOpen;
     }
     win->setVisible(flag);
-    if (win->shadow()) {
-        win->shadow()->setVisible(flag);
-    }
+    updateShadows();
     return KErrNone;
 }
 
@@ -307,6 +309,7 @@ int OplScreenWidget::setWindowRect(int drawableId, const QPoint& position, const
     if (size) {
         win->setSize(*size);
     }
+    updateShadows();
     return KErrNone;
 }
 
@@ -722,6 +725,14 @@ QByteArray OplScreenWidget::getImageData(int drawableId, const QRect& rect)
     return result;
 }
 
+void OplScreenWidget::updateShadows()
+{
+    if (mShadowOverlay) {
+        mShadowOverlay->raise();
+        mShadowOverlay->update();
+    }
+}
+
 ////
 
 Drawable::Drawable(int drawableId, const QSize& size, OplScreen::BitmapMode mode)
@@ -996,7 +1007,6 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
     , Drawable(drawableId, rect.size(), mode)
     , mClock(nullptr)
     , mScale(1)
-    , mShadow(nullptr)
     , mShadowSize(shadowSize)
     , mGreyPlane(nullptr)
     , mHighlight(nullptr)
@@ -1005,11 +1015,6 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
     setGeometry(rect);
     if (mode == OplScreen::monochromeWithGreyPlane) {
         mGreyPlane.reset(new Drawable(getId(), Drawable::size(), OplScreen::gray2));
-    }
-    if (mShadowSize) {
-        mShadow = new WindowShadow(screen);
-        mShadow->setGeometry(x() + mShadowSize, y() + mShadowSize, width(), height());
-        mShadow->stackUnder(this);
     }
     update();
 }
@@ -1172,9 +1177,6 @@ void Window::setPos(const QPoint& pos)
     mUnscaledRect.moveTo(pos);
     auto scaledPos = scaledRect().topLeft();
     move(scaledPos); // in QWidget
-    if (mShadow) {
-        mShadow->move(scaledPos.x() + mShadowSize * mScale, scaledPos.y() + mShadowSize * mScale);
-    }
 }
 
 void Window::setSize(const QSize& size)
@@ -1183,9 +1185,6 @@ void Window::setSize(const QSize& size)
     Drawable::setSize(size); // Update image
     auto scaledSize = scaledRect().size();
     resize(scaledSize); // update widget
-    if (mShadow) {
-        mShadow->resize(scaledSize);
-    }
     if (mGreyPlane) {
         mGreyPlane->setSize(size);
     }
@@ -1202,9 +1201,6 @@ void Window::setScale(int scale)
         // Don't call setSize as that will invalidate the Drawable contents
         auto scaled = scaledRect().size();
         resize(scaled);
-        if (mShadow) {
-            mShadow->resize(scaled);
-        }
         if (mClock) {
             mClock->setScale(mScale);
         }
@@ -1311,3 +1307,71 @@ void WindowShadow::paintEvent(QPaintEvent* event)
     QBrush brush(mColor);
     painter.fillRect(event->rect(), brush);
 }
+
+//
+
+ShadowOverlay::ShadowOverlay(QWidget* parent)
+    : QWidget(parent)
+{
+    setAttribute(Qt::WA_TransparentForMouseEvents);
+    setGeometry(0, 0, parent->width(), parent->height());
+    show();
+}
+
+void ShadowOverlay::paintEvent(QPaintEvent* event)
+{
+    // This is the union of everywhere on screen that a shadow should be drawn to.
+    QRegion shadow;
+
+    // This is parts of the screen drawn to by a window above i in the window list (which is updated as we traverse the
+    // list). Occluded areas should not get shadows from windows later down in the order.
+    QRegion occludedi;
+
+    auto screen = qobject_cast<OplScreenWidget*>(parent());
+    const int scale = screen->getScale();
+
+    QList<Window*> windows = screen->findChildren<Window*>();
+    // windows is ordered back-to-front
+    std::reverse(windows.begin(), windows.end());
+    // windows is now ordered front-to-back
+    const int n = windows.count();
+    // For each window, iterate the windows below it and work out where shadows should fall on each window
+    // Note, windows without shadow do not cause shadow depth to increase.
+    for (int i = 0; i < n; i++) {
+        Window& window = *windows[i];
+        const auto shadowSize = window.getShadowSize();
+        QRegion windowRegion(window.geometry());
+        occludedi += windowRegion;
+        if (shadowSize == 0 || !window.isVisible()) {
+            continue;
+        }
+        QRegion occludedj(occludedi);
+        int shadowDepth = 1;
+
+        for (int j = i + 1; j < n; j++) {
+            if (!windows[j]->isVisible()) {
+                continue;
+            }
+            int shadowOffset = shadowSize * scale * shadowDepth;
+            auto jrect = windows[j]->geometry();
+            QRegion winShadowRegion(
+                window.x() + shadowOffset,
+                window.y() + shadowOffset,
+                window.width(),
+                window.height()
+            );
+            auto region = winShadowRegion.subtracted(occludedj).intersected(jrect);
+            shadow |= region;
+            occludedj += jrect;
+            if (windows[j]->getShadowSize()) {
+                shadowDepth++;
+            }
+        }
+    }
+
+    QPainter painter(this);
+    QBrush brush(QColor(128, 128, 128, 128)); // 50% transparent grey
+    painter.setClipRegion(shadow);
+    painter.fillRect(event->rect(), brush);
+}
+

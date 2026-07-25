@@ -380,8 +380,8 @@ function MenuPane.new(x, y, pos, values, selected, cutoutLen)
         textGap = 6
         lineGap = 5 -- 2 pixels space each side of the horizontal line
         shortcutFont = kShortcutFont
-        shadowHeight = 8
-        createFlags = KColorgCreate4GrayMode | KgCreateHasShadow | ((shadowHeight // 2) << 4)
+        shadowHeight = 4
+        createFlags = KColorgCreate4GrayMode | KgCreateHasShadow | ((shadowHeight // 2) << 8)
     end
 
     -- Get required font metrics

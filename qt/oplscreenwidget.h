@@ -44,6 +44,7 @@ class Window;
 class ClockWidget;
 class SpriteWidget;
 class WindowShadow;
+class ShadowOverlay;
 
 struct WindowSprite : public OplScreen::Sprite
 {
@@ -96,6 +97,7 @@ protected:
     void sprite(int drawableId, int spriteId, const Sprite* sprite) override;
     QByteArray peekLine(int drawableId, const QPoint& position, int numPixels, PeekMode mode) override;
     QByteArray getImageData(int drawableId, const QRect& rect) override;
+    void updateShadows();
 
 private slots:
     void audioStateChanged(QAudio::State state);
@@ -123,6 +125,7 @@ private:
     QScopedPointer<QTimer> mSpriteTimer;
     int64_t mLastSpriteTick;
     QScopedPointer<QTimer> mClockTimer;
+    QPointer<ShadowOverlay> mShadowOverlay;
 
     AsyncHandle* mAudioAsync;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -172,7 +175,7 @@ public:
     QPoint getPos() const;
     void setScale(int scale);
     QRect scaledRect() const;
-    WindowShadow* shadow() const { return mShadow; }
+    int getShadowSize() const { return mShadowSize; }
 
     void draw(const OplScreen::DrawCmd& cmd) override;
     void drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect) override;
@@ -233,6 +236,19 @@ protected:
 
 private:
     QColor mColor;
+
+};
+
+class ShadowOverlay : public QWidget
+{
+    Q_OBJECT
+
+public:
+
+    explicit ShadowOverlay(QWidget* parent);
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
 
 };
 
