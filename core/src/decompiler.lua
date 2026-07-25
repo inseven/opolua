@@ -1345,7 +1345,7 @@ function decompileProc(proc, options)
         elseif op == "NotInt" then
             pushUnaryExpr(EWord, "NOT ")
         elseif op == "NotLong" then
-            pushUnaryExpr(ELong, "NOT ", EWord)
+            pushUnaryExpr(ELong, "NOT ")
         elseif op == "NotFloat" then
             pushUnaryExpr(EReal, "NOT ", EWord)
         elseif op == "UnaryMinusInt" then
