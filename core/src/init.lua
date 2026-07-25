@@ -177,6 +177,7 @@ DataTypeSuffix = {
 
 KErrNone = 0
 KErrNotReady = -62
+KErrEvalSyntax = -87 -- Don't know what this is actually called, only used by EVAL
 KStopErr = -999 -- Made this one up
 
 Errors = enum {
@@ -229,6 +230,7 @@ Errors = enum {
     KErrIOCancelled = KErrIOCancelled,
     KErrSyntax = KErrSyntax,
     KOplStructure = KOplStructure,
+    KErrEvalSyntax = KErrEvalSyntax,
     KErrIllegal = KErrIllegal,
     KErrNumArg = KErrNumArg,
     KErrUndef = KErrUndef,

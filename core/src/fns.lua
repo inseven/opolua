@@ -1231,11 +1231,14 @@ function Eval(stack, runtime) -- 0x99
             RETURN %s
         ENDP
         ]], str)
-    local ok, prog = pcall(require("compiler").compile, "evaluateExpression", nil, proc, {})
+    local ver = runtime:getTranslatorVersion()
+    local ok, prog = pcall(require("compiler").compile, "evaluateExpression", nil, proc, {}, false, ver)
     if not ok then
-        error(-87) -- "Syntax error", not sure what the actual constant name should be since it isn't in const.oph...
+        printf("Failed to eval %s\nError: %s\n", str, prog)
+        error(KErrEvalSyntax)
     end
     local proc = assert(require("opofile").parseOpo(prog)[1])
+    proc.module = { name = "EVAL" } -- in case of execution errors, populate enough state to keep error handler happy
     runtime:pushNewFrame(stack, proc, 0)
 end
 
