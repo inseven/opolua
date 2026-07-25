@@ -1051,6 +1051,10 @@ function Runtime:isSeries3()
     return self.iss3
 end
 
+function Runtime:getTranslatorVersion()
+    return self.translatorVersion
+end
+
 -- Returns the datatype for parameters to opcodes that deal with addresses
 -- eg IoSeek's addr parameter is an int on SIBO and a long on ER5
 function Runtime:addressType()
