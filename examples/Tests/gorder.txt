@@ -1,6 +1,7 @@
 INCLUDE "const.oph"
+INCLUDE "toolbar.oph"
 
-REM DECLARE EXTERNAL
+DECLARE EXTERNAL
 
 EXTERNAL updateWindows:
 REM this is needed to make sure id% is typed correctly when called with a long integer argument from ev&
