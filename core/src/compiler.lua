@@ -1472,7 +1472,7 @@ function ProcState:emitExpression(exp, requiredType)
             -- Its a proc call
             local decl = self.procDecls[procName]
             if self.strictExternals then
-                synassert(decl, exp, "Undefined external")
+                synassert(decl, exp, "Undefined external %s:", procName)
             end
             if decl then
                 checkExpressionArguments(exp.args, decl.args, exp)
