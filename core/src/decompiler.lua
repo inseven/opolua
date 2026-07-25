@@ -1527,9 +1527,10 @@ function decompileProc(proc, options)
             addStatement(location, "ESCAPE %s", flag == 0 and "OFF" or "ON")
         elseif op == "Vector" then
             local expr = popExpr(EWord)
+            checkOpenIfs(expr.location)
             local ncases = ip16()
             local vector = openBlock(currentBlock, nil, nil, "VECTOR", "VECTOR %s", eval(expr))
-            vector.location = location
+            vector.location = expr.location
             for i = 1, ncases do
                 local dest = location + ips16()
                 local label = fmt(era == "sibo" and "v%04X_%d" or "vector_%04X_case_%d", location, i)
