@@ -55,6 +55,7 @@ LUA_FILES = \
     ../core/src/stack.lua \
     ../core/src/struct.lua \
     ../core/src/includes/bmp_oxh.lua \
+    ../core/src/includes/buffer_oxh.lua \
     ../core/src/includes/const_oph.lua \
     ../core/src/includes/date_oxh.lua \
     ../core/src/includes/dbase_oxh.lua \
@@ -66,6 +67,7 @@ LUA_FILES = \
     ../core/src/modules/toolbar.lua \
     ../core/src/opx/alarm.lua \
     ../core/src/opx/bmp.lua \
+    ../core/src/opx/buffer.lua \
     ../core/src/opx/date.lua \
     ../core/src/opx/dbase.lua \
     ../core/src/opx/gprinter.lua \
