@@ -52,6 +52,15 @@ class MainThreadEvent;
     } \
     int fn(lua_State* L)
 
+#define DECLARE_MAINTHREAD_IOHANDLER_FN(fn) \
+    static int fn ## _s(lua_State* L) { \
+        auto self = getSelf(L); \
+        return self->call([self, L] { \
+            return self->fn(L); \
+        }); \
+    } \
+    int fn(lua_State* L)
+
 #define IOHANDLER_FN(fn) { #fn, fn ## _s }
 
 enum class Drive : char {
@@ -264,19 +273,19 @@ private:
     DECLARE_IOHANDLER_FN(asyncRequest);
     DECLARE_IOHANDLER_FN(cancelRequest);
     DECLARE_IOHANDLER_FN(checkCompletions);
-    DECLARE_IOHANDLER_FN(createBitmap);
-    DECLARE_IOHANDLER_FN(createWindow);
+    DECLARE_MAINTHREAD_IOHANDLER_FN(createBitmap);
+    DECLARE_MAINTHREAD_IOHANDLER_FN(createWindow);
     DECLARE_IOHANDLER_FN(draw);
     DECLARE_IOHANDLER_FN(debugEvent);
-    DECLARE_IOHANDLER_FN(getConfig);
+    DECLARE_MAINTHREAD_IOHANDLER_FN(getConfig);
     DECLARE_IOHANDLER_FN(getDeviceInfo);
     DECLARE_IOHANDLER_FN(getTime);
-    DECLARE_IOHANDLER_FN(graphicsop);
+    DECLARE_MAINTHREAD_IOHANDLER_FN(graphicsop);
     DECLARE_IOHANDLER_FN(keysDown);
     DECLARE_IOHANDLER_FN(opsync);
-    DECLARE_IOHANDLER_FN(setConfig);
+    DECLARE_MAINTHREAD_IOHANDLER_FN(setConfig);
     DECLARE_IOHANDLER_FN(setEra);
-    DECLARE_IOHANDLER_FN(system);
+    DECLARE_MAINTHREAD_IOHANDLER_FN(system);
     DECLARE_IOHANDLER_FN(testEvent);
     DECLARE_IOHANDLER_FN(textEditor);
     DECLARE_IOHANDLER_FN(utctime);

@@ -929,28 +929,22 @@ int OplRuntime::graphicsop(lua_State* L)
 {
     auto cmd = QString(lua_tostring(L, 1));
     if (cmd == "close") {
-        return call([this, L] {
-            mScreen->closeDrawable(lua_tointeger(L, 2));
-            return 0;
-        });
+        mScreen->closeDrawable(lua_tointeger(L, 2));
+        return 0;
     } else if (cmd == "show") {
-        return call([this, L] {
-            lua_pushinteger(L, mScreen->showWindow(lua_tointeger(L, 2), lua_toboolean(L, 3)));
-            return 1;
-        });
+        lua_pushinteger(L, mScreen->showWindow(lua_tointeger(L, 2), lua_toboolean(L, 3)));
+        return 1;
     } else if (cmd == "setwin") {
-        return call([this, L] {
-            int drawableId = lua_tointeger(L, 2);
-            QPoint pos(lua_tointeger(L, 3), lua_tointeger(L, 4));
-            QSize size;
-            QSize* sizePtr = nullptr;
-            if (!lua_isnil(L, 5)) {
-                size = QSize(lua_tointeger(L, 5), lua_tointeger(L, 6));
-                sizePtr = &size;
-            }
-            lua_pushinteger(L, mScreen->setWindowRect(drawableId, pos, sizePtr));
-            return 1;
-        });
+        int drawableId = lua_tointeger(L, 2);
+        QPoint pos(lua_tointeger(L, 3), lua_tointeger(L, 4));
+        QSize size;
+        QSize* sizePtr = nullptr;
+        if (!lua_isnil(L, 5)) {
+            size = QSize(lua_tointeger(L, 5), lua_tointeger(L, 6));
+            sizePtr = &size;
+        }
+        lua_pushinteger(L, mScreen->setWindowRect(drawableId, pos, sizePtr));
+        return 1;
     } else if (cmd == "order") {
         int drawableId = lua_tointeger(L, 2);
         int pos = qMax((int)lua_tointeger(L, 3), 1);
@@ -973,186 +967,170 @@ int OplRuntime::graphicsop(lua_State* L)
         lua_pushinteger(L, result);
         return 1;
     } else if (cmd == "loadfont") {
-        return call([this, L] {
-            int drawableId = lua_tointeger(L, 2);
-            uint32_t uid = (uint32_t)lua_tointeger(L, 3);
-            OplScreen::FontMetrics metrics{};
-            QString pngPath = getFont(uid, metrics);
-            if (pngPath.isEmpty()) {
-                lua_pushnil(L);
-                lua_pushinteger(L, KErrInvalidArgs);
-                return 2;
-            }
+        int drawableId = lua_tointeger(L, 2);
+        uint32_t uid = (uint32_t)lua_tointeger(L, 3);
+        OplScreen::FontMetrics metrics{};
+        QString pngPath = getFont(uid, metrics);
+        if (pngPath.isEmpty()) {
+            lua_pushnil(L);
+            lua_pushinteger(L, KErrInvalidArgs);
+            return 2;
+        }
 
-            mScreen->loadPng(drawableId, pngPath);
-            lua_newtable(L);
-            setValue(L, "name", metrics.name);
-            SET_INT(L, "height", metrics.height);
-            SET_INT(L, "height", metrics.height);
-            SET_INT(L, "ascent", metrics.ascent);
-            SET_INT(L, "descent", metrics.descent);
-            SET_INT(L, "maxwidth", metrics.maxwidth);
-            lua_createtable(L, 256, 0);
-            for (int i = 0; i < 256; i++) {
-                lua_pushinteger(L, metrics.widths[i]);
-                lua_rawseti(L, -2, i + 1);
-            }
-            lua_setfield(L, -2, "widths");
-            return 1;
-        });
+        mScreen->loadPng(drawableId, pngPath);
+        lua_newtable(L);
+        setValue(L, "name", metrics.name);
+        SET_INT(L, "height", metrics.height);
+        SET_INT(L, "height", metrics.height);
+        SET_INT(L, "ascent", metrics.ascent);
+        SET_INT(L, "descent", metrics.descent);
+        SET_INT(L, "maxwidth", metrics.maxwidth);
+        lua_createtable(L, 256, 0);
+        for (int i = 0; i < 256; i++) {
+            lua_pushinteger(L, metrics.widths[i]);
+            lua_rawseti(L, -2, i + 1);
+        }
+        lua_setfield(L, -2, "widths");
+        return 1;
     } else if (cmd == "giprint") {
-        return call([this, L] {
-            int drawableId = lua_tointeger(L, 2);
-            if (drawableId == 0) {
-                if (mInfoWinId) {
-                    mScreen->showWindow(mInfoWinId, false);
-                }
-                mInfoWinHideTimer.reset();
-                return 0;
-            }
-
-            mInfoWinId = drawableId;
-            mScreen->showWindow(mInfoWinId, true);
-            mInfoWinHideTimer.reset(new QTimer());
-            connect(mInfoWinHideTimer.get(), &QTimer::timeout, this, [this]() {
-                mInfoWinHideTimer.reset();
+        int drawableId = lua_tointeger(L, 2);
+        if (drawableId == 0) {
+            if (mInfoWinId) {
                 mScreen->showWindow(mInfoWinId, false);
-            });
-            mInfoWinHideTimer->setSingleShot(true);
-            mInfoWinHideTimer->setTimerType(Qt::PreciseTimer);
-            mInfoWinHideTimer->start(2000);
-            return 0;
-        });
-    } else if (cmd == "busy") {
-        return call([this, L] {
-            int drawableId = lua_tointeger(L, 2);
-            int delay = lua_tointeger(L, 3);
-            if (drawableId == 0) {
-                if (mBusyWinId) {
-                    mScreen->showWindow(mBusyWinId, false);
-                }
-                mBusyWinShowTimer.reset();
-                return 0;
             }
+            mInfoWinHideTimer.reset();
+            return 0;
+        }
 
-            mBusyWinId = drawableId;
-            mBusyWinShowTimer.reset(new QTimer(this));
-            connect(mBusyWinShowTimer.get(), &QTimer::timeout, this, [this]() {
-                mBusyWinShowTimer.reset();
-                mScreen->showWindow(mBusyWinId, true);
-            });
-            mBusyWinShowTimer->setSingleShot(true);
-            mBusyWinShowTimer->setTimerType(Qt::PreciseTimer);
-            mBusyWinShowTimer->start(delay * 500); // delay is in half-seconds, so convert to milliseconds
-            return 0;
+        mInfoWinId = drawableId;
+        mScreen->showWindow(mInfoWinId, true);
+        mInfoWinHideTimer.reset(new QTimer());
+        connect(mInfoWinHideTimer.get(), &QTimer::timeout, this, [this]() {
+            mInfoWinHideTimer.reset();
+            mScreen->showWindow(mInfoWinId, false);
         });
+        mInfoWinHideTimer->setSingleShot(true);
+        mInfoWinHideTimer->setTimerType(Qt::PreciseTimer);
+        mInfoWinHideTimer->start(2000);
+        return 0;
+    } else if (cmd == "busy") {
+        int drawableId = lua_tointeger(L, 2);
+        int delay = lua_tointeger(L, 3);
+        if (drawableId == 0) {
+            if (mBusyWinId) {
+                mScreen->showWindow(mBusyWinId, false);
+            }
+            mBusyWinShowTimer.reset();
+            return 0;
+        }
+
+        mBusyWinId = drawableId;
+        mBusyWinShowTimer.reset(new QTimer(this));
+        connect(mBusyWinShowTimer.get(), &QTimer::timeout, this, [this]() {
+            mBusyWinShowTimer.reset();
+            mScreen->showWindow(mBusyWinId, true);
+        });
+        mBusyWinShowTimer->setSingleShot(true);
+        mBusyWinShowTimer->setTimerType(Qt::PreciseTimer);
+        mBusyWinShowTimer->start(delay * 500); // delay is in half-seconds, so convert to milliseconds
+        return 0;
     } else if (cmd == "cursor") {
-        return call([this, L] {
-            mCursorTimer.reset();
-            if (mCursorDrawn) {
-                // Then clear the old cursor
-                drawCursor();
+        mCursorTimer.reset();
+        if (mCursorDrawn) {
+            // Then clear the old cursor
+            drawCursor();
+        }
+        mCursorDrawCmd = std::nullopt;
+        if (lua_type(L, 2) == LUA_TTABLE) {
+            int flags = to_int(L, 2, "flags");
+            constexpr int KCursorTypeNotFlashing = 2;
+            constexpr int KCursorTypeGrey = 4;
+            // The grey cursor color doesn't really work with the invert drawing mode, never mind.
+            rawgetfield(L, 2, "rect");
+            mCursorDrawCmd = {
+                .type = OplScreen::fill,
+                .drawableId = to_int(L, 2, "id"),
+                .mode = OplScreen::invert,
+                .origin = QPoint(to_int(L, 3, "x"), to_int(L, 3, "y")),
+                .color = (flags & KCursorTypeGrey) ? 0xFF888888 : 0xFF000000,
+                .bgcolor = 0xFFFFFFFF, // doesn't really matter
+                .penWidth = 1,
+                .greyMode = OplScreen::drawBlack,
+                .fill = {
+                    .size = QSize(to_int(L, 3, "w"), to_int(L, 3, "h")),
+                },
+            };
+            drawCursor();
+            if ((flags & KCursorTypeNotFlashing) == 0) {
+                mCursorTimer.reset(new QTimer());
+                connect(mCursorTimer.get(), &QTimer::timeout, this, &OplRuntime::drawCursor);
+                mCursorTimer->setTimerType(Qt::PreciseTimer);
+                mCursorTimer->start(500);
             }
-            mCursorDrawCmd = std::nullopt;
-            if (lua_type(L, 2) == LUA_TTABLE) {
-                int flags = to_int(L, 2, "flags");
-                constexpr int KCursorTypeNotFlashing = 2;
-                constexpr int KCursorTypeGrey = 4;
-                // The grey cursor color doesn't really work with the invert drawing mode, never mind.
-                rawgetfield(L, 2, "rect");
-                mCursorDrawCmd = {
-                    .type = OplScreen::fill,
-                    .drawableId = to_int(L, 2, "id"),
-                    .mode = OplScreen::invert,
-                    .origin = QPoint(to_int(L, 3, "x"), to_int(L, 3, "y")),
-                    .color = (flags & KCursorTypeGrey) ? 0xFF888888 : 0xFF000000,
-                    .bgcolor = 0xFFFFFFFF, // doesn't really matter
-                    .penWidth = 1,
-                    .greyMode = OplScreen::drawBlack,
-                    .fill = {
-                        .size = QSize(to_int(L, 3, "w"), to_int(L, 3, "h")),
-                    },
-                };
-                drawCursor();
-                if ((flags & KCursorTypeNotFlashing) == 0) {
-                    mCursorTimer.reset(new QTimer());
-                    connect(mCursorTimer.get(), &QTimer::timeout, this, &OplRuntime::drawCursor);
-                    mCursorTimer->setTimerType(Qt::PreciseTimer);
-                    mCursorTimer->start(500);
-                }
-            }
-            return 0;
-        });
+        }
+        return 0;
     } else if (cmd == "clock") {
-        return call([this, L] {
-            int drawableId = lua_tointeger(L, 2);
-            if (lua_type(L, 3) == LUA_TTABLE) {
-                rawgetfield(L, 3, "position");
-                int mode = to_int(L, 3, "mode");
-                int offset = to_int(L, 3, "offset");
-                if ((mode & 0x100) == 0) {
-                    offset = offset * 60; // 0x100 means offset in seconds rather than minutes
-                }
-                OplScreen::ClockInfo info = {
-                    .mode = mode,
-                    .type = oplModeToClockType(mode & 0xF, mDeviceType, mConfig["clockFormat"] == "1"),
-                    .offset = offset,
-                    .pos = QPoint(to_int(L, 4, "x"), to_int(L, 4, "y")),
-                    .showSeconds = (mode & 0x20) != 0,
-                    .showDate = (mode & 0x10) != 0,
-                };
-                mScreen->clock(drawableId, &info);
-            } else {
-                mScreen->clock(drawableId, nullptr);
+        int drawableId = lua_tointeger(L, 2);
+        if (lua_type(L, 3) == LUA_TTABLE) {
+            rawgetfield(L, 3, "position");
+            int mode = to_int(L, 3, "mode");
+            int offset = to_int(L, 3, "offset");
+            if ((mode & 0x100) == 0) {
+                offset = offset * 60; // 0x100 means offset in seconds rather than minutes
             }
-            return 0;
-        });
+            OplScreen::ClockInfo info = {
+                .mode = mode,
+                .type = oplModeToClockType(mode & 0xF, mDeviceType, mConfig["clockFormat"] == "1"),
+                .offset = offset,
+                .pos = QPoint(to_int(L, 4, "x"), to_int(L, 4, "y")),
+                .showSeconds = (mode & 0x20) != 0,
+                .showDate = (mode & 0x10) != 0,
+            };
+            mScreen->clock(drawableId, &info);
+        } else {
+            mScreen->clock(drawableId, nullptr);
+        }
+        return 0;
     } else if (cmd == "sprite") {
-        return call([this, L] {
-            int windowId = lua_tointeger(L, 2);
-            int spriteId = lua_tointeger(L, 3);
-            if (lua_isnil(L, 4)) {
-                mScreen->sprite(windowId, spriteId, nullptr);
-                return 0;
-            }
-            OplScreen::Sprite sprite;
-            sprite.origin = to_point(L, 4, "origin");
-            rawgetfield(L, 4, "frames");
-            for (int i = 1; ; i++) {
-                if (lua_rawgeti(L, -1, i) != LUA_TTABLE) {
-                    lua_pop(L, 1);
-                    break;
-                }
-                OplScreen::SpriteFrame frame = {
-                    .offset = to_point(L, -1, "offset"),
-                    .bitmap = to_int(L, -1, "bitmap"),
-                    .mask = to_int(L, -1, "mask"),
-                    .invertMask = to_bool(L, -1, "invertMask"),
-                    .time = (int)(to_double(L, -1, "time") * 1000000), // in microseconds
-                };
-                sprite.frames.append(frame);
-                lua_pop(L, 1); // frame
-            }
-            lua_pop(L, 1); // frames
-            mScreen->sprite(windowId, spriteId, &sprite);
+        int windowId = lua_tointeger(L, 2);
+        int spriteId = lua_tointeger(L, 3);
+        if (lua_isnil(L, 4)) {
+            mScreen->sprite(windowId, spriteId, nullptr);
             return 0;
-        });
+        }
+        OplScreen::Sprite sprite;
+        sprite.origin = to_point(L, 4, "origin");
+        rawgetfield(L, 4, "frames");
+        for (int i = 1; ; i++) {
+            if (lua_rawgeti(L, -1, i) != LUA_TTABLE) {
+                lua_pop(L, 1);
+                break;
+            }
+            OplScreen::SpriteFrame frame = {
+                .offset = to_point(L, -1, "offset"),
+                .bitmap = to_int(L, -1, "bitmap"),
+                .mask = to_int(L, -1, "mask"),
+                .invertMask = to_bool(L, -1, "invertMask"),
+                .time = (int)(to_double(L, -1, "time") * 1000000), // in microseconds
+            };
+            sprite.frames.append(frame);
+            lua_pop(L, 1); // frame
+        }
+        lua_pop(L, 1); // frames
+        mScreen->sprite(windowId, spriteId, &sprite);
+        return 0;
     } else if (cmd == "peekline") {
-        return call([this, L] {
-            int drawableId = lua_tointeger(L, 2);
-            QPoint point(lua_tointeger(L, 3), lua_tointeger(L, 4));
-            int numPixels = lua_tointeger(L, 5);
-            auto mode = (OplScreen::PeekMode)lua_tointeger(L, 6);
-            pushValue(L, mScreen->peekLine(drawableId, point, numPixels, mode));
-            return 1;
-        });
+        int drawableId = lua_tointeger(L, 2);
+        QPoint point(lua_tointeger(L, 3), lua_tointeger(L, 4));
+        int numPixels = lua_tointeger(L, 5);
+        auto mode = (OplScreen::PeekMode)lua_tointeger(L, 6);
+        pushValue(L, mScreen->peekLine(drawableId, point, numPixels, mode));
+        return 1;
     } else if (cmd == "getimg") {
-        return call([this, L] {
-            int drawableId = lua_tointeger(L, 2);
-            QRect rect(to_int(L, 3, "x"), to_int(L, 3, "y"), to_int(L, 3, "w"), to_int(L, 3, "h"));
-            pushValue(L, mScreen->getImageData(drawableId, rect));
-            return 1;
-        });
+        int drawableId = lua_tointeger(L, 2);
+        QRect rect(to_int(L, 3, "x"), to_int(L, 3, "y"), to_int(L, 3, "w"), to_int(L, 3, "h"));
+        pushValue(L, mScreen->getImageData(drawableId, rect));
+        return 1;
     } else {
         qWarning("Unhandled graphicsop %s", qPrintable(cmd));
         return 0;
@@ -1331,45 +1309,41 @@ int OplRuntime::drawMainThread(lua_State* L)
 
 int OplRuntime::createWindow(lua_State* L)
 {
-    return call([this, L] {
-        int drawableId = lua_tointeger(L, 1);
-        QRect rect(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5));
-        int flags = lua_tointeger(L, 6);
-        OplScreen::BitmapMode mode = (OplScreen::BitmapMode)(flags & 0xFF);
-        if (mode == OplScreen::gray4 && isSibo()) {
-            // On SIBO flags was actually a boolean for use grey plane, so mode=1 actually means monochromeWithGreyPlane
-            mode = OplScreen::monochromeWithGreyPlane;
-        }
-        int shadow = 0;
-        if ((flags & 0xF0) != 0) {
-            shadow = 2 * ((flags & 0xF00) >> 8);
-        }
-        lua_pushinteger(L, mScreen->createWindow(drawableId, rect, mode, shadow));
-        if (mInfoWinId) {
-            // Keep info win on top
-            mScreen->setOrder(mInfoWinId, 1);
-        }
+    int drawableId = lua_tointeger(L, 1);
+    QRect rect(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5));
+    int flags = lua_tointeger(L, 6);
+    OplScreen::BitmapMode mode = (OplScreen::BitmapMode)(flags & 0xFF);
+    if (mode == OplScreen::gray4 && isSibo()) {
+        // On SIBO flags was actually a boolean for use grey plane, so mode=1 actually means monochromeWithGreyPlane
+        mode = OplScreen::monochromeWithGreyPlane;
+    }
+    int shadow = 0;
+    if ((flags & 0xF0) != 0) {
+        shadow = 2 * ((flags & 0xF00) >> 8);
+    }
+    lua_pushinteger(L, mScreen->createWindow(drawableId, rect, mode, shadow));
+    if (mInfoWinId) {
+        // Keep info win on top
+        mScreen->setOrder(mInfoWinId, 1);
+    }
 
-        return 1;
-    });
+    return 1;
 }
 
 int OplRuntime::createBitmap(lua_State* L)
 {
-    return call([this, L] {
-        int drawableId = lua_tointeger(L, 1);
-        QSize size(lua_tointeger(L, 2), lua_tointeger(L, 3));
-        // Nothing except OPL likes zero-sized windows/bitmaps...
-        if (size.width() == 0) {
-            size.setWidth(1);
-        }
-        if (size.height() == 0) {
-            size.setHeight(1);
-        }
-        OplScreen::BitmapMode mode = (OplScreen::BitmapMode)lua_tointeger(L, 4);
-        lua_pushinteger(L, mScreen->createBitmap(drawableId, size, mode));
-        return 1;
-    });
+    int drawableId = lua_tointeger(L, 1);
+    QSize size(lua_tointeger(L, 2), lua_tointeger(L, 3));
+    // Nothing except OPL likes zero-sized windows/bitmaps...
+    if (size.width() == 0) {
+        size.setWidth(1);
+    }
+    if (size.height() == 0) {
+        size.setHeight(1);
+    }
+    OplScreen::BitmapMode mode = (OplScreen::BitmapMode)lua_tointeger(L, 4);
+    lua_pushinteger(L, mScreen->createBitmap(drawableId, size, mode));
+    return 1;
 }
 
 void OplRuntime::pressMenuKey()
@@ -2117,28 +2091,26 @@ void OplRuntime::didWritePixels(int numPixels)
 
 int OplRuntime::system(lua_State *L)
 {
-    return call([this, L] {
-        QString cmd(lua_tostring(L, 1));
-        if (cmd == "setAppTitle") {
-            auto name = tolocalstring(L, 2);
-            emit titleChanged(name);
-        } else if (cmd == "displayTaskList" || cmd == "runApp" || cmd == "setBackground" || cmd == "setForeground") {
-            // Ignore these
-        } else if (cmd == "escape") {
-            setEscape(lua_toboolean(L, 2));
-        } else if (cmd == "getCmd") {
-            pushValue(L, mGetCmd);
-            bool isCloseEvent = mGetCmd == "X";
-            mGetCmd.clear();
-            if (isCloseEvent) {
-                emit closeEventProcessed();
-            }
-            return 1;
-        } else {
-            qDebug("Bad args to system!");
+    QString cmd(lua_tostring(L, 1));
+    if (cmd == "setAppTitle") {
+        auto name = tolocalstring(L, 2);
+        emit titleChanged(name);
+    } else if (cmd == "displayTaskList" || cmd == "runApp" || cmd == "setBackground" || cmd == "setForeground") {
+        // Ignore these
+    } else if (cmd == "escape") {
+        setEscape(lua_toboolean(L, 2));
+    } else if (cmd == "getCmd") {
+        pushValue(L, mGetCmd);
+        bool isCloseEvent = mGetCmd == "X";
+        mGetCmd.clear();
+        if (isCloseEvent) {
+            emit closeEventProcessed();
         }
-        return 0;
-    });
+        return 1;
+    } else {
+        qDebug("Bad args to system!");
+    }
+    return 0;
 }
 
 int OplRuntime::textEditor(lua_State *)
