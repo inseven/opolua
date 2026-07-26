@@ -1348,12 +1348,18 @@ void ShadowOverlay::paintEvent(QPaintEvent* event)
         QRegion occludedj(occludedi);
         int shadowDepth = 1;
 
-        for (int j = i + 1; j < n; j++) {
-            if (!windows[j]->isVisible()) {
-                continue;
+        // We use <= n and pretend there is a fullscreen window at j==n
+        for (int j = i + 1; j <= n; j++) {
+            QRect jrect;
+            if (j == n) {
+                jrect = screen->rect();
+            } else {
+                if (!windows[j]->isVisible()) {
+                    continue;
+                }
+                jrect = windows[j]->geometry();
             }
             int shadowOffset = shadowSize * scale * shadowDepth;
-            auto jrect = windows[j]->geometry();
             QRegion winShadowRegion(
                 window.x() + shadowOffset,
                 window.y() + shadowOffset,
@@ -1363,7 +1369,7 @@ void ShadowOverlay::paintEvent(QPaintEvent* event)
             auto region = winShadowRegion.subtracted(occludedj).intersected(jrect);
             shadow |= region;
             occludedj += jrect;
-            if (windows[j]->getShadowSize()) {
+            if (j < n && windows[j]->getShadowSize()) {
                 shadowDepth++;
             }
         }
