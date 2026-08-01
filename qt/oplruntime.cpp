@@ -1623,6 +1623,7 @@ void OplRuntime::callCompletion(lua_State* L, uint32_t ref, int code, const QByt
 
 // asyncRequest("event", addr, completion, consume, keyfilter)
 // asyncRequest("after", addr, completion, period)
+// asyncRequest("at", addr, completion, time)
 // asyncRequest("playsound", addr, completion, data)
 int OplRuntime::asyncRequest(lua_State* L)
 {
@@ -1667,7 +1668,19 @@ int OplRuntime::asyncRequest(lua_State* L)
             mPendingRequests.insert(statAddr, ev);
             mMutex.unlock();
             QTimer::singleShot(interval, Qt::PreciseTimer, ev, [this, ev] {
-                qDebug("asyncRequest after finished");
+                asyncFinished(ev, KErrNone);
+            });
+            return 0;
+        });
+    } else if (requestName == "at") {
+        return call([this, L, statAddr]() {
+            auto time = lua_tointeger(L, 4);
+            auto ev = new AsyncHandle(this, statAddr, AsyncHandle::at);
+            mMutex.lock();
+            mPendingRequests.insert(statAddr, ev);
+            mMutex.unlock();
+            auto t = QDateTime::fromSecsSinceEpoch(time);
+            QTimer::singleShot(QDateTime::currentDateTime().msecsTo(t), Qt::PreciseTimer, ev, [this, ev] {
                 asyncFinished(ev, KErrNone);
             });
             return 0;
