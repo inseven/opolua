@@ -131,6 +131,7 @@ OplRuntime::OplRuntime(QObject *parent)
     , mCursorDrawn(false)
     , mEscapeOn(true)
     , mIgnoreFocusEvents(false)
+    , mHasBackgrounded(false)
 {
     mFs.reset(new FileSystemIoHandler());
     mStringCodec = QTextCodec::codecForName("Windows-1252");
@@ -615,6 +616,8 @@ void OplRuntime::startThread()
 
     // Runtime always starts out escapable
     setEscape(true);
+
+    mHasBackgrounded = false;
 
     emit startedRunning(mDeviceOpoPath.isEmpty() ? QString() : mFs->getNativePath(mDeviceOpoPath));
 
@@ -1550,6 +1553,14 @@ void OplRuntime::focusEvent(bool focussed)
     if (mIgnoreFocusEvents) {
         return;
     }
+    if (focussed && !mHasBackgrounded) {
+        // Apps do not get a foreground event until they've been backgrounded at least once
+        return;
+    }
+    if (!focussed) {
+        mHasBackgrounded = true;
+    }
+
     Event e = {
         .code = focussed ? opl::foregrounded : opl::backgrounded,
         .focusevent = {
