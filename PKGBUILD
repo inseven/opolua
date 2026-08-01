@@ -20,13 +20,9 @@ source=(
     "git+https://github.com/tomsci/LuaSwift.git"
     "git+https://github.com/lua/lua.git"
     "git+https://github.com/inseven/diligence.git"
-    "git+https://github.com/jbmorley/changes.git"
-    "git+https://github.com/jbmorley/build-tools.git"
 )
 
 sha256sums=(
-    "SKIP"
-    "SKIP"
     "SKIP"
     "SKIP"
     "SKIP"
@@ -39,8 +35,6 @@ prepare() {
     git submodule init
     git config submodule.LuaSwift.url "$srcdir/LuaSwift"
     git config submodule.diligence.url "$srcdir/diligence"
-    git config submodule.scripts/changes.url "$srcdir/changes"
-    git config submodule.scripts/build-tools.url "$srcdir/build-tools"
     git -c protocol.file.allow=always submodule update --recursive
 
     cd "$srcdir/opolua/dependencies/LuaSwift"

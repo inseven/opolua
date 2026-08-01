@@ -5,4 +5,5 @@
 /_site
 /docs/docs/cli/*/_help.txt
 /docs/releases
+/scripts/Pipfile.lock
 build

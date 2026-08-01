@@ -29,11 +29,6 @@ jobs:
       with:
           fetch-depth: 0
 
-    - name: Checkout required submodules
-      run: |
-        git submodule update --init --depth 1 scripts/build-tools
-        git submodule update --init --depth 1 scripts/changes
-
     - name: Install the tool dependencies
       uses: jdx/mise-action@v4
       env:
@@ -46,7 +41,7 @@ jobs:
       id: version
       run: |
         source scripts/environment.sh
-        VERSION_NUMBER=`scripts/changes/changes version`
+        VERSION_NUMBER=`changes version`
         BUILD_NUMBER=`build-tools generate-build-number`
         echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
         echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
@@ -347,11 +342,6 @@ jobs:
       with:
           fetch-depth: 0
 
-    - name: Checkout required submodules
-      run: |
-        git submodule update --init --depth 1 scripts/build-tools
-        git submodule update --init --depth 1 scripts/changes
-
     - name: Install dependencies
       run: scripts/install-dependencies.sh
 
@@ -397,11 +387,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Checkout required submodules
-        run: |
-          git submodule update --init --depth 1 scripts/build-tools
-          git submodule update --init --depth 1 scripts/changes
 
       - name: Install the tool dependencies
         uses: jdx/mise-action@v4
