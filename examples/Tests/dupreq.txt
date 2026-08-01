@@ -1,5 +1,6 @@
 REM This is a test program for how duplicate GETEVENTA32 calls are supposed to
-REM be handled.
+REM be handled. It uses some careful IOWAITs to check that signals are not
+REM generated where they shouldn't be.
 
 PROC main:
     LOCAL ev&(16), stat1%, stat2%

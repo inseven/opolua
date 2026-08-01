@@ -1659,10 +1659,6 @@ int OplRuntime::asyncRequest(lua_State* L)
     } else if (requestName == "after") {
         return call([this, L, requestHandle]() {
             int interval = to_int(L, 2, "period");
-            if (interval < 0) {
-                // TODO handle negative num for PAUSE
-                interval = -interval;
-            }
             // qDebug("asyncRequest after %d", interval);
             auto ev = new AsyncHandle(this, requestHandle, AsyncHandle::after);
             mMutex.lock();

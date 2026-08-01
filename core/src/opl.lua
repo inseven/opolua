@@ -1508,11 +1508,34 @@ end
 
 function PAUSE(val)
     local period = val * 50 -- now in ms
-    local sleepVar = runtime:makeTemporaryVar(DataTypes.EWord)
-    sleepVar(KErrFilePending)
-    runtime:iohandler().asyncRequest("after", { var = sleepVar, period = period })
-    -- TODO also return if there's a key event...
-    runtime:waitForRequest(sleepVar)
+    local sleepVar, keyVar
+    if period ~= 0 then
+        sleepVar = runtime:makeTemporaryVar(DataTypes.EWord)
+        sleepVar(KErrFilePending)
+        runtime:iohandler().asyncRequest("after", { var = sleepVar, period = math.abs(period) })
+    end
+
+    if period <= 0 then
+        keyVar = runtime:makeTemporaryVar(DataTypes.EWord)
+        keyVar(KErrFilePending)
+        runtime:iohandler().asyncRequest("event", {
+            var = keyVar,
+            consume = false,
+            keyfilter = true
+        })
+    end
+
+    runtime:waitForRequest(sleepVar or keyVar, sleepVar and keyVar)
+
+    if sleepVar and sleepVar:isPending() then
+        runtime:iohandler().cancelRequest(sleepVar)
+        runtime:waitForRequest(sleepVar)
+    end
+
+    if keyVar and keyVar:isPending() then
+        runtime:iohandler().cancelRequest(keyVar)
+        runtime:waitForRequest(keyVar)
+    end
 end
 
 function GET()
