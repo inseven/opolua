@@ -362,6 +362,7 @@ private:
 
     bool mEscapeOn;
     bool mIgnoreFocusEvents;
+    bool mHasBackgrounded;
 };
 
 #endif // OPLRUNTIME_H
