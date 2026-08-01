@@ -57,6 +57,13 @@ QString to_string(lua_State* L, int idx, const char* name)
     return str ? QString::fromLatin1(str, len) : QString();
 }
 
+QByteArray to_bytearray(lua_State* L, int idx)
+{
+    size_t len = 0;
+    auto str = lua_tolstring(L, idx, &len);
+    return str ? QByteArray(str, len) : QByteArray();
+}
+
 QByteArray to_bytearray(lua_State* L, int idx, const char* name)
 {
     rawgetfield(L, idx, name);

@@ -741,6 +741,8 @@ local function runMenuEventLoop(bar, pane, shortcuts)
         end
         gCLOSE(bar.id)
     end
+    ev:free()
+    stat:free()
     return result, highlight
 end
 

@@ -441,6 +441,7 @@ function Iow(stack, runtime) -- 0x0C
         runtime:waitForRequest(stat)
         err = stat()
     end
+    stat:free()
     stack:push(err)
 end
 
@@ -593,7 +594,7 @@ end
 function KeyC(stack, runtime) -- 0x24
     -- As with GetEventC, this includes the waitForRequest
     local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
-    runtime:iohandler().cancelRequest(stat)
+    runtime:cancelRequest(stat)
     runtime:waitForRequest(stat)
     stack:push(KErrNone)
 end
@@ -1046,7 +1047,7 @@ end
 
 function GetEventC(stack, runtime) -- 0x56
     local stat = runtime:addrAsVariable(stack:pop(), DataTypes.EWord)
-    runtime:iohandler().cancelRequest(stat)
+    runtime:cancelRequest(stat)
     -- Unlike IoCancel, GetEventC should do its own waitForRequest.
     runtime:waitForRequest(stat)
     stack:push(0) -- why these return something, who knows

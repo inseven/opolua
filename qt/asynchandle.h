@@ -33,11 +33,11 @@ public:
         playsound,
     };
 
-    explicit AsyncHandle(QObject *parent, int ref, Type type)
+    explicit AsyncHandle(QObject *parent, uint32_t ref, Type type)
         : QObject(parent), mType(type), mRef(ref)
     {}
 
-    int ref() const {
+    uint32_t ref() const {
         return mRef;
     }
 
@@ -47,7 +47,7 @@ public:
 
 private:
     Type mType;
-    int mRef;
+    uint32_t mRef;
 };
 
 #endif // ASYNCHANDLE_H

@@ -538,7 +538,7 @@ public struct Async {
         case at(Date)
     }
 
-    public typealias RequestHandle = Int32
+    public typealias RequestHandle = UInt32 // Actually just the status variable address
 
     public struct Request {
         public let type: RequestType

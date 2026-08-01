@@ -1503,6 +1503,7 @@ function Beep(stack, runtime) -- 0xA0
     runtime:PlaySoundPcm16(var, dataStr)
     runtime:waitForRequest(var)
     local val = var()
+    var:free()
     if val < 0 then
         error(val)
     end
@@ -2124,6 +2125,8 @@ function GetEvent(stack, runtime) -- 0xE4
     else
         result[1] = k
     end
+    ev:free()
+    stat:free()
     resultAddr:writeArray(result, DataTypes.EWord)
 end
 
@@ -2734,6 +2737,7 @@ function GetEvent32(stack, runtime) -- 0x122
     local ev = runtime:addrFromInt(stack:pop())
     runtime:GETEVENTA32(stat, ev)
     runtime:waitForRequest(stat)
+    stat:free()
 end
 
 function GetEventA32(stack, runtime) -- 0x123

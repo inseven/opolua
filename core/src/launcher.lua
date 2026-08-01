@@ -270,9 +270,15 @@ function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
             },
         }
         selectedLang = sisFile.languages[langQuery and langQuery.variable() or 1]
+        deviceIdx = deviceVar()
+        deviceVar:free()
+
+        if langQuery then
+            langQuery.variable:free()
+        end
 
         if ret == KKeyEnter then
-            local selectedDevice = devices[deviceVar()]
+            local selectedDevice = devices[deviceIdx]
             if selectedDevice ~= currentDevice then
                 changeDevice = selectedDevice
                 -- The usercancel is just so the sis.installSis() logic aborts cleanly, we will call it again once the
@@ -499,9 +505,11 @@ function selectApp()
             { key = KKeyEnter | KDButtonNoLabel, text = "Launch" },
         },
     }
+    local choice = choiceVar()
+    choiceVar:free()
 
     if ret == KKeyEnter then
-        return choicePaths[choiceVar()]
+        return choicePaths[choice]
     else
         return nil
     end
