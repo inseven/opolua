@@ -520,7 +520,7 @@ extension Fs.Operation {
 }
 
 // The way FlagEnum is defined (requiring CaseIterable) means we cannot define this in terms of CommonCore's OplModifier
-public enum Modifier: Int, FlagEnum {
+public enum Modifier: Int32, FlagEnum {
     case shift = 2
     case control = 4
     case psion = 8
@@ -532,8 +532,7 @@ public typealias Modifiers = FlagSet<Modifier>
 public struct Async {
 
     public enum RequestType {
-        case getevent
-        case keya
+        case event(consume: Bool, keyfilter: Bool)
         case playsound(Data)
         case after(TimeInterval)
         case at(Date)
@@ -542,8 +541,8 @@ public struct Async {
     public typealias RequestHandle = Int32
 
     public struct Request {
-        let type: RequestType
-        let handle: RequestHandle
+        public let type: RequestType
+        public let handle: RequestHandle
 
         public init(type: RequestType, handle: RequestHandle) {
             self.type = type
@@ -670,7 +669,7 @@ public struct Async {
 }
 
 extension Async.KeyPressEvent {
-    public func modifiedKeycode() -> Int? {
+    public func modifiedKeycode() -> Int32? {
         return self.keycode.modifiedKeycode(self.modifiers)
     }
 }
@@ -850,7 +849,7 @@ public protocol OpoIoHandler: FileSystemIoHandler {
 
     func getDeviceInfo() -> (Graphics.Size, Graphics.Bitmap.Mode, String)
 
-    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType)
+    func asyncRequest(_ request: Async.Request)
     func cancelRequest(handle: Async.RequestHandle)
     func waitForAnyRequest() -> Async.Response
     func anyRequest() -> Async.Response?
@@ -908,7 +907,7 @@ public class DummyIoHandler : OpoIoHandler {
         return .err(.notReady)
     }
 
-    public func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType) {
+    public func asyncRequest(_ request: Async.Request) {
     }
 
     public func cancelRequest(handle: Async.RequestHandle) {

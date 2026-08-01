@@ -206,6 +206,15 @@ enum TranslatorVersion {
     opler1 = 0x200A,
 } CLOSED_ENUM;
 
+enum OplError {
+    KErrNone = 0,
+    KErrGenFail = -1,
+    KErrInvalidArgs = -2,
+    KErrFilePending = -46,
+    KErrIOCancelled = -48,
+    KErrDrawNotOpen = -118,
+} CLOSED_ENUM;
+
 typedef struct OplClockMetrics {
     const char* name; // name of clock png, NULL means digital
     unsigned int timeFont; // 0 means analog

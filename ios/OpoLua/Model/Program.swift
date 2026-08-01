@@ -55,9 +55,13 @@ class Program {
 
     class GetEventRequest: Scheduler.Request {
         weak var program: Program?
+        let consume: Bool
+        let keyfilter: Bool
 
-        init(handle: Async.RequestHandle, program: Program) {
+        init(handle: Async.RequestHandle, program: Program, consume: Bool, keyfilter: Bool) {
             self.program = program
+            self.consume = consume
+            self.keyfilter = keyfilter
             super.init(handle: handle)
         }
 
@@ -76,29 +80,6 @@ class Program {
         }
     }
 
-    class KeyaRequest: Scheduler.Request {
-        weak var program: Program?
-
-        init(handle: Async.RequestHandle, program: Program) {
-            self.program = program
-            super.init(handle: handle)
-        }
-
-        override func cancel() {
-            if let prog = program {
-                prog.keyaRequest = nil
-            }
-        }
-
-        override func start() {
-            guard let program = self.program else {
-                print("Cannot start request if program isn't set!")
-                return
-            }
-            program.startKeyaRequest(self)
-        }
-    }
-
     private let settings: Settings
     let url: URL
     private let configuration: Configuration
@@ -110,7 +91,6 @@ class Program {
     let windowServer: WindowServer
     private let scheduler = Scheduler()
     private var geteventRequest: GetEventRequest?
-    private var keyaRequest: KeyaRequest?
     private var settingsSink: AnyCancellable?
 
     private var _state: State = .idle
@@ -316,41 +296,37 @@ class Program {
 
     func startGetEventRequest(_ request: GetEventRequest) {
         scheduler.withLockHeld {
-            precondition(self.geteventRequest == nil, "Duplicate geteventRequest!")
-            precondition(self.keyaRequest == nil, "GetEvent request after Keya!")
+            // OpoInterpreter now takes care of completing duplicate getevent requests before execution reaches here, so
+            // we should just replace ours without worrying about it.
             self.geteventRequest = request
-        }
-        checkGetEventCompletion()
-    }
-
-    func startKeyaRequest(_ request: KeyaRequest) {
-        scheduler.withLockHeld {
-            precondition(self.keyaRequest == nil, "Duplicate keyaRequest!")
-            precondition(self.geteventRequest == nil, "Keya request after GetEvent!")
-            self.keyaRequest = request
         }
         checkGetEventCompletion()
     }
 
     func checkGetEventCompletion() {
         scheduler.withLockHeld {
-            if let request = self.geteventRequest,
-               let event = eventQueue.tryTakeFirst() {
-                self.geteventRequest = nil
-                scheduler.completeLocked(request: request, response: event)
-            } else if let request = self.keyaRequest {
-                while true {
-                    // The docs for KEYA state that any non key event gets dropped
-                    // Note, only complete the event for keys with a charcode (ie not modifiers)
-                    if let event = eventQueue.tryTakeFirst() {
-                        if case .keypressevent(let k) = event, k.keycode.toCharcode() != nil {
-                            self.keyaRequest = nil
-                            scheduler.completeLocked(request: request, response: event)
-                            break
-                        }
+            guard let request = self.geteventRequest else {
+                return
+            }
+            if request.keyfilter {
+                // Drop everything from the start of the queue that isn't a key event
+                eventQueue.dropFirstItems(where: { event in
+                    if case .keypressevent(let k) = event, k.keycode.toCharcode() != nil {
+                        return false // don't drop
                     } else {
-                        break
+                        return true // drop
                     }
+                })
+            }
+            if request.consume {
+                if let event = eventQueue.tryTakeFirst() {
+                    self.geteventRequest = nil
+                    scheduler.completeLocked(request: request, response: event)
+                }
+            } else {
+                if !eventQueue.isEmpty() {
+                    self.geteventRequest = nil
+                    scheduler.completeLocked(request: request, response: .completed)
                 }
             }
         }
@@ -491,19 +467,17 @@ extension Program: OpoIoHandler {
         return fileSystem.perform(op)
     }
 
-    func asyncRequest(handle: Async.RequestHandle, type: Async.RequestType) {
+    func asyncRequest(_ request: Async.Request) {
         let req: Scheduler.Request
-        switch type {
-        case .getevent:
-            req = GetEventRequest(handle: handle, program: self)
-        case .keya:
-            req = KeyaRequest(handle: handle, program: self)
+        switch request.type {
+        case .event(let consume, let keyfilter):
+            req = GetEventRequest(handle: request.handle, program: self, consume: consume, keyfilter: keyfilter)
         case .after(let interval):
-            req = TimerRequest(handle: handle, after: interval)
+            req = TimerRequest(handle: request.handle, after: interval)
         case .at(let date):
-            req = TimerRequest(handle: handle, at: date)
+            req = TimerRequest(handle: request.handle, at: date)
         case .playsound(let data):
-            req = PlaySoundRequest(handle: handle, data: data)
+            req = PlaySoundRequest(handle: request.handle, data: data)
         }
         scheduler.addPendingRequest(req)
     }

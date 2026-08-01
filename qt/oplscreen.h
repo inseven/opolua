@@ -27,14 +27,6 @@
 
 #include "opldevicetype.h"
 
-enum OplError {
-    KErrNone = 0,
-    KErrGenFail = -1,
-    KErrInvalidArgs = -2,
-    KErrIOCancelled = -48,
-    KErrDrawNotOpen = -118,
-};
-
 class AsyncHandle;
 class OplFontProvider;
 

@@ -1472,27 +1472,24 @@ function KEY()
 end
 
 function KEYA(stat, keyArrayAddr)
-    -- This is similar to GETEVENTA32 except for the actual async call
+    -- This is identical to GETEVENTA32 except for keyfilter=true, and the completion fn translating the event data
 
-    local existingEvent = runtime:getResource("getevent")
-    if existingEvent then
-        -- printf("Outstanding getevent request, cancelling\n")
-        runtime:iohandler().cancelRequest(existingEvent.var)
-        runtime:waitForRequest(existingEvent.var)
-        assert(runtime:getResource("getevent") == nil, "cancelRequest did not release getevent resource!")
-    end
-
-    stat(KErrFilePending)
-    local function completion()
-        runtime:setResource("getevent", nil)
+    local function completion(data)
+        if data then
+            local code, timestamp, scancode, modifiers, rep = string.unpack("i4i4i4I4i4", data)
+            local keyArrayData = string.pack("i2I2",
+                keycodeToCharacterCode(code),
+                modifiers | ((rep == 0) and 0 or 0x100))
+            keyArrayAddr:write(keyArrayData)
+        end
     end
     local requestTable = {
         var = stat,
-        ev = keyArrayAddr,
         completion = completion,
+        consume = true,
+        keyfilter = true,
     }
-    runtime:setResource("getevent", requestTable)
-    runtime:iohandler().asyncRequest("keya", requestTable)
+    runtime:iohandler().asyncRequest("event", requestTable)
 
     -- It's safest to just always do this here
     runtime:flushGraphicsOps()
@@ -1544,31 +1541,19 @@ function GETSTR()
 end
 
 function GETEVENTA32(stat, evAddr)
-    -- It's important not to call checkCompletions here, because that could make
-    -- it look like the program had correctly managed its GetEventA32 calls when
-    -- it potentially hadn't, which we can only determine by whether or not the
-    -- onAssignCallback has fired and unset the getevent resource.
-    local existingEvent = runtime:getResource("getevent")
-    if existingEvent then
-        -- printf("Outstanding getevent request, cancelling\n")
-        runtime:iohandler().cancelRequest(existingEvent.var)
-        runtime:waitForRequest(existingEvent.var)
-        assert(runtime:getResource("getevent") == nil, "cancelRequest did not release getevent resource!")
-        -- printf("Cancel complete\n")
-    end
-
-    stat(KErrFilePending)
-    local function completion()
+    local function completion(data)
         -- printf("GetEvent stat set to %s\n", stat())
-        runtime:setResource("getevent", nil)
+        if data then
+            evAddr:write(data)
+        end
     end
     local requestTable = {
         var = stat,
-        ev = evAddr,
         completion = completion,
+        consume = true,
+        keyfilter = false,
     }
-    runtime:setResource("getevent", requestTable)
-    runtime:iohandler().asyncRequest("getevent", requestTable)
+    runtime:iohandler().asyncRequest("event", requestTable)
 
     -- It's safest to just always do this here
     runtime:flushGraphicsOps()
