@@ -1435,12 +1435,12 @@ function Runtime:waitForAnyRequest()
     assert(ok, KStopErr)
 end
 
-function Runtime:waitForRequest(stat)
+function Runtime:waitForRequest(stat, stat2)
     local waits = -1
     repeat
         waits = waits + 1
         self:waitForAnyRequest()
-    until not stat:isPending()
+    until not stat:isPending() or (stat2 and not stat2:isPending())
     -- And balance any waits we did for things that weren't stat
     self:requestSignal(waits)
 end
