@@ -242,6 +242,8 @@ function View:capturePointer()
             end
         end
     end
+    ev:free()
+    stat:free()
     self.capturing = false
     -- print("end capture")
 end
@@ -2713,6 +2715,8 @@ function DIALOG(dialog)
         win:drawIfNeeded()
         gUPDATE()
     end
+    ev:free()
+    stat:free()
 
     gCLOSE(win.windowId)
 

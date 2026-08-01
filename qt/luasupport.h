@@ -37,6 +37,7 @@ bool to_bool(lua_State* L, int idx, const char* name);
 int to_int(lua_State* L, int idx, const char* name);
 double to_double(lua_State* L, int idx, const char* name);
 QString to_string(lua_State* L, int idx, const char* name);
+QByteArray to_bytearray(lua_State* L, int idx);
 QByteArray to_bytearray(lua_State* L, int idx, const char* name);
 QPoint to_point(lua_State* L, int idx, const char* name);
 

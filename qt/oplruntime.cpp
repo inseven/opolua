@@ -76,8 +76,7 @@ private:
 #define ASSERT_MAIN_THREAD() Q_ASSERT(QThread::currentThread() == thread())
 
 struct Completion {
-    int type;
-    int ref;
+    uint32_t ref;
     int code;
     QByteArray data;
 };
@@ -159,6 +158,9 @@ OplRuntime::OplRuntime(QObject *parent)
     lua_pushlightuserdata(L, this);
     lua_pushcclosure(L, printHandler_s, 1);
     lua_setglobal(L, "doprint");
+
+    lua_newtable(L);
+    lua_setfield(L, LUA_REGISTRYINDEX, "requests");
 
     mLastOpTime.start();
 
@@ -1600,93 +1602,82 @@ void OplRuntime::addEvent(const OplRuntime::Event& event)
     }
 }
 
-void OplRuntime::setRequestStatus(lua_State* L, int ref, int code)
+void OplRuntime::callCompletion(lua_State* L, uint32_t ref, int code, const QByteArray& data, bool unref)
 {
-    lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
-    lua_getfield(L, -1, "var"); // statusVar
-    lua_remove(L, -2); // the ref table
+    lua_getfield(L, LUA_REGISTRYINDEX, "requests");
+    lua_rawgeti(L, -1, ref); // completion fn
     lua_pushinteger(L, code);
-    lua_call(L, 1, 0);
+    if (data.isEmpty()) {
+        lua_pushnil(L);
+    } else {
+        pushValue(L, data);
+    }
+    lua_call(L, 2, 0); // completion(code, data)
+    // Top of stack is now requests
+    if (unref) {
+        lua_pushnil(L);
+        lua_rawseti(L, -2, ref);
+    }
+    lua_pop(L, 1); // requests
 }
 
-void OplRuntime::unrefAsync(lua_State* L, int ref)
-{
-    lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
-    lua_getfield(L, -1, "var");
-    luaL_callmeta(L, -1, "uniqueKey");
-    lua_pushnil(L);
-    lua_settable(L, LUA_REGISTRYINDEX); // registry[statusVar:uniqueKey()] = nil
-    lua_pop(L, 1); // var
-    luaL_unref(L, LUA_REGISTRYINDEX, ref); // registry[requestHandle] = nil
-    lua_pop(L, 1); // ref
-}
-
-// asyncRequest(requestName, requestTable)
-// asyncRequest("event", { var = stat, completion = ..., consume = bool, keyfilter = bool })
-// asyncRequest("after", { var = stat, period = ... })
-// asyncRequest("at", { var = stat, time = ...})
-// asyncRequest("playsound", { var = stat, data = ... })
+// asyncRequest("event", addr, completion, consume, keyfilter)
+// asyncRequest("after", addr, completion, period)
+// asyncRequest("playsound", addr, completion, data)
 int OplRuntime::asyncRequest(lua_State* L)
 {
-    lua_settop(L, 2);
-    lua_pushvalue(L, 1);
-    lua_setfield(L, 2, "type"); // requestTable.type = requestName
-    lua_pushvalue(L, 2); // dup requestTable
-    int requestHandle = luaL_ref(L, LUA_REGISTRYINDEX); // pop dup, registry[requestHandle] = requestTable
-
-    lua_pushinteger(L, requestHandle);
-    lua_setfield(L, 2, "ref"); // requestTable.ref = requestHandle
-
-    lua_getfield(L, 2, "var"); // statusVar
-    luaL_callmeta(L, -1, "uniqueKey");
-    // qDebug("asyncRequest %s %s", lua_tostring(L, 1), lua_tostring(L, -1));
-
-    lua_remove(L, -2); // remove the dup statusVar
-    lua_pushvalue(L, 2); // dup requestTable
-    lua_rawset(L, LUA_REGISTRYINDEX); // registry[statusVar:uniqueKey()] = requestTable
-
     QString requestName(lua_tostring(L, 1));
-    // qDebug("asyncRequest %s ref %d", qPrintable(requestName), requestHandle);
-    if (requestName == "event") {
-        bool consume = to_bool(L, 2, "consume");
-        bool keyfilter = to_bool(L, 2, "keyfilter");
+    uint32_t statAddr = (uint32_t)lua_tointeger(L, 2);
+    Q_ASSERT(statAddr != 0);
+    
+    lua_getfield(L, LUA_REGISTRYINDEX, "requests");
+    lua_pushinteger(L, statAddr);
+    lua_pushvalue(L, 3); // completion
+    lua_rawset(L, -3); // registry.requests[statAddr] = completion
+    lua_pop(L, 1); // requests
 
+    // type-specific parameters start at index 4
+
+    if (requestName == "event") {
+        bool consume = lua_toboolean(L, 4);
+        bool keyfilter = lua_toboolean(L, 5);
         QMutexLocker lock(&mMutex);
 
         if (mEventRequest) {
             // Duplicate event requests set the former's stat to KErrIOCancelled but does _not_ signal them
             // qDebug("Cancelling prev req");
-            setRequestStatus(L, mEventRequest->ref(), KErrIOCancelled);
+            bool shouldUnref = mEventRequest->ref() != statAddr;
+            callCompletion(L, mEventRequest->ref(), KErrIOCancelled, QByteArray(), shouldUnref);
             mPendingRequests.remove(mEventRequest->ref());
-            unrefAsync(L, mEventRequest->ref());
+            // unrefAsync(L, mEventRequest->ref());
             delete mEventRequest;
             mEventRequest = nullptr;
         }
 
-        mEventRequest = new EventRequest(requestHandle, consume, keyfilter);
-        setRequestStatus(L, requestHandle, KErrFilePending);
-        mPendingRequests.insert(requestHandle, mEventRequest);
+        mEventRequest = new EventRequest(statAddr, consume, keyfilter);
+        callCompletion(L, statAddr, KErrFilePending);
+        mPendingRequests.insert(statAddr, mEventRequest);
         checkEventRequest_locked();
     } else if (requestName == "after") {
-        return call([this, L, requestHandle]() {
-            int interval = to_int(L, 2, "period");
+        return call([this, L, statAddr]() {
+            int interval = lua_tointeger(L, 4);
             // qDebug("asyncRequest after %d", interval);
-            auto ev = new AsyncHandle(this, requestHandle, AsyncHandle::after);
+            auto ev = new AsyncHandle(this, statAddr, AsyncHandle::after);
             mMutex.lock();
-            mPendingRequests.insert(requestHandle, ev);
+            mPendingRequests.insert(statAddr, ev);
             mMutex.unlock();
             QTimer::singleShot(interval, Qt::PreciseTimer, ev, [this, ev] {
-                // qDebug("asyncRequest after finished");
+                qDebug("asyncRequest after finished");
                 asyncFinished(ev, KErrNone);
             });
             return 0;
         });
     } else if (requestName == "playsound") {
-        return call([this, L, requestHandle]() {
-            auto data = to_bytearray(L, 2, "data");
-            auto ev = new AsyncHandle(this, requestHandle, AsyncHandle::playsound);
+        return call([this, L, statAddr]() {
+            auto data = to_bytearray(L, 4);
+            auto ev = new AsyncHandle(this, statAddr, AsyncHandle::playsound);
             mMutex.lock();
-            mPendingRequests.insert(requestHandle, ev);
+            mPendingRequests.insert(statAddr, ev);
             mMutex.unlock();
             mScreen->playSound(ev, data);
             return 0;
@@ -1700,19 +1691,11 @@ int OplRuntime::asyncRequest(lua_State* L)
 int OplRuntime::cancelRequest(lua_State* L)
 {
     return call([this, L]() {
-        luaL_callmeta(L, -1, "uniqueKey");
-        // qDebug("cancelRequest %s", lua_tostring(L, -1));
-        int t = lua_gettable(L, LUA_REGISTRYINDEX); // 2: registry[statusVar:uniqueKey()] -> requestTable
-        if (t == LUA_TNIL) {
-            // Request must've already been completed by completeAnyRequest_locked
-            // qDebug("cancelRequest: Already completed");
-            return 0;
-        } else {
-            Q_ASSERT(t == LUA_TTABLE); // Unexpected type for registry requestTable
-        }
-        int ref = to_int(L, 2, "ref");
+        uint32_t statAddr = lua_tointeger(L, 1);
+        Q_ASSERT(statAddr != 0);
         mMutex.lock();
-        AsyncHandle* h = mPendingRequests.value(ref, nullptr);
+        AsyncHandle* h = mPendingRequests.value(statAddr, nullptr);
+        // qDebug("Cancelling request statAddr=%x h=%p", statAddr, h);
         if (h) {
             asyncFinished_locked(h, KErrIOCancelled);
             if (h == mEventRequest) {
@@ -1771,10 +1754,10 @@ void OplRuntime::asyncFinished_locked(AsyncHandle* asyncHandle, int code, const 
 {
     int ref = asyncHandle->ref();
     AsyncHandle* h = mPendingRequests.take(ref);
+    // qDebug("asyncHandle=%p ref=0x%x h=%p", asyncHandle, ref, h);
     Q_ASSERT(h);
     Q_ASSERT(h == asyncHandle);
     Completion completion = {
-        .type = h->type(),
         .ref = h->ref(),
         .code = code,
         .data = data
@@ -1791,26 +1774,7 @@ bool OplRuntime::completeAnyRequest_locked(lua_State *L)
         Completion c = mPendingCompletions.takeFirst();
         mMutex.unlock();
         // qDebug("Completing request for ref %d code %d", c.ref, c.code);
-        int t = lua_rawgeti(L, LUA_REGISTRYINDEX, c.ref);
-        Q_ASSERT(t == LUA_TTABLE);
-
-        setRequestStatus(L, c.ref, c.code);
-        // requestTable is still on the stack so this won't break anything
-        unrefAsync(L, c.ref);
-
-        // And if the caller specified a custom completion fn, call that once everything else has been done
-        if (lua_getfield(L, -1, "completion") == LUA_TFUNCTION) {
-            if (c.data.isEmpty()) {
-                lua_pushnil(L);
-            } else {
-                pushValue(L, c.data);
-            }
-            lua_call(L, 1, 0);
-        } else {
-            lua_pop(L, 1);
-        }
-
-        lua_pop(L, 1); // requestTable
+        callCompletion(L, c.ref, c.code, c.data, true);
         return true;
     }
     return false;

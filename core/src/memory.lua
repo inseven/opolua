@@ -647,6 +647,10 @@ function Variable:uniqueKey()
     return uniqueKey(self._chunk, self._offset)
 end
 
+function Variable:getAddress()
+    return self._chunk.address + self._offset
+end
+
 function Variable:isPending()
     local t = self:type()
     if t == DataTypes.EWord then

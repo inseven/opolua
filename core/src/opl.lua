@@ -1459,22 +1459,26 @@ function KEY()
     local stat = runtime:makeTemporaryVar(DataTypes.EWord)
     local ev = runtime:makeTemporaryVar(DataTypes.ELongArray, 16)
     local evAddr = ev:addressOf()
+    local result = 0
     while eventsWaiting do
         GETEVENTA32(stat, evAddr)
         runtime:waitForRequest(stat)
         if ev[KEvAType]() & KEvNotKeyMask == 0 then
             runtime:setResource("kmod", ev[KEvAKMod]())
-            return keycodeToCharacterCode(ev[KEvAType]())
+            result = keycodeToCharacterCode(ev[KEvAType]())
+            break
         end
         eventsWaiting = TESTEVENT()
     end
-    return 0
+    ev:free()
+    stat:free()
+    return result
 end
 
 function KEYA(stat, keyArrayAddr)
     -- This is identical to GETEVENTA32 except for keyfilter=true, and the completion fn translating the event data
-
-    local function completion(data)
+    local function completion(code, data)
+        stat(code)
         if data then
             local code, timestamp, scancode, modifiers, rep = string.unpack("i4i4i4I4i4", data)
             local keyArrayData = string.pack("i2I2",
@@ -1483,13 +1487,9 @@ function KEYA(stat, keyArrayAddr)
             keyArrayAddr:write(keyArrayData)
         end
     end
-    local requestTable = {
-        var = stat,
-        completion = completion,
-        consume = true,
-        keyfilter = true,
-    }
-    runtime:iohandler().asyncRequest("event", requestTable)
+    local consume = true
+    local keyfilter = true
+    runtime:iohandler().asyncRequest("event", stat:getAddress(), completion, consume, keyfilter)
 
     -- It's safest to just always do this here
     runtime:flushGraphicsOps()
@@ -1512,29 +1512,32 @@ function PAUSE(val)
     if period ~= 0 then
         sleepVar = runtime:makeTemporaryVar(DataTypes.EWord)
         sleepVar(KErrFilePending)
-        runtime:iohandler().asyncRequest("after", { var = sleepVar, period = math.abs(period) })
+        runtime:iohandler().asyncRequest("after", sleepVar:getAddress(), sleepVar, math.abs(period))
     end
 
     if period <= 0 then
         keyVar = runtime:makeTemporaryVar(DataTypes.EWord)
-        keyVar(KErrFilePending)
-        runtime:iohandler().asyncRequest("event", {
-            var = keyVar,
-            consume = false,
-            keyfilter = true
-        })
+        local consume = false
+        local keyfilter = true
+        runtime:iohandler().asyncRequest("event", keyVar:getAddress(), keyVar, consume, keyfilter)
     end
 
     runtime:waitForRequest(sleepVar or keyVar, sleepVar and keyVar)
 
-    if sleepVar and sleepVar:isPending() then
-        runtime:iohandler().cancelRequest(sleepVar)
-        runtime:waitForRequest(sleepVar)
+    if sleepVar then
+        if sleepVar:isPending() then
+            runtime:cancelRequest(sleepVar)
+            runtime:waitForRequest(sleepVar)
+        end
+        sleepVar:free()
     end
 
-    if keyVar and keyVar:isPending() then
-        runtime:iohandler().cancelRequest(keyVar)
-        runtime:waitForRequest(keyVar)
+    if keyVar then
+        if keyVar:isPending() then
+            runtime:cancelRequest(keyVar)
+            runtime:waitForRequest(keyVar)
+        end
+        keyVar:free()
     end
 end
 
@@ -1552,10 +1555,13 @@ function GET()
     local k = runtime:makeTemporaryVar(DataTypes.EWordArray, 2)
     KEYA(stat, k:addressOf())
     runtime:waitForRequest(stat)
+    stat:free()
 
     local modifiers = k[2]() & 0xFF
     runtime:setResource("kmod", modifiers)
-    return k[1]()
+    local result = k[1]()
+    k:free()
+    return result
 end
 
 function GETSTR()
@@ -1564,19 +1570,15 @@ function GETSTR()
 end
 
 function GETEVENTA32(stat, evAddr)
-    local function completion(data)
-        -- printf("GetEvent stat set to %s\n", stat())
+    local function completion(code, data)
+        stat(code)
         if data then
             evAddr:write(data)
         end
     end
-    local requestTable = {
-        var = stat,
-        completion = completion,
-        consume = true,
-        keyfilter = false,
-    }
-    runtime:iohandler().asyncRequest("event", requestTable)
+    local consume = true
+    local keyfilter = false
+    runtime:iohandler().asyncRequest("event", stat:getAddress(), completion, consume, keyfilter)
 
     -- It's safest to just always do this here
     runtime:flushGraphicsOps()
@@ -1825,12 +1827,12 @@ function IOA(h, fn, stat, a, b)
             -- relative timer period is 1/10 second, and period should be in ms
             local period = a() * 100
             stat(KErrFilePending)
-            runtime:iohandler().asyncRequest("after", { var = stat, period = period })
+            runtime:iohandler().asyncRequest("after", stat:getAddress(), stat, period)
             f.stat = stat
         elseif fn == KFnTimerAbsolute then
             -- a is time in seconds since epoch
             stat(KErrFilePending)
-            runtime:iohandler().asyncRequest("at", { var = stat, time = a() })
+            runtime:iohandler().asyncRequest("at", stat:getAddress(), stat, a())
         else
             error("Unknown IOA timer operation")
         end
@@ -1847,7 +1849,7 @@ function IOCANCEL(h)
     end
 
     if f.timer and f.stat and f.stat:isPending() then
-        runtime:iohandler().cancelRequest(f.stat)
+        runtime:cancelRequest(f.stat)
     end
     return KErrNone
 end
@@ -1970,17 +1972,18 @@ function PlaySoundPcm16(var, data)
     var:setPending()
 
     runtime:setResource("sound", var)
-    local function completion()
+    local function completion(code)
+        var(code)
         runtime:setResource("sound", nil)
     end
-    runtime:iohandler().asyncRequest("playsound", { var = var, data = data, completion = completion })
+    runtime:iohandler().asyncRequest("playsound", var:getAddress(), completion, data)
 end
 
 function StopSound()
     local var = runtime:getResource("sound")
     local didStop = false
     if var then
-        runtime:iohandler().cancelRequest(var)
+        runtime:cancelRequest(var)
         runtime:waitForRequest(var)
         assert(runtime:getResource("sound") == nil, "cancelRequest did not release sound resource!")
         didStop = true

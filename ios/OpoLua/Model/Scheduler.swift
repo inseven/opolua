@@ -126,7 +126,7 @@ class Scheduler {
         repeat {
             if interrupted {
                 interrupted = false
-                return Async.Response(handle: -1, value: .interrupt)
+                return Async.Response(handle: 0, value: .interrupt)
             } else if let response = removeCompletedRequest() {
                 return response
             }

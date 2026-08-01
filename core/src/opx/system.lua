@@ -372,6 +372,7 @@ function PlaySound(stack, runtime) -- 38
     PlaySoundA(stack, runtime)
     runtime:waitForRequest(var)
     local val = var()
+    var:free()
     if val < 0 then
         error(val)
     end

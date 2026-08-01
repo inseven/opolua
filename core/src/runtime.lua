@@ -176,9 +176,9 @@ function Runtime:getVar(index, type, indirect)
 end
 
 -- Only for things that need to simulate a var (such as for making sync versions of async requests)
-function Runtime:makeTemporaryVar(type, len, stringMaxLen)
-    local result = Chunk():makeNewVariable(0, type, stringMaxLen, len)
-    return result
+function Runtime:makeTemporaryVar(type, arrayLen, stringMaxLen)
+    -- Note, caller must call var:free() when done with it
+    return self.chunk:allocVariable(type, stringMaxLen, arrayLen)
 end
 
 function Runtime:addModule(path, procTable, opxTable)
@@ -1456,6 +1456,10 @@ end
 
 function Runtime:requestSignal(num)
     self.signal = self.signal + (num or 1)
+end
+
+function Runtime:cancelRequest(stat)
+    self.ioh.cancelRequest(stat:getAddress())
 end
 
 function Runtime:getPath()

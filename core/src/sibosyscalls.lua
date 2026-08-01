@@ -83,7 +83,9 @@ function IoPlaySoundW(runtime, params) -- 0x861E
     IoPlaySoundA(runtime, params)
     runtime:waitForRequest(var)
     -- printf("IoPlaySoundW returned %d\n", var())
-    return var()
+    local result = var()
+    var:free()
+    return result
 end
 
 function IoPlaySoundA(runtime, params) -- 0x861F

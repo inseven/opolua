@@ -263,8 +263,7 @@ private:
     bool completeAnyRequest_locked(lua_State *L);
     void eventRequestComplete_locked(const Event* event);
     void asyncFinished_locked(AsyncHandle* asyncHandle, int code, const QByteArray& data = QByteArray());
-    void setRequestStatus(lua_State* L, int ref, int code);
-    void unrefAsync(lua_State* L, int ref);
+    void callCompletion(lua_State* L, uint32_t ref, int code, const QByteArray& data = QByteArray(), bool unref = false);
 
     static OplRuntime* getSelf(lua_State *L);
     QString tolocalstring(lua_State *L, int index);
@@ -329,7 +328,7 @@ private:
         NextPushFrame
     } mBreakOnNext;
     uint8_t mSpeed;
-    QMap<int, AsyncHandle*> mPendingRequests;
+    QMap<uint32_t, AsyncHandle*> mPendingRequests;
     QVector<Completion> mPendingCompletions;
     QSet<int> mKeysDown; // set of scancodes, used for SIBO HwGetScanCodes only
     opl::ProgramInfo mDebugInfo;
