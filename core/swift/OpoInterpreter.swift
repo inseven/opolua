@@ -383,13 +383,13 @@ private func getDeviceInfo(_ L: LuaState!) -> CInt {
 }
 
 // asyncRequest(requestName, requestTable)
-// asyncRequest("getevent", { var = ..., ev = ... })
-// asyncRequest("keya", { var = ..., k = ... })
+// asyncRequest("event", { var = stat, completion = ..., consume = bool, keyfilter = bool })
 // asyncRequest("after", { var = ..., period = ... })
 // asyncRequest("at", { var = ..., time = ...})
 // asyncRequest("playsound", { var = ..., data = ... })
 private func asyncRequest(_ L: LuaState!) -> CInt {
-    let iohandler = getInterpreterUpval(L).iohandler
+    let interpreter = getInterpreterUpval(L)
+    let iohandler = interpreter.iohandler
     guard let name = L.tostring(1) else { return 0 }
     L.settop(2)
     L.remove(1) // Removes name, so requestTable is now at position 1
@@ -398,10 +398,16 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
 
     let type: Async.RequestType
     switch name {
-    case "getevent":
-        type = .getevent
-    case "keya":
-        type = .keya
+    case "event":
+        if let existing = interpreter.eventRequest {
+            // Have to 'cancel' it here (set the stat but don't signal, unlike an actual cancelRequest)
+            setRequestStatus(L, ref: existing, code: .KErrIOCancelled)
+            unrefAsync(L, ref: existing)
+        }
+
+        let consume = L.toboolean(1, key: "consume")
+        let keyfilter = L.toboolean(1, key: "keyfilter")
+        type = .event(consume: consume, keyfilter: keyfilter)
     case "after":
         guard let period = L.toint(1, key: "period") else {
             print("Bad param to after asyncRequest")
@@ -440,23 +446,17 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
     L.push(index: 1) // dup requestTable
     L.rawset(LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = requestTable
 
-    iohandler.asyncRequest(handle: requestHandle, type: type)
+    if name == "event" {
+        interpreter.eventRequest = requestHandle
+        setRequestStatus(L, ref: requestHandle, code: .KErrFilePending)
+    }
+
+    iohandler.asyncRequest(Async.Request(type: type, handle: requestHandle))
     return 0
 }
 
 // As per init.lua
-private let KOplErrIOCancelled = -48
 private let KStopErr = -999
-private enum DataTypes: Int, RawPushable {
-    case EWord = 0
-    case ELong = 1
-    case EReal = 2
-    case EString = 3
-    case EWordArray = 0x80
-    case ELongArray = 0x81
-    case ERealArray = 0x82
-    case EStringArray = 0x83
-}
 
 private func checkCompletions(_ L: LuaState!) -> CInt {
     let interpreter = getInterpreterUpval(L)
@@ -559,7 +559,7 @@ private func getTime(_ L: LuaState!) -> CInt {
 private func keysDown(_ L: LuaState!) -> CInt {
     let iohandler = getInterpreterUpval(L).iohandler
     let keys = iohandler.keysDown()
-    let scancodes = keys.map { $0.toScancode(sibo: true) }
+    let scancodes = keys.map { Int($0.toScancode(sibo: true)) }
     var buf: [UInt8] = []
     for byteIdx in 0 ..< 20 {
         var b: UInt8 = 0
@@ -704,6 +704,30 @@ private func setEra(_ L: LuaState!) -> CInt {
     return 0
 }
 
+private func setRequestStatus(_ L: LuaState, ref: CInt, code: OplError) {
+    let t = L.gettop()
+    L.rawget(LUA_REGISTRYINDEX, key: ref)
+    L.printStack(from: t)
+    lua_getfield(L, -1, "var") // statusVar
+    lua_remove(L, -2) // the ref table
+    L.push(code.rawValue)
+    lua_call(L, 1, 0)
+    assert(L.gettop() == t)
+}
+
+private func unrefAsync(_ L: LuaState, ref: CInt) {
+    let t = L.gettop()
+    L.rawget(LUA_REGISTRYINDEX, key: ref)
+    lua_getfield(L, -1, "var")
+    luaL_callmeta(L, -1, "uniqueKey")
+    lua_pushnil(L)
+    lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = nil
+    lua_pop(L, 1) // var
+    luaL_unref(L, LUA_REGISTRYINDEX, ref) // registry[requestHandle] = nil
+    lua_pop(L, 1) // ref
+    assert(L.gettop() == t)
+}
+
 private extension Error {
     var detailIfPresent: String {
         if let err = self as? OpoInterpreter.InterpreterError {
@@ -723,6 +747,8 @@ public class OpoInterpreter: PsiLuaEnv {
     private var hooks: LuaHooksState!
 
     var era: AppEra? = nil
+
+    fileprivate var eventRequest: Async.RequestHandle? = nil
 
     public override init() {
         iohandler = DummyIoHandler() // For now...
@@ -876,27 +902,29 @@ public class OpoInterpreter: PsiLuaEnv {
         try pcall(3, 0) // runOpo(devicePath, proc, iohandler)
     }
 
-    private static func modifiersToTEventModifiers(_ modifiers: Modifiers) -> Int {
-        return Int(oplModifiersToTEventModifiers(UInt32(modifiers.rawValue)))
+    private static func modifiersToTEventModifiers(_ modifiers: Modifiers) -> Int32 {
+        return Int32(oplModifiersToTEventModifiers(UInt32(modifiers.rawValue)))
     }
 
     func completeRequest(_ L: LuaState!, _ response: Async.Response) {
         L.settop(0)
+        if eventRequest == response.handle {
+            eventRequest = nil
+        }
         let t = L.rawget(LUA_REGISTRYINDEX, key: response.handle) // 1: registry[requestHandle] -> requestTable
         assert(t == .table, "Failed to locate requestTable for requestHandle \(response.handle)!")
 
-        // Deal with writing any result data
-
         let type = L.tostring(1, key: "type") ?? ""
-        func timestampToInt32(_ timestamp: TimeInterval) -> Int {
+        func timestampToInt32(_ timestamp: TimeInterval) -> Int32 {
             let microsecs = Int(timestamp * 1000000)
             let us32 = UInt32(microsecs % Int(UInt32.max))
             let intVal = Int32(bitPattern: us32)
-            return Int(intVal)
+            return intVal
         }
         switch type {
-        case "getevent":
-            var ev = Array<Int>(repeating: 0, count: 9)
+        case "event":
+            var ev = Array<Int32>(repeating: 0, count: 16)
+            var hasData = true
             switch (response.value) {
             case .keypressevent(let event):
                 let modifiers = event.getModifiers(includingPsion: isSibo())
@@ -909,99 +937,77 @@ public class OpoInterpreter: PsiLuaEnv {
                 ev[4] = event.isRepeat ? 1 : 0
             case .keydownevent(let event):
                 // print("keydown \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
-                ev[0] = EventId.keydown.intValue
+                ev[0] = EventId.keydown.int32Value
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.keycode.toScancode(sibo: isSibo())
                 ev[3] = event.getModifiers(includingPsion: isSibo()).rawValue
             case .keyupevent(let event):
                 // print("keyup \(event.keycode) t=\(event.timestamp) scan=\(event.keycode.toScancode())")
-                ev[0] = EventId.keyup.intValue
+                ev[0] = EventId.keyup.int32Value
                 ev[1] = timestampToInt32(event.timestamp)
                 ev[2] = event.keycode.toScancode(sibo: isSibo())
                 ev[3] = event.getModifiers(includingPsion: isSibo()).rawValue
             case .penevent(let event):
-                ev[0] = EventId.pen.intValue
+                ev[0] = EventId.pen.int32Value
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = event.windowId.value
-                ev[3] = event.type.intValue
+                ev[2] = Int32(event.windowId.value)
+                ev[3] = event.type.int32Value
                 ev[4] = Self.modifiersToTEventModifiers(event.modifiers)
-                ev[5] = event.x
-                ev[6] = event.y
-                ev[7] = event.screenx
-                ev[8] = event.screeny
+                ev[5] = Int32(event.x)
+                ev[6] = Int32(event.y)
+                ev[7] = Int32(event.screenx)
+                ev[8] = Int32(event.screeny)
             case .pendownevent(let event):
-                ev[0] = EventId.pendown.intValue
+                ev[0] = EventId.pendown.int32Value
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = event.windowId.value
+                ev[2] = Int32(event.windowId.value)
             case .penupevent(let event):
-                ev[0] = EventId.penup.intValue
+                ev[0] = EventId.penup.int32Value
                 ev[1] = timestampToInt32(event.timestamp)
-                ev[2] = event.windowId.value
+                ev[2] = Int32(event.windowId.value)
             case .foregrounded(let event):
-                ev[0] = EventId.foregrounded.intValue
+                ev[0] = EventId.foregrounded.int32Value
                 ev[1] = timestampToInt32(event.timestamp)
             case .backgrounded(let event):
-                ev[0] = EventId.backgrounded.intValue
+                ev[0] = EventId.backgrounded.int32Value
                 ev[1] = timestampToInt32(event.timestamp)
             case .quitevent:
                 // 0x404 is actually just the generic "cmd" event, hence we set getCmd for iohandler.system("getCmd")
-                ev[0] = EventId.command.intValue
+                ev[0] = EventId.command.int32Value
                 self.getCmd = "X"
             case .cancelled, .completed, .interrupt:
-                break // No completion data for these
+                hasData = false
             }
-            lua_getfield(L, 1, "ev") // Pushes eventArray (as an Addr)
-            luaL_getmetafield(L, -1, "writeArray") // Addr:writeArray
-            lua_insert(L, -2) // put writeArray below eventArray
-            L.push(ev) // ev as a table
-            L.push(DataTypes.ELong)
-            let _ = logpcall(3, 0)
-        case "keya":
-            switch response.value {
-            case .keypressevent(let event):
-                var k = Array<Int>(repeating: 0, count: 2)
-                k[0] = event.keycode.toCharcode()!
-                k[1] = event.modifiers.rawValue | (event.isRepeat ? 0x100 : 0)
-                lua_getfield(L, 1, "ev") // Pushes eventArray (as an Addr)
-                luaL_getmetafield(L, -1, "writeArray") // Addr:writeArray
-                lua_insert(L, -2) // put writeArray below eventArray
-                L.push(k) // k as a table
-                L.push(DataTypes.EWord)
-                let _ = logpcall(3, 0)
-            case .cancelled, .interrupt:
-                break
-            default:
-                print("Warning unhandled response type for keya \(response.value)")
+
+            if hasData {
+                ev.withUnsafeBytes { evData in
+                    L.push(evData)
+                }
+            } else {
+                L.pushnil()
             }
         default:
-            break // No data for these
+            L.pushnil() // No data for these
         }
 
         // Mark statusVar as completed
-        let val: Int
+        let val: OplError
         switch (response.value) {
         case .cancelled:
-            val = KOplErrIOCancelled
+            val = .KErrIOCancelled
         default:
-            val = 0 // Assuming everything is a success completion atm...
+            val = .KErrNone // Assuming everything is a success completion atm...
         }
 
         // print("Completing \(type) with value \(val)")
 
-        lua_getfield(L, 1, "var") // statusVar
-        L.push(val)
-        lua_call(L, 1, 0)
-
-        // Finally, free up requestHandle
-        lua_getfield(L, 1, "var")
-        luaL_callmeta(L, -1, "uniqueKey")
-        lua_pushnil(L)
-        lua_settable(L, LUA_REGISTRYINDEX) // registry[statusVar:uniqueKey()] = nil
-        luaL_unref(L, LUA_REGISTRYINDEX, response.handle) // registry[requestHandle] = nil
+        setRequestStatus(L, ref: response.handle, code: val)
+        unrefAsync(L, ref: response.handle)
 
         // And if the caller specified a custom completion fn, call that once everything else has been done
         if lua_getfield(L, 1, "completion") == LUA_TFUNCTION {
-            lua_call(L, 0, 0)
+            lua_insert(L, -2) // Move function below completion data
+            lua_call(L, 1, 0)
         } else {
             lua_pop(L, 1)
         }
@@ -1017,5 +1023,4 @@ public class OpoInterpreter: PsiLuaEnv {
     public func isSibo() -> Bool {
         return era == .sibo
     }
-
 }

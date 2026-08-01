@@ -75,6 +75,26 @@ private:
 // the thing that matters from OplRuntime's point of view (and generally that will always be the main thread).
 #define ASSERT_MAIN_THREAD() Q_ASSERT(QThread::currentThread() == thread())
 
+struct Completion {
+    int type;
+    int ref;
+    int code;
+    QByteArray data;
+};
+
+struct EventRequest : public AsyncHandle
+{
+    EventRequest(int ref, bool aconsume, bool akeyfilter)
+        : AsyncHandle(nullptr, ref, AsyncHandle::event)
+        , consume(aconsume)
+        , keyfilter(akeyfilter)
+    {
+    }
+
+    bool consume;
+    bool keyfilter;
+};
+
 void dumpStack(lua_State *L, const char* where)
 {
     const int n = lua_gettop(L);
@@ -1569,12 +1589,32 @@ void OplRuntime::addEvent(const OplRuntime::Event& event)
     }
 }
 
+void OplRuntime::setRequestStatus(lua_State* L, int ref, int code)
+{
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+    lua_getfield(L, -1, "var"); // statusVar
+    lua_remove(L, -2); // the ref table
+    lua_pushinteger(L, code);
+    lua_call(L, 1, 0);
+}
+
+void OplRuntime::unrefAsync(lua_State* L, int ref)
+{
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+    lua_getfield(L, -1, "var");
+    luaL_callmeta(L, -1, "uniqueKey");
+    lua_pushnil(L);
+    lua_settable(L, LUA_REGISTRYINDEX); // registry[statusVar:uniqueKey()] = nil
+    lua_pop(L, 1); // var
+    luaL_unref(L, LUA_REGISTRYINDEX, ref); // registry[requestHandle] = nil
+    lua_pop(L, 1); // ref
+}
+
 // asyncRequest(requestName, requestTable)
-// asyncRequest("getevent", { var = ..., ev = ... })
-// asyncRequest("keya", { var = ..., k = ... })
-// asyncRequest("after", { var = ..., period = ... })
-// asyncRequest("at", { var = ..., time = ...})
-// asyncRequest("playsound", { var = ..., data = ... })
+// asyncRequest("event", { var = stat, completion = ..., consume = bool, keyfilter = bool })
+// asyncRequest("after", { var = stat, period = ... })
+// asyncRequest("at", { var = stat, time = ...})
+// asyncRequest("playsound", { var = stat, data = ... })
 int OplRuntime::asyncRequest(lua_State* L)
 {
     lua_settop(L, 2);
@@ -1595,11 +1635,25 @@ int OplRuntime::asyncRequest(lua_State* L)
     lua_rawset(L, LUA_REGISTRYINDEX); // registry[statusVar:uniqueKey()] = requestTable
 
     QString requestName(lua_tostring(L, 1));
-    if (requestName == "getevent" || requestName == "keya") {
+    // qDebug("asyncRequest %s ref %d", qPrintable(requestName), requestHandle);
+    if (requestName == "event") {
+        bool consume = to_bool(L, 2, "consume");
+        bool keyfilter = to_bool(L, 2, "keyfilter");
+
         QMutexLocker lock(&mMutex);
-        Q_ASSERT(mEventRequest == nullptr);
-        AsyncHandle::Type type = (requestName == "getevent") ? AsyncHandle::getevent : AsyncHandle::keya;
-        mEventRequest = new AsyncHandle(nullptr, requestHandle, type);
+
+        if (mEventRequest) {
+            // Duplicate event requests set the former's stat to KErrIOCancelled but does _not_ signal them
+            // qDebug("Cancelling prev req");
+            setRequestStatus(L, mEventRequest->ref(), KErrIOCancelled);
+            mPendingRequests.remove(mEventRequest->ref());
+            unrefAsync(L, mEventRequest->ref());
+            delete mEventRequest;
+            mEventRequest = nullptr;
+        }
+
+        mEventRequest = new EventRequest(requestHandle, consume, keyfilter);
+        setRequestStatus(L, requestHandle, KErrFilePending);
         mPendingRequests.insert(requestHandle, mEventRequest);
         checkEventRequest_locked();
     } else if (requestName == "after") {
@@ -1695,15 +1749,29 @@ void OplRuntime::asyncFinished(AsyncHandle* asyncHandle, int code)
     delete asyncHandle;
 }
 
+void OplRuntime::eventRequestComplete_locked(const Event* event)
+{
+    QByteArray data;
+    if (event) {
+        data = QByteArray(reinterpret_cast<const char*>(event), sizeof(Event));
+    }
+    asyncFinished_locked(mEventRequest, KErrNone, data);
+}
+
 // Private fn, callable from any thread depending on the type of async event. Does not signal. Removes asyncHandle from
 // mPendingRequests but does not delete it.
-void OplRuntime::asyncFinished_locked(AsyncHandle* asyncHandle, int code)
+void OplRuntime::asyncFinished_locked(AsyncHandle* asyncHandle, int code, const QByteArray& data)
 {
     int ref = asyncHandle->ref();
     AsyncHandle* h = mPendingRequests.take(ref);
     Q_ASSERT(h);
     Q_ASSERT(h == asyncHandle);
-    Completion completion = h->getCompletion(code);
+    Completion completion = {
+        .type = h->type(),
+        .ref = h->ref(),
+        .code = code,
+        .data = data
+    };
     mPendingCompletions.append(completion);
 }
 
@@ -1715,41 +1783,22 @@ bool OplRuntime::completeAnyRequest_locked(lua_State *L)
     if (mPendingCompletions.count()) {
         Completion c = mPendingCompletions.takeFirst();
         mMutex.unlock();
+        // qDebug("Completing request for ref %d code %d", c.ref, c.code);
         int t = lua_rawgeti(L, LUA_REGISTRYINDEX, c.ref);
         Q_ASSERT(t == LUA_TTABLE);
 
-        if (c.code == KErrNone && (c.type == AsyncHandle::getevent || c.type == AsyncHandle::keya)) {
-            lua_getfield(L, -1, "ev"); // Pushes eventArray (as an Addr)
-            t = luaL_getmetafield(L, -1, "write"); // Addr:write
-            Q_ASSERT(t == LUA_TFUNCTION);
-            lua_insert(L, -2); // put write below eventArray
-            pushValue(L, c.data);
-            lua_call(L, 2, 0);
-        } else {
-            // There aren't (currently) any other async event types that have completion data, nor is there ever a
-            // situation where an erroring event should be writing data.
-            Q_ASSERT(c.data.isEmpty());
-        }
-
-        lua_getfield(L, -1, "var"); // statusVar
-        lua_pushinteger(L, c.code);
-        lua_call(L, 1, 0);
-
-        // Finally, free up requestHandle
-        lua_getfield(L, -1, "var");
-        luaL_callmeta(L, -1, "uniqueKey");
-        // qDebug("Completed request %s", lua_tostring(L, -1));
-        lua_pushnil(L);
-        lua_settable(L, LUA_REGISTRYINDEX); // registry[statusVar:uniqueKey()] = nil
-        lua_pop(L, 1); // var
-        lua_getfield(L, -1, "ref");
-        int ref = lua_tointeger(L, -1);
-        luaL_unref(L, LUA_REGISTRYINDEX, ref); // registry[requestHandle] = nil
-        lua_pop(L, 1); // ref
+        setRequestStatus(L, c.ref, c.code);
+        // requestTable is still on the stack so this won't break anything
+        unrefAsync(L, c.ref);
 
         // And if the caller specified a custom completion fn, call that once everything else has been done
         if (lua_getfield(L, -1, "completion") == LUA_TFUNCTION) {
-            lua_call(L, 0, 0);
+            if (c.data.isEmpty()) {
+                lua_pushnil(L);
+            } else {
+                pushValue(L, c.data);
+            }
+            lua_call(L, 1, 0);
         } else {
             lua_pop(L, 1);
         }
@@ -1768,30 +1817,26 @@ bool OplRuntime::checkEventRequest_locked()
 
     bool foundEvent = false;
 
-    if (mEventRequest->type() == AsyncHandle::getevent) {
-        if (mEvents.count()) {
-            auto event = mEvents.takeFirst();
-            mEventRequest->setCompletionData(event);
-            asyncFinished_locked(mEventRequest, KErrNone);
-            foundEvent = true;
-        }
-    } else if (mEventRequest->type() == AsyncHandle::keya) {
+    if (mEventRequest->keyfilter) {
         while (mEvents.count() && !foundEvent) {
-            auto event = mEvents.takeFirst();
-            if (event.isKeyEvent()) {
-                int16_t data[2];
-                data[0] = (int16_t)oplCharcodeForKeycode(event.code);
-                data[1] = (int16_t)event.keypress.modifiers | (event.keypress.repeat ? 0x100 : 0);
-                mEventRequest->setCompletionData(data);
-                asyncFinished_locked(mEventRequest, KErrNone);
+            if (mEvents[0].isKeyEvent()) {
                 foundEvent = true;
+            } else {
+                // Drop event and keep looking
+                mEvents.removeFirst();
             }
         }
     } else {
-        Q_ASSERT(false);
+        foundEvent = !mEvents.isEmpty();
     }
 
     if (foundEvent) {
+        if (mEventRequest->consume) {
+            eventRequestComplete_locked(&mEvents[0]);
+            mEvents.removeFirst();
+        } else {
+            eventRequestComplete_locked(nullptr);
+        }
         delete mEventRequest;
         mEventRequest = nullptr;
     }

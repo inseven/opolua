@@ -22,21 +22,13 @@
 #include <QByteArray>
 #include <QObject>
 
-struct Completion {
-    int type;
-    int ref;
-    int code;
-    QByteArray data;
-};
-
 // For things like timers that need a QObject in order to be cancellable
 class AsyncHandle : public QObject {
     Q_OBJECT
 public:
 
     enum Type {
-        getevent,
-        keya,
+        event,
         after,
         playsound,
     };
@@ -53,24 +45,9 @@ public:
         return mType;
     }
 
-    template <typename T>
-    void setCompletionData(const T& data) {
-        mCompletionData = QByteArray(reinterpret_cast<const char*>(&data), sizeof(T));
-    }
-
-    Completion getCompletion(int code) const {
-        return {
-            .type = mType,
-            .ref = mRef,
-            .code = code,
-            .data = mCompletionData
-        };
-    }
-
 private:
     Type mType;
     int mRef;
-    QByteArray mCompletionData; // Used by getevent/keya types
 };
 
 #endif // ASYNCHANDLE_H

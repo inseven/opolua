@@ -45,6 +45,7 @@ struct lua_State;
 class AsyncHandle;
 struct Completion;
 class MainThreadEvent;
+struct EventRequest;
 
 #define DECLARE_IOHANDLER_FN(fn) \
     static int fn ## _s(lua_State* L) { \
@@ -260,7 +261,10 @@ private:
     bool checkEventRequest_locked();
     void unlockAndSignalIfWaiting();
     bool completeAnyRequest_locked(lua_State *L);
-    void asyncFinished_locked(AsyncHandle* asyncHandle, int code);
+    void eventRequestComplete_locked(const Event* event);
+    void asyncFinished_locked(AsyncHandle* asyncHandle, int code, const QByteArray& data = QByteArray());
+    void setRequestStatus(lua_State* L, int ref, int code);
+    void unrefAsync(lua_State* L, int ref);
 
     static OplRuntime* getSelf(lua_State *L);
     QString tolocalstring(lua_State *L, int index);
@@ -312,7 +316,7 @@ private:
     //// BEGIN protected by mMutex
     MainThreadEvent* mCallEvent;
     QVector<Event> mEvents;
-    AsyncHandle* mEventRequest;
+    EventRequest* mEventRequest;
     bool mWaiting;
     bool mInterrupted;
     bool mPaused;

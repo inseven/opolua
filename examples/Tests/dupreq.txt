@@ -1,0 +1,34 @@
+REM This is a test program for how duplicate GETEVENTA32 calls are supposed to
+REM be handled.
+
+PROC main:
+    LOCAL ev&(16), stat1%, stat2%
+    GETEVENTA32 stat1%, ev&()
+
+    PRINT "stat1 after GETEVENTA32", stat1%
+
+    GETEVENTA32 stat2%, ev&()
+
+    REM stat1% should be -48 (cancelled) and stat2% -46 (pending)
+    PRINT "stat1 after second GETEVENTA32", stat1%, "stat2", stat2%
+    
+    PRINT "IOWAIT...";
+    REM You should not see the "Done" print until you press (and hold) the
+    REM control key (or any key, but control only generates 1 event which is
+    REM useful for the following code).
+    IOWAIT
+    PRINT " Done"
+
+    GETEVENTA32 stat2%, ev&()
+    REM stat2% should be -46 (pending) here
+    PRINT "stat2 after second GETEVENTA32 with same stat", stat2%
+
+    PRINT "IOWAIT...";
+    REM You should not see the "Done" print until you let go of the control
+    REM key you started holding down earlier.
+    IOWAIT
+    PRINT " Done"
+
+    GET
+
+ENDP

@@ -34,16 +34,6 @@ extension Int32Representable {
     }
 }
 
-protocol IntRepresentable<RawValue> : RawRepresentable where RawValue == UInt32 {
-    var intValue: Int { get }
-}
-
-extension IntRepresentable {
-    var intValue: Int {
-        return Int(self.rawValue)
-    }
-}
-
 extension OplKeyCode : Int32Representable {}
 
 extension OplKeyCode {
@@ -61,9 +51,8 @@ extension OplKeyCode {
         }
     }
 
-    func toScancode(sibo: Bool) -> Int {
-        let result = oplScancodeForKeycode(self.int32Value, sibo)
-        return Int(result)
+    func toScancode(sibo: Bool) -> Int32 {
+        return oplScancodeForKeycode(self.int32Value, sibo)
 
     }
 
@@ -77,19 +66,19 @@ extension OplKeyCode {
         }
     }
 
-    public func modifiedKeycode(_ modifiers: Modifiers) -> Int? {
+    public func modifiedKeycode(_ modifiers: Modifiers) -> Int32? {
         let result = oplModifiedKeycode(self.int32Value, UInt32(modifiers.rawValue))
         if result == 0 {
             return nil
         } else {
-            return Int(result)
+            return result
         }
     }
 }
 
-extension EventId : IntRepresentable {}
+extension EventId : Int32Representable {}
 
-extension TEventModifiers : IntRepresentable {}
+extension TEventModifiers : Int32Representable {}
 
 public typealias PointerType = OplCore.PointerType
-extension PointerType : IntRepresentable {}
+extension PointerType : Int32Representable {}
