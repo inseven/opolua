@@ -21,7 +21,7 @@ PROC main:
     gFONT KFontArialNormal32&
     gPRINT "Hello"
     gAT gX - 10, gY
-    CURSOR gIDENTITY, 28, 2, 32, 6
+    CURSOR gIDENTITY, 28, 10, 32, 6
     gUPDATE
     GET
 
