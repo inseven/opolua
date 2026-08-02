@@ -373,6 +373,7 @@ public struct Graphics {
     }
 
     public enum CursorFlag: Int, FlagEnum {
+        case obloid = 1
         case notFlashing = 2
         case grey = 4
     }

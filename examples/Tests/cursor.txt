@@ -8,7 +8,7 @@ PROC main:
     GET
 
     REM graphics cursor
-    gAT 50, 50
+    gAT 50, 30
     gFONT KFontArialNormal32&
     gPRINT "Hello"
     gAT gX - 10, gY
@@ -17,11 +17,16 @@ PROC main:
     GET
 
     REM grey non flashing cursor
-    gAT 50, 100
+    gAT 50, 60
     gFONT KFontArialNormal32&
     gPRINT "Hello"
     gAT gX - 10, gY
     CURSOR gIDENTITY, 28, 10, 32, 6
+    gUPDATE
+    GET
+
+    REM obloid cursor (sibo only)
+    CURSOR gIDENTITY, 28, 10, 32, 1
     gUPDATE
     GET
 

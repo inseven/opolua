@@ -1068,14 +1068,17 @@ int OplRuntime::graphicsop(lua_State* L)
         mCursorDrawCmd = std::nullopt;
         if (lua_type(L, 2) == LUA_TTABLE) {
             int flags = to_int(L, 2, "flags");
+            constexpr int KCursorTypeObloid = 1;
             constexpr int KCursorTypeNotFlashing = 2;
             constexpr int KCursorTypeGrey = 4;
+            bool round = isSibo() && (flags & KCursorTypeObloid);
+            qDebug("round=%d", (int)round);
             // The grey cursor color doesn't really work with the invert drawing mode, never mind.
             rawgetfield(L, 2, "rect");
             mCursorDrawCmd = {
-                .type = OplScreen::fill,
+                .type = round ? OplScreen::cmdInvert : OplScreen::fill,
                 .drawableId = to_int(L, 2, "id"),
-                .mode = OplScreen::invert,
+                .mode = round ? OplScreen::set : OplScreen::invert,
                 .origin = QPoint(to_int(L, 3, "x"), to_int(L, 3, "y")),
                 .color = (flags & KCursorTypeGrey) ? 0xFF888888 : 0xFF000000,
                 .bgcolor = 0xFFFFFFFF, // doesn't really matter
