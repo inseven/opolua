@@ -148,6 +148,7 @@ public struct Graphics {
 
         public static let black = Self(r: 0, g: 0, b: 0)
         public static let white = Self(r: 255, g: 255, b: 255)
+        public static let midgray = Self(r: 0x80, g: 0x80, b: 0x80)
         public static let gray = Self(r: 0xAA, g: 0xAA, b: 0xAA)
         public static let alphaMask: UInt32 = 0xFF000000
 

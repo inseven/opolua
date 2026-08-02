@@ -223,7 +223,7 @@ class WindowServer {
         cancelCursorTimer()
         if let cursor {
             let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
-            let col: Graphics.Color = cursor.flags.contains(.grey) ? .gray : .black
+            let col: Graphics.Color = cursor.flags.contains(.grey) ? .midgray : .black
             cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert,
                 origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
             let _ = window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
