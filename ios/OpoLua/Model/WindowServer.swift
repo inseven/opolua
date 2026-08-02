@@ -222,9 +222,10 @@ class WindowServer {
 
         cancelCursorTimer()
         if let cursor {
-            let op = Graphics.DrawCommand.OpType.fill(cursor.rect.size)
+            let round = self.device.isSibo && cursor.flags.contains(.obloid)
+            let op: Graphics.DrawCommand.OpType = round ? .invert(cursor.rect.size) : .fill(cursor.rect.size)
             let col: Graphics.Color = cursor.flags.contains(.grey) ? .midgray : .black
-            cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: .invert,
+            cursorDrawCmd = Graphics.DrawCommand(drawableId: cursor.id, type: op, mode: round ? .set : .invert,
                 origin: cursor.rect.origin, color: col, bgcolor: .white, penWidth: 1, greyMode: .normal)
             let _ = window(for: cursor.id)?.draw(cursorDrawCmd!, provider: self)
             cursorCurrentlyDrawn = true

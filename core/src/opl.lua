@@ -1046,8 +1046,6 @@ function CURSOR(id, x, y, w, h, t)
             t = 0
         end
 
-        t = t & ~1 -- Explicitly ignore obloid cursor flag
-
         if cursor and id == cursor.id
             and x == cursor.rect.x and y == cursor.rect.y
             and w == cursor.rect.w and h == cursor.rect.h and t == cursor.flags then
