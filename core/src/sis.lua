@@ -734,7 +734,15 @@ function installSis(filename, data, iohandler, includeStub, verbose, stubs)
                 return failInstall(i, "epocerr", err, path)
             end
             if file.type == FileType.FileRun and (file.details & FileRunDetails.RunRemove) == 0 then
-                iohandler.sisInstallRun(callbackContext, path, file.details)
+                local result = iohandler.sisInstallRun(callbackContext, path, file.details)
+                if result == nil or result == "continue" then
+                    -- Carry on
+                elseif result == "abort" then
+                    return failInstall(nil, "usercancel")
+                elseif result == "exit" then
+                    -- The non-nil first parameter should result in a rollback
+                    return failInstall(i, "usercancel")
+                end
             end
         elseif file.type == FileType.SisComponent then
             local err = installSis(file.src, file.data, iohandler, includeStub, verbose, stubs)

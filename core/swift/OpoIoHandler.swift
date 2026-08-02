@@ -811,7 +811,7 @@ public struct Sis {
         case `continue` // "Continue" button only
         case skip // "Yes"/"No" buttons, next install file skipped on "No"
         case abort // "Yes"/"No" buttons, abort install on "No"
-        case exit // Same as abort but also do cleanup (?)
+        case exit // Same as abort but does rollback
     }
 
     public enum RunFlag: Int, FlagEnum {
@@ -820,6 +820,11 @@ public struct Sis {
     }
     public typealias RunFlags = FlagSet<RunFlag>
 
+    public enum RunResult: String {
+        case `continue`
+        case abort // No rollback
+        case exit // abort and do rollback
+    }
 }
 
 public protocol SisInstallIoHandler: FileSystemIoHandler {
@@ -835,7 +840,7 @@ public protocol SisInstallIoHandler: FileSystemIoHandler {
     // rollback is unnecessary (because for eg, the native code will take care of it).
     func sisInstallRollback(sis: Sis.File) -> Bool
 
-    func sisInstallRun(sis: Sis.File, path: String, flags: Sis.RunFlags)
+    func sisInstallRun(sis: Sis.File, path: String, flags: Sis.RunFlags) -> Sis.RunResult
 
     func sisInstallComplete(sis: Sis.File)
 }
