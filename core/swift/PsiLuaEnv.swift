@@ -597,8 +597,9 @@ public class PsiLuaEnv {
             print("Bad sisInstallRun params")
             return 0
         }
-        iohandler.value.sisInstallRun(sis: info, path: path, flags: Sis.RunFlags(rawValue: flags))
-        return 0
+        let result = iohandler.value.sisInstallRun(sis: info, path: path, flags: Sis.RunFlags(rawValue: flags))
+        L.push(result)
+        return 1
     }
 
 }
@@ -726,6 +727,8 @@ extension Sis.BeginResult: Pushable {
         }
     }
 }
+
+extension Sis.RunResult: RawPushable {}
 
 extension Sis.InstallError: Pushable {
     public func push(onto state: LuaState) {

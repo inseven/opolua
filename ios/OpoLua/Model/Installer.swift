@@ -117,7 +117,9 @@ extension Installer: SisInstallIoHandler {
         return false // rollback not needed since we install to a sandbox.
     }
 
-    func sisInstallRun(sis: Sis.File, path: String, flags: Sis.RunFlags) {
+    func sisInstallRun(sis: Sis.File, path: String, flags: Sis.RunFlags) -> Sis.RunResult {
+        print("sisInstallRun \(path)")
+        return .continue
     }
 
     func sisInstallComplete(sis: Sis.File) {
