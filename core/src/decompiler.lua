@@ -962,7 +962,9 @@ function decompileProc(proc, options)
                 expr = popExpr(valueType)
             end
 
-            if valueType and isArrayType(valueType) then
+            -- valueType might be an array and expr not be an array index expression, if the original code used the '#'
+            -- syntax to supply an address directly
+            if valueType and isArrayType(valueType) and expr.operand ~= "#" then
                 -- Have to massage expr's arrayIndexExpr to come out right
                 assert(expr.arrayIndexExpr, "Array type without an index expression??")
                 assert(expr.arrayIndexExpr.value == "1", "Unexpected variable array expression")
