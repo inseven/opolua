@@ -23,6 +23,8 @@ import Lua
 import CLua
 import OplCore
 
+private let KEventRequest: Async.RequestHandle = UInt32.max
+
 private func traceHandler(_ L: LuaState!) -> CInt {
     L.settop(1)
     if L.type(1) != .table {
@@ -391,6 +393,7 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
     let iohandler = interpreter.iohandler
     guard let name = L.tostring(1) else { return 0 }
     guard let requestHandle: Async.RequestHandle = L.tovalue(2) else { return 0 }
+    var iohandleRequestHandle: Async.RequestHandle? = requestHandle
 
     L.rawget(LUA_REGISTRYINDEX, key: "requests")
     L.push(index: 3) // completion
@@ -404,6 +407,10 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
             // Have to 'cancel' it here (set the stat but don't signal, unlike an actual cancelRequest)
             let shouldUnref = existing != requestHandle
             callCompletion(L, handle: existing, code: .KErrIOCancelled, unref: shouldUnref)
+            // And no need to make another request to iohandler
+            iohandleRequestHandle = nil
+        } else {
+            iohandleRequestHandle = KEventRequest
         }
 
         let consume = L.toboolean(4)
@@ -435,7 +442,9 @@ private func asyncRequest(_ L: LuaState!) -> CInt {
         fatalError("Unhandled asyncRequest type \(name)")
     }
 
-    iohandler.asyncRequest(Async.Request(type: type, handle: requestHandle))
+    if let iohandleRequestHandle {
+        iohandler.asyncRequest(Async.Request(type: type, handle: iohandleRequestHandle))
+    }
     return 0
 }
 
@@ -688,7 +697,11 @@ private func setEra(_ L: LuaState!) -> CInt {
 
 private func callCompletion(_ L: LuaState, handle: Async.RequestHandle, code: OplError, data: Pushable? = nil, unref: Bool = false) {
     L.rawget(LUA_REGISTRYINDEX, key: "requests")
-    L.rawget(-1, key: handle) // completion fn
+    let t = L.rawget(-1, key: handle) // completion fn
+    if t == .nil {
+        print("No completion in requests for handle \(handle)!")
+        return
+    }
     L.push(code.rawValue)
     if let data {
         L.push(data)
@@ -886,7 +899,17 @@ public class OpoInterpreter: PsiLuaEnv {
 
     func completeRequest(_ L: LuaState!, _ response: Async.Response) {
         L.settop(0)
-        if eventRequest == response.handle {
+        var handle = response.handle
+        // The reason we have this magic KEventRequest value and deferred lookup of the real handle value for event
+        // requests is so that if the program makes an additional GETEVENTA32 call (abandoning the previous one)
+        // when we've already constructed the response, that we can redirect the event to the correct new status var.
+        // This is handled more neatly in the Qt version where we don't have the OpoIoHandler interface which implicitly
+        // assumes there's a 1:1 relationship between requests and responses, which isn't true in the case of event
+        // requests. And it's easier to hide that detail than it is to bloat that interface still further with these
+        // nuances.
+        if response.handle == KEventRequest {
+            precondition(eventRequest != nil)
+            handle = eventRequest!
             eventRequest = nil
         }
 
@@ -968,7 +991,7 @@ public class OpoInterpreter: PsiLuaEnv {
         }
 
         // print("Completing \(type) with value \(val)")
-        callCompletion(L, handle: response.handle, code: val, data: data, unref: true)
+        callCompletion(L, handle: handle, code: val, data: data, unref: true)
         L.settop(0)
     }
 

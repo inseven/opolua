@@ -76,6 +76,7 @@ private:
 #define ASSERT_MAIN_THREAD() Q_ASSERT(QThread::currentThread() == thread())
 
 struct Completion {
+    AsyncHandle::Type type;
     uint32_t ref;
     int code;
     QByteArray data;
@@ -1607,8 +1608,14 @@ void OplRuntime::addEvent(const OplRuntime::Event& event)
 
 void OplRuntime::callCompletion(lua_State* L, uint32_t ref, int code, const QByteArray& data, bool unref)
 {
+    // qDebug("Completing ref %X code %d", ref, code);
     lua_getfield(L, LUA_REGISTRYINDEX, "requests");
     lua_rawgeti(L, -1, ref); // completion fn
+    if (lua_isnil(L, -1)) {
+        qDebug("Attempting to complete ref %X code %d which is not found in requests!", ref, code);
+        lua_pop(L, 2); // requests, nil completion fn
+        return;
+    }
     lua_pushinteger(L, code);
     if (data.isEmpty()) {
         lua_pushnil(L);
@@ -1633,10 +1640,11 @@ int OplRuntime::asyncRequest(lua_State* L)
     QString requestName(lua_tostring(L, 1));
     uint32_t statAddr = (uint32_t)lua_tointeger(L, 2);
     Q_ASSERT(statAddr != 0);
-    
+
     lua_getfield(L, LUA_REGISTRYINDEX, "requests");
     lua_pushinteger(L, statAddr);
     lua_pushvalue(L, 3); // completion
+    // qDebug("asyncRequest %s %X=%s", qPrintable(requestName), statAddr, lua_typename(L, lua_type(L, -1)));
     lua_rawset(L, -3); // registry.requests[statAddr] = completion
     lua_pop(L, 1); // requests
 
@@ -1649,13 +1657,24 @@ int OplRuntime::asyncRequest(lua_State* L)
 
         if (mEventRequest) {
             // Duplicate event requests set the former's stat to KErrIOCancelled but does _not_ signal them
-            // qDebug("Cancelling prev req");
+            // qDebug("Cancelling previous event request");
             bool shouldUnref = mEventRequest->ref() != statAddr;
             callCompletion(L, mEventRequest->ref(), KErrIOCancelled, QByteArray(), shouldUnref);
             mPendingRequests.remove(mEventRequest->ref());
-            // unrefAsync(L, mEventRequest->ref());
             delete mEventRequest;
             mEventRequest = nullptr;
+        }
+
+        // Similarly, in case there's another event request that supersedes one that's already finished but
+        // which hasn't yet been completed, redirect that completion to now refer to this statAddr instead. Yes this
+        // is nasty but it is what the OPL semantics seem to require to avoid dropping events. This possibly may not
+        // do the same as real hardware in the case of a mix of KEYA and GETEVENTA32 calls but I've not seen any app be
+        // _quite_ that crazy.
+        for (int i = mPendingCompletions.count() - 1; i >= 0; i--) {
+            if (mPendingCompletions[i].type == AsyncHandle::event) {
+                mPendingCompletions[i].ref = statAddr;
+                return 0;
+            }
         }
 
         mEventRequest = new EventRequest(statAddr, consume, keyfilter);
@@ -1768,12 +1787,13 @@ void OplRuntime::eventRequestComplete_locked(const Event* event)
 // mPendingRequests but does not delete it.
 void OplRuntime::asyncFinished_locked(AsyncHandle* asyncHandle, int code, const QByteArray& data)
 {
-    int ref = asyncHandle->ref();
+    auto ref = asyncHandle->ref();
     AsyncHandle* h = mPendingRequests.take(ref);
-    // qDebug("asyncHandle=%p ref=0x%x h=%p", asyncHandle, ref, h);
+    // qDebug("asyncFinished asyncHandle=%p ref=0x%X h=%p code=%d", asyncHandle, ref, h, code);
     Q_ASSERT(h);
     Q_ASSERT(h == asyncHandle);
     Completion completion = {
+        .type = h->type(),
         .ref = h->ref(),
         .code = code,
         .data = data
@@ -1789,7 +1809,7 @@ bool OplRuntime::completeAnyRequest_locked(lua_State *L)
     if (mPendingCompletions.count()) {
         Completion c = mPendingCompletions.takeFirst();
         mMutex.unlock();
-        // qDebug("Completing request for ref %d code %d", c.ref, c.code);
+        // qDebug("Completing request for ref %X code %d", c.ref, c.code);
         callCompletion(L, c.ref, c.code, c.data, true);
         return true;
     }
