@@ -798,7 +798,7 @@ function splitQuery(query)
     while true do
         local foundKeyword
         for i, keyword in ipairs(keywords) do
-            local prevGroupEnd, nextPos = queryUpper:match("()%s+"..keyword.."%s*()", pos)
+            local prevGroupEnd, nextPos = queryUpper:match("()%s+"..keyword.."%s+()", pos)
             if nextPos then
                 -- Found a keyword. Assemble everything prior to this to prevKeyword, if applicable
                 foundKeyword = keyword
