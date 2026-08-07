@@ -777,10 +777,6 @@ function decompileProc(proc, options)
     end
 
     local function addStatement(location, ...)
-        if location then
-            checkOpenIfs(location)
-        end
-
         local value = nil
         if select("#", ...) > 0 then
             value = fmt(...)
@@ -791,6 +787,9 @@ function decompileProc(proc, options)
             --  due to other expressions, so need to take the min
             location = math.min(trap, location)
             trap = nil
+        end
+        if location then
+            checkOpenIfs(location)
         end
         local statement = {
             location = location,
@@ -1859,7 +1858,7 @@ function decompileProc(proc, options)
         end
     end
 
-    assert(currentBlock == procBlock, "Unterminated block "..currentBlock.type)
+    assert(currentBlock == procBlock, "Unterminated block "..currentBlock.type.." in "..proc.name)
     assert(trap == nil, "Dangling TRAP")
     local endp = addStatement(proc.codeOffset + proc.codeSize, "ENDP")
     endp.type = "ENDP"
