@@ -244,7 +244,6 @@ private:
             struct {
                 int32_t timestamp;
             } focusevent;
-            int32_t pad[15];
         };
 
         bool isKeyEvent() const;

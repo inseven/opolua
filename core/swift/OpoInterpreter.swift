@@ -919,7 +919,7 @@ public class OpoInterpreter: PsiLuaEnv {
             let intVal = Int32(bitPattern: us32)
             return intVal
         }
-        var ev = Array<Int32>(repeating: 0, count: 16)
+        var ev = Array<Int32>(repeating: 0, count: 9)
         var data: Data? = Data()
         switch (response.value) {
         case .keypressevent(let event):

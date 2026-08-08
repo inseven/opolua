@@ -1580,7 +1580,7 @@ void OplRuntime::closeEvent()
 {
     Event e = {
         .code = opl::command,
-        .pad = {},
+        .keypress = {},
     };
     mGetCmd = "X";
     addEvent(e);
