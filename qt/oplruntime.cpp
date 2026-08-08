@@ -456,6 +456,7 @@ void OplRuntime::restart()
 {
     auto prevRunNextFn = mRunNextFn;
     auto fn = [this, prevRunNextFn]() {
+        mPaused = false;
         lua_settop(L, 0);
         lua_getfield(L, LUA_REGISTRYINDEX, "restartArgs");
         lua_rawgeti(L, 1, 0);
