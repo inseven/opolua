@@ -25,8 +25,9 @@
 #include <QMutexLocker>
 #include <QString>
 
-FileSystemIoHandler::FileSystemIoHandler()
+FileSystemIoHandler::FileSystemIoHandler(QTextCodec& stringCodec)
     : mSimulatedDrive(0)
+    , mStringCodec(&stringCodec)
 {
 }
 
@@ -185,7 +186,7 @@ int FileSystemIoHandler::fsop(lua_State* L)
 {
     auto self = reinterpret_cast<const FileSystemIoHandler*>(lua_touserdata(L, lua_upvalueindex(1)));
     QString cmd(lua_tostring(L, 1));
-    QString path(lua_tostring(L, 2));
+    QString path(self->tolocalstring(L, 2));
 
     const bool cmdReturnsResult = cmd == "read" || cmd == "dir" || cmd == "stat" || cmd == "disks" || cmd == "getNativePath";
     auto err = [L, cmdReturnsResult](int err) {
@@ -321,7 +322,7 @@ int FileSystemIoHandler::fsop(lua_State* L)
         }
         return 1;
     } else if (cmd == "rename") {
-        QString dest(lua_tostring(L, 3));
+        QString dest(self->tolocalstring(L, 3));
         bool destWritable = false;
         QString destNative = self->getNativePath(dest, &destWritable);
         if (destNative.isEmpty()) {
@@ -347,4 +348,16 @@ int FileSystemIoHandler::fsop(lua_State* L)
     qDebug() << "TODO" << cmd << path;
     return err(-1);
 
+}
+
+void FileSystemIoHandler::setStringCodec(QTextCodec& codec)
+{
+    QMutexLocker lock(&mMutex);
+    mStringCodec = &codec;
+}
+
+QString FileSystemIoHandler::tolocalstring(lua_State *L, int index) const
+{
+    auto str = lua_tostring(L, index);
+    return mStringCodec->toUnicode(str);
 }

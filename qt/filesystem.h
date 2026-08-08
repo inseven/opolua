@@ -24,16 +24,18 @@
 #include <QMap>
 #include <QMutex>
 #include <QDir>
+#include <QTextCodec>
 
 class FileSystemIoHandler {
 
 public:
-    explicit FileSystemIoHandler();
+    explicit FileSystemIoHandler(QTextCodec& stringCodec);
     void addMapping(char drive, const QDir& to, bool writable=false);
     void addSimulatedDrive(char drive, const QVector<QString>& files);
     void removeMapping(char drive);
     void removeAllMappings();
     bool isWritable(char drive) const;
+    void setStringCodec(QTextCodec& codec);
 
     void makeFsIoHandlerBridge(lua_State *L) const;
     QString getNativePath(const QString& devicePath, bool* writable=nullptr) const;
@@ -47,12 +49,14 @@ private:
     };
     static int fsop(lua_State* L);
     QString getNativePathLocked(const QString& devicePath, const Drive*& mapping) const;
+    QString tolocalstring(lua_State *L, int index) const;
 
 private:
     mutable QMutex mMutex;
     QMap<char, Drive> mPaths;
     QMap<QString, QString> mSimulatedPaths;
     char mSimulatedDrive;
+    QTextCodec* mStringCodec;
 };
 
 #endif // FILESYSTEM_H

@@ -134,8 +134,8 @@ OplRuntime::OplRuntime(QObject *parent)
     , mHasBackgrounded(false)
     , mHeapCheckEnabled(false)
 {
-    mFs.reset(new FileSystemIoHandler());
     mStringCodec = QTextCodec::codecForName("Windows-1252");
+    mFs.reset(new FileSystemIoHandler(*mStringCodec));
     mConfig["locale"] = "en_GB";
     mConfig["clockFormat"] = "0";
 
@@ -1966,6 +1966,7 @@ int OplRuntime::setEra(lua_State *L)
     } else {
         mStringCodec = QTextCodec::codecForName("Windows-1252");
     }
+    mFs->setStringCodec(*mStringCodec);
 
     if (eraIsSibo != isSibo() && !mIgnoreOpoEra) {
         auto deviceType = eraIsSibo ? psionSeries3c : psionSeries5;
