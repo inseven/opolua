@@ -59,6 +59,7 @@
     <addaction name="breakOnError"/>
     <addaction name="windowFocusEnabled"/>
     <addaction name="actionFlush"/>
+    <addaction name="heapCheckingEnabled"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -474,6 +475,17 @@
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="heapCheckingEnabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Heap Checking</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+K</string>
    </property>
   </action>
  </widget>

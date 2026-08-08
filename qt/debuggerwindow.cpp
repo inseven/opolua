@@ -57,6 +57,7 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     connect(ui->actionFlush, &QAction::triggered, runtime, &OplRuntime::flushGraphicsOps);
     connect(ui->breakOnError, &QAction::triggered, this, &DebuggerWindow::toggleBreakOnError);
     connect(ui->windowFocusEnabled, &QAction::triggered, this, &DebuggerWindow::toggleWindowFocusEnabled);
+    connect(ui->heapCheckingEnabled, &QAction::triggered, this, &DebuggerWindow::toggleHeapCheckingEnabled);
     connect(ui->stackView, &StackView::gotoAddress, this, &DebuggerWindow::gotoAddressSlot);
     connect(ui->actionDebugLog, &QAction::triggered, gApp, &OplApplication::showLogWindow);
     connect(ui->actionExportBitmap, &QAction::triggered, this, &DebuggerWindow::exportBitmap);
@@ -424,6 +425,12 @@ void DebuggerWindow::toggleWindowFocusEnabled()
 {
     bool newState = ui->windowFocusEnabled->isChecked();
     mRuntime->setIgnoreFocusEvents(!newState);
+}
+
+void DebuggerWindow::toggleHeapCheckingEnabled()
+{
+    bool newState = ui->heapCheckingEnabled->isChecked();
+    mRuntime->setHeapCheck(newState);
 }
 
 CodeView* DebuggerWindow::currentCodeView() const

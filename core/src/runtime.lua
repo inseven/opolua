@@ -1858,4 +1858,9 @@ function Runtime:setVariable(procName, index, arrayIndex, newValue)
     end
 end
 
+function Runtime:setHeapCheck(flag)
+    printf("setHeapCheck(%s)\n", flag)
+    self.chunk.checkHeap = flag
+end
+
 return _ENV

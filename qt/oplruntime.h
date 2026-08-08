@@ -159,6 +159,8 @@ public: // Debugging APIs
     bool ignoreFocusEvents() const;
     void setIgnoreFocusEvents(bool flag);
 
+    void setHeapCheck(bool flag);
+
     opl::ProgramInfo getDebugInfo();
     void setVariable(const opl::Frame& frame, const opl::Variable& variable, std::optional<int> arrayIndex, const QString& value);
     static QString varToStr(const opl::Variable& v, int idx = -1);
@@ -271,6 +273,7 @@ private:
     bool debugInfoStale() const;
     void updateDebugInfo(lua_State* L, bool errOnStack = false);
     void doRenameVariable(lua_State* L, const QString& proc, uint32_t index, const QString& newName);
+    void doSetHeapCheck(lua_State* L, bool flag);
 
     DECLARE_IOHANDLER_FN(asyncRequest);
     DECLARE_IOHANDLER_FN(cancelRequest);
@@ -361,6 +364,8 @@ private:
     bool mEscapeOn;
     bool mIgnoreFocusEvents;
     bool mHasBackgrounded;
+    bool mHeapCheckEnabled;
+    std::optional<bool> mPendingSetHeapCheck;
 };
 
 #endif // OPLRUNTIME_H

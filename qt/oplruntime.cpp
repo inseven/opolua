@@ -132,6 +132,7 @@ OplRuntime::OplRuntime(QObject *parent)
     , mEscapeOn(true)
     , mIgnoreFocusEvents(false)
     , mHasBackgrounded(false)
+    , mHeapCheckEnabled(false)
 {
     mFs.reset(new FileSystemIoHandler());
     mStringCodec = QTextCodec::codecForName("Windows-1252");
@@ -567,6 +568,10 @@ int OplRuntime::runOpoHelper(lua_State* L)
     lua_pushvalue(L, -1);
     mRuntimeRef = luaL_ref(L, LUA_REGISTRYINDEX);
     Q_ASSERT(lua_gettop(L) == 1);
+
+    if (mHeapCheckEnabled || (mPendingSetHeapCheck.has_value() && *mPendingSetHeapCheck)) {
+        doSetHeapCheck(L, true);
+    }
 
     int t = luaL_getmetafield(L, 1, "run");
     Q_ASSERT(t == LUA_TFUNCTION);
@@ -2063,7 +2068,13 @@ int OplRuntime::opsync(lua_State* L)
         shouldWait = true;
     }
     bool shouldUpdateDebugInfo = shouldWait || debugInfoStale();
+    std::optional<bool> pendingSetHeapCheck = mPendingSetHeapCheck;
+    mPendingSetHeapCheck = std::nullopt;
     mMutex.unlock();
+
+    if (pendingSetHeapCheck.has_value()) {
+        doSetHeapCheck(L, *pendingSetHeapCheck);
+    }
 
     if (shouldUpdateDebugInfo) {
         call([this, L] {
@@ -2862,4 +2873,32 @@ void OplRuntime::flushGraphicsOps()
     lua_pushcclosure(L, drawMainThread_s, 1);
     lua_insert(L, -2); // Push fn behind ops
     lua_call(L, 1, 0);
+}
+
+void OplRuntime::setHeapCheck(bool flag)
+{
+    ASSERT_MAIN_THREAD();
+    QMutexLocker lock(&mMutex);
+    if (mWaiting) {
+        // We can do it now
+        mPendingSetHeapCheck = std::nullopt;
+        lock.unlock();
+        doSetHeapCheck(L, flag);
+    } else {
+        mPendingSetHeapCheck = flag;
+    }
+}
+
+void OplRuntime::doSetHeapCheck(lua_State* L, bool flag)
+{
+    mHeapCheckEnabled = flag;
+    lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
+    luaL_getmetafield(L, -1, "setHeapCheck");
+    lua_insert(L, -2);
+    lua_pushboolean(L, flag);
+    int err = lua_pcall(L, 2, 0, 0);
+    if (err) {
+        qWarning("Error calling setHeapCheck: %s", luaL_tolstring(L, -1, NULL));
+        lua_pop(L, 1);
+    }
 }
