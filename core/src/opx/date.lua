@@ -220,7 +220,10 @@ function DTHoursDiff(stack, runtime) -- 22
 end
 
 function DTMinutesDiff(stack, runtime) -- 23
-    unimplemented("opx.date.DTMinutesDiff")
+    local endt = popTimeFromStack(stack)
+    local startt = popTimeFromStack(stack)
+    local diff = runtime:iohandler().utctime(endt) - runtime:iohandler().utctime(startt)
+    stack:push(toint32(diff // 60))
 end
 
 function DTSecsDiff(stack, runtime) -- 24
