@@ -35,6 +35,7 @@ private slots:
     void drawableSelected();
     void toggleBreakOnError();
     void toggleWindowFocusEnabled();
+    void toggleHeapCheckingEnabled();
     void stepOver();
     void setCurrentEditor(const QString& module);
     void gotoAddressSlot(const QString& module, uint32_t address);

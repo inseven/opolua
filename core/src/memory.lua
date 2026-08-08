@@ -61,7 +61,25 @@ Chunk = class {
     address = 0, -- Note, chunk must start on a chunkstride boundary
     maxIdx = 0, -- A convenience for dump() when using unsized Chunks
     size = nil, -- Must be set to use alloc
+    checkHeap = false,
+    shadow = {}, -- Tracks heap metadata but is sparse (ie doesn't have actual data in, just heap cell headers)
 }
+
+local function setShadowWord(chunk, idx, val)
+    chunk[idx] = val
+    chunk.shadow[idx] = val
+end
+
+local function getShadowWord(chunk, idx)
+    local val = chunk[idx] or 0
+    if chunk.checkHeap then
+        local expected = chunk.shadow[idx] or 0
+        if val ~= expected then
+            error(string.format("HEAP CORRUPTION: cell index %d is %08X in heap but %08X in shadow", idx, val, expected))
+        end
+    end
+    return val
+end
 
 function Chunk:checkRange(addr)
     local max = self.address + self.size
@@ -216,6 +234,7 @@ function Chunk:allocVariable(type, stringMaxLen, arrayLen)
         sz = sz * arrayLen
     end
     local allocOffset = self:alloc(sz + prefix)
+    assert(allocOffset, "OOM in allocVariable!")
     local result = self:makeNewVariable(allocOffset, type, stringMaxLen, arrayLen)
     result._allocOffset = allocOffset
     return result
@@ -233,9 +252,10 @@ function Chunk:setSize(len)
     assert(self.size == nil and self[0] == nil and self.maxIdx == 0, "Cannot resize chunks!")
     assert(len & 0x3 == 0, "Chunk size must be aligned!")
     self.size = len
-    self[0] = 1 -- 0 always points to the first free cell
-    self[1] = len -- Cell size of the first (and only) free cell)
-    self[2] = 0 -- Next free cell index (ie, no more)
+    setShadowWord(self, 0, 1) -- 0 always points to the first free cell
+    setShadowWord(self, 1, len) -- Cell size of the first (and only) free cell)
+    setShadowWord(self, 2, 0) -- Next free cell index (ie, no more)
+
 end
 
 function Chunk:alloc(len)
@@ -247,7 +267,7 @@ function Chunk:alloc(len)
     local freeCellPtrIdx = 0
     local idx, cellLen
     while true do
-        idx = self[freeCellPtrIdx] or 0
+        idx = getShadowWord(self, freeCellPtrIdx)
         if idx == 0 then
             -- No more free cells
             print("OOM!")
@@ -256,7 +276,7 @@ function Chunk:alloc(len)
             -- error("OOM DOOM")
             return nil
         end
-        cellLen = self[idx] or 0
+        cellLen = getShadowWord(self, idx)
         if cellLen >= len + 4 then
             -- Found a big enough cell
             break
@@ -264,20 +284,20 @@ function Chunk:alloc(len)
         freeCellPtrIdx = idx + 1
     end
     -- print("idx", idx)
-    local nextFreeCellIdx = self[idx + 1]
+    local nextFreeCellIdx = getShadowWord(self, idx + 1)
     -- print("nextFreeCellIdx", nextFreeCellIdx)
     local remaining = cellLen - (len + 4)
     -- print("remaining", remaining)
     if remaining >= 8 then
         -- There's room to split the cell
-        self[idx] = len + 4
+        setShadowWord(self, idx, len + 4)
         local newCellIdx = idx + 1 + (len >> strideshift)
         -- print("newCellIdx", newCellIdx)
-        self[newCellIdx] = remaining
-        self[newCellIdx + 1] = nextFreeCellIdx
+        setShadowWord(self, newCellIdx, remaining)
+        setShadowWord(self, newCellIdx + 1, nextFreeCellIdx)
         nextFreeCellIdx = newCellIdx
     end
-    self[freeCellPtrIdx] = nextFreeCellIdx
+    setShadowWord(self, freeCellPtrIdx, nextFreeCellIdx)
     local result = (idx + 1) << strideshift
     -- printf("--> 0x%X freeCellList after: %s\n", result, self:freeCellListStr())
     -- self:write(result, string.rep("\xAA", len))
@@ -318,7 +338,7 @@ end
 
 -- This isn't a complicated calculation, it's more for clarity
 function Chunk:getCellLen(cellIdx)
-    return self[cellIdx]
+    return getShadowWord(self, cellIdx)
 end
 
 function Chunk:getAllocLen(offset)
@@ -336,36 +356,36 @@ function Chunk:free(offset)
 end
 
 function Chunk:declareFreeCell(cellIdx, cellLen)
-    self[cellIdx] = cellLen -- In the case of Chunk:free() this is already set, but do it here anyway to handle realloc
+    setShadowWord(self, cellIdx, cellLen) -- In the case of Chunk:free() this is already set, but do it here anyway to handle realloc
 
     -- Find the freeCell immediately before where this should go
     local prev = -1
-    local fc = self[prev + 1]
+    local fc = getShadowWord(self, prev + 1)
     while fc ~= 0 do
         if fc > cellIdx then
             break
         end
         prev = fc
-        fc = self[prev + 1]
+        fc = getShadowWord(self, prev + 1)
     end
 
-    local nextCell = self[prev + 1]
+    local nextCell = getShadowWord(self, prev + 1)
     -- printf("declareFreeCell(%X): prev=%X next=%X\n", cellIdx << strideshift, prev << strideshift, nextCell << strideshift)
-    self[prev + 1] = cellIdx -- prev->next = cellIdx
-    self[cellIdx + 1] = nextCell -- cell->next = nextCell
+    setShadowWord(self, prev + 1, cellIdx) -- prev->next = cellIdx
+    setShadowWord(self, cellIdx + 1, nextCell) -- cell->next = nextCell
 
     -- Now check if we can coelsce cell with either its prev or its next
     if nextCell > 0 and cellIdx + (cellLen >> strideshift) == nextCell then
         -- printf("Merging cell %X len %d with next %X\n", cellIdx << strideshift, cellLen, nextCell << strideshift)
         cellLen = cellLen + self:getCellLen(nextCell)
-        nextCell = self[nextCell + 1]
-        self[cellIdx] = cellLen
-        self[cellIdx + 1] = nextCell
+        nextCell = getShadowWord(self, nextCell + 1)
+        setShadowWord(self, cellIdx, cellLen)
+        setShadowWord(self, cellIdx + 1, nextCell)
     end
     if prev > 0 and prev + (self:getCellLen(prev) >> strideshift) == cellIdx then
         -- printf("Merging cell %X with prev %X len %d\n", cellIdx << strideshift, prev << strideshift, self:getCellLen(prev))
-        self[prev] = self:getCellLen(prev) + cellLen -- set prev cellLen
-        self[prev + 1] = nextCell
+        setShadowWord(self, prev, self:getCellLen(prev) + cellLen) -- set prev cellLen
+        setShadowWord(self, prev + 1, nextCell)
     end
     -- printf("freeCellList after: %s\n", self:freeCellListStr())
 end
@@ -385,7 +405,7 @@ function Chunk:realloc(offset, sz)
         -- Shrink in place
         local cellIdx = (offset - 4) >> strideshift
         if allocLen - sz >= 8 then
-            self[cellIdx] = sz
+            setShadowWord(self, cellIdx, sz)
             self:declareFreeCell((offset + sz) >> strideshift, allocLen - sz)
         end
         return offset
