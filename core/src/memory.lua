@@ -520,6 +520,10 @@ function Variable:__call(val)
                 error(KErrStrTooLong)
             end
             data = string_pack("<B", #val)..val
+        elseif t == EReal then
+            -- See https://github.com/inseven/opolua/issues/707#issuecomment-5222015874 for why we flip the data around
+            local d = string_pack("<d", val)
+            data = string_sub(d, 4)..string_sub(d, 1, 4)
         else
             data = string_pack(FmtForType[t], val)
         end
@@ -557,6 +561,10 @@ function Variable:__call(val)
         else
             -- Fall back to the slow path
             local bytes = chunk:read(offset, ValSize[t])
+            if t == EReal then
+                -- See https://github.com/inseven/opolua/issues/707#issuecomment-5222015874 for why we flip the data around
+                bytes = string_sub(bytes, 4)..string_sub(bytes, 1, 4)
+            end
             local result = string_unpack(assert(FmtForType[t]), bytes)
             return result
         end
