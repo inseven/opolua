@@ -1855,7 +1855,25 @@ function decompileProc(proc, options)
         if ip == initialIp then
             local ok, err = xpcall(decodeNextStatement, debug.traceback)
             if not ok then
-                return nil, fmt("Error during decode of proc '%s' at 0x%08X:\n%s\n", proc.name, initialIp, err)
+                -- Abort the decompile and fall back to just instruction decode
+                currentBlock = procBlock
+                trap = nil
+                gotoLabels = {}
+                namedLabels = {}
+                procBlock.statements = {
+                    { value = "REM An error occurred during decode of the procedure:" }
+                }
+                for line in err:gmatch("[^\n]+") do
+                    table.insert(procBlock.statements, { value = "REM " .. line })
+                end
+                table.insert(procBlock.statements, { value = "REM The raw disassembly is as follows:" })
+                local rt = require("runtime").newRuntime(nil, oplFormat)
+                rt:addModule("C:\\module", { proc }, options.opxTable)
+
+                rt:decodeProc(proc.name, nil, function(location, line)
+                    table.insert(procBlock.statements, { location = location, value = "REM "..line })
+                end)
+                break
             end
         end
     end
