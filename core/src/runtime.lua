@@ -1066,29 +1066,39 @@ function Runtime:addressType()
 end
 
 function Runtime:decodeNextInstruction()
+    local location, text = self:doDecodeNextInstruction()
+    return fmt("%08X: %s", location, text)
+
+end
+
+function Runtime:doDecodeNextInstruction()
     local currentIp = self.ip
     local opCode = sbyte(self.data, currentIp + 1)
     if not opCode then
-        return fmt("%08X: ???", currentIp)
+        return currentIp, "???"
     end
     local op = self.opcodes[opCode]
     self.ip = currentIp + 1
     local opDump = op and op.."_dump"
     local extra = ops[opDump] and ops[opDump](self)
-    return fmt("%08X: %02X [%s]%s", currentIp, opCode, op or "?", extra and (" "..extra) or "")
+    return currentIp, fmt("%02X [%s]%s", opCode, op or "?", extra and (" "..extra) or "")
 end
 
-function Runtime:dumpRawBytesUntil(newIp)
+function Runtime:dumpRawBytesUntil(newIp, outFn)
     while self.ip < newIp do
         local val = string.unpack("b", self.data, 1 + self.ip)
         local valu = string.unpack("B", self.data, 1 + self.ip)
         local ch = string.char(valu):gsub("[\x00-\x1F\x7F-\xFF]", "?")
-        printf("%08X: %02X (%d) '%s'\n", self.ip, valu, val, ch)
+        outFn(self.ip, fmt("%02X (%d) '%s'", self.ip, valu, val, ch))
         self.ip = self.ip + 1
     end
 end
 
 function Runtime:dumpProc(procName, startAddr)
+    self:decodeProc(procName, startAddr, function(loc, line) printf("%08X: %s\n", loc, line) end)
+end
+
+function Runtime:decodeProc(procName, startAddr, outFn)
     local proc = self:findProc(procName)
     local endIdx = proc.codeOffset + proc.codeSize
     self:pushNewFrame(nil, proc, #proc.params)
@@ -1103,8 +1113,8 @@ function Runtime:dumpProc(procName, startAddr)
             -- data.
             local jmp = string.unpack("<i2", self.data, 1 + self.ip + 1)
             local newIp = self.ip + jmp
-            print(self:decodeNextInstruction()) -- prints the goto
-            self:dumpRawBytesUntil(newIp)
+            outFn(self:doDecodeNextInstruction()) -- prints the goto
+            self:dumpRawBytesUntil(newIp, outFn)
             realCodeStart = newIp
         elseif string.unpack("c3", self.data, 1 + self.ip) == "\x4F\x00\x5B" then
             -- Similarly, workaround a [StackByteAsWord] 0, [BranchIfFalse]
@@ -1115,26 +1125,26 @@ function Runtime:dumpProc(procName, startAddr)
                 if self.ip == realCodeStart then
                     realCodeStart = newIp
                 end
-                print(self:decodeNextInstruction()) -- StackByteAsWord
-                print(self:decodeNextInstruction()) -- BranchIfFalse
-                self:dumpRawBytesUntil(newIp)
+                outFn(self:doDecodeNextInstruction()) -- StackByteAsWord
+                outFn(self:doDecodeNextInstruction()) -- BranchIfFalse
+                self:dumpRawBytesUntil(newIp, outFn)
             end
         elseif self.ip == realCodeStart and self.data:sub(1 + self.ip, self.ip + 10):match("[\x00\x08]..\x4F.\x40%\x5B..%\x2B") then
             -- Another variant which does a CompareEqualInt against an extern
             -- variable that's (afaics) always going to be zero.
 
             -- Simple[In]DirectRightSideInt, StackByteAsWord, CompareEqualInt, BranchIfFalse, ConstantString
-            print(self:decodeNextInstruction()) -- SimpleInDirectRightSideInt
-            print(self:decodeNextInstruction()) -- StackByteAsWord
-            print(self:decodeNextInstruction()) -- CompareEqualInt
+            outFn(self:doDecodeNextInstruction()) -- SimpleInDirectRightSideInt
+            outFn(self:doDecodeNextInstruction()) -- StackByteAsWord
+            outFn(self:doDecodeNextInstruction()) -- CompareEqualInt
             local jmp = string.unpack("<i2", self.data, 1 + self.ip + 1)
             local newIp = self.ip + jmp            
-            print(self:decodeNextInstruction()) -- BranchIfFalse
-            self:dumpRawBytesUntil(newIp)
+            outFn(self:doDecodeNextInstruction()) -- BranchIfFalse
+            self:dumpRawBytesUntil(newIp, outFn)
         end
 
         if self.ip == initialIp then -- ie above didn't change anything
-            print(self:decodeNextInstruction())
+            outFn(self:doDecodeNextInstruction())
         end
     end
     self:setFrame(nil)
