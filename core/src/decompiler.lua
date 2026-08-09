@@ -414,7 +414,7 @@ function decompileProc(proc, options)
             state.indexes[n] = i
             statement = block.statements[i]
 
-            if statement == nil and n > 1 then
+            while statement == nil and n > 1 do
                 -- Gone past the last statement in the block, unwind
                 state.blocks[n] = nil
                 state.indexes[n] = nil
@@ -2091,7 +2091,6 @@ function decompileProc(proc, options)
     end
 
     -- A pass to coelesce PRINT statements - do this only after all other statements like ENDIFs have been inserted
-    i = options.mergePrints == false and #statements or 1
     if options.mergePrints ~= false then
         for block, i, s in allStatements() do
             local isPrint = s.type == "gPRINT" or s.type == "PRINT" or s.type == "LPRINT"
