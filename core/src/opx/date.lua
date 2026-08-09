@@ -251,7 +251,9 @@ function DTDayNoInYear(stack, runtime) -- 27
 end
 
 function DTDayNoInWeek(stack, runtime) -- 28
-    unimplemented("opx.date.DTDayNoInWeek")
+    local dh = popTimeFromStack(stack)
+    local t = runtime:iohandler().utctime(dh)
+    stack:push(runtime:DOW(t))
 end
 
 function DTDaysInMonth(stack, runtime) -- 29

@@ -2022,6 +2022,16 @@ function DAYSTODATE(days)
     return result.year, result.month, result.day
 end
 
+-- Note, takes a time in seconds rather than day,month,year like the OPL DOW fn
+function DOW(t)
+    -- Lua (and C) use 1 to mean Sunday, OPL 1 is Monday...
+    local result = os.date("!*t", t).wday - 1
+    if result == 0 then
+        result = 7
+    end
+    return result
+end
+
 -- Series 3 status window
 
 local function redrawStatusWindow()

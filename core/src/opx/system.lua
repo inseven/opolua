@@ -106,11 +106,13 @@ fns = {
 }
 
 function BackLightOn(stack, runtime) -- 1
-    unimplemented("opx.system.BackLightOn")
+    stack:push(0)
 end
 
 function SetBackLightOn(stack, runtime) -- 2
-    unimplemented("opx.system.SetBackLightOn")
+    local flag = stack:pop()
+    printf("SetBackLightOn(%d)\n", flag)
+    stack:push(0)
 end
 
 function SetBackLightOnTime(stack, runtime) -- 3
