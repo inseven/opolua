@@ -247,7 +247,7 @@ function gTWIDTH(text, fontId, style)
         local chw = font.widths[1 + string_byte(text, i)]
         if mono and chw > 0 then
             -- How are zero-width chars handled? Don't know!
-            chw = font.widths[1 + string.byte("0")]
+            chw = font.widths[1 + string.byte("O")]
         end
         width = width + chw
         if bold and chw > 0 then
@@ -1377,7 +1377,7 @@ function drawText(str, x, y, mode, xflags)
         local ch = string_byte(str, i)
         local bmpx = (ch % 32) * maxwidth
         local bmpy = (ch // 32) * h
-        local chw = mono and font.widths[1 + string.byte("0")] or font.widths[1 + ch]
+        local chw = mono and font.widths[1 + string.byte("O")] or font.widths[1 + ch]
         if chw > 0 then
             addChar(bmpx, bmpy, chw, h, x, y)
             if bold then
