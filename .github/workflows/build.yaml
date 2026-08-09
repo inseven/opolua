@@ -25,22 +25,25 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
           fetch-depth: 0
 
-    - name: Install the tool dependencies
+    # Ensure we're using the latest version of mise in an attempt to catch upstream errors early.
+    - name: Get the latest mise version
+      id: mise
+      run: echo "version=$(curl -fsSL https://mise.jdx.dev/VERSION)" >> "$GITHUB_OUTPUT"
+
+    - name: Install mise
       uses: jdx/mise-action@v4
+      with:
+        version: ${{ steps.mise.outputs.version }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Install dependencies
-      run: scripts/install-dependencies.sh
 
     - name: Generate version and build numbers
       id: version
       run: |
-        source scripts/environment.sh
         VERSION_NUMBER=`changes version`
         BUILD_NUMBER=`build-tools generate-build-number`
         echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
@@ -55,12 +58,21 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
-    - name: Install dependencies
-      run: scripts/install-dependencies.sh
+    # Ensure we're using the latest version of mise in an attempt to catch upstream errors early.
+    - name: Get the latest mise version
+      id: mise
+      run: echo "version=$(curl -fsSL https://mise.jdx.dev/VERSION)" >> "$GITHUB_OUTPUT"
+
+    - name: Install mise
+      uses: jdx/mise-action@v4
+      with:
+        version: ${{ steps.mise.outputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and test
       run: scripts/build-package.sh
@@ -78,12 +90,21 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
-    - name: Install dependencies
-      run: scripts/install-dependencies.sh
+    # Ensure we're using the latest version of mise in an attempt to catch upstream errors early.
+    - name: Get the latest mise version
+      id: mise
+      run: echo "version=$(curl -fsSL https://mise.jdx.dev/VERSION)" >> "$GITHUB_OUTPUT"
+
+    - name: Install mise
+      uses: jdx/mise-action@v4
+      with:
+        version: ${{ steps.mise.outputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Test Lua
       run: scripts/test.sh
@@ -208,7 +229,7 @@ jobs:
       run: ${{ matrix.setup }}
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -240,13 +261,13 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
     - name: Cache Qt
       id: cache-qt
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: qt-install
         key: qt-${{ runner.os }}-${{ hashFiles('scripts/install-qt.sh') }}
@@ -280,17 +301,21 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
-    - name: Install the tool dependencies
+    # Ensure we're using the latest version of mise in an attempt to catch upstream errors early.
+    - name: Get the latest mise version
+      id: mise
+      run: echo "version=$(curl -fsSL https://mise.jdx.dev/VERSION)" >> "$GITHUB_OUTPUT"
+
+    - name: Install mise
       uses: jdx/mise-action@v4
+      with:
+        version: ${{ steps.mise.outputs.version }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Install dependencies
-      run: scripts/install-dependencies.sh
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
@@ -338,12 +363,21 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
           fetch-depth: 0
 
-    - name: Install dependencies
-      run: scripts/install-dependencies.sh
+    # Ensure we're using the latest version of mise in an attempt to catch upstream errors early.
+    - name: Get the latest mise version
+      id: mise
+      run: echo "version=$(curl -fsSL https://mise.jdx.dev/VERSION)" >> "$GITHUB_OUTPUT"
+
+    - name: Install mise
+      uses: jdx/mise-action@v4
+      with:
+        version: ${{ steps.mise.outputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - uses: actions/download-artifact@v8
       with:
@@ -384,17 +418,28 @@ jobs:
       steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Install the tool dependencies
+      # Ensure we're using the latest version of mise in an attempt to catch upstream errors early.
+      - name: Get the latest mise version
+        id: mise
+        run: echo "version=$(curl -fsSL https://mise.jdx.dev/VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Install mise
         uses: jdx/mise-action@v4
+        with:
+          version: ${{ steps.mise.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies
-        run: scripts/install-dependencies.sh
+      - name: Cache the Jekyll dependencies
+        uses: actions/cache@v6
+        with:
+          path: docs/vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('docs/Gemfile.lock') }}
+          restore-keys: ${{ runner.os }}-gems-
 
       - name: Build website
         run: |

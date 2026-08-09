@@ -1,9 +1,8 @@
 .build
 .jekyll-cache
-.local
 .swiftpm
 /_site
 /docs/docs/cli/*/_help.txt
 /docs/releases
-/scripts/Pipfile.lock
+/docs/vendor
 build

@@ -27,7 +27,6 @@ set -u
 
 ROOT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 
-SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 SRC_DIRECTORY="$ROOT_DIRECTORY/qt"
 BUILD_DIRECTORY="$ROOT_DIRECTORY/qt/build"
 TEMPORARY_DIRECTORY="${ROOT_DIRECTORY}/temp"
@@ -37,8 +36,6 @@ ENV_PATH="$ROOT_DIRECTORY/.env"
 
 QT_INSTALL_DIRECTORY="$ROOT_DIRECTORY/qt-install"
 export PATH="$QT_INSTALL_DIRECTORY/bin:$PATH"
-
-source "$SCRIPTS_DIRECTORY/environment.sh"
 
 # Generate a random string to secure the local keychain.
 export TEMPORARY_KEYCHAIN_PASSWORD=`openssl rand -base64 14`
