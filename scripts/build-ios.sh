@@ -26,7 +26,6 @@ set -x
 set -u
 
 ROOT_DIRECTORY="$( cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )" &> /dev/null && pwd )"
-SCRIPTS_DIRECTORY="$ROOT_DIRECTORY/scripts"
 SRC_DIRECTORY="$ROOT_DIRECTORY/core/src"
 APP_DIRECTORY="$ROOT_DIRECTORY/ios"
 
@@ -37,8 +36,6 @@ KEYCHAIN_PATH="$TEMPORARY_DIRECTORY/temporary.keychain"
 MACOS_ARCHIVE_PATH="$BUILD_DIRECTORY/Archive-macOS.xcarchive"
 IOS_ARCHIVE_PATH="$BUILD_DIRECTORY/Archive-iOS.xcarchive"
 ENV_PATH="$APP_DIRECTORY/.env"
-
-source "$SCRIPTS_DIRECTORY/environment.sh"
 
 # Process the command line arguments.
 POSITIONAL=()

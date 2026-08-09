@@ -37,8 +37,6 @@ ARTIFACTS_DIRECTORY="$ROOT_DIRECTORY/artifacts"
 ENV_PATH="$ROOT_DIRECTORY/.env"
 RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/upload-and-publish-release.sh"
 
-source "$SCRIPTS_DIRECTORY/environment.sh"
-
 # Check that the GitHub command is available on the path.
 which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
 

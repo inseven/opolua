@@ -31,8 +31,6 @@ CLI_DIRECTORY="$ROOT_DIRECTORY/bin"
 WEBSITE_DIRECTORY="$ROOT_DIRECTORY/docs"
 CLI_DOCUMENTATION_DIRECTORY="$WEBSITE_DIRECTORY/docs/cli"
 
-source "$SCRIPTS_DIRECTORY/environment.sh"
-
 function generate_command_usage() {
     COMMAND=$1
     # Since OpoLua commands follow the convention of exiting with an error when printing help, we have to temporarily
@@ -50,10 +48,6 @@ VERSION_NUMBER=${VERSION_NUMBER:-0.0.1}
 BUILD_NUMBER=${BUILD_NUMBER:-0}
 
 # Install the Jekyll dependencies.
-export GEM_HOME="$ROOT_DIRECTORY/.local/ruby"
-mkdir -p "$GEM_HOME"
-export PATH="$GEM_HOME/bin":$PATH
-gem install bundler
 cd "$WEBSITE_DIRECTORY"
 bundle install
 
