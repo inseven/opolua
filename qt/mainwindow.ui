@@ -57,6 +57,7 @@
     </property>
     <addaction name="actionMenu"/>
     <addaction name="actionDiamond"/>
+    <addaction name="actionHelpKey"/>
     <addaction name="actionRestart"/>
     <addaction name="actionStop"/>
     <addaction name="actionSendCloseEvent"/>
@@ -430,6 +431,11 @@
    </property>
    <property name="shortcut">
     <string>F5</string>
+   </property>
+  </action>
+  <action name="actionHelpKey">
+   <property name="text">
+    <string>Press 'Help' Key (F3)</string>
    </property>
   </action>
  </widget>

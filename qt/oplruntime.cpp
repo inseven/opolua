@@ -1395,6 +1395,13 @@ void OplRuntime::pressDiamondKey()
     keyEvent(QKeyEvent(QEvent::KeyRelease, Qt::Key_F2, Qt::NoModifier));
 }
 
+void OplRuntime::pressHelpKey()
+{
+    Q_ASSERT(isSiboDeviceType(mDeviceType));
+    keyEvent(QKeyEvent(QEvent::KeyPress, Qt::Key_F3, Qt::NoModifier));
+    keyEvent(QKeyEvent(QEvent::KeyRelease, Qt::Key_F3, Qt::NoModifier));
+}
+
 void OplRuntime::keyEvent(const QKeyEvent& event)
 {
     // qDebug("keyEvent %d type=%d repeat=%d", event.key(), event.type(), event.isAutoRepeat());
