@@ -107,6 +107,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionRestart, &QAction::triggered, runtime, &OplRuntime::restart);
     connect(ui->actionMenu, &QAction::triggered, runtime, &OplRuntime::pressMenuKey);
     connect(ui->actionDiamond, &QAction::triggered, runtime, &OplRuntime::pressDiamondKey);
+    connect(ui->actionHelpKey, &QAction::triggered, runtime, &OplRuntime::pressHelpKey);
     connect(ui->actionSeries3, &QAction::triggered, this, [this] { setDevice(psionSeries3); });
     connect(ui->actionSeries3c, &QAction::triggered, this, [this] { setDevice(psionSeries3c); });
     connect(ui->actionSiena, &QAction::triggered, this, [this] { setDevice(psionSiena); });
@@ -229,6 +230,7 @@ void MainWindow::onDeviceTypeChanged()
     bool sibo = getRuntime().isSibo();
     auto device = getRuntime().getDeviceType();
     ui->actionDiamond->setVisible(sibo);
+    ui->actionHelpKey->setVisible(sibo);
     ui->actionSeries3->setVisible(sibo);
     ui->actionSeries3c->setVisible(sibo);
     ui->actionSiena->setVisible(sibo);

@@ -58,6 +58,7 @@ int qtKeyToOpl(int qtKey)
     // case Qt::Key_ScrollLock:
     case Qt::Key_F1: return opl::menu;
     case Qt::Key_F2: return opl::diamond;
+    case Qt::Key_F3: return opl::help;
     // case Qt::Key_Super_L:
     // case Qt::Key_Super_R:
     case Qt::Key_Menu: return opl::menu;

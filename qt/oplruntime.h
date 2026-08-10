@@ -176,6 +176,7 @@ public slots:
     void restart();
     void pressMenuKey();
     void pressDiamondKey();
+    void pressHelpKey();
     void runFaster();
     void runSlower();
     void closeEvent();
