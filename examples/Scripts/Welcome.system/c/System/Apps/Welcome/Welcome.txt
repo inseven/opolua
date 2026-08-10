@@ -277,12 +277,18 @@ PROC drawWelcome:
 	LOCAL x%, id%, bit%, i%, iconsPath$(255)
 	gCOLOR 128, 128, 128
 	gAT 0, 16
-	gFONT KFontEiksym15&
-	gSTYLE KgStyleNormal%
-	gPRINT "#"
-	gAT 15, 16
-	gFONT KFontSquashed&
-	gPRINT "Press this to simulate the Menu key"
+	IF MachineName$: = "OpoLua Qt"
+		gAT 4, 16
+		gFONT KFontSquashed&
+		gPRINT "Press F1 to simulate the Menu key"
+	ELSE
+		gFONT KFontEiksym15&
+		gSTYLE KgStyleNormal%
+		gPRINT "#"
+		gAT 15, 16
+		gFONT KFontSquashed&
+		gPRINT "Press this to simulate the Menu key"
+	ENDIF
 
 	gCOLOR 0, 0, 0
 	gSTYLE KgStyleBold%

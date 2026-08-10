@@ -152,6 +152,8 @@ class Program {
                 oplConfig[key] = "0" // analog
             case .locale:
                 oplConfig[key] = "en_GB"
+            case .machineName:
+                oplConfig[key] = "OpoLua"
             }
         }
         
@@ -514,6 +516,8 @@ extension Program: OpoIoHandler {
                 settings.clockType = clockType
             case .locale:
                 break // TODO persist this? It's not currently settable, so...
+            case .machineName:
+                break
             }
         }
     }

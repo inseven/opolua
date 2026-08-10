@@ -458,7 +458,8 @@ function SetPointerGrabOn(stack, runtime) -- 48
 end
 
 function MachineName(stack, runtime) -- 49
-    stack:push("OpoLua")
+    local name = runtime:iohandler().getConfig("machineName")
+    stack:push(name)
 end
 
 function MachineUniqueId(stack, runtime) -- 50
