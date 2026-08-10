@@ -138,6 +138,7 @@ OplRuntime::OplRuntime(QObject *parent)
     mFs.reset(new FileSystemIoHandler(*mStringCodec));
     mConfig["locale"] = "en_GB";
     mConfig["clockFormat"] = "0";
+    mConfig["machineName"] = "OpoLua Qt";
 
     L = luaL_newstate();
     luaL_requiref(L, LUA_GNAME, luaopen_base, 1);

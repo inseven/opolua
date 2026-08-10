@@ -679,6 +679,7 @@ extension Async.KeyPressEvent {
 public enum ConfigName: String, CaseIterable {
     case clockFormat // 0: analog, 1: digital
     case locale // eg "en_GB"
+    case machineName
 }
 
 public struct TextFieldInfo: Codable {
