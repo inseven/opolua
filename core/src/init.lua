@@ -546,6 +546,7 @@ function hexUnescape(str)
     return str:gsub("\\x(%x%x)", function(hexcode) return string.char(tonumber(hexcode, 16)) end)
 end
 
+KKeyHelp = 291
 KKeyDiamond = 292
 
 local charCodeMap = {
@@ -569,8 +570,8 @@ function keycodeToCharacterCode(rawKeycode)
         return ch | psionBit
     elseif keycode < 256 then
         return rawKeycode
-    elseif keycode == KKeyDiamond then
-        -- diamond key, there is no "32" code because the key was removed in epoc32, so no translation needed.
+    elseif keycode == KKeyDiamond or keycode == KKeyHelp then
+        -- for these, there is no "32" code because the key was removed in epoc32, so no translation needed.
         return rawKeycode
     else
         error("Unknown keycode "..tostring(rawKeycode))
