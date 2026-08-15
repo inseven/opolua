@@ -139,7 +139,7 @@ function gCLS()
     -- printf("gCLS\n")
     local context = runtime:getGraphicsContext()
     context.pos = { x = 0, y = 0 }
-    runtime:drawCmd("fill", { width = context.width, height = context.height, mode = 1 })
+    runtime:drawCmd("fill", { width = context.width, height = context.height, mode = 1, greyMode = 2 })
 end
 
 function gAT(x, y)

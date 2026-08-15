@@ -87,7 +87,12 @@ private func draw(_ L: LuaState!) -> CInt {
         }
         let mode = Graphics.Mode(rawValue: L.toint(-1, key: "mode") ?? 0) ?? .set
         let penWidth = L.toint(-1, key: "penwidth") ?? 1
-        let greyMode: Graphics.GreyMode = L.getdecodable(-1, key: "greyMode") ?? .normal
+        let greyMode: Graphics.GreyMode
+        if interpreter.era == .sibo {
+            greyMode = L.getdecodable(-1, key: "greyMode") ?? .normal
+        } else {
+            greyMode = .normal
+        }
         let optype: Graphics.DrawCommand.OpType
         switch (t) {
         case "fill":

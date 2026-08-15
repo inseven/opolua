@@ -1022,7 +1022,7 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
 void Window::draw(const OplScreen::DrawCmd& cmd)
 {
     invalidateMask();
-    if (cmd.greyMode) {
+    if (cmd.greyMode && mGreyPlane) {
         // For simplicity of compositing, make sure any non-white colours are set to the grey level we want
         auto greyPlaneCmd = cmd;
         if (greyPlaneCmd.color != 0xFFFFFFFF) {
