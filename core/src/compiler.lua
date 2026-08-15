@@ -1342,8 +1342,7 @@ function ProcState:getVar(token, isArray)
     if external == nil then
         -- Do we have an externalDecl for it?
         local decl = self.externalDecls[token.val]
-        synassert(decl or not self.strictExternals, token,
-            "External used without being declared when DECLARE EXTERNAL is in effect")
+        synassert(decl or not self.strictExternals, token, "Undefined external %s", token.val)
         if decl then
             synassert(dataType == decl.type, token,
                 "Type %d does not match EXTERNAL declaration type %d", dataType, decl.type)
