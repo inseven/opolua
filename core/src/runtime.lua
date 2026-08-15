@@ -724,7 +724,9 @@ function Runtime:drawCmd(type, op)
         op.y = context.pos.y
     end
     op.penwidth = context.penwidth
-    op.greyMode = context.greyMode
+    if not op.greyMode then
+        op.greyMode = context.greyMode
+    end
 
     self:incrementOpCount(context)
 
