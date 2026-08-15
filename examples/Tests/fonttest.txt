@@ -1,0 +1,163 @@
+INCLUDE "const.oph"
+
+DECLARE EXTERNAL
+
+EXTERNAL showFont:(font&, name$, grid%)
+EXTERNAL addFont:(font&, name$)
+
+CONST KMaxFonts% = 48
+
+PROC main:
+    GLOBAL fontcount%
+    GLOBAL fonts&(KMaxFonts%), fontNames$(KMaxFonts%, 16)
+    GLOBAL screenw%
+    LOCAL idx%, i%, grid%, choice$(32)
+
+    screenw% = gWIDTH
+
+    addFont:(KFontArialNormal8&, "Arial 8")
+    addFont:(KFontArialNormal11&, "Arial 11")
+    addFont:(KFontArialNormal13&, "Arial 13")
+    addFont:(KFontArialNormal15&, "Arial 15")
+    addFont:(KFontArialNormal18&, "Arial 18")
+    addFont:(KFontArialNormal22&, "Arial 22")
+    addFont:(KFontArialNormal27&, "Arial 27")
+    addFont:(KFontArialNormal32&, "Arial 32")
+    addFont:(KFontArialBold8&, "Arial Bold 8")
+    addFont:(KFontArialBold11&, "Arial Bold 11")
+    addFont:(KFontArialBold13&, "Arial Bold 13")
+    addFont:(KFontCalc13n&, "Calc 13")
+    addFont:(KFontCalc18n&, "Calc 18")
+    addFont:(KFontCalc24n&, "Calc 24")
+    addFont:(KFontCourierNormal8&, "Courier 8")
+    addFont:(KFontCourierNormal11&, "Courier 11")
+    addFont:(KFontCourierNormal13&, "Courier 13")
+    addFont:(KFontCourierNormal15&, "Courier 15")
+    addFont:(KFontCourierNormal18&, "Courier 18")
+    addFont:(KFontCourierNormal22&, "Courier 22")
+    addFont:(KFontCourierNormal27&, "Courier 27")
+    addFont:(KFontCourierNormal32&, "Courier 32")
+    addFont:(KFontCourierBold8&, "Courier Bold 8")
+    addFont:(KFontCourierBold11&, "Courier Bold 11")
+    addFont:(KFontCourierBold13&, "Courier Bold 13")
+    addFont:(KFontDigital35&, "Digital 35")
+    addFont:(KFontMon9n&, "Mon 9")
+    addFont:(KFontMon9b&, "Mon Bold 9")
+    addFont:(KFontMon18n&, "Mon 18")
+    addFont:(KFontMon18b&, "Mon Bold 18")
+    addFont:(KFontSquashed&, "Squashed")
+    addFont:(KFontTimesNormal8&, "Times 8")
+    addFont:(KFontTimesNormal11&, "Times 11")
+    addFont:(KFontTimesNormal13&, "Times 13")
+    addFont:(KFontTimesNormal15&, "Times 15")
+    addFont:(KFontTimesNormal18&, "Times 18")
+    addFont:(KFontTimesNormal22&, "Times 22")
+    addFont:(KFontTimesNormal27&, "Times 27")
+    addFont:(KFontTimesNormal32&, "Times 32")
+    addFont:(KFontTimesBold8&, "Times Bold 8")
+    addFont:(KFontTimesBold11&, "Times Bold 11")
+    addFont:(KFontTimesBold13&, "Times Bold 13")
+    addFont:(KFontTiny4&, "Tiny 4")
+
+    idx% = 1
+    WHILE 1
+        dINIT "Choose a font"
+        dCHOICE idx%, "Font", "..."
+        i% = 1
+        WHILE i% <= fontcount%
+            choice$ = fontNames$(i%)
+            IF i% < fontcount%
+                choice$ = choice$ + ",..."
+            ENDIF
+            dCHOICE idx%, "", choice$
+            i% = i% + 1
+        ENDWH
+        dCHECKBOX grid%, "Draw grid"
+        dBUTTONS "Cancel", -27, "OK", KKeyEnter%
+        IF DIALOG = 0
+            RETURN
+        ENDIF
+
+        IF grid%
+            grid% = 1
+        ENDIF
+        showFont:(fonts&(idx%), fontNames$(idx%), grid%)
+    ENDWH
+ENDP
+
+PROC addFont:(font&, name$)
+    EXTERNAL fontcount%, fonts&(), fontNames$()
+    fontcount% = fontcount% + 1
+    fonts&(fontcount%) = font&
+    fontNames$(fontcount%) = name$
+ENDP
+
+PROC showFont:(font&, name$, grid%)
+    EXTERNAL screenw%
+    LOCAL inf&(48), ascent%, x%, y%, charw%, charh%
+    gCLS
+    gFONT font&
+    gINFO32 inf&()
+    ascent% = inf&(5)
+    charw% = inf&(7) + grid%
+    charh% = inf&(3) + grid%
+
+    gUPDATE OFF
+
+    IF charw% * 32 > screenw%
+        REM make sure window is big enough, in case of the larger fonts
+        gSETWIN 0, 0, charw% * 32, gHEIGHT
+    ENDIF
+
+    IF grid%
+        REM fill entire area with grey, once characters are printed it'll look like a grid
+        gCOLOR 192, 192, 192
+        gFILL 1 + 32 * charw%, 1 + 8 * charh%, KgModeSet%
+        gCOLOR 0, 0, 0
+        gTMODE KtModeReplace%
+    ENDIF
+
+    y% = 0
+    WHILE y% < 8
+        IF grid%
+            gAT 0, y% * charh%
+            gCOLOR 128, 128, 128
+            gLINEBY 32 * charw%, 0
+            gCOLOR 0, 0, 0
+        ENDIF
+
+        x% = 0
+        WHILE x% < 32
+            IF y% = 0 AND grid%
+                gAT x% * charw%, 0
+                gCOLOR 128, 128, 128
+                gLINEBY 0, 1 + 8 * charh%
+                gCOLOR 0, 0, 0
+            ENDIF
+            gAT grid% + charw% * x%, grid% + ascent% + charh% * y%
+            gPRINT CHR$(y% * 32 + x%)
+
+            x% = x% + 1
+        ENDWH
+        y% = y% + 1
+    ENDWH
+
+    IF grid%
+        REM bottom/right edges of grid
+        gCOLOR 128, 128, 128
+        gAT x% * charw%, 0
+        gLINEBY 0, 1 + 8 * charh%
+        gAT 0, y% * charh%
+        gLINEBY 32 * charw%, 0
+        gCOLOR 0, 0, 0
+    ENDIF
+
+    gUPDATE ON
+    GET
+
+    IF charw% * 32 > screenw%
+        gSETWIN -screenw%, 0
+        GET
+        gSETWIN 0, 0
+    ENDIF
+ENDP
