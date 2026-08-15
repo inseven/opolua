@@ -245,6 +245,8 @@
         <file alias="dialog.opo">../examples/Tests/dialog.opo</file>
         <file alias="dow.opo">../examples/Tests/dow.opo</file>
         <file alias="exist.opo">../examples/Tests/exist.opo</file>
+        <file alias="fonttest.opo">../examples/Tests/fonttest.opo</file>
+        <file alias="fonttest93.opo">../examples/Tests/fonttest93.opo</file>
         <file alias="get.opo">../examples/Tests/get.opo</file>
         <file alias="getstr.opo">../examples/Tests/getstr.opo</file>
         <file alias="getevent.opo">../examples/Tests/getevent.opo</file>

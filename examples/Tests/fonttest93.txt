@@ -1,0 +1,128 @@
+INCLUDE "const.oph"
+
+CONST KMaxFonts% = 13
+
+PROC main:
+    GLOBAL fontcnt%
+    GLOBAL fonts%(KMaxFonts%), fnames$(KMaxFonts%, 16)
+    GLOBAL screenw%
+    LOCAL idx%, i%, grid%, choice$(32), bgrid%
+
+    screenw% = gWIDTH
+
+    addFont:(1, "Sys$norm")
+    addFont:(2, "Sys$bold")
+    addFont:(3, "Sys$digt")
+    addFont:(4, "Mono 8x8")
+    addFont:(5, "Roman 8")
+    addFont:(6, "Roman 11")
+    addFont:(7, "Roman 13")
+    addFont:(8, "Roman 16")
+    addFont:(9, "Swiss 8")
+    addFont:(10, "Swiss 11")
+    addFont:(11, "Swiss 13")
+    addFont:(12, "Swiss 16")
+    addFont:(13, "Mono 6x6")
+
+    idx% = 1
+    WHILE 1
+        dINIT "Choose a font"
+        dCHOICE idx%, "Font", "..."
+        i% = 1
+        WHILE i% <= fontcnt%
+            choice$ = fnames$(i%)
+            IF i% < fontcnt%
+                choice$ = choice$ + ",..."
+            ENDIF
+            dCHOICE idx%, "", choice$
+            i% = i% + 1
+        ENDWH
+        dCHOICE grid%, "Draw grid", "Off,On"
+        dBUTTONS "Cancel", -27, "OK", KKeyEnter%
+        IF DIALOG = 0
+            RETURN
+        ENDIF
+
+        IF grid% > 1
+            bgrid% = 1
+        ELSE
+            bgrid% = 0
+        ENDIF
+        showFont:(fonts%(idx%), fnames$(idx%), bgrid%)
+    ENDWH
+ENDP
+
+PROC addFont:(font%, name$)
+    fontcnt% = fontcnt% + 1
+    fonts%(fontcnt%) = font%
+    fnames$(fontcnt%) = name$
+ENDP
+
+PROC showFont:(font%, name$, grid%)
+    LOCAL inf%(32), ascent%, x%, y%, charw%, charh%
+    gCLS
+    gFONT font%
+    gINFO inf%()
+    ascent% = inf%(5)
+    charw% = inf%(7) + grid%
+    charh% = inf%(3) + grid%
+
+    gUPDATE OFF
+
+    IF charw% * 32 > screenw%
+        REM make sure window is big enough, in case of the larger fonts
+        gSETWIN 0, 0, charw% * 32, gHEIGHT
+    ENDIF
+
+    IF grid%
+        REM fill entire area with grey, once characters are printed it'll look like a grid
+        gGREY 1
+        gFILL 1 + 32 * charw%, 1 + 8 * charh%, KgModeSet%
+        gGREY 0
+        gTMODE KtModeReplace%
+    ENDIF
+
+    y% = 0
+    WHILE y% < 8
+        IF grid%
+            gAT 0, y% * charh%
+            gGREY 1
+            gLINEBY 32 * charw%, 0
+            gGREY 2
+        ENDIF
+
+        x% = 0
+        WHILE x% < 32
+            IF y% = 0 AND grid%
+                gAT x% * charw%, 0
+                gGREY 1
+                gLINEBY 0, 1 + 8 * charh%
+                gGREY 2
+            ENDIF
+            gAT grid% + charw% * x%, grid% + ascent% + charh% * y%
+            gPRINT CHR$(y% * 32 + x%)
+
+            x% = x% + 1
+        ENDWH
+        y% = y% + 1
+    ENDWH
+
+    IF grid%
+        REM bottom/right edges of grid
+        gGREY 1
+        gAT x% * charw%, 0
+        gLINEBY 0, 1 + 8 * charh%
+        gAT 0, y% * charh%
+        gLINEBY 32 * charw%, 0
+        gGREY 0
+    ENDIF
+
+    gUPDATE ON
+    GET
+
+    IF charw% * 32 > screenw%
+        gSETWIN -screenw%, 0
+        GET
+        gSETWIN 0, 0
+    ENDIF
+ENDP
