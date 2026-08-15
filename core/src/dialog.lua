@@ -1593,6 +1593,8 @@ function DialogChoiceList:init(lineHeight)
         print("Empty choices list in dCHOICE!")
         error(KErrInvalidArgs)
     end
+    assert(not self.moreChoices, "Structure fault: dCHOICE list ended with '...'")
+
     self.arrowSize = runtime:isSeries3() and gTWIDTH("\x10", 1) or kChoiceArrowSize
     DialogChoiceList._super.init(self, lineHeight)
 end
