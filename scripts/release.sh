@@ -327,6 +327,7 @@ if $RELEASE ; then
     mkdir -p ~/.appstoreconnect/private_keys/
     API_KEY_PATH=~/".appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY_ID.p8"
     echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o "$API_KEY_PATH"
+    chmod 600 "$API_KEY_PATH"
     ls ~/.appstoreconnect/private_keys/
 
     export ASC_KEY_ID="$APPLE_API_KEY_ID"
