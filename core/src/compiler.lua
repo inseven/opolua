@@ -123,6 +123,7 @@ local statemachine = {
     ['\r?\n'] = 'newline',
     ['[ \t]+'] = 'space',
     ['@[%%&$]?'] = 'dyncall', -- Dynamic procedure call syntax
+    ['#'] = 'opaddr', -- The "don't add an ADDR" unary operator, dunno what it's really called
 
     -- Bluh ensuring REM isn't interpreted as an identifier is tedious...
     ['[a-qs-zA-QS-Z]%.?[a-zA-Z0-9_]*'] = idsuffix,
@@ -708,6 +709,7 @@ precedences = enum {
     NOT = 5,
     unm = 6, -- Not actually a token, special cased
     pow = 7,
+    opaddr = 8,
 }
 
 operatorOpcodes = {
@@ -740,6 +742,7 @@ percentOpcodes = {
 unaryOperators = {
     NOT = true,
     unm = true,
+    opaddr = true,
 }
 
 -- The ones that return a boolean (ie Int) regardless of what type the operands are.
@@ -904,6 +907,10 @@ function parseExpressionList(tokens)
     return result
 end
 
+function isAddr(type)
+    return type:match("^"..AddressOfPrefix) ~= nil
+end
+
 function expandPtrType(type, oplFormat)
     assert(oplFormat, "Missing oplFormat arg!")
     if type == IntPtr then
@@ -923,6 +930,9 @@ function setExpressionType(exp, oplFormat)
         setExpressionType(exp[2], oplFormat)
         exp.operandType = Float
         exp.valType = exp.operandType
+    elseif op == "opaddr" then
+        exp.operandType = setExpressionType(exp[2], oplFormat)
+        exp.valType = expandPtrType(IntPtr, oplFormat)
     elseif op then
         local lhs = unaryOperators[op] and exp[2] or exp[1]
         local lhsType = TypeToDataType[setExpressionType(lhs, oplFormat)]
@@ -1240,7 +1250,9 @@ function checkExpressionArguments(args, declArgs, token)
         synassert(numParams == #declArgs, token, "Expected %d args to %s, not %d", #declArgs, token.val, numParams)
     end
     for i, arg in ipairs(args or {}) do
-        if declArgs[i] == AddressOfAny then
+        if isAddr(declArgs[i]) and arg.op == "opaddr" then
+            -- We don't need to check for there being a variable of the right type
+        elseif declArgs[i] == AddressOfAny then
             synassert(arg.type == "identifier" or (arg.type == "call" and arg.args and #arg.args == 0), arg, "Expected variable")
         elseif declArgs[i] == AddressOfIntArray then
             synassert(arg.type == "call" and arg.valType == Int and arg.args and #arg.args == 0, arg, "Expected Int array var")
@@ -1293,7 +1305,7 @@ function ProcState:pushStack(...)
     for i = 1, select("#", ...) do
         local val = expandPtrType(select(i, ...), self.oplFormat)
         local sz
-        if val:match("^"..AddressOfPrefix) then
+        if isAddr(val) then
             sz = 6 -- Apparently...
         elseif val == String then
             sz = 0 -- Apparently...
@@ -1401,11 +1413,16 @@ function ProcState:emitExpression(exp, requiredType)
     requiredType = expandPtrType(assert(requiredType), self.oplFormat)
     local opcodes = opcodes[self.oplFormat]
 
-    if requiredType:match("^"..AddressOfPrefix) then
-        -- Special case, only used by ops which take the address of a variable
-        local isArray = exp.args ~= nil
-        local var = self:getVar(exp, isArray)
-        self:emitAddressOfVar(var, exp)
+    if isAddr(requiredType) then
+        if exp.op == "opaddr" then
+            -- No need for emitAddressOf
+            self:emitExpression(exp[2], exp.valType)
+        else
+            -- Special case, only used by ops which take the address of a variable
+            local isArray = exp.args ~= nil
+            local var = self:getVar(exp, isArray)
+            self:emitAddressOfVar(var, exp)
+        end
         return
     elseif requiredType:match("^"..VariablePrefix) then
         -- I don't think this syntax is ever used for array variables...?
