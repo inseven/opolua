@@ -45,7 +45,7 @@ struct lua_State;
 class AsyncHandle;
 struct Completion;
 class MainThreadEvent;
-struct EventRequest;
+class EventRequest;
 
 #define DECLARE_IOHANDLER_FN(fn) \
     static int fn ## _s(lua_State* L) { \

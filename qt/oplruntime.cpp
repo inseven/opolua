@@ -82,8 +82,9 @@ struct Completion {
     QByteArray data;
 };
 
-struct EventRequest : public AsyncHandle
+class EventRequest : public AsyncHandle
 {
+public:
     EventRequest(int ref, bool aconsume, bool akeyfilter)
         : AsyncHandle(nullptr, ref, AsyncHandle::event)
         , consume(aconsume)
@@ -1648,7 +1649,7 @@ void OplRuntime::callCompletion(lua_State* L, uint32_t ref, int code, const QByt
 // asyncRequest("event", addr, completion, consume, keyfilter)
 // asyncRequest("after", addr, completion, period)
 // asyncRequest("at", addr, completion, time)
-// asyncRequest("playsound", addr, completion, data)
+// asyncRequest("playsound", addr, completion, data, [channel])
 int OplRuntime::asyncRequest(lua_State* L)
 {
     QString requestName(lua_tostring(L, 1));
@@ -1724,11 +1725,13 @@ int OplRuntime::asyncRequest(lua_State* L)
     } else if (requestName == "playsound") {
         return call([this, L, statAddr]() {
             auto data = to_bytearray(L, 4);
+            int channel = lua_tointeger(L, 5);
+            if (!channel) channel = 1;
             auto ev = new AsyncHandle(this, statAddr, AsyncHandle::playsound);
             mMutex.lock();
             mPendingRequests.insert(statAddr, ev);
             mMutex.unlock();
-            mScreen->playSound(ev, data);
+            mScreen->playSound(ev, channel-1, data);
             return 0;
         });
     } else {

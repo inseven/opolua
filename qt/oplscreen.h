@@ -193,7 +193,7 @@ public:
 
     virtual void sprite(int drawableId, int spriteId, const Sprite* sprite) = 0;
     virtual void clock(int drawableId, const ClockInfo* info) = 0;
-    virtual void playSound(AsyncHandle* handle, const QByteArray& data) = 0;
+    virtual void playSound(AsyncHandle* handle, int channel, const QByteArray& data) = 0;
     virtual QByteArray peekLine(int drawableId, const QPoint& position, int numPixels, PeekMode mode) = 0;
     virtual QByteArray getImageData(int drawableId, const QRect& rect) = 0; // result should be 8bpp with zero stride padding
 };

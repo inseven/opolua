@@ -1627,6 +1627,10 @@ function IOOPEN(path, mode)
         local f = runtime:newFileHandle()
         f.timer = true
         return f.h
+    elseif path == "SND:" and runtime:isSeries3() then
+        local f = runtime:newFileHandle()
+        f.sound = true
+        return f.h
     end
 
     path = runtime:abs(path)
@@ -1785,6 +1789,8 @@ local KFnTimerAbsolute = 2
 local KConsoleRequestHandle = -2
 local KIoConsoleRequestSense = 8
 local KIoConsoleRequestInquire = 12
+local KFnSoundChannel1 = 1
+local KFnSoundChannel2 = 2
 
 function IOA(h, fn, stat, a, b)
     -- See CIOCollection::HandleConsoleRequest()
@@ -1814,7 +1820,7 @@ function IOA(h, fn, stat, a, b)
     end
 
     local f = runtime:getFile(h)
-    if not f or not f.timer then
+    if not f or (not f.timer and not f.sound) then
         return KErrInvalidArgs
     end
     
@@ -1834,6 +1840,21 @@ function IOA(h, fn, stat, a, b)
         else
             error("Unknown IOA timer operation")
         end
+    elseif f.sound then
+        if fn == KFnSoundChannel1 or fn == KFnSoundChannel2 then
+            a = a:asVariable(DataTypes.EWordArray)
+            b = b:asVariable(DataTypes.EWord)
+
+            local notes = {}
+            for i = 1, b() * 2, 2 do
+                notes[i] = a[i]() -- freq
+                notes[i + 1] = a[i + 1]() / 60 -- duration
+            end
+            PlaySoundNotes(stat, notes, fn)
+        else
+            error("Unhandled SND operation")
+        end
+
     else
         error("Unknown IOA operation")
     end
@@ -1962,28 +1983,70 @@ function PlaySoundA(var, path)
         runtime:requestComplete(var, err)
         return
     end
-    PlaySoundPcm16(var, sndData)
+
+    PlaySoundPcm16(var, sndData, 1)
+    if var() == KErrInUse then
+        runtime:waitForRequest(var) -- Consume the signal
+        error(KErrInUse)
+    end
 end
 
-function PlaySoundPcm16(var, data)
-    assert(runtime:getResource("sound") == nil, KErrInUse)
+function PlaySoundPcm16(var, data, channel)
+    local rscName = "sound" .. tostring(channel or 1)
+    if runtime:getResource(rscName) then
+        runtime:requestComplete(var, KErrInUse)
+        return
+    end
     var:setPending()
 
-    runtime:setResource("sound", var)
+    runtime:setResource(rscName, var)
     local function completion(code)
         var(code)
-        runtime:setResource("sound", nil)
+        runtime:setResource(rscName, nil)
     end
-    runtime:iohandler().asyncRequest("playsound", var:getAddress(), completion, data)
+    runtime:iohandler().asyncRequest("playsound", var:getAddress(), completion, data, channel)
+end
+
+function PlaySoundNotes(stat, array, channel)
+    -- Array odd elements are frequency in hertz, even elements duration in seconds
+    -- ie [freq, duration, freq, duration, ...]
+
+    local data = {}
+    local sampleRate = 8000
+    local twoPi = math.pi * 2
+    local sin, floor, ch, tinsert = math.sin, math.floor, string.char, table.insert
+    -- Iterate the notes
+    for i = 0, (#array // 2) - 1 do
+        local freq = array[1 + i*2]
+        local duration = array[1 + i*2 + 1]
+        -- print("freq", freq, "duration", duration)
+
+        local numSamples = floor(sampleRate * duration)
+        local phase = 0
+        local delta = twoPi * freq / sampleRate
+        -- Construct data of the appropriate length for this note
+        for j = 1, numSamples do
+            local val = sin(phase)
+            phase = phase + delta
+            if phase > twoPi then
+                phase = phase - twoPi
+            end
+            local scaledVal = floor(16384 * val) -- Would be 32768 to play at full vol
+            local unsignedVal = scaledVal % 65536
+            tinsert(data, ch(unsignedVal & 0xFF, (unsignedVal >> 8) & 0xFF))
+        end
+    end
+    local dataStr = table.concat(data)
+    PlaySoundPcm16(stat, dataStr, channel)
 end
 
 function StopSound()
-    local var = runtime:getResource("sound")
+    local var = runtime:getResource("sound1")
     local didStop = false
     if var then
         runtime:cancelRequest(var)
         runtime:waitForRequest(var)
-        assert(runtime:getResource("sound") == nil, "cancelRequest did not release sound resource!")
+        assert(runtime:getResource("sound1") == nil, "cancelRequest did not release sound resource!")
         didStop = true
     end
     return didStop
