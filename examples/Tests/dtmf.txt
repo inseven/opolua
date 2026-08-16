@@ -1,0 +1,24 @@
+PROC main:
+    LOCAL ret%, h%, s$(24), info%(2)
+    ret%=IOOPEN(h%, "SND:", -1)
+    IF ret%<0
+        PRINT "Failed to start"
+        PRINT err$(err)
+        GET
+        RETURN
+    ENDIF
+
+    REM does pre-using one of the channels mess up the timing?
+    BEEP 5,300
+    PAUSE 10
+
+    s$ = "123456,789*0#" + CHR$(0)
+    REM lower byte is delay length, upper byte is tone length, both in 1/32 seconds
+    info%(1) = 8 + (256 * 8)
+    info%(2) = 48
+
+    ret% = IOW(h%, 10, #UADD(ADDR(s$), 1), info%())
+
+    IOCLOSE(h%)
+
+ENDP

@@ -1791,6 +1791,22 @@ local KIoConsoleRequestSense = 8
 local KIoConsoleRequestInquire = 12
 local KFnSoundChannel1 = 1
 local KFnSoundChannel2 = 2
+local KFnSoundDtmf = 10
+
+local KDtmfTones = {
+    ["1"] = { 697, 1209 },
+    ["2"] = { 697, 1336 },
+    ["3"] = { 697, 1633 },
+    ["4"] = { 770, 1209 },
+    ["5"] = { 770, 1336 },
+    ["6"] = { 770, 1633 },
+    ["7"] = { 852, 1209 },
+    ["8"] = { 852, 1336 },
+    ["9"] = { 852, 1633 },
+    ["*"] = { 941, 1209 },
+    ["0"] = { 941, 1336 },
+    ["#"] = { 941, 1633 },
+}
 
 function IOA(h, fn, stat, a, b)
     -- See CIOCollection::HandleConsoleRequest()
@@ -1851,6 +1867,43 @@ function IOA(h, fn, stat, a, b)
                 notes[i + 1] = a[i + 1]() / 60 -- duration
             end
             PlaySoundNotes(stat, notes, fn)
+        elseif fn == KFnSoundDtmf then
+            -- Hmm do we have a way to read zero-terminated strings without reading the entire possible size?
+            local str = string.unpack("z", a:read(24))
+            local delayLen, toneLen, pauseLen = string.unpack("<BBI2", b:read(4))
+            delayLen = delayLen / 32
+            toneLen = toneLen / 32
+            pauseLen = pauseLen / 32
+            local notes_ch1 = {}
+            local notes_ch2 = {}
+            local tinsert = table.insert
+            for ch in str:gmatch(".") do
+                if ch == "," then
+                    tinsert(notes_ch1, 0)
+                    tinsert(notes_ch1, pauseLen)
+                    tinsert(notes_ch2, 0)
+                    tinsert(notes_ch2, pauseLen)
+                else
+                    local tones = assert(KDtmfTones[ch], "Bad DTMF key")
+                    tinsert(notes_ch1, tones[1])
+                    tinsert(notes_ch1, toneLen)
+                    tinsert(notes_ch1, 0)
+                    tinsert(notes_ch1, delayLen)
+
+                    tinsert(notes_ch2, tones[2])
+                    tinsert(notes_ch2, toneLen)
+                    tinsert(notes_ch2, 0)
+                    tinsert(notes_ch2, delayLen)
+                end
+            end
+
+            local stat2 = runtime:makeTemporaryVar(DataTypes.EWord)
+            PlaySoundNotes(stat, notes_ch1, 1)
+            PlaySoundNotes(stat2, notes_ch2, 2, function()
+                -- Need to consume the signal for stat2
+                runtime:waitForRequest(stat2)
+                stat2:free()
+            end)
         else
             error("Unhandled SND operation")
         end
@@ -1991,7 +2044,7 @@ function PlaySoundA(var, path)
     end
 end
 
-function PlaySoundPcm16(var, data, channel)
+function PlaySoundPcm16(var, data, channel, customCompletionFn)
     local rscName = "sound" .. tostring(channel or 1)
     if runtime:getResource(rscName) then
         runtime:requestComplete(var, KErrInUse)
@@ -2003,11 +2056,14 @@ function PlaySoundPcm16(var, data, channel)
     local function completion(code)
         var(code)
         runtime:setResource(rscName, nil)
+        if customCompletionFn then
+            customCompletionFn(code)
+        end
     end
     runtime:iohandler().asyncRequest("playsound", var:getAddress(), completion, data, channel)
 end
 
-function PlaySoundNotes(stat, array, channel)
+function PlaySoundNotes(stat, array, channel, customCompletionFn)
     -- Array odd elements are frequency in hertz, even elements duration in seconds
     -- ie [freq, duration, freq, duration, ...]
 
