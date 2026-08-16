@@ -37,8 +37,13 @@ ARTIFACTS_DIRECTORY="$ROOT_DIRECTORY/artifacts"
 ENV_PATH="$ROOT_DIRECTORY/.env"
 RELEASE_SCRIPT_PATH="$SCRIPTS_DIRECTORY/upload-and-publish-release.sh"
 
-# Check that the GitHub command is available on the path.
+BUNDLE_IDENTIFIER="uk.co.inseven.opolua"
+APP_STORE_APP_ID="1604029880"
+
+# Check the system-wide commands are available.
 which gh || (echo "GitHub cli (gh) not available on the path." && exit 1)
+which asc || (echo "App Store Connect cli (asc) not available on the path." && exit 1)
+which jq || (echo "jq not available on the path." && exit 1)
 
 # Process the command line arguments.
 POSITIONAL=()
@@ -320,36 +325,84 @@ PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
 if $RELEASE ; then
 
     mkdir -p ~/.appstoreconnect/private_keys/
-    echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o ~/".appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY_ID.p8"
+    API_KEY_PATH=~/".appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY_ID.p8"
+    echo -n "$APPLE_API_KEY_BASE64" | base64 --decode -o "$API_KEY_PATH"
     ls ~/.appstoreconnect/private_keys/
 
-    # Validate and upload the iOS build.
-    xcrun altool --validate-app \
-        -f "$IPA_PATH" \
-        --apiKey "$APPLE_API_KEY_ID" \
-        --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-        --output-format json \
-        --type ios
-    xcrun altool --upload-app \
-        -f "$IPA_PATH" \
-        --primary-bundle-id "uk.co.inseven.opolua" \
-        --apiKey "$APPLE_API_KEY_ID" \
-        --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-        --type ios
+    export ASC_KEY_ID="$APPLE_API_KEY_ID"
+    export ASC_ISSUER_ID="$APPLE_API_KEY_ISSUER_ID"
+    export ASC_PRIVATE_KEY_PATH="$API_KEY_PATH"
+    export ASC_BYPASS_KEYCHAIN=1
 
-    # Validate and upload the macOS build.
-    xcrun altool --validate-app \
-        -f "$PKG_PATH" \
-        --apiKey "$APPLE_API_KEY_ID" \
-        --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-        --output-format json \
-        --type macos
-    xcrun altool --upload-app \
-        -f "$PKG_PATH" \
-        --primary-bundle-id "uk.co.inseven.opolua" \
-        --apiKey "$APPLE_API_KEY_ID" \
-        --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-        --type macos
+    # Check if we can upload to TestFlight.
+    # App Store Connect doesn't accept submissions for published releases so we don't bother if we know it'll fail. This
+    # catches the scenario where we're performing builds without new features that would bump the version number.
+
+    PUBLISHED_STATES="PENDING_APPLE_RELEASE,PENDING_DEVELOPER_RELEASE,PROCESSING_FOR_DISTRIBUTION,READY_FOR_DISTRIBUTION,REPLACED_WITH_NEW_VERSION"
+
+    IOS_PUBLISHED_VERSION=`asc versions list \
+        --app "$APP_STORE_APP_ID" \
+        --platform "IOS" \
+        --version "$VERSION_NUMBER" \
+        --state "$PUBLISHED_STATES" \
+        --output json \
+        | jq -r 'first(.data[].attributes.versionString) // ""'`
+
+    UPLOAD_IOS=true
+    if [ -n "$IOS_PUBLISHED_VERSION" ] ; then
+        echo "Version $VERSION_NUMBER has already been published to the iOS App Store; skipping TestFlight upload."
+        UPLOAD_IOS=false
+    fi
+
+    MACOS_PUBLISHED_VERSION=`asc versions list \
+        --app "$APP_STORE_APP_ID" \
+        --platform "MAC_OS" \
+        --version "$VERSION_NUMBER" \
+        --state "$PUBLISHED_STATES" \
+        --output json \
+        | jq -r 'first(.data[].attributes.versionString) // ""'`
+
+    UPLOAD_MACOS=true
+    if [ -n "$MACOS_PUBLISHED_VERSION" ] ; then
+        echo "Version $VERSION_NUMBER has already been published to the macOS App Store; skipping TestFlight upload."
+        UPLOAD_MACOS=false
+    fi
+
+    if $UPLOAD_IOS ; then
+
+        # Validate and upload the iOS build.
+        xcrun altool --validate-app \
+            -f "$IPA_PATH" \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+            --output-format json \
+            --type ios
+        xcrun altool --upload-app \
+            -f "$IPA_PATH" \
+            --primary-bundle-id "$BUNDLE_IDENTIFIER" \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+            --type ios
+
+    fi
+
+    if $UPLOAD_MACOS ; then
+
+        # Validate and upload the macOS build.
+        xcrun altool --validate-app \
+            -f "$PKG_PATH" \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+            --output-format json \
+            --type macos
+        xcrun altool --upload-app \
+            -f "$PKG_PATH" \
+            --primary-bundle-id "$BUNDLE_IDENTIFIER" \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
+            --type macos
+
+    fi
 
     changes \
         release \
