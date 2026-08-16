@@ -244,6 +244,7 @@
         <file alias="datetest.opo">../examples/Tests/datetest.opo</file>
         <file alias="dialog.opo">../examples/Tests/dialog.opo</file>
         <file alias="dow.opo">../examples/Tests/dow.opo</file>
+        <file alias="dtmf.opo">../examples/Tests/dtmf.opo</file>
         <file alias="exist.opo">../examples/Tests/exist.opo</file>
         <file alias="fonttest.opo">../examples/Tests/fonttest.opo</file>
         <file alias="fonttest93.opo">../examples/Tests/fonttest93.opo</file>
