@@ -646,6 +646,16 @@ checkCode("IOC(0, 1, i%, l&)", {
     op"DropInt",
 })
 
+checkCode("IOC(0, 1, i%, #l&)", {
+    op"StackByteAsWord", 0,
+    op"StackByteAsWord", 1,
+    op"SimpleDirectLeftSideInt", h(0x12),
+    fn"Addr",
+    op"SimpleDirectRightSideLong", h(0x14),
+    fn"Ioc", 4,
+    op"DropInt",
+})
+
 checkCode("USE z", {
     op"Use",
     25,
