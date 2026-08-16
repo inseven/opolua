@@ -60,6 +60,7 @@ DEFINES += OPOLUA_VERSION=$$VERSION OPOLUA_BUILD_NUM=$$BUILD_NUMBER
 HEADERS += \
     aboutwindow.h \
     asynchandle.h \
+    audioplayer.h \
     codeview.h \
     clockwidget.h \
     debuggerwindow.h \
@@ -88,6 +89,8 @@ HEADERS += \
 
 SOURCES += \
     aboutwindow.cpp \
+    asynchandle.cpp \
+    audioplayer.cpp \
     codeview.cpp \
     clockwidget.cpp \
     debuggerwindow.cpp \

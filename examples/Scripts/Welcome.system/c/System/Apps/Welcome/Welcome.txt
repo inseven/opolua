@@ -423,8 +423,10 @@ PROC drawAudio:
 	gPRINT "Audio is supported, including basic tone-based audio and Psion sound files."
 	gAT 0, 70
 	gPRINT "Try it out by pressing the toolbar buttons on the right."
-	gAT 0, 100
-	gPRINT "You may have to take your iPhone off silent mode by flicking the hardware switch!"
+	IF MachineName$: = "OpoLua"
+		gAT 0, 100
+		gPRINT "You may have to take your iPhone off silent mode by flicking the hardware switch!"
+	ENDIF
 ENDP
 
 PROC drawImgs:

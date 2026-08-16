@@ -1463,7 +1463,7 @@ end
 
 function Beep(stack, runtime) -- 0xA0
     local pitch = stack:pop()
-    local freq = 512 / (pitch + 1) -- in Khz
+    local freq = 512000 / (pitch + 1) -- in Hz
     local duration = stack:pop() * 1/32 -- in seconds
     local iohBeep = runtime:iohandler().beep
     if iohBeep then
@@ -1472,39 +1472,16 @@ function Beep(stack, runtime) -- 0xA0
         return
     end
 
-    local sampleRate = 8000
-    local sin, floor, ch = math.sin, math.floor, string.char
-    local numSamples = floor(sampleRate * duration)
-    local phase = 0
-    local twoPi = math.pi * 2
-    local delta = twoPi * (freq * 1000) / sampleRate
-    local data = {}
-    for i = 1, numSamples do
-        local val = sin(phase)
-        phase = phase + delta
-        if phase > twoPi then
-            phase = phase - twoPi
-        end
-        local scaledVal = floor(16384 * val) -- Would be 32768 to play at full vol
-        -- if scaledVal == 32768 then scaledVal = 32767 end
-        local unsignedVal = scaledVal % 65536
-        data[i] = ch(unsignedVal & 0xFF, (unsignedVal >> 8) & 0xFF)
-    end
-    local dataStr = table.concat(data)
-
     -- Oddly BEEP does not care about ongoing sound effects - on device it kindasorta plays it over the top but not
-    -- properly, so we'll just ignore it.
-    -- assert(runtime:getResource("sound") == nil, KErrInUse)
-    if runtime:getResource("sound") then
-        return
-    end
-
+    -- properly, so we'll use the 2nd channel now we have one.
     local var = runtime:makeTemporaryVar(DataTypes.ELong)
-    runtime:PlaySoundPcm16(var, dataStr)
+    runtime:PlaySoundNotes(var, { freq, duration }, 2)
     runtime:waitForRequest(var)
     local val = var()
     var:free()
-    if val < 0 then
+    if val == KErrInUse then
+        -- Don't care?
+    elseif val < 0 then
         error(val)
     end
 end

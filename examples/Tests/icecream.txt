@@ -1,0 +1,38 @@
+PROC main:
+    LOCAL ret%,sndHand%
+    ret%=IOOPEN(sndHand%,"SND:",-1) REM open the device
+    IF ret%<0
+        PRINT "Failed to start"
+        PRINT err$(err)
+        GET
+    ELSE
+        icecream:(sndHand%)
+        IOCLOSE(sndHand%)
+    ENDIF
+ENDP
+
+PROC icecream:(sndHand%)
+    GLOBAL notes1%(4),notes2%(14)
+    GLOBAL s1stat%,len1%,len2%
+    
+    REM define 1st voice
+    notes1%(1)=1048 :notes1%(2)=96 REM freq, duration
+    notes1%(3)=524 :notes1%(4)=48
+    len1%=2 REM number of notes in voice 1
+    
+    REM define 2nd voice
+    notes2%(1)=1048 :notes2%(2)=16
+    notes2%(3)=1320 :notes2%(4)=16
+    notes2%(5)=1568 :notes2%(6)=16
+    notes2%(7)=2092 :notes2%(8)=16
+    notes2%(9)=1568 :notes2%(10)=16
+    notes2%(11)=1320 :notes2%(12)=16
+    notes2%(13)=1048 :notes2%(14)=48
+    len2%=7 REM number of notes in voice 2
+    IOC(sndhand%,1,s1stat%,notes1%(),len1%)
+    REM voice 1 asynchronous
+    IOW(sndHand%,2,notes2%(),len2%)
+    REM voice 2 synchronous
+    IOWAITSTAT s1stat%
+    PRINT "stat=", s1stat%
+ENDP

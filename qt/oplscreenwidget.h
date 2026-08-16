@@ -19,12 +19,6 @@
 #ifndef OPLSCREENWIDGET_H
 #define OPLSCREENWIDGET_H
 
-#include <QtGlobal>
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#include <QAudioSink>
-#else
-#include <QAudioOutput>
-#endif
 #include <QBitmap>
 #include <QImage>
 #include <QKeyEvent>
@@ -38,6 +32,7 @@
 
 #include "oplscreen.h"
 
+class AudioPlayer;
 class OplRuntimeGui;
 class Drawable;
 class Window;
@@ -93,15 +88,13 @@ protected:
     void endBatchDraw() override;
     void clock(int drawableId, const ClockInfo* info) override;
     void startClockTimer();
-    void playSound(AsyncHandle* handle, const QByteArray& data) override;
+    void playSound(AsyncHandle* handle, int channel, const QByteArray& data) override;
     void sprite(int drawableId, int spriteId, const Sprite* sprite) override;
     QByteArray peekLine(int drawableId, const QPoint& position, int numPixels, PeekMode mode) override;
     QByteArray getImageData(int drawableId, const QRect& rect) override;
     void updateShadows();
 
 private slots:
-    void audioStateChanged(QAudio::State state);
-    void audioHandleDeleted();
     void spriteTimerTick();
     void onStopped();
     void clockTick();
@@ -126,14 +119,7 @@ private:
     int64_t mLastSpriteTick;
     QScopedPointer<QTimer> mClockTimer;
     QPointer<ShadowOverlay> mShadowOverlay;
-
-    AsyncHandle* mAudioAsync;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    QAudioSink* mAudio;
-#else
-    QAudioOutput* mAudio;
-#endif
-    QByteArray mAudioData;
+    AudioPlayer* mAudioChannels[2];
 };
 
 class Drawable

@@ -46,7 +46,7 @@ function getch()
 end
 
 function beep(freq, duration)
-    printf("defaultiohandler: BEEP %gkHz for %gs\n", freq, duration)
+    printf("defaultiohandler: BEEP %gHz for %gs\n", freq, duration)
     return true
 end
 
