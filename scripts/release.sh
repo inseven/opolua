@@ -82,7 +82,7 @@ function cleanup {
     rm -rf "$TEMPORARY_DIRECTORY"
 
     # Clean up any private keys.
-    if [ -f ~/.appstoreconnect/private_keys ]; then
+    if [ -d ~/.appstoreconnect/private_keys ]; then
         rm -r ~/.appstoreconnect/private_keys
     fi
 

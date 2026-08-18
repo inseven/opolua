@@ -98,11 +98,6 @@ function cleanup {
     build-tools delete-keychain "$KEYCHAIN_PATH"
     rm -rf "$TEMPORARY_DIRECTORY"
 
-    # Clean up any private keys.
-    if [ -f ~/.appstoreconnect/private_keys ]; then
-        rm -r ~/.appstoreconnect/private_keys
-    fi
-
 }
 
 trap cleanup EXIT
