@@ -1,0 +1,3 @@
+app = "1604029880"
+platforms = ["IOS", "MAC_OS"]
+repository = "inseven/opolua"
