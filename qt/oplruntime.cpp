@@ -135,7 +135,7 @@ OplRuntime::OplRuntime(QObject *parent)
     , mHasBackgrounded(false)
     , mHeapCheckEnabled(false)
 {
-    mStringCodec = QTextCodec::codecForName("Windows-1252");
+    mStringCodec = codecForEra("er5");
     mFs.reset(new FileSystemIoHandler(*mStringCodec));
     mConfig["locale"] = "en_GB";
     mConfig["clockFormat"] = "0";
@@ -1967,16 +1967,22 @@ int OplRuntime::utctime(lua_State *L)
     return 1;
 }
 
+QTextCodec* OplRuntime::codecForEra(const QString& era)
+{
+    bool eraIsSibo = era == "sibo";
+    if (eraIsSibo) {
+        return QTextCodec::codecForName("cp850");
+    } else {
+        return QTextCodec::codecForName("cp1252");
+    }
+}
+
 int OplRuntime::setEra(lua_State *L)
 {
     QString era(lua_tostring(L, 1));
-    int translatorVersion = lua_tointeger(L, 2);
     bool eraIsSibo = era == "sibo";
-    if (eraIsSibo) {
-        mStringCodec = QTextCodec::codecForName("IBM 850"); // Is this the right name...?
-    } else {
-        mStringCodec = QTextCodec::codecForName("Windows-1252");
-    }
+    int translatorVersion = lua_tointeger(L, 2);
+    mStringCodec = codecForEra(era);
     mFs->setStringCodec(*mStringCodec);
 
     if (eraIsSibo != isSibo() && !mIgnoreOpoEra) {
@@ -2707,7 +2713,23 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
     f.close();
 
     QString aifPath = aifForAppPath(path);
+
+    pushValue(L, data);
     
+    // See what era it is, so we can correctly decode character set of literal strings
+    require(L, "recognizer");
+    rawgetfield(L, -1, "recognize");
+    lua_remove(L, -2);
+    lua_pushvalue(L, -2);
+    int err = lua_pcall(L, 1, 1, 0);
+    QString era;
+    if (err) {
+        lua_pop(L, 1);
+    } else {
+        era = to_string(L, -1, "era");
+    }
+    auto stringCodec = codecForEra(era);
+
     require(L, "decompiler");
     rawgetfield(L, -1, "decompileFile");
     lua_remove(L, -2);
@@ -2747,7 +2769,7 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
 
     lua_pushcfunction(L, traceback);
     lua_insert(L, 1);
-    int err = lua_pcall(L, 4, 2, 1);
+    err = lua_pcall(L, 4, 2, 1);
     lua_remove(L, 1); // remove traceback
     if (err) {
         qWarning("decompile errored: %s", luaL_tolstring(L, -1, NULL));
@@ -2770,7 +2792,7 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
         }
         lua_pop(L, 1); // addr
         lua_rawgeti(L, -1, 2); // line text
-        result.append({addr, QString(lua_tostring(L, -1))});
+        result.append({addr, stringCodec->toUnicode(lua_tostring(L, -1))});
         lua_pop(L, 2); // line text, line array
     }
     lua_pop(L, 1); // decompileFile result
