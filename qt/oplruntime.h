@@ -116,6 +116,7 @@ public:
     static bool isSiboDeviceType(DeviceType type);
     static QString aifForAppPath(const QString& path);
     static bool opoIsSibo(const QString& nativePath);
+    QTextCodec* codecForEra(const QString& era);
 
     Speed getSpeed() const;
     void setSpeed(Speed speed);
