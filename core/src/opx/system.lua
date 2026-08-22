@@ -190,7 +190,10 @@ function IsSystem(stack, runtime) -- 19
 end
 
 function SetReadOnly(stack, runtime) -- 20
-    unimplemented("opx.system.SetReadOnly")
+    local state = stack:pop()
+    local path = stack:pop()
+    printf("SetReadOnly(%s, %d)\n", path, state)
+    stack:push(0)
 end
 
 function SetHiddenFile(stack, runtime) -- 21
