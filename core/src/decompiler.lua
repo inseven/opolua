@@ -1880,8 +1880,13 @@ function decompileProc(proc, options)
 
     assert(currentBlock == procBlock, "Unterminated block "..currentBlock.type.." in "..proc.name)
     assert(trap == nil, "Dangling TRAP")
+    local lastStatement = currentBlock.statements[#currentBlock.statements]
     local endp = addStatement(proc.codeOffset + proc.codeSize, "ENDP")
     endp.type = "ENDP"
+    if lastStatement and lastStatement.value == "RETURN" and lastStatement.elided and not options.showElided then
+        -- The ENDP location should be that of the elided return
+        endp.location = lastStatement.location
+    end
     -- From this point on all transformations are done over the entire program, there's no in-progress block
     currentBlock = nil
 
