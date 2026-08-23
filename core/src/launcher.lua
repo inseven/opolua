@@ -157,6 +157,7 @@ function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
     local sis = require("sis")
 
     local seenApps = {}
+    local sisVersion
     local changeDevice
     local selectedLang
 
@@ -257,9 +258,10 @@ function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
             index = deviceVar(),
         })
 
+        sisVersion = string.format("%d.%02d", sisFile.version.major, sisFile.version.minor)
         local ret = DIALOG {
-            title = string.format("Install %s %d.%02d",
-                sisFile.name[sisFile.languages[1]], sisFile.version.major, sisFile.version.minor),
+            title = string.format("Install %s %s",
+                sisFile.name[sisFile.languages[1]], sisVersion),
             flags = 0,
             xpos = 0,
             ypos = 0,
@@ -357,11 +359,14 @@ function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
             buttons = buttons,
         }
 
+        local result = { version = sisVersion }
+
         if ret == KKeyEnter then
-            return { launch = seenApps[1] }
+            result.launch = seenApps[1]
         else
-            return {} -- Success, but no launch
+            -- Success, but no launch
         end
+        return result
     elseif changeDevice then
         return { setdevice = changeDevice, lang = selectedLang }
     else

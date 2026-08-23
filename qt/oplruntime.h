@@ -202,7 +202,7 @@ signals:
     void pauseStateChanged(bool paused);
     void titleChanged(const QString& title);
     void runComplete(const QString& errMsg, const QString& errDetail);
-    void installationComplete(const QString& sisPath);
+    void installationComplete(const QString& sisPath, const QString& sisVersion);
     void systemClockChanged(bool digital);
     void escapeStateChanged(bool on);
     void speedChanged();
