@@ -68,7 +68,7 @@ private slots:
     void pauseStateChanged(bool paused);
 
     void runComplete(const QString& errMsg, const QString& errDetail);
-    void installationComplete(const QString& sisPath);
+    void installationComplete(const QString& sisPath, const QString& sisVersion);
     void updateRecents(const QStringList& recentFiles);
     void onSpeedChanged();
     void onDeviceTypeChanged();
@@ -81,7 +81,7 @@ private:
     void sizeWindowToFitInterpreter();
     QString getSourceUrlForPath(const QString& path);
     void applyManifest();
-    void updateManifest(const QString& sourceUrl = QString());
+    void updateManifest(const QString& sourceUrl = QString(), const QString& sisVersion = QString());
     void doInstallSis(const QString& file);
 
 private:
@@ -95,11 +95,15 @@ private:
     bool mForceClosing;
     QLabel* statusLabel;
     QLabel* speedLabel;
-    QString mManifest;
+
+    // Manifest and app info
+    QString mManifestPath;
+    QString mSourceUrl;
+    QString mAppVersion; // From manifest, originally from SIS file when installed
     QScopedPointer<OplAppInfo> mAppInfo;
+
     QString mErrMsg;
     QString mErrDetail;
-    QString mSourceUrl;
     QPointer<DebuggerWindow> mDebugWindow;
 };
 

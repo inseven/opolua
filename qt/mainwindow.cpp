@@ -412,7 +412,7 @@ void MainWindow::openFile(const QString& path)
         m->openFile(path);
         return;
     }
-    mManifest = QString();
+    mManifestPath = QString();
 
     QFileInfo info(path);
     QString extension = info.suffix().toLower();
@@ -439,8 +439,8 @@ void MainWindow::openFile(const QString& path)
         QString drive = driveForApp(path);
         if (!drive.isEmpty()) {
 
-            mManifest = manifestForDrive(drive);
-            if (!mManifest.isEmpty()) {
+            mManifestPath = manifestForDrive(drive);
+            if (!mManifestPath.isEmpty()) {
                 applyManifest();
             }
 
@@ -481,36 +481,37 @@ void MainWindow::openFile(const QString& path)
     }
 }
 
-void MainWindow::installationComplete(const QString& sisPath)
+void MainWindow::installationComplete(const QString& sisPath, const QString& sisVersion)
 {
     auto path = getRuntime().getNativePath("C:\\");
     Q_ASSERT(!path.isEmpty());
-    mManifest = manifestForDrive(path);
+    mManifestPath = manifestForDrive(path);
     mSourceUrl = getSourceUrlForPath(sisPath);
-    updateManifest(mSourceUrl);
+    mAppVersion = sisVersion;
+    updateManifest(mSourceUrl, sisVersion);
 }
 
-void MainWindow::updateManifest(const QString& sourceUrl)
+void MainWindow::updateManifest(const QString& sourceUrl, const QString& sisVersion)
 {
-    if (mManifest.isEmpty() || !getRuntime().writableMainDrive()) {
+    if (mManifestPath.isEmpty() || !getRuntime().writableMainDrive()) {
         return;
     }
 
     QJsonObject obj;
-    QFile f(mManifest);
+    QFile f(mManifestPath);
     if (f.open(QFile::ReadOnly)) {
         obj = QJsonDocument::fromJson(f.readAll()).object();
         f.close();
     }
 
     // Migrate launch.oplsys -> manifest.json if necessary
-    QFileInfo inf(mManifest);
+    QFileInfo inf(mManifestPath);
     if (inf.fileName() == "launch.oplsys") {
         auto newp = QFileInfo(inf.dir(), "manifest.json").filePath();
-        qDebug("Migrating manifest from %s to %s", qPrintable(mManifest), qPrintable(newp));
-        mManifest = newp;
+        qDebug("Migrating manifest from %s to %s", qPrintable(mManifestPath), qPrintable(newp));
+        mManifestPath = newp;
         f.remove();
-        f.setFileName(mManifest);
+        f.setFileName(mManifestPath);
     }
 
     auto deviceType = getRuntime().getDeviceType();
@@ -520,12 +521,15 @@ void MainWindow::updateManifest(const QString& sourceUrl)
     if (!sourceUrl.isEmpty()) {
         obj.insert("sourceUrl", sourceUrl);
     }
+    if (!sisVersion.isEmpty()) {
+        obj.insert("appVersion", sisVersion);
+    }
 
     if (f.open(QFile::ReadWrite | QFile::Truncate)) {
         f.write(QJsonDocument(obj).toJson());
         f.close();
     } else {
-        qDebug("Failed to open %s", qPrintable(mManifest));
+        qDebug("Failed to open %s", qPrintable(mManifestPath));
     }
 
 #if !defined(Q_OS_MAC)
@@ -540,9 +544,9 @@ void MainWindow::updateManifest(const QString& sourceUrl)
 
 void MainWindow::applyManifest()
 {
-    QFile f(mManifest);
+    QFile f(mManifestPath);
     if (!f.open(QFile::ReadOnly)) {
-        qWarning("Failed to open manifest %s", qPrintable(mManifest));
+        qWarning("Failed to open manifest %s", qPrintable(mManifestPath));
         mSourceUrl = QString();
         return;
     }
@@ -555,6 +559,7 @@ void MainWindow::applyManifest()
     doSetScale(manifest["scale"].toInt(1));
 
     mSourceUrl = manifest["sourceUrl"].toString();
+    mAppVersion = manifest["appVersion"].toString();
     // qDebug("sourceUrl = %s", qPrintable(mSourceUrl));
 }
 
@@ -703,13 +708,15 @@ _Please provide details of the program you were running, and what you were doing
 | --- | --- |
 | **App name** | %1 |
 | **UID** | %2 |
-| **Source URL** | %4 |
+| **Version** | %4 |
+| **Source URL** | %5 |
 | **Device** | %3 |
 )");
     description = description
         .arg((mAppInfo && !mAppInfo->appName.isEmpty()) ? mAppInfo->appName : QString("*unknown*"))
         .arg((mAppInfo && mAppInfo->uid != 0) ? QString("0x%1").arg(mAppInfo->uid, 0, 16) : "*unknown*")
         .arg(OplRuntime::deviceTypeToString(getRuntime().getDeviceType()))
+        .arg(!mAppVersion.isEmpty() ? mAppVersion : QString("*unknown*"))
         // Do the URL last because it could itself have %N sequences in...
         .arg(mSourceUrl.isEmpty() ? "*unknown*" : mSourceUrl);
 

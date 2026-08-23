@@ -697,6 +697,7 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, cons
         }
         auto launch = to_string(L, -1, "launch");
         auto changeDevice = to_string(L, -1, "setdevice");
+        auto sisVersion = to_string(L, -1, "version");
 
         if (!changeDevice.isEmpty()) {
             auto lang = to_string(L, -1, "lang");
@@ -707,7 +708,7 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, cons
         }
 
         lua_pop(L, 1);
-        emit installationComplete(file);
+        emit installationComplete(file, sisVersion);
         if (!launch.isEmpty()) {
             pushRunParams(launch);
             startThread();
