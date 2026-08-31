@@ -359,6 +359,11 @@ void DebuggerWindow::setCurrentEditor(const QString& module)
     auto ed = getCodeView(module);
     ui->centralwidget->setCurrentWidget(ed);
     setWindowTitle(QString("%1 - OpoLua Debugger").arg(QFileInfo(module).fileName()));
+    if (module.startsWith(":")) {
+        setWindowFilePath(QString());
+    } else {
+        setWindowFilePath(module);
+    }
     ui->actionToggleBreak->setEnabled(!module.endsWith(".lua"));
     ui->actionExportBitmap->setVisible(false);
     ui->actionGotoSymbol->setEnabled(true);
@@ -379,6 +384,7 @@ void DebuggerWindow::setCurrentDrawable(const opl::Drawable& drawable)
     setWindowTitle(QString("%1 %2 - OpoLua Debugger")
         .arg(drawable.isWindow ? "Window" : "Bitmap")
         .arg(drawable.id));
+    setWindowFilePath(QString());
     ui->actionExportBitmap->setVisible(true);
     ui->actionGotoSymbol->setEnabled(false);
     ui->actionFind->setEnabled(false);

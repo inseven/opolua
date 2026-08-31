@@ -70,11 +70,15 @@ HEADERS += \
     filesystem.h \
     gotopopup.h \
     highlighter.h \
+    importwizard.h \
+    importwizardresultspage.h \
+    importwizardselectpage.h \
     linenumberarea.h \
     logwindow.h \
     luasupport.h \
     luatokenizer.h \
     mainwindow.h \
+    manifest.h \
     oplapplication.h \
     opldebug.h \
     oplkeycode.h \
@@ -99,6 +103,9 @@ SOURCES += \
     filesystem.cpp \
     gotopopup.cpp \
     highlighter.cpp \
+    importwizard.cpp \
+    importwizardresultspage.cpp \
+    importwizardselectpage.cpp \
     linenumberarea.cpp \
     logwindow.cpp \
     lua.cpp \
@@ -106,6 +113,7 @@ SOURCES += \
     luatokenizer.cpp \
     main.cpp \
     mainwindow.cpp \
+    manifest.cpp \
     oplapplication.cpp \
     oplkeycode.cpp \
     oplruntime.cpp \
@@ -123,6 +131,8 @@ FORMS += \
     aboutwindow.ui \
     debuggerwindow.ui \
     gotopopup.ui \
+    importwizardresultspage.ui \
+    importwizardselectpage.ui \
     logwindow.ui \
     mainwindow.ui
 

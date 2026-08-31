@@ -400,7 +400,7 @@ end
 
 function launcher(osName)
     runtime:iohandler().system("setAppTitle", "Launcher")
-    SCREEN(70, 20, 10, 1)
+    SCREEN(72, 20, 12, 1)
     local isMac = osName == "osx" or osName == "macos" -- Qt5 and Qt6 names respectively
     local mod = isMac and "Cmd" or "Ctrl-Alt"
     local function print(str)
@@ -414,6 +414,8 @@ function launcher(osName)
     print("  * dragging it into this window.")
     print("")
     print("Install multiple SIS files on the same virtual disk by dragging a SIS onto the window of a running app.")
+    print("")
+    print(string.format("Import an app lacking a SIS file with File->Import App... (%s-Shift-I)", mod))
 
     local icon = gLOADBIT("C:\\icons_color.mbm", false, 0)
     local w, h = gWIDTH(), gHEIGHT()

@@ -74,6 +74,7 @@ void pushValue(lua_State* L, uint64_t v);
 void pushValue(lua_State* L, lua_CFunction v);
 void pushValue(lua_State* L, double v);
 void pushValue(lua_State* L, const QByteArray& str);
+void pushValue(lua_State* L, const char* str);
 void pushValue(lua_State* L, const QString& str);
 void pushValue(lua_State* L, const wchar_t* value);
 void pushValue(lua_State* L, const QVariant& value);

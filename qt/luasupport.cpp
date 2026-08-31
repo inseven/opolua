@@ -135,6 +135,11 @@ void pushValue(lua_State* L, const QByteArray& str)
     lua_pushlstring(L, str.data(), str.size());
 }
 
+void pushValue(lua_State* L, const char* str)
+{
+    lua_pushstring(L, str);
+}
+
 void pushValue(lua_State* L, const QString& str)
 {
     pushValue(L, str.toUtf8());

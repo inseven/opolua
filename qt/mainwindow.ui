@@ -44,6 +44,7 @@
     <addaction name="menuOpenRecent"/>
     <addaction name="actionWelcome"/>
     <addaction name="actionInstall"/>
+    <addaction name="actionImportApp"/>
     <addaction name="separator"/>
     <addaction name="actionDebugLog"/>
     <addaction name="actionOpenSharedFolder"/>
@@ -436,6 +437,14 @@
   <action name="actionHelpKey">
    <property name="text">
     <string>Press 'Help' Key (F3)</string>
+   </property>
+  </action>
+  <action name="actionImportApp">
+   <property name="text">
+    <string>Import App...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Shift+I</string>
    </property>
   </action>
  </widget>

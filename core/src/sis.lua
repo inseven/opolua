@@ -1262,4 +1262,144 @@ function makeSis(manifest)
     return table.concat(parts)
 end
 
+function inferLayoutFromFiles(files)
+    local result = {}
+    -- result.appName is used as the name of the M:\APP or C:\System\Apps subdir
+    local isFlat = true
+    local hasTopLevelApp = false
+    local hasFullStructure = false
+    -- First pass to find OPA(s) for the purposes of working out appName etc
+    for _, file in ipairs(files) do
+        if file.era then
+            assert(result.era == nil or result.era == file.era, "Multiple binary eras found?!")
+            result.era = file.era
+        end
+
+        if file.type == "opo" and file.path:upper():match("%.OPA$") then
+            -- HACK because recognize can't currently handle iconless SIBO OPAs
+            file.type = "opa"
+        end
+
+        local fileIsTopLevel = oplpath.dirname(file.path) == ""
+        if fileIsTopLevel then
+            if file.type == "opa" then
+                hasTopLevelApp = true
+            end
+        else
+            isFlat = false
+        end
+
+        if file.type == "opa" and file.era == "sibo" then
+            local appBaseName = oplpath.splitext(oplpath.basename(file.path))
+            if oplpath.dirname(file.path):upper() == "APP\\" then
+                -- Good, the structure has the entire app directory, this is the easiest to deal with as we don't need
+                -- to do anything
+                hasFullStructure = true
+                -- appName doesn't matter here (at least, not for the purpose of figuring out subdirs) but we should
+                -- still set it to _something_
+                result.appName = appBaseName
+            elseif file.defaultFile then
+                -- We will assume that the intended app subdir has the same name as the (top-level) data dir as given by
+                -- defaultDir. There are doubtless some cases where this will be better than choosing the opa name, and
+                -- some cases where the OPA name would be better. And probably some where the app subdir matches neither.
+                -- Or the files are intended to go somewhere else entirely. Without running the app, it's impossible to
+                -- know.
+                -- print(dump(file))
+                local opaDefaultDir = oplpath.basename(oplpath.split(file.defaultFile):match("(.*)\\$"))
+                if opaDefaultDir == "OPD" then
+                    -- This almost always means the app just hasn't set it and it's unlikely to be useful, so we'll go
+                    -- with assuming a subdir of APP based on the opa basename
+                    result.appName = appBaseName
+                elseif result.appName == nil then
+                    result.appName = opaDefaultDir
+                else
+                    printf("Warning: multiple OPAs, ignoring %s's defaultDir %s\n", file.path, opaDefaultDir)
+                end
+            end
+        elseif file.type == "opa" and file.era == "er5" then
+            local appBaseName = oplpath.splitext(oplpath.basename(file.path))
+            if oplpath.dirname(file.path):upper():match("^SYSTEM\\APPS\\") then
+                hasFullStructure = true
+            end
+
+            local inferredAppName
+            if fileIsTopLevel then
+                inferredAppName = appBaseName
+            else
+                inferredAppName = oplpath.basename(oplpath.dirname(file.path))
+            end
+            if result.appName == nil then
+                result.appName = inferredAppName
+            end
+        elseif file.type == "aif" then
+            result.appCaption = file.captions[file.captions[1]]
+            result.uid = file.uid3
+        end
+    end
+
+    -- Second pass to actually work out renames
+    local appNameUpper = result.appName and result.appName:upper()
+    for _, file in ipairs(files) do
+        local newPath = file.path
+        local dir = oplpath.dirname(file.path):upper():match("(.-)\\?$") -- Strip trailing separator
+        if hasFullStructure then
+            -- Nothing needed
+        elseif file.type == "opa" and file.era == "sibo" then
+            local expectedPath = "APP\\"..oplpath.basename(file.path)
+            if file.path:upper() ~= expectedPath:upper() then
+                newPath = expectedPath
+            end
+        -- elseif appDir and oplpath.join("APP", dir) == appDir then
+        elseif dir == appNameUpper then
+            -- File is already in the app subdir
+            if result.era == "sibo" then
+                newPath = oplpath.join("APP", file.path)
+            else
+                newPath = oplpath.join("System\\Apps", file.path)
+            end
+        elseif result.appName == nil then
+            -- There's nothing we can infer if we found no OPAs
+        else
+            if hasTopLevelApp then
+                if result.era == "sibo" then
+                    newPath = oplpath.join("APP\\"..result.appName, file.path)
+                else
+                    newPath = oplpath.join("System\\Apps\\"..result.appName, file.path)
+                end
+            end
+        end
+        table.insert(result, { file.path, newPath })
+    end
+
+    -- print(dump(result))
+    return result
+end
+
+function makePackageFile(actions)
+    local result = {}
+
+    local drv
+    if actions.era == "sibo" then
+        drv = "M"
+        table.insert(result, "; target: epoc16\n\n")
+    else
+        drv = "C"
+    end
+    local name = actions.appCaption or actions.appName
+    local uid = actions.uid or 0
+    local verMaj, verMin = 1, 0
+    if actions.version then
+        local maj, min = actions.version:match("([0-9]+)%.([0-9]+)")
+        assert(maj, "Bad version number "..actions.version)
+        verMaj = tonumber(maj)
+        verMin = tonumber(min)
+    end
+    table.insert(result, string.format('#{"%s"},(0x%08X),%d,%d,0\n\n', name, uid, verMaj, verMin))
+    for _, file in ipairs(actions) do
+        table.insert(result, string.format('"%s"-"%s:\\%s"\n', file[1], drv, file[2]))
+    end
+
+    return table.concat(result)
+end
+
 return _ENV
