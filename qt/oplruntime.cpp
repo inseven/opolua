@@ -26,6 +26,7 @@
 
 #include <QCoreApplication>
 #include <QDebug>
+#include <QDirIterator>
 #include <QEvent>
 #include <QJsonDocument>
 #include <QJsonValue>
@@ -50,24 +51,27 @@ void dumpStack(lua_State *L, const char* where);
 class StackChecker
 {
 public:
-    StackChecker(lua_State* L, int top) : L(L), top(top) {}
+    StackChecker(lua_State* L, int top, const char* fn) : L(L), top(top), fn(fn) {}
     ~StackChecker() {
         if (lua_gettop(L) != top) {
             qDebug("Expected top: %d actual %d", top, lua_gettop(L));
             dumpStack(L, "StackChecker");
         }
-        Q_ASSERT_X(lua_gettop(L) == top, "StackChecker", "Stack top not correct on function exit");
+        Q_ASSERT_X(lua_gettop(L) == top, fn, "Stack top not correct on function exit");
     }
 
 private:
     lua_State *L;
     int top;
+    const char* fn;
 };
 
 #define CONCAT_INNER(x, y) x ## y
 #define CONCAT(x,y) CONCAT_INNER(x, y)
-#define CHECK_STACK_BALANCED(L) StackChecker CONCAT(_stackcheck_, __LINE__) (L, lua_gettop(L))
-#define CHECK_STACK_ON_RETURN(L, diff) StackChecker CONCAT(_stackcheck_, __LINE__) (L, lua_gettop(L) diff)
+#define CHECK_STACK_BALANCED(L) \
+    StackChecker CONCAT(_stackcheck_, __LINE__) (L, lua_gettop(L), __PRETTY_FUNCTION__)
+#define CHECK_STACK_ON_RETURN(L, diff) \
+    StackChecker CONCAT(_stackcheck_, __LINE__) (L, lua_gettop(L) diff, __PRETTY_FUNCTION__)
 
 #endif // QT_NO_DEBUG
 
@@ -656,18 +660,22 @@ void OplRuntime::runInstaller(const QString& file, const QString& sysDir)
     doRunInstaller(file, sysDir, QString());
 }
 
-void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, const QString& lang)
+void OplRuntime::setDeviceTypeFromSisInfo(const std::optional<SisInfo>& sisinfo)
 {
-    Q_ASSERT(!running());
-
     // Pre-parse the SIS file so we can set the initial device type to the correct era, if necessary
-    auto sisinfo = getSisInfo(file);
     if (sisinfo.has_value()) {
         bool epoc16 = (sisinfo->target == SisInfo::Epoc16);
         if (epoc16 != isSibo()) {
             setDeviceType(epoc16 ? psionSeries3c : psionSeries5);
         }
     }
+}
+
+void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, const QString& lang)
+{
+    Q_ASSERT(!running());
+
+    setDeviceTypeFromSisInfo(getSisInfo(file));
 
     mLauncherCmd = "installSis";
     mFs->removeAllMappings();
@@ -721,7 +729,6 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, cons
 
 std::optional<SisInfo> OplRuntime::getSisInfo(const QString& nativePath)
 {
-    Q_ASSERT(!running());
     QFile f(nativePath);
     if (!f.open(QFile::ReadOnly)) {
         qWarning("Failed to open file %s", qPrintable(nativePath));
@@ -729,23 +736,29 @@ std::optional<SisInfo> OplRuntime::getSisInfo(const QString& nativePath)
     }
     auto data = f.readAll();
     f.close();
-    
+    return doGetSisInfo(data);
+}
+
+std::optional<SisInfo> OplRuntime::doGetSisInfo(const QByteArray& sisFileData)
+{
+    Q_ASSERT(!running());
+    CHECK_STACK_BALANCED(L);
     require(L, "sis");
     rawgetfield(L, -1, "parseSisFile");
-    pushValue(L, data);
-    int err = lua_pcall(L, 1, 1, 0);
+    pushValue(L, sisFileData);
+    auto err = pcall(1, 1);
     if (err) {
-        qWarning("Failed to parse sis file: %s", lua_tolstring(L, -1, nullptr));
-        lua_pop(L, 2); // err, sis
+        qWarning("Failed to parse sis file: %s", qPrintable(*err));
+        lua_pop(L, 1); // sis
         return std::nullopt;
     }
 
     rawgetfield(L, -2, "makeManifest");
     lua_insert(L, -2);
-    err = lua_pcall(L, 1, 1, 0);
+    err = pcall(1, 1);
     if (err) {
-        qWarning("Error from makeManifest! %s", lua_tolstring(L, -1, nullptr));
-        lua_pop(L, 2); // err, sis
+        qWarning("Error from makeManifest! %s", qPrintable(*err));
+        lua_pop(L, 1); // sis
         return std::nullopt;
     }
 
@@ -778,7 +791,7 @@ std::optional<SisInfo> OplRuntime::getSisInfo(const QString& nativePath)
             lua_pop(L, 1); // pop val, keep key for next iter
         }
     }
-    lua_pop(L, 1); // name
+    lua_pop(L, 3); // name, manifest, sis
 
     return result;
 }
@@ -2291,9 +2304,9 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
     lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
     luaL_getmetafield(L, -1, "getDebugInfo");
     lua_insert(L, -2);
-    int err = lua_pcall(L, 1, 1, 0);
+    auto err = pcall(L, 1, 1);
     if (err) {
-        qFatal("Error fetching debug info: %s", luaL_tolstring(L, -1, NULL));
+        qFatal("Error fetching debug info: %s", qPrintable(*err));
     }
 
     opl::ProgramInfo info {};
@@ -2585,10 +2598,9 @@ void OplRuntime::setVariable(const opl::Frame& frame, const opl::Variable& varia
     }
     pushValue(L, value);
 
-    int err = lua_pcall(L, 5, 0, 0);
+    auto err = pcall(5, 0);
     if (err) {
-        qWarning("Error setting variable: %s", luaL_tolstring(L, -1, NULL));
-        lua_pop(L, 1);
+        qWarning("Error setting variable: %s", qPrintable(*err));
     }
 
     mLastDebugInfoTime.invalidate(); // Marks debug info as stale
@@ -2623,10 +2635,9 @@ void OplRuntime::doRenameVariable(lua_State* L, const QString& proc, uint32_t in
     pushValue(L, proc);
     pushValue(L, index);
     pushValue(L, newName);
-    int err = lua_pcall(L, 4, 0, 0);
+    auto err = pcall(L, 4, 0);
     if (err) {
-        qWarning("Error renaming variable: %s", luaL_tolstring(L, -1, NULL));
-        lua_pop(L, 1);
+        qWarning("Error renaming variable: %s", qPrintable(*err));
     }
 }
 
@@ -2722,11 +2733,9 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
     rawgetfield(L, -1, "recognize");
     lua_remove(L, -2);
     lua_pushvalue(L, -2);
-    int err = lua_pcall(L, 1, 1, 0);
+    auto err = pcall(1, 1);
     QString era;
-    if (err) {
-        lua_pop(L, 1);
-    } else {
+    if (!err) {
         era = to_string(L, -1, "era");
     }
     auto stringCodec = codecForEra(era);
@@ -2768,17 +2777,13 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
         }
     }
 
-    lua_pushcfunction(L, traceback);
-    lua_insert(L, 1);
-    err = lua_pcall(L, 4, 2, 1);
-    lua_remove(L, 1); // remove traceback
+    err = pcall(4, 2);
     if (err) {
-        qWarning("decompile errored: %s", luaL_tolstring(L, -1, NULL));
-        lua_pop(L, 1);
+        qWarning("decompile errored: %s", qPrintable(*err));
         return {};
     } else if (lua_isnil(L, -2)) {
         qWarning("decompile failed: %s", luaL_tolstring(L, -1, NULL));
-        lua_pop(L, 2);
+        lua_pop(L, 3); // tolstring, the 2 results
         return {};
     }
     lua_pop(L, 1); // no error so pop the nil errstr
@@ -2898,10 +2903,10 @@ void OplRuntime::flushGraphicsOps()
     lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
     luaL_getmetafield(L, -1, "getBufferedGraphicsOps");
     lua_insert(L, -2);
-    int err = lua_pcall(L, 1, 1, 0);
+    auto err = pcall(1, 1);
     if (err) {
-        qWarning("Error fetching graphics ops: %s", luaL_tolstring(L, -1, NULL));
-        lua_pop(L, 1);
+        qWarning("Error fetching graphics ops: %s", qPrintable(*err));
+        return;
     }
     
     // For simplicity (read: don't wanna refactor drawMainThread to work on relative indexes) push a new stack frame
@@ -2932,9 +2937,285 @@ void OplRuntime::doSetHeapCheck(lua_State* L, bool flag)
     luaL_getmetafield(L, -1, "setHeapCheck");
     lua_insert(L, -2);
     lua_pushboolean(L, flag);
-    int err = lua_pcall(L, 2, 0, 0);
+    auto err = pcall(L, 2, 0);
     if (err) {
-        qWarning("Error calling setHeapCheck: %s", luaL_tolstring(L, -1, NULL));
+        qWarning("Error calling setHeapCheck: %s", qPrintable(*err));
+    }
+}
+
+OplRuntime::FolderAnalysis OplRuntime::analyzeAppFolder(const QString& path)
+{
+    Q_ASSERT(!running());
+    CHECK_STACK_BALANCED(L);
+
+    FolderAnalysis result;
+
+    require(L, "sis");
+    lua_getfield(L, -1, "inferLayoutFromFiles");
+    lua_remove(L, -2); // sis
+
+    lua_newtable(L); // files
+    require(L, "recognizer");
+    lua_getfield(L, -1, "recognize");
+    lua_remove(L, -2); // recognizer
+
+    QDir dir(path);
+    QDirIterator iter(dir, QDirIterator::Subdirectories);
+    int i = 1;
+    while (iter.hasNext()) {
+        iter.next();
+        QFileInfo info(iter.filePath());
+        if (info.isFile()) {
+            auto filePath = info.filePath();
+            auto relPath = dir.relativeFilePath(filePath).replace("/", "\\");
+            QFile f(filePath);
+            if (!f.open(QFile::ReadOnly)) {
+                qWarning("Failed to open %s", qPrintable(filePath));
+                continue;
+            }
+            auto data = f.readAll();
+            f.close();
+            lua_pushvalue(L, -1); // recognize
+            pushValue(L, data);
+            auto err = pcall(1, 1);
+            if (err) {
+                qWarning("recognize failed on %s: %s", qPrintable(filePath), qPrintable(*err));
+                continue;
+            }
+            if (lua_isnil(L, -1)) {
+                lua_pop(L, 1);
+                lua_newtable(L);
+                pushValue(L, "unknown");
+                lua_setfield(L, -2, "type");
+            }
+            pushValue(L, relPath);
+            lua_setfield(L, -2, "path"); // recognizeResult.path = filePath
+            lua_rawseti(L, -3, i++); // files[i] = recognizeResult
+        }
+    }
+    lua_pop(L, 1); // recognize
+
+    auto err = pcall(1, 1); // sis.inferLayoutFromFiles(files)
+    if (err) {
+        qWarning("inferLayoutFromFiles on %s failed: %s", qPrintable(path), qPrintable(*err));
+        return result;
+    }
+
+    result.era = to_string(L, -1, "era");
+    result.appName = to_string(L, -1, "appName");
+    result.appCaption = to_string(L, -1, "appCaption");
+    result.uid = to_intt<uint32_t>(L, -1, "uid");
+
+    i = 1;
+    while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+        int t = lua_rawgeti(L, -1, 1);
+        Q_ASSERT(t == LUA_TSTRING);
+        QString src(lua_tostring(L, -1));
+        lua_pop(L, 1);
+
+        t = lua_rawgeti(L, -1, 2);
+        Q_ASSERT(t == LUA_TSTRING);
+        QString dest(lua_tostring(L, -1));
+        lua_pop(L, 1);
+        
+        FileRename rename = {
+            .nativePath = src,
+            .devicePath = dest
+        };
+        result.files.push_back(rename);
+
         lua_pop(L, 1);
     }
+    lua_pop(L, 2); // last result from lua_rawgeti, results
+
+    return result;
+}
+
+std::optional<QString> OplRuntime::pcall(int nargs, int nret)
+{
+    return pcall(L, nargs, nret);
+}
+
+std::optional<QString> OplRuntime::pcall(lua_State* L, int nargs, int nret)
+{
+    int tracebackPos = lua_gettop(L) - nargs;
+    lua_pushcfunction(L, traceback);
+    lua_insert(L, tracebackPos); // Put traceback immediately prior to fn being called
+    int err = lua_pcall(L, nargs, nret, tracebackPos);
+    if (err) {
+        QString errStr(luaL_tolstring(L, -1, nullptr));
+        lua_pop(L, 3); // tolstring, err, traceback
+        return errStr;
+    } else {
+        lua_remove(L, tracebackPos);
+        return std::nullopt;
+    }
+}
+
+QString OplRuntime::makePackageFile(const OplRuntime::FolderAnalysis& info)
+{
+    Q_ASSERT(!running());
+    CHECK_STACK_BALANCED(L);
+    require(L, "sis");
+    lua_getfield(L, -1, "makePackageFile");
+    lua_remove(L, -2); // sis
+
+    lua_newtable(L); // actions
+    setValue(L, "era", info.era);
+    if (info.uid) {
+        setValue(L, "uid", info.uid);
+    }
+    if (!info.appCaption.isEmpty()) {
+        setValue(L, "appCaption", info.appCaption);
+    }
+    if (!info.appName.isEmpty()) {
+        setValue(L, "appName", info.appName);
+    }
+    if (!info.version.isEmpty()) {
+        setValue(L, "version", info.version);
+    }
+    
+    int i = 1;
+    for (const auto& file : info.files) {
+        lua_newtable(L);
+        pushValue(L, file.nativePath);
+        lua_rawseti(L, -2, 1);
+        pushValue(L, file.devicePath);
+        lua_rawseti(L, -2, 2);
+        lua_rawseti(L, -2, i++); // result[i++] = file
+    }
+
+    // int err = lua_pcall(L, 1, 1, 0);
+    auto err = pcall(1, 1);
+    if (err) {
+        qWarning("makePackageFile failed: %s", qPrintable(*err));
+        return QString();
+    }
+    QString result(lua_tostring(L, -1));
+    lua_pop(L, 1);
+    return result;
+}
+
+QByteArray OplRuntime::makeSis(const QString& packageFileData, const QString& basePath)
+{
+    Q_ASSERT(!running());
+    CHECK_STACK_BALANCED(L);
+    require(L, "sis"); // 1: sis
+
+    lua_getfield(L, -1, "pkgToManifest");
+    pushValue(L, packageFileData);
+    auto err = pcall(1, 1); // pushes manifest
+    if (err) {
+        qDebug("pkgToManifest failed: %s", qPrintable(*err));
+        lua_pop(L, 1); // sis
+        return QByteArray();
+    }
+
+    QDir baseDir(basePath);
+
+    // Now fill in data for each of the files in the resulting manifest
+    int i = 1;
+    lua_getfield(L, -1, "files");
+    while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+        // pushes file
+        lua_newtable(L); // data
+        lua_getfield(L, -2, "src");
+        int srcidx = 0;
+        while (lua_rawgeti(L, -1, ++srcidx) == LUA_TSTRING) {
+            QString fileSrc(lua_tostring(L, -1));
+            lua_pop(L, 1); // path
+
+            QString path = baseDir.filePath(fileSrc.replace("\\", "/"));
+            QFile f(path);
+            if (!f.open(QFile::ReadOnly)) {
+                qWarning("Failed to open %s", qPrintable(path));
+                lua_pop(L, 6); // src, data, file, files, manifest, sis
+                return QByteArray();
+            }
+            auto data = f.readAll();
+            pushValue(L, data);
+            lua_rawseti(L, -3, srcidx); // data[srcidx] = data
+        }
+        lua_pop(L, 2); // last lua_rawgeti, src
+        lua_setfield(L, -2, "data"); // file.data = data
+        lua_pop(L, 1); // file
+    }
+    lua_pop(L, 2); // last lua_rawgeti, files
+
+    // Now we can actually make the SIS file
+    lua_getfield(L, -2, "makeSis");
+    lua_insert(L, -2); // put makeSis fn behind manifest
+    err = pcall(1, 1);
+    if (err) {
+        qWarning("makeSis failed: %s", qPrintable(*err));
+        lua_pop(L, 1); // sis
+        return QByteArray();
+    }
+
+    QByteArray result = to_bytearray(L, -1);
+    lua_pop(L, 2); // result, sis
+    return result;
+}
+
+namespace {
+
+int noop(lua_State*) {
+    return 0;
+}
+
+int notimpl(lua_State* L) {
+    lua_pushstring(L, "notimplemented");
+    return 1;
+}
+
+int yarp(lua_State* L) {
+    lua_pushboolean(L, true);
+    return 1;
+}
+
+int inst(lua_State* L) {
+    lua_newtable(L);
+    setValue(L, "type", "install");
+    setValue(L, "lang", "en_GB");
+    return 1;
+}
+
+} // end namespace
+
+// This is intended for quiet installs only; if the SIS might want to ask the user a question then use runInstaller()
+// instead.
+bool OplRuntime::installSis(const QString& sisFileName, const QByteArray& sisFile, const QString& sysPath)
+{
+    Q_ASSERT(!running());
+    CHECK_STACK_BALANCED(L);
+    if (sysPath.isEmpty()) {
+        qDebug("No install path!");
+        return false;
+    }
+
+    setDeviceTypeFromSisInfo(doGetSisInfo(sisFile));
+    QString drive = QString("%1").arg((char)mainDrive());
+    QString drvPath = QFileInfo(QDir(sysPath), drive.toLower()).filePath();
+    mFs->addMapping((char)mainDrive(), drvPath, true);
+
+    require(L, "sis");
+    lua_getfield(L, -1, "installSis");
+    lua_remove(L, -2); // sis
+    pushValue(L, sisFileName);
+    pushValue(L, sisFile);
+    mFs->makeFsIoHandlerBridge(L);
+    SET_FN(L, "sisInstallBegin", inst);
+    SET_FN(L, "sisInstallRun", noop);
+    SET_FN(L, "sisInstallQuery", yarp);
+    SET_FN(L, "sisInstallRollback", noop);
+    SET_FN(L, "sisInstallComplete", noop);
+    SET_FN(L, "sisGetStubs", notimpl);
+    lua_pushboolean(L, !isSibo()); // install stub
+
+    auto err = pcall(4, 0);
+    if (err) {
+        qWarning("Install failed: %s", qPrintable(*err));
+        return false;
+    }
+    return true;
 }

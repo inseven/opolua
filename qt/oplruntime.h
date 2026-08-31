@@ -19,6 +19,7 @@
 #ifndef OPLRUNTIME_H
 #define OPLRUNTIME_H
 
+#include <QByteArray>
 #include <QDir>
 #include <QElapsedTimer>
 #include <QKeyEvent>
@@ -144,6 +145,24 @@ public:
     void interruptAndRun(std::function<void(void)> runNextFn);
 
     std::optional<SisInfo> getSisInfo(const QString& nativePath);
+    std::optional<SisInfo> doGetSisInfo(const QByteArray& sisFileData);
+
+    struct FileRename {
+        QString nativePath;
+        QString devicePath;
+    };
+    struct FolderAnalysis {
+        QString era;
+        QString appName;
+        QString appCaption;
+        QString version;
+        uint32_t uid;
+        std::vector<FileRename> files;
+    };    
+    FolderAnalysis analyzeAppFolder(const QString& path);
+    QString makePackageFile(const FolderAnalysis& info);
+    QByteArray makeSis(const QString& packageFileData, const QString& baseDir);
+    bool installSis(const QString& sisFileName, const QByteArray& sisFile, const QString& sysPath);
 
     static void configureLuaResourceSearcher(lua_State *L);
     static int dofile(lua_State *L);
@@ -171,6 +190,8 @@ public: // Debugging APIs
 
 protected:
     bool event(QEvent* ev) override;
+    std::optional<QString> pcall(lua_State* L, int nargs, int nret);
+    std::optional<QString> pcall(int nargs, int nret);
 
 public slots:
     void interrupt();
@@ -272,6 +293,7 @@ private:
     QString tolocalstring(lua_State *L, int index);
     void setEscape(bool flag);
     void doRunInstaller(const QString& file, const QString& sysDir, const QString& lang);
+    void setDeviceTypeFromSisInfo(const std::optional<SisInfo>& sisInfo);
     bool debugInfoStale() const;
     void updateDebugInfo(lua_State* L, bool errOnStack = false);
     void doRenameVariable(lua_State* L, const QString& proc, uint32_t index, const QString& newName);

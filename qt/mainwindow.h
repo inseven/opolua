@@ -19,6 +19,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "manifest.h"
+
 #include <QAction>
 #include <QLabel>
 #include <QMainWindow>
@@ -59,6 +61,7 @@ public slots:
     void openWelcome();
     void setTitle(const QString& title);
     void installSis();
+    void importApp();
     void openFile(const QString& path);
     void showDebugger();
 
@@ -81,7 +84,7 @@ private:
     void sizeWindowToFitInterpreter();
     QString getSourceUrlForPath(const QString& path);
     void applyManifest();
-    void updateManifest(const QString& sourceUrl = QString(), const QString& sisVersion = QString());
+    void updateManifest();
     void doInstallSis(const QString& file);
 
 private:
@@ -97,9 +100,7 @@ private:
     QLabel* speedLabel;
 
     // Manifest and app info
-    QString mManifestPath;
-    QString mSourceUrl;
-    QString mAppVersion; // From manifest, originally from SIS file when installed
+    Manifest mManifest;
     QScopedPointer<OplAppInfo> mAppInfo;
 
     QString mErrMsg;

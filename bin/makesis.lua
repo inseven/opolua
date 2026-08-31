@@ -80,7 +80,8 @@ EPOC16 Support
 
   If makesis finds a the special comment `; target: epoc16` in a package file,
   it will generate a SIS file with the installer version 0x10 to mark it as
-  being suitable for EPOC16 devices.
+  being suitable for EPOC16 devices. This installer version is an OpoLua
+  extension.
 
 ]])
         os.exit(true)

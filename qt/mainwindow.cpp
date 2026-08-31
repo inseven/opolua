@@ -34,6 +34,7 @@
 #endif
 
 #include "ui_mainwindow.h"
+#include "importwizard.h"
 #include "oplapplication.h"
 #include "oplruntimegui.h"
 #include "debuggerwindow.h"
@@ -55,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionOpen->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+O", nullptr));
     ui->actionWelcome->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+L", nullptr));
     ui->actionInstall->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+I", nullptr));
+    ui->actionImportApp->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Shift+I", nullptr));
     ui->actionDebugLog->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+D", nullptr));
     ui->actionOpenSharedFolder->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+F", nullptr));
     ui->actionClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+W", nullptr));
@@ -101,6 +103,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openDialog);
     connect(ui->actionWelcome, &QAction::triggered, this, &MainWindow::openWelcome);
     connect(ui->actionInstall, &QAction::triggered, this, &MainWindow::installSis);
+    connect(ui->actionImportApp, &QAction::triggered, this, &MainWindow::importApp);
     connect(ui->actionDebugLog, &QAction::triggered, gApp, &OplApplication::showLogWindow);
     connect(ui->actionOpenSharedFolder, &QAction::triggered, this, &MainWindow::openSharedFolder);
     connect(ui->actionStop, &QAction::triggered, runtime, &OplRuntime::interrupt);
@@ -399,6 +402,19 @@ void MainWindow::doInstallSis(const QString& file)
     }
 }
 
+void MainWindow::importApp()
+{
+    if (getRuntime().running()) {
+        MainWindow* m = new MainWindow();
+        m->show();
+        m->importApp();
+        return;
+    }
+    auto wizard = new ImportWizard();
+    connect(wizard, &ImportWizard::launch, this, &MainWindow::openFile);
+    wizard->show();
+}
+
 void MainWindow::openFile(const QString& path)
 {
     if (getRuntime().runningLauncherCommand() == "launcher") {
@@ -412,7 +428,7 @@ void MainWindow::openFile(const QString& path)
         m->openFile(path);
         return;
     }
-    mManifestPath = QString();
+    mManifest.setPath(QString());
 
     QFileInfo info(path);
     QString extension = info.suffix().toLower();
@@ -439,8 +455,8 @@ void MainWindow::openFile(const QString& path)
         QString drive = driveForApp(path);
         if (!drive.isEmpty()) {
 
-            mManifestPath = manifestForDrive(drive);
-            if (!mManifestPath.isEmpty()) {
+            mManifest.setPath(manifestForDrive(drive));
+            if (!mManifest.path().isEmpty()) {
                 applyManifest();
             }
 
@@ -483,54 +499,34 @@ void MainWindow::openFile(const QString& path)
 
 void MainWindow::installationComplete(const QString& sisPath, const QString& sisVersion)
 {
-    auto path = getRuntime().getNativePath("C:\\");
+    auto path = getRuntime().mappingForDrive(getRuntime().mainDrive());
     Q_ASSERT(!path.isEmpty());
-    mManifestPath = manifestForDrive(path);
-    mSourceUrl = getSourceUrlForPath(sisPath);
-    mAppVersion = sisVersion;
-    updateManifest(mSourceUrl, sisVersion);
+    mManifest.setPath(manifestForDrive(path));
+    mManifest.setDevice(getRuntime().getDeviceType());
+    mManifest.setSourceUrl(getSourceUrlForPath(sisPath));
+    mManifest.setAppVersion(sisVersion);
+    mManifest.save();
 }
 
-void MainWindow::updateManifest(const QString& sourceUrl, const QString& sisVersion)
+void MainWindow::updateManifest()
 {
-    if (mManifestPath.isEmpty() || !getRuntime().writableMainDrive()) {
+    if (mManifest.path().isEmpty() || !getRuntime().writableMainDrive()) {
         return;
     }
 
-    QJsonObject obj;
-    QFile f(mManifestPath);
-    if (f.open(QFile::ReadOnly)) {
-        obj = QJsonDocument::fromJson(f.readAll()).object();
-        f.close();
-    }
-
     // Migrate launch.oplsys -> manifest.json if necessary
-    QFileInfo inf(mManifestPath);
+    QFileInfo inf(mManifest.path());
     if (inf.fileName() == "launch.oplsys") {
         auto newp = QFileInfo(inf.dir(), "manifest.json").filePath();
-        qDebug("Migrating manifest from %s to %s", qPrintable(mManifestPath), qPrintable(newp));
-        mManifestPath = newp;
+        qDebug("Migrating manifest from %s to %s", qPrintable(mManifest.path()), qPrintable(newp));
+        mManifest.setPath(newp);
+        QFile f(mManifest.path());
         f.remove();
-        f.setFileName(mManifestPath);
     }
 
-    auto deviceType = getRuntime().getDeviceType();
-    QString typeStr = OplRuntime::deviceTypeToString(deviceType);
-    obj.insert("device", typeStr);
-    obj.insert("scale", ui->screen->getScale());
-    if (!sourceUrl.isEmpty()) {
-        obj.insert("sourceUrl", sourceUrl);
-    }
-    if (!sisVersion.isEmpty()) {
-        obj.insert("appVersion", sisVersion);
-    }
-
-    if (f.open(QFile::ReadWrite | QFile::Truncate)) {
-        f.write(QJsonDocument(obj).toJson());
-        f.close();
-    } else {
-        qDebug("Failed to open %s", qPrintable(mManifestPath));
-    }
+    mManifest.setDevice(getRuntime().getDeviceType());
+    mManifest.setScale(ui->screen->getScale());
+    mManifest.save();
 
 #if !defined(Q_OS_MAC)
     // Mac is the only OS with bundle support
@@ -544,23 +540,11 @@ void MainWindow::updateManifest(const QString& sourceUrl, const QString& sisVers
 
 void MainWindow::applyManifest()
 {
-    QFile f(mManifestPath);
-    if (!f.open(QFile::ReadOnly)) {
-        qWarning("Failed to open manifest %s", qPrintable(mManifestPath));
-        mSourceUrl = QString();
+    if (!mManifest.load()) {
         return;
     }
-    auto manifest = QJsonDocument::fromJson(f.readAll());
-    QString device = manifest["device"].toString();
-
-    if (!device.isEmpty()) {
-        getRuntime().setDeviceType(OplRuntime::toDeviceType(device));
-    }
-    doSetScale(manifest["scale"].toInt(1));
-
-    mSourceUrl = manifest["sourceUrl"].toString();
-    mAppVersion = manifest["appVersion"].toString();
-    // qDebug("sourceUrl = %s", qPrintable(mSourceUrl));
+    getRuntime().setDeviceType(mManifest.device());
+    doSetScale(mManifest.scale());
 }
 
 QString MainWindow::getSharedDrive()
@@ -716,9 +700,9 @@ _Please provide details of the program you were running, and what you were doing
         .arg((mAppInfo && !mAppInfo->appName.isEmpty()) ? mAppInfo->appName : QString("*unknown*"))
         .arg((mAppInfo && mAppInfo->uid != 0) ? QString("0x%1").arg(mAppInfo->uid, 0, 16) : "*unknown*")
         .arg(OplRuntime::deviceTypeToString(getRuntime().getDeviceType()))
-        .arg(!mAppVersion.isEmpty() ? mAppVersion : QString("*unknown*"))
+        .arg(!mManifest.appVersion().isEmpty() ? mManifest.appVersion() : QString("*unknown*"))
         // Do the URL last because it could itself have %N sequences in...
-        .arg(mSourceUrl.isEmpty() ? "*unknown*" : mSourceUrl);
+        .arg(mManifest.sourceUrl().isEmpty() ? "*unknown*" : mManifest.sourceUrl());
 
     if (!mErrDetail.isEmpty()) {
         description = QString("%1\n\n## Details\n\n```\n%2\n```").arg(description, mErrDetail);

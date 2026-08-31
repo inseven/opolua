@@ -292,3 +292,7 @@ function path_basename(path)
     local pattern = string.format("%s?([^%s]+)$", osPathSeparator, osPathSeparator)
     return (path:match(pattern))
 end
+
+function path_tonative(path)
+    return path:gsub("[/\\]", osPathSeparator)
+end

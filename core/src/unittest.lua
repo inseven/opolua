@@ -203,6 +203,8 @@ function main()
     checkWrap("hello world", 5, "hello \nworld")
     checkWrap("hello!", 4, "hell\no!")
 
+    testInfer()
+
     print("All tests passed.")
 end
 
@@ -212,6 +214,72 @@ function checkSpec(spec, expectedPath, expectedTableName, expectedFields, expect
     assertEquals(tableName, expectedTableName)
     assertEquals(fields, expectedFields)
     assertEquals(sortSpec, expectedSort)
+end
+
+function testInfer()
+    local sis = require("sis")
+    local function checkFiles(files, expected)
+        local actions = sis.inferLayoutFromFiles(files)
+        assertEquals(actions, expected)
+    end
+
+    -- A series 5 app distributed as just the raw app dir
+    checkFiles({
+        { path = "FooApp.app", type = "opa", era = "er5" },
+        { path = "FooApp.aif", type = "aif", captions = { [1] = "en_GB", en_GB = "Foo" }, icons = {} },
+        { path = "whatevs.mbm", type = "mbm" }
+    }, {
+        appName = "FooApp",
+        appCaption = "Foo",
+        era = "er5",
+        { "FooApp.app", [[System\Apps\FooApp\FooApp.app]] },
+        { "FooApp.aif", [[System\Apps\FooApp\FooApp.aif]] },
+        { "whatevs.mbm", [[System\Apps\FooApp\whatevs.mbm]] },
+    })
+
+    -- A series 3 app distributed as flat files, without a PATH set
+    -- Example: https://archive.org/download/NWTPsion3/NWT_Psion3.tar/NWT_Psion3%2Fapps%2Ftimer%2Fgeock159.zip
+    checkFiles({
+        { path = "GeoClock.opa", type = "opa", era = "sibo", defaultFile = [[\OPD\Geoclock.ODB]] },
+        { path = "worldmap.pic", type = "pic", era = "sibo" },
+        { path = "Geoclock.txt", type = "unknown" },
+    }, {
+        appName = "GeoClock",
+        era = "sibo",
+        { "GeoClock.opa", [[APP\GeoClock.opa]] },
+        { "worldmap.pic", [[APP\GeoClock\worldmap.pic]] },
+        { "Geoclock.txt", [[APP\GeoClock\Geoclock.txt]] },
+    })
+
+    -- No PATH set, but with files in subdirs
+    -- Example: https://archive.org/download/pilowar/pilowar.iso/Coll%2FJUMPYP.ZIP
+    checkFiles({
+        { path = [[JUMPY.OPA]] , type = "opa", era = "sibo", defaultFile = [[\OPD\Jumpy.ODB]] },
+        { path = [[JUMPY\COMMON.PIC]], type = "pic", era = "sibo" },
+        { path = "JUMPY.TXT", type = "unknown" },
+    }, {
+        appName = "JUMPY",
+        era = "sibo",
+        { [[JUMPY.OPA]], [[APP\JUMPY.OPA]] },
+        { [[JUMPY\COMMON.PIC]], [[APP\JUMPY\COMMON.PIC]] },
+        { "JUMPY.TXT", [[APP\JUMPY\JUMPY.TXT]] },
+    })
+
+
+
+    -- Something specifying the whole App dir
+    checkFiles({
+        { path = [[APP\DRAGON.OPA]] , type = "opa", era = "sibo", defaultFile = [[\DRAGON\Dragon.DFG]] },
+        { path = [[APP\DRAGON\INTRO.PIC]], type = "pic", era = "sibo" },
+        { path = [[readme.txt]], type = "unknown" },
+    }, {
+        appName = "DRAGON",
+        era = "sibo",
+        { [[APP\DRAGON.OPA]], [[APP\DRAGON.OPA]] },
+        { [[APP\DRAGON\INTRO.PIC]], [[APP\DRAGON\INTRO.PIC]] },
+        { "readme.txt", "readme.txt" },
+    })
+
 end
 
 pcallMain()
