@@ -205,6 +205,8 @@ function main()
 
     testInfer()
 
+    checkOpcodes()
+
     print("All tests passed.")
 end
 
@@ -280,6 +282,23 @@ function testInfer()
         { "readme.txt", "readme.txt" },
     })
 
+end
+
+function checkOpcodes()
+    local function check(name, tbl)
+        assert(type(tbl[name]) == "function", "Missing function for "..name)
+    end
+
+    local ops = require("ops")
+    local fns = require("fns")
+    for _, ver in ipairs({ EOplTranVersionOplS3, EOplTranVersionOpl1993, EOplTranVersionOpler1 }) do
+        for code, name in pairs(ops.codes[ver]) do
+            check(name, ops)
+        end
+        for code, name in pairs(fns.codes[ver]) do
+            check(name, fns)
+        end
+    end
 end
 
 pcallMain()

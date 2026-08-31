@@ -56,7 +56,7 @@ codes_s3 = {
     [0x18] = "PeekB",
     [0x19] = "PeekW",
     [0x1A] = "Pos",
-    [0x1B] = "IllegalFuncOpCode",
+    [0x1B] = "RecSize",
     [0x1C] = "Second",
     [0x1D] = "Usr",
     [0x1E] = "Year",
@@ -89,29 +89,29 @@ codes_s3 = {
     [0x39] = "gCreateEnhanced",
     [0x3A] = "MenuWithMemory",
     [0x3B] = "IllegalFuncOpCode",
-    [0x3C] = "IllegalFuncOpCode",
-    [0x3D] = "IllegalFuncOpCode",
-    [0x3E] = "IllegalFuncOpCode",
-    [0x3F] = "IllegalFuncOpCode",
+    [0x3C] = "LoadLib",
+    [0x3D] = "UnloadLib",
+    [0x3E] = "FindLib",
+    [0x3F] = "GetLibh",
     [0x40] = "Days",
     [0x41] = "IAbs",
     [0x42] = "IntLong",
     [0x43] = "PeekL",
     [0x44] = "Space",
     [0x45] = "DateToSecs",
-    [0x46] = "IllegalFuncOpCode",
-    [0x47] = "IllegalFuncOpCode",
-    [0x48] = "IllegalFuncOpCode",
-    [0x49] = "IllegalFuncOpCode",
-    [0x4A] = "IllegalFuncOpCode",
+    [0x46] = "NewObj",
+    [0x47] = "NewObjh",
+    [0x48] = "Send",
+    [0x49] = "EnterSend",
+    [0x4A] = "EnterSend0",
     [0x4B] = "IllegalFuncOpCode",
     [0x4C] = "IllegalFuncOpCode",
     [0x4D] = "IllegalFuncOpCode",
     [0x4E] = "IllegalFuncOpCode",
-    [0x4F] = "Ioc",
+    [0x4F] = "IllegalFuncOpCode",
     [0x50] = "IllegalFuncOpCode",
     [0x51] = "IllegalFuncOpCode",
-    [0x52] = "IoCancel",
+    [0x52] = "IllegalFuncOpCode",
     [0x53] = "IllegalFuncOpCode",
     [0x54] = "FindField",
     [0x55] = "Bookmark",
@@ -241,7 +241,7 @@ codes_s3 = {
     [0xD1] = "RightStr",
     [0xD2] = "SciStr",
     [0xD3] = "UpperStr",
-    [0xD4] = "IllegalFuncOpCode",
+    [0xD4] = "UsrStr",
     [0xD5] = "WCmd",
     [0xD6] = "CmdStr",
     [0xD7] = "ParseStr",
@@ -260,16 +260,28 @@ codes_s3a = {
     [0x4C] = "ReAlloc",
     [0x4D] = "AdjustAlloc",
     [0x4E] = "LenAlloc",
+    [0x4F] = "Ioc",
     [0x50] = "Uadd",
     [0x51] = "Usub",
+    [0x52] = "IoCancel",
     [0x53] = "StatWinInfo",
 }
 
 codes_s5 = {
     [0x02] = "IllegalFuncOpCode", -- was Call
+    [0x1B] = "IllegalFuncOpCode", -- was RecSize
     [0x1D] = "IllegalFuncOpCode", -- was Usr
     [0x27] = "gCreateBit",
     [0x35] = "IllegalFuncOpCode", -- was Os
+    [0x3C] = "IllegalFuncOpCode", -- was LoadLib
+    [0x3D] = "IllegalFuncOpCode", -- was UnloadLib
+    [0x3E] = "IllegalFuncOpCode", -- was FindLib
+    [0x3F] = "IllegalFuncOpCode", -- was GetLibh
+    [0x46] = "IllegalFuncOpCode", -- was NewObj
+    [0x47] = "IllegalFuncOpCode", -- was NewObjh
+    [0x48] = "IllegalFuncOpCode", -- was Send
+    [0x49] = "IllegalFuncOpCode", -- was EnterSend
+    [0x4A] = "IllegalFuncOpCode", -- was EnterSend0
     [0x53] = "IllegalFuncOpCode", -- was StatWinInfo
     [0x57] = "InTrans",
     [0x58] = "mPopup",
@@ -535,6 +547,10 @@ end
 function Pos(stack, runtime) -- 0x1A
     local db = runtime:getDb()
     stack:push(db:getPos())
+end
+
+function RecSize(stack, runtime) -- 0x1B
+    unimplemented("fns.RecSize")
 end
 
 function Second(stack, runtime) -- 0x1C
@@ -864,7 +880,23 @@ function MenuWithMemory(stack, runtime) -- 0x3A
     stack:push(selected)
 end
 
-function Days(stack, runtime) -- 0x37
+function LoadLib(stack, runtime) -- 0x3C (SIBO)
+    unimplemented("fns.LoadLib")
+end
+
+function UnloadLib(stack, runtime) -- 0x3D (SIBO)
+    unimplemented("fns.UnloadLib")
+end
+
+function FindLib(stack, runtime) -- 0x3E (SIBO)
+    unimplemented("fns.FindLib")
+end
+
+function GetLibh(stack, runtime) -- 0x3F (SIBO)
+    unimplemented("fns.GetLibh")
+end
+
+function Days(stack, runtime) -- 0x40
     local year = stack:pop()
     local month = stack:pop()
     local day = stack:pop()
@@ -928,6 +960,32 @@ function DateToSecs(stack, runtime) -- 0x45
     assert(t, err)
     stack:push(toint32(t))
 end
+
+function NewObj(stack, runtime) -- 0x46 (SIBO)
+    unimplemented("NEWOBJ")
+end
+
+function NewObjh(stack, runtime) -- 0x47 (SIBO)
+    unimplemented("NEWOBJH")
+end
+
+function Send(stack, runtime) -- 0x48 (SIBO)
+    unimplemented("SEND")
+end
+
+Send_dump = numParams_dump
+
+function EnterSend(stack, runtime) -- 0x49 (SIBO)
+    unimplemented("ENTERSEND")
+end
+
+EnterSend_dump = numParams_dump
+
+function EnterSend0(stack, runtime) -- 0x4A (SIBO)
+    unimplemented("ENTERSEND0")
+end
+
+EnterSend0_dump = numParams_dump
 
 function Alloc(stack, runtime) -- 0x4B
     local sz = stack:pop()
@@ -1396,6 +1454,10 @@ end
 
 function UpperStr(stack, runtime) -- 0xD3
     stack:push(stack:pop():upper())
+end
+
+function UsrStr(stack, runtime) -- 0xD4
+    unimplemented("fns.UsrStr")
 end
 
 function WCmd(stack, runtime) -- 0xD5
