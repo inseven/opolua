@@ -552,6 +552,7 @@ codes_s3a = {
     [0x104] = "Font",
     [0x105] = "Style",
     [0x10C] = "FreeAlloc",
+    [0x10D] = "LinkLib",
     [0x10E] = "rCache",
     [0x10F] = "gButton",
     [0x110] = "gXBorder",
@@ -567,6 +568,7 @@ codes_s5 = {
     [0xEF] = "IllegalOpCode", -- was StatusWin
     [0x102] = "IllegalOpCode", -- was diamInit
     [0x103] = "IllegalOpCode", -- was diamPos
+    [0x10D] = "IllegalOpCode", -- was LinkLib
     [0x10E] = "IllegalOpCode", -- was rCache
     [0x118] = "CallOpxFunc",
     [0x119] = "Statement32",
@@ -1492,6 +1494,10 @@ end
 
 function Cls(stack, runtime) -- 0xA2
     runtime:CLS()
+end
+
+function Compress(stack, runtime) -- 0xA3 (SIBO)
+    unimplemented("Compress")
 end
 
 function Copy(stack, runtime) -- 0xA4
@@ -2556,6 +2562,10 @@ end
 function FreeAlloc(stack, runtime) -- 0x10C
     local addr = runtime:addrFromInt(stack:pop())
     runtime:realloc(addr:intValue(), 0)
+end
+
+function LinkLib(stack, runtime) -- 0x10D (SIBO)
+    unimplemented("LinkLib")
 end
 
 function rCache(stack, runtime) -- 0x10E (SIBO)
