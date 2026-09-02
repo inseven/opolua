@@ -980,7 +980,7 @@ function decompileProc(proc, options)
     local function handleStandardOp(location, standardOp)
         local nargs = #standardOp.args
         if standardOp.args.numParams then
-            nargs = ip8() + standardOp.args.numFixedParams
+            nargs = standardOp.args.qualifierRule(nil, ip8())
         end
 
         local args = getArgs(standardOp.args, nargs)
@@ -1716,7 +1716,7 @@ function decompileProc(proc, options)
                 ip = ip - 1 -- Rewind because handleStandardOp expects to read it to check numParams
                 handleStandardOp(location, {
                     name = "BUSY",
-                    args = { String, Int, Int, numParams = { 1, 2, 3 }, numFixedParams = 0 }
+                    args = { String, Int, Int, numParams = { 1, 2, 3 }, qualifierRule = compiler.qN }
                 })
             end
         elseif op == "Lock" then
@@ -1730,7 +1730,7 @@ function decompileProc(proc, options)
                 ip = ip - 1
                 handleStandardOp(location, {
                     name = "gCLOCK ON,",
-                    args = { Int, IntPtr, String, IntPtr, Int, numParams = {1, 2, 3, 4, 5}, numFixedParams = -1 },
+                    args = { Int, IntPtr, String, IntPtr, Int, numParams = {1, 2, 3, 4, 5}, qualifierRule = compiler.fixed(-1) },
                 })
             end
         elseif op == "CallOpxFunc" then

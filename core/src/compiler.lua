@@ -420,14 +420,40 @@ local function Op(name, args) return { type = "op", name = name, args = args } e
 local function SpecialFn(args, ret) return { type = "fn", args = args, valType = ret } end
 local function SpecialOp(optArgs) return { type = "op", args = optArgs } end
 
+-- Helpers for qualifierRule. These can be called with either a non-nil args (and 2nd argument nil), in which case the
+-- fn should return the qualifier for those args, or with args nil and qualifier non-nil, in which case the fn should
+-- return the number of args for that qualifier.
+function qN(args, qualifier)
+    if qualifier then
+        -- qualifier -> number of args
+        return qualifier
+    else
+        -- args -> qualifier
+        return #args
+    end
+end
+
+function fixed(n)
+    return function(args, qualifier)
+        if qualifier then
+            -- qualifier -> number of args
+            return qualifier + n
+        else
+            -- args -> qualifier
+            return #args - n
+        end
+    end
+end
+
 -- Includes CallFunction functions, and commands that correspond to a single opcode and have a fixed number of
 -- arguments. Cmds which have variadic arguments using the standard numParams calling convention can use
 -- numParams={...} which is an array of acceptable argument counts. Non-Special Ops with numParams MUST also specify
--- numFixedParams because Ops are not consistent in how variable number of args are implemented (unlike Fns which are).
--- numFixedParams=2 means the first two args are not counted in numParams.
+-- qualifierRule because Ops are not consistent in how variable number of args are implemented (unlike Fns which are).
+-- qualifierRule=qN means the qualifier exactly matches the number of arguments. qualifierRule=fixed(2) means the first
+-- two args are not counted in numParams.
 --
--- One way to figure out what numFixedParams should be is by looking at the source of opl/oplt/stran/OT_KYWRD.CPP for
--- how `qualifier` is set.
+-- One way to figure out what the qualfierRule should be is by looking at the source of opl/oplt/stran/OT_KYWRD.CPP for
+-- how `qualifier` is set. Or refer to <http://www.davros.org/psion/psionics/opo.fmt>.
 Callables = {
     ABS = Fn("Abs", {Float}, Float),
     ACOS = Fn("ACos", {Float}, Float),
@@ -481,7 +507,7 @@ Callables = {
     DIALOG = Fn("Dialog", {}, Int),
     DIAMINIT = SpecialOp(),
     DIAMPOS = Op("diamPos", {Int}),
-    DINIT = Op("dInit", {String, Int, numParams = {0, 1, 2}, numFixedParams = 0}),
+    DINIT = Op("dInit", {String, Int, numParams = {0, 1, 2}, qualifierRule = qN}),
     ["DIR$"] = Fn("DirStr", {String}, String),
     DLONG = SpecialOp({LongVariable, String, Long, Long}),
     DOW = Fn("Dow", {Int, Int, Int}, Int),
@@ -510,10 +536,10 @@ Callables = {
     FLT = Fn("Flt", {Long}, Float),
     FREEALLOC = Op("FreeAlloc", {IntPtr}),
     GAT = Op("gAt", {Int, Int}),
-    GBORDER = Op("gBorder", {Int, Int, Int, numParams = {1, 3}, numFixedParams = 0}),
+    GBORDER = Op("gBorder", {Int, Int, Int, numParams = {1, 3}, qualifierRule = qN}),
     GBOX = Op("gBox", {Int, Int}),
-    GBUTTON = Op("gButton", {String, Int, Int, Int, Int, Long, Long, Int, numParams = {5, 6, 7, 8}, numFixedParams = 5}),
-    GCIRCLE = Op("gCircle", {Int, Int, numParams = {1, 2}, numFixedParams = 1}),
+    GBUTTON = Op("gButton", {String, Int, Int, Int, Int, Long, Long, Int, numParams = {5, 6, 7, 8}, qualifierRule = fixed(5)}),
+    GCIRCLE = Op("gCircle", {Int, Int, numParams = {1, 2}, qualifierRule = fixed(1)}),
     GCLOCK = SpecialOp(),
     GCLOSE = Op("gClose", {Int}),
     GCLS = Op("gCls", {}),
@@ -523,7 +549,7 @@ Callables = {
     GCOPY = Op("gCopy", {Int, Int, Int, Int, Int, Int}),
     GCREATE = SpecialFn({Int, Int, Int, Int, Int, Int, numParams = {5, 6}}, Int),
     GCREATEBIT = SpecialFn(nil, Int),
-    GELLIPSE = Op("gEllipse", {Int, Int, Int, numParams = {2, 3}, numFixedParams = 2}),
+    GELLIPSE = Op("gEllipse", {Int, Int, Int, numParams = {2, 3}, qualifierRule = fixed(2)}),
     ["GEN$"] = Fn("GenStr", {Float, Int}, String),
     GET = Fn("Get", {}, Int),
     ["GETCMD$"] = Fn("WCmd", {}, String),
@@ -543,7 +569,7 @@ Callables = {
     GINFO = Op("gInfo", {AddressOfIntArray}),
     GINFO32 = Op("gInfo32", {AddressOfLongArray}),
     GINVERT = Op("gInvert", {Int, Int}),
-    GIPRINT = Op("gIPrint", {String, Int, numParams = {1, 2}, numFixedParams = 1}),
+    GIPRINT = Op("gIPrint", {String, Int, numParams = {1, 2}, qualifierRule = fixed(1)}),
     GLINEBY = Op("gLineBy", {Int, Int}),
     GLINETO = Op("gLineTo", {Int, Int}),
     GLOADBIT = Fn("gLoadBit", {String, Int, Int, numParams = {1, 2, 3}}, Int),
@@ -557,13 +583,13 @@ Callables = {
     GPEEKLINE = SpecialOp({Int, Int, Int, AddressOfIntArray, Int, Int, numParams = {5, 6}}),
     GPOLY = Op("gPoly", {AddressOfIntArray}),
     GPRINT = SpecialOp(),
-    GPRINTB = Op("gPrintBoxText", {String, Int, Int, Int, Int, Int, numParams = {2, 3, 4, 5, 6}, numFixedParams = 1}),
+    GPRINTB = Op("gPrintBoxText", {String, Int, Int, Int, Int, Int, numParams = {2, 3, 4, 5, 6}, qualifierRule = fixed(1)}),
     GPRINTCLIP = Fn("gPrintClip", {String, Int}, Int),
     GRANK = Fn("gRank", {}, Int),
-    GSAVEBIT = Op("gSaveBit", {String, Int, Int, numParams = {1, 3}, numFixedParams = 1}),
-    GSCROLL = Op("gScroll", {Int, Int, Int, Int, Int, Int, numParams = {2, 6}, numFixedParams = 0}),
+    GSAVEBIT = Op("gSaveBit", {String, Int, Int, numParams = {1, 3}, qualifierRule = fixed(1)}),
+    GSCROLL = Op("gScroll", {Int, Int, Int, Int, Int, Int, numParams = {2, 6}, qualifierRule = qN}),
     GSETPENWIDTH = Op("gSetPenWidth", {Int}),
-    GSETWIN = Op("gSetWin", {Int, Int, Int, Int, numParams = {2, 4}, numFixedParams = 0}),
+    GSETWIN = Op("gSetWin", {Int, Int, Int, Int, numParams = {2, 4}, qualifierRule = qN}),
     GSTYLE = Op("gStyle", {Int}),
     GTMODE = Op("gTMode", {Int}),
     GTWIDTH = Fn("gTWidth", {String}, Int),
@@ -573,7 +599,7 @@ Callables = {
     GVISIBLE = SpecialOp(),
     GWIDTH = Fn("gWidth", {}, Int),
     GX = Fn("gX", {}, Int),
-    GXBORDER = Op("gXBorder", {Int, Int, Int, Int, numParams = {2, 4}, numFixedParams = 0}),
+    GXBORDER = Op("gXBorder", {Int, Int, Int, Int, numParams = {2, 4}, qualifierRule = qN}),
     GXPRINT = Op("gXPrint", {String, Int}),
     GY = Fn("gY", {}, Int),
     ["HEX$"] = Fn("HexStr", {Long}, String),
@@ -875,7 +901,7 @@ function parseUntypedExpression(tokens)
                 token.args = parseExpressionList(tokens)
                 tokens:expect("cloparen")
                 if token.type == "dyncall" then
-                    assert(#token.args == 1, "Wrong number of args to @()")
+                    assert(#token.args == 1, "Wrong number of arguments to @()")
                     assert(token.args[1].valType == String, "Expected string argument to @()")
                     -- We've consumed @%(fnname) tokens should now be :(args...)
                     tokens:expectNext("colon")
@@ -2438,8 +2464,9 @@ function ProcState:handleStandardOp(callable, opToken, args)
         self:emit("B", opcode)
     end
     if callable.args.numParams then
-        local numParams = #args - callable.args.numFixedParams
-        self:emit("B", numParams)
+        assert(callable.args.qualifierRule, "Definition of "..callable.name.." must define qualifierRule")
+        local qualifier = callable.args.qualifierRule(args)
+        self:emit("B", qualifier)
     end
     self:popStack(#args)
 end
@@ -2452,7 +2479,7 @@ function handleOp_BUSY(procState)
         procState.tokens:advance() -- consume the OFF
         procState:emit("BB", opcodes.Busy, 0)
     else
-        local op = Op("Busy", {String, Int, Int, numParams = {1, 2, 3}, numFixedParams = 0})
+        local op = Op("Busy", {String, Int, Int, numParams = {1, 2, 3}, qualifierRule = qN })
         procState:handleOp(op, cmdToken)
     end
 end
@@ -2470,7 +2497,7 @@ function handleOp_CACHE(procState)
             opcodes[procState.oplFormat].rCache & 0xFF,
             next.type == "ON" and 1 or 0)
     else
-        local op = Op("rCache", {Int, Int, numParams = {2}, numFixedParams = 0})
+        local op = Op("rCache", {Int, Int, numParams = {2}, qualifierRule = qN })
         procState:handleOp(op, cmdToken)
     end
 end
