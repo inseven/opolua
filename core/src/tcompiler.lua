@@ -381,7 +381,7 @@ for cmd, callable in pairs(compiler.Callables) do
                 compiler.opcodes[compiler.Opl93][callable.name]
             assert(found, "No opcode for "..callable.name)
             if callable.args.numParams then
-                assert(callable.args.numFixedParams, cmd.." specifies numParams but not numFixedParams")
+                assert(callable.args.qualifierRule, cmd.." specifies numParams but not qualifierRule")
             end
         end
     else
