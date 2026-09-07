@@ -678,7 +678,13 @@ function gSAVEBIT(path, w, h)
     else
         rect = { x = 0, y = 0, w = context.width, h = context.height }
     end
-    printf("gSAVEBIT %s %dx%d mode=%d\n", path, rect.w, rect.h, context.displayMode)
+    local absPath = runtime:abs(path)
+    if runtime:isSibo() then
+        if not absPath:lower():match("%.pic") then
+            absPath = absPath .. ".pic"
+        end
+    end
+    printf("gSAVEBIT %s -> %s %dx%d mode=%d\n", path, absPath, rect.w, rect.h, context.displayMode)
     local data = runtime:iohandler().graphicsop("getimg", context.id, rect)
     local bmp = {
         width = rect.w,
@@ -687,7 +693,7 @@ function gSAVEBIT(path, w, h)
         normalizedImgData = data,
     }
     local mbmData = require("mbm").makeMbm(KUidOplFile, { bmp })
-    local err = runtime:iohandler().fsop("write", path, mbmData)
+    local err = runtime:iohandler().fsop("write", absPath, mbmData)
     if err ~= KErrNone then
         error(err)
     end
