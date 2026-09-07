@@ -153,9 +153,9 @@ Options:
     local verbose = not args.decompile and (all or procName == nil)
     opofile = require("opofile")
     runtime = require("runtime")
-    local prog = opofile.parseOpo2(data, verbose)
+    local prog = opofile.parseOpo(data, verbose)
     local rt = runtime.newRuntime(nil, prog.translatorVersion)
-    rt:addModule("C:\\module", prog.procTable, prog.opxTable)
+    rt:addModule("C:\\module", prog)
     if args.decompile then
         local names = {} -- map of module name to table of name->newname
         for _, rename in ipairs(args.name) do

@@ -181,7 +181,7 @@ function Runtime:makeTemporaryVar(type, arrayLen, stringMaxLen)
     return self.chunk:allocVariable(type, stringMaxLen, arrayLen)
 end
 
-function Runtime:addModule(path, procTable, opxTable)
+function Runtime:addModule(path, opo)
     -- printf("addModule: %s\n", path)
     local name = oplpath.splitext(oplpath.basename(path))
     local mod = {
@@ -191,10 +191,11 @@ function Runtime:addModule(path, procTable, opxTable)
         -- procnames.
         name = name:upper(),
         path = path,
-        procTable = procTable,
-        opxTable = opxTable,
+        procTable = opo.procTable,
+        opxTable = opo.opxTable,
+        uid3 = opo.uid3, -- Track the uid3 if the opo has one
     }
-    for _, proc in ipairs(procTable) do
+    for _, proc in ipairs(opo.procTable) do
         if mod[proc.name] then
             -- Have seen this in some SIBO progs, runtime appears to pick the first
             printf("Warning: duplicate proc name '%s' in %s\n", proc.name, path)
@@ -1360,8 +1361,8 @@ function Runtime:loadModule(path)
         data = self.ioh.fsop("read", path)
     end
     if data then
-        local procTable, opxTable = opofile.parseOpo(data, self.instructionDebug)
-        self:addModule(path, procTable, opxTable)
+        local opo = opofile.parseOpo(data, self.instructionDebug)
+        self:addModule(path, opo)
         return
     end
 
@@ -1386,7 +1387,7 @@ function Runtime:loadModule(path)
             table.insert(procTable, proc)
         end
     end
-    local m = self:addModule(path, procTable)
+    local m = self:addModule(path, { procTable = procTable })
     m.nativePath = mod.__nativePath
     -- finally, import all the helper fns from opl.lua into mod's environment
     for name, fn in pairs(self.opl) do
@@ -1649,11 +1650,10 @@ function newRuntimeWithFile(fileName, iohandler)
         error({ msg = "File is a native binary and not compiled OPL.", notOpl = true })
     end
 
-    local module = opofile.parseOpo2(data, verbose)
+    local module = opofile.parseOpo(data, verbose)
     iohandler.setEra(module.era, module.translatorVersion) -- Needed to set the default string encoding
     local rt = newRuntime(iohandler, module.translatorVersion)
-    local mod = rt:addModule(fileName, module.procTable, module.opxTable)
-    mod.uid3 = module.uid3
+    local mod = rt:addModule(fileName, module)
     return rt
 end
 
