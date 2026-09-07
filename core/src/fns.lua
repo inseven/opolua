@@ -1291,7 +1291,7 @@ function Eval(stack, runtime) -- 0x99
         printf("Failed to eval %s\nError: %s\n", str, prog)
         error(KErrEvalSyntax)
     end
-    local proc = assert(require("opofile").parseOpo(prog)[1])
+    local proc = assert(require("opofile").parseOpo(prog).procTable[1])
     proc.module = { name = "EVAL" } -- in case of execution errors, populate enough state to keep error handler happy
     runtime:pushNewFrame(stack, proc, 0)
 end

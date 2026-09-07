@@ -5,7 +5,7 @@ _ENV = module()
 
 function decompileFile(data, pathHint, renames, aifData)
     local opofile = require("opofile")
-    local prog = opofile.parseOpo2(data)
+    local prog = opofile.parseOpo(data)
     local result = {}
     local options = {
         path = pathHint,
@@ -1868,7 +1868,7 @@ function decompileProc(proc, options)
                 end
                 table.insert(procBlock.statements, { value = "REM The raw disassembly is as follows:" })
                 local rt = require("runtime").newRuntime(nil, oplFormat)
-                rt:addModule("C:\\module", { proc }, options.opxTable)
+                rt:addModule("C:\\module", { procTable = { proc }, opxTable = options.opxTable })
 
                 rt:decodeProc(proc.name, nil, function(location, line)
                     table.insert(procBlock.statements, { location = location, value = "REM "..line })

@@ -95,11 +95,11 @@ function recognize(data, verbose)
     end
 
     if uid1 == KUidDirectFileStore and uid2 == KUidOplApp then
-        local procTable, opxTable, era = require("opofile").parseOpo(data, verbose)
-        return { type = "opa", era = era, uid3 = uid3 }
+        local opo = require("opofile").parseOpo(data, verbose)
+        return { type = "opa", era = opo.era, uid3 = opo.uid3 }
     elseif uid1 == KUidDirectFileStore and uid2 == KUidOPO then
-        local procTable, opxTable, era = require("opofile").parseOpo(data, verbose)
-        return { type = "opo", era = era }
+        local opo = require("opofile").parseOpo(data, verbose)
+        return { type = "opo", era = opo.era }
     end
 
     if uid1 == KUidDirectFileStore then

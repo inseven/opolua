@@ -36,11 +36,6 @@ TOpoRootStream = "<I4I2I2I4I4I4I2"
 TOpoProcHeader = "<s1I4I2"
 
 function parseOpo(data, verbose)
-    local module = parseOpo2(data, verbose)
-    return module.procTable, module.opxTable, module.era
-end
-
-function parseOpo2(data, verbose)
     local function vprintf(...)
         if verbose then
             printf(...)

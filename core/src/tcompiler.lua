@@ -203,9 +203,9 @@ local function checkProg(prog, expected)
     end
 
     local opoData = opofile.makeOpo(progObj)
-    local procTable, opxTable = opofile.parseOpo(opoData)
-    assertEquals(#procTable, #expected)
-    for procIdx, proc in ipairs(procTable) do
+    local opo = opofile.parseOpo(opoData)
+    assertEquals(#opo.procTable, #expected)
+    for procIdx, proc in ipairs(opo.procTable) do
         local expectedProc = expected[procIdx]
         local code = proc.data:sub(1 + proc.codeOffset, proc.codeOffset + proc.codeSize)
 
@@ -270,15 +270,15 @@ local function checkProg(prog, expected)
     end
 
     assertEquals(progObj.aif, expected.aif)
-    assertEquals(opxTable, expected.opxTable)
+    assertEquals(opo.opxTable, expected.opxTable)
 
     -- Now check we can decompile it
     local output = {}
     local function outputFn(location, ...)
         table.insert(output, string.format(...))
     end
-    assert(decompiler.decompile(procTable, {
-        opxTable = opxTable,
+    assert(decompiler.decompile(opo.procTable, {
+        opxTable = opo.opxTable,
         format = compiler.OplEr5,
         annotate = false,
         outputFn = outputFn,
@@ -293,10 +293,10 @@ local function checkProg(prog, expected)
         error(dump(recompiledProgObj))
     end
     local recompiledOpoData = opofile.makeOpo(recompiledProgObj)
-    local procTable, opxTable = opofile.parseOpo(opoData)
+    local  opo = opofile.parseOpo(opoData)
     output = {}
-    assert(decompiler.decompile(procTable, {
-        opxTable = opxTable,
+    assert(decompiler.decompile(opo.procTable, {
+        opxTable = opo.opxTable,
         format = compiler.OplEr5,
         annotate = false,
         outputFn = outputFn,
