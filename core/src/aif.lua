@@ -30,24 +30,17 @@ function parseAif(data)
 
     if data:sub(1, 16) == "OPLObjectFile**\0" then
         -- Series 3 OPA files have their AIF metadata built in - for simplicity, treat them like a special kind of AIF
-        -- Not entirely clear how to establish if this is an OPA with metadata or just an OPO without - we will peek
-        -- for a PIC header and assume that means we're an OPA
 
-        -- local _, _, era = require("opofile").parseOpo(data)
+        local opo = require("opofile").parseOpo(data)
+        if opo.defaultFile then
+            local icons
+            if opo.picPos then
+                local len, picDataPos = string.unpack("<I2", data, opo.picPos)
+                local picData = data:sub(picDataPos, picDataPos + len - 1)
+                icons = mbm.parseMbmHeader(picData)
+            end
 
-        local sourceName, pos = string.unpack("<s1", data, 21)
-        local len, hdr = string.unpack("<I2c4", data, pos)
-        if hdr == "PIC\xDC" then
-            local picDataPos = pos + 2
-            local picData = data:sub(picDataPos, picDataPos + len - 1)
-            local icons = mbm.parseMbmHeader(picData)
-
-            local infoPos = picDataPos + len
-            local infoLen, name, path, type = string.unpack("<I2c14c20I2", data, infoPos)
-            name = string.unpack("z", name)
-            path = string.unpack("z", path)
-            -- name is actually the default filename but that seems to be constructed from the APP <name> plus EXT <ext>
-            local caption = oplpath.splitext(name)
+            local caption = oplpath.splitext(oplpath.basename(opo.defaultFile))
             return {
                 type = "opa",
                 uid3 = 0,
@@ -55,10 +48,10 @@ function parseAif(data)
                     "en_GB",
                     en_GB = caption,
                 },
-                icons = icons,
+                icons = icons or {},
                 era = "sibo",
-                defaultFile = oplpath.join(path, name),
-                opaType = type,
+                defaultFile = opo.defaultFile,
+                opaType = opo.opaType,
             }
         else
             return nil
