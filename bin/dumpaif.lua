@@ -76,7 +76,7 @@ Options:
             printf("DefaultFile: %s\n", info.defaultFile)
         end
         if info.opaType then
-            printf("OpaType: %d\n", info.opaType);
+            printf("OpaType: 0x%X\n", info.opaType);
         end
     end
 

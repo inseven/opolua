@@ -221,7 +221,12 @@ function Runtime:addModule(path, opo)
     if not self.cwd then
         assert(oplpath.isabs(path), "Bad path for initial module!")
         local drive, dir, base, ext = oplpath.parse(path)
-        self.cwd = drive.."\\"
+        if self:isSibo() then
+            -- Default dir comes from the app's path, or \OPD if the program is just an OPO without an APP section.
+            self:setCwd(drive..oplpath.join(opo.path or "\\OPD", ""))
+        else
+            self:setCwd(drive.."\\")
+        end
     end
     if #self.modules == 1 then
         self:setAppName(name)
@@ -1484,6 +1489,7 @@ function Runtime:getCwd()
 end
 
 function Runtime:setCwd(cwd)
+    -- printf("setCwd(%s)\n", cwd)
     assert(oplpath.isabs(cwd), "Cannot set a non-absolute CWD!")
     assert(cwd:match("\\$"), "Cannot set a non-dir path as CWD!")
     self.cwd = cwd
@@ -1658,6 +1664,14 @@ function newRuntimeWithFile(fileName, iohandler)
 end
 
 function Runtime:run(procName)
+    if self:isSibo() then
+        -- Need to make sure cwd exists
+        if not self:EXIST(self.cwd) then
+            -- Don't error if this fails, we might be running an OPO with no filesystem
+            self.ioh.fsop("mkdir", self.cwd)
+        end
+    end
+
     local procToCall = procName and procName:upper() or self.modules[1].procTable[1].name
     local err = self:pcallProc(procToCall)
     if err and err.code == KStopErr then

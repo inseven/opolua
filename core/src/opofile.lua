@@ -43,22 +43,43 @@ function parseOpo(data, verbose)
     end
 
     local result = {}
-    local procTableIdx, opxTableIdx, srcNameIdx
+    local procTableIdx, opxTableIdx, sourceName
     local tv
     if data:sub(1, 16) == "OPLObjectFile**\0" then
         -- SIBO format
         -- TOpoFileHeader16
-        local sig, fileVersion, offset = string.unpack(TOpoFileHeader16, data)
+        local sig, fileVersion, moduleOffset, srcPos = string.unpack(TOpoFileHeader16, data)
+        local src, endOfFileHeaderPos = string.unpack("s1", data, srcPos)
+        sourceName = string.unpack("z", src.."\0")
         -- It appears nothing cares about fileVersion (seems to always be 1?)
-        vprintf("SIBO version=%d offset=0x%08X\n", fileVersion, offset)
+        vprintf("SIBO version=%d moduleOffset=0x%08X\n", fileVersion, moduleOffset)
+
+        if 1 + moduleOffset > endOfFileHeaderPos then
+            local opaDataPos = endOfFileHeaderPos
+            local len, hdr = string.unpack("<I2c4", data, opaDataPos)
+            if hdr == "PIC\xDC" then
+                result.picPos = opoDataPos
+                -- Skip over the embedded icon
+                opaDataPos = opaDataPos + 2 + len
+            end
+            local name, path, type = string.unpack("<c14c20I2", data, opaDataPos + 2) -- +2 to skip over len
+            name = string.unpack("z", name.."\0")
+            path = string.unpack("z", path.."\0")
+            vprintf("Type: 0x%X\n", type)
+            vprintf("Path: %s\n", path)
+            vprintf("Name: %s\n", name)
+            result.path = path
+            result.defaultFile = oplpath.join(path, name)
+            result.opaType = type
+        end
+
         -- TOpoModuleHeader16
-        local totalSize, translatorVersion, minRunVersion, pti = string.unpack(TOpoModuleHeader16, data, 1 + offset)
+        local totalSize, translatorVersion, minRunVersion, pti = string.unpack(TOpoModuleHeader16, data, 1 + moduleOffset)
         vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
         assert(translatorVersion == EOplTranVersionOplS3 or translatorVersion == EOplTranVersionOpl1993)
         assert(minRunVersion == EOplTranVersionOplS3 or minRunVersion == EOplTranVersionOpl1993)
         procTableIdx = pti
         opxTableIdx = 0 -- not supported in this version
-        srcNameIdx = string.packsize(TOpoFileHeader16)
         result.era = "sibo"
         result.translatorVersion = translatorVersion
     else
@@ -81,7 +102,10 @@ function parseOpo(data, verbose)
         vprintf("translatorVersion: 0x%04X minRunVersion: 0x%04X\n", translatorVersion, minRunVersion)
         assert(translatorVersion == EOplTranVersionOpler1, "Unexpected translatorVersion!")
         assert(minRunVersion == EOplTranVersionOpler1, "Unexpected minRunVersion!")
-        srcNameIdx = sni
+        if sni > 0 then
+            sourceName = string.unpack("<s1", data, sni + 1)
+        end
+
         procTableIdx = pti
         opxTableIdx = oti
         result.era = "er5"
@@ -89,15 +113,8 @@ function parseOpo(data, verbose)
         result.translatorVersion = translatorVersion
     end
 
-    local sourceName
-    if srcNameIdx > 0 then
-        sourceName = string.unpack("<s1", data, srcNameIdx + 1)
-        local unNullTerminated = sourceName:match("^(.*)\0$")
-        if unNullTerminated then
-            -- SIBO format can include a null terminator here
-            sourceName = unNullTerminated
-        end
-        vprintf("Source name: %s\n", sourceName)
+    if sourceName then
+        vprintf("Source: %s\n", sourceName)
     end
 
     result.procTable = {}
