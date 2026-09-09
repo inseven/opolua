@@ -2117,11 +2117,7 @@ end
 -- misc
 
 function checkPathValid(path)
-    local toCheck = path
-    if oplpath.isabs(path) then
-        toCheck = path:sub(3)
-    end
-    if toCheck:match('[:"*?/]') then
+    if not oplpath.isValid(path) then
         return nil, KErrName
     end
 

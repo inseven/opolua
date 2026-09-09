@@ -104,7 +104,7 @@ Various useful resources which aided greatly in reverse-engineering the OPL and 
 * https://web.archive.org/web/20060505220702/http://www.allaboutopl.com/wiki/OPLCommandsListing?v=kbu
 * https://www.thouky.co.uk/software/psifs/sis.html
 * http://www.koeniglich.de/epoc32_fileformats.txt
-* https://frodo.looijaard.name/psifiles/MBM_File
+* https://frodo.looijaard.name/psifiles/Index
 * http://www.davros.org/psion/psionics/
 * http://www.users.globalnet.co.uk/~datajam/opl-manual/html/opl/opchapt13.html
 * https://web.archive.org/web/20041130063903/http://home.t-online.de/home/thomas-milius/Download/Documentation/EPCDB.htm

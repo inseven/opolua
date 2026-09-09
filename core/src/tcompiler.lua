@@ -202,7 +202,7 @@ local function checkProg(prog, expected)
         error(dump(progObj))
     end
 
-    local opoData = opofile.makeOpo(progObj)
+    local opoData = opofile.makeOpo(progObj, oplFormat)
     local opo = opofile.parseOpo(opoData)
     assertEquals(#opo.procTable, #expected)
     for procIdx, proc in ipairs(opo.procTable) do
@@ -230,7 +230,7 @@ local function checkProg(prog, expected)
             expectedProc.iTotalTableSize = 0
         end
         if not expectedProc.translatorVersion then
-            expectedProc.translatorVersion = opofile.EOplTranVersionOpler1
+            expectedProc.translatorVersion = oplFormat
         end
         if procIdx == 1 and expectedProc.name == nil then
             expectedProc.name = "MAIN"
@@ -269,6 +269,7 @@ local function checkProg(prog, expected)
         end
     end
 
+    assertEquals(opo.translatorVersion, oplFormat)
     assertEquals(progObj.aif, expected.aif)
     assertEquals(opo.opxTable, expected.opxTable)
 
@@ -279,7 +280,7 @@ local function checkProg(prog, expected)
     end
     assert(decompiler.decompile(opo.procTable, {
         opxTable = opo.opxTable,
-        format = compiler.OplEr5,
+        format = oplFormat,
         annotate = false,
         outputFn = outputFn,
         renames = {},
@@ -287,7 +288,7 @@ local function checkProg(prog, expected)
     local decompiledText = table.concat(output)
     -- And that the decompiled output compiles, and that when we decompile _that_ we get the same text as from the first
     -- decompile.
-    ok, recompiledProgObj = xpcall(compiler.docompile, debug.traceback, dummyPath, nil, decompiledText, {}, compiler.OplEr5)
+    ok, recompiledProgObj = xpcall(compiler.docompile, debug.traceback, dummyPath, nil, decompiledText, {}, oplFormat)
     if not ok then
         print(decompiledText)
         error(dump(recompiledProgObj))
@@ -297,7 +298,7 @@ local function checkProg(prog, expected)
     output = {}
     assert(decompiler.decompile(opo.procTable, {
         opxTable = opo.opxTable,
-        format = compiler.OplEr5,
+        format = oplFormat,
         annotate = false,
         outputFn = outputFn,
         renames = {},
@@ -342,15 +343,19 @@ local function checkCode(statement, expectedCode)
     checkCodeRet(statement, expectedCode)
 end
 
-local function checkSyntaxError(statement, expectedError, oplFormat)
-    local prog = string.format(checkCodeWrapper, "", statement)
-    local ok, err = pcall(compiler.docompile, "C:\\module", nil, prog, {}, oplFormat or compiler.OplEr5)
+local function checkProgError(prog, expectedError, oplFormat)
+    local ok, err = pcall(compiler.docompile, "program", nil, prog, {}, oplFormat or compiler.OplEr5)
     assert(not ok, "Compile unexpectedly succeeded!")
     assert(err.src, "Error didn't include src!? "..tostring(err))
-    -- Line number should always be 4 because that's where checkCodeWrapper puts statement
-    local expectedErrWithPrefix = "C:\\module:4:" .. expectedError
+    local expectedErrWithPrefix = "program:"..expectedError
     local errStr = string.format("%s:%d:%d: %s", err.src.path, err.src.line, err.src.column, err.msg)
     assertEquals(errStr, expectedErrWithPrefix)
+end
+
+local function checkSyntaxError(statement, expectedError, oplFormat)
+    local prog = string.format(checkCodeWrapper, "", statement)
+    -- Line number should always be 4 because that's where checkCodeWrapper puts statement
+    checkProgError(prog, "4:"..expectedError, oplFormat)
 end
 
 checklex("print a% --3.14e1 ** 2,", { id"PRINT", id"a%", "sub", "sub", lit"3.14e1", "pow", lit"2", "comma", "eos" })
@@ -1477,5 +1482,74 @@ checkProg(doubleEndif, {
         op"ZeroReturnFloat",
     }
 })
+
+oplFormat = compiler.Opl93 -- This line changes the meaning of things like op"..." from this point on
+
+siboOpa = [[
+APP MyApp
+    PATH "\APP\SUBDIR"
+    EXT "YEM"
+    TYPE 2
+ENDA
+
+PROC main:
+ENDP
+]]
+checkProg(siboOpa, {
+    aif = {
+        captions = {
+            en_GB = "MYAPP",
+            [1] = "en_GB",
+        },
+        defaultFile = [[\APP\SUBDIR\MYAPP.YEM]],
+        icons = {},
+        opaType = 2,
+    },
+    {
+        op"ZeroReturnFloat",
+    }
+})
+
+siboOpaNoPathLeadingBackslash = [[
+APP MyApp
+    PATH "Nope"
+ENDA
+]]
+checkProgError(siboOpaNoPathLeadingBackslash, "2:10: Bad PATH", compiler.Opl93)
+
+siboOpaPathTooLong = [[
+APP MyApp
+    PATH "\234567890123456789"
+ENDA
+]]
+checkProgError(siboOpaPathTooLong, "2:10: PATH too long", compiler.Opl93)
+
+siboOpaPathSegmentTooLong = [[
+APP MyApp
+    PATH "\234567890"
+ENDA
+]]
+checkProgError(siboOpaPathSegmentTooLong, "2:10: PATH component too long", compiler.Opl93)
+
+siboOpaBadExt1 = [[
+APP MyApp
+    EXT ""
+ENDA
+]]
+checkProgError(siboOpaBadExt1, "2:9: Bad EXT", compiler.Opl93)
+
+siboOpaBadExt2 = [[
+APP MyApp
+    EXT "Toolong"
+ENDA
+]]
+checkProgError(siboOpaBadExt2, "2:9: Bad EXT", compiler.Opl93)
+
+siboOpaBadExt3 = [[
+APP MyApp
+    EXT "a.b"
+ENDA
+]]
+checkProgError(siboOpaBadExt3, "2:9: Bad EXT", compiler.Opl93)
 
 print("All tests passed.")

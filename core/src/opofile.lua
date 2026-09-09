@@ -35,6 +35,8 @@ TOpoStoreHeader = "<I4I4I4I4I4"
 TOpoRootStream = "<I4I2I2I4I4I4I2"
 TOpoProcHeader = "<s1I4I2"
 
+SiboOpaData = "<c14c20I2"
+
 function parseOpo(data, verbose)
     local function vprintf(...)
         if verbose then
@@ -62,7 +64,7 @@ function parseOpo(data, verbose)
                 -- Skip over the embedded icon
                 opaDataPos = opaDataPos + 2 + len
             end
-            local name, path, type = string.unpack("<c14c20I2", data, opaDataPos + 2) -- +2 to skip over len
+            local name, path, type = string.unpack(SiboOpaData, data, opaDataPos + 2) -- +2 to skip over len
             name = string.unpack("z", name.."\0")
             path = string.unpack("z", path.."\0")
             vprintf("Type: 0x%X\n", type)
@@ -443,13 +445,18 @@ function makeOpo(prog, format)
     local translatorVersion = format
     local minRunVersion = translatorVersion
     local srcNameIdx, procOffset
+    local moduleHeaderOffset -- SIBO only
     if format == EOplTranVersionOpler1 then
         local nominalSrcNameIdx = string.packsize(TOpoStoreHeader)
         srcNameIdx = prog.path and nominalSrcNameIdx or 0
         procOffset = nominalSrcNameIdx + (prog.path and (#prog.path + 1) or 0)
     else
-        local srcNameIdx = string.packsize(TOpoFileHeader16) + string.packsize(TOpoModuleHeader16)
-        procOffset = srcNameIdx + 1 + (prog.path and #prog.path or 0)
+        moduleHeaderOffset = string.packsize(TOpoFileHeader16)
+            + 1 + (prog.path and #prog.path or 0) -- source
+            + 0 -- PIC resource
+            + (prog.aif and (2 + string.packsize(SiboOpaData)) or 0)
+
+        procOffset = moduleHeaderOffset + string.packsize(TOpoModuleHeader16) -- Updated below
     end
 
     local procTable = {}
@@ -548,10 +555,14 @@ function makeOpo(prog, format)
         end
     else
         local pathLen = prog.path and #prog.path or 0
-        -- offset will be bigger once APP data is supported
-        local offset = string.packsize(TOpoFileHeader16) + 1 + pathLen
-        add(TOpoFileHeader16, "OPLObjectFile**\0", 1, offset)
+        add(TOpoFileHeader16, "OPLObjectFile**\0", 1, moduleHeaderOffset)
         add("s1", prog.path or "")
+        -- TODO pic
+        if prog.aif then
+            local path, name = oplpath.split(prog.aif.defaultFile)
+            add("<I2"..SiboOpaData, string.packsize(SiboOpaData), name, path, prog.aif.opaType)
+        end
+        assert(result.sz == moduleHeaderOffset, "Mismatch in moduleHeaderOffset!")
         local totalSize = rootStreamIdx
         add(TOpoModuleHeader16, totalSize, translatorVersion, minRunVersion, procTableIdx)
     end

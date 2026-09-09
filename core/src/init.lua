@@ -533,6 +533,14 @@ function oplpath.canon(path)
     return path:upper():gsub("[\\/]+", "/")
 end
 
+function oplpath.isValid(path)
+    local toCheck = path
+    if oplpath.isabs(path) then
+        toCheck = path:match("(\\.*)")
+    end
+    return toCheck:match('[:"*?/]') == nil and toCheck:match("\\\\") == nil
+end
+
 -- Simplest most unambiguous escaping you can get - anything that's not
 -- printable ascii is converted to \xNN, including newlines and (to avoid
 -- ambiguity) backslash.
