@@ -1098,10 +1098,15 @@ function parseApp(tokens, consts)
     local exps = parseExpressionList(tokens)
     local validTokens
     if tokens.oplFormat == OplEr5 then
-        synassert(#exps == 2, appToken, "Expected APP name, uid")
+        synassert(#exps == 2, appToken, "Expected APP <name>, <uid>")
+        -- Despite what the OPL manual says (that it's 250 chars, which is physically impossible given how the file
+        -- format stores it), the max len appears to be 32 chars. The file format would I think allow up to 63.
+        synassert(#exps[1].val <= 32, exps[1], "Name too long")
         aif.uid3 = evalConstExpr(Long, exps[2], consts)
         validTokens = { "CAPTION", "ICON", "FLAGS", "ENDA", "eos" }
     else
+        synassert(#exps == 1, appToken, "Expected APP <name>")
+        synassert(#exps[1].val <= 8, exps[1], "Name too long")
         validTokens = { "TYPE", "PATH", "ICON", "EXT", "ENDA", "eos" }
     end
     local defaultCaption = exps[1].val
@@ -1129,27 +1134,51 @@ function parseApp(tokens, consts)
                 path = evalConstExpr(String, parseExpression(tokens), consts)
             })
         elseif token.type == "FLAGS" then
+            synassert(tokens.oplFormat >= OplEr5, token, notAvailable(token.type))
             tokens:advance()
             synassert(aif.flags == nil, token, "Duplicate FLAGS")
             aif.flags = evalConstExpr(Int, parseExpression(tokens), consts)
         elseif token.type == "TYPE" then
+            synassert(tokens.oplFormat < OplEr5, token, notAvailable(token.type))
             tokens:advance()
             synassert(aif.opaType == nil, token, "Duplicate TYPE")
             aif.opaType = evalConstExpr(Int, parseExpression(tokens), consts)
         elseif token.type == "PATH" then
-            tokens:advance()
+            synassert(tokens.oplFormat < OplEr5, token, notAvailable(token.type))
             synassert(path == nil, token, "Duplicate PATH")
-            path = evalConstExpr(String, parseExpression(tokens), consts)
-        elseif token.type == "EXT" then
             tokens:advance()
+            local pathToken = tokens:current()
+            path = evalConstExpr(String, parseExpression(tokens), consts)
+            -- There are some compile-time restrictions on what PATH is allowed to be.
+            -- * Must start with a backslash
+            -- * Has a backslash added if not already given
+            -- * Resulting string must be <= 19 chars
+            -- * No individual path segment may be more than 8 chars
+            synassert(path:match("^\\") and oplpath.isValid(path), pathToken, "Bad PATH")
+            if not path:match("\\$") then
+                path = path .. "\\"
+            end
+            synassert(#path <= 19, pathToken, "PATH too long")
+            for part in path:gmatch("[^\\]+") do
+                synassert(#part <= 8, pathToken, "PATH component too long")
+            end
+        elseif token.type == "EXT" then
+            synassert(tokens.oplFormat < OplEr5, token, notAvailable(token.type))
             synassert(ext == nil, token, "Duplicate EXT")
+            tokens:advance()
+            local extToken = tokens:current()
             ext = evalConstExpr(String, parseExpression(tokens), consts)
+            -- EXT must be 1 to 3 valid path chars and cannot contain a dot (or a backslash)
+            synassert(#ext > 0 and #ext <= 3 and not ext:match("[%.\\]") and oplpath.isValid(ext), extToken, "Bad EXT") 
         else
             synerror(token, "Unhandled token "..token.val)
         end
     end
     if tokens.oplFormat < OplEr5 then
         aif.defaultFile = oplpath.join(path or "\\OPD", defaultCaption .. "." .. (ext or "ODB"))
+        if aif.opaType == nil then
+            aif.opaType = 0
+        end
     end
     tokens:advance()
     if aif.captions[1] == nil then
