@@ -77,7 +77,7 @@ Options:
 
     --format <91|93|er5>
         What OPL version to compile for. '91' for OPL1991 which targets the
-        Series 3, '93' for OPL1993 targetting the Series 3c, or 'er5' for the
+        Series 3, '93' for OPL1993 targetting the Series 3a/3c, or 'er5' for the
         Series 5. The default is 'er5' if not specified.
 ]])
         os.exit(false)
