@@ -256,6 +256,7 @@ codes_s3 = {
 }
 
 codes_s3a = {
+    [0x3B] = "CreateSprite",
     [0x4B] = "Alloc",
     [0x4C] = "ReAlloc",
     [0x4D] = "AdjustAlloc",
@@ -878,6 +879,10 @@ function MenuWithMemory(stack, runtime) -- 0x3A
         var(highlighted) -- Update this
     end
     stack:push(selected)
+end
+
+function CreateSprite(stack, runtime) -- 0x3B (SIBO)
+    unimplemented("fns.CreateSprite")
 end
 
 function LoadLib(stack, runtime) -- 0x3C (SIBO)

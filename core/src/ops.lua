@@ -551,6 +551,11 @@ codes_s3a = {
     [0x103] = "diamPos",
     [0x104] = "Font",
     [0x105] = "Style",
+    [0x107] = "AppendSprite",
+    [0x108] = "DrawSprite",
+    [0x109] = "ChangeSprite",
+    [0x10A] = "PosSprite",
+    [0x10B] = "CloseSprite",
     [0x10C] = "FreeAlloc",
     [0x10D] = "LinkLib",
     [0x10E] = "rCache",
@@ -2557,6 +2562,30 @@ end
 function Style(stack, runtime) -- 0x105
     local style = stack:pop()
     runtime:STYLE(style)
+end
+
+function AppendSprite(stack, runtime) -- 0x107 (SIBO)
+    unimplemented("AppendSprite")
+end
+
+AppendSprite_dump = qualifier_dump
+
+function DrawSprite(stack, runtime) -- 0x108 (SIBO)
+    unimplemented("DrawSprite")
+end
+
+function ChangeSprite(stack, runtime) -- 0x109 (SIBO)
+    unimplemented("ChangeSprite")
+end
+
+ChangeSprite_dump = qualifier_dump
+
+function PosSprite(stack, runtime) -- 0x10A (SIBO)
+    unimplemented("PosSprite")
+end
+
+function CloseSprite(stack, runtime) -- 0x10B (SIBO)
+    unimplemented("CloseSprite")
 end
 
 function FreeAlloc(stack, runtime) -- 0x10C

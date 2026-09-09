@@ -445,6 +445,28 @@ function fixed(n)
     end
 end
 
+local function q_20_41(args, qualifier)
+    -- 2 args: qualifier 0. 4 args: qualifier 1
+    if qualifier then
+        -- qualifier -> number of args
+        return assert(({ [0] = 2, [1] = 4 })[qualifier], "Bad qualifier")
+    else
+        -- args -> qualifier
+        return assert(({ [2] = 0, [4] = 1 })[#args])
+    end
+end
+
+local function q_30_51(args, qualifier)
+    -- 3 args: qualifier 0. 5 args: qualifier 1
+    if qualifier then
+        -- qualifier -> number of args
+        return assert(({ [0] = 3, [1] = 5 })[qualifier], "Bad qualifier")
+    else
+        -- args -> qualifier
+        return assert(({ [3] = 0, [5] = 1 })[#args])
+    end
+end
+
 -- Includes CallFunction functions, and commands that correspond to a single opcode and have a fixed number of
 -- arguments. Cmds which have variadic arguments using the standard numParams calling convention can use
 -- numParams={...} which is an array of acceptable argument counts. Non-Special Ops with numParams MUST also specify
@@ -462,6 +484,7 @@ Callables = {
     ALERT = Fn("Alert", {String, String, String, String, String, numParams = {1, 2, 3, 4, 5}}, Int),
     ALLOC = Fn("Alloc", {IntPtr}, IntPtr),
     APPEND = Op("Append", {}),
+    APPENDSPRITE = Op("AppendSprite", {Int, AddressOfStringArray, Int, Int, numParams = {2, 4}, qualifierRule = q_20_41}),
     ASC = Fn("Asc", {String}, Int),
     ASIN = Fn("ASin", {Float}, Float),
     AT = Op("At", {Int, Int}),
@@ -474,8 +497,10 @@ Callables = {
     CACHE = SpecialOp(),
     CALL = Fn("Call", {Int, Int, Int, Int, Int, Int, numParams = {1, 2, 3, 4, 5, 6}}, Int),
     CANCEL = Op("Cancel", {}),
+    CHANGESPRITE = Op("ChangeSprite", {Int, Int, AddressOfStringArray, Int, Int, numParams = {3, 5}, qualifierRule = q_30_51}),
     ["CHR$"] = Fn("ChrStr", {Int}, String),
     CLOSE = Op("Close", {}),
+    CLOSESPRITE = Op("CloseSprite", {Int}),
     CLEARFLAGS = Op("ClearFlags", {Long}),
     CLS = Op("Cls", {}),
     ["CMD$"] = Fn("CmdStr", {Int}, String),
@@ -486,6 +511,7 @@ Callables = {
     COS = Fn("Cos", {Float}, Float),
     COUNT = Fn("Count", {}, Int),
     CREATE = SpecialOp(),
+    CREATESPRITE = Fn("CreateSprite", {}, Int),
     CURSOR = SpecialOp(),
     DATETOSECS = Fn("DateToSecs", {Int, Int, Int, Int, Int, Int}, Long),
     ["DATIM$"] = Fn("DatimStr", {}, String),
@@ -512,6 +538,7 @@ Callables = {
     DLONG = SpecialOp({LongVariable, String, Long, Long}),
     DOW = Fn("Dow", {Int, Int, Int}, Int),
     DPOSITION = SpecialOp({Int, Int}),
+    DRAWSPRITE = Op("DrawSprite", {Int, Int}),
     DTEXT = SpecialOp({String, String, Int, numParams = {2, 3}}),
     DTIME = SpecialOp({LongVariable, String, Int, Long, Long}),
     DXINPUT = SpecialOp({StringVariable, String}),
@@ -683,6 +710,7 @@ Callables = {
     POKEW = Op("PokeW", {IntPtr, Int}),
     POS = Fn("Pos", {}, Int),
     POSITION = Op("Position", {Int}),
+    POSSPRITE = Op("PosSprite", {Int, Int}),
     PRINT = SpecialOp(),
     PUT = Op("Put", {}),
     RAD = Fn("Rad", {Float}, Float),
@@ -1329,6 +1357,8 @@ function checkExpressionArguments(args, declArgs, token)
             synassert(arg.type == "call" and arg.valType == Long and arg.args and #arg.args == 0, arg, "Expected Long array var")
         elseif declArgs[i] == AddressOfFloatArray then
             synassert(arg.type == "call" and arg.valType == Float and arg.args and #arg.args == 0, arg, "Expected Float array var")
+        elseif declArgs[i] == AddressOfStringArray then
+            synassert(arg.type == "call" and arg.valType == String and arg.args and #arg.args == 0, arg, "Expected String array var")
         elseif declArgs[i] == AddressOfInt or declArgs[i] == IntVariable then
             synassert(arg.type == "identifier" and arg.valType == Int, arg, "Expected Int var")
         elseif declArgs[i] == AddressOfLong or declArgs[i] == LongVariable then
