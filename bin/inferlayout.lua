@@ -10,8 +10,10 @@ function main()
     local args = getopt({
         "dir",
         version = string,
+        json = true,
         help = true,
         h = "help",
+        j = "json",
         v = "version",
     })
 
@@ -24,6 +26,9 @@ on-device file layout probably should be. The resulting pkg file can be passed
 to makesis.lua.
 
 Options:
+
+    --json, -j
+        Instead of outputting a .pkg file, output the file renames as a JSON object.
 
     --version <value>, -v <value>
         Specify the version in the resulting pkg/sis file. If not specified,
@@ -46,8 +51,18 @@ Options:
     local actions = sis.inferLayoutFromFiles(files)
     -- print(dump(actions))
 
-    actions.version = args.version
-    print(sis.makePackageFile(actions))
+    if args.json then
+        -- json doesn't like mixed array/dicts
+        actions.files = {}
+        for i, file in ipairs(actions) do
+            actions.files[i] = { src = file[1], dest = file[2] }
+            actions[i] = nil
+        end
+        print(dump(actions, "json"))
+    else
+        actions.version = args.version
+        print(sis.makePackageFile(actions))
+    end
 end
 
 function ls(path)
