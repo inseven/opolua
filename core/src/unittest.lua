@@ -227,13 +227,13 @@ function testInfer()
 
     -- A series 5 app distributed as just the raw app dir
     checkFiles({
-        { path = "FooApp.app", type = "opa", era = "er5" },
+        { path = "FooApp.app", type = "opa", era = "epoc32" },
         { path = "FooApp.aif", type = "aif", captions = { [1] = "en_GB", en_GB = "Foo" }, icons = {} },
         { path = "whatevs.mbm", type = "mbm" }
     }, {
         appName = "FooApp",
         appCaption = "Foo",
-        era = "er5",
+        era = "epoc32",
         { "FooApp.app", [[System\Apps\FooApp\FooApp.app]] },
         { "FooApp.aif", [[System\Apps\FooApp\FooApp.aif]] },
         { "whatevs.mbm", [[System\Apps\FooApp\whatevs.mbm]] },

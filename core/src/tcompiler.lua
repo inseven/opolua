@@ -41,7 +41,7 @@ local ELongArray = DataTypes.ELongArray
 local ERealArray = DataTypes.ERealArray
 local EStringArray = DataTypes.EStringArray
 
-local oplFormat = compiler.OplEr5
+local oplFormat = compiler.OplEr1
 
 local function assertEquals(a, b)
     local adump, bdump = dump(a), dump(b)
@@ -132,7 +132,7 @@ local function External(name, type)
 end
 
 local function checklex(text, expected)
-    local tokens = compiler.lex(text, nil, compiler.OplEr5Language)
+    local tokens = compiler.lex(text, nil, compiler.OplEr1Language)
     local function assertEquals(a, b)
         local adump, bdump = dump(a), dump(b)
         if adump ~= bdump then
@@ -179,8 +179,8 @@ local function stripTokenSources(expression)
 end
 
 local function checkExpression(text, expected)
-    local tokens = compiler.lex(text, nil, compiler.OplEr5Language)
-    tokens.oplFormat = compiler.OplEr5
+    local tokens = compiler.lex(text, nil, compiler.OplEr1Language)
+    tokens.oplFormat = compiler.OplEr1
     local ok, result = xpcall(function() return stripTokenSources(compiler.parseExpression(tokens)) end, debug.traceback)
     if not ok then
         print("Current token", table.unpack(tokens:current()))
@@ -344,7 +344,7 @@ local function checkCode(statement, expectedCode)
 end
 
 local function checkProgError(prog, expectedError, oplFormat)
-    local ok, err = pcall(compiler.docompile, "program", nil, prog, {}, oplFormat or compiler.OplEr5)
+    local ok, err = pcall(compiler.docompile, "program", nil, prog, {}, oplFormat or compiler.OplEr1)
     assert(not ok, "Compile unexpectedly succeeded!")
     assert(err.src, "Error didn't include src!? "..tostring(err))
     local expectedErrWithPrefix = "program:"..expectedError
@@ -373,7 +373,7 @@ for cmd, callable in pairs(compiler.Callables) do
             local handler = "handleFn_"..cmd
             assert(compiler[handler], "Missing implementation of "..handler)
         else
-            local found = compiler.fncodes[compiler.OplEr5][callable.name] or
+            local found = compiler.fncodes[compiler.OplEr1][callable.name] or
                 compiler.fncodes[compiler.Opl93][callable.name]
             assert(found, "No fncode for "..callable.name)
         end
@@ -382,7 +382,7 @@ for cmd, callable in pairs(compiler.Callables) do
             local handler = "handleOp_"..cmd
             assert(compiler[handler], "Missing implementation of "..handler)
         else
-            local found = compiler.opcodes[compiler.OplEr5][callable.name] or
+            local found = compiler.opcodes[compiler.OplEr1][callable.name] or
                 compiler.opcodes[compiler.Opl93][callable.name]
             assert(found, "No opcode for "..callable.name)
             if callable.args.numParams then
@@ -1449,12 +1449,12 @@ ENDP
 ]]
 
 
-prog = compiler.docompile("D:\\const.oph", nil, require("includes.const_oph"), {}, compiler.OplEr5)
-prog = compiler.docompile("D:\\beep.opl", nil, beep, {}, compiler.OplEr5)
-prog = compiler.docompile("D:\\pause.opl", nil, pause, {}, compiler.OplEr5)
-prog = compiler.docompile("D:\\simple.opl", nil, simple, {}, compiler.OplEr5)
-prog = compiler.docompile("D:\\globint.opl", nil, globint, {}, compiler.OplEr5)
-prog = compiler.docompile("D:\\globals.opl", nil, globals, {}, compiler.OplEr5)
+prog = compiler.docompile("D:\\const.oph", nil, require("includes.const_oph"), {}, compiler.OplEr1)
+prog = compiler.docompile("D:\\beep.opl", nil, beep, {}, compiler.OplEr1)
+prog = compiler.docompile("D:\\pause.opl", nil, pause, {}, compiler.OplEr1)
+prog = compiler.docompile("D:\\simple.opl", nil, simple, {}, compiler.OplEr1)
+prog = compiler.docompile("D:\\globint.opl", nil, globint, {}, compiler.OplEr1)
+prog = compiler.docompile("D:\\globals.opl", nil, globals, {}, compiler.OplEr1)
 
 
 -- The trick with this one is there's a goto after the "REM Inner if" which serves to terminate both

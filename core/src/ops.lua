@@ -2955,7 +2955,7 @@ end
 --     unimplemented("SetHelp")
 -- end
 
-function gColorBackground(stack, runtime) -- ER5: 0x137, ER6: 0x136
+function gColorBackground(stack, runtime) -- ER1: 0x137, ER6: 0x136
     local r, g, b = stack:pop(3)
     runtime:gCOLORBACKGROUND(r % 256, g % 256, b % 256)
 end
@@ -2971,7 +2971,7 @@ local displayModeToColorInfo = {
     [KColorgCreate256ColorMode] = { KDisplayModeColor256, 256, 0 },
 }
 
-function gColorInfo(stack, runtime) -- ER5: 0x136, ER6: 0x135
+function gColorInfo(stack, runtime) -- ER1: 0x136, ER6: 0x135
     local addr = runtime:addrFromInt(stack:pop())
     local _, _, displayMode = runtime:getScreenInfo()
 

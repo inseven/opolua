@@ -322,7 +322,7 @@ function parseSisFile(data, verbose)
     end
 
     local target = InstVerToTarget[instVer]
-    assert(target, "Only EPOC16 or EPOC32 release 5 (ER5) SIS files are supported")
+    assert(target, "Only EPOC16 or EPOC32 release 1 (ER1) SIS files are supported")
 
     local options, type, verMaj, verMin, variant, langPtr, filesPtr, reqPtr, certPtr, namePtr, pos =
         string.unpack("<I2I2I2I2I4I4I4I4I4I4", data, pos)
@@ -1316,7 +1316,7 @@ function inferLayoutFromFiles(files)
                     printf("Warning: multiple OPAs, ignoring %s's defaultDir %s\n", file.path, opaDefaultDir)
                 end
             end
-        elseif file.type == "opa" and file.era == "er5" then
+        elseif file.type == "opa" and file.era == "epoc32" then
             local appBaseName = oplpath.splitext(oplpath.basename(file.path))
             if oplpath.dirname(file.path):upper():match("^SYSTEM\\APPS\\") then
                 hasFullStructure = true

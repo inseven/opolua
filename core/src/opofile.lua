@@ -110,7 +110,7 @@ function parseOpo(data, verbose)
 
         procTableIdx = pti
         opxTableIdx = oti
-        result.era = "er5"
+        result.era = "epoc32"
         result.uid3 = uid3
         result.translatorVersion = translatorVersion
     end

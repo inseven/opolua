@@ -24,7 +24,7 @@ import CLua
 
 import OpoLuaSource
 
-// ER5 always uses CP1252 afaics, which also works for our ASCII-only error messages
+// ER1 always uses CP1252 afaics, which also works for our ASCII-only error messages
 public let kDefaultEpocEncoding: LuaStringEncoding = .stringEncoding(.windowsCP1252)
 // And SIBO uses CP850 (which is handled completely differently and has an inconsistent name to boot)
 public let kSiboEncoding: LuaStringEncoding = .cfStringEncoding(.dosLatin1)
@@ -80,7 +80,7 @@ public class PsiLuaEnv {
 
     public enum AppEra: String, Codable {
         case sibo
-        case er5
+        case epoc32
     }
 
     public struct AppInfo {
@@ -621,8 +621,8 @@ internal extension LuaState {
         if isnoneornil(index) {
             return nil
         }
-        let era: PsiLuaEnv.AppEra = L.getdecodable(index, key: "era") ?? .er5
-        let encoding = era == .er5 ? kDefaultEpocEncoding : kSiboEncoding
+        let era: PsiLuaEnv.AppEra = L.getdecodable(index, key: "era") ?? .epoc32
+        let encoding = era == .epoc32 ? kDefaultEpocEncoding : kSiboEncoding
         L.rawget(index, key: "captions")
         var captions: [PsiLuaEnv.LocalizedString] = []
         for _ in L.ipairs(-1) {
