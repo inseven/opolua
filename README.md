@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/inseven/opolua/actions/workflows/build.yaml/badge.svg)](https://github.com/inseven/opolua/actions/workflows/build.yaml)
 
-An OPO (compiled OPL) interpreter written in Lua and Swift/Qt, based on the Psion Series 5 era format (ie ER5, prior to the Quartz 6.x changes). It lets you run Psion 5 programs written in OPL on any iOS device, subject to the limitations described below, as well as on any platform supported by the Qt port (mac, windows, linux).
+An OPO (compiled OPL) interpreter written in Lua and Swift/Qt, supporting Psion Series 3 to Series 5 formats. It lets you run Psion 3 and 5 programs written in OPL on any iOS device, subject to the limitations described below, as well as on any platform supported by the Qt port (mac, windows, linux).
 
 Supported features:
 

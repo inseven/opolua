@@ -1064,7 +1064,7 @@ function Runtime:getTranslatorVersion()
 end
 
 -- Returns the datatype for parameters to opcodes that deal with addresses
--- eg IoSeek's addr parameter is an int on SIBO and a long on ER5
+-- eg IoSeek's addr parameter is an int on SIBO and a long on ER1
 function Runtime:addressType()
     if self:isSibo() then
         return DataTypes.EWord

@@ -125,7 +125,7 @@ function recognize(data, verbose)
     end
 
     if uid1 == KDynamicLibraryUid then
-        return { type = "nativebin", era = "er5" }
+        return { type = "nativebin", era = "epoc32" }
     end
 
     if (uid2 == KUidAppDllDoc8 or uid2 == KUidSisFileEr6) and uid3 == KUidInstallApp then

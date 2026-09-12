@@ -693,7 +693,7 @@ private func setEra(_ L: LuaState!) -> CInt {
         switch era {
         case .sibo:
             L.setDefaultStringEncoding(kSiboEncoding)
-        case .er5:
+        case .epoc32:
             L.setDefaultStringEncoding(kDefaultEpocEncoding)
         }
     }

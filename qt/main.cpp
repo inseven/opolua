@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
         w->show();
         if (!device.isEmpty()) {
             w->getRuntime().setDeviceType(OplRuntime::toDeviceType(device));
-            // Allow for eg a series 3 device type even when running a er5-era test file
+            // Allow for eg a series 3 device type even when running a er1-era test file
             w->getRuntime().setIgnoreOpoEra(true);
         }
         if (scale >= 1 && scale <= 4) {

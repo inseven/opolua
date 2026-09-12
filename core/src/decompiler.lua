@@ -37,7 +37,7 @@ function decompile(procTable, options)
     local formatToCmdline = {
         [compiler.Opl91] = "91",
         [compiler.Opl93] = "93",
-        [compiler.OplEr5] = "er5",
+        [compiler.OplEr1] = "er1",
     }
 
     local nameArgs = {}
@@ -68,7 +68,7 @@ function decompile(procTable, options)
         else
             outputFn(nil, "APP %s\n", primaryCaption, options.aif.uid3)
         end
-        if options.format >= compiler.OplEr5 then
+        if options.format >= compiler.OplEr1 then
             for _, lang in ipairs(options.aif.captions) do
                 local langId = sis.Locales[lang]
                 outputFn(nil, '    CAPTION "%s", %d\n', options.aif.captions[lang], langId)
@@ -246,7 +246,7 @@ function decompileProc(proc, options)
     local endIdx = proc.codeOffset + proc.codeSize
     local renames = options.renames[proc.name] or {}
     local compiler = require("compiler")
-    local era = oplFormat >= compiler.OplEr5 and "er5" or "sibo"
+    local era = oplFormat >= compiler.OplEr1 and "epoc32" or "sibo"
     local AddrType = era == "sibo" and EWord or ELong
     local ops = require("ops")
     local opcodes = ops.codes[oplFormat]
@@ -256,7 +256,7 @@ function decompileProc(proc, options)
     local AddressOfPrefix, AddressOfAny, VariablePrefix =
         compiler.AddressOfPrefix, compiler.AddressOfAny, compiler.VariablePrefix
     local Int, Long, Float, String = compiler.Int, compiler.Long, compiler.Float, compiler.String
-    local IntPtr = era == "er5" and Long or Int
+    local IntPtr = era == "sibo" and Int or Long
     local AddressOfInt, AddressOfLong, AddressOfFloat, AddressOfString =
         compiler.AddressOfInt, compiler.AddressOfLong, compiler.AddressOfFloat, compiler.AddressOfString
     local AddressOfIntArray, AddressOfLongArray, AddressOfFloatArray, AddressOfStringArray =
@@ -1602,7 +1602,7 @@ function decompileProc(proc, options)
                 addStatement(location, "gUPDATE ON")
             end
         elseif op == "gPeekLine" then
-            local modeArg = era == "er5" and Int or nil
+            local modeArg = era == "epoc32" and Int or nil
             handleStandardOp(location, {
                 name = "gPEEKLINE",
                 args = { Int, Int, Int, AddressOfIntArray, Int, modeArg }
@@ -1670,13 +1670,13 @@ function decompileProc(proc, options)
             elseif itemType == dItemTypes.dFILE then
                 local uidSuff = ""
                 -- Unlike so many commands that got a new opcode when extended, they just straight up changed the number
-                -- of arguments dFILE takes (although I'm unsure if this was sibo->er5 or something the 3c-era did)
-                if era == "er5" then
+                -- of arguments dFILE takes.
+                if era == "epoc32" then
                     local uid3 = popExpr(ELong)
                     local uid2 = popExpr(ELong)
                     local uid1 = popExpr(ELong)
                     if uid1.value == "0" and uid2.value == "0" and uid3.value == "0" then
-                        -- ER5 2-arg syntax just pushed 3 literal zeros onto the stack
+                        -- epoc32 2-arg syntax just pushed 3 literal zeros onto the stack
                     else
                         uidSuff = fmt(", %s, %s, %s", eval(uid1), eval(uid2), eval(uid3))
                     end

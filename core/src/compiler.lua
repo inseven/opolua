@@ -26,7 +26,7 @@ _ENV = module()
 
 Opl91 = EOplTranVersionOplS3
 Opl93 = EOplTranVersionOpl1993
-OplEr5 = EOplTranVersionOpler1
+OplEr1 = EOplTranVersionOpler1
 
 do
     local ops = require("ops")
@@ -172,7 +172,7 @@ local function lexmatch(text, tokenStart, pos, sm)
     end
 end
 
-identifierTokens_er5 = enum {
+identifierTokens_er1 = enum {
     "INCLUDE", "CONST", "DECLARE", "EXTERNAL",
     "APP", "CAPTION", "ICON", "FLAGS", "ENDA",
     "OPX", "END", "BYREF", -- For DECLARE OPX ... END DECLARE
@@ -982,7 +982,7 @@ end
 function expandPtrType(type, oplFormat)
     assert(oplFormat, "Missing oplFormat arg!")
     if type == IntPtr then
-        return oplFormat == OplEr5 and Long or Int
+        return oplFormat == OplEr1 and Long or Int
     else
         return type
     end
@@ -1125,7 +1125,7 @@ function parseApp(tokens, consts)
     tokens:advance() -- Past the APP
     local exps = parseExpressionList(tokens)
     local validTokens
-    if tokens.oplFormat == OplEr5 then
+    if tokens.oplFormat == OplEr1 then
         synassert(#exps == 2, appToken, "Expected APP <name>, <uid>")
         -- Despite what the OPL manual says (that it's 250 chars, which is physically impossible given how the file
         -- format stores it), the max len appears to be 32 chars. The file format would I think allow up to 63.
@@ -1162,17 +1162,17 @@ function parseApp(tokens, consts)
                 path = evalConstExpr(String, parseExpression(tokens), consts)
             })
         elseif token.type == "FLAGS" then
-            synassert(tokens.oplFormat >= OplEr5, token, notAvailable(token.type))
+            synassert(tokens.oplFormat >= OplEr1, token, notAvailable(token.type))
             tokens:advance()
             synassert(aif.flags == nil, token, "Duplicate FLAGS")
             aif.flags = evalConstExpr(Int, parseExpression(tokens), consts)
         elseif token.type == "TYPE" then
-            synassert(tokens.oplFormat < OplEr5, token, notAvailable(token.type))
+            synassert(tokens.oplFormat < OplEr1, token, notAvailable(token.type))
             tokens:advance()
             synassert(aif.opaType == nil, token, "Duplicate TYPE")
             aif.opaType = evalConstExpr(Int, parseExpression(tokens), consts)
         elseif token.type == "PATH" then
-            synassert(tokens.oplFormat < OplEr5, token, notAvailable(token.type))
+            synassert(tokens.oplFormat < OplEr1, token, notAvailable(token.type))
             synassert(path == nil, token, "Duplicate PATH")
             tokens:advance()
             local pathToken = tokens:current()
@@ -1191,7 +1191,7 @@ function parseApp(tokens, consts)
                 synassert(#part <= 8, pathToken, "PATH component too long")
             end
         elseif token.type == "EXT" then
-            synassert(tokens.oplFormat < OplEr5, token, notAvailable(token.type))
+            synassert(tokens.oplFormat < OplEr1, token, notAvailable(token.type))
             synassert(ext == nil, token, "Duplicate EXT")
             tokens:advance()
             local extToken = tokens:current()
@@ -1202,7 +1202,7 @@ function parseApp(tokens, consts)
             synerror(token, "Unhandled token "..token.val)
         end
     end
-    if tokens.oplFormat < OplEr5 then
+    if tokens.oplFormat < OplEr1 then
         aif.defaultFile = oplpath.join(path or "\\OPD", defaultCaption .. "." .. (ext or "ODB"))
         if aif.opaType == nil then
             aif.opaType = 0
@@ -1929,7 +1929,7 @@ end
 
 function handleFn_GCREATEBIT(exp, procState)
     local callable
-    if procState.oplFormat == OplEr5 then
+    if procState.oplFormat == OplEr1 then
         callable = Fn("gCreateBit", {Int, Int, Int, numParams = {2, 3}}, Int)
     else
         -- The important differentiation here is the lack of numParams meaning handleFn will not emit a numParams byte
@@ -2174,7 +2174,7 @@ function ProcState:parse()
                         synassert(exp.maxLen > 0 and exp.maxLen < 256, maxLenExp, "String is too long")
                     end
                 end
-                local maxIdentifierLen = (oplFormat >= OplEr5) and 32 or 8
+                local maxIdentifierLen = (oplFormat >= OplEr1) and 32 or 8
                 synassert(#exp.val <= maxIdentifierLen, exp, "Variable name is too long")
                 synassert(self.locals[exp.val] == nil and self.externalDecls[exp.val] == nil, exp,
                     "Duplicate definition of %s", exp.val)
@@ -2663,7 +2663,7 @@ function handleOp_DELETE(procState, args)
         procState:emitExpression(args[1], String)
         procState:emit("B", opcodes.Delete)
     else
-        synassert(procState.oplFormat >= OplEr5, args[2], notAvailable("DELETE dbase$, table$"));
+        synassert(procState.oplFormat >= OplEr1, args[2], notAvailable("DELETE dbase$, table$"));
         procState:emitExpression(args[1], String)
         procState:emitExpression(args[2], String)
         procState:emit("BB", opcodes.NextOpcodeTable, opcodes.DeleteTable - 256)
@@ -2693,11 +2693,11 @@ function handleOp_DFILE(procState, args)
     procState:emitExpression(args[3], Int)
     local numEmittedArgs = 6
     if #args == 6 then
-        synassert(procState.oplFormat == OplEr5, args[4], "dFILE 6 argument overload only introduced in ER5")
+        synassert(procState.oplFormat == OplEr1, args[4], "dFILE 6 argument overload only introduced in ER1")
         procState:emitExpression(args[4], Long)
         procState:emitExpression(args[5], Long)
         procState:emitExpression(args[6], Long)
-    elseif procState.oplFormat == OplEr5 then
+    elseif procState.oplFormat == OplEr1 then
         procState:emit("BBBBBB", opcodes.StackByteAsLong, 0, opcodes.StackByteAsLong, 0, opcodes.StackByteAsLong, 0)
         procState:pushStack(Long, Long, Long)
     else
@@ -3063,9 +3063,9 @@ function readFile(filename, text)
     return data
 end
 
-OplEr5Language = {
+OplEr1Language = {
     statemachine = statemachine,
-    identifierTokens = identifierTokens_er5,
+    identifierTokens = identifierTokens_er1,
     precedences = precedences,
     unaryOperators = unaryOperators,
     rightAssociativeOperators = rightAssociativeOperators,
@@ -3082,12 +3082,12 @@ Opl93Language = {
 function docompile(path, realPath, programText, includePaths, format)
     -- Some fixups based on format that aren't handled by either checking the valid opcodes, or by the command being
     -- special and having its own handling function.
-    if format == OplEr5 then
+    if format == OplEr1 then
         Callables.DINIT.args.numParams = {0, 1, 2}
     else
         Callables.DINIT.args.numParams = {0, 1}
     end
-    local lang = format == OplEr5 and OplEr5Language or Opl93Language
+    local lang = format == OplEr1 and OplEr1Language or Opl93Language
     local tokens = lex(programText, realPath or path, lang, format)
     tokens.oplFormat = assert(format, "OPL version not specified!")
     local procTable = {}
@@ -3173,11 +3173,11 @@ function docompile(path, realPath, programText, includePaths, format)
             token = tokens:expectNext("EXTERNAL", "OPX")
             if token.type == "EXTERNAL" then
                 -- Technically not valid earlier, but it doesn't affect the output format so might as well allow it
-                -- assert(format == OplEr5, "EXTERNAL declarations only valid for ER5")
+                -- assert(format == OplEr1, "EXTERNAL declarations only valid for ER1")
                 strictExternals = true
                 tokens:advance()
             else
-                assert(format == OplEr5, "OPX declarations only valid for ER5")
+                assert(format == OplEr1, "OPX declarations only valid for ER1")
                 local opx = parseOpx(tokens, consts)
                 -- Add all the opx fns to our procDecls
                 for i, decl in ipairs(opx.procDecls) do
@@ -3188,7 +3188,7 @@ function docompile(path, realPath, programText, includePaths, format)
             end
         elseif token.type == "EXTERNAL" then
             -- Technically not valid earlier, but it doesn't affect the output format so might as well allow it
-            -- assert(format == OplEr5, "EXTERNAL only valid for ER5")
+            -- assert(format == OplEr1, "EXTERNAL only valid for ER1")
             tokens:advance()
             parseProcDeclaration("EXTERNAL", tokens, procDecls)
         elseif token.type == "PROC" then

@@ -75,10 +75,11 @@ Options:
         If specified, an AIF file will be written alongside <output>.
         The file being compiled must have a "APP .. ENDA" section.
 
-    --format <91|93|er5>
+    --format <91|93|er1>
         What OPL version to compile for. '91' for OPL1991 which targets the
-        Series 3, '93' for OPL1993 targetting the Series 3a/3c, or 'er5' for the
-        Series 5. The default is 'er5' if not specified.
+        Series 3, '93' for OPL1993 targetting the Series 3a/3c, or 'er1' for the
+        Series 5. The default is 'er1' if not specified. For compatibility with
+        older opolua versions, 'er5' is a synonym for 'er1'.
 ]])
         os.exit(false)
     end
@@ -88,9 +89,10 @@ Options:
     local argToFormat = {
         ["91"] = compiler.Opl91,
         ["93"] = compiler.Opl93,
-        ["er5"] = compiler.OplEr5,
+        ["er1"] = compiler.OplEr1,
+        ["er5"] = compiler.OplEr1,
     }
-    local format = assert(argToFormat[args.format or "er5"], "Bad --format argument")
+    local format = assert(argToFormat[args.format or "er1"], "Bad --format argument")
     if args.stdout then
         assert(args.output == nil, "Cannot specify both --stdout and <output>")
         assert(args.dump == nil, "Cannot specify both --stdout and --dump")

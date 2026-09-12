@@ -139,7 +139,7 @@ OplRuntime::OplRuntime(QObject *parent)
     , mHasBackgrounded(false)
     , mHeapCheckEnabled(false)
 {
-    mStringCodec = codecForEra("er5");
+    mStringCodec = codecForEra("epoc32");
     mFs.reset(new FileSystemIoHandler(*mStringCodec));
     mConfig["locale"] = "en_GB";
     mConfig["clockFormat"] = "0";

@@ -103,7 +103,7 @@ extension Device {
         switch era {
         case .sibo:
             return .psionSeries3c
-        case .er5:
+        case .epoc32:
             return .psionSeries5
         case .none:
             return .psionSeries5
