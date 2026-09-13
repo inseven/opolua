@@ -645,6 +645,7 @@ end
 
 function Runtime:saveGraphicsState()
     local ctx = self:getGraphicsContext()
+    local currentSprite = self:getGraphics().currentSprite
     return {
         id = ctx.id,
         mode = ctx.mode,
@@ -654,11 +655,13 @@ function Runtime:saveGraphicsState()
         pos = { x = ctx.pos.x, y = ctx.pos.y },
         fontUid = ctx.fontUid,
         style = ctx.style,
+        currentSprite = currentSprite and currentSprite.id,
         flush = self:getGraphicsAutoFlush(),
     }
 end
 
 function Runtime:restoreGraphicsState(state)
+    local graphics = self:getGraphics()
     local ctx = self:getGraphicsContext(state.id)
     ctx.mode = state.mode
     ctx.tmode = state.tmode
@@ -669,6 +672,9 @@ function Runtime:restoreGraphicsState(state)
     ctx.style = state.style
     self:setGraphicsContext(state.id)
     self:setGraphicsAutoFlush(state.flush)
+    if state.currentSprite then
+        graphics.currentSprite = graphics.sprites[state.currentSprite]
+    end
 end
 
 function Runtime:getFont(fontId)
