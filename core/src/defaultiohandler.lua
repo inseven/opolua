@@ -110,7 +110,7 @@ end
 function input(initVal)
     local line = io.stdin:read()
     -- We don't support pressing esc to clear the line, oh well
-    if line:byte(1, 1) == 27 then
+    if line == nil or line:byte(1, 1) == 27 then
         -- Close enough...
         return nil
     else
