@@ -1896,6 +1896,7 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
     local addr = runtime:addrFromInt(stack:pop())
 
     local ginfo = runtime:gINFO()
+    local ctx = runtime:getGraphicsContext()
 
     local fontName = runtime:getFont().name
     local function fontWord(idx)
@@ -1906,6 +1907,16 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
             frag = frag..string.rep("\0", 2 - #frag)
             return string.unpack("I2", frag)
         end
+    end
+
+    local ginfo_31 = 0
+    if runtime:getTranslatorVersion() ~= EOplTranVersionOplS3 then
+        -- According to
+        -- https://web.archive.org/web/20040123041703/http://www.snake.net/people/paul/psion/oplman/ba_summ.html#A.2
+        -- info[31] is always zero on the series 3, and beyond that point the manual says it's the "windowserver id" of
+        -- the current window. Confirmed by experimentation, info[31] updates when you create a new window or call
+        -- gUSE on a Series 3a.
+        ginfo_31 = ctx.id -- our 'windowserver' IDs are the same as our window/bitmap IDs
     end
 
     local data = {
@@ -1930,7 +1941,7 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
         ginfo.tmode, -- 19 gTMode
         ginfo.style, -- 20 gStyle
         ginfo.cursorVisible and 1 or 0, -- 21 cursor state
-        ginfo.cursorWindow, -- 22 ID of window containing cursor
+        ginfo.cursorWindow or 0, -- 22 ID of window containing cursor
         ginfo.cursorWidth or 0, -- 23 cursor width
         ginfo.cursorHeight or 0, -- 24 cursor height
         ginfo.cursorAscent or 0, -- 25 cursor ascent
@@ -1938,8 +1949,8 @@ function gInfo(stack, runtime) -- 0xD0 (SIBO only)
         ginfo.cursorY or 0, -- 27 cursor y
         ginfo.isWindow and 0 or 1, -- 28 drawableIsBitmap
         ginfo.cursorFlags or 0, -- 29 cursor effects
-        0, -- 30 gGREY setting (TODO...)
-        0, -- 31 reserved
+        ctx.greyMode or 0, -- 30 gGREY setting
+        ginfo_31, -- 31 window server ID of current drawable (see comment above)
         0, -- 32 reserved
     }
     addr:writeArray(data, DataTypes.EWord)
@@ -2819,7 +2830,7 @@ function gInfo32(stack, runtime) -- 0x128
         ginfo.tmode, -- 19 gTMode
         ginfo.style, -- 20 gStyle
         ginfo.cursorVisible and 1 or 0, -- 21 cursor state
-        ginfo.cursorWindow or -1, -- 22 ID of window containing cursor
+        ginfo.cursorWindow or 0, -- 22 ID of window containing cursor
         ginfo.cursorWidth or 0, -- 23 cursor width
         ginfo.cursorHeight or 0, -- 24 cursor height
         ginfo.cursorAscent or 0, -- 25 cursor ascent
