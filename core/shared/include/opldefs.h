@@ -227,3 +227,8 @@ const unsigned int KFontSysNorm = 1;
 const unsigned int KFontSwiss11 = 10;
 const unsigned int KFontDigital35 = 0x10000128;
 const unsigned int KFontArialNormal15 = 0x100001F5;
+
+const int KgCreate2ColourMode = 0x0000;
+const int KColorgCreate4GrayMode = 0x0001;
+const int KColorgCreate16GrayMode = 0x0002;
+const int KColorgCreate256ColorMode = 0x0005;
