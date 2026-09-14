@@ -509,17 +509,14 @@ void oplGetScreenSize(OplDeviceType device, int* width, int* height)
     }
 }
 
-static int KColorgCreate4GrayMode = 0x0001;
-static int KColorgCreate16GrayMode = 0x0002;
-static int KColorgCreate256ColorMode = 0x0005;
-
 int oplGetScreenMode(OplDeviceType device)
 {
     switch (device) {
         case psionSeries3:
+        case psionSiena:
+            return KgCreate2ColourMode;
         // case psionSeries3a:
         case psionSeries3c:
-        case psionSiena:
             return KColorgCreate4GrayMode;
         case oregonOsaris:
         case psionSeries5:
