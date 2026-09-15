@@ -1014,25 +1014,30 @@ void Window::updateSprites(QPainter& painter)
             // There can be a lack of a current frame if the sprite has not yet got any frames with valid bitmaps set
             continue;
         }
+
         auto& frame = sprite.frames[sprite.currentFrame];
-        QPoint pos(this->pos() + sprite.origin + frame.offset);
-        Drawable* src = screen->getBitmap(frame.bitmap);
-        if (!src) continue;
-        if (frame.mask) {
-            Drawable* mask = screen->getBitmap(frame.mask);
-            if (!mask) continue;
-            QPixmap maskedSource(src->getPixmap());
-            QBitmap m = mask->getMask();
-            if (!frame.invertMask) {
-                // Sprite masks are backwards by default, so we have to flip the colours if invertMask is _not_ set
-                PAINTER_BEGIN(inverter, &m);
-                inverter.setCompositionMode(QPainter::RasterOp_SourceAndNotDestination);
-                inverter.fillRect(m.rect(), Qt::color0);
+
+        QPoint pos(getPos() + sprite.origin + frame.offset);
+        if (frame.bitmap) {
+            Drawable* src = screen->getBitmap(frame.bitmap);
+            if (!src) continue;
+            if (frame.mask) {
+                Drawable* mask = screen->getBitmap(frame.mask);
+                if (!mask) continue;
+                QPixmap maskedSource(src->getPixmap());
+                QBitmap m = mask->getMask();
+                if (!frame.invertMask) {
+                    // Sprite masks are backwards by default (black means "draw this" in OPL land), so we have to flip the
+                    // colours if invertMask is _not_ set
+                    PAINTER_BEGIN(inverter, &m);
+                    inverter.setCompositionMode(QPainter::RasterOp_SourceAndNotDestination);
+                    inverter.fillRect(m.rect(), Qt::color0);
+                }
+                maskedSource.setMask(m);
+                painter.drawPixmap(pos, maskedSource);
+            } else {
+                painter.drawPixmap(pos, src->getPixmap());
             }
-            maskedSource.setMask(m);
-            painter.drawPixmap(pos, maskedSource);
-        } else {
-            painter.drawPixmap(pos, src->getPixmap());
         }
     }
 }

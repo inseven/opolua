@@ -1,0 +1,4 @@
+PROC main:
+    BUSY "Wait for it...", 3
+    GET
+ENDP

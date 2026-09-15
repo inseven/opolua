@@ -238,6 +238,7 @@
         <file alias="alert.opo">../examples/Tests/alert.opo</file>
         <file alias="bench.opo">../examples/Tests/bench.opo</file>
         <file alias="border.opo">../examples/Tests/border.opo</file>
+        <file alias="busy.opo">../examples/Tests/busy.opo</file>
         <file alias="clock.opo">../examples/Tests/clock.opo</file>
         <file alias="cmd.opo">../examples/Tests/cmd.opo</file>
         <file alias="cursor.opo">../examples/Tests/cursor.opo</file>
