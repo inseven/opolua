@@ -274,6 +274,10 @@
         <file alias="pause.opo">../examples/Tests/pause.opo</file>
         <file alias="penwidth.opo">../examples/Tests/penwidth.opo</file>
         <file alias="screeninfo.opo">../examples/Tests/screeninfo.opo</file>
+        <file alias="sprite.oplsys/manifest.json">../examples/Tests/sprite.oplsys/manifest.json</file>
+        <file alias="sprite.oplsys/m/APP/sprite.opa">../examples/Tests/sprite.oplsys/m/APP/sprite.opa</file>
+        <file alias="sprite.oplsys/m/OPD/cross.pic">../examples/Tests/sprite.oplsys/m/OPD/cross.pic</file>
+        <file alias="sprite.oplsys/m/OPD/box.pic">../examples/Tests/sprite.oplsys/m/OPD/box.pic</file>
         <file alias="statuswin.opo">../examples/Tests/statuswin.opo</file>
         <file alias="style.opo">../examples/Tests/style.opo</file>
     </qresource>
