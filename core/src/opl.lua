@@ -827,9 +827,12 @@ local function drawInfoPrint(drawable, text, corner)
         error("Bad corner")
     end
     gSETWIN(x, y, w, winHeight)
+    local textx = inset
+    local texty
     if sibo then
         gFILL(w, winHeight, KgModeClear)
-        gAT(inset, inset + ascent)
+        texty = inset
+        gAT(textx, texty + ascent)
         gPRINTCLIP(text, actualTextWidth)
         gAT(0, 0)
         gINVERT(w, winHeight)
@@ -839,10 +842,11 @@ local function drawInfoPrint(drawable, text, corner)
         gFILL(w, winHeight)
         gXBORDER(2, 0x94)
         gCOLOR(255, 255, 255)
-        gAT(inset, 4 + ascent)
+        texty = 4
+        gAT(textx, texty + ascent)
         gPRINTCLIP(text, actualTextWidth)
     end
-    return { x = inset, y = gY() - ascent, w = actualTextWidth, h = textHeight }
+    return { x = textx, y = texty, w = actualTextWidth, h = textHeight }
 end
 
 function gIPRINT(text, corner)
