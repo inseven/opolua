@@ -1,0 +1,58 @@
+APP sprite
+ENDA
+
+PROC sprite:
+    LOCAL bit$(6,6), sprId%
+    crBits:                                     REM createa bitmap files
+    gAT gWIDTH/2, 0
+    gFILL gWIDTH/2, gHEIGHT, 0                  REM fill half of screen
+    sprId% = CREATESPRITE
+    bit$(1) = "" :bit$(2) = ""
+    bit$(3) = "cross"                           REM black cross, pixels inverted
+    bit$(4) = "" :bit$(5) = "" :bit$(6) = ""
+    APPENDSPRITE 5, bit$(), 0, 0                REM cross for half a second
+    bit$(1) = "" :bit$(2) = "" :bit$(3) = ""
+    bit$(4) = "" :bit$(5) = "" :bit$(6) = ""
+    APPENDSPRITE 5, bit$(), 0, 0                REM blank for half a second
+    DRAWSPRITE gWIDTH / 2 - 5, gHEIGHT / 2 - 5  REM animate the sprite
+    BUSY "flash cross, c", 3                    REM no offset ('c' for central)
+    GET
+
+    bit$(3) = "box"                             REM black box, pixels inverted
+    CHANGESPRITE 2, 5, bit$(), 0, 0             REM in 2nd bitmap-set
+    BUSY "cross/box, c/c", 3                    REM central/central
+    GET
+    CHANGESPRITE 2, 5, bit$(), 40, 0            REM offset by 30 pixels right
+    BUSY "cross/box, c/40", 3                   REM central/40
+    GET
+    bit$(3) = ""                                REM remove the cross in set 1
+    CHANGESPRITE 1, 3, bit$(), 0, 0             REM display for 3/10 seconds
+    BUSY "flash box, 40", 3                     REM box at offset 40 still
+    GET
+    bit$(3) = "cross"
+    CHANGESPRITE 1, 5, bit$(), 0, 0             REM cross centralised - set 1
+    bit$(3) = "box"
+    CHANGESPRITE 2, 5, bit$(), 0, 0             REM box centralised - set 2
+    BUSY "Escape quits"
+    DO
+        POSSPRITE RND * (gWIDTH - 11), RND * (gHEIGHT - 11)
+        REM move sprite randomly
+        PAUSE -20                               REM once a second
+    UNTIL KEY = 27
+    CLOSESPRITE sprId%
+ENDP
+
+PROC crBits:
+    REM create bitmap files if they don't exist
+    IF NOT EXIST("cross.pic") OR NOT EXIST("box.pic")
+        gCREATE(0, 0, 11, 11, 1, 1)
+        gAT 5,0 :gLINEBY 0,11
+        gAT 0,5 :gLINEBY 11,0
+        gSAVEBIT "cross"
+        gCLS
+        gAT 0,0
+        gBOX gWIDTH, gHEIGHT
+        gSAVEBIT "box"
+        gCLOSE gIDENTITY
+    ENDIF
+ENDP
