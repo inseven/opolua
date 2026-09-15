@@ -167,8 +167,16 @@ local function getSpriteFrame(runtime, addr)
     local bmpBlackSet, bmpBlackClear, bmpBlackInvert, bmpGreySet, bmpGreyClear, bmpGreyInvert, relx, rely, delay =
         string.unpack("<I2I2I2I2I2I2I2I2I4", runtime:addrFromInt(addr):read(24))
     -- print("Sprite params", bmpBlackSet, bmpBlackClear, bmpBlackInvert, bmpGreySet, bmpGreyClear, bmpGreyInvert, relx, rely, delay)
-    -- These are returned in the same order as accepted by SPRITECHANGE and SPRITEAPPEND
-    return delay * 0.1, bmpBlackSet, bmpBlackSet, true, relx, rely
+    -- These are returned in the same order as accepted by bmp.CHANGESPRITE and bmp.APPENDSPRITE
+    local bitmaps = {
+        bmpBlackSet,
+        bmpBlackClear,
+        bmpBlackInvert,
+        bmpGreySet,
+        bmpGreyClear,
+        bmpGreyInvert
+    }
+    return delay / 10, bitmaps, relx, rely
 end
 
 function wSetSprite(runtime, params) -- 0x8DF5
@@ -182,27 +190,26 @@ function wSetSprite(runtime, params) -- 0x8DF5
     end
     if params.di ~= 0 then
         local frameId = params.dx + 1 -- Or si...?
-        bmp.SPRITECHANGE(runtime, spriteId, frameId, getSpriteFrame(runtime, params.di))
+        bmp.CHANGESPRITE(runtime, spriteId, frameId, getSpriteFrame(runtime, params.di))
     end
 end
 
 function wCreateSprite(runtime, params) -- 0x8DF6
-    print("wCreateSprite", dumpRegisters(params))
+    -- print("wCreateSprite", dumpRegisters(params))
     local winId = params.bx
-    if winId == 0 then
-        -- Can't decide if this is a bug in PopOut or something we're doing wrong earlier
-        winId = 1
-    end
     local x = runtime:addrAsVariable(params.cx, DataTypes.EWord)()
     local y = runtime:addrAsVariable(params.cx + 2, DataTypes.EWord)()
+    -- dx is "child window behaviour" where 0 basically means ESpriteNoChildClip
+    local flags = params.dx == 0 and 1 or 0
+    -- printf("winId=%d dx=%d\n", winId, params.dx)
 
     local bmp = require("opx.bmp")
-    local id = bmp.SPRITECREATE(runtime, winId, x, y, 0)
+    local id = bmp.SPRITECREATE(runtime, winId, x, y, flags)
 
     local numSprites = params.di
     local spriteInfoAddr = params.si
     for i = 1, numSprites do
-        bmp.SPRITEAPPEND(runtime, getSpriteFrame(runtime, spriteInfoAddr))
+        bmp.APPENDSPRITE(runtime, getSpriteFrame(runtime, spriteInfoAddr))
         spriteInfoAddr = spriteInfoAddr + 24
     end
     bmp.SPRITEDRAW(runtime)

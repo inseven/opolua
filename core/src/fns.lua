@@ -882,7 +882,19 @@ function MenuWithMemory(stack, runtime) -- 0x3A
 end
 
 function CreateSprite(stack, runtime) -- 0x3B (SIBO)
-    unimplemented("fns.CreateSprite")
+    -- See also bmp.lua's SPRITECREATE
+    local graphics = runtime:getGraphics()
+    local spriteId = #graphics.sprites + 1
+    local sprite = {
+        origin = { x = 0, y = 0 },
+        win = nil, -- Not set until DRAWSPRITE, unlike the bmp.opx SPRITECREATE
+        id = spriteId,
+        frames = {},
+        bitmaps = {},
+    }
+    graphics.sprites[spriteId] = sprite
+    graphics.currentSprite = sprite
+    stack:push(spriteId)
 end
 
 function LoadLib(stack, runtime) -- 0x3C (SIBO)

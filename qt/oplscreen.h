@@ -157,14 +157,27 @@ public:
 
     struct SpriteFrame {
         QPoint offset;
+
+        // For S5 sprites (bmp.SPRITECREATE)
         int bitmap;
         int mask;
         bool invertMask;
+
+        // For S3 sprites (wCreateSprite/CREATESPRITE)
+        // All these are ids of bitmaps that are inverted, ie black means set
+        int blackSetMask;
+        int blackClearMask;
+        int blackInvertMask;
+        int greySetMask;
+        int greyClearMask;
+        int greyInvertMask;
+
         int time; // microseconds
     };
 
     struct Sprite {
         QPoint origin;
+        bool global;
         QVector<SpriteFrame> frames;
     };
 

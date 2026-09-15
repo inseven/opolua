@@ -2575,28 +2575,89 @@ function Style(stack, runtime) -- 0x105
     runtime:STYLE(style)
 end
 
+local function doAppendOrChangeSprite(stack, runtime, isAppend)
+    local qualifier = runtime:IP8()
+    local dx, dy = 0, 0
+    if qualifier == 1 then
+        dx, dy = stack:pop(2)
+    end
+    local bitmapNames = runtime:addrAsVariable(stack:pop(), DataTypes.EStringArray)
+    local time = stack:pop() / 10 -- time arg is in 1/10 seconds
+
+    local graphics = runtime:getGraphics()
+    local currentDrawable = runtime:gIDENTITY()
+    local sprite = graphics.currentSprite
+    assert(sprite, "No currentSprite in APPEND/CREATESPRITE")
+
+    local bitmaps = {}
+    for i = 1, 6 do
+        local name = bitmapNames[i]()
+        if #name > 0 then
+            local bitmapId = sprite.bitmaps[name]
+            if not bitmapId then
+                bitmapId = runtime:gLOADBIT(name, false, 0)
+                sprite.bitmaps[name] = bitmapId
+            end
+            bitmaps[i] = bitmapId
+        else
+            bitmaps[i] = 0
+        end
+    end
+
+    -- Undo any gLOADBITs
+    runtime:gUSE(currentDrawable)
+
+    if isAppend then
+        require("opx.bmp").APPENDSPRITE(runtime, time, bitmaps, dx, dy)
+    else
+        local spriteId = sprite.id
+        local frameId = stack:pop()
+        require("opx.bmp").CHANGESPRITE(runtime, spriteId, frameId, time, bitmaps, dx, dy)
+    end
+end
+
 function AppendSprite(stack, runtime) -- 0x107 (SIBO)
-    unimplemented("AppendSprite")
+    doAppendOrChangeSprite(stack, runtime, true)
 end
 
 AppendSprite_dump = qualifier_dump
 
 function DrawSprite(stack, runtime) -- 0x108 (SIBO)
-    unimplemented("DrawSprite")
+    local x, y = stack:pop(2)
+    local graphics = runtime:getGraphics()
+    local sprite = graphics.currentSprite
+    assert(sprite, "No current sprite!")
+    sprite.origin = { x = x, y = y }
+    sprite.win = runtime:gIDENTITY()
+
+    require("opx.bmp").SPRITEDRAW(runtime)
 end
 
 function ChangeSprite(stack, runtime) -- 0x109 (SIBO)
-    unimplemented("ChangeSprite")
+    doAppendOrChangeSprite(stack, runtime, false)
 end
 
 ChangeSprite_dump = qualifier_dump
 
 function PosSprite(stack, runtime) -- 0x10A (SIBO)
-    unimplemented("PosSprite")
+    local x, y = stack:pop(2)
+    local id = runtime:getGraphics().currentSprite.id
+    assert(id, KErrInvalidArgs)
+    require("opx.bmp").SPRITEPOS(runtime, id, x, y)
 end
 
 function CloseSprite(stack, runtime) -- 0x10B (SIBO)
-    unimplemented("CloseSprite")
+    local id = stack:pop()
+    local graphics = runtime:getGraphics()
+    local sprite = graphics.sprites[id]
+    for _, bitmap in pairs(sprite.bitmaps) do
+        runtime:gCLOSE(bitmap)
+    end
+    graphics.sprites[sprite.id] = nil
+    if graphics.currentSprite and graphics.currentSprite.id == id then
+        graphics.currentSprite = nil
+    end
+    runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, nil)
 end
 
 function FreeAlloc(stack, runtime) -- 0x10C

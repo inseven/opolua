@@ -1149,8 +1149,9 @@ int OplRuntime::graphicsop(lua_State* L)
             mScreen->sprite(windowId, spriteId, nullptr);
             return 0;
         }
-        OplScreen::Sprite sprite;
+        OplScreen::Sprite sprite{};
         sprite.origin = to_point(L, 4, "origin");
+        sprite.global = to_bool(L, 4, "global");
         rawgetfield(L, 4, "frames");
         for (int i = 1; ; i++) {
             if (lua_rawgeti(L, -1, i) != LUA_TTABLE) {
@@ -1162,6 +1163,12 @@ int OplRuntime::graphicsop(lua_State* L)
                 .bitmap = to_int(L, -1, "bitmap"),
                 .mask = to_int(L, -1, "mask"),
                 .invertMask = to_bool(L, -1, "invertMask"),
+                .blackSetMask = to_int(L, -1, "blackSetMask"),
+                .blackClearMask = to_int(L, -1, "blackClearMask"),
+                .blackInvertMask = to_int(L, -1, "blackInvertMask"),
+                .greySetMask = to_int(L, -1, "greySetMask"),
+                .greyClearMask = to_int(L, -1, "greyClearMask"),
+                .greyInvertMask = to_int(L, -1, "greyInvertMask"),
                 .time = (int)(to_double(L, -1, "time") * 1000000), // in microseconds
             };
             sprite.frames.append(frame);
