@@ -1,26 +1,7 @@
+-- Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
+-- See LICENSE file for license information.
+
 --[[
-
-Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
---
 
 The idea of this file is to define a Lua equivalent of some of the OPL APIs,
 using normal Lua function arguments and return values. Where it makes sense to
@@ -34,10 +15,16 @@ verbose and brittle (since the iohandler API in particular is always subject to
 change).
 
 All of the APIs in this file are available via runtime member fns, eg
-runtime:gCREATE(20, 20). As a convenience, modules and OPX code (ie the files
-in the modules and opx directories) can call them directly as gCREATE(20, 20).
+runtime:gCREATE(20, 20). As a convenience, modules (ie the files
+in the modules directory, currently just toolbar.lua) plus menu.lua and
+dialog.lua, plus anything else loaded using runtime:require("...") like
+scrollbar.lua, can call them directly as gCREATE(20, 20).
 
 Boolean parameters should be actual bools - ie pass true or false, not -1 or 0.
+
+All the functions in this file have implicit access to the current runtime via
+a global variable of that name. Different runtimes therefore load separate
+copies of opl.lua.
 
 ]]
 

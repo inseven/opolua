@@ -38,6 +38,8 @@
 #define PAINTER_BEGIN(name, px) QPainter name(px)
 #endif
 
+const QRgb kGreyColour = 0xFFAAAAAA;
+
 OplScreenWidget::OplScreenWidget(QWidget *parent)
     : QWidget(parent)
     , mScale(1)
@@ -518,7 +520,10 @@ void OplScreenWidget::sprite(int drawableId, int spriteId, const OplScreen::Spri
         mSpriteTimer->setTimerType(Qt::PreciseTimer);
         mLastSpriteTick = QDateTime::currentMSecsSinceEpoch();
         connect(mSpriteTimer.get(), &QTimer::timeout, this, &OplScreenWidget::spriteTimerTick);
-        mSpriteWidget = new SpriteWidget(this);
+        // The only devices doing the grey plane thing are the ones that use 4 colour greyscale.
+        // ie the 3c (and 3a if we ever distinguish them).
+        bool hasGreyPlane = oplGetScreenMode(mRuntime->getDeviceType()) == KColorgCreate4GrayMode;
+        mSpriteWidget = new SpriteWidget(this, hasGreyPlane);
         mSpriteTimer->start(50);
     }
 }
@@ -913,6 +918,11 @@ Window::Window(OplScreenWidget* screen, int drawableId, const QRect& rect, OplSc
     update();
 }
 
+OplScreenWidget* Window::getScreen() const
+{
+    return static_cast<OplScreenWidget*>(parent());
+}
+
 void Window::draw(const OplScreen::DrawCmd& cmd)
 {
     invalidateMask();
@@ -920,10 +930,10 @@ void Window::draw(const OplScreen::DrawCmd& cmd)
         // For simplicity of compositing, make sure any non-white colours are set to the grey level we want
         auto greyPlaneCmd = cmd;
         if (greyPlaneCmd.color != 0xFFFFFFFF) {
-            greyPlaneCmd.color = 0xFFAAAAAA;
+            greyPlaneCmd.color = kGreyColour;
         }
         if (greyPlaneCmd.bgcolor != 0xFFFFFFFF) {
-            greyPlaneCmd.bgcolor = 0xFFAAAAAA;
+            greyPlaneCmd.bgcolor = kGreyColour;
         }
         greyPlane().draw(greyPlaneCmd);
     }
@@ -1006,9 +1016,60 @@ Drawable* Window::getGreyPlane() const
     return mGreyPlane.get();
 }
 
-void Window::updateSprites(QPainter& painter)
+void Window::updateSpritePlane(QPainter& painter, const WindowSprite& sprite, bool grey, int setMask, int clearMask, int invertMask)
 {
-    auto screen = static_cast<OplScreenWidget*>(parent());
+    // We make sure to only ever draw QBitmaps to painter (not QPixmaps) to ensure the pen colour is preserved which
+    // is important to mak sure the grey plane is handled correctly.
+
+    auto screen = getScreen();
+    const auto& frame = sprite.frames[sprite.currentFrame];
+    // painterPos is relative to painter, ie potentially a global position
+    QPoint painterPos(sprite.origin + frame.offset);
+    // TODO support non-global sprites
+    // if (sprite.global) {
+        painterPos += getPos();
+    // }
+
+    if (setMask) {
+        Drawable* src = screen->getBitmap(setMask);
+        if (src) {
+            painter.drawPixmap(painterPos, src->getMask());
+        }
+    }
+    if (clearMask) {
+        Drawable* src = screen->getBitmap(clearMask);
+        if (src) {
+            painter.save();
+            painter.setPen(Qt::white);
+            painter.drawPixmap(painterPos, src->getMask());
+            painter.restore();
+        }
+    }
+    if (invertMask) {
+        Drawable* src = screen->getBitmap(invertMask);
+        if (src && (!grey || getGreyPlane())) {
+            // See Drawable::drawCopy with cmd.mode == OplScreen::invert
+            QRect destRect(sprite.origin + frame.offset, src->size());
+            QPixmap tempDest(src->size());
+            {
+                PAINTER_BEGIN(tempPainter, &tempDest);
+                // Copy the bit of our pixmap we're going to composite in to
+                Drawable* plane = grey ? getGreyPlane() : this;
+                tempPainter.drawPixmap(QPoint(), plane->getPixmap(), destRect);
+                // Do the invert
+                tempPainter.setCompositionMode(QPainter::RasterOp_NotSourceXorDestination);
+                tempPainter.drawPixmap(QPoint(), src->getMask());
+            }
+            // And do a masked draw of the result
+            tempDest.setMask(src->getMask());
+            painter.drawPixmap(painterPos, tempDest);
+        }
+    }
+}
+
+void Window::updateSprites(QPainter& painter, QPainter* greyPlanePainter)
+{
+    auto screen = getScreen();
     for (const auto& sprite : mSprites) {
         if (sprite.currentFrame >= sprite.frames.count()) {
             // There can be a lack of a current frame if the sprite has not yet got any frames with valid bitmaps set
@@ -1016,6 +1077,11 @@ void Window::updateSprites(QPainter& painter)
         }
 
         auto& frame = sprite.frames[sprite.currentFrame];
+
+        updateSpritePlane(painter, sprite, false, frame.blackSetMask, frame.blackClearMask, frame.blackInvertMask);
+        if (greyPlanePainter && mGreyPlane.get() /*&& !sprite.global*/) {
+            updateSpritePlane(*greyPlanePainter, sprite, true, frame.greySetMask, frame.greyClearMask, frame.greyInvertMask);
+        }
 
         QPoint pos(getPos() + sprite.origin + frame.offset);
         if (frame.bitmap) {
@@ -1045,25 +1111,25 @@ void Window::updateSprites(QPainter& painter)
 void Window::mousePressEvent(QMouseEvent *event)
 {
     event->accept();
-    static_cast<OplScreenWidget*>(parent())->mouseEvent(event, this);
+    getScreen()->mouseEvent(event, this);
 }
 
 void Window::mouseMoveEvent(QMouseEvent *event)
 {
     event->accept();
-    static_cast<OplScreenWidget*>(parent())->mouseEvent(event, this);
+    getScreen()->mouseEvent(event, this);
 }
 
 void Window::mouseReleaseEvent(QMouseEvent *event)
 {
     event->accept();
-    static_cast<OplScreenWidget*>(parent())->mouseEvent(event, this);
+    getScreen()->mouseEvent(event, this);
 }
 
 void Window::mouseDoubleClickEvent(QMouseEvent *event)
 {
     event->accept();
-    static_cast<OplScreenWidget*>(parent())->mouseEvent(event, this);
+    getScreen()->mouseEvent(event, this);
 }
 
 QPoint Window::getPos() const
@@ -1122,6 +1188,7 @@ void Window::setSprite(int spriteId, const OplScreen::Sprite* sprite)
     }
     WindowSprite s{};
     s.origin = sprite->origin;
+    s.global = sprite->global;
     s.frames = sprite->frames;
     if (sprite->frames.count()) {
         s.remainingFrameTime = sprite->frames[0].time;
@@ -1160,9 +1227,12 @@ void Window::setHighlighted(bool flag)
 
 //
 
-SpriteWidget::SpriteWidget(OplScreenWidget* screen)
+SpriteWidget::SpriteWidget(OplScreenWidget* screen, bool hasGreyPlane)
     : QLabel(screen)
 {
+    if (hasGreyPlane) {
+        mGreyPixmap.reset(new QPixmap);
+    }
     setAttribute(Qt::WA_TransparentForMouseEvents);
     resize(screen->size()); // This will configure mPixmap via resizeEvent
     show();
@@ -1174,11 +1244,28 @@ void SpriteWidget::renderSprites(const QList<Window*>& windows, int scale)
     mPixmap.fill(Qt::transparent);
     PAINTER_BEGIN(painter, &mPixmap);
     painter.scale(scale, scale);
+    QPainter greyPainter;
+    QPainter* greyPainterPtr = nullptr;
+    if (mGreyPixmap) {
+        mGreyPixmap->fill(Qt::transparent);
+        greyPainter.begin(mGreyPixmap.get());
+        greyPainter.scale(scale, scale);
+        greyPainter.setPen(kGreyColour);
+        greyPainterPtr = &greyPainter;
+    }
     for (Window* w : windows) {
-        w->updateSprites(painter);
+        w->updateSprites(painter, greyPainterPtr);
     }
     painter.end();
-    setPixmap(mPixmap);
+    if (greyPainterPtr) {
+        // Draw black (mPixmap) on top of grey. mPixmap already has alpha set so we can just blat it
+        greyPainter.setTransform(QTransform()); // Undo the previous scale, go back to 1:1
+        greyPainter.drawPixmap(QPoint(0, 0), mPixmap);
+        greyPainter.end();
+        setPixmap(*mGreyPixmap);
+    } else {
+        setPixmap(mPixmap);
+    }
 }
 
 void SpriteWidget::resizeEvent(QResizeEvent *event)
@@ -1186,6 +1273,10 @@ void SpriteWidget::resizeEvent(QResizeEvent *event)
     QLabel::resizeEvent(event);
     mPixmap = QPixmap(size());
     mPixmap.fill(Qt::transparent);
+    if (mGreyPixmap) {
+        mGreyPixmap.reset(new QPixmap(size()));
+        mGreyPixmap->fill(Qt::transparent);
+    }
     setPixmap(mPixmap);
 }
 

@@ -170,7 +170,7 @@ public:
     void update() override;
     void setSprite(int spriteId, const OplScreen::Sprite* sprite);
     void animateSprites(int64_t interval_us);
-    void updateSprites(QPainter& painter);
+    void updateSprites(QPainter& painter, QPainter* greyPlanePainter);
 
     void setHighlighted(bool flag);
 
@@ -182,6 +182,8 @@ protected:
 
 private:
     Drawable& greyPlane();
+    void updateSpritePlane(QPainter& painter, const WindowSprite& sprite, bool grey, int setMask, int clearMask, int invertMask);
+    OplScreenWidget* getScreen() const;
 
 public:
     ClockWidget* mClock;
@@ -200,7 +202,7 @@ class SpriteWidget : public QLabel
     Q_OBJECT
 
 public:
-    explicit SpriteWidget(OplScreenWidget* screen);
+    explicit SpriteWidget(OplScreenWidget* screen, bool hasGreyPLane);
     void renderSprites(const QList<Window*>& windows, int scale);
 
 protected:
@@ -208,6 +210,7 @@ protected:
 
 private:
     QPixmap mPixmap;
+    QScopedPointer<QPixmap> mGreyPixmap;
 };
 
 class WindowShadow : public QWidget

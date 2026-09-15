@@ -84,9 +84,6 @@ function SpriteCreate(stack, runtime)
     local flags = stack:pop()
     local x, y = stack:popXY()
     local winId = stack:pop()
-    if winId == 0 then
-        winId = 1 -- apparently...
-    end
     local spriteId = SPRITECREATE(runtime, winId, x, y, flags)
     stack:push(spriteId)
 end
@@ -94,14 +91,17 @@ end
 function SPRITECREATE(runtime, winId, x, y, flags)
     local graphics = runtime:getGraphics()
     local context = runtime:getGraphicsContext(winId)
+    -- winId zero means "the root window" which only really makes sense when combined with the ESpriteNoChildClip flag
+    local isGlobal = winId == 0 and (flags & 1) ~= 0 -- TSpriteFlags::ESpriteNoChildClip in epoc32 terms
     -- printf("SPRITECREATE(winId=%d, x=%d, y=%d, flags=%X)", winId, x, y, flags)
-    assert(context and context.isWindow, "id is not a window")
+    assert((context and context.isWindow) or isGlobal, "id is not a window")
     local spriteId = #graphics.sprites + 1
     local sprite = {
         origin = { x = x, y = y },
         win = winId,
         id = spriteId,
         frames = {},
+        global = isGlobal,
     }
     graphics.sprites[spriteId] = sprite
     graphics.currentSprite = sprite
@@ -119,6 +119,7 @@ function SpriteAppend(stack, runtime)
     stack:push(0)
 end
 
+-- The OPX API
 function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
     local graphics = runtime:getGraphics()
     local sprite = graphics.currentSprite
@@ -134,6 +135,25 @@ function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
         invertMask = invertMask,
     }
     -- printf("SPRITEAPPEND(t=%s, bmp=%d, mask=%d, inv=%s, dx=%d, dy=%d)\n", time, bitmap, maskBitmap, invertMask, dx, dy)
+    table.insert(sprite.frames, frame)
+end
+
+-- The SIBO API
+function APPENDSPRITE(runtime, time, bitmaps, dx, dy)
+    local sprite = runtime:getGraphics().currentSprite
+    assert(sprite, "No currentSprite in APPEND/CREATESPRITE")
+
+    local frame = {
+        offset = { x = dx, y = dy },
+        -- bitmap, mask and invertMask are all nil for S3a sprites
+        time = time,
+        blackSetMask = bitmaps[1],
+        blackClearMask = bitmaps[2],
+        blackInvertMask = bitmaps[3],
+        greySetMask = bitmaps[4],
+        greyClearMask = bitmaps[5],
+        greyInvertMask = bitmaps[6],
+    }
     table.insert(sprite.frames, frame)
 end
 
@@ -153,6 +173,7 @@ function SpriteChange(stack, runtime)
     stack:push(0)
 end
 
+-- The OPX API
 function SPRITECHANGE(runtime, spriteId, frameId, time, bitmap, maskBitmap, invertMask, dx, dy)
     -- printf("SPRITECHANGE(id=%d, frame=%d, t=%s, bmp=%d, mask=%d, inv=%s, dx=%d, dy=%d\n", spriteId, frameId, time, bitmap, maskBitmap, invertMask, dx, dy)
     local graphics = runtime:getGraphics()
@@ -174,6 +195,26 @@ function SPRITECHANGE(runtime, spriteId, frameId, time, bitmap, maskBitmap, inve
         time = time,
         invertMask = invertMask,
     }
+    sprite.frames[frameId] = frame
+    runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
+end
+
+-- The SIBO API
+function CHANGESPRITE(runtime, spriteId, frameId, time, bitmaps, dx, dy)
+    local sprite = runtime:getGraphics().sprites[spriteId]
+    assert(sprite, "No currentSprite in APPEND/CREATESPRITE")
+
+    local frame = {
+        offset = { x = dx, y = dy },
+        time = time,
+        blackSetMask = bitmaps[1],
+        blackClearMask = bitmaps[2],
+        blackInvertMask = bitmaps[3],
+        greySetMask = bitmaps[4],
+        greyClearMask = bitmaps[5],
+        greyInvertMask = bitmaps[6],
+    }
+    assert(frameId <= #sprite.frames, KErrInvalidArgs)
     sprite.frames[frameId] = frame
     runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
 end
@@ -232,6 +273,9 @@ function SpriteDelete(stack, runtime)
         decRefcount(runtime, frame.mask)
     end
     graphics.sprites[sprite.id] = nil
+    if graphics.currentSprite == sprite then
+        graphics.currentSprite = nil
+    end
     runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, nil)
     stack:push(0)
 end
