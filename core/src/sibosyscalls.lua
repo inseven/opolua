@@ -31,12 +31,14 @@ fns = {
     [0x8620] = "IoPlaySoundCancel",
     [0x8800] = "ProcId",
     [0x880C] = "ProcRename",
+    [0x8B05] = "GenGetCountryData",
     [0x8B12] = "GenMarkActive",
     [0x8B13] = "GenMarkNonActive",
     [0x8B1B] = "GenGetLanguageCode",
     [0x8D0E] = "wInquireWindow",
     [0x8D11] = "wFree",
     [0x8D5F] = "gSetOpenAddress",
+    [0x8D6C] = "wInformOnAll",
     [0x8D7E] = "wserv8D7E",
     [0x8DF5] = "wSetSprite",
     [0x8DF6] = "wCreateSprite",
@@ -117,6 +119,76 @@ function ProcRename(runtime, params) -- 0x880C
     runtime:iohandler().system("setAppTitle", str)
 end
 
+function GenGetCountryData(runtime, params) -- 0x8B05
+    local date = require("opx.date")
+    local systinfo = require("opx.systinfo")
+    local dummyStack = require("stack").newStack()
+    local function wrapStackCall(fn, ...)
+        local nargs = select("#", ...)
+        for i = 1, nargs do
+            dummyStack:push(select(i, ...))
+        end
+        fn(dummyStack, runtime)
+        assert(dummyStack.n == 1, "Unbalanced stack!")
+        return dummyStack:pop()
+    end
+
+    local cc = wrapStackCall(date.LCCountryCode)
+    local offset = wrapStackCall(systinfo.SIUTCOffset) // 60 -- SIUTCOffset is in seconds, this API is in minutes
+    local dateFormat = systinfo.KDateFormatEuropean -- calling SIDateFormat is too much hassle
+    local timeFormat = systinfo.KTimeFormat12Hour
+    local currencyPos = 0 -- Should really use SICurrencyFormat...
+    local currencySpace = 1 -- ditto
+    local currencyPrecision = 2
+    local currencyNeg = 0
+    local triadThreshold = 0
+    local triadSeparator = string.byte(",")
+    local decimalSep = string.byte(".")
+    local dateSep = string.byte("/")
+    local timeSep = string.byte(":")
+    local currencySymbol = "\x8C" -- pound sign in CP850
+    local startOfWeek = wrapStackCall(date.LCStartOfWeek) - 1 -- 0 is monday apparently, unlike LCStartOfWeek
+    local function dstFlag(arg)
+        return wrapStackCall(systinfo.SIDaylightSaving, arg) and 1 or 0
+    end
+    local activeDst = dstFlag(systinfo.KDaylightSavingZoneHome)
+        | (dstFlag(systinfo.KDaylightSavingZoneEuropean) << 1)
+        | (dstFlag(systinfo.KDaylightSavingZoneNorthern) << 2)
+        | (dstFlag(systinfo.KDaylightSavingZoneSouthern) << 3)
+    local clockType = runtime:LCClockFormat()
+    local dayAbbrLen = 3
+    local monthAbbrLen = 3
+    local workdays = 0x7F -- Mon-Fri
+    local units = 1 -- cm
+
+    local result = string.pack("<HHBBBBBBBBBBBc9BBBBBBB",
+        cc,
+        offset,
+        dateFormat,
+        timeFormat,
+        currencyPos,
+        currencySpace,
+        currencyPrecision,
+        currencyNeg,
+        triadThreshold,
+        triadSeparator,
+        decimalSep,
+        dateSep,
+        timeSep,
+        currencySymbol,
+        startOfWeek,
+        activeDst,
+        clockType,
+        dayAbbrLen,
+        monthAbbrLen,
+        workdays,
+        units)
+    -- print(#result)
+    assert(#result == 31)
+    local addr = runtime:addrFromInt(params.bx)
+    addr:write(result)
+end
+
 function GenMarkActive(runtime, params) -- 0x8B12
 end
 
@@ -152,6 +224,10 @@ function gSetOpenAddress(runtime, params) -- 0x8D5F
         offset = (params.dx << 16) + params.cx
     end
     runtime:setResource("gSetOpenAddress", offset)
+end
+
+function wInformOnAll(runtime, params) -- 0x8D6C
+    print("wInformOnAll")
 end
 
 function wserv8D7E(runtime, params) -- 0x8D7E
