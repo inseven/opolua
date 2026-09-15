@@ -65,9 +65,12 @@ OplAppInfo OplRuntimeGui::getAppInfo(const QString& aifPath)
     lua_getfield(L, -1, "parseAifToNative");
     lua_remove(L, -2); // aif
     pushValue(L, data);
-    int ret = lua_pcall(L, 1, 1, 0);
-    if (ret || lua_type(L, -1) != LUA_TTABLE) {
-        qDebug("parseAif failed: %s", luaL_tolstring(L, -1, nullptr));
+    auto err = pcall(L, 1, 1);
+    if (err) {
+        qWarning("parseAif failed: %s", qPrintable(*err));
+        return result;
+    } else if (lua_type(L, -1) != LUA_TTABLE) {
+        // Not an app?
         lua_pop(L, 1);
         return result;
     }
@@ -156,7 +159,7 @@ QVector<OplAppInfo> OplRuntimeGui::getMDriveApps()
     }
     QDir appsDir(path);
     for (const QString& appName : appsDir.entryList({"*.OPA", "*.APP"}, QDir::Files)) {
-        // qDebug("Entry %s", qPrintable(appName));
+        // qDebug("App entry %s", qPrintable(appName));
         auto info = getAppInfo("M:\\APP\\" + appName);
         if (!info.deviceAppPath.isEmpty()) {
             result.append(info);
