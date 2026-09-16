@@ -1,4 +1,8 @@
 PROC main:
-    BUSY "Wait for it...", 3
-    GET
+    WHILE 1
+        BUSY "Press a key to toggle busy msg"
+        GET
+        BUSY OFF
+        GET
+    ENDWH
 ENDP
