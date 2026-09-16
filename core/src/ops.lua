@@ -1827,7 +1827,7 @@ gSaveBit_dump = qualifier_dump
 function gClose(stack, runtime) -- 0xC6
     local id = stack:pop()
     assert(id ~= KDefaultWin, KErrInvalidArgs) -- Cannot close the console
-    runtime:closeGraphicsContext(id)
+    runtime:gCLOSE(id)
 end
 
 function gUse(stack, runtime) -- 0xC7

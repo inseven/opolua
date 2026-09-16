@@ -70,6 +70,9 @@ end
 -- Graphics APIs
 
 function gCLOSE(id)
+    local ctx = runtime:getGraphicsContext(id)
+    assert(ctx, KErrInvalidArgs)
+    assert(ctx.bmpRefCount == nil, "Cannot gCLOSE a bitmap opened with BITMAPLOAD")
     runtime:closeGraphicsContext(id)
 end
 
@@ -854,24 +857,27 @@ function gIPRINT(text, corner)
 end
 
 function BUSY(text, corner, delay)
-    local busyWinId = runtime:getResource("busy")
-    if busyWinId then
+    local bmp = require("opx.bmp")
+    local busyWinInfo = runtime:getResource("busy")
+    if busyWinInfo then
         runtime:iohandler().graphicsop("busy", 0)
         runtime:setResource("busy", nil)
-        gCLOSE(busyWinId)
+        bmp.SPRITEDELETE(runtime, busyWinInfo.sprite)
+        gCLOSE(busyWinInfo.win)
     end
     if not text then
         return
     end
 
     local state = runtime:saveGraphicsState()
-    busyWinId = gCREATE(0, 0, 1, 1, false, KColorgCreate4GrayMode)
-    runtime:setResource("busy", busyWinId)
+    local busyWinId = gCREATE(0, 0, 1, 1, false, KColorgCreate4GrayMode)
     local textRect = drawInfoPrint(busyWinId, text, corner or KBusyBottomLeft)
 
-    local bmp = require("opx.bmp")
     local sprite = bmp.SPRITECREATE(runtime, busyWinId, textRect.x, textRect.y, 0)
     local blackBmp = gCREATEBIT(textRect.w, textRect.h, KColorgCreate2GrayMode)
+    -- fudge blackBmp into being a bmp.opx bitmap because the bmp.opx sprite APIs don't let you generate your own
+    -- sprite bitmaps, you have to load them from a file...
+    runtime:getGraphicsContext().bmpRefCount = 1 -- Congrats, you're now a bitmap
     gCOLOR(0, 0, 0)
     gFILL(gWIDTH(), gHEIGHT())
     gUSE(busyWinId)
@@ -879,6 +885,7 @@ function BUSY(text, corner, delay)
     bmp.SPRITEAPPEND(runtime, 0.5, blackBmp, blackBmp, true, 0, 0)
     bmp.SPRITEAPPEND(runtime, 0.5, blackBmp, blackBmp, false, 0, 0)
     bmp.SPRITEDRAW(runtime)
+    bmp.BITMAPUNLOAD(runtime, blackBmp) -- Now owned by the sprite
 
     if delay and delay > 0 then
         runtime:iohandler().graphicsop("busy", busyWinId, delay)
@@ -887,6 +894,7 @@ function BUSY(text, corner, delay)
         gVISIBLE(true)
     end
     runtime:restoreGraphicsState(state)
+    runtime:setResource("busy", { win = busyWinId, sprite = sprite })
 end
 
 function INPUT(var, initVal)

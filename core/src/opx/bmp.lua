@@ -1,26 +1,5 @@
---[[
-
-Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-]]
+-- Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
+-- See LICENSE file for license information.
 
 _ENV = module()
 
@@ -37,42 +16,47 @@ fns = {
     [10] = "SpriteUse",
 }
 
+-- In the real bmp.opx, bitmap handles were CFbsBitmap pointers cast to TInt32.
+-- To avoid having 2 different backends we just use drawable IDs and gLOADBIT
+-- under the hood.
 function BitmapLoad(stack, runtime)
     local idx = stack:pop()
     local path = stack:pop()
+    local id = BITMAPLOAD(runtime, path, idx)
+    stack:push(id)
+end
+
+function BITMAPLOAD(runtime, path, idx)
     local cur = runtime:gIDENTITY()
     local id = runtime:gLOADBIT(path, false, idx)
     runtime:getGraphicsContext().bmpRefCount = 1
     runtime:gUSE(cur)
-    stack:push(id)
+    return id
 end
 
 local function incRefcount(runtime, bitmapId)
-    if bitmapId == 0 then
-        -- SIBO allows initially invalid bitmap IDs (updated by a subsequent SPRITECHANGE)
-        return
-    end
-    local bitmap = runtime:getGraphicsContext(bitmapId)
-    assert(bitmap, "incRefcount on invalid bitmapId!")
-    bitmap.bmpRefCount = (bitmap.bmpRefCount or 1) + 1
+    local bitmap = runtime:getGraphicsContext(assert(bitmapId))
+    assert(bitmap and bitmap.bmpRefCount, "incRefcount on invalid bitmapId!")
+    bitmap.bmpRefCount = bitmap.bmpRefCount + 1
 end
 
 local function decRefcount(runtime, bitmapId)
-    if bitmapId == 0 then
-        -- SIBO allows initially invalid bitmap IDs (updated by a subsequent SPRITECHANGE)
-        return
-    end
     local bitmap = runtime:getGraphicsContext(bitmapId)
-    assert(bitmap, "decRefcount on invalid bitmapId!")
+    assert(bitmap and bitmap.bmpRefCount, "decRefcount on invalid bitmapId!")
     bitmap.bmpRefCount = bitmap.bmpRefCount - 1
     if bitmap.bmpRefCount == 0 then
+        bitmap.bmpRefCount = nil
         runtime:gCLOSE(bitmapId)
     end
 end
 
 function BitmapUnload(stack, runtime)
-    decRefcount(runtime, stack:pop())
+    BITMAPUNLOAD(runtime, stack:pop())
     stack:push(0)
+end
+
+function BITMAPUNLOAD(runtime, id)
+    decRefcount(runtime, id)
 end
 
 function BitmapDisplayMode(stack, runtime)
@@ -125,8 +109,7 @@ function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
     local sprite = graphics.currentSprite
     assert(sprite, "No current sprite!")
 
-    incRefcount(runtime, bitmap)
-    incRefcount(runtime, maskBitmap)
+    -- Note, refcounts not incremented until draw
     local frame = {
         offset = { x = dx, y = dy },
         bitmap = bitmap,
@@ -179,6 +162,7 @@ function SPRITECHANGE(runtime, spriteId, frameId, time, bitmap, maskBitmap, inve
     local graphics = runtime:getGraphics()
     local sprite = graphics.sprites[spriteId]
     assert(sprite, "Bad sprite id to SPRITECHANGE")
+    assert(sprite.drawn, KOplStructure)
 
     local oldFrame = sprite.frames[frameId]
     assert(oldFrame, "No frame for id!")
@@ -202,7 +186,8 @@ end
 -- The SIBO API
 function CHANGESPRITE(runtime, spriteId, frameId, time, bitmaps, dx, dy)
     local sprite = runtime:getGraphics().sprites[spriteId]
-    assert(sprite, "No currentSprite in APPEND/CREATESPRITE")
+    assert(sprite, "No currentSprite in CHANGESPRITE")
+    assert(sprite.drawn, KOplStructure)
 
     local frame = {
         offset = { x = dx, y = dy },
@@ -235,6 +220,14 @@ function SPRITEDRAW(runtime)
     -- printf("SpriteDraw\n")
     local sprite = getCurrentSprite(runtime)
     sprite.drawn = true
+    if not sprite.isSibo then
+        -- Apparently refcounts should not be incremented until draw
+        for _, frame in ipairs(sprite.frames) do
+            incRefcount(runtime, frame.bitmap)
+            incRefcount(runtime, frame.mask)
+        end
+    end
+
     runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
 end
 
@@ -258,6 +251,11 @@ end
 
 function SpriteDelete(stack, runtime)
     local id = stack:pop()
+    SPRITEDELETE(runtime, id)
+    stack:push(0)
+end
+
+function SPRITEDELETE(runtime, id)
     -- printf("SpriteDelete %d\n", id)
     local graphics = runtime:getGraphics()
     local sprite = graphics.sprites[id]
@@ -265,19 +263,19 @@ function SpriteDelete(stack, runtime)
     if sprite == nil then
         -- It seems like this isn't an error on the Psion 5?
         printf("Bad sprite ID %d in SpriteDelete!\n", id)
-        stack:push(0)
         return
     end
-    for _, frame in ipairs(sprite.frames) do
-        decRefcount(runtime, frame.bitmap)
-        decRefcount(runtime, frame.mask)
+    if not sprite.isSibo then
+        for _, frame in ipairs(sprite.frames) do
+            decRefcount(runtime, frame.bitmap)
+            decRefcount(runtime, frame.mask)
+        end
     end
     graphics.sprites[sprite.id] = nil
     if graphics.currentSprite == sprite then
         graphics.currentSprite = nil
     end
     runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, nil)
-    stack:push(0)
 end
 
 function SpriteUse(stack, runtime)
