@@ -800,7 +800,7 @@ void OplRuntime::runLauncher()
 {
     Q_ASSERT(mThread == nullptr);
     mLauncherCmd = "launcher";
-    mFs->addSimulatedDrive('C', {":/welcome/c/System/Apps/Welcome/icons_color.mbm"});
+    mFs->addSimulatedDrive('C', {":/welcome.oplsys/c/System/Apps/Welcome/icons_color.mbm"});
     lua_settop(L, 0);
     require(L, "runtime");
     lua_getfield(L, -1, "runLauncherCmd");

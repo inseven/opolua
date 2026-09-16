@@ -183,7 +183,7 @@
         <file alias="10204.png">../resources/borders/sibo/10204.png</file>
     </qresource>
 
-    <qresource prefix="/welcome">
+    <qresource prefix="/welcome.oplsys">
         <file alias="c/System/Apps/Welcome/icons_color.mbm">../examples/Scripts/Welcome.system/c/System/Apps/Welcome/icons_color.mbm</file>
         <file alias="c/System/Apps/Welcome/icons_grayscale.mbm">../examples/Scripts/Welcome.system/c/System/Apps/Welcome/icons_grayscale.mbm</file>
         <file alias="c/System/Apps/Welcome/psionstyle.mbm">../examples/Scripts/Welcome.system/c/System/Apps/Welcome/psionstyle.mbm</file>
