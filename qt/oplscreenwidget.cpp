@@ -1094,11 +1094,18 @@ void Window::updateSprites(QPainter& painter, QPainter* greyPlanePainter)
 
         QPoint pos(getPos() + sprite.origin + frame.offset);
         if (frame.bitmap) {
+            // qDebug("Rendering frame %d with bitmap %d invert %d", sprite.currentFrame, frame.bitmap, (int)frame.invertMask);
             Drawable* src = screen->getBitmap(frame.bitmap);
-            if (!src) continue;
+            if (!src) {
+                qDebug("No src %d!", frame.bitmap);
+                continue;
+            }
             if (frame.mask) {
                 Drawable* mask = screen->getBitmap(frame.mask);
-                if (!mask) continue;
+                if (!mask) {
+                    qDebug("No mask %d!", frame.mask);
+                    continue;
+                }
                 QPixmap maskedSource(src->getPixmap());
                 QBitmap m = mask->getMask();
                 if (!frame.invertMask) {

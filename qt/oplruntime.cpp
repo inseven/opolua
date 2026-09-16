@@ -973,6 +973,24 @@ QString OplRuntime::tolocalstring(lua_State *L, int index)
     return mStringCodec->toUnicode(str);
 }
 
+OplScreen::SpriteFrame OplRuntime::getSpriteFrame(lua_State* L)
+{
+    OplScreen::SpriteFrame frame = {
+        .offset = to_point(L, -1, "offset"),
+        .bitmap = to_int(L, -1, "bitmap"),
+        .mask = to_int(L, -1, "mask"),
+        .invertMask = to_bool(L, -1, "invertMask"),
+        .blackSetMask = to_int(L, -1, "blackSetMask"),
+        .blackClearMask = to_int(L, -1, "blackClearMask"),
+        .blackInvertMask = to_int(L, -1, "blackInvertMask"),
+        .greySetMask = to_int(L, -1, "greySetMask"),
+        .greyClearMask = to_int(L, -1, "greyClearMask"),
+        .greyInvertMask = to_int(L, -1, "greyInvertMask"),
+        .time = (int)(to_double(L, -1, "time") * 1000000), // in microseconds
+    };
+    return frame;
+}
+
 int OplRuntime::graphicsop(lua_State* L)
 {
     auto cmd = QString(lua_tostring(L, 1));
@@ -1158,20 +1176,7 @@ int OplRuntime::graphicsop(lua_State* L)
                 lua_pop(L, 1);
                 break;
             }
-            OplScreen::SpriteFrame frame = {
-                .offset = to_point(L, -1, "offset"),
-                .bitmap = to_int(L, -1, "bitmap"),
-                .mask = to_int(L, -1, "mask"),
-                .invertMask = to_bool(L, -1, "invertMask"),
-                .blackSetMask = to_int(L, -1, "blackSetMask"),
-                .blackClearMask = to_int(L, -1, "blackClearMask"),
-                .blackInvertMask = to_int(L, -1, "blackInvertMask"),
-                .greySetMask = to_int(L, -1, "greySetMask"),
-                .greyClearMask = to_int(L, -1, "greyClearMask"),
-                .greyInvertMask = to_int(L, -1, "greyInvertMask"),
-                .time = (int)(to_double(L, -1, "time") * 1000000), // in microseconds
-            };
-            sprite.frames.append(frame);
+            sprite.frames.append(getSpriteFrame(L));
             lua_pop(L, 1); // frame
         }
         lua_pop(L, 1); // frames
@@ -2422,13 +2427,18 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
     }
     lua_pop(L, 1); // modules
 
+    int currentDrawable = to_int(L, -1, "currentDrawable");
+    int currentSprite = to_int(L, -1, "currentSprite");
+
     if (rawgetfield(L, -1, "drawables") == LUA_TTABLE) {
         i = 1;
         while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+            int id = to_int(L, -1, "id");
             opl::Drawable d = {
-                .id = to_int(L, -1, "id"),
+                .id = id,
                 .isWindow = to_bool(L, -1, "isWindow"),
                 .isColor = to_bool(L, -1, "isColor"),
+                .isCurrent = id == currentDrawable,
                 .bitDepth = to_int(L, -1, "bitDepth"),
                 .rect = QRect(to_int(L, -1, "x"), to_int(L, -1, "y"), to_int(L, -1, "w"), to_int(L, -1, "h")),
                 .opCount = to_intt<uint32_t>(L, -1, "opCount"),
@@ -2440,8 +2450,37 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
         }
         lua_pop(L, 1); // final nil from lua_rawgeti
     }       
+    lua_pop(L, 1); // drawables
 
-    lua_pop(L, 2); // drawables, info
+    if (rawgetfield(L, -1, "sprites") == LUA_TTABLE) {
+        i = 1;
+        while (lua_rawgeti(L, -1, i++) == LUA_TTABLE) {
+            int id = to_int(L, -1, "id");
+            opl::Sprite s = {
+                .spriteId = id,
+                .windowId = to_int(L, -1, "win"),
+                .origin = to_point(L, -1, "origin"),
+                .isGlobal = to_bool(L, -1, "isGlobal"),
+                .isCurrent = id == currentSprite,
+                .isSibo = to_bool(L, -1, "isSibo"),
+            };
+            rawgetfield(L, -1, "frames");
+            for (int f = 1; ; f++) {
+                if (lua_rawgeti(L, -1, f) != LUA_TTABLE) {
+                    lua_pop(L, 1);
+                    break;
+                }
+                s.frames.append(getSpriteFrame(L));
+                lua_pop(L, 1); // frame
+            }
+            lua_pop(L, 1); // frames
+            info.sprites.append(s);
+            lua_pop(L, 1); // sprite
+        }
+        lua_pop(L, 1); // final nil from lua_rawgeti
+    }
+
+    lua_pop(L, 2); // sprites, info
     Q_ASSERT(lua_gettop(L) == top); // Make sure stack is left balanced
 
     if (errOnStack) {

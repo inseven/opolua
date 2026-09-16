@@ -208,6 +208,32 @@
     </column>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="spritesDockWidget">
+   <property name="windowTitle">
+    <string>Sprites</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QTreeWidget" name="spritesView">
+    <property name="uniformRowHeights">
+     <bool>true</bool>
+    </property>
+    <property name="columnCount">
+     <number>2</number>
+    </property>
+    <column>
+     <property name="text">
+      <string notr="true">1</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string notr="true">2</string>
+     </property>
+    </column>
+   </widget>
+  </widget>
   <action name="actionPause">
    <property name="icon">
     <iconset theme="QIcon::ThemeIcon::MediaPlaybackPause"/>

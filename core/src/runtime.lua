@@ -1821,10 +1821,26 @@ function Runtime:getDebugInfo()
     end
     table.sort(drawables, function(a, b) return a.id < b.id end)
 
+    local sprites = {}
+    for _, sprite in pairs(self.graphics and self.graphics.sprites or {}) do
+        table.insert(sprites, {
+            origin = sprite.origin,
+            win = sprite.win,
+            id = sprite.id,
+            frames = sprite.frames,
+            isGlobal = sprite.global,
+            isSibo = sprite.isSibo,
+        })
+    end
+    table.sort(sprites, function(a, b) return a.id < b.id end)
+
     return {
         frames = frames,
         modules = modules,
         drawables = drawables,
+        currentDrawable = self.graphics and self.graphics.current and self.graphics.current.id,
+        sprites = sprites,
+        currentSprite = self.graphics and self.graphics.currentSprite and self.graphics.currentSprite.id,
     }
 end
 

@@ -33,6 +33,7 @@ private slots:
     void debugInfoUpdated();
     void moduleSelected();
     void drawableSelected();
+    void spriteItemSelected();
     void toggleBreakOnError();
     void toggleWindowFocusEnabled();
     void toggleHeapCheckingEnabled();
@@ -56,6 +57,7 @@ private:
     void gotoAddress(const QString& module, uint32_t address, bool isBreakPosition = false);
     void clearBreaks();
     DrawableView* currentDrawableView() const;
+    const opl::Drawable* getDrawable(int drawableId) const;
     DrawableView* getDrawableView(const opl::Drawable& drawable);
     void setCurrentDrawable(const opl::Drawable& drawable);
     QString getSearchText() const;
@@ -67,6 +69,7 @@ private:
     OplRuntime* mRuntime;
     QVector<opl::Module> mShownModules;
     QVector<opl::Drawable> mShownDrawables;
+    QVector<opl::Sprite> mShownSprites;
     QMap<QString, CodeView*> mCodeViews;
     QMap<int, DrawableView*> mDrawableViews;
     struct SingleStepState {
