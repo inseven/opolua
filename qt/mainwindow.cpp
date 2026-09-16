@@ -348,7 +348,7 @@ void MainWindow::openWelcome()
     }
     OplRuntime& runtime = m->getRuntime();
     runtime.removeAllDrives();
-    runtime.setDrive(Drive::C, ":/welcome/c");
+    runtime.setDrive(Drive::C, ":/welcome.oplsys/c");
 
     runtime.run("C:\\System\\Apps\\Welcome\\Welcome.app");
 }
