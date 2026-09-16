@@ -211,6 +211,21 @@ public:
     virtual QByteArray getImageData(int drawableId, const QRect& rect) = 0; // result should be 8bpp with zero stride padding
 };
 
+static inline bool operator==(const OplScreen::SpriteFrame &lhs, const OplScreen::SpriteFrame &rhs)
+{
+    return lhs.offset == rhs.offset &&
+        lhs.bitmap == rhs.bitmap &&
+        lhs.mask == rhs.mask &&
+        lhs.invertMask == rhs.invertMask &&
+        lhs.blackSetMask == rhs.blackSetMask &&
+        lhs.blackClearMask == rhs.blackClearMask &&
+        lhs.blackInvertMask == rhs.blackInvertMask &&
+        lhs.greySetMask == rhs.greySetMask &&
+        lhs.greyClearMask == rhs.greyClearMask &&
+        lhs.greyInvertMask == rhs.greyInvertMask &&
+        lhs.time == rhs.time;
+}
+
 class OplFontProvider {
 public:
     virtual QString getFont(uint32_t uid, OplScreen::FontMetrics& metrics) = 0;

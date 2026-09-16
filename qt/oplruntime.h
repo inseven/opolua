@@ -298,6 +298,7 @@ private:
     void updateDebugInfo(lua_State* L, bool errOnStack = false);
     void doRenameVariable(lua_State* L, const QString& proc, uint32_t index, const QString& newName);
     void doSetHeapCheck(lua_State* L, bool flag);
+    OplScreen::SpriteFrame getSpriteFrame(lua_State* L);
 
     DECLARE_IOHANDLER_FN(asyncRequest);
     DECLARE_IOHANDLER_FN(cancelRequest);

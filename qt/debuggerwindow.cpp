@@ -19,6 +19,23 @@
 
 #include "ui_debuggerwindow.h"
 
+enum SpriteTreeChild {
+    SpriteChildBitmap = 0,
+    SpriteChildMask = 1,
+
+    // SIBO
+    SpriteChildBlackSet = 0,
+    SpriteChildBlackClear = 1,
+    SpriteChildBlackInvert = 2,
+    SpriteChildGreySet = 3,
+    SpriteChildGreyClear = 4,
+    SpriteChildGreyInvert = 5,
+};
+
+enum CustomDataRoles {
+    DrawableIdRole = Qt::UserRole,
+};
+
 DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::DebuggerWindow)
@@ -87,6 +104,10 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     ui->drawablesView->setHeaderLabels({"Id", "Rank", "Info"});
     ui->drawablesView->sortByColumn(0, Qt::AscendingOrder);
 
+    // Sprites dock widget
+    ui->spritesView->setHeaderLabels({"Id", "Info"});
+    connect(ui->spritesView, &QTreeWidget::itemSelectionChanged, this, &DebuggerWindow::spriteItemSelected);
+
     // Status bar
 
     mStatusLabel = new QLabel(this);
@@ -111,19 +132,103 @@ DebuggerWindow::~DebuggerWindow()
 
 static QString describeDrawable(const opl::Drawable& d)
 {
+    QString result;
     if (d.isWindow) {
-        return QString("Window (%1, %2) %3x%4 %5bpp")
+        result = QString("Window (%1, %2) %3x%4 %5bpp")
             .arg(d.rect.x())
             .arg(d.rect.y())
             .arg(d.rect.width())
             .arg(d.rect.height())
             .arg(d.bitDepth);
     } else {
-        return QString("Bitmap %1x%2 %3bpp")
+        result = QString("Bitmap %1x%2 %3bpp")
             .arg(d.rect.width())
             .arg(d.rect.height())
             .arg(d.bitDepth);
     }
+
+    if (d.isCurrent) {
+        result = result + " (*)";
+    }
+    return result;
+}
+
+static QString describeSprite(const opl::Sprite& s)
+{
+    QString result = QString("Window %1 (%2, %3)")
+        .arg(s.windowId)
+        .arg(s.origin.x())
+        .arg(s.origin.y());
+
+    if (s.isCurrent) {
+        result = result + " (*)";
+    }
+    return result;
+}
+
+static QString describeSpriteFrame(const OplScreen::SpriteFrame& f)
+{
+    QString result = QString("Offset: (%1, %2) time: %3ms")
+        .arg(f.offset.x())
+        .arg(f.offset.y())
+        .arg(f.time / 1000);
+    return result;
+}
+
+static QString describeMask(const OplScreen::SpriteFrame& f)
+{
+    auto result = QString("%1").arg(f.mask);
+    if (f.invertMask) {
+        result = result + " (inverted)";
+    }
+    return result;
+}
+
+static QTreeWidgetItem* newBitmapItem(int drawableId, const QString& name, const QString& desc = QString())
+{
+    QString description = desc;
+    if (description.isEmpty()) {
+        description = QString("%1").arg(drawableId);
+    }
+    auto item = new QTreeWidgetItem({ name, description });
+    item->setData(0, DrawableIdRole, drawableId);
+    return item;
+}
+
+static void updateSpriteFrameBitmap(QTreeWidgetItem* frameItem, int childIdx, int drawableId, const QString& desc = QString())
+{
+    QString description = desc;
+    if (description.isEmpty()) {
+        description = QString("%1").arg(drawableId);
+    }
+    auto item = frameItem->child(childIdx);
+    item->setData(0, DrawableIdRole, drawableId);
+    item->setData(1, Qt::DisplayRole, description);
+}
+
+static QTreeWidgetItem* newFrameItem(int index, bool isSibo, const OplScreen::SpriteFrame& frame)
+{
+    auto frameItem = new QTreeWidgetItem({ QString("Frame %1").arg(index + 1), describeSpriteFrame(frame) });
+    if (isSibo) {
+        frameItem->addChildren({
+            newBitmapItem(frame.blackSetMask, "set (black)"),
+            newBitmapItem(frame.blackClearMask, "clear (black)"),
+            newBitmapItem(frame.blackInvertMask, "invert (black)"),
+            newBitmapItem(frame.greySetMask, "set (grey)"),
+            newBitmapItem(frame.greyClearMask, "clear (grey)"),
+            newBitmapItem(frame.greyInvertMask, "invert (grey)")
+        });
+    } else {
+        QString maskDescSuffix;
+        if (frame.invertMask) {
+            maskDescSuffix = " (inverted)";
+        }
+        frameItem->addChildren({
+            newBitmapItem(frame.bitmap, "bitmap"),
+            newBitmapItem(frame.mask, "mask", describeMask(frame))
+        });
+    }
+    return frameItem;
 }
 
 void DebuggerWindow::debugInfoUpdated()
@@ -227,6 +332,65 @@ void DebuggerWindow::debugInfoUpdated()
     );
     Q_ASSERT(mShownDrawables.count() == info.drawables.count());
 
+    bool spritesWasEmpty = mShownSprites.count() == 0;
+    Differ<opl::Sprite>::diff(mShownSprites, info.sprites,
+        [](const auto& a, const auto& b) { return a.spriteId == b.spriteId && a.isSibo == b.isSibo; },
+        [this](int deletedIdx) {
+            delete ui->spritesView->takeTopLevelItem(deletedIdx);
+        },
+        [this](int addedIdx, const auto& newSprite) {
+            QString desc = describeSprite(newSprite);
+            auto item = new QTreeWidgetItem({
+                QString("Sprite %1").arg(newSprite.spriteId),
+                desc
+            });
+            item->setData(0, DrawableIdRole, newSprite.windowId);
+            ui->spritesView->insertTopLevelItems(addedIdx, {item});
+            if (addedIdx == 0) {
+                // Qt seems to select the first item added after the list was empty
+                ui->spritesView->clearSelection();
+            }
+
+            for (int i = 0; i < newSprite.frames.count(); i++) {
+                const auto& frame = newSprite.frames[i];
+                item->addChild(newFrameItem(i, newSprite.isSibo, frame));
+            }
+        },
+        [this](int updatedIdx, const auto& sprite) {
+            auto item = ui->spritesView->topLevelItem(updatedIdx);
+            item->setData(1, Qt::DisplayRole, describeSprite(sprite));
+            // Copy here to avoid complications of using recursive diff
+            QVector<OplScreen::SpriteFrame> oldFrames = mShownSprites[updatedIdx].frames;
+            Differ<OplScreen::SpriteFrame>::diff(oldFrames, sprite.frames,
+                [](const auto&, const auto&) { return true; /* There's nothing to distinguish frame uniqueness */ },
+                [item](int deletedIdx) {
+                    delete item->takeChild(deletedIdx);
+                },
+                [item, &sprite](int addedIdx, const auto& newFrame) {
+                    item->addChild(newFrameItem(addedIdx, sprite.isSibo, newFrame));
+                },
+                [item, &sprite](int updatedIdx, const auto& frame) {
+                    auto frameItem = item->child(updatedIdx);
+                    if (sprite.isSibo) {
+                        updateSpriteFrameBitmap(frameItem, SpriteChildBlackSet, frame.blackSetMask);
+                        updateSpriteFrameBitmap(frameItem, SpriteChildBlackClear, frame.blackClearMask);
+                        updateSpriteFrameBitmap(frameItem, SpriteChildBlackInvert, frame.blackInvertMask);
+                        updateSpriteFrameBitmap(frameItem, SpriteChildGreySet, frame.greySetMask);
+                        updateSpriteFrameBitmap(frameItem, SpriteChildGreyClear, frame.greyClearMask);
+                        updateSpriteFrameBitmap(frameItem, SpriteChildGreyInvert, frame.greyInvertMask);
+                    } else {
+                        updateSpriteFrameBitmap(frameItem, SpriteChildBitmap, frame.bitmap);
+                        updateSpriteFrameBitmap(frameItem, SpriteChildMask, frame.mask, describeMask(frame));
+                    }
+                }
+            );
+        }
+    );
+    if (spritesWasEmpty && mShownSprites.count() != 0) {
+        ui->spritesView->expandRecursively(QModelIndex());
+        ui->spritesView->resizeColumnToContents(0);
+    }
+
     if (info.paused) {
         const auto& topFrame = info.frames.last();
 
@@ -295,7 +459,34 @@ void DebuggerWindow::drawableSelected()
     auto item = selection.count() ? selection[0] : nullptr;
     if (!item) return;
     const auto& drawable = mShownDrawables[ui->drawablesView->indexOfTopLevelItem(item)];
+    ui->spritesView->clearSelection();
     setCurrentDrawable(drawable);
+}
+
+const opl::Drawable* DebuggerWindow::getDrawable(int drawableId) const
+{
+    auto iter = std::find_if(mShownDrawables.begin(), mShownDrawables.end(), [drawableId](const opl::Drawable& d) {
+        return d.id == drawableId;
+    });
+    if (iter != mShownDrawables.end()) {
+        return &*iter;
+    } else {
+        return nullptr;
+    }
+}
+
+void DebuggerWindow::spriteItemSelected()
+{
+    auto selection = ui->spritesView->selectedItems();
+    auto item = selection.count() ? selection[0] : nullptr;
+    if (!item) return;
+
+    int drawableId = item->data(0, DrawableIdRole).toInt();
+    auto drawable = getDrawable(drawableId);
+    if (drawable) {
+        ui->drawablesView->clearSelection();
+        setCurrentDrawable(*drawable);
+    }
 }
 
 void DebuggerWindow::highlightWindow(int drawableId)
@@ -356,6 +547,7 @@ DrawableView* DebuggerWindow::getDrawableView(const opl::Drawable& drawable)
 void DebuggerWindow::setCurrentEditor(const QString& module)
 {
     ui->drawablesView->clearSelection();
+    ui->spritesView->clearSelection();
     auto ed = getCodeView(module);
     ui->centralwidget->setCurrentWidget(ed);
     setWindowTitle(QString("%1 - OpoLua Debugger").arg(QFileInfo(module).fileName()));
