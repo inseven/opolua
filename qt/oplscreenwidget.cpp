@@ -44,6 +44,7 @@ OplScreenWidget::OplScreenWidget(QWidget *parent)
     : QWidget(parent)
     , mScale(1)
     , mSpriteWidget(nullptr)
+    , mLastSpriteTick(0)
     , mAudioChannels{}
 {
     mRuntime = new OplRuntimeGui(this);
@@ -70,6 +71,11 @@ void OplScreenWidget::init()
     mDrawables.clear();
     Q_ASSERT(findChildren<Window*>().count() == 0);
     delete mStoppedShadow;
+    mLastSpriteTick = 0;
+    mSpriteTimer.reset();
+    if (mSpriteWidget) {
+        mSpriteWidget->renderSprites({}, mScale);
+    }
 }
 
 void OplScreenWidget::onStopped()
@@ -205,6 +211,9 @@ int OplScreenWidget::createWindow(int drawableId, const QRect& rect, BitmapMode 
         updateShadows();
     } else {
         mShadowOverlay = new ShadowOverlay(this);
+    }
+    if (mSpriteWidget) {
+        mSpriteWidget->raise();
     }
     return KErrNone;
 }
