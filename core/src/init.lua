@@ -338,7 +338,7 @@ DeviceInfo = {
     ["psion-series-3c"] = {
         defaultFont = KFontSwiss13,
         consoleFont = KFontMono8x8,
-        iprintFont = KFontSwiss11,
+        iprintFont = KFontSwiss13,
         statusWinSizes = { 31, 63 },
         hasDiamondKey = true,
     },
