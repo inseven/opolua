@@ -891,6 +891,7 @@ function CreateSprite(stack, runtime) -- 0x3B (SIBO)
         id = spriteId,
         frames = {},
         bitmaps = {},
+        isSibo = true,
     }
     graphics.sprites[spriteId] = sprite
     graphics.currentSprite = sprite

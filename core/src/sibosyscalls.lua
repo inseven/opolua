@@ -281,6 +281,7 @@ function wCreateSprite(runtime, params) -- 0x8DF6
 
     local bmp = require("opx.bmp")
     local id = bmp.SPRITECREATE(runtime, winId, x, y, flags)
+    runtime:getGraphics().sprites[id].isSibo = true
 
     local numSprites = params.di
     local spriteInfoAddr = params.si
