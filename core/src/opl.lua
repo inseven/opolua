@@ -882,8 +882,9 @@ function BUSY(text, corner, delay)
     gFILL(gWIDTH(), gHEIGHT())
     gUSE(busyWinId)
     runtime:flushGraphicsOps()
-    bmp.SPRITEAPPEND(runtime, 0.5, blackBmp, blackBmp, true, 0, 0)
-    bmp.SPRITEAPPEND(runtime, 0.5, blackBmp, blackBmp, false, 0, 0)
+    -- I swear the invert flags should be the opposite way round here, but it displays right, so...
+    bmp.SPRITEAPPEND(runtime, 0.8, blackBmp, blackBmp, false, 0, 0)
+    bmp.SPRITEAPPEND(runtime, 0.8, blackBmp, blackBmp, true, 0, 0)
     bmp.SPRITEDRAW(runtime)
     bmp.BITMAPUNLOAD(runtime, blackBmp) -- Now owned by the sprite
 
