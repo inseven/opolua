@@ -108,6 +108,10 @@ Options:
                 the way ELSE blocks are calculated requiring the WHILE transform
                 to have taken place, this option implies no-elses and
                 no-elseifs.
+            no-hex-literals
+                Do not attempt to convert integer literal arguments to certain
+                commands (like FONT) into hex constants, instead leaving them
+                as decimal.
 ]=])
         return os.exit(false)
     end
@@ -122,6 +126,7 @@ Options:
         ["no-merge-prints"] = true,
         ["no-whiles"] = true,
         ["show-elided"] = true,
+        ["no-hex-literals"] = true,
     }
     for _, option in ipairs(args.option) do
         if not knownOptions[option] then
@@ -214,6 +219,9 @@ Options:
         end
         if hasOption("no-elses") then
             options.addElses = false
+        end
+        if hasOption("no-hex-literals") then
+            options.hexLiterals = false
         end
 
         local ok, err

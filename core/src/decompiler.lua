@@ -211,6 +211,27 @@ local prettyNames = {
     GY = "gY",
 }
 
+-- Map of cmd names to which of their arguments should be shown in hex if they are integer literals.
+local hexHints = {
+    CALL = { true },
+    CLEARFLAGS = { true },
+    FONT = { true },
+    IOOPEN = { false, false, true },
+    OS = { true },
+    SETFLAGS = { true },
+    USR = { true },
+    ["USR$"] = { true },
+    dINIT = { false, true },
+    dFILE = { false, false, true, true, true, true },
+    dTEXT = { false, false, true },
+    gBORDER = { true },
+    gBUTTON = { false, false, false, false, false, false, false, true },
+    gCREATE = { false, false, false, false, false, true },
+    gFONT = { true },
+    gSTYLE = { true },
+    gXBORDER = { false, true },
+}
+
 local endStatements = {
     ENDIF = true,
     ENDP = true,
@@ -436,7 +457,29 @@ function decompileProc(proc, options)
         return iterfn, initState
     end
 
-    local function eval(expr, needsBrackets)
+    local eval -- Forward decl for evalArgExpr
+
+    local function shouldHexArg(cmd, argIdx)
+        return options.hexLiterals ~= false and hexHints[cmd] and hexHints[cmd][argIdx]
+    end
+
+    local function evalArgExpr(cmd, argIdx, argExpr)
+        local result = eval(argExpr)
+        if shouldHexArg(cmd, argIdx) then
+            local intLiteral = tonumber(result:match("^%-?[0-9]+$"))
+            if intLiteral and (intLiteral < 0 or intLiteral >= 16) then
+                if argExpr.valType == EWord then
+                    result = string.format("$%X", touint16(intLiteral))
+                else
+                    -- There shouldn't be any other options at this point
+                    result = string.format("&%X", touint32(intLiteral))
+                end
+            end
+        end
+        return result
+    end
+    
+    function eval(expr, needsBrackets)
         -- needs brackets is more "needs brackets if it's a compound expression"
         if expr.operand then
             if expr.operand == "CAST" then
@@ -472,7 +515,7 @@ function decompileProc(proc, options)
             if #expr > 0 then
                 local params = {}
                 for i, arg in ipairs(expr) do
-                    params[i] = eval(arg)
+                    params[i] = evalArgExpr(expr.call, i, arg)
                 end
                 return fmt("%s(%s)", expr.call, table.concat(params, ", "))
             else
@@ -992,7 +1035,7 @@ function decompileProc(proc, options)
         if nargs > 0 then
             local argStrs = {}
             for i, expr in ipairs(args) do
-                argStrs[i] = eval(expr)
+                argStrs[i] = evalArgExpr(standardOp.name, i, expr)
             end
             s.value = fmt("%s %s", s.value, table.concat(argStrs, ", "))
         end
@@ -1622,7 +1665,7 @@ function decompileProc(proc, options)
             if itemType == dItemTypes.dTEXT then
                 local flagSuff = ""
                 if ip8() ~= 0 then
-                    flagSuff = fmt(", %s", eval(popExpr(EWord)))
+                    flagSuff = fmt(", %s", evalArgExpr("dTEXT", 3, popExpr(EWord)))
                 end
                 local body = popExpr(EString)
                 local prompt = popExpr(EString)
@@ -1678,7 +1721,10 @@ function decompileProc(proc, options)
                     if uid1.value == "0" and uid2.value == "0" and uid3.value == "0" then
                         -- epoc32 2-arg syntax just pushed 3 literal zeros onto the stack
                     else
-                        uidSuff = fmt(", %s, %s, %s", eval(uid1), eval(uid2), eval(uid3))
+                        uidSuff = fmt(", %s, %s, %s",
+                            evalArgExpr("dFILE", 4, uid1),
+                            evalArgExpr("dFILE", 5, uid2),
+                            evalArgExpr("dFILE", 6, uid3))
                     end
                 end
                 local flags = popExpr(EWord)
