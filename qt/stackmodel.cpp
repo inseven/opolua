@@ -517,9 +517,8 @@ bool StackModel::setData(const QModelIndex &index, const QVariant &value, int ro
             // Copy these so they don't risk getting invalidated by the renameVariable() call
             QString module = frame.procModule;
             QString proc = frame.procName;
-            QString oldName = stripTypeSuffix(var.name);
             mRuntime->renameVariable(proc, var.index, newName);
-            emit variableRenamed(module, proc, oldName, newName);
+            emit variableRenamed(module, proc, var.index, newName);
             return true;
         }
     } else {

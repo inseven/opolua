@@ -42,8 +42,8 @@ function decompile(procTable, options)
 
     local nameArgs = {}
     for _, mod in ipairs(sortedKeys(options.renames or {})) do
-        for _, oldName in ipairs(sortedKeys(options.renames[mod])) do
-            table.insert(nameArgs, string.format(' --name "%s:%s=%s"', mod, oldName, options.renames[mod][oldName]))
+        for _, idx in ipairs(sortedKeys(options.renames[mod])) do
+            table.insert(nameArgs, string.format(' --name "%s:%04X=%s"', mod, idx, options.renames[mod][idx]))
         end
     end
     local outputFn = options.outputFn
@@ -370,13 +370,10 @@ function decompileProc(proc, options)
 
     local vars = proc.vars
     -- We don't necessarily have all the names yet (because of locals) but we need to process all the renames we can now
-    local varsByOldName = {} -- this uses undecorated names to match what renames does.
-    for _, var in pairs(vars) do
-        varsByOldName[var.name:match("[A-Za-z0-9_]+")] = var
-    end
-    for oldName, newName in pairs(renames) do
-        local var = varsByOldName[oldName]
+    for idx, newName in pairs(renames) do
+        local var = vars[idx]
         if var and var.type then
+            assert(not var.isGlobal, "Cannot apply a rename to a global declaration "..newName)
             var.name = newName..DataTypeSuffix[var.type & 0xF]
         else
             -- Otherwise we wait until declareLocalVar to apply the rename
@@ -558,10 +555,7 @@ function decompileProc(proc, options)
         -- but since indexes don't get reused for different vars we now know its
         -- type and can make a var entry.
         if vars[index] == nil then
-            local undecoratedName = opofile.makeLocalName(proc, index)
-            if renames[undecoratedName] then
-                undecoratedName = renames[undecoratedName]
-            end
+            local undecoratedName = renames[index] or opofile.makeLocalName(proc, index)
             vars[index] = {
                 directIdx = index,
                 type = type,
@@ -572,10 +566,7 @@ function decompileProc(proc, options)
             if isArrayType(type) and vars[index].type == nil then
                 vars[index].type = type
                 -- And recalculate name with the type suffix
-                local undecoratedName = opofile.makeLocalName(proc, index)
-                if renames[undecoratedName] then
-                    undecoratedName = renames[undecoratedName]
-                end
+                local undecoratedName = renames[index] or opofile.makeLocalName(proc, index)
                 local newName = undecoratedName..DataTypeSuffix[type]
                 vars[index].name = newName
             end
@@ -584,8 +575,8 @@ function decompileProc(proc, options)
     end
 
     local function getLabelName(dest)
-        local name = fmt("label_%04X", dest)
-        return (renames[name] or name).."::"
+        local name = renames[dest] or fmt(era == "sibo" and "lab_%04X" or "label_%04X", dest)
+        return name.."::"
     end
 
     local function popExpr(type)
@@ -1591,8 +1582,7 @@ function decompileProc(proc, options)
                 addStatement(location, "ONERR OFF")
             else
                 local dest = location + offset
-                local label = fmt(era == "sibo" and "err_%04X" or "errhandler_%04X", dest)
-                label = renames[label] or label
+                local label = renames[dest] or fmt(era == "sibo" and "err_%04X" or "errhandler_%04X", dest)
                 addNamedLabel(dest, label.."::")
                 addStatement(location, "ONERR %s", label)
             end

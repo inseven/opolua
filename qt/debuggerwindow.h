@@ -46,7 +46,7 @@ private slots:
     void findPrevious();
     void useSelectionForFind();
     void toggleBreak();
-    void variableRenamed(const QString& module, const QString& proc, const QString& oldName, const QString& newName);
+    void variableRenamed(const QString& module, const QString& proc, uint32_t index, const QString& newName);
     void exportBitmap();
     void highlightWindow(int drawableId);
     void copy();

@@ -2802,9 +2802,9 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
                 lua_pushvalue(L, -2); // pushes the new table
                 lua_rawset(L, -4); // renames[override.proc] = {}
             }
-            pushValue(L, override.origName);
+            pushValue(L, override.index);
             pushValue(L, override.newName);
-            lua_rawset(L, -3); // renames[proc][origName] = override.newName
+            lua_rawset(L, -3); // renames[proc][index] = override.newName
             lua_pop(L, 1); // renames[proc]
         }
     }

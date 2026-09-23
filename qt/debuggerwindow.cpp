@@ -669,12 +669,12 @@ void DebuggerWindow::toggleBreak()
     view->toggleBreakpoint();
 }
 
-void DebuggerWindow::variableRenamed(const QString& module, const QString& proc, const QString& oldName, const QString& newName)
+void DebuggerWindow::variableRenamed(const QString& module, const QString& proc, uint32_t index, const QString& newName)
 {
     auto& overrides = mNameOverrides[module];
     bool found = false;
     for (int i = 0; i < overrides.count(); i++) {
-        if (overrides[i].proc == proc && overrides[i].newName == oldName) {
+        if (overrides[i].proc == proc && overrides[i].index == index) {
             // Update existing
             found = true;
             overrides[i].newName = newName;
@@ -682,10 +682,9 @@ void DebuggerWindow::variableRenamed(const QString& module, const QString& proc,
         }
     }
     if (!found) {
-        // If there's no existing rename, the current name must be the original name
         overrides.append({
             .proc = proc,
-            .origName = oldName,
+            .index = index,
             .newName = newName
         });
     }
