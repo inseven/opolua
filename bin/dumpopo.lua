@@ -162,7 +162,7 @@ Options:
     local rt = runtime.newRuntime(nil, prog.translatorVersion)
     rt:addModule("C:\\module", prog)
     if args.decompile then
-        local names = {} -- map of module name to table of name->newname
+        local names = {} -- map of module name to table of index->newname
         for _, rename in ipairs(args.name) do
             local proc, oldName, newName = rename:match("(.*):([A-Za-z0-9_]+)%=(.*)")
             if not proc then
@@ -172,7 +172,17 @@ Options:
             if not names[proc] then
                 names[proc] = {}
             end
-            names[proc][oldName] = newName
+            local index = tonumber(oldName, 16)
+            if index == nil then
+                local hex = oldName:match("^local_([0-9A-Fa-f]+)$") or oldName:match("^loc([0-9A-Fa-f]+)$")
+                    or oldName:match("^label_([0-9A-Fa-f]+)$") or oldName:match("^lab_([0-9A-Fa-f]+)$")
+                    or oldName:match("^errhandler_([0-9A-Fa-f]+)$") or oldName:match("^err_([0-9A-Fa-f]+)$")
+                if hex then
+                    index = tonumber(hex, 16)
+                end
+            end
+            assert(index, "Expected local_XXXX or locXXXX or XXXX for variable name")
+            names[proc][index] = newName
         end
 
         local aif = nil

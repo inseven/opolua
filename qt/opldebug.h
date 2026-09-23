@@ -123,7 +123,7 @@ static inline bool operator==(const Sprite &lhs, const Sprite &rhs)
 
 struct NameOverride {
     QString proc;
-    QString origName;
+    uint32_t index;
     QString newName;
 };
 
