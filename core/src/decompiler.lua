@@ -75,7 +75,8 @@ function decompile(procTable, options)
             end
         else
             if options.aif.opaType then
-                outputFn(nil, '    TYPE %d\n', options.aif.opaType)
+                local typeStr = string.format(options.aif.opaType <= 4 and "%d" or "$%04X", options.aif.opaType)
+                outputFn(nil, '    TYPE %s\n', typeStr)
             end
             if options.aif.defaultFile then
                 local path, name = oplpath.split(options.aif.defaultFile)
