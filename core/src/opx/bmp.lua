@@ -109,7 +109,8 @@ function SPRITEAPPEND(runtime, time, bitmap, maskBitmap, invertMask, dx, dy)
     local sprite = graphics.currentSprite
     assert(sprite, "No current sprite!")
 
-    -- Note, refcounts not incremented until draw
+    incRefcount(runtime, bitmap)
+    incRefcount(runtime, maskBitmap)
     local frame = {
         offset = { x = dx, y = dy },
         bitmap = bitmap,
@@ -220,13 +221,6 @@ function SPRITEDRAW(runtime)
     -- printf("SpriteDraw\n")
     local sprite = getCurrentSprite(runtime)
     sprite.drawn = true
-    if not sprite.isSibo then
-        -- Apparently refcounts should not be incremented until draw
-        for _, frame in ipairs(sprite.frames) do
-            incRefcount(runtime, frame.bitmap)
-            incRefcount(runtime, frame.mask)
-        end
-    end
 
     runtime:iohandler().graphicsop("sprite", sprite.win, sprite.id, sprite)
 end
