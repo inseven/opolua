@@ -223,13 +223,25 @@ void CodeView::toggleBreakpoint()
     auto addr = mBlockAddrs[c.blockNumber()];
     // qDebug("toggleBreakpoint %x", addr);
     bool set = !mBreakpoints.contains(addr);
-    if (set) {
+    showBreakpoint(addr, set);
+    emit breakpointConfigured(mPath, addr, set);
+}
+
+void CodeView::showBreakpoint(uint32_t addr, bool show)
+{
+    // Does not emit breakpointConfigured
+    if (show) {
         mBreakpoints.insert(addr);
     } else {
         mBreakpoints.remove(addr);
     }
     mLineNumberArea->update();
-    emit breakpointConfigured(mPath, addr, set);
+}
+
+void CodeView::setShownBreakpoints(const QSet<uint32_t>& addresses)
+{
+    mBreakpoints = addresses;
+    mLineNumberArea->update();
 }
 
 void CodeView::toggleGotoPopup()

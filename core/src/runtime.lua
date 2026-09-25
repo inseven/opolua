@@ -102,6 +102,7 @@ function Runtime:getLocalVar(index, type, frame)
     local vars = frame.vars
     local var = vars[index]
     if not var then
+        -- First time we're encountering this variable in this frame
         local stringMaxLen = nil
         if type & 0xF == DataTypes.EString then
             local stringFixupIndex = index - 1
@@ -115,39 +116,29 @@ function Runtime:getLocalVar(index, type, frame)
         end
 
         var = self.chunk:getVariableAtOffset(frame.framePtr + index, type)
+        var.name = opofile.makeLocalName(frame.proc, index, type) -- might be overridden below
         var:fixup(stringMaxLen, arrayLen)
         vars[index] = var
         if frame.proc then
+            -- See if we can get a name from proc, and if not, update proc
             local procVar = frame.proc.vars[index]
-            if procVar and procVar.type then
-                -- Don't use the name from the proc info unless it also had a type (excludes local arrays that couldn't
-                -- be typed just from the proc info)
-                var.name = procVar.name
+            if procVar then
+                assert(procVar.name) -- Must have a name to be in proc.vars
+                if procVar.type then
+                    var.name = procVar.name
+                else
+                    -- It must have an (untyped) name, which we can now type
+                    var.name = procVar.name .. DataTypeSuffix[type]
+                    procVar.type = type
+                    procVar.name = var.name
+                end
+            else
+                frame.proc.vars[index] = {
+                    type = type,
+                    directIdx = index,
+                    name = var.name
+                }
             end
-        end
-    end
-
-    if not var.name then
-        -- We now have its type so we can name it
-        var.name = opofile.makeLocalName(frame.proc, index, type)
-    end
-
-    -- Might as well update proc for next time
-    if frame.proc and frame.proc.vars then
-        local procVar = frame.proc.vars[index]
-        if procVar == nil then
-            procVar = {
-                type = type,
-                directIdx = index,
-            }
-            frame.proc.vars[index] = procVar
-        end
-        if procVar.name == nil then
-            procVar.name = var.name
-        end
-        assert(procVar.type == nil or procVar.type == var:type(), "Type mismatch on updating proc var!")
-        if procVar.type == nil then
-            procVar.type = var:type()
         end
     end
 
@@ -1854,14 +1845,28 @@ end
 function Runtime:renameVariable(procName, index, name)
     local proc = self:findProc(procName)
     local var = proc.vars[index]
-    assert(var, "Var not found!")
-    var.name = name..DataTypeSuffix[var.type & 0xF]
+    if var == nil then
+        -- We might be trying to rename an integer local we haven't yet encountered
+        var = {
+            name = name,
+            directIdx = index,
+        }
+        proc.vars[index] = var
+    else
+        var.name = name
+        if var.type then
+            var.name = var.name..DataTypeSuffix[var.type & 0xF]
+        end
+    end
 
     -- Need to also update the var name in the frame, for any frames currently using proc
     local frame = self.frame
     while frame ~= nil do
         if frame.proc == proc then
-            frame.vars[index].name = var.name
+            -- Check frame has actually encountered the variable
+            if frame.vars[index] then
+                frame.vars[index].name = var.name
+            end
         end
         frame = frame.prevFrame
     end

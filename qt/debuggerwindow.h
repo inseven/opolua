@@ -26,8 +26,14 @@ class DebuggerWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit DebuggerWindow(OplRuntime* runtime, QWidget *parent = nullptr);
+    explicit DebuggerWindow(OplRuntime* runtime, const QVariant& config = QVariant(), QWidget *parent = nullptr);
     ~DebuggerWindow();
+
+    QVariant getDebuggerConfig() const;
+    void setDebuggerConfig(const QVariant& config);
+
+signals:
+    void debuggerConfigChanged();
 
 private slots:
     void debugInfoUpdated();
@@ -47,6 +53,7 @@ private slots:
     void useSelectionForFind();
     void toggleBreak();
     void variableRenamed(const QString& module, const QString& proc, uint32_t index, const QString& newName);
+    void breakpointConfigured(const QString& module, uint32_t addr, bool set);
     void exportBitmap();
     void highlightWindow(int drawableId);
     void copy();
@@ -62,6 +69,8 @@ private:
     void setCurrentDrawable(const opl::Drawable& drawable);
     QString getSearchText() const;
     void setSearchText(const QString& text);
+    QString relPath(const QString& absPath) const;
+    QString absPath(const QString& relPath) const;
 
 private:
     Ui::DebuggerWindow *ui;

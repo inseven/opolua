@@ -628,6 +628,7 @@ void OplRuntime::startThread()
     if (mScreen) {
         mScreen->init();
     }
+    updateDebugInfoOnRunComplete(); // Not exactly the right name but does the right thing, signalling empty debug info
 
     // Runtime always starts out escapable
     setEscape(true);
@@ -892,7 +893,6 @@ void OplRuntime::onThreadExited()
     auto fn = mRunNextFn;
     if (fn) {
         mRunNextFn = nullptr;
-        // mScreen->init();
         fn();
     } else {
         lua_settop(L, 0);
@@ -2307,11 +2307,17 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
     // qDebug("updateDebugInfo");
     const int top = lua_gettop(L);
 
-    // Check for any renames still pending
-    for (const auto& rename : mPendingVariableRenames) {
-        doRenameVariable(L, rename.proc, rename.index, rename.name);
+    // Check for any pending renames without an explicit module path, which means we can (hopefully) do them now
+    const auto& procs = mPendingVariableRenames.value(QString());
+    for (auto procIter = procs.cbegin(), procEnd = procs.cend(); procIter != procEnd; procIter++) {
+        const QString& procName = procIter.key();
+        const QMap<uint32_t, QString>& renames = procIter.value();
+        for (auto idxIter = renames.cbegin(), idxEnd = renames.cend(); idxIter != idxEnd; idxIter++) {
+            doRenameVariable(L, procName, idxIter.key(), idxIter.value());
+        }
     }
-    mPendingVariableRenames.clear();
+
+    mPendingVariableRenames.remove(QString());
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
     luaL_getmetafield(L, -1, "getDebugInfo");
@@ -2337,7 +2343,9 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
             .variables = {},
         };
         if (frame.procModule.isEmpty()) {
-            frame.procModule = mFs->getNativePath(to_string(L, -1, "procModule"));
+            rawgetfield(L, -1, "procModule");
+            frame.procModule = mFs->getNativePath(tolocalstring(L, -1));
+            lua_pop(L, 1); // procModule
         }
 
         int varidx = 1;
@@ -2352,6 +2360,12 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
                 .value = {},
                 .global = to_bool(L, -1, "global"),
             };
+            // Check for any pending renames we haven't gotten to yet
+            auto rename = mPendingVariableRenames.value(frame.procModule).value(frame.procName).value(v.index);
+            if (!rename.isEmpty()) {
+                v.name = rename;
+            }
+
             rawgetfield(L, -1, "value");
             switch (v.type) {
                 case opl::EWord:
@@ -2422,6 +2436,21 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
             }
             info.modules.append(m);
             lua_pop(L, 1); // module
+
+            if (mPendingVariableRenames.contains(m.nativePath)) {
+                const auto& procs = mPendingVariableRenames[m.nativePath];
+                // Assume that all procs currently loaded whose names match something in the module, are actually from
+                // this module. This isn't _technically_ guaranteed but it's pretty unusual and we can just let
+                // doRenameVariable fail in that scenario.
+                for (auto procIter = procs.cbegin(), procEnd = procs.cend(); procIter != procEnd; procIter++) {
+                    const QString& procName = procIter.key();
+                    const QMap<uint32_t, QString>& renames = procIter.value();
+                    for (auto idxIter = renames.cbegin(), idxEnd = renames.cend(); idxIter != idxEnd; idxIter++) {
+                        doRenameVariable(L, procName, idxIter.key(), idxIter.value());
+                    }
+                }
+                mPendingVariableRenames.remove(m.nativePath);
+            }
         }
         lua_pop(L, 1); // final nil from lua_rawgeti
     }
@@ -2463,6 +2492,7 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
                 .isGlobal = to_bool(L, -1, "isGlobal"),
                 .isCurrent = id == currentSprite,
                 .isSibo = to_bool(L, -1, "isSibo"),
+                .frames = {},
             };
             rawgetfield(L, -1, "frames");
             for (int f = 1; ; f++) {
@@ -2655,21 +2685,21 @@ void OplRuntime::setVariable(const opl::Frame& frame, const opl::Variable& varia
 
 void OplRuntime::renameVariable(const QString& proc, uint32_t index, const QString& newName)
 {
+    renameVariable(QString(), proc, index, newName);
+}
+
+void OplRuntime::renameVariable(const QString& moduleNativePath, const QString& proc, uint32_t index, const QString& newName)
+{
     ASSERT_MAIN_THREAD();
     QMutexLocker lock(&mMutex);
     mLastDebugInfoTime.invalidate(); // Marks debug info as stale
     bool waiting = mWaiting;
     lock.unlock();
-    if (waiting) {
+    if (waiting && moduleNativePath.isEmpty()) {
         doRenameVariable(L, proc, index, newName);
         updateDebugInfo(L);
     } else {
-        // mPendingVariableRenames only ever touched by updateDebugInfo which is also main thread so no locking needed
-        mPendingVariableRenames.append({
-            .proc = proc,
-            .index = index,
-            .name = newName
-        });
+        mPendingVariableRenames[moduleNativePath][proc][index] = newName;
     }
 }
 
@@ -2936,6 +2966,32 @@ void OplRuntime::configureBreakpoint(const QString& moduleNativePath, uint32_t a
     } else {
         clearBreakpoint(moduleNativePath, addr);
     }
+}
+
+QMap<QString, QVector<uint32_t>> OplRuntime::getBreakpoints() const
+{
+    QMap<QString, QVector<uint32_t>> result;
+    QMutexLocker lock(&mMutex);
+    for (auto iter = mBreakpoints.begin(), endIter = mBreakpoints.end(); iter != endIter; iter++) {
+        for (const QString& nativePath : iter.value()) {
+            result[nativePath].append(iter.key());
+        }
+    }
+    return result;
+}
+
+QSet<uint32_t> OplRuntime::getModuleBreakpoints(const QString& moduleNativePath) const
+{
+    QSet<uint32_t> result;
+    QMutexLocker lock(&mMutex);
+    for (auto iter = mBreakpoints.begin(), endIter = mBreakpoints.end(); iter != endIter; iter++) {
+        for (const QString& nativePath : iter.value()) {
+            if (nativePath == moduleNativePath) {
+                result.insert(iter.key());
+            }
+        }
+    }
+    return result;
 }
 
 void OplRuntime::flushGraphicsOps()
