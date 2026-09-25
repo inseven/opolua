@@ -36,7 +36,7 @@ enum CustomDataRoles {
     DrawableIdRole = Qt::UserRole,
 };
 
-DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
+DebuggerWindow::DebuggerWindow(OplRuntime* runtime, const QVariant& config, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::DebuggerWindow)
     , mRuntime(runtime)
@@ -112,6 +112,10 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
 
     mStatusLabel = new QLabel(this);
     ui->statusbar->addWidget(mStatusLabel);
+
+    if (config.isValid()) {
+        setDebuggerConfig(config);
+    }
 
     // Stack info dock widget (do this last as it triggers a debugInfoUpdated)
 
@@ -518,14 +522,16 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
         } else {
             view = new CodeView(this, new OplTokenizer);
             view->setUseHexLineAddresses(true);
-            auto prog = OplRuntime().decompile(path);
+            auto overrides = mNameOverrides.value(path, QVector<opl::NameOverride>());
+            auto prog = OplRuntime().decompile(path, overrides);
             view->setContents(prog);
+            view->setShownBreakpoints(mRuntime->getModuleBreakpoints(path));
         }
         view->setPath(path);
         view->setReadOnly(true);
         view->moveCursor(QTextCursor::Start);
         view->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
-        connect(view, &CodeView::breakpointConfigured, mRuntime, &OplRuntime::configureBreakpoint);
+        connect(view, &CodeView::breakpointConfigured, this, &DebuggerWindow::breakpointConfigured);
         mCodeViews[path] = view;
         ui->centralwidget->addWidget(view);
     }
@@ -692,6 +698,13 @@ void DebuggerWindow::variableRenamed(const QString& module, const QString& proc,
     CodeView* view = getCodeView(module);
     auto prog = OplRuntime().decompile(module, overrides);
     view->setContents(prog);
+    emit debuggerConfigChanged();
+}
+
+void DebuggerWindow::breakpointConfigured(const QString& module, uint32_t addr, bool set)
+{
+    mRuntime->configureBreakpoint(module, addr, set);
+    emit debuggerConfigChanged();
 }
 
 void DebuggerWindow::exportBitmap()
@@ -790,4 +803,105 @@ QString DebuggerWindow::getSearchText() const
 #else
     return mSearchText;
 #endif
+}
+
+QString DebuggerWindow::relPath(const QString& absPath) const
+{
+    QDir dir(mRuntime->mappingForDrive(mRuntime->mainDrive()));
+    dir.cdUp();
+    return dir.relativeFilePath(absPath);
+}
+
+QString DebuggerWindow::absPath(const QString& relPath) const
+{
+    QDir dir(mRuntime->mappingForDrive(mRuntime->mainDrive()));
+    dir.cdUp();
+    return dir.absoluteFilePath(relPath);
+}
+
+QVariant DebuggerWindow::getDebuggerConfig() const
+{
+    QMap<QString, QVariant> result;
+
+    const QMap<QString, QVector<uint32_t>> breakpoints = mRuntime->getBreakpoints();
+    QMap<QString, QVariant> brkvar;
+    for (auto iter = breakpoints.begin(), endIter = breakpoints.end(); iter != endIter; iter++) {
+        QList<QVariant> lst;
+        for (uint32_t addr : iter.value()) {
+            lst.append(addr);
+        }
+        brkvar[relPath(iter.key())] = lst;
+    }
+    if (!brkvar.isEmpty()) {
+        result["breakpoints"] = brkvar;
+    }
+
+    QMap<QString, QVariant> renamevar;
+    for (auto iter = mNameOverrides.cbegin(), endIter = mNameOverrides.cend(); iter != endIter; iter++) {
+        QMap<QString, QVariant> renames;
+        for (const opl::NameOverride& override : iter.value()) {
+            QString key = QString("%1:%2").arg(override.proc).arg(override.index, 4, 16, QLatin1Char('0'));
+            renames[key] = override.newName;
+        }
+        if (!renames.isEmpty()) {
+            renamevar[relPath(iter.key())] = renames;
+        }
+    }
+    if (!renamevar.isEmpty()) {
+        result["renames"] = renamevar;
+    }
+
+    return result.isEmpty() ? QVariant() : result;
+}
+
+void DebuggerWindow::setDebuggerConfig(const QVariant& config)
+{
+    if (!config.isValid()) {
+        return;
+    }
+    if (!config.canConvert<QMap<QString, QVariant>>()) {
+        qWarning("Bad type in setDebuggerConfig!");
+        return;
+    }
+    mNameOverrides.clear();
+
+    const QMap<QString, QVariant> configMap = config.toMap();
+    const QMap<QString, QVariant> breakpoints = configMap["breakpoints"].toMap();
+    for (auto iter = breakpoints.cbegin(), endIter = breakpoints.cend(); iter != endIter; iter++) {
+        QString path = absPath(iter.key());
+        auto codeview = mCodeViews.value(path, nullptr);
+        QList<QVariant> addrs = iter.value().toList();
+        for (const QVariant& addrVar : addrs) {
+            uint32_t addr = addrVar.value<uint32_t>();
+            if (addr) {
+                mRuntime->setBreakpoint(path, addr);
+                if (codeview) {
+                    codeview->showBreakpoint(addr);
+                }
+            }
+        }
+    }
+
+    const QMap<QString, QVariant> renames = configMap["renames"].toMap();
+    for (auto iter = renames.cbegin(), endIter = renames.cend(); iter != endIter; iter++) {
+        const QString path = absPath(iter.key());
+        const QMap<QString, QVariant> modRenames = iter.value().toMap();
+        for (auto riter = modRenames.cbegin(), rendIter = modRenames.cend(); riter != rendIter; riter++) {
+            QString procAndVar = riter.key();
+            QString newName = riter.value().toString();
+            auto parts = procAndVar.split(":");
+            if (parts.count() == 2 && !newName.isEmpty()) {
+                const auto& procName = parts[0];
+                uint32_t index = (uint32_t)parts[1].toLong(nullptr, 16);
+                // For code views
+                mNameOverrides[path].append({
+                    .proc = procName,
+                    .index = index,
+                    .newName = newName,
+                });
+                // And for the debug info, stack model etc
+                mRuntime->renameVariable(path, procName, index, newName);
+            }
+        }
+    }
 }

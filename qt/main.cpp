@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
     auto args = QCoreApplication::arguments();
     QString device;
     int scale = 0;
+    bool debugger = false;
     // 0 is app path, 1 will be "open" (or nothing)
     for (int i = 2; i < args.count(); i++) {
         if (args[i] == "--device" || args[i] == "-d") {
@@ -126,6 +127,9 @@ int main(int argc, char *argv[])
                 qWarning("Syntax: opolua open --scale 1|2|3|4");
                 return 1;
             }
+        } else if (args[i] == "--debugger" || args[i] == "-g") {
+            debugger = true;
+            args.removeAt(i);
         }
     }
     if (args.count() == 3 && args[1] == "open") {
@@ -138,7 +142,7 @@ int main(int argc, char *argv[])
         if (scale >= 1 && scale <= 4) {
             w->setScale(scale);
         }
-        w->openFile(QFileInfo(args[2]).canonicalFilePath());
+        w->openFileEx(QFileInfo(args[2]).canonicalFilePath(), debugger);
     } else {
         w->showLauncher();
     }

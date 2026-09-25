@@ -188,6 +188,9 @@ public: // Debugging APIs
     typedef std::pair<uint32_t, QString> Line;
     QVector<Line> decompile(const QString& path, const QVector<opl::NameOverride>& renames={});
 
+    QMap<QString, QVector<uint32_t>> getBreakpoints() const;
+    QSet<uint32_t> getModuleBreakpoints(const QString& moduleNativePath) const;
+
 protected:
     bool event(QEvent* ev) override;
     std::optional<QString> pcall(lua_State* L, int nargs, int nret);
@@ -214,6 +217,7 @@ public slots: // Debugging-related slots
     void configureBreakpoint(const QString& moduleNativePath, uint32_t addr, bool set);
     void setBreakpoint(const QString& moduleNativePath, uint32_t addr);
     void clearBreakpoint(const QString& moduleNativePath, uint32_t addr);
+    void renameVariable(const QString& moduleNativePath, const QString& proc, uint32_t index, const QString& newName);
     void renameVariable(const QString& proc, uint32_t index, const QString& newName);
     void flushGraphicsOps();
     void stopDebugging();
@@ -363,12 +367,10 @@ private:
     QElapsedTimer mLastDebugInfoTime;
     //// END protected by mMutex
     QElapsedTimer mLastOpTime;
-    struct IndexedNameOverride {
-        QString proc;
-        uint32_t index;
-        QString name;
-    };
-    QVector<IndexedNameOverride> mPendingVariableRenames;
+
+    // Map of module path -> proc name -> index -> new var name
+    QMap<QString, QMap<QString, QMap<uint32_t, QString>>> mPendingVariableRenames;
+
     int mRuntimeRef;
     std::function<void(void)> mRunNextFn;
     QSemaphore mWaitSemaphore;

@@ -31,6 +31,9 @@ public:
 
     void setBreak(std::optional<uint32_t> address);
 
+    void setShownBreakpoints(const QSet<uint32_t>& addresses);
+    void showBreakpoint(uint32_t address, bool show = true);
+
 public slots:
     void toggleBreakpoint();
     void toggleGotoPopup();

@@ -46,6 +46,7 @@ public:
 
     OplRuntimeGui& getRuntime();
     void showLauncher();
+    void openFileEx(const QString& path, bool showDebugger);
 
     void setScale(int scale);
 
@@ -77,6 +78,7 @@ private slots:
     void onDeviceTypeChanged();
     void reportIssue();
     void openSoftwareIndex();
+    void onDebuggerConfigChanged();
 
 private:
     void setDevice(int device);
