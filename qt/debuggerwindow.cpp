@@ -134,6 +134,17 @@ DebuggerWindow::~DebuggerWindow()
     mRuntime->stopDebugging();
 }
 
+void DebuggerWindow::keyPressEvent(QKeyEvent *event)
+{
+    // qDebug() << "Key event" << event->key();
+    if (event->key() == Qt::Key_Escape && !mLastCodeView.isEmpty() && currentCodeView() == nullptr) {
+        event->accept();
+        setCurrentEditor(mLastCodeView);
+    } else {
+        QMainWindow::keyPressEvent(event);
+    }
+}
+
 static QString describeDrawable(const opl::Drawable& d)
 {
     QString result;
@@ -570,6 +581,7 @@ void DebuggerWindow::setCurrentEditor(const QString& module)
     ui->actionFindPrevious->setEnabled(true);
     ui->actionUseSelectionForFind->setEnabled(true);
     ed->setFocus();
+    mLastCodeView = module;
 }
 
 void DebuggerWindow::setCurrentDrawable(const opl::Drawable& drawable)

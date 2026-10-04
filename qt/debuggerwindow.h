@@ -58,6 +58,9 @@ private slots:
     void highlightWindow(int drawableId);
     void copy();
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private:
     CodeView* currentCodeView() const;
     CodeView* getCodeView(const QString& path);
@@ -80,6 +83,7 @@ private:
     QVector<opl::Drawable> mShownDrawables;
     QVector<opl::Sprite> mShownSprites;
     QMap<QString, CodeView*> mCodeViews;
+    QString mLastCodeView;
     QMap<int, DrawableView*> mDrawableViews;
     struct SingleStepState {
         QString module;
