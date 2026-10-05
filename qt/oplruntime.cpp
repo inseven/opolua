@@ -127,7 +127,9 @@ OplRuntime::OplRuntime(QObject *parent)
     , mPaused(false)
     , mDebugging(false)
     , mBreakOnErr(false)
-    , mBreakOnNext(None)
+    , mStepMode(NotStepping)
+    , mSteppingLevel(0)
+    , mCurrentLevel(0)
     , mSpeed(Fastest)
     , mDebugInfo{}
     , mRuntimeRef(LUA_NOREF)
@@ -634,6 +636,8 @@ void OplRuntime::startThread()
     setEscape(true);
 
     mHasBackgrounded = false;
+    mSteppingLevel = 0;
+    mCurrentLevel = 1;
 
     emit startedRunning(mDeviceOpoPath.isEmpty() ? QString() : mFs->getNativePath(mDeviceOpoPath));
 
@@ -2095,10 +2099,14 @@ int OplRuntime::opsync(lua_State* L)
     uint32_t addr = (uint32_t)lua_tointeger(L, 2);
     // qDebug("opsync %s ip=%x", lua_tostring(L, 1), addr);
     mMutex.lock();
-    if (mBreakOnNext == NextOp) {
-        mBreakOnNext = None;
+    if (mStepMode == SingleStepping) {
         mPaused = true;
         // qDebug("Single step pausing at ip=%x", addr);
+    } else if ((mStepMode == SteppingOver || mStepMode == SteppingIn)
+            && mCurrentLevel == mSteppingLevel
+            && (addr < mStepLimit.first || addr >= mStepLimit.second)) {
+        mPaused = true;
+        // qDebug("Step in/over exceeded the instruction range, pausing at ip=%x", addr);
     }
     auto brkiter = mBreakpoints.find(addr);
     if (brkiter != mBreakpoints.end()) {
@@ -2110,6 +2118,7 @@ int OplRuntime::opsync(lua_State* L)
 
     if (mPaused) {
         mWaiting = true;
+        mStepMode = NotStepping;
         shouldWait = true;
     }
     bool shouldUpdateDebugInfo = shouldWait || debugInfoStale();
@@ -2154,6 +2163,7 @@ int OplRuntime::debugEvent(lua_State* L)
     QMutexLocker lock(&mMutex);
     bool shouldBreak = false;
     bool isErr = false;
+    bool isLuaFrame = false;
     if (mBreakOnErr && ev == "err") {
         // An epoc error has occurred (eg a RAISE or a leave)
         shouldBreak = true;
@@ -2164,10 +2174,19 @@ int OplRuntime::debugEvent(lua_State* L)
         shouldBreak = true;
         isErr = true;
     }
-    if ((mBreakOnNext == NextReturn && ev == "return") ||
-        (mBreakOnNext == NextPushFrame && ev == "pushframe")) {
+    if (ev == "framechange") {
+        mCurrentLevel = (int)lua_tointeger(L, 2);
+        // Don't break during step in when entering a Lua frame
+        isLuaFrame = lua_toboolean(L, 3);
+    }
+
+    if ((mStepMode == SteppingOut || mStepMode == SteppingOver) && mCurrentLevel && mCurrentLevel < mSteppingLevel) {
         shouldBreak = true;
-        mBreakOnNext = None;
+        mStepMode = NotStepping;
+    } else if (mStepMode == SteppingIn && mCurrentLevel != mSteppingLevel && !isLuaFrame) {
+        // Stepping in to a return should probably break at the unwind
+        shouldBreak = true;
+        mStepMode = NotStepping;
     }
 
     if (shouldBreak && mDebugging) {
@@ -2897,17 +2916,21 @@ void OplRuntime::stepOut()
 {
     if (isPaused()) {
         mMutex.lock();
-        mBreakOnNext = NextReturn;
+        mStepMode = SteppingOut;
+        mSteppingLevel = mCurrentLevel;
         mMutex.unlock();
         unpause();
     }
 }
 
-void OplRuntime::stepIn()
+void OplRuntime::stepIn(uint32_t limit)
 {
     if (isPaused()) {
         mMutex.lock();
-        mBreakOnNext = NextPushFrame;
+        mStepMode = SteppingIn;
+        mSteppingLevel = mCurrentLevel;
+        uint32_t currentAddr = mDebugInfo.frames.count() ? mDebugInfo.frames.last().ip : 0;
+        mStepLimit = {currentAddr, limit};
         mMutex.unlock();
         unpause();
     }
@@ -2917,7 +2940,21 @@ void OplRuntime::singleStep()
 {
     if (isPaused()) {
         mMutex.lock();
-        mBreakOnNext = NextOp;
+        mStepMode = SingleStepping;
+        mSteppingLevel = mCurrentLevel;
+        mMutex.unlock();
+        unpause();
+    }
+}
+
+void OplRuntime::stepOver(uint32_t limit)
+{
+    if (isPaused()) {
+        mMutex.lock();
+        mStepMode = SteppingOver;
+        mSteppingLevel = mCurrentLevel;
+        uint32_t currentAddr = mDebugInfo.frames.count() ? mDebugInfo.frames.last().ip : 0;
+        mStepLimit = {currentAddr, limit};
         mMutex.unlock();
         unpause();
     }

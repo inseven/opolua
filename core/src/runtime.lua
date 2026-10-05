@@ -359,9 +359,10 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         -- end
     end
 
-    self:debugEvent("pushframe")
+    local isLuaProc = proc.fn ~= nil
+    self:debugEvent("framechange", self:frameCount(), isLuaProc)
 
-    if proc.fn then
+    if isLuaProc then
         -- It's a Lua-implemented proc meaning we don't just set ip and return
         -- to the event loop, we have to invoke it here. Conveniently
         -- frame.indirects contains exactly the proc args, in the right format.
@@ -401,7 +402,7 @@ function Runtime:returnFromFrame(stack, val)
     if prevFrame then
         stack:push(val)
     end
-    self:debugEvent("return")
+    self:debugEvent("framechange", self:frameCount())
 end
 
 function Runtime:setFrame(newFrame, ip)
@@ -1275,6 +1276,16 @@ function traceback(msgOrCode)
     return err
 end
 
+function Runtime:frameCount()
+    local result = 0
+    local frame = self.frame
+    while frame do
+        result = result + 1
+        frame = frame.prevFrame
+    end
+    return result
+end
+
 function Runtime:pcallProc(procName, ...)
     local callingFrame = self.frame
     assert(callingFrame == nil or callingFrame.proc.fn, "Cannnot callProc while still executing something else!")
@@ -1312,14 +1323,23 @@ function Runtime:pcallProc(procName, ...)
                     -- And continue to next instruction
                 else
                     -- See if this frame or any parent frame up to callingFrame has an error handler
+                    local frameChanged = false
                     while true do
                         if self.frame.errIp then
                             self.ip = self.frame.errIp
                             -- Jumping to an error handler nukes all temporaries on the stack
                             stack:popTo(self.frame.returnStackSize)
+
+                            -- If we found an error handler in a different frame, emit a framechange event so any
+                            -- stepOut breaks can be processed before the error handler starts running
+                            if frameChanged then
+                                self:debugEvent("framechange", self:frameCount())
+                            end
+
                             break
                         else
                             local prevFrame = self:popFrame(stack)
+                            frameChanged = true
                             if prevFrame ~= callingFrame then
                                 -- And loop again
                             else

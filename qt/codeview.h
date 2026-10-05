@@ -25,6 +25,7 @@ public:
     void scrollToAddress(uint32_t addr, bool selectLine = true);
 
     uint32_t lineAddressForAddress(uint32_t address) const;
+    uint32_t nextLineAddressForAddress(uint32_t address) const;
 
     int lineNumberAreaWidth();
     void lineNumberPaintEvent(QPaintEvent* event);

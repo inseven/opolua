@@ -43,6 +43,7 @@ private slots:
     void toggleBreakOnError();
     void toggleWindowFocusEnabled();
     void toggleHeapCheckingEnabled();
+    void stepIn();
     void stepOver();
     void setCurrentEditor(const QString& module);
     void gotoAddressSlot(const QString& module, uint32_t address);
@@ -85,13 +86,6 @@ private:
     QMap<QString, CodeView*> mCodeViews;
     QString mLastCodeView;
     QMap<int, DrawableView*> mDrawableViews;
-    struct SingleStepState {
-        QString module;
-        QString proc;
-        uint32_t lineAddr;
-        int frameIdx;
-    };
-    std::optional<SingleStepState> mSteppingOver;
     std::optional<opl::ProgramInfo> mPauseState;
     QMap<QString, QVector<opl::NameOverride>> mNameOverrides; // Map key is module name same as for mCodeViews
 #ifndef Q_OS_MAC

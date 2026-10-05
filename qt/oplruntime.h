@@ -211,8 +211,9 @@ public slots: // Debugging-related slots
     void updateDebugInfoIfStale();
     void pause();
     void unpause();
-    void stepIn();
+    void stepIn(uint32_t limit);
     void stepOut();
+    void stepOver(uint32_t limit);
     void singleStep();
     void configureBreakpoint(const QString& moduleNativePath, uint32_t addr, bool set);
     void setBreakpoint(const QString& moduleNativePath, uint32_t addr);
@@ -353,11 +354,17 @@ private:
     bool mDebugging;
     bool mBreakOnErr;
     enum {
-        None,
-        NextReturn,
-        NextOp,
-        NextPushFrame
-    } mBreakOnNext;
+        NotStepping,
+        SteppingOut,
+        SteppingOver,
+        SteppingIn,
+        SingleStepping,
+    } mStepMode;
+    int mSteppingLevel;
+    int mCurrentLevel;
+    // When in step mode SteppingIn or SteppingOver, this is the range of instructions that are valid to be stepped over
+    // (while mCurrentLevel == mSteppingLevel) before an automatic break should be triggered
+    std::pair<uint32_t, uint32_t> mStepLimit;
     uint8_t mSpeed;
     QMap<uint32_t, AsyncHandle*> mPendingRequests;
     QVector<Completion> mPendingCompletions;
