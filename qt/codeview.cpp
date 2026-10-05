@@ -173,9 +173,6 @@ uint32_t CodeView::lineAddressForAddress(uint32_t address) const
 {
     auto cursor = cursorForAddress(address);
     auto blockIdx = cursor.blockNumber();
-    while (blockIdx > 0 && mBlockAddrs[blockIdx - 1] == mBlockAddrs[blockIdx]) {
-        blockIdx--;
-    }
     return mBlockAddrs[blockIdx];
 }
 
@@ -198,6 +195,20 @@ const QTextCursor CodeView::cursorForAddress(uint32_t address) const
     }
 
     return QTextCursor(document()->findBlockByNumber(idx));
+}
+
+uint32_t CodeView::nextLineAddressForAddress(uint32_t address) const
+{
+    auto cursor = cursorForAddress(address);
+    int line = cursor.blockNumber();
+    if (line + 1 < mBlockAddrs.count()) {
+        line++;
+    }
+    const uint32_t lineAddr = mBlockAddrs[line];
+    while (line + 1 < mBlockAddrs.count() && mBlockAddrs[line + 1] == lineAddr) {
+        line++;
+    }
+    return mBlockAddrs[line];
 }
 
 void CodeView::setBreak(std::optional<uint32_t> address)

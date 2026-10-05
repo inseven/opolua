@@ -67,7 +67,7 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, const QVariant& config, QWid
     connect(ui->actionContinue, &QAction::triggered, runtime, &OplRuntime::unpause);
     connect(ui->actionRestart, &QAction::triggered, runtime, &OplRuntime::restart);
     connect(ui->actionStop, &QAction::triggered, runtime, &OplRuntime::interrupt);
-    connect(ui->actionStepInto, &QAction::triggered, runtime, &OplRuntime::stepIn);
+    connect(ui->actionStepInto, &QAction::triggered, this, &DebuggerWindow::stepIn);
     connect(ui->actionStepOut, &QAction::triggered, runtime, &OplRuntime::stepOut);
     connect(ui->actionStepOver, &QAction::triggered, this, &DebuggerWindow::stepOver);
     connect(ui->actionToggleBreak, &QAction::triggered, this, &DebuggerWindow::toggleBreak);
@@ -408,41 +408,7 @@ void DebuggerWindow::debugInfoUpdated()
 
     if (info.paused) {
         const auto& topFrame = info.frames.last();
-
-        if (mSteppingOver.has_value()) {
-            auto view = mCodeViews.value(mSteppingOver->module);
-            if (!view) {
-                // qDebug("Module for step over has gona away??");
-                mSteppingOver = std::nullopt;
-                mRuntime->unpause();
-            } else if (info.frames.count() > mSteppingOver->frameIdx
-                && info.frames[mSteppingOver->frameIdx].procModule == mSteppingOver->module
-                && info.frames[mSteppingOver->frameIdx].procName == mSteppingOver->proc) {
-                // The same proc is still on the stack in the same place
-                if (info.frames.count() > mSteppingOver->frameIdx + 1) {
-                    // We appear to be stepped in, keep stepping out until we're back in the same frame
-                    mRuntime->stepOut();
-                } else {
-                    // In the same frame
-                    auto newLineAddr = view->lineAddressForAddress(topFrame.ip);
-                    if (newLineAddr == mSteppingOver->lineAddr) {
-                        // qDebug("Continuing step over %x still in same statement %x", topFrame.ip, newLineAddr);
-                        mRuntime->singleStep();
-                    } else {
-                        // qDebug("Made it somewhere else %x != %x", newLineAddr, mSteppingOver->lineAddr);
-                        mSteppingOver = std::nullopt;
-                        gotoAddress(topFrame.procModule, topFrame.ip, true);
-                    }
-                }
-            } else {
-                // Frame no longer there, stepping over a return should probably be treated as a break
-                // qDebug("Frame unwound, breaking");
-                mSteppingOver = std::nullopt;
-                gotoAddress(topFrame.procModule, topFrame.ip, true);
-            }
-        } else {
-            gotoAddress(topFrame.procModule, topFrame.ip, true);
-        }
+        gotoAddress(topFrame.procModule, topFrame.ip, true);
     }
 
     QString status;
@@ -669,13 +635,19 @@ void DebuggerWindow::stepOver()
     Q_ASSERT(view);
     auto currentAddr = view->lineAddressForAddress(topFrame.ip);
     // qDebug("Stepping over from addr = %x", currentAddr);
-    mSteppingOver = {
-        .module = topFrame.procModule,
-        .proc = topFrame.procName,
-        .lineAddr = currentAddr,
-        .frameIdx = (int)(mPauseState->frames.count() - 1)
-    };
-    mRuntime->singleStep();
+    mRuntime->stepOver(view->nextLineAddressForAddress(currentAddr));
+}
+
+void DebuggerWindow::stepIn()
+{
+    if (!mPauseState.has_value()) {
+        return;
+    }
+    const auto& topFrame = mPauseState->frames.last();
+    auto view = mCodeViews.value(topFrame.procModule);
+    Q_ASSERT(view);
+    auto currentAddr = view->lineAddressForAddress(topFrame.ip);
+    mRuntime->stepIn(view->nextLineAddressForAddress(currentAddr));
 }
 
 void DebuggerWindow::toggleBreak()
