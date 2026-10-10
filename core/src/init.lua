@@ -80,6 +80,33 @@ json = {
     Dict = function(tbl) return setmetatable(tbl, json.dictHintMetatable) end,
 }
 
+local _jsonModule = nil
+
+function json.decode(data, src)
+    if _jsonModule == nil then
+        _jsonModule = require("json")
+    end
+    local function traceback(err)
+        if type(err) == "table" then
+            err.traceback = debug.traceback(nil, 2)
+            return err
+        else
+            return debug.traceback(err, 2)
+        end
+    end
+
+    local ok, result = xpcall(_jsonModule.parse, traceback, data, src, json.null, json.dictHintMetatable)
+    -- I guess we should probably translate the table-error-values here
+    if not ok then
+        if type(result) == "string" then
+            error(result)
+        else
+            error(string.format("%s:%d:%d: %s\n%s", result.src.path, result.src.line, result.src.column, result.msg, result.traceback))
+        end
+    end
+    return result
+end
+
 -- Might be overridden by native code impl
 function doprint(str)
     io.stdout:write(str)
