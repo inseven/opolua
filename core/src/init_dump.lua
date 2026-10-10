@@ -33,8 +33,12 @@ local function unhandledType(t, outputFormat)
             ["\""] = "\\\"",
             ["\\"] = "\\\\",
         })
-        -- Anything else non-printable, escape with \u
-        s = s:gsub("[\x00-\x1F]", function(m) return string.format("\\u%04X", m:byte()) end)
+        -- Replace any control characters and valid UTF-8 sequences
+        s = s:gsub("[\x00-\x1F\xC2-\xFD][\x80-\xBF]*", function(m)
+            local ch = utf8.codepoint(m)
+            return string.format("\\u%04X", ch)
+        end)
+
         return '"'..s..'"'
     else
         return tostring(t)
@@ -150,8 +154,6 @@ local function quotedString(str, outputFormat, tableKey)
 
     return result
 end
-
-local jsonDictHintMetatable
 
 function dump(t, outputFormat, indent, indentChars, seenTables)
     if outputFormat == "" then
