@@ -98,6 +98,7 @@ jobs:
         name: opolua-ios
         path: build/build.zip
         if-no-files-found: error
+        retention-days: 1
 
   qt-linux-build:
     strategy:
@@ -219,6 +220,7 @@ jobs:
         name: opolua-qt-${{ matrix.name }}
         path: qt/build/artifacts/*
         if-no-files-found: error
+        retention-days: 1
 
   qt-windows-build:
     runs-on: windows-latest
@@ -261,6 +263,7 @@ jobs:
         name: opolua-qt-windows
         path: qt/build/build.zip
         if-no-files-found: error
+        retention-days: 1
 
   qt-macos-build:
     runs-on: macos-latest
@@ -306,6 +309,7 @@ jobs:
         name: opolua-qt-macos
         path: qt/build/build.zip
         if-no-files-found: error
+        retention-days: 1
 
   publish-release:
     runs-on: inseven-macos-26
@@ -359,6 +363,7 @@ jobs:
         name: build
         path: build/*
         if-no-files-found: error
+        retention-days: 1
 
   website-build:
       runs-on: ubuntu-latest
