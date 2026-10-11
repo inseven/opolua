@@ -314,13 +314,12 @@ QT_ARCH_ROLLING_X86_64_NAME="opolua-bin-arch-rolling-x86_64-$VERSION_NUMBER-$BUI
 QT_ARCH_ROLLING_X86_64_PATH="$BUILD_DIRECTORY/$QT_ARCH_ROLLING_X86_64_NAME"
 cp "$ARTIFACTS_DIRECTORY/opolua-qt-arch-latest-x86_64/$QT_ARCH_ROLLING_X86_64_NAME" "$QT_ARCH_ROLLING_X86_64_PATH"
 
-# Unpack the iOS and Mac Catalyst builds.
+# Unpack the iOS build.
 
 cd "$ROOT_DIRECTORY"
 
 unzip "$ARTIFACTS_DIRECTORY/opolua-ios/build.zip" -d "$BUILD_DIRECTORY"
 IPA_PATH="$BUILD_DIRECTORY/OpoLua.ipa"
-PKG_PATH="$BUILD_DIRECTORY/OpoLua.pkg"
 
 if $RELEASE ; then
 
@@ -355,20 +354,6 @@ if $RELEASE ; then
         UPLOAD_IOS=false
     fi
 
-    MACOS_PUBLISHED_VERSION=`asc versions list \
-        --app "$APP_STORE_APP_ID" \
-        --platform "MAC_OS" \
-        --version "$VERSION_NUMBER" \
-        --state "$PUBLISHED_STATES" \
-        --output json \
-        | jq -r 'first(.data[].attributes.versionString) // ""'`
-
-    UPLOAD_MACOS=true
-    if [ -n "$MACOS_PUBLISHED_VERSION" ] ; then
-        echo "Version $VERSION_NUMBER has already been published to the macOS App Store; skipping TestFlight upload."
-        UPLOAD_MACOS=false
-    fi
-
     if $UPLOAD_IOS ; then
 
         # Validate and upload the iOS build.
@@ -387,30 +372,12 @@ if $RELEASE ; then
 
     fi
 
-    if $UPLOAD_MACOS ; then
-
-        # Validate and upload the macOS build.
-        xcrun altool --validate-app \
-            -f "$PKG_PATH" \
-            --apiKey "$APPLE_API_KEY_ID" \
-            --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-            --output-format json \
-            --type macos
-        xcrun altool --upload-app \
-            -f "$PKG_PATH" \
-            --primary-bundle-id "$BUNDLE_IDENTIFIER" \
-            --apiKey "$APPLE_API_KEY_ID" \
-            --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-            --type macos
-
-    fi
-
     changes \
         release \
         --skip-if-empty \
         --push \
         --exec "$RELEASE_SCRIPT_PATH" \
-        "$IPA_PATH" "$PKG_PATH" \
+        "$IPA_PATH" \
         "$QT_MACOS_PATH" \
         "$QT_WINDOWS_PATH" \
         "$BUILD_DIRECTORY/manifest.json" \

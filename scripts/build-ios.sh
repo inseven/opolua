@@ -33,7 +33,6 @@ BUILD_DIRECTORY="$ROOT_DIRECTORY/build"
 TEMPORARY_DIRECTORY="$ROOT_DIRECTORY/temp"
 
 KEYCHAIN_PATH="$TEMPORARY_DIRECTORY/temporary.keychain"
-MACOS_ARCHIVE_PATH="$BUILD_DIRECTORY/Archive-macOS.xcarchive"
 IOS_ARCHIVE_PATH="$BUILD_DIRECTORY/Archive-iOS.xcarchive"
 ENV_PATH="$APP_DIRECTORY/.env"
 
@@ -49,10 +48,6 @@ do
         ;;
     esac
 done
-
-# iPhone to be used for smoke test builds and tests.
-# This doesn't specify the OS version to allow the build script to recover from minor build changes.
-IPHONE_DESTINATION="platform=iOS Simulator,name=iPhone 15 Pro"
 
 # Generate a random string to secure the local keychain.
 export TEMPORARY_KEYCHAIN_PASSWORD=`openssl rand -base64 14`
@@ -108,11 +103,9 @@ BUILD_NUMBER=${BUILD_NUMBER:-0}
 
 # Import the certificates into our dedicated keychain.
 echo "$APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$APPLE_DISTRIBUTION_CERTIFICATE_BASE64"
-echo "$MACOS_DEVELOPER_INSTALLER_CERTIFICATE_PASSWORD" | build-tools import-base64-certificate --password "$KEYCHAIN_PATH" "$MACOS_DEVELOPER_INSTALLER_CERTIFICATE_BASE64"
 
 # Install the provisioning profiles.
 build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_App_Store_Profile.mobileprovision"
-build-tools install-provisioning-profile "$APP_DIRECTORY/profiles/OpoLua_Mac_Catalyst_App_Store_Profile.provisionprofile"
 
 # Build and archive the iOS project.
 sudo xcode-select --switch "$IOS_XCODE_PATH"
@@ -131,24 +124,6 @@ xcodebuild \
     -exportArchive \
     -exportPath "$BUILD_DIRECTORY" \
     -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-iOS.plist"
-
-# Builds the macOS project.
-sudo xcode-select --switch "$MACOS_XCODE_PATH"
-xcodebuild \
-    -project OpoLua.xcodeproj \
-    -scheme "OpoLua" \
-    -config Release \
-    -archivePath "$MACOS_ARCHIVE_PATH" \
-    -destination "generic/platform=macOS,variant=Mac Catalyst" \
-    OTHER_CODE_SIGN_FLAGS="--keychain=\"$KEYCHAIN_PATH\"" \
-    CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
-    MARKETING_VERSION=$VERSION_NUMBER \
-    clean archive
-xcodebuild \
-    -archivePath "$MACOS_ARCHIVE_PATH" \
-    -exportArchive \
-    -exportPath "$BUILD_DIRECTORY" \
-    -exportOptionsPlist "$APP_DIRECTORY/ExportOptions-macCatalyst.plist"
 
 cd "$BUILD_DIRECTORY"
 zip --symlinks -r "build.zip" "OpoLua.ipa" "OpoLua.pkg"
