@@ -1641,8 +1641,8 @@ function ProcState:resolveOffsets(argExps)
         checkSz()
     end
     self.iTotalTableSize = variableIdx - 0x12 -- size of globalDecls plus subprocs
-    for _, arg in ipairs(argExps) do
-        self.externals[arg.val].indirectIdx = variableIdx
+    for i, arg in ipairs(argExps) do
+        self.args[i].indirectIdx = variableIdx
         variableIdx = variableIdx + 2
         checkSz(arg)
     end
@@ -1872,13 +1872,14 @@ function parseProc(tokens, consts, procDecls, opxTable, strictExternals)
         opxTable = opxTable,
         subprocs = {}, -- Array, in order, and also keyed by name
         strictExternals = strictExternals,
+        args = {}, -- Array
         externals = {}, -- Array, in order, and also keyed by name (by name also includes args)
         externalDecls = {}, -- variables declared with `external foo%`, keyed by name
         -- Something can appear in externalDecls without appearing in `externals`, if it was declared with `external foo%`
         -- but never actually used.
         localDecls = {}, -- Array, in order
         globalDecls = {}, -- Array, in order
-        locals = {}, -- Contains both localDecls and globalDecls, map keyed by variable name
+        locals = {}, -- Contains both localDecls and globalDecls (ie everything with a directIdx), map keyed by variable name
         code = { sz = 0 },
         pendingOffsets = {},
         labels = {},
@@ -1905,13 +1906,16 @@ function ProcState:parse()
     end
 
     for _, arg in ipairs(argExps) do
-        self.externals[arg.val] = {
+        local argVar = {
             name = arg.val,
             type = TypeToDataType[arg.valType], -- Proc args can never be arrays, so this is ok
             valType = arg.valType,
             external = true,
+            sourceName = arg.tokenSource,
         }
         -- Note, don't insert into the array part because args shouldn't appear in the resulting proc's externals
+        self.externals[arg.val] = argVar
+        table.insert(self.args, argVar)
     end
 
     local result = {
@@ -2278,8 +2282,17 @@ function ProcState:parse()
         }
         table.insert(allVars, var)
     end
+    result.names = {}
     for _, var in ipairs(self.localDecls) do
         table.insert(allVars, var)
+        local fullVarName = string.format("%s:%04X", result.name, var.offset)
+        -- printf("Var %s is %s\n", var.val, fullVarName)
+        result.names[fullVarName] = var.tokenSource
+    end
+
+    for _, var in ipairs(self.args) do
+        local fullVarName = string.format("%s:%04X", result.name, var.indirectIdx)
+        result.names[fullVarName] = var.sourceName
     end
 
     local strings = {}
@@ -3070,7 +3083,14 @@ function compile(path, realPath, programText, includePaths, shouldMakeAif, forma
 
         aifData = require("aif").makeAif(compileResult.aif)
     end
-    return opo, aifData
+    local names = {}
+    for _, proc in ipairs(compileResult.procTable) do
+        for var, name in pairs(proc.names) do
+            names[var] = name
+        end
+    end
+
+    return opo, names, aifData
 end
 
 return _ENV

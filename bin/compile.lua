@@ -37,6 +37,8 @@ function main()
         aif = true,
         format = string, t = "format",
         stdout = true, o = "stdout",
+        symbols = true, y = "symbols",
+        symbolfile = string,
     })
 
     if args.help then
@@ -73,13 +75,23 @@ Options:
 
     --aif
         If specified, an AIF file will be written alongside <output>.
-        The file being compiled must have a "APP .. ENDA" section.
+        The file being compiled must have a "APP .. ENDA" section and the format
+        must be 'er1' (or not specified).
 
     --format <91|93|er1>
         What OPL version to compile for. '91' for OPL1991 which targets the
         Series 3, '93' for OPL1993 targetting the Series 3a/3c, or 'er1' for the
         Series 5. The default is 'er1' if not specified. For compatibility with
         older opolua versions, 'er5' is a synonym for 'er1'.
+
+    --symbols, -y
+        If specified, local variable names for every compiled proc will be
+        written in JSON format to a file alongside <output>. To override the
+        location, specify --symbolfile.
+
+    --symbolfile <path>
+        Write symbols to <path> rather than the default location. Implies
+        --symbols.
 ]])
         os.exit(false)
     end
@@ -103,7 +115,7 @@ Options:
         -- Assume it's a .opl file
         progText = require("recognizer").getOplText(progText)
     end
-    local ok, result, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText,
+    local ok, result, symbols, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText,
         args.include, args.aif, format)
     if not ok then
         if type(result) == "string" then
@@ -132,11 +144,18 @@ Options:
     elseif args.stdout then
         io.stdout:write(result)
     else
-        local outName = args.output or (oplpath.splitext(args.filename) .. ".opo")
-        writeFile(outName, result)
+        local outPath = args.output or (oplpath.splitext(args.filename) .. ".opo")
+        writeFile(outPath, result)
         if args.aif then
-            local aifName = oplpath.splitext(outName)..".aif"
+            local aifName = oplpath.splitext(outPath)..".aif"
             writeFile(aifName, aif)
+        end
+        if args.symbols then
+            local symPath = args.symbolfile
+            if not symPath then
+                symPath = oplpath.splitext(outPath) .. ".json"
+            end
+            writeFile(symPath, json.encode({names = symbols}))
         end
     end
 end

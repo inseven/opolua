@@ -31,14 +31,15 @@ function main()
         "filename",
         "procName",
         "startAddr",
-        all = true, a = "all",
-        help = true, h = "help",
-        decompile = true, d = "decompile",
-        annotate = true, t = "annotate",
-        name = table, n = "name",
         aif = string, i = "aif",
-        stdin = true,
+        all = true, a = "all",
+        annotate = true, t = "annotate",
+        decompile = true, d = "decompile",
+        help = true, h = "help",
+        name = table, n = "name",
         option = table, o = "option",
+        stdin = true,
+        symbols = string, y = "symbols",
     })
     local procName = args.procName
     local all = args.all
@@ -69,11 +70,18 @@ Options:
         also prefixes each line with the address of the start of the first
         statement on that line.
 
+    --symbols <path>, -y <path>
+        Specify the path to a JSON file containing local variable names, as
+        output by compile.lua --symbols. These will be used to fill in names for
+        any variables whose names are not stored in the OPO file.  Has no effect
+        unless --decompile is specified.
+
     --name <proc>:<name>=<newname>
         Manually specify a name for a local in the given proc. Can be used
         multiple times for multiple variables. For example to rename local_00AC%
-        to event% in the MAIN proc, specify --name MAIN:local_00AC=event. Has
-        no effect unless --decompile is specified.
+        to event% in the MAIN proc, specify --name MAIN:local_00AC=event. These
+        take precedence over names from --symbols, if present. Has no effect
+        unless --decompile is specified.
 
     --aif <path>, -i <path>
         Adds an APP...ENDA block to the decompile output based on the given AIF
@@ -162,15 +170,16 @@ Options:
     local rt = runtime.newRuntime(nil, prog.translatorVersion)
     rt:addModule("C:\\module", prog)
     if args.decompile then
-        local names = {} -- map of module name to table of index->newname
+        local decompiler = require("decompiler")
+        local renames = {} -- map of module name to table of index->newname
         for _, rename in ipairs(args.name) do
             local proc, oldName, newName = rename:match("(.*):([A-Za-z0-9_]+)%=(.*)")
             if not proc then
                 io.stderr:write("Syntax: --name PROCNAME:<oldname>=<newname>\n")
                 return os.exit(false)
             end
-            if not names[proc] then
-                names[proc] = {}
+            if not renames[proc] then
+                renames[proc] = {}
             end
             local index = tonumber(oldName, 16)
             if index == nil then
@@ -182,13 +191,18 @@ Options:
                 end
             end
             assert(index, "Expected local_XXXX or locXXXX or XXXX for variable name")
-            names[proc][index] = newName
+            renames[proc][index] = newName
         end
 
         local aif = nil
         if args.aif then
             local aifData = readFile(args.aif)
             aif = require("aif").parseAif(aifData)
+        end
+
+        local symbols = nil
+        if args.symbols then
+            symbols = decompiler.convertJsonSymbolsFormat(json.decode(readFile(args.symbols)))
         end
 
         local options = {
@@ -206,7 +220,9 @@ Options:
                 printf(...)
             end,
             format = prog.translatorVersion,
-            renames = names,
+            symbols = symbols,
+            symbolsPathHint = args.symbols,
+            renames = renames,
             aif = aif,
             showElided = hasOption("show-elided") or args.annotate,
         }
@@ -236,9 +252,9 @@ Options:
 
         local ok, err
         if procName then
-            ok, err = require("decompiler").decompileProc(rt:findProc(procName:upper()), options)
+            ok, err = decompiler.decompileProc(rt:findProc(procName:upper()), options)
         else
-            ok, err = require("decompiler").decompile(prog.procTable, options)
+            ok, err = decompiler.decompile(prog.procTable, options)
         end
 
         if not ok then

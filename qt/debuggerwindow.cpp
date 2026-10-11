@@ -499,9 +499,16 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
         } else {
             view = new CodeView(this, new OplTokenizer);
             view->setUseHexLineAddresses(true);
+            auto pathInfo = QFileInfo(path);
+            auto symbolsInfo = QFileInfo(pathInfo.dir(), pathInfo.completeBaseName() + ".json");
+            QString symbolsPath;
+            if (symbolsInfo.isFile()) {
+                symbolsPath = symbolsInfo.filePath();
+            }
             auto overrides = mNameOverrides.value(path, QVector<opl::NameOverride>());
-            auto prog = OplRuntime().decompile(path, overrides);
+            auto prog = OplRuntime().decompile(path, symbolsPath, overrides);
             view->setContents(prog);
+            view->setSymbolsPath(symbolsPath);
             view->setShownBreakpoints(mRuntime->getModuleBreakpoints(path));
         }
         view->setPath(path);
@@ -680,7 +687,7 @@ void DebuggerWindow::variableRenamed(const QString& module, const QString& proc,
     }
 
     CodeView* view = getCodeView(module);
-    auto prog = OplRuntime().decompile(module, overrides);
+    auto prog = OplRuntime().decompile(module, view->symbolsPath(), overrides);
     view->setContents(prog);
     emit debuggerConfigChanged();
 }

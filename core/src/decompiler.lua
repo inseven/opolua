@@ -3,7 +3,8 @@
 
 _ENV = module()
 
-function decompileFile(data, pathHint, renames, aifData)
+-- Entry point for native code
+function decompileFile(data, pathHint, symbols, renames, aifData)
     local opofile = require("opofile")
     local prog = opofile.parseOpo(data)
     local result = {}
@@ -16,6 +17,7 @@ function decompileFile(data, pathHint, renames, aifData)
             table.insert(result, { location, line })
         end,
         format = prog.translatorVersion,
+        symbolsPathHint = symbols and symbols.path,
         renames = renames,
     }
     if aifData then
@@ -24,12 +26,30 @@ function decompileFile(data, pathHint, renames, aifData)
         -- See if it has embedded AIF data
         options.aif = require("aif").parseAif(data)
     end
+
+    if symbols then
+        options.symbols = convertJsonSymbolsFormat(symbols)
+    end
+
     local ok, err = decompile(prog.procTable, options)
     if ok then
         return result
     else
         return nil, err
     end
+end
+
+function convertJsonSymbolsFormat(symbols)
+    -- Massage the JSON format into what decompileProc options wants
+    local procs = {}
+    for symbol, name in pairs(symbols.names or {}) do
+        local proc, offset = symbol:match("([^:]+):(.*)")
+        if procs[proc] == nil then
+            procs[proc] = {}
+        end
+        procs[proc][tonumber(offset, 16)] = name
+    end
+    return procs
 end
 
 function decompile(procTable, options)
@@ -41,6 +61,10 @@ function decompile(procTable, options)
     }
 
     local nameArgs = {}
+    if options.symbolsPathHint then
+        table.insert(nameArgs, string.format(' --symbols "%s"', options.symbolsPathHint))
+    end
+
     for _, mod in ipairs(sortedKeys(options.renames or {})) do
         for _, idx in ipairs(sortedKeys(options.renames[mod])) do
             table.insert(nameArgs, string.format(' --name "%s:%04X=%s"', mod, idx, options.renames[mod][idx]))
@@ -266,7 +290,18 @@ function decompileProc(proc, options)
     local outputFn = options.outputFn
     local ip = proc.codeOffset
     local endIdx = proc.codeOffset + proc.codeSize
-    local renames = options.renames[proc.name] or {}
+    local renames = {}
+    if options.symbols then
+        for sym, name in pairs(options.symbols[proc.name] or {}) do
+            -- Symbols has type suffix, renames doesn't
+            renames[sym] = name:match("(.-)[%$%%&]?$")
+        end
+    end
+    if options.renames then
+        for sym, name in pairs(options.renames[proc.name] or {}) do
+            renames[sym] = name
+        end
+    end
     local compiler = require("compiler")
     local era = oplFormat >= compiler.OplEr1 and "epoc32" or "sibo"
     local AddrType = era == "sibo" and EWord or ELong

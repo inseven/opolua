@@ -82,6 +82,16 @@ void CodeView::setContents(const QVector<std::pair<uint32_t, QString>>& blocks)
     verticalScrollBar()->setValue(scrollPos);
 }
 
+void CodeView::setSymbolsPath(const QString& path)
+{
+    mSymbolsPath = path;
+}
+
+QString CodeView::symbolsPath() const
+{
+    return mSymbolsPath;
+}
+
 // LineNumberArea adapted from https://doc.qt.io/qt-5/qtwidgets-widgets-codeView-example.html
 
 const int kBreakBulletWidth = 10;
