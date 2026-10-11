@@ -69,9 +69,6 @@ class AutoOrientView: UIView {
     }
 
     private func transformForSize(size: CGSize) -> CGAffineTransform {
-#if targetEnvironment(macCatalyst)
-        return .identity
-#else
         var transform = CGAffineTransform.identity
         var screenSize = contentView.systemLayoutSizeFitting(.zero)
         let center = CGPoint(x: screenSize.width / 2, y: screenSize.height / 2)
@@ -107,7 +104,6 @@ class AutoOrientView: UIView {
         }
 
         return transform
-#endif
     }
 
 }

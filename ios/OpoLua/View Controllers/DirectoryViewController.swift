@@ -104,11 +104,9 @@ class DirectoryViewController : BrowserViewController {
     }
 
     private func configureRefreshControl() {
-#if !targetEnvironment(macCatalyst)
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refreshControlDidChange(_:)), for: .valueChanged)
         collectionView.refreshControl = refreshControl
-#endif
     }
 
     override func viewWillAppear(_ animated: Bool) {
