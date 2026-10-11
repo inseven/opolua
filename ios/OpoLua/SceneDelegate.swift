@@ -60,14 +60,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    func showAbout() {
-        rootViewController.showAbout()
-    }
-
-    func showSettings() {
-        rootViewController.showSettings()
-    }
-
     func install(url: URL, preferredDestinationUrl: URL? = nil, sourceUrl: URL? = nil) {
         let installerViewController = InstallerViewController(settings: AppDelegate.shared.settings,
                                                               url: url,
@@ -77,28 +69,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         rootViewController.present(installerViewController, animated: true)
     }
 
-    func runApplication(_ applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32 {
-        dispatchPrecondition(condition: .onQueue(.main))
-        switch applicationIdentifier {
-        case .textEditor:
-            let viewController = SourceViewController(url: url, showsDoneButton: true)
-            viewController.delegate = self
-            let navigationController = UINavigationController(rootViewController: viewController)
-            rootViewController.present(navigationController, animated: true)
-            return 1
-        }
-    }
-
     func showUrl(_ url: URL) {
         rootViewController.showUrl(url)
-    }
-
-}
-
-extension SceneDelegate: SourceViewControllerDelelgate {
-
-    func sourceViewControllerDidFinish(_ sourceViewController: SourceViewController) {
-        sourceViewController.dismiss(animated: true)
     }
 
 }

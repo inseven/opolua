@@ -28,12 +28,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return UIApplication.shared.delegate as! AppDelegate
     }
 
+    weak var sceneDelegate: SceneDelegate?
+
     let settings: Settings
     let taskManager: TaskManager
     let detector: ProgramDetector
     let downloader: UbiquitousDownloader
 
-    weak var sceneDelegate: SceneDelegate?
     private var settingsSink: AnyCancellable?
 
     override init() {
@@ -86,25 +87,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     @objc func showAbout() {
-        sceneDelegate?.showAbout()
+        sceneDelegate?.rootViewController.showAbout()
     }
 
     @objc func showSettings() {
-        sceneDelegate?.showSettings()
+        sceneDelegate?.rootViewController.showSettings()
     }
 
     func install(url: URL, preferredDestinationUrl: URL? = nil, sourceUrl: URL? = nil) {
         sceneDelegate?.install(url: url, preferredDestinationUrl: preferredDestinationUrl, sourceUrl: sourceUrl)
     }
 
-    func runApplication(_ applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32? {
-        return sceneDelegate?.runApplication(applicationIdentifier, url: url)
+    func runApplication(_ applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32 {
+        dispatchPrecondition(condition: .onQueue(.main))
+        switch applicationIdentifier {
+        case .textEditor:
+            let viewController = SourceViewController(url: url, showsDoneButton: true)
+            viewController.delegate = self
+            let navigationController = UINavigationController(rootViewController: viewController)
+            sceneDelegate?.rootViewController.present(navigationController, animated: true)
+            return 1
+        }
     }
 
     func showUrl(_ url: URL) {
         sceneDelegate?.showUrl(url)
     }
     
+}
+
+extension AppDelegate: SourceViewControllerDelelgate {
+
+    func sourceViewControllerDidFinish(_ sourceViewController: SourceViewController) {
+        sourceViewController.dismiss(animated: true)
+    }
+
 }
 
 extension AppDelegate: TaskManagerDelegate {
