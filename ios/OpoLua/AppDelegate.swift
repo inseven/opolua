@@ -28,14 +28,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return UIApplication.shared.delegate as! AppDelegate
     }
 
-    var window: UIWindow?
+    weak var sceneDelegate: SceneDelegate?
 
-    private let settings: Settings
-    private let taskManager: TaskManager
-    private let detector: ProgramDetector
+    let settings: Settings
+    let taskManager: TaskManager
+    let detector: ProgramDetector
     let downloader: UbiquitousDownloader
 
-    private var rootViewController: RootViewController!
     private var settingsSink: AnyCancellable?
 
     override init() {
@@ -55,15 +54,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             try! fileManager.createDirectory(at: fileManager.documentsUrl, withIntermediateDirectories: true)
         }
 
-        rootViewController = RootViewController(settings: settings, taskManager: taskManager, detector: detector)
-
-        window = UIWindow()
-        window?.rootViewController = rootViewController
-        window?.tintColor = settings.theme.color
-        window?.makeKeyAndVisible()
-
-        settingsSink = settings.objectWillChange.sink { _ in
-            self.window?.tintColor = self.settings.theme.color
+        settingsSink = settings.objectWillChange.sink { [weak self] _ in
+            guard let self else { return }
+            sceneDelegate?.window?.tintColor = settings.theme.color
         }
 
         taskManager.delegate = self
@@ -71,17 +64,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         detector.start()
         downloader.start()
 
-        return true
-    }
-
-    func application(_ app: UIApplication,
-                     open url: URL,
-                     options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        guard url.startAccessingSecurityScopedResource() else {
-            rootViewController.present(error: OpoLuaError.secureAccess)
-            return false
-        }
-        install(url: url)
         return true
     }
 
@@ -105,20 +87,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     @objc func showAbout() {
-        rootViewController.showAbout()
+        sceneDelegate?.rootViewController.showAbout()
     }
 
     @objc func showSettings() {
-        rootViewController.showSettings()
+        sceneDelegate?.rootViewController.showSettings()
     }
 
     func install(url: URL, preferredDestinationUrl: URL? = nil, sourceUrl: URL? = nil) {
-        let installerViewController = InstallerViewController(settings: settings,
-                                                              url: url,
-                                                              preferredDestinationUrl: preferredDestinationUrl,
-                                                              sourceUrl: sourceUrl)
-        installerViewController.installerDelegate = self
-        rootViewController.present(installerViewController, animated: true)
+        sceneDelegate?.install(url: url, preferredDestinationUrl: preferredDestinationUrl, sourceUrl: sourceUrl)
     }
 
     func runApplication(_ applicationIdentifier: ApplicationIdentifier, url: URL) -> Int32 {
@@ -128,13 +105,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let viewController = SourceViewController(url: url, showsDoneButton: true)
             viewController.delegate = self
             let navigationController = UINavigationController(rootViewController: viewController)
-            rootViewController.present(navigationController, animated: true)
+            sceneDelegate?.rootViewController.present(navigationController, animated: true)
             return 1
         }
     }
 
     func showUrl(_ url: URL) {
-        rootViewController.showUrl(url)
+        sceneDelegate?.showUrl(url)
     }
     
 }
@@ -147,33 +124,16 @@ extension AppDelegate: SourceViewControllerDelelgate {
 
 }
 
-extension AppDelegate: InstallerViewControllerDelegate {
-
-    func installerViewControllerDidFinish(_ installerViewController: InstallerViewController) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        installerViewController.dismiss(animated: true)
-    }
-
-    func installerViewController(_ installerViewController: InstallerViewController,
-                                 didInstallToDestinationUrl destinationUrl: URL) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        installerViewController.dismiss(animated: true)
-        rootViewController.showUrl(destinationUrl)
-    }
-
-}
-
 extension AppDelegate: TaskManagerDelegate {
 
     func taskManagerShowTaskList(_ taskManager: TaskManager) {
         let taskManagerViewController = TaskManagerViewController(settings: settings, taskManager: taskManager)
         let navigationController = UINavigationController(rootViewController: taskManagerViewController)
-        rootViewController.present(navigationController, animated: true)
+        sceneDelegate?.rootViewController.present(navigationController, animated: true)
     }
 
     func taskManager(_ taskManager: TaskManager, bringProgramToForeground program: Program) {
-        rootViewController.bringProgramToForeground(program)
+        sceneDelegate?.rootViewController.bringProgramToForeground(program)
     }
 
 }
-
