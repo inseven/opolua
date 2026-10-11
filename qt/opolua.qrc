@@ -239,6 +239,7 @@
         <file alias="bench.opo">../examples/Tests/bench.opo</file>
         <file alias="border.opo">../examples/Tests/border.opo</file>
         <file alias="breaktest.opo">../examples/Tests/breaktest.opo</file>
+        <file alias="breaktest.json">../examples/Tests/breaktest.json</file>
         <file alias="busy.opo">../examples/Tests/busy.opo</file>
         <file alias="clock.opo">../examples/Tests/clock.opo</file>
         <file alias="cmd.opo">../examples/Tests/cmd.opo</file>

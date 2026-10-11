@@ -185,6 +185,9 @@ void pushValue(lua_State* L, const QVariant& value)
     case QMetaType::QByteArray:
         pushValue(L, value.toByteArray());
         break;
+    case QMetaType::QVariantMap:
+        pushValue(L, value.toMap());
+        break;
     default:
         qWarning("Unhandled QVariant type %d", t);
         lua_pushnil(L);

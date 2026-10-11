@@ -35,6 +35,9 @@ public:
     void setShownBreakpoints(const QSet<uint32_t>& addresses);
     void showBreakpoint(uint32_t address, bool show = true);
 
+    void setSymbolsPath(const QString& path);
+    QString symbolsPath() const;
+
 public slots:
     void toggleBreakpoint();
     void toggleGotoPopup();
@@ -74,6 +77,7 @@ private:
     std::optional<uint32_t> mBreak;
     GotoPopup* mGotoPopup;
     QMap<QString, int> mSymbolToCharOffset;
+    QString mSymbolsPath;
 
 };
 

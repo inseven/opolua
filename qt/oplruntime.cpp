@@ -29,6 +29,7 @@
 #include <QDirIterator>
 #include <QEvent>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QJsonValue>
 #include <QSysInfo>
 #include <QTimer>
@@ -2808,7 +2809,8 @@ bool OplRuntime::opoIsSibo(const QString& nativePath)
     return false;
 }
 
-QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVector<opl::NameOverride>& renames)
+QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QString& symbolsPath,
+    const QVector<opl::NameOverride>& renames)
 {
     Q_ASSERT(!running());
     QFile f(path);
@@ -2841,6 +2843,25 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
     pushValue(L, data);
     pushValue(L, path);
 
+    if (symbolsPath.isEmpty()) {
+        lua_pushnil(L);
+    } else {
+        QFile sf(symbolsPath);
+        QJsonObject val;
+        if (sf.open(QFile::ReadOnly)) {
+            auto jsonData = sf.readAll();
+            sf.close();
+            val = QJsonDocument::fromJson(jsonData).object();
+        }
+        if (!val.isEmpty()) {
+            val["path"] = symbolsPath;
+            pushValue(L, QVariant(val.toVariantMap()));
+        } else {
+            qWarning("Couldn't read symbols from %s", qPrintable(symbolsPath));
+            lua_pushnil(L);
+        }
+    }
+
     lua_newtable(L); // renames
     if (renames.count()) {
         for (const auto& override : renames) {
@@ -2872,7 +2893,7 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
         }
     }
 
-    err = pcall(4, 2);
+    err = pcall(5, 2);
     if (err) {
         qWarning("decompile errored: %s", qPrintable(*err));
         return {};

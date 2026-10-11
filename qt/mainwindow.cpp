@@ -735,7 +735,10 @@ void MainWindow::showDebugger()
 {
     if (!mDebugWindow) {
         getRuntime().setIgnoreFocusEvents(true);
-        QVariant debuggerInfo = mManifest.debuggerInfo().toVariant();
+        QVariant debuggerInfo;
+        if (mManifest.debuggerInfo().isObject()) {
+            debuggerInfo = mManifest.debuggerInfo().toVariant();
+        }
         mDebugWindow = new DebuggerWindow(ui->screen->getRuntime(), debuggerInfo);
         mDebugWindow->move(pos() + QPoint(100, 100));
         connect(mDebugWindow, &DebuggerWindow::debuggerConfigChanged, this, &MainWindow::onDebuggerConfigChanged);

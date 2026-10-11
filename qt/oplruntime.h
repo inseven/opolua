@@ -186,7 +186,7 @@ public: // Debugging APIs
     static QString varToStr(const opl::Variable& v, int idx = -1);
 
     typedef std::pair<uint32_t, QString> Line;
-    QVector<Line> decompile(const QString& path, const QVector<opl::NameOverride>& renames={});
+    QVector<Line> decompile(const QString& path, const QString& symbolsPath = {}, const QVector<opl::NameOverride>& renames={});
 
     QMap<QString, QVector<uint32_t>> getBreakpoints() const;
     QSet<uint32_t> getModuleBreakpoints(const QString& moduleNativePath) const;
