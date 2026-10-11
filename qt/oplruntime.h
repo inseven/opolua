@@ -218,6 +218,7 @@ public slots: // Debugging-related slots
     void configureBreakpoint(const QString& moduleNativePath, uint32_t addr, bool set);
     void setBreakpoint(const QString& moduleNativePath, uint32_t addr);
     void clearBreakpoint(const QString& moduleNativePath, uint32_t addr);
+    void clearAllBreakpoints();
     void renameVariable(const QString& moduleNativePath, const QString& proc, uint32_t index, const QString& newName);
     void renameVariable(const QString& proc, uint32_t index, const QString& newName);
     void flushGraphicsOps();

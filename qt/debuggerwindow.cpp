@@ -72,6 +72,7 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, const QVariant& config, QWid
     connect(ui->actionStepOver, &QAction::triggered, this, &DebuggerWindow::stepOver);
     connect(ui->actionToggleBreak, &QAction::triggered, this, &DebuggerWindow::toggleBreak);
     connect(ui->actionFlush, &QAction::triggered, runtime, &OplRuntime::flushGraphicsOps);
+    connect(ui->actionClearAllBreakpoints, &QAction::triggered, this, &DebuggerWindow::clearBreakpoints);
     connect(ui->breakOnError, &QAction::triggered, this, &DebuggerWindow::toggleBreakOnError);
     connect(ui->windowFocusEnabled, &QAction::triggered, this, &DebuggerWindow::toggleWindowFocusEnabled);
     connect(ui->heapCheckingEnabled, &QAction::triggered, this, &DebuggerWindow::toggleHeapCheckingEnabled);
@@ -895,4 +896,13 @@ void DebuggerWindow::setDebuggerConfig(const QVariant& config)
             }
         }
     }
+}
+
+void DebuggerWindow::clearBreakpoints()
+{
+    mRuntime->clearAllBreakpoints();
+    for (CodeView* codeview : mCodeViews) {
+        codeview->setShownBreakpoints({});
+    }
+    emit debuggerConfigChanged();
 }

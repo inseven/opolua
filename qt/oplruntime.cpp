@@ -3052,6 +3052,12 @@ QSet<uint32_t> OplRuntime::getModuleBreakpoints(const QString& moduleNativePath)
     return result;
 }
 
+void OplRuntime::clearAllBreakpoints()
+{
+    QMutexLocker lock(&mMutex);
+    mBreakpoints = {};
+}
+
 void OplRuntime::flushGraphicsOps()
 {
     ASSERT_MAIN_THREAD();
