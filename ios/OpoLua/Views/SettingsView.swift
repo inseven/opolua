@@ -66,14 +66,12 @@ struct SettingsView: View {
                     Toggle("Always Show Error Details", isOn: $settings.alwaysShowErrorDetails)
                 }
 #endif
-#if !targetEnvironment(macCatalyst)
                 Section {
                     Button("About \(Bundle.main.displayName!)...") {
                         sheet = .about
                     }
                     .foregroundColor(.primary)
                 }
-#endif
             }
             .tint(Color(uiColor: settings.theme.color))
             .navigationTitle("Settings")

@@ -272,11 +272,7 @@ class ProgramViewController: UIViewController {
             navigationItem.rightBarButtonItems = [optionsBarButtonItem]
             toolbarItems = [.flexibleSpace(), keyboardBarButtonItem, .fixedSpace(16.0), controllerBarButtonItem, .flexibleSpace()]
         } else {
-#if targetEnvironment(macCatalyst)
-            navigationItem.rightBarButtonItems = [optionsBarButtonItem]
-#else
             navigationItem.rightBarButtonItems = [optionsBarButtonItem, keyboardBarButtonItem, controllerBarButtonItem]
-#endif
             toolbarItems = []
         }
 
@@ -408,14 +404,10 @@ class ProgramViewController: UIViewController {
                              .flexibleSpace()],
                             animated: animated)
         } else {
-#if targetEnvironment(macCatalyst)
-            navigationItem.setRightBarButtonItems([optionsBarButtonItem], animated: animated)
-#else
             navigationItem.setRightBarButtonItems([optionsBarButtonItem,
                                                    keyboardBarButtonItem,
                                                    controllerBarButtonItem],
                                                   animated: animated)
-#endif
             setToolbarItems([], animated: animated)
         }
     }

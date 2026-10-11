@@ -72,9 +72,7 @@ class LibraryViewController: UICollectionViewController {
         super.init(collectionViewLayout: UICollectionViewCompositionalLayout.list(using: UICollectionLayoutListConfiguration(appearance: .insetGrouped)))
         title = "Library"
         navigationItem.rightBarButtonItem = addBarButtonItem
-#if !targetEnvironment(macCatalyst)
         navigationItem.leftBarButtonItem = settingsBarButtonItem
-#endif
         clearsSelectionOnViewWillAppear = false
 
         collectionView.collectionViewLayout = createLayout()
