@@ -24,12 +24,7 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
-    private var settings: Settings!
-    private var taskManager: TaskManager!
-
-    private var rootViewController: RootViewController!
-    private var settingsSink: AnyCancellable?
+    var rootViewController: RootViewController!
 
     func scene(_ scene: UIScene,
                willConnectTo session: UISceneSession,
@@ -39,23 +34,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         let appDelegate = AppDelegate.shared
-        settings = appDelegate.settings
-        taskManager = appDelegate.taskManager
 
-        rootViewController = RootViewController(settings: settings,
-                                                taskManager: taskManager,
+        rootViewController = RootViewController(settings: appDelegate.settings,
+                                                taskManager: appDelegate.taskManager,
                                                 detector: appDelegate.detector)
 
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = rootViewController
-        window?.tintColor = settings.theme.color
+        window?.tintColor = appDelegate.settings.theme.color
         window?.makeKeyAndVisible()
 
-        settingsSink = settings.objectWillChange.sink { _ in
-            self.window?.tintColor = self.settings.theme.color
-        }
-
-        taskManager.delegate = self
         appDelegate.sceneDelegate = self
 
         self.scene(scene, openURLContexts: connectionOptions.urlContexts)
@@ -81,7 +69,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func install(url: URL, preferredDestinationUrl: URL? = nil, sourceUrl: URL? = nil) {
-        let installerViewController = InstallerViewController(settings: settings,
+        let installerViewController = InstallerViewController(settings: AppDelegate.shared.settings,
                                                               url: url,
                                                               preferredDestinationUrl: preferredDestinationUrl,
                                                               sourceUrl: sourceUrl)
@@ -127,20 +115,6 @@ extension SceneDelegate: InstallerViewControllerDelegate {
         dispatchPrecondition(condition: .onQueue(.main))
         installerViewController.dismiss(animated: true)
         rootViewController.showUrl(destinationUrl)
-    }
-
-}
-
-extension SceneDelegate: TaskManagerDelegate {
-
-    func taskManagerShowTaskList(_ taskManager: TaskManager) {
-        let taskManagerViewController = TaskManagerViewController(settings: settings, taskManager: taskManager)
-        let navigationController = UINavigationController(rootViewController: taskManagerViewController)
-        rootViewController.present(navigationController, animated: true)
-    }
-
-    func taskManager(_ taskManager: TaskManager, bringProgramToForeground program: Program) {
-        rootViewController.bringProgramToForeground(program)
     }
 
 }

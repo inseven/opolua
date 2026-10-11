@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import Combine
 import UIKit
 
 @main
@@ -33,6 +34,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let downloader: UbiquitousDownloader
 
     weak var sceneDelegate: SceneDelegate?
+    private var settingsSink: AnyCancellable?
 
     override init() {
         settings = Settings()
@@ -50,6 +52,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if !fileManager.directoryExists(atPath: fileManager.documentsUrl.path) {
             try! fileManager.createDirectory(at: fileManager.documentsUrl, withIntermediateDirectories: true)
         }
+
+        settingsSink = settings.objectWillChange.sink { [weak self] _ in
+            guard let self else { return }
+            sceneDelegate?.window?.tintColor = settings.theme.color
+        }
+
+        taskManager.delegate = self
 
         detector.start()
         downloader.start()
@@ -96,4 +105,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         sceneDelegate?.showUrl(url)
     }
     
+}
+
+extension AppDelegate: TaskManagerDelegate {
+
+    func taskManagerShowTaskList(_ taskManager: TaskManager) {
+        let taskManagerViewController = TaskManagerViewController(settings: settings, taskManager: taskManager)
+        let navigationController = UINavigationController(rootViewController: taskManagerViewController)
+        sceneDelegate?.rootViewController.present(navigationController, animated: true)
+    }
+
+    func taskManager(_ taskManager: TaskManager, bringProgramToForeground program: Program) {
+        sceneDelegate?.rootViewController.bringProgramToForeground(program)
+    }
+
 }
