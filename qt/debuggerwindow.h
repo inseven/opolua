@@ -55,6 +55,7 @@ private slots:
     void toggleBreak();
     void variableRenamed(const QString& module, const QString& proc, uint32_t index, const QString& newName);
     void breakpointConfigured(const QString& module, uint32_t addr, bool set);
+    void clearBreakpoints();
     void exportBitmap();
     void highlightWindow(int drawableId);
     void copy();
