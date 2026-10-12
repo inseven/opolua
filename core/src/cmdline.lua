@@ -264,6 +264,19 @@ function setTerminalCharMode(flag)
     terminalCharMode = flag
 end
 
+function cmd(...)
+    local cmdStr = string.format(...)
+    local h = io.popen(cmdStr)
+    local ok, err, num = h:close()
+    if not ok then
+        error(string.format("%s failed with %s %d", cmdStr, err, num))
+    end
+end
+
+function mkdir(path)
+    cmd('mkdir -p "%s"', path)
+end
+
 function pcallMain()
     local runtime = require("runtime")
     local ok, err = xpcall(main, runtime.traceback)

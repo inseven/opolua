@@ -49,7 +49,14 @@ Compile a Series 5 era OPL program. If neither <output>, --stdout, nor --dump
 are specified, the result is written to <filename>.opo alongside <filename>.
 
 <filename> can be either a plain text file, or an OPL file. OPL files are
-converted to text as per opltotext.lua. 
+converted to text as per opltotext.lua.
+
+If <output> is specified and ends in ".oplsys" then the output is written to
+c/System/Apps/xyz.app or m/APP/xyz.opa (as determined by the OPL format used)
+within the <output> directory (which is created if necessary). An
+opolua-compatible manifest.json file is also created with suitable device entry
+based on the --format parameter. Using a ".oplsys" <output> means symbols and an
+AIF file (if applicable for the format) are always generated.
 
 Options:
     --dump, -d
@@ -110,6 +117,11 @@ Options:
         assert(args.dump == nil, "Cannot specify both --stdout and --dump")
     end
 
+    local isOplSys = args.output and args.output:match("%.oplsys$")
+    if isOplSys and format >= compiler.OplEr1 then
+        args.aif = true
+    end
+
     local progText = readFile(args.filename)
     if progText:sub(1, 4) == string.pack("<I4", KUidDirectFileStore) then
         -- Assume it's a .opl file
@@ -145,6 +157,25 @@ Options:
         io.stdout:write(result)
     else
         local outPath = args.output or (oplpath.splitext(args.filename) .. ".opo")
+        if isOplSys then
+            args.symbols = true
+            local sysDir = outPath
+            local appName = oplpath.splitext(oplpath.basename(outPath))
+            local outDir, device, scale
+            if format < compiler.OplEr1 then
+                outDir = path_tonative(path_join(outPath, "m/APP"))
+                outPath = path_join(outDir, appName..".opa")
+                device = format == compiler.Opl91 and "psion-series-3" or "psion-series-3c"
+                scale = 2
+            else
+                outDir = path_tonative(path_join(outPath, "c/System/Apps/"..appName))
+                outPath = path_join(outDir, appName..".app")
+                device = "psion-series-5"
+            end
+            mkdir(outDir)
+            writeFile(path_join(sysDir, "manifest.json"), json.encode({ device = device, scale = scale }).."\n")
+            writeFile(path_join(sysDir, "launch.oplsys"), "")
+        end                
         writeFile(outPath, result)
         if args.aif then
             local aifName = oplpath.splitext(outPath)..".aif"
