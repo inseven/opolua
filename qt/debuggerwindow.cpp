@@ -505,6 +505,7 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
             QString symbolsPath;
             if (symbolsInfo.isFile()) {
                 symbolsPath = symbolsInfo.filePath();
+                mRuntime->addSymbolsFromFile(path, symbolsPath);
             }
             auto overrides = mNameOverrides.value(path, QVector<opl::NameOverride>());
             auto prog = OplRuntime().decompile(path, symbolsPath, overrides);
@@ -828,19 +829,43 @@ QVariant DebuggerWindow::getDebuggerConfig() const
         result["breakpoints"] = brkvar;
     }
 
-    QMap<QString, QVariant> renamevar;
+    // renames format is:
+    // {
+    //     "<module-relative-path>": {
+    //         "<procname>": {
+    //             "<offset>": "<newname>",
+    //             ...
+    //          },
+    //     },
+    //     ...
+    // }
+
+
+    QMap<QString, QVariant> modules;
+
     for (auto iter = mNameOverrides.cbegin(), endIter = mNameOverrides.cend(); iter != endIter; iter++) {
-        QMap<QString, QVariant> renames;
+        QString moduleName = relPath(iter.key());
+        QMap<QString, QMap<QString, QString>> procs;
         for (const opl::NameOverride& override : iter.value()) {
-            QString key = QString("%1:%2").arg(override.proc).arg(override.index, 4, 16, QLatin1Char('0'));
-            renames[key] = override.newName;
+            QString varName = QString("%1").arg(override.index, 4, 16, QLatin1Char('0')).toUpper();
+            procs[override.proc][varName] = override.newName;
         }
-        if (!renames.isEmpty()) {
-            renamevar[relPath(iter.key())] = renames;
+        if (!procs.isEmpty()) {
+            // Have to convert procs into a QVariant which doesn't happen automatically for recursive types
+            QMap<QString, QVariant> procsVariant;
+            for (auto procIter = procs.cbegin(), endProcIter = procs.cend(); procIter != endProcIter; procIter++) {
+                const QMap<QString, QString>& vars = procIter.value();
+                QMap<QString, QVariant> varsVariant;
+                for (auto varIter = vars.cbegin(), endVarIter = vars.cend(); varIter != endVarIter; varIter++) {
+                    varsVariant[varIter.key()] = varIter.value();
+                }
+                procsVariant[procIter.key()] = varsVariant;
+            }
+            modules[moduleName] = procsVariant;
         }
     }
-    if (!renamevar.isEmpty()) {
-        result["renames"] = renamevar;
+    if (!modules.isEmpty()) {
+        result["renames"] = modules;
     }
 
     return result.isEmpty() ? QVariant() : result;
@@ -879,12 +904,12 @@ void DebuggerWindow::setDebuggerConfig(const QVariant& config)
         const QString path = absPath(iter.key());
         const QMap<QString, QVariant> modRenames = iter.value().toMap();
         for (auto riter = modRenames.cbegin(), rendIter = modRenames.cend(); riter != rendIter; riter++) {
-            QString procAndVar = riter.key();
-            QString newName = riter.value().toString();
-            auto parts = procAndVar.split(":");
-            if (parts.count() == 2 && !newName.isEmpty()) {
-                const auto& procName = parts[0];
-                uint32_t index = (uint32_t)parts[1].toLong(nullptr, 16);
+            QString procName = riter.key();
+            const QMap<QString, QVariant> vars = riter.value().toMap();
+            for (auto varIter = vars.cbegin(), varEndIter = vars.cend(); varIter != varEndIter; varIter++) {
+                QString varName = varIter.key();
+                QString newName = varIter.value().toString();
+                uint32_t index = (uint32_t)varName.toLong(nullptr, 16);
                 // For code views
                 mNameOverrides[path].append({
                     .proc = procName,

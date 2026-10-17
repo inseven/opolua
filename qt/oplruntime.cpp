@@ -2708,6 +2708,54 @@ void OplRuntime::renameVariable(const QString& proc, uint32_t index, const QStri
     renameVariable(QString(), proc, index, newName);
 }
 
+namespace {
+
+QJsonObject readJson(const QString& path)
+{
+    QFile f(path);
+    QJsonObject val;
+    if (f.open(QFile::ReadOnly)) {
+        auto jsonData = f.readAll();
+        f.close();
+        val = QJsonDocument::fromJson(jsonData).object();
+    }
+    if (val.isEmpty()) {
+        qWarning("Couldn't read JSON from %s", qPrintable(path));
+    }
+    return val;
+}
+
+} // end namespace
+
+void OplRuntime::addSymbolsFromFile(const QString& moduleNativePath, const QString& path)
+{
+    ASSERT_MAIN_THREAD();
+    auto symbols = readJson(path);
+    if (symbols.isEmpty()) {
+        return;
+    }
+    const auto procs = symbols["procs"].toObject();
+    for (auto procIter = procs.begin(), procEnd = procs.end(); procIter != procEnd; procIter++) {
+        QString procName = procIter.key();
+        const auto vars = procIter.value().toObject();
+        for (auto varIter = vars.begin(), varEnd = vars.end(); varIter != varEnd; varIter++) {
+            QString var = varIter.key();
+            bool ok = false;
+            uint32_t index = var.toUInt(&ok, 16);
+            if (ok) {
+                QString newName = varIter.value().toString();
+                auto suff = newName.right(1);
+                if (suff == "%" || suff == "&" || suff == "$") {
+                    newName = newName.left(newName.length() - 1);
+                }
+                renameVariable(moduleNativePath, procName, index, newName);
+            } else {
+                // A label or similar, ignore
+            }
+        }
+    }
+}
+
 void OplRuntime::renameVariable(const QString& moduleNativePath, const QString& proc, uint32_t index, const QString& newName)
 {
     ASSERT_MAIN_THREAD();
@@ -2719,6 +2767,7 @@ void OplRuntime::renameVariable(const QString& moduleNativePath, const QString& 
         doRenameVariable(L, proc, index, newName);
         updateDebugInfo(L);
     } else {
+        // qDebug("OplRuntime pending rename %s %04X = %s", qPrintable(proc), index, qPrintable(newName));
         mPendingVariableRenames[moduleNativePath][proc][index] = newName;
     }
 }
@@ -2846,18 +2895,11 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QStri
     if (symbolsPath.isEmpty()) {
         lua_pushnil(L);
     } else {
-        QFile sf(symbolsPath);
-        QJsonObject val;
-        if (sf.open(QFile::ReadOnly)) {
-            auto jsonData = sf.readAll();
-            sf.close();
-            val = QJsonDocument::fromJson(jsonData).object();
-        }
+        QJsonObject val = readJson(symbolsPath);
         if (!val.isEmpty()) {
             val["path"] = symbolsPath;
             pushValue(L, QVariant(val.toVariantMap()));
         } else {
-            qWarning("Couldn't read symbols from %s", qPrintable(symbolsPath));
             lua_pushnil(L);
         }
     }
@@ -2872,7 +2914,7 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QStri
                 lua_pushvalue(L, -2); // pushes the new table
                 lua_rawset(L, -4); // renames[override.proc] = {}
             }
-            pushValue(L, override.index);
+            pushValue(L, QString("%1").arg(override.index, 4, 16, QLatin1Char('0')).toUpper());
             pushValue(L, override.newName);
             lua_rawset(L, -3); // renames[proc][index] = override.newName
             lua_pop(L, 1); // renames[proc]

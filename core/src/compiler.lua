@@ -806,6 +806,11 @@ function expandPtrType(type, oplFormat)
     end
 end
 
+
+function getLabelName(dest, oplFormat)
+    return string.format(oplFormat < OplEr1 and "lab_%04X" or "label_%04X", dest)
+end
+
 function setExpressionType(exp, oplFormat)
     local op = exp.op
     if exp.valType then
@@ -1669,10 +1674,10 @@ function ProcState:resolveOffsets(argExps)
         local result
         local packFmt = "<H" -- everything except labels use unsigned 16-bit offsets
         if p.type == "label" then
-            local offset = self.labels[p.name]
-            synassert(offset, p.token, "No label found for %s", p.name)
+            local label = self.labels[p.name]
+            synassert(label, p.token, "No label found for %s", p.name)
             -- The desired value is an offset relative the location of the jump instruction...
-            result = offset - p.codeSz + 3
+            result = label.offset - p.codeSz + 3
             packFmt = "<h" -- label offsets are signed 16-bit
         elseif p.type == "local" then
             local var = assert(self.locals[p.name])
@@ -2109,7 +2114,7 @@ function ProcState:parse()
             self:emit("B", opcodes.GoTo)
             self:addPendingOffset("label", scope.endLabel)
             -- Define nextCondLabel, declare new nextCondLabel for our conditional
-            self.labels[scope.nextCondLabel] = self.code.sz
+            self.labels[scope.nextCondLabel] = { offset = self.code.sz }
             scope.nextCondLabel = string.format("#else-%d", tokenIndex)
             parseAndEmitConditionalExpression()
             self:emit("B", opcodes.BranchIfFalse)
@@ -2122,7 +2127,7 @@ function ProcState:parse()
             self:emit("B", opcodes.GoTo)
             self:addPendingOffset("label", scope.endLabel)
             -- Define nextCondLabel, no need for a new nextCondLabel (since ELSE is unconditional)
-            self.labels[scope.nextCondLabel] = self.code.sz
+            self.labels[scope.nextCondLabel] = { offset = self.code.sz }
             scope.nextCondLabel = nil
         elseif tokenType == "ENDIF" then
             synassert(scope.type == "IF", token, "Expected end of %s block", scope.type)
@@ -2130,9 +2135,9 @@ function ProcState:parse()
             -- Last block doesn't need a goto (?)
             -- Define endLabel and nextCondLabel if necessary
             if scope.nextCondLabel then
-                self.labels[scope.nextCondLabel] = self.code.sz
+                self.labels[scope.nextCondLabel] = { offset = self.code.sz }
             end
-            self.labels[scope.endLabel] = self.code.sz
+            self.labels[scope.endLabel] = { offset = self.code.sz }
             -- End the scope
             scope = scope.prev
             -- And we're done
@@ -2141,7 +2146,7 @@ function ProcState:parse()
             tokens:advance()
             local condLabel = string.format("#while-%d", tokenIndex)
             local endLabel = string.format("#end-while-%d", tokenIndex)
-            self.labels[condLabel] = self.code.sz
+            self.labels[condLabel] = { offset = self.code.sz }
             parseAndEmitConditionalExpression()
             scope = {
                 type = "WHILE",
@@ -2157,7 +2162,7 @@ function ProcState:parse()
             tokens:advance()
             self:emit("B", opcodes.GoTo)
             self:addPendingOffset("label", scope.condLabel, token)
-            self.labels[scope.endLabel] = self.code.sz
+            self.labels[scope.endLabel] = { offset = self.code.sz }
             scope = scope.prev
         elseif tokenType == "DO" then
             local tokenIndex = tokens.index
@@ -2165,7 +2170,7 @@ function ProcState:parse()
             local startLabel = string.format("#do-%d", tokenIndex)
             local condLabel = string.format("#until-%d", tokenIndex)
             local endLabel = string.format("#end-do-%d", tokenIndex)
-            self.labels[startLabel] = self.code.sz
+            self.labels[startLabel] = { offset = self.code.sz }
             scope = {
                 type = "DO",
                 startLabel = startLabel,
@@ -2176,12 +2181,12 @@ function ProcState:parse()
         elseif tokenType == "UNTIL" then
             synassert(scope.type == "DO", token, "Expected end of %s block", scope.type)
             tokens:advance()
-            self.labels[scope.condLabel] = self.code.sz
+            self.labels[scope.condLabel] = { offset = self.code.sz }
             parseAndEmitConditionalExpression()
             self:emit("B", opcodes.BranchIfFalse)
             self:popStack(1)
             self:addPendingOffset("label", scope.startLabel, token)
-            self.labels[scope.endLabel] = self.code.sz
+            self.labels[scope.endLabel] = { offset = self.code.sz }
             scope = scope.prev
         elseif tokenType == "BREAK" or tokenType == "CONTINUE" then
             -- Find innermost DO or WHILE scope
@@ -2200,8 +2205,12 @@ function ProcState:parse()
             tokens:advance()
         elseif tokenType == "label" then
             local labelName = assert(token.val:match("(.+)::"))
-            synassert(#labelName <= 32, token, "Label name is too long")
-            self.labels[labelName] = self.code.sz
+            local maxLabelLen = (oplFormat >= OplEr1) and 32 or 8
+            synassert(#labelName <= maxLabelLen, token, "Label name is too long")
+            self.labels[labelName] = {
+                offset = self.code.sz,
+                token = token,
+            }
             tokens:advance()
         elseif tokenType == "GOTO" then
             local labelToken = tokens:expectNext("identifier", "label")
@@ -2285,14 +2294,22 @@ function ProcState:parse()
     result.names = {}
     for _, var in ipairs(self.localDecls) do
         table.insert(allVars, var)
-        local fullVarName = string.format("%s:%04X", result.name, var.offset)
-        -- printf("Var %s is %s\n", var.val, fullVarName)
-        result.names[fullVarName] = var.tokenSource
+        local localName = string.format("%04X", var.offset)
+        -- printf("Var %s is %s\n", var.val, localName)
+        result.names[localName] = var.tokenSource
     end
 
     for _, var in ipairs(self.args) do
-        local fullVarName = string.format("%s:%04X", result.name, var.indirectIdx)
-        result.names[fullVarName] = var.sourceName
+        local localName = string.format("%04X", var.indirectIdx)
+        result.names[localName] = var.sourceName
+    end
+
+    for _, label in pairs(self.labels) do
+        -- if token is set, it's not an internal control flow label
+        if label.token then
+            local labelName = string.format("%04X::", label.offset)
+            result.names[labelName] = label.token.tokenSource:match("([^:]+)")
+        end
     end
 
     local strings = {}
@@ -3047,7 +3064,8 @@ end
 
 function compile(path, realPath, programText, includePaths, shouldMakeAif, format)
     local compileResult = docompile(path, realPath, programText, includePaths, format)
-    local opo = require("opofile").makeOpo(compileResult, format)
+    local opofile = require("opofile")
+    local opo = opofile.makeOpo(compileResult, format)
     local aifData = nil
     if shouldMakeAif and compileResult.aif then
         if compileResult.aif.icons then
@@ -3083,14 +3101,30 @@ function compile(path, realPath, programText, includePaths, shouldMakeAif, forma
 
         aifData = require("aif").makeAif(compileResult.aif)
     end
-    local names = {}
+    local symbols = {}
+    -- Parse the result to get codeOffsets for each of the procs, because we need that to correctly calculate label symbols...
+    local parsedProcs = opofile.parseOpo(opo).procTable
+    local procOffsets = {}
+    for _, proc in ipairs(parsedProcs) do
+        procOffsets[proc.name] = proc.codeOffset
+    end
+
     for _, proc in ipairs(compileResult.procTable) do
-        for var, name in pairs(proc.names) do
-            names[var] = name
+        if not symbols[proc.name] then
+            symbols[proc.name] = json.Dict {}
+        end
+        for var, srcName in pairs(proc.names) do
+            local varName = var
+            local labelOffset = var:match("^([0-9A-F][0-9A-F][0-9A-F][0-9A-F])::$")
+            if labelOffset then
+                local absOffset = assert(procOffsets[proc.name]) + tonumber(labelOffset, 16)
+                varName = string.format("%s", getLabelName(absOffset, format))
+            end
+            symbols[proc.name][varName] = srcName
         end
     end
 
-    return opo, names, aifData
+    return opo, symbols, aifData
 end
 
 return _ENV

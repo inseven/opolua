@@ -186,7 +186,7 @@ Options:
             if not symPath then
                 symPath = oplpath.splitext(outPath) .. ".json"
             end
-            writeFile(symPath, json.encode({names = symbols}))
+            writeFile(symPath, json.encode({procs = symbols}))
         end
     end
 end

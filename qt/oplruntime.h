@@ -221,6 +221,7 @@ public slots: // Debugging-related slots
     void clearAllBreakpoints();
     void renameVariable(const QString& moduleNativePath, const QString& proc, uint32_t index, const QString& newName);
     void renameVariable(const QString& proc, uint32_t index, const QString& newName);
+    void addSymbolsFromFile(const QString& moduleNativePath, const QString& path);
     void flushGraphicsOps();
     void stopDebugging();
 
