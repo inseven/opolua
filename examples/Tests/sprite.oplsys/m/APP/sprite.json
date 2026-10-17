@@ -1,6 +1,9 @@
 {
-    "names": {
-        "SPRITE:001D": "bit$",
-        "SPRITE:0047": "sprId%"
+    "procs": {
+        "CRBITS": {},
+        "SPRITE": {
+            "001D": "bit$",
+            "0047": "sprId%"
+        }
     }
 }

@@ -181,17 +181,12 @@ Options:
             if not renames[proc] then
                 renames[proc] = {}
             end
-            local index = tonumber(oldName, 16)
-            if index == nil then
-                local hex = oldName:match("^local_([0-9A-Fa-f]+)$") or oldName:match("^loc([0-9A-Fa-f]+)$")
-                    or oldName:match("^label_([0-9A-Fa-f]+)$") or oldName:match("^lab_([0-9A-Fa-f]+)$")
-                    or oldName:match("^errhandler_([0-9A-Fa-f]+)$") or oldName:match("^err_([0-9A-Fa-f]+)$")
-                if hex then
-                    index = tonumber(hex, 16)
-                end
+
+            local localOffset = oldName:match("^local_([0-9A-Fa-f]+)$") or oldName:match("^loc([0-9A-Fa-f]+)$")
+            if localOffset then
+                oldName = localOffset
             end
-            assert(index, "Expected local_XXXX or locXXXX or XXXX for variable name")
-            renames[proc][index] = newName
+            renames[proc][oldName] = newName
         end
 
         local aif = nil
@@ -202,7 +197,7 @@ Options:
 
         local symbols = nil
         if args.symbols then
-            symbols = decompiler.convertJsonSymbolsFormat(json.decode(readFile(args.symbols)))
+            symbols = json.decode(readFile(args.symbols)).procs
         end
 
         local options = {

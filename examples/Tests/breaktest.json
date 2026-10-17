@@ -1,8 +1,16 @@
 {
-  "names": {
-    "MAIN:001C": "name$",
-    "SUBPROC:0012": "a%",
-    "SUBPROC:0014": "b%",
-    "SUBPROC:0016": "c%"
-  }
+    "procs": {
+        "MAIN": {
+            "001C": "name$",
+            "011E": "unrefdArray%",
+            "0120": "unrefdInt%",
+            "0122": "refdInt%",
+            "label_0071": "thisisfine"
+        },
+        "SUBPROC": {
+            "0012": "a%",
+            "0014": "b%",
+            "0016": "c%"
+        }
+    }
 }

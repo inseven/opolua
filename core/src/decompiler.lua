@@ -28,7 +28,7 @@ function decompileFile(data, pathHint, symbols, renames, aifData)
     end
 
     if symbols then
-        options.symbols = convertJsonSymbolsFormat(symbols)
+        options.symbols = symbols.procs
     end
 
     local ok, err = decompile(prog.procTable, options)
@@ -37,19 +37,6 @@ function decompileFile(data, pathHint, symbols, renames, aifData)
     else
         return nil, err
     end
-end
-
-function convertJsonSymbolsFormat(symbols)
-    -- Massage the JSON format into what decompileProc options wants
-    local procs = {}
-    for symbol, name in pairs(symbols.names or {}) do
-        local proc, offset = symbol:match("([^:]+):(.*)")
-        if procs[proc] == nil then
-            procs[proc] = {}
-        end
-        procs[proc][tonumber(offset, 16)] = name
-    end
-    return procs
 end
 
 function decompile(procTable, options)
@@ -67,7 +54,7 @@ function decompile(procTable, options)
 
     for _, mod in ipairs(sortedKeys(options.renames or {})) do
         for _, idx in ipairs(sortedKeys(options.renames[mod])) do
-            table.insert(nameArgs, string.format(' --name "%s:%04X=%s"', mod, idx, options.renames[mod][idx]))
+            table.insert(nameArgs, string.format(' --name "%s:%s=%s"', mod, idx, options.renames[mod][idx]))
         end
     end
     local outputFn = options.outputFn
@@ -294,7 +281,8 @@ function decompileProc(proc, options)
     if options.symbols then
         for sym, name in pairs(options.symbols[proc.name] or {}) do
             -- Symbols has type suffix, renames doesn't
-            renames[sym] = name:match("(.-)[%$%%&]?$")
+            local newName = name:match("(.-)[%$%%&]?$")
+            renames[sym] = newName
         end
     end
     if options.renames then
@@ -406,13 +394,18 @@ function decompileProc(proc, options)
 
     local vars = proc.vars
     -- We don't necessarily have all the names yet (because of locals) but we need to process all the renames we can now
-    for idx, newName in pairs(renames) do
+    for oldName, newName in pairs(renames) do
+        local idx = tonumber(oldName, 16)
         local var = vars[idx]
         if var and var.type then
             assert(not var.isGlobal, "Cannot apply a rename to a global declaration "..newName)
             var.name = newName..DataTypeSuffix[var.type & 0xF]
         else
-            -- Otherwise we wait until declareLocalVar to apply the rename
+            -- Otherwise we wait until declareLocalVar to apply the rename. If a local is completely unreferenced, then
+            -- we won't be able to show it at all. Even worse is an int/long array where we know it exists but cannot
+            -- know its full type - these we also have to just omit (although in both cases we could maybe infer from
+            -- surrounding offsets what size and thus type it is).
+            -- printf("No variable found for rename %s\n", oldName)
         end
     end
     local args = {}
@@ -590,8 +583,9 @@ function decompileProc(proc, options)
         -- A non-array non-string local won't have a var from the proc metadata,
         -- but since indexes don't get reused for different vars we now know its
         -- type and can make a var entry.
+        local renameName = string.format("%04X", index)
         if vars[index] == nil then
-            local undecoratedName = renames[index] or opofile.makeLocalName(proc, index)
+            local undecoratedName = renames[renameName] or opofile.makeLocalName(proc, index)
             vars[index] = {
                 directIdx = index,
                 type = type,
@@ -602,7 +596,7 @@ function decompileProc(proc, options)
             if isArrayType(type) and vars[index].type == nil then
                 vars[index].type = type
                 -- And recalculate name with the type suffix
-                local undecoratedName = renames[index] or opofile.makeLocalName(proc, index)
+                local undecoratedName = renames[renameName] or opofile.makeLocalName(proc, index)
                 local newName = undecoratedName..DataTypeSuffix[type]
                 vars[index].name = newName
             end
@@ -610,9 +604,16 @@ function decompileProc(proc, options)
         end
     end
 
-    local function getLabelName(dest)
-        local name = renames[dest] or fmt(era == "sibo" and "lab_%04X" or "label_%04X", dest)
-        return name.."::"
+    local function getLabelName(dest, decorated)
+        local name = compiler.getLabelName(dest, oplFormat)
+        local rename = renames[name]
+        if rename then
+            name = rename
+        end
+        if decorated then
+            name = name.."::"
+        end
+        return name
     end
 
     local function popExpr(type)
@@ -1618,7 +1619,7 @@ function decompileProc(proc, options)
                 addStatement(location, "ONERR OFF")
             else
                 local dest = location + offset
-                local label = renames[dest] or fmt(era == "sibo" and "err_%04X" or "errhandler_%04X", dest)
+                local label = getLabelName(dest, false)
                 addNamedLabel(dest, label.."::")
                 addStatement(location, "ONERR %s", label)
             end
@@ -2212,7 +2213,7 @@ function decompileProc(proc, options)
     -- Finally, print each statement
     for block, i, statement in allStatements() do
         if (gotoLabels[statement.location] or 0) > 0 then
-            emit(block, "%s", getLabelName(statement.location))
+            emit(block, "%s", getLabelName(statement.location, true))
             gotoLabels[statement.location] = nil
         end
         if namedLabels[statement.location] then
