@@ -2033,7 +2033,15 @@ function decompileProc(proc, options)
         for _, index in ipairs(sortedVars) do
             local var = vars[index]
             if var.directIdx and not var.isGlobal then
-                table.insert(procBlock.statements, varIdx, { value = "LOCAL "..makeDecl(var) })
+                if var.type then
+                    table.insert(procBlock.statements, varIdx, { value = "LOCAL "..makeDecl(var) })
+                else
+                    -- Presumably an unused int/long array in that we have _some_ metadata for it but not enough to
+                    -- establish the full type
+                    table.insert(procBlock.statements, varIdx, {
+                        value = string.format("REM unused local variable at index %04X", var.directIdx)
+                    })
+                end
                 varIdx = varIdx + 1
             end
         end
