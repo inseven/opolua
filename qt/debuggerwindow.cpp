@@ -71,7 +71,7 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, const QVariant& config, QWid
     connect(ui->actionStepOut, &QAction::triggered, runtime, &OplRuntime::stepOut);
     connect(ui->actionStepOver, &QAction::triggered, this, &DebuggerWindow::stepOver);
     connect(ui->actionToggleBreak, &QAction::triggered, this, &DebuggerWindow::toggleBreak);
-    connect(ui->actionFlush, &QAction::triggered, runtime, &OplRuntime::flushGraphicsOps);
+    connect(ui->actionFlush, &QAction::triggered, this, &DebuggerWindow::flushGraphicsOps);
     connect(ui->actionClearAllBreakpoints, &QAction::triggered, this, &DebuggerWindow::clearBreakpoints);
     connect(ui->breakOnError, &QAction::triggered, this, &DebuggerWindow::toggleBreakOnError);
     connect(ui->windowFocusEnabled, &QAction::triggered, this, &DebuggerWindow::toggleWindowFocusEnabled);
@@ -930,4 +930,13 @@ void DebuggerWindow::clearBreakpoints()
         codeview->setShownBreakpoints({});
     }
     emit debuggerConfigChanged();
+}
+
+void DebuggerWindow::flushGraphicsOps()
+{
+    if (!mPauseState.has_value()) {
+        return;
+    }
+    mPauseState = std::nullopt; // Reset this so debugInfoUpdated doesn't ignore the update
+    mRuntime->flushGraphicsOps();
 }

@@ -764,6 +764,13 @@ function Runtime:getBufferedGraphicsOps()
     if graphics and graphics.buffer then
         local result = graphics.buffer
         graphics.buffer = {}
+        -- printf("Returning %d graphics ops\n", #result)
+        -- Bump the opcount for all involved drawables to make sure that operations the debugger can now 'see' cause
+        -- updates where appropriate
+        for _, op in ipairs(result) do
+            self:incrementOpCount(graphics.contexts[op.id])
+        end            
+
         return result
     else
         return {}

@@ -59,6 +59,7 @@ private slots:
     void exportBitmap();
     void highlightWindow(int drawableId);
     void copy();
+    void flushGraphicsOps();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
