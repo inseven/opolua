@@ -3122,6 +3122,8 @@ void OplRuntime::flushGraphicsOps()
     lua_pushcclosure(L, drawMainThread_s, 1);
     lua_insert(L, -2); // Push fn behind ops
     lua_call(L, 1, 0);
+
+    updateDebugInfo(L);
 }
 
 void OplRuntime::setHeapCheck(bool flag)
