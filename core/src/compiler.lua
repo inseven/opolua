@@ -1,26 +1,5 @@
---[[
-
-Copyright (c) 2021-2026 Jason Morley, Tom Sutcliffe
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-]]
+-- Copyright (C) 2021-2026 Jason Morley, Tom Sutcliffe
+-- See LICENSE file for license information.
 
 _ENV = module()
 
@@ -53,9 +32,13 @@ do
     end
 end
 
-local string_find, string_match, string_sub, string_pack = string.find, string.match, string.sub, string.pack
+local string_match, string_sub, string_pack = string.match, string.sub, string.pack
 local table_insert, table_unpack = table.insert, table.unpack
 local type = type
+
+local lex = require("lex")
+local synerror, synassert = lex.synerror, lex.synassert
+_ENV.lex = lex.lex -- For compat
 
 local idsuffix = {
     [''] = 'identifier',
@@ -143,35 +126,6 @@ local statemachine = {
     end,
 }
 
-local function lexmatch(text, tokenStart, pos, sm)
-    local tsm = type(sm)
-    if tsm == "string" then
-        return sm, text:sub(tokenStart, pos - 1)
-    elseif tsm == "function" then
-        local toktype, tokval = sm(text, tokenStart, pos)
-        if type(toktype) == "string" then
-            return toktype, tokval
-        else
-            sm = toktype
-            -- And drop through
-        end
-    end
-    for k, v in pairs(sm) do
-        if k ~= '' then
-            local tstart, tend = string_find(text, '^'..k, pos)
-            if tstart then
-                return lexmatch(text, tokenStart, tend + 1, v)
-            end
-        end
-    end
-    local noMoreCharsOpt = sm['']
-    if noMoreCharsOpt then
-        return lexmatch(text, tokenStart, pos, noMoreCharsOpt)
-    else
-        return nil
-    end
-end
-
 identifierTokens_er1 = enum {
     "INCLUDE", "CONST", "DECLARE", "EXTERNAL",
     "APP", "CAPTION", "ICON", "FLAGS", "ENDA",
@@ -205,145 +159,9 @@ identifierTokens_sibo = enum {
     "RETURN",
 }
 
--- symbol is something with a src - either an expression or a token
-local function synerror(symbol, fmt, ...)
-    local src = symbol.src
-    error({msg = string.format(fmt, ...), src = { path = src[1], line = src[2], column = src[3] } }, 0)
-end
-
-local function synassert(test, symbol, ...)
-    if test then
-        return test
-    else
-        synerror(symbol, ...)
-    end
-end
-
 -- Helper for synassert/synerror
 function notAvailable(val)
     return "%s not available in the specified OPL version", val
-end
-
-Tokens = class {}
-Token = class {}
-
-function Tokens:current()
-    return self[self.index]
-end
-
-function Tokens:peekNext()
-    return self[self.index + 1]
-end
-
-function Tokens:advance()
-    self.index = self.index + 1
-end
-
-function Tokens:last()
-    return self[#self]
-end
-
-function Tokens:eos()
-    local current = self[self.index]
-    -- In every case where we call eos(), colon can be treated the same as eos. The only place it can't, is in
-    -- parseExpression when token.type is dyncall, and that makes sure not to call eos().
-    return current == nil or current.type == "eos" or current.type == "colon"
-end
-
-function Tokens:expectNext(...)
-    self:advance()
-    return self:expect(...)
-end
-
-function Tokens:expect(...)
-    local allowed = {...}
-    return self:expectTokens(allowed)
-end
-
-function Tokens:expectTokens(allowed)
-    local token = self:current()
-    for _, val in ipairs(allowed) do
-        allowed[val] = true
-    end
-    if allowed[token.type] then
-        return token
-    else
-        synerror(token, "Expected token %s", table.concat(allowed, "|"))
-    end
-end
-
-function Tokens:endOfExpression()
-    if self:eos() then
-        return true
-    end
-    local curr = self:current().type
-    -- The way subexpression parsing is done, a close bracket always means the end of the subexpression. Semicolon is
-    -- only valid in the context of print but there's no real need to distinguish here.
-    return curr == "comma" or curr == "cloparen" or curr == "semicolon"
-end
-
-function Token:__tostring()
-    local desc
-    if self.type == "identifier" or self.type == "call" or self.type == "dyncall" or self.type == "number" or self.type == "string" then
-        desc = self.val
-    else
-        desc = self.type
-    end
-    return string.format("%s:%d:%d: %s", self.src[1], self.src[2], self.src[3], desc)
-end
-
-function Token:context()
-    return self.src[4]
-end
-
-function lex(prog, source, language, tokenContext)
-    assert(language, "language parameter must be specified")
-    local idx = 1
-    local tokens = Tokens { index = 1, language = language }
-    local line = 1
-    local col = 1
-    if source == nil then
-        source = "<input>"
-    end
-    while true do
-        local tok, val = lexmatch(prog, idx, idx, language.statemachine)
-        if not tok then
-            break
-        end
-        if tok == "error" then
-            synerror({src={source, line, col}}, val)
-        end
-        idx = idx + #val
-        if tok == "newline" then
-            table.insert(tokens, Token { type="eos", src={source, line, col} })
-            line = line + 1
-            col = 1
-        elseif tok == "space" or tok == "comment" then
-            col = col + #val            
-        else
-            local tokenSource = val
-            if tok == "identifier" or tok == "label" then
-                val = val:upper()
-                if language.identifierTokens[val] then
-                    tok = val
-                end
-            end
-            local src = {source, line, col, tokenContext}
-            table.insert(tokens, Token { type=tok, val=val, src=src, tokenSource = tokenSource })
-            col = col + #val
-        end
-    end
-
-    -- Add a trailing end of statement marker, for convenience
-    if (tokens[#tokens] or {}).type ~= "eos" then
-        table.insert(tokens, Token { type="eos", src={source, line, col} })
-    end
-
-    if idx <= #prog then
-        -- Means we hit something we couldn't parse
-        synerror({src={source, line, col}}, "Parse error")
-    end
-    return tokens
 end
 
 Int = "%"
@@ -986,6 +804,11 @@ function expandPtrType(type, oplFormat)
     else
         return type
     end
+end
+
+
+function getLabelName(dest, oplFormat)
+    return string.format(oplFormat < OplEr1 and "lab_%04X" or "label_%04X", dest)
 end
 
 function setExpressionType(exp, oplFormat)
@@ -1823,8 +1646,8 @@ function ProcState:resolveOffsets(argExps)
         checkSz()
     end
     self.iTotalTableSize = variableIdx - 0x12 -- size of globalDecls plus subprocs
-    for _, arg in ipairs(argExps) do
-        self.externals[arg.val].indirectIdx = variableIdx
+    for i, arg in ipairs(argExps) do
+        self.args[i].indirectIdx = variableIdx
         variableIdx = variableIdx + 2
         checkSz(arg)
     end
@@ -1851,10 +1674,10 @@ function ProcState:resolveOffsets(argExps)
         local result
         local packFmt = "<H" -- everything except labels use unsigned 16-bit offsets
         if p.type == "label" then
-            local offset = self.labels[p.name]
-            synassert(offset, p.token, "No label found for %s", p.name)
+            local label = self.labels[p.name]
+            synassert(label, p.token, "No label found for %s", p.name)
             -- The desired value is an offset relative the location of the jump instruction...
-            result = offset - p.codeSz + 3
+            result = label.offset - p.codeSz + 3
             packFmt = "<h" -- label offsets are signed 16-bit
         elseif p.type == "local" then
             local var = assert(self.locals[p.name])
@@ -2054,13 +1877,14 @@ function parseProc(tokens, consts, procDecls, opxTable, strictExternals)
         opxTable = opxTable,
         subprocs = {}, -- Array, in order, and also keyed by name
         strictExternals = strictExternals,
+        args = {}, -- Array
         externals = {}, -- Array, in order, and also keyed by name (by name also includes args)
         externalDecls = {}, -- variables declared with `external foo%`, keyed by name
         -- Something can appear in externalDecls without appearing in `externals`, if it was declared with `external foo%`
         -- but never actually used.
         localDecls = {}, -- Array, in order
         globalDecls = {}, -- Array, in order
-        locals = {}, -- Contains both localDecls and globalDecls, map keyed by variable name
+        locals = {}, -- Contains both localDecls and globalDecls (ie everything with a directIdx), map keyed by variable name
         code = { sz = 0 },
         pendingOffsets = {},
         labels = {},
@@ -2087,13 +1911,16 @@ function ProcState:parse()
     end
 
     for _, arg in ipairs(argExps) do
-        self.externals[arg.val] = {
+        local argVar = {
             name = arg.val,
             type = TypeToDataType[arg.valType], -- Proc args can never be arrays, so this is ok
             valType = arg.valType,
             external = true,
+            sourceName = arg.tokenSource,
         }
         -- Note, don't insert into the array part because args shouldn't appear in the resulting proc's externals
+        self.externals[arg.val] = argVar
+        table.insert(self.args, argVar)
     end
 
     local result = {
@@ -2287,7 +2114,7 @@ function ProcState:parse()
             self:emit("B", opcodes.GoTo)
             self:addPendingOffset("label", scope.endLabel)
             -- Define nextCondLabel, declare new nextCondLabel for our conditional
-            self.labels[scope.nextCondLabel] = self.code.sz
+            self.labels[scope.nextCondLabel] = { offset = self.code.sz }
             scope.nextCondLabel = string.format("#else-%d", tokenIndex)
             parseAndEmitConditionalExpression()
             self:emit("B", opcodes.BranchIfFalse)
@@ -2300,7 +2127,7 @@ function ProcState:parse()
             self:emit("B", opcodes.GoTo)
             self:addPendingOffset("label", scope.endLabel)
             -- Define nextCondLabel, no need for a new nextCondLabel (since ELSE is unconditional)
-            self.labels[scope.nextCondLabel] = self.code.sz
+            self.labels[scope.nextCondLabel] = { offset = self.code.sz }
             scope.nextCondLabel = nil
         elseif tokenType == "ENDIF" then
             synassert(scope.type == "IF", token, "Expected end of %s block", scope.type)
@@ -2308,9 +2135,9 @@ function ProcState:parse()
             -- Last block doesn't need a goto (?)
             -- Define endLabel and nextCondLabel if necessary
             if scope.nextCondLabel then
-                self.labels[scope.nextCondLabel] = self.code.sz
+                self.labels[scope.nextCondLabel] = { offset = self.code.sz }
             end
-            self.labels[scope.endLabel] = self.code.sz
+            self.labels[scope.endLabel] = { offset = self.code.sz }
             -- End the scope
             scope = scope.prev
             -- And we're done
@@ -2319,7 +2146,7 @@ function ProcState:parse()
             tokens:advance()
             local condLabel = string.format("#while-%d", tokenIndex)
             local endLabel = string.format("#end-while-%d", tokenIndex)
-            self.labels[condLabel] = self.code.sz
+            self.labels[condLabel] = { offset = self.code.sz }
             parseAndEmitConditionalExpression()
             scope = {
                 type = "WHILE",
@@ -2335,7 +2162,7 @@ function ProcState:parse()
             tokens:advance()
             self:emit("B", opcodes.GoTo)
             self:addPendingOffset("label", scope.condLabel, token)
-            self.labels[scope.endLabel] = self.code.sz
+            self.labels[scope.endLabel] = { offset = self.code.sz }
             scope = scope.prev
         elseif tokenType == "DO" then
             local tokenIndex = tokens.index
@@ -2343,7 +2170,7 @@ function ProcState:parse()
             local startLabel = string.format("#do-%d", tokenIndex)
             local condLabel = string.format("#until-%d", tokenIndex)
             local endLabel = string.format("#end-do-%d", tokenIndex)
-            self.labels[startLabel] = self.code.sz
+            self.labels[startLabel] = { offset = self.code.sz }
             scope = {
                 type = "DO",
                 startLabel = startLabel,
@@ -2354,12 +2181,12 @@ function ProcState:parse()
         elseif tokenType == "UNTIL" then
             synassert(scope.type == "DO", token, "Expected end of %s block", scope.type)
             tokens:advance()
-            self.labels[scope.condLabel] = self.code.sz
+            self.labels[scope.condLabel] = { offset = self.code.sz }
             parseAndEmitConditionalExpression()
             self:emit("B", opcodes.BranchIfFalse)
             self:popStack(1)
             self:addPendingOffset("label", scope.startLabel, token)
-            self.labels[scope.endLabel] = self.code.sz
+            self.labels[scope.endLabel] = { offset = self.code.sz }
             scope = scope.prev
         elseif tokenType == "BREAK" or tokenType == "CONTINUE" then
             -- Find innermost DO or WHILE scope
@@ -2378,8 +2205,12 @@ function ProcState:parse()
             tokens:advance()
         elseif tokenType == "label" then
             local labelName = assert(token.val:match("(.+)::"))
-            synassert(#labelName <= 32, token, "Label name is too long")
-            self.labels[labelName] = self.code.sz
+            local maxLabelLen = (oplFormat >= OplEr1) and 32 or 8
+            synassert(#labelName <= maxLabelLen, token, "Label name is too long")
+            self.labels[labelName] = {
+                offset = self.code.sz,
+                token = token,
+            }
             tokens:advance()
         elseif tokenType == "GOTO" then
             local labelToken = tokens:expectNext("identifier", "label")
@@ -2460,8 +2291,25 @@ function ProcState:parse()
         }
         table.insert(allVars, var)
     end
+    result.names = {}
     for _, var in ipairs(self.localDecls) do
         table.insert(allVars, var)
+        local localName = string.format("%04X", var.offset)
+        -- printf("Var %s is %s\n", var.val, localName)
+        result.names[localName] = var.tokenSource
+    end
+
+    for _, var in ipairs(self.args) do
+        local localName = string.format("%04X", var.indirectIdx)
+        result.names[localName] = var.sourceName
+    end
+
+    for _, label in pairs(self.labels) do
+        -- if token is set, it's not an internal control flow label
+        if label.token then
+            local labelName = string.format("%04X::", label.offset)
+            result.names[labelName] = label.token.tokenSource:match("([^:]+)")
+        end
     end
 
     local strings = {}
@@ -3088,7 +2936,7 @@ function docompile(path, realPath, programText, includePaths, format)
         Callables.DINIT.args.numParams = {0, 1}
     end
     local lang = format == OplEr1 and OplEr1Language or Opl93Language
-    local tokens = lex(programText, realPath or path, lang, format)
+    local tokens = lex.lex(programText, realPath or path, lang, format)
     tokens.oplFormat = assert(format, "OPL version not specified!")
     local procTable = {}
     local opxTable = {}
@@ -3216,7 +3064,8 @@ end
 
 function compile(path, realPath, programText, includePaths, shouldMakeAif, format)
     local compileResult = docompile(path, realPath, programText, includePaths, format)
-    local opo = require("opofile").makeOpo(compileResult, format)
+    local opofile = require("opofile")
+    local opo = opofile.makeOpo(compileResult, format)
     local aifData = nil
     if shouldMakeAif and compileResult.aif then
         if compileResult.aif.icons then
@@ -3252,7 +3101,30 @@ function compile(path, realPath, programText, includePaths, shouldMakeAif, forma
 
         aifData = require("aif").makeAif(compileResult.aif)
     end
-    return opo, aifData
+    local symbols = {}
+    -- Parse the result to get codeOffsets for each of the procs, because we need that to correctly calculate label symbols...
+    local parsedProcs = opofile.parseOpo(opo).procTable
+    local procOffsets = {}
+    for _, proc in ipairs(parsedProcs) do
+        procOffsets[proc.name] = proc.codeOffset
+    end
+
+    for _, proc in ipairs(compileResult.procTable) do
+        if not symbols[proc.name] then
+            symbols[proc.name] = json.Dict {}
+        end
+        for var, srcName in pairs(proc.names) do
+            local varName = var
+            local labelOffset = var:match("^([0-9A-F][0-9A-F][0-9A-F][0-9A-F])::$")
+            if labelOffset then
+                local absOffset = assert(procOffsets[proc.name]) + tonumber(labelOffset, 16)
+                varName = string.format("%s", getLabelName(absOffset, format))
+            end
+            symbols[proc.name][varName] = srcName
+        end
+    end
+
+    return opo, symbols, aifData
 end
 
 return _ENV

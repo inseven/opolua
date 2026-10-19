@@ -1,0 +1,29 @@
+INCLUDE "system.oxh"
+
+PROC main:
+    LOCAL name$(255)
+    LOCAL unrefdArray%(1)
+    LOCAL unrefdInt%
+    LOCAL refdInt%
+
+    refdInt% = 1234
+
+    subproc:(1, 2, 3)
+
+    REM step in/over an OPX call
+    name$ = MachineName$:
+
+    ONERR thisisfine
+    gLOADBIT("nope")
+
+thisisfine::
+    ONERR OFF
+
+    GET
+
+    PRINT "Done"
+ENDP
+
+PROC subproc:(a%, b%, c%)
+    PRINT "subproc!"
+ENDP

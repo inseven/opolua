@@ -122,6 +122,11 @@ private:
     AudioPlayer* mAudioChannels[2];
 };
 
+enum class Plane {
+    Primary, // The black plane on black+grey drawables, the only plane otherwise
+    All, // Includes grey plane if applicable
+};
+
 class Drawable
 {
 public:
@@ -137,7 +142,7 @@ public:
     virtual void drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* mask);
     void loadFromBitmap(bool color, int width, int height, const QByteArray& data);
 
-    QPixmap& getPixmap();
+    virtual QPixmap& getPixmap(Plane which);
     QBitmap& getMask();
     void invalidateMask();
     virtual Drawable* getGreyPlane() const;
@@ -162,6 +167,7 @@ public:
     void setScale(int scale);
     QRect scaledRect() const;
     int getShadowSize() const { return mShadowSize; }
+    QPixmap& getPixmap(Plane which) override;
 
     void draw(const OplScreen::DrawCmd& cmd) override;
     void drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect) override;
@@ -189,6 +195,7 @@ public:
     ClockWidget* mClock;
     QMap<int, WindowSprite> mSprites;
 private:
+    QPixmap mComposite; // Includes grey plane if applicable, unscaled
     QRect mUnscaledRect;
     int mScale;
     WindowShadow* mShadow;

@@ -29,6 +29,7 @@
 #include <QDirIterator>
 #include <QEvent>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QJsonValue>
 #include <QSysInfo>
 #include <QTimer>
@@ -127,7 +128,9 @@ OplRuntime::OplRuntime(QObject *parent)
     , mPaused(false)
     , mDebugging(false)
     , mBreakOnErr(false)
-    , mBreakOnNext(None)
+    , mStepMode(NotStepping)
+    , mSteppingLevel(0)
+    , mCurrentLevel(0)
     , mSpeed(Fastest)
     , mDebugInfo{}
     , mRuntimeRef(LUA_NOREF)
@@ -628,11 +631,14 @@ void OplRuntime::startThread()
     if (mScreen) {
         mScreen->init();
     }
+    updateDebugInfoOnRunComplete(); // Not exactly the right name but does the right thing, signalling empty debug info
 
     // Runtime always starts out escapable
     setEscape(true);
 
     mHasBackgrounded = false;
+    mSteppingLevel = 0;
+    mCurrentLevel = 1;
 
     emit startedRunning(mDeviceOpoPath.isEmpty() ? QString() : mFs->getNativePath(mDeviceOpoPath));
 
@@ -892,7 +898,6 @@ void OplRuntime::onThreadExited()
     auto fn = mRunNextFn;
     if (fn) {
         mRunNextFn = nullptr;
-        // mScreen->init();
         fn();
     } else {
         lua_settop(L, 0);
@@ -2095,10 +2100,14 @@ int OplRuntime::opsync(lua_State* L)
     uint32_t addr = (uint32_t)lua_tointeger(L, 2);
     // qDebug("opsync %s ip=%x", lua_tostring(L, 1), addr);
     mMutex.lock();
-    if (mBreakOnNext == NextOp) {
-        mBreakOnNext = None;
+    if (mStepMode == SingleStepping) {
         mPaused = true;
         // qDebug("Single step pausing at ip=%x", addr);
+    } else if ((mStepMode == SteppingOver || mStepMode == SteppingIn)
+            && mCurrentLevel == mSteppingLevel
+            && (addr < mStepLimit.first || addr >= mStepLimit.second)) {
+        mPaused = true;
+        // qDebug("Step in/over exceeded the instruction range, pausing at ip=%x", addr);
     }
     auto brkiter = mBreakpoints.find(addr);
     if (brkiter != mBreakpoints.end()) {
@@ -2110,6 +2119,7 @@ int OplRuntime::opsync(lua_State* L)
 
     if (mPaused) {
         mWaiting = true;
+        mStepMode = NotStepping;
         shouldWait = true;
     }
     bool shouldUpdateDebugInfo = shouldWait || debugInfoStale();
@@ -2154,6 +2164,7 @@ int OplRuntime::debugEvent(lua_State* L)
     QMutexLocker lock(&mMutex);
     bool shouldBreak = false;
     bool isErr = false;
+    bool isLuaFrame = false;
     if (mBreakOnErr && ev == "err") {
         // An epoc error has occurred (eg a RAISE or a leave)
         shouldBreak = true;
@@ -2164,10 +2175,19 @@ int OplRuntime::debugEvent(lua_State* L)
         shouldBreak = true;
         isErr = true;
     }
-    if ((mBreakOnNext == NextReturn && ev == "return") ||
-        (mBreakOnNext == NextPushFrame && ev == "pushframe")) {
+    if (ev == "framechange") {
+        mCurrentLevel = (int)lua_tointeger(L, 2);
+        // Don't break during step in when entering a Lua frame
+        isLuaFrame = lua_toboolean(L, 3);
+    }
+
+    if ((mStepMode == SteppingOut || mStepMode == SteppingOver) && mCurrentLevel && mCurrentLevel < mSteppingLevel) {
         shouldBreak = true;
-        mBreakOnNext = None;
+        mStepMode = NotStepping;
+    } else if (mStepMode == SteppingIn && mCurrentLevel != mSteppingLevel && !isLuaFrame) {
+        // Stepping in to a return should probably break at the unwind
+        shouldBreak = true;
+        mStepMode = NotStepping;
     }
 
     if (shouldBreak && mDebugging) {
@@ -2307,11 +2327,17 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
     // qDebug("updateDebugInfo");
     const int top = lua_gettop(L);
 
-    // Check for any renames still pending
-    for (const auto& rename : mPendingVariableRenames) {
-        doRenameVariable(L, rename.proc, rename.index, rename.name);
+    // Check for any pending renames without an explicit module path, which means we can (hopefully) do them now
+    const auto& procs = mPendingVariableRenames.value(QString());
+    for (auto procIter = procs.cbegin(), procEnd = procs.cend(); procIter != procEnd; procIter++) {
+        const QString& procName = procIter.key();
+        const QMap<uint32_t, QString>& renames = procIter.value();
+        for (auto idxIter = renames.cbegin(), idxEnd = renames.cend(); idxIter != idxEnd; idxIter++) {
+            doRenameVariable(L, procName, idxIter.key(), idxIter.value());
+        }
     }
-    mPendingVariableRenames.clear();
+
+    mPendingVariableRenames.remove(QString());
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, mRuntimeRef);
     luaL_getmetafield(L, -1, "getDebugInfo");
@@ -2337,7 +2363,9 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
             .variables = {},
         };
         if (frame.procModule.isEmpty()) {
-            frame.procModule = mFs->getNativePath(to_string(L, -1, "procModule"));
+            rawgetfield(L, -1, "procModule");
+            frame.procModule = mFs->getNativePath(tolocalstring(L, -1));
+            lua_pop(L, 1); // procModule
         }
 
         int varidx = 1;
@@ -2352,6 +2380,12 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
                 .value = {},
                 .global = to_bool(L, -1, "global"),
             };
+            // Check for any pending renames we haven't gotten to yet
+            auto rename = mPendingVariableRenames.value(frame.procModule).value(frame.procName).value(v.index);
+            if (!rename.isEmpty()) {
+                v.name = rename;
+            }
+
             rawgetfield(L, -1, "value");
             switch (v.type) {
                 case opl::EWord:
@@ -2422,6 +2456,21 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
             }
             info.modules.append(m);
             lua_pop(L, 1); // module
+
+            if (mPendingVariableRenames.contains(m.nativePath)) {
+                const auto& procs = mPendingVariableRenames[m.nativePath];
+                // Assume that all procs currently loaded whose names match something in the module, are actually from
+                // this module. This isn't _technically_ guaranteed but it's pretty unusual and we can just let
+                // doRenameVariable fail in that scenario.
+                for (auto procIter = procs.cbegin(), procEnd = procs.cend(); procIter != procEnd; procIter++) {
+                    const QString& procName = procIter.key();
+                    const QMap<uint32_t, QString>& renames = procIter.value();
+                    for (auto idxIter = renames.cbegin(), idxEnd = renames.cend(); idxIter != idxEnd; idxIter++) {
+                        doRenameVariable(L, procName, idxIter.key(), idxIter.value());
+                    }
+                }
+                mPendingVariableRenames.remove(m.nativePath);
+            }
         }
         lua_pop(L, 1); // final nil from lua_rawgeti
     }
@@ -2463,6 +2512,7 @@ void OplRuntime::updateDebugInfo(lua_State* L, bool errOnStack)
                 .isGlobal = to_bool(L, -1, "isGlobal"),
                 .isCurrent = id == currentSprite,
                 .isSibo = to_bool(L, -1, "isSibo"),
+                .frames = {},
             };
             rawgetfield(L, -1, "frames");
             for (int f = 1; ; f++) {
@@ -2655,21 +2705,70 @@ void OplRuntime::setVariable(const opl::Frame& frame, const opl::Variable& varia
 
 void OplRuntime::renameVariable(const QString& proc, uint32_t index, const QString& newName)
 {
+    renameVariable(QString(), proc, index, newName);
+}
+
+namespace {
+
+QJsonObject readJson(const QString& path)
+{
+    QFile f(path);
+    QJsonObject val;
+    if (f.open(QFile::ReadOnly)) {
+        auto jsonData = f.readAll();
+        f.close();
+        val = QJsonDocument::fromJson(jsonData).object();
+    }
+    if (val.isEmpty()) {
+        qWarning("Couldn't read JSON from %s", qPrintable(path));
+    }
+    return val;
+}
+
+} // end namespace
+
+void OplRuntime::addSymbolsFromFile(const QString& moduleNativePath, const QString& path)
+{
+    ASSERT_MAIN_THREAD();
+    auto symbols = readJson(path);
+    if (symbols.isEmpty()) {
+        return;
+    }
+    const auto procs = symbols["procs"].toObject();
+    for (auto procIter = procs.begin(), procEnd = procs.end(); procIter != procEnd; procIter++) {
+        QString procName = procIter.key();
+        const auto vars = procIter.value().toObject();
+        for (auto varIter = vars.begin(), varEnd = vars.end(); varIter != varEnd; varIter++) {
+            QString var = varIter.key();
+            bool ok = false;
+            uint32_t index = var.toUInt(&ok, 16);
+            if (ok) {
+                QString newName = varIter.value().toString();
+                auto suff = newName.right(1);
+                if (suff == "%" || suff == "&" || suff == "$") {
+                    newName = newName.left(newName.length() - 1);
+                }
+                renameVariable(moduleNativePath, procName, index, newName);
+            } else {
+                // A label or similar, ignore
+            }
+        }
+    }
+}
+
+void OplRuntime::renameVariable(const QString& moduleNativePath, const QString& proc, uint32_t index, const QString& newName)
+{
     ASSERT_MAIN_THREAD();
     QMutexLocker lock(&mMutex);
     mLastDebugInfoTime.invalidate(); // Marks debug info as stale
     bool waiting = mWaiting;
     lock.unlock();
-    if (waiting) {
+    if (waiting && moduleNativePath.isEmpty()) {
         doRenameVariable(L, proc, index, newName);
         updateDebugInfo(L);
     } else {
-        // mPendingVariableRenames only ever touched by updateDebugInfo which is also main thread so no locking needed
-        mPendingVariableRenames.append({
-            .proc = proc,
-            .index = index,
-            .name = newName
-        });
+        // qDebug("OplRuntime pending rename %s %04X = %s", qPrintable(proc), index, qPrintable(newName));
+        mPendingVariableRenames[moduleNativePath][proc][index] = newName;
     }
 }
 
@@ -2759,7 +2858,8 @@ bool OplRuntime::opoIsSibo(const QString& nativePath)
     return false;
 }
 
-QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVector<opl::NameOverride>& renames)
+QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QString& symbolsPath,
+    const QVector<opl::NameOverride>& renames)
 {
     Q_ASSERT(!running());
     QFile f(path);
@@ -2792,6 +2892,18 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
     pushValue(L, data);
     pushValue(L, path);
 
+    if (symbolsPath.isEmpty()) {
+        lua_pushnil(L);
+    } else {
+        QJsonObject val = readJson(symbolsPath);
+        if (!val.isEmpty()) {
+            val["path"] = symbolsPath;
+            pushValue(L, QVariant(val.toVariantMap()));
+        } else {
+            lua_pushnil(L);
+        }
+    }
+
     lua_newtable(L); // renames
     if (renames.count()) {
         for (const auto& override : renames) {
@@ -2802,9 +2914,9 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
                 lua_pushvalue(L, -2); // pushes the new table
                 lua_rawset(L, -4); // renames[override.proc] = {}
             }
-            pushValue(L, override.origName);
+            pushValue(L, QString("%1").arg(override.index, 4, 16, QLatin1Char('0')).toUpper());
             pushValue(L, override.newName);
-            lua_rawset(L, -3); // renames[proc][origName] = override.newName
+            lua_rawset(L, -3); // renames[proc][index] = override.newName
             lua_pop(L, 1); // renames[proc]
         }
     }
@@ -2823,7 +2935,7 @@ QVector<OplRuntime::Line> OplRuntime::decompile(const QString& path, const QVect
         }
     }
 
-    err = pcall(4, 2);
+    err = pcall(5, 2);
     if (err) {
         qWarning("decompile errored: %s", qPrintable(*err));
         return {};
@@ -2867,17 +2979,21 @@ void OplRuntime::stepOut()
 {
     if (isPaused()) {
         mMutex.lock();
-        mBreakOnNext = NextReturn;
+        mStepMode = SteppingOut;
+        mSteppingLevel = mCurrentLevel;
         mMutex.unlock();
         unpause();
     }
 }
 
-void OplRuntime::stepIn()
+void OplRuntime::stepIn(uint32_t limit)
 {
     if (isPaused()) {
         mMutex.lock();
-        mBreakOnNext = NextPushFrame;
+        mStepMode = SteppingIn;
+        mSteppingLevel = mCurrentLevel;
+        uint32_t currentAddr = mDebugInfo.frames.count() ? mDebugInfo.frames.last().ip : 0;
+        mStepLimit = {currentAddr, limit};
         mMutex.unlock();
         unpause();
     }
@@ -2887,7 +3003,21 @@ void OplRuntime::singleStep()
 {
     if (isPaused()) {
         mMutex.lock();
-        mBreakOnNext = NextOp;
+        mStepMode = SingleStepping;
+        mSteppingLevel = mCurrentLevel;
+        mMutex.unlock();
+        unpause();
+    }
+}
+
+void OplRuntime::stepOver(uint32_t limit)
+{
+    if (isPaused()) {
+        mMutex.lock();
+        mStepMode = SteppingOver;
+        mSteppingLevel = mCurrentLevel;
+        uint32_t currentAddr = mDebugInfo.frames.count() ? mDebugInfo.frames.last().ip : 0;
+        mStepLimit = {currentAddr, limit};
         mMutex.unlock();
         unpause();
     }
@@ -2938,6 +3068,38 @@ void OplRuntime::configureBreakpoint(const QString& moduleNativePath, uint32_t a
     }
 }
 
+QMap<QString, QVector<uint32_t>> OplRuntime::getBreakpoints() const
+{
+    QMap<QString, QVector<uint32_t>> result;
+    QMutexLocker lock(&mMutex);
+    for (auto iter = mBreakpoints.begin(), endIter = mBreakpoints.end(); iter != endIter; iter++) {
+        for (const QString& nativePath : iter.value()) {
+            result[nativePath].append(iter.key());
+        }
+    }
+    return result;
+}
+
+QSet<uint32_t> OplRuntime::getModuleBreakpoints(const QString& moduleNativePath) const
+{
+    QSet<uint32_t> result;
+    QMutexLocker lock(&mMutex);
+    for (auto iter = mBreakpoints.begin(), endIter = mBreakpoints.end(); iter != endIter; iter++) {
+        for (const QString& nativePath : iter.value()) {
+            if (nativePath == moduleNativePath) {
+                result.insert(iter.key());
+            }
+        }
+    }
+    return result;
+}
+
+void OplRuntime::clearAllBreakpoints()
+{
+    QMutexLocker lock(&mMutex);
+    mBreakpoints = {};
+}
+
 void OplRuntime::flushGraphicsOps()
 {
     ASSERT_MAIN_THREAD();
@@ -2960,6 +3122,8 @@ void OplRuntime::flushGraphicsOps()
     lua_pushcclosure(L, drawMainThread_s, 1);
     lua_insert(L, -2); // Push fn behind ops
     lua_call(L, 1, 0);
+
+    updateDebugInfo(L);
 }
 
 void OplRuntime::setHeapCheck(bool flag)

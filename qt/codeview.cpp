@@ -82,6 +82,16 @@ void CodeView::setContents(const QVector<std::pair<uint32_t, QString>>& blocks)
     verticalScrollBar()->setValue(scrollPos);
 }
 
+void CodeView::setSymbolsPath(const QString& path)
+{
+    mSymbolsPath = path;
+}
+
+QString CodeView::symbolsPath() const
+{
+    return mSymbolsPath;
+}
+
 // LineNumberArea adapted from https://doc.qt.io/qt-5/qtwidgets-widgets-codeView-example.html
 
 const int kBreakBulletWidth = 10;
@@ -173,9 +183,6 @@ uint32_t CodeView::lineAddressForAddress(uint32_t address) const
 {
     auto cursor = cursorForAddress(address);
     auto blockIdx = cursor.blockNumber();
-    while (blockIdx > 0 && mBlockAddrs[blockIdx - 1] == mBlockAddrs[blockIdx]) {
-        blockIdx--;
-    }
     return mBlockAddrs[blockIdx];
 }
 
@@ -198,6 +205,20 @@ const QTextCursor CodeView::cursorForAddress(uint32_t address) const
     }
 
     return QTextCursor(document()->findBlockByNumber(idx));
+}
+
+uint32_t CodeView::nextLineAddressForAddress(uint32_t address) const
+{
+    auto cursor = cursorForAddress(address);
+    int line = cursor.blockNumber();
+    if (line + 1 < mBlockAddrs.count()) {
+        line++;
+    }
+    const uint32_t lineAddr = mBlockAddrs[line];
+    while (line + 1 < mBlockAddrs.count() && mBlockAddrs[line + 1] == lineAddr) {
+        line++;
+    }
+    return mBlockAddrs[line];
 }
 
 void CodeView::setBreak(std::optional<uint32_t> address)
@@ -223,13 +244,25 @@ void CodeView::toggleBreakpoint()
     auto addr = mBlockAddrs[c.blockNumber()];
     // qDebug("toggleBreakpoint %x", addr);
     bool set = !mBreakpoints.contains(addr);
-    if (set) {
+    showBreakpoint(addr, set);
+    emit breakpointConfigured(mPath, addr, set);
+}
+
+void CodeView::showBreakpoint(uint32_t addr, bool show)
+{
+    // Does not emit breakpointConfigured
+    if (show) {
         mBreakpoints.insert(addr);
     } else {
         mBreakpoints.remove(addr);
     }
     mLineNumberArea->update();
-    emit breakpointConfigured(mPath, addr, set);
+}
+
+void CodeView::setShownBreakpoints(const QSet<uint32_t>& addresses)
+{
+    mBreakpoints = addresses;
+    mLineNumberArea->update();
 }
 
 void CodeView::toggleGotoPopup()

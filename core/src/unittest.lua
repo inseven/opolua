@@ -207,7 +207,57 @@ function main()
 
     checkOpcodes()
 
+    checkJson('""', "")
+    checkJson('   "" ', "")
+    checkJson([["a\nb"]], "a\nb")
+    checkJson([["a\\b\"c"]], 'a\\b"c')
+    checkJson('"a\\u2020b"', "a\u{2020}b")
+
+    -- non-BMP unicode has to be a surrogate pair, ugh
+    checkJson('"\\uD87E\\udd2ee"', "\u{1F92E}e")
+
+    checkJson('0', 0)
+    -- Leading zeros aren't valid in JSON numbers
+    checkInvalidJson('0123', ":1:2: Unparsed trailing data")
+    checkJson('123.456', 123.456)
+    checkJson('10e1', 100.0)
+    checkJson('10.1e1', 101.0)
+    checkJson('null', json.null)
+    checkJson('false', false)
+    checkInvalidJson('FALSE', ":1:1: Parse error")
+    checkJson('{}', json.Dict {})
+    checkJson('[]', {})
+    checkJson('[[]]', {{}})
+    checkJson('[1, "two"]', {1, "two"})
+    checkJson('[1, null, 3]', {1, json.null, 3})
+    checkJson('{"int": 1, "emptyar": [], "arr": ["a", "b"], "emptydict": {}, "tru": true, "fal": false}',
+        {int = 1, emptyar = {}, arr = {"a", "b"}, emptydict = json.Dict {}, tru = true, fal = false})
+    checkInvalidJson('{', ":1:2: Expected string")
+    checkInvalidJson('[', ":1:2: Missing ]")
+
+    assertEquals(json.encode("\u{A3}"), '"\\u00A3"')
+    assertEquals(json.encode("\b\r\n"), '"\\b\\r\\n"')
+
     print("All tests passed.")
+end
+
+function checkJson(data, expected)
+    local jsonValue = json.decode(data)
+    assertEquals(jsonValue, expected)
+
+    -- Also check it can be round tripped through encode and that that also comes out the same (flushes out
+    -- bugs around mistracking empty tables as arrays instead of dicts, for eg)
+    local encoded = json.encode(jsonValue)
+    assertEquals(encoded, json.encode(expected))
+end
+
+function checkInvalidJson(data, expectedErr)
+    local jsonParse = require("json").parse
+    local ok, result = pcall(jsonParse, data)
+    assert(not ok, "Decode unexpectedly succeeded")
+    assert(type(result) == "table", "Expected table error value?")
+    local err = string.format(":%d:%d: %s", result.src.line, result.src.column, result.msg)
+    assertEquals(err, expectedErr)
 end
 
 function checkSpec(spec, expectedPath, expectedTableName, expectedFields, expectedSort)
@@ -267,8 +317,6 @@ function testInfer()
         { "JUMPY.TXT", [[APP\JUMPY\JUMPY.TXT]] },
     })
 
-
-
     -- Something specifying the whole App dir
     checkFiles({
         { path = [[APP\DRAGON.OPA]] , type = "opa", era = "sibo", defaultFile = [[\DRAGON\Dragon.DFG]] },
@@ -281,7 +329,6 @@ function testInfer()
         { [[APP\DRAGON\INTRO.PIC]], [[APP\DRAGON\INTRO.PIC]] },
         { "readme.txt", "readme.txt" },
     })
-
 end
 
 function checkOpcodes()

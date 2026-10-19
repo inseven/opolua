@@ -143,7 +143,7 @@ QPixmap OplScreenWidget::getPixmap(int drawableId) const
     if (!drawable) {
         return QPixmap();
     }
-    return drawable->getPixmap();
+    return drawable->getPixmap(Plane::All);
 }
 
 void OplScreenWidget::keyPressEvent(QKeyEvent *event)
@@ -559,7 +559,7 @@ QByteArray OplScreenWidget::peekLine(int drawableId, const QPoint& position, int
         qDebug("Bad drawableId %d to peekLine", drawableId);
         return QByteArray();
     }
-    auto img = src->getPixmap().toImage();
+    auto img = src->getPixmap(Plane::Primary).toImage();
     img.convertTo(QImage::Format_Grayscale8); // Simplifies logic
     QByteArray result;
     int bitIdx = 0;
@@ -623,7 +623,7 @@ QByteArray OplScreenWidget::getImageData(int drawableId, const QRect& rect)
     }
 
     const bool isColor = src->getMode() >= OplScreen::color16;
-    auto img = src->getPixmap().toImage().copy(rect);
+    auto img = src->getPixmap(Plane::All).toImage().copy(rect);
     img.convertTo(isColor ? QImage::Format_RGB32 : QImage::Format_Grayscale8);
     QByteArray result;
     for (int i = 0; i < img.height(); i++) {
@@ -776,8 +776,9 @@ void Drawable::setSize(const QSize& size)
     invalidateMask();
 }
 
-QPixmap& Drawable::getPixmap()
+QPixmap& Drawable::getPixmap(Plane which)
 {
+    Q_UNUSED(which); // Drawables only have one plane anyway
     return mPixmap;
 }
 
@@ -932,6 +933,16 @@ OplScreenWidget* Window::getScreen() const
     return static_cast<OplScreenWidget*>(parent());
 }
 
+QPixmap& Window::getPixmap(Plane which)
+{
+    switch (which) {
+        case Plane::Primary:
+            return mPixmap;
+        case Plane::All:
+            return mComposite;
+    }
+}
+
 void Window::draw(const OplScreen::DrawCmd& cmd)
 {
     invalidateMask();
@@ -993,23 +1004,22 @@ void Window::drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* ma
 
 void Window::update()
 {
-    QPixmap unscaledPixmap;
     if (mGreyPlane) {
-        unscaledPixmap = QPixmap(mPixmap.size());
-        PAINTER_BEGIN(painter, &unscaledPixmap);
-        painter.drawPixmap(QPoint(), mGreyPlane->getPixmap());
+        mComposite = QPixmap(mPixmap.size());
+        PAINTER_BEGIN(painter, &mComposite);
+        painter.drawPixmap(QPoint(), mGreyPlane->getPixmap(Plane::Primary));
         // Now draw the black plane on top with a mask, so its white pixels don't overwrite the grey plane
         QPixmap maskedPixmap(mPixmap);
         maskedPixmap.setMask(getMask());
         painter.drawPixmap(QPoint(), maskedPixmap);
     } else {
-        unscaledPixmap = mPixmap;
+        mComposite = mPixmap;
     }
 
     if (mScale == 1) {
-        setPixmap(unscaledPixmap);
+        setPixmap(mComposite);
     } else {
-        auto scaled = unscaledPixmap.scaled(scaledRect().size());
+        auto scaled = mComposite.scaled(scaledRect().size());
         setPixmap(scaled);
     }
 }
@@ -1064,7 +1074,7 @@ void Window::updateSpritePlane(QPainter& painter, const WindowSprite& sprite, bo
                 PAINTER_BEGIN(tempPainter, &tempDest);
                 // Copy the bit of our pixmap we're going to composite in to
                 Drawable* plane = grey ? getGreyPlane() : this;
-                tempPainter.drawPixmap(QPoint(), plane->getPixmap(), destRect);
+                tempPainter.drawPixmap(QPoint(), plane->getPixmap(Plane::Primary), destRect);
                 // Do the invert
                 tempPainter.setCompositionMode(QPainter::RasterOp_NotSourceXorDestination);
                 tempPainter.drawPixmap(QPoint(), src->getMask());
@@ -1106,7 +1116,7 @@ void Window::updateSprites(QPainter& painter, QPainter* greyPlanePainter)
                     qDebug("No mask %d!", frame.mask);
                     continue;
                 }
-                QPixmap maskedSource(src->getPixmap());
+                QPixmap maskedSource(src->getPixmap(Plane::All));
                 QBitmap m = mask->getMask();
                 if (!frame.invertMask) {
                     // Sprite masks are backwards by default (black means "draw this" in OPL land), so we have to flip the
@@ -1118,7 +1128,7 @@ void Window::updateSprites(QPainter& painter, QPainter* greyPlanePainter)
                 maskedSource.setMask(m);
                 painter.drawPixmap(pos, maskedSource);
             } else {
-                painter.drawPixmap(pos, src->getPixmap());
+                painter.drawPixmap(pos, src->getPixmap(Plane::All));
             }
         }
     }

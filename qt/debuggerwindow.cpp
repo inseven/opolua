@@ -36,7 +36,7 @@ enum CustomDataRoles {
     DrawableIdRole = Qt::UserRole,
 };
 
-DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
+DebuggerWindow::DebuggerWindow(OplRuntime* runtime, const QVariant& config, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::DebuggerWindow)
     , mRuntime(runtime)
@@ -67,11 +67,12 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     connect(ui->actionContinue, &QAction::triggered, runtime, &OplRuntime::unpause);
     connect(ui->actionRestart, &QAction::triggered, runtime, &OplRuntime::restart);
     connect(ui->actionStop, &QAction::triggered, runtime, &OplRuntime::interrupt);
-    connect(ui->actionStepInto, &QAction::triggered, runtime, &OplRuntime::stepIn);
+    connect(ui->actionStepInto, &QAction::triggered, this, &DebuggerWindow::stepIn);
     connect(ui->actionStepOut, &QAction::triggered, runtime, &OplRuntime::stepOut);
     connect(ui->actionStepOver, &QAction::triggered, this, &DebuggerWindow::stepOver);
     connect(ui->actionToggleBreak, &QAction::triggered, this, &DebuggerWindow::toggleBreak);
-    connect(ui->actionFlush, &QAction::triggered, runtime, &OplRuntime::flushGraphicsOps);
+    connect(ui->actionFlush, &QAction::triggered, this, &DebuggerWindow::flushGraphicsOps);
+    connect(ui->actionClearAllBreakpoints, &QAction::triggered, this, &DebuggerWindow::clearBreakpoints);
     connect(ui->breakOnError, &QAction::triggered, this, &DebuggerWindow::toggleBreakOnError);
     connect(ui->windowFocusEnabled, &QAction::triggered, this, &DebuggerWindow::toggleWindowFocusEnabled);
     connect(ui->heapCheckingEnabled, &QAction::triggered, this, &DebuggerWindow::toggleHeapCheckingEnabled);
@@ -113,6 +114,10 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, QWidget *parent)
     mStatusLabel = new QLabel(this);
     ui->statusbar->addWidget(mStatusLabel);
 
+    if (config.isValid()) {
+        setDebuggerConfig(config);
+    }
+
     // Stack info dock widget (do this last as it triggers a debugInfoUpdated)
 
     auto model = new StackModel(runtime, ui->stackView);
@@ -128,6 +133,17 @@ DebuggerWindow::~DebuggerWindow()
     }
     delete ui;
     mRuntime->stopDebugging();
+}
+
+void DebuggerWindow::keyPressEvent(QKeyEvent *event)
+{
+    // qDebug() << "Key event" << event->key();
+    if (event->key() == Qt::Key_Escape && !mLastCodeView.isEmpty() && currentCodeView() == nullptr) {
+        event->accept();
+        setCurrentEditor(mLastCodeView);
+    } else {
+        QMainWindow::keyPressEvent(event);
+    }
 }
 
 static QString describeDrawable(const opl::Drawable& d)
@@ -393,41 +409,7 @@ void DebuggerWindow::debugInfoUpdated()
 
     if (info.paused) {
         const auto& topFrame = info.frames.last();
-
-        if (mSteppingOver.has_value()) {
-            auto view = mCodeViews.value(mSteppingOver->module);
-            if (!view) {
-                // qDebug("Module for step over has gona away??");
-                mSteppingOver = std::nullopt;
-                mRuntime->unpause();
-            } else if (info.frames.count() > mSteppingOver->frameIdx
-                && info.frames[mSteppingOver->frameIdx].procModule == mSteppingOver->module
-                && info.frames[mSteppingOver->frameIdx].procName == mSteppingOver->proc) {
-                // The same proc is still on the stack in the same place
-                if (info.frames.count() > mSteppingOver->frameIdx + 1) {
-                    // We appear to be stepped in, keep stepping out until we're back in the same frame
-                    mRuntime->stepOut();
-                } else {
-                    // In the same frame
-                    auto newLineAddr = view->lineAddressForAddress(topFrame.ip);
-                    if (newLineAddr == mSteppingOver->lineAddr) {
-                        // qDebug("Continuing step over %x still in same statement %x", topFrame.ip, newLineAddr);
-                        mRuntime->singleStep();
-                    } else {
-                        // qDebug("Made it somewhere else %x != %x", newLineAddr, mSteppingOver->lineAddr);
-                        mSteppingOver = std::nullopt;
-                        gotoAddress(topFrame.procModule, topFrame.ip, true);
-                    }
-                }
-            } else {
-                // Frame no longer there, stepping over a return should probably be treated as a break
-                // qDebug("Frame unwound, breaking");
-                mSteppingOver = std::nullopt;
-                gotoAddress(topFrame.procModule, topFrame.ip, true);
-            }
-        } else {
-            gotoAddress(topFrame.procModule, topFrame.ip, true);
-        }
+        gotoAddress(topFrame.procModule, topFrame.ip, true);
     }
 
     QString status;
@@ -518,14 +500,24 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
         } else {
             view = new CodeView(this, new OplTokenizer);
             view->setUseHexLineAddresses(true);
-            auto prog = OplRuntime().decompile(path);
+            auto pathInfo = QFileInfo(path);
+            auto symbolsInfo = QFileInfo(pathInfo.dir(), pathInfo.completeBaseName() + ".json");
+            QString symbolsPath;
+            if (symbolsInfo.isFile()) {
+                symbolsPath = symbolsInfo.filePath();
+                mRuntime->addSymbolsFromFile(path, symbolsPath);
+            }
+            auto overrides = mNameOverrides.value(path, QVector<opl::NameOverride>());
+            auto prog = OplRuntime().decompile(path, symbolsPath, overrides);
             view->setContents(prog);
+            view->setSymbolsPath(symbolsPath);
+            view->setShownBreakpoints(mRuntime->getModuleBreakpoints(path));
         }
         view->setPath(path);
         view->setReadOnly(true);
         view->moveCursor(QTextCursor::Start);
         view->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
-        connect(view, &CodeView::breakpointConfigured, mRuntime, &OplRuntime::configureBreakpoint);
+        connect(view, &CodeView::breakpointConfigured, this, &DebuggerWindow::breakpointConfigured);
         mCodeViews[path] = view;
         ui->centralwidget->addWidget(view);
     }
@@ -564,6 +556,7 @@ void DebuggerWindow::setCurrentEditor(const QString& module)
     ui->actionFindPrevious->setEnabled(true);
     ui->actionUseSelectionForFind->setEnabled(true);
     ed->setFocus();
+    mLastCodeView = module;
 }
 
 void DebuggerWindow::setCurrentDrawable(const opl::Drawable& drawable)
@@ -651,13 +644,19 @@ void DebuggerWindow::stepOver()
     Q_ASSERT(view);
     auto currentAddr = view->lineAddressForAddress(topFrame.ip);
     // qDebug("Stepping over from addr = %x", currentAddr);
-    mSteppingOver = {
-        .module = topFrame.procModule,
-        .proc = topFrame.procName,
-        .lineAddr = currentAddr,
-        .frameIdx = (int)(mPauseState->frames.count() - 1)
-    };
-    mRuntime->singleStep();
+    mRuntime->stepOver(view->nextLineAddressForAddress(currentAddr));
+}
+
+void DebuggerWindow::stepIn()
+{
+    if (!mPauseState.has_value()) {
+        return;
+    }
+    const auto& topFrame = mPauseState->frames.last();
+    auto view = mCodeViews.value(topFrame.procModule);
+    Q_ASSERT(view);
+    auto currentAddr = view->lineAddressForAddress(topFrame.ip);
+    mRuntime->stepIn(view->nextLineAddressForAddress(currentAddr));
 }
 
 void DebuggerWindow::toggleBreak()
@@ -669,12 +668,12 @@ void DebuggerWindow::toggleBreak()
     view->toggleBreakpoint();
 }
 
-void DebuggerWindow::variableRenamed(const QString& module, const QString& proc, const QString& oldName, const QString& newName)
+void DebuggerWindow::variableRenamed(const QString& module, const QString& proc, uint32_t index, const QString& newName)
 {
     auto& overrides = mNameOverrides[module];
     bool found = false;
     for (int i = 0; i < overrides.count(); i++) {
-        if (overrides[i].proc == proc && overrides[i].newName == oldName) {
+        if (overrides[i].proc == proc && overrides[i].index == index) {
             // Update existing
             found = true;
             overrides[i].newName = newName;
@@ -682,17 +681,23 @@ void DebuggerWindow::variableRenamed(const QString& module, const QString& proc,
         }
     }
     if (!found) {
-        // If there's no existing rename, the current name must be the original name
         overrides.append({
             .proc = proc,
-            .origName = oldName,
+            .index = index,
             .newName = newName
         });
     }
 
     CodeView* view = getCodeView(module);
-    auto prog = OplRuntime().decompile(module, overrides);
+    auto prog = OplRuntime().decompile(module, view->symbolsPath(), overrides);
     view->setContents(prog);
+    emit debuggerConfigChanged();
+}
+
+void DebuggerWindow::breakpointConfigured(const QString& module, uint32_t addr, bool set)
+{
+    mRuntime->configureBreakpoint(module, addr, set);
+    emit debuggerConfigChanged();
 }
 
 void DebuggerWindow::exportBitmap()
@@ -791,4 +796,147 @@ QString DebuggerWindow::getSearchText() const
 #else
     return mSearchText;
 #endif
+}
+
+QString DebuggerWindow::relPath(const QString& absPath) const
+{
+    QDir dir(mRuntime->mappingForDrive(mRuntime->mainDrive()));
+    dir.cdUp();
+    return dir.relativeFilePath(absPath);
+}
+
+QString DebuggerWindow::absPath(const QString& relPath) const
+{
+    QDir dir(mRuntime->mappingForDrive(mRuntime->mainDrive()));
+    dir.cdUp();
+    return dir.absoluteFilePath(relPath);
+}
+
+QVariant DebuggerWindow::getDebuggerConfig() const
+{
+    QMap<QString, QVariant> result;
+
+    const QMap<QString, QVector<uint32_t>> breakpoints = mRuntime->getBreakpoints();
+    QMap<QString, QVariant> brkvar;
+    for (auto iter = breakpoints.begin(), endIter = breakpoints.end(); iter != endIter; iter++) {
+        QList<QVariant> lst;
+        for (uint32_t addr : iter.value()) {
+            lst.append(addr);
+        }
+        brkvar[relPath(iter.key())] = lst;
+    }
+    if (!brkvar.isEmpty()) {
+        result["breakpoints"] = brkvar;
+    }
+
+    // renames format is:
+    // {
+    //     "<module-relative-path>": {
+    //         "<procname>": {
+    //             "<offset>": "<newname>",
+    //             ...
+    //          },
+    //     },
+    //     ...
+    // }
+
+
+    QMap<QString, QVariant> modules;
+
+    for (auto iter = mNameOverrides.cbegin(), endIter = mNameOverrides.cend(); iter != endIter; iter++) {
+        QString moduleName = relPath(iter.key());
+        QMap<QString, QMap<QString, QString>> procs;
+        for (const opl::NameOverride& override : iter.value()) {
+            QString varName = QString("%1").arg(override.index, 4, 16, QLatin1Char('0')).toUpper();
+            procs[override.proc][varName] = override.newName;
+        }
+        if (!procs.isEmpty()) {
+            // Have to convert procs into a QVariant which doesn't happen automatically for recursive types
+            QMap<QString, QVariant> procsVariant;
+            for (auto procIter = procs.cbegin(), endProcIter = procs.cend(); procIter != endProcIter; procIter++) {
+                const QMap<QString, QString>& vars = procIter.value();
+                QMap<QString, QVariant> varsVariant;
+                for (auto varIter = vars.cbegin(), endVarIter = vars.cend(); varIter != endVarIter; varIter++) {
+                    varsVariant[varIter.key()] = varIter.value();
+                }
+                procsVariant[procIter.key()] = varsVariant;
+            }
+            modules[moduleName] = procsVariant;
+        }
+    }
+    if (!modules.isEmpty()) {
+        result["renames"] = modules;
+    }
+
+    return result.isEmpty() ? QVariant() : result;
+}
+
+void DebuggerWindow::setDebuggerConfig(const QVariant& config)
+{
+    if (!config.isValid()) {
+        return;
+    }
+    if (!config.canConvert<QMap<QString, QVariant>>()) {
+        qWarning("Bad type in setDebuggerConfig!");
+        return;
+    }
+    mNameOverrides.clear();
+
+    const QMap<QString, QVariant> configMap = config.toMap();
+    const QMap<QString, QVariant> breakpoints = configMap["breakpoints"].toMap();
+    for (auto iter = breakpoints.cbegin(), endIter = breakpoints.cend(); iter != endIter; iter++) {
+        QString path = absPath(iter.key());
+        auto codeview = mCodeViews.value(path, nullptr);
+        QList<QVariant> addrs = iter.value().toList();
+        for (const QVariant& addrVar : addrs) {
+            uint32_t addr = addrVar.value<uint32_t>();
+            if (addr) {
+                mRuntime->setBreakpoint(path, addr);
+                if (codeview) {
+                    codeview->showBreakpoint(addr);
+                }
+            }
+        }
+    }
+
+    const QMap<QString, QVariant> renames = configMap["renames"].toMap();
+    for (auto iter = renames.cbegin(), endIter = renames.cend(); iter != endIter; iter++) {
+        const QString path = absPath(iter.key());
+        const QMap<QString, QVariant> modRenames = iter.value().toMap();
+        for (auto riter = modRenames.cbegin(), rendIter = modRenames.cend(); riter != rendIter; riter++) {
+            QString procName = riter.key();
+            const QMap<QString, QVariant> vars = riter.value().toMap();
+            for (auto varIter = vars.cbegin(), varEndIter = vars.cend(); varIter != varEndIter; varIter++) {
+                QString varName = varIter.key();
+                QString newName = varIter.value().toString();
+                uint32_t index = (uint32_t)varName.toLong(nullptr, 16);
+                // For code views
+                mNameOverrides[path].append({
+                    .proc = procName,
+                    .index = index,
+                    .newName = newName,
+                });
+                // And for the debug info, stack model etc
+                mRuntime->renameVariable(path, procName, index, newName);
+            }
+        }
+    }
+}
+
+void DebuggerWindow::clearBreakpoints()
+{
+    mRuntime->clearAllBreakpoints();
+    for (CodeView* codeview : mCodeViews) {
+        codeview->setShownBreakpoints({});
+    }
+    emit debuggerConfigChanged();
+}
+
+void DebuggerWindow::flushGraphicsOps()
+{
+    if (!mPauseState.has_value()) {
+        return;
+    }
+    mPauseState = std::nullopt; // Reset this so debugInfoUpdated doesn't ignore the update
+    mRuntime->flushGraphicsOps();
 }

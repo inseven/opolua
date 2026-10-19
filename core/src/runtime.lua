@@ -102,6 +102,7 @@ function Runtime:getLocalVar(index, type, frame)
     local vars = frame.vars
     local var = vars[index]
     if not var then
+        -- First time we're encountering this variable in this frame
         local stringMaxLen = nil
         if type & 0xF == DataTypes.EString then
             local stringFixupIndex = index - 1
@@ -115,39 +116,29 @@ function Runtime:getLocalVar(index, type, frame)
         end
 
         var = self.chunk:getVariableAtOffset(frame.framePtr + index, type)
+        var.name = opofile.makeLocalName(frame.proc, index, type) -- might be overridden below
         var:fixup(stringMaxLen, arrayLen)
         vars[index] = var
         if frame.proc then
+            -- See if we can get a name from proc, and if not, update proc
             local procVar = frame.proc.vars[index]
-            if procVar and procVar.type then
-                -- Don't use the name from the proc info unless it also had a type (excludes local arrays that couldn't
-                -- be typed just from the proc info)
-                var.name = procVar.name
+            if procVar then
+                assert(procVar.name) -- Must have a name to be in proc.vars
+                if procVar.type then
+                    var.name = procVar.name
+                else
+                    -- It must have an (untyped) name, which we can now type
+                    var.name = procVar.name .. DataTypeSuffix[type]
+                    procVar.type = type
+                    procVar.name = var.name
+                end
+            else
+                frame.proc.vars[index] = {
+                    type = type,
+                    directIdx = index,
+                    name = var.name
+                }
             end
-        end
-    end
-
-    if not var.name then
-        -- We now have its type so we can name it
-        var.name = opofile.makeLocalName(frame.proc, index, type)
-    end
-
-    -- Might as well update proc for next time
-    if frame.proc and frame.proc.vars then
-        local procVar = frame.proc.vars[index]
-        if procVar == nil then
-            procVar = {
-                type = type,
-                directIdx = index,
-            }
-            frame.proc.vars[index] = procVar
-        end
-        if procVar.name == nil then
-            procVar.name = var.name
-        end
-        assert(procVar.type == nil or procVar.type == var:type(), "Type mismatch on updating proc var!")
-        if procVar.type == nil then
-            procVar.type = var:type()
         end
     end
 
@@ -368,9 +359,10 @@ function Runtime:pushNewFrame(stack, proc, numParams)
         -- end
     end
 
-    self:debugEvent("pushframe")
+    local isLuaProc = proc.fn ~= nil
+    self:debugEvent("framechange", self:frameCount(), isLuaProc)
 
-    if proc.fn then
+    if isLuaProc then
         -- It's a Lua-implemented proc meaning we don't just set ip and return
         -- to the event loop, we have to invoke it here. Conveniently
         -- frame.indirects contains exactly the proc args, in the right format.
@@ -410,7 +402,7 @@ function Runtime:returnFromFrame(stack, val)
     if prevFrame then
         stack:push(val)
     end
-    self:debugEvent("return")
+    self:debugEvent("framechange", self:frameCount())
 end
 
 function Runtime:setFrame(newFrame, ip)
@@ -772,6 +764,13 @@ function Runtime:getBufferedGraphicsOps()
     if graphics and graphics.buffer then
         local result = graphics.buffer
         graphics.buffer = {}
+        -- printf("Returning %d graphics ops\n", #result)
+        -- Bump the opcount for all involved drawables to make sure that operations the debugger can now 'see' cause
+        -- updates where appropriate
+        for _, op in ipairs(result) do
+            self:incrementOpCount(graphics.contexts[op.id])
+        end            
+
         return result
     else
         return {}
@@ -1284,6 +1283,16 @@ function traceback(msgOrCode)
     return err
 end
 
+function Runtime:frameCount()
+    local result = 0
+    local frame = self.frame
+    while frame do
+        result = result + 1
+        frame = frame.prevFrame
+    end
+    return result
+end
+
 function Runtime:pcallProc(procName, ...)
     local callingFrame = self.frame
     assert(callingFrame == nil or callingFrame.proc.fn, "Cannnot callProc while still executing something else!")
@@ -1321,14 +1330,23 @@ function Runtime:pcallProc(procName, ...)
                     -- And continue to next instruction
                 else
                     -- See if this frame or any parent frame up to callingFrame has an error handler
+                    local frameChanged = false
                     while true do
                         if self.frame.errIp then
                             self.ip = self.frame.errIp
                             -- Jumping to an error handler nukes all temporaries on the stack
                             stack:popTo(self.frame.returnStackSize)
+
+                            -- If we found an error handler in a different frame, emit a framechange event so any
+                            -- stepOut breaks can be processed before the error handler starts running
+                            if frameChanged then
+                                self:debugEvent("framechange", self:frameCount())
+                            end
+
                             break
                         else
                             local prevFrame = self:popFrame(stack)
+                            frameChanged = true
                             if prevFrame ~= callingFrame then
                                 -- And loop again
                             else
@@ -1854,14 +1872,28 @@ end
 function Runtime:renameVariable(procName, index, name)
     local proc = self:findProc(procName)
     local var = proc.vars[index]
-    assert(var, "Var not found!")
-    var.name = name..DataTypeSuffix[var.type & 0xF]
+    if var == nil then
+        -- We might be trying to rename an integer local we haven't yet encountered
+        var = {
+            name = name,
+            directIdx = index,
+        }
+        proc.vars[index] = var
+    else
+        var.name = name
+        if var.type then
+            var.name = var.name..DataTypeSuffix[var.type & 0xF]
+        end
+    end
 
     -- Need to also update the var name in the frame, for any frames currently using proc
     local frame = self.frame
     while frame ~= nil do
         if frame.proc == proc then
-            frame.vars[index].name = var.name
+            -- Check frame has actually encountered the variable
+            if frame.vars[index] then
+                frame.vars[index].name = var.name
+            end
         end
         frame = frame.prevFrame
     end

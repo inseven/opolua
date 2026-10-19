@@ -37,6 +37,8 @@ function main()
         aif = true,
         format = string, t = "format",
         stdout = true, o = "stdout",
+        symbols = true, y = "symbols",
+        symbolfile = string,
     })
 
     if args.help then
@@ -47,7 +49,14 @@ Compile a Series 5 era OPL program. If neither <output>, --stdout, nor --dump
 are specified, the result is written to <filename>.opo alongside <filename>.
 
 <filename> can be either a plain text file, or an OPL file. OPL files are
-converted to text as per opltotext.lua. 
+converted to text as per opltotext.lua.
+
+If <output> is specified and ends in ".oplsys" then the output is written to
+c/System/Apps/xyz.app or m/APP/xyz.opa (as determined by the OPL format used)
+within the <output> directory (which is created if necessary). An
+opolua-compatible manifest.json file is also created with suitable device entry
+based on the --format parameter. Using a ".oplsys" <output> means symbols and an
+AIF file (if applicable for the format) are always generated.
 
 Options:
     --dump, -d
@@ -73,13 +82,23 @@ Options:
 
     --aif
         If specified, an AIF file will be written alongside <output>.
-        The file being compiled must have a "APP .. ENDA" section.
+        The file being compiled must have a "APP .. ENDA" section and the format
+        must be 'er1' (or not specified).
 
     --format <91|93|er1>
         What OPL version to compile for. '91' for OPL1991 which targets the
         Series 3, '93' for OPL1993 targetting the Series 3a/3c, or 'er1' for the
         Series 5. The default is 'er1' if not specified. For compatibility with
         older opolua versions, 'er5' is a synonym for 'er1'.
+
+    --symbols, -y
+        If specified, local variable names for every compiled proc will be
+        written in JSON format to a file alongside <output>. To override the
+        location, specify --symbolfile.
+
+    --symbolfile <path>
+        Write symbols to <path> rather than the default location. Implies
+        --symbols.
 ]])
         os.exit(false)
     end
@@ -98,12 +117,17 @@ Options:
         assert(args.dump == nil, "Cannot specify both --stdout and --dump")
     end
 
+    local isOplSys = args.output and args.output:match("%.oplsys$")
+    if isOplSys and format >= compiler.OplEr1 then
+        args.aif = true
+    end
+
     local progText = readFile(args.filename)
     if progText:sub(1, 4) == string.pack("<I4", KUidDirectFileStore) then
         -- Assume it's a .opl file
         progText = require("recognizer").getOplText(progText)
     end
-    local ok, result, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText,
+    local ok, result, symbols, aif = xpcall(compiler.compile, traceback, args.source or args.filename, args.filename, progText,
         args.include, args.aif, format)
     if not ok then
         if type(result) == "string" then
@@ -132,11 +156,37 @@ Options:
     elseif args.stdout then
         io.stdout:write(result)
     else
-        local outName = args.output or (oplpath.splitext(args.filename) .. ".opo")
-        writeFile(outName, result)
+        local outPath = args.output or (oplpath.splitext(args.filename) .. ".opo")
+        if isOplSys then
+            args.symbols = true
+            local sysDir = outPath
+            local appName = oplpath.splitext(oplpath.basename(outPath))
+            local outDir, device, scale
+            if format < compiler.OplEr1 then
+                outDir = path_tonative(path_join(outPath, "m/APP"))
+                outPath = path_join(outDir, appName..".opa")
+                device = format == compiler.Opl91 and "psion-series-3" or "psion-series-3c"
+                scale = 2
+            else
+                outDir = path_tonative(path_join(outPath, "c/System/Apps/"..appName))
+                outPath = path_join(outDir, appName..".app")
+                device = "psion-series-5"
+            end
+            mkdir(outDir)
+            writeFile(path_join(sysDir, "manifest.json"), json.encode({ device = device, scale = scale }).."\n")
+            writeFile(path_join(sysDir, "launch.oplsys"), "")
+        end                
+        writeFile(outPath, result)
         if args.aif then
-            local aifName = oplpath.splitext(outName)..".aif"
+            local aifName = oplpath.splitext(outPath)..".aif"
             writeFile(aifName, aif)
+        end
+        if args.symbols then
+            local symPath = args.symbolfile
+            if not symPath then
+                symPath = oplpath.splitext(outPath) .. ".json"
+            end
+            writeFile(symPath, json.encode({procs = symbols}))
         end
     end
 end

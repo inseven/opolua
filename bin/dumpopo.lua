@@ -31,14 +31,15 @@ function main()
         "filename",
         "procName",
         "startAddr",
-        all = true, a = "all",
-        help = true, h = "help",
-        decompile = true, d = "decompile",
-        annotate = true, t = "annotate",
-        name = table, n = "name",
         aif = string, i = "aif",
-        stdin = true,
+        all = true, a = "all",
+        annotate = true, t = "annotate",
+        decompile = true, d = "decompile",
+        help = true, h = "help",
+        name = table, n = "name",
         option = table, o = "option",
+        stdin = true,
+        symbols = string, y = "symbols",
     })
     local procName = args.procName
     local all = args.all
@@ -69,11 +70,18 @@ Options:
         also prefixes each line with the address of the start of the first
         statement on that line.
 
+    --symbols <path>, -y <path>
+        Specify the path to a JSON file containing local variable names, as
+        output by compile.lua --symbols. These will be used to fill in names for
+        any variables whose names are not stored in the OPO file.  Has no effect
+        unless --decompile is specified.
+
     --name <proc>:<name>=<newname>
         Manually specify a name for a local in the given proc. Can be used
         multiple times for multiple variables. For example to rename local_00AC%
-        to event% in the MAIN proc, specify --name MAIN:local_00AC=event. Has
-        no effect unless --decompile is specified.
+        to event% in the MAIN proc, specify --name MAIN:local_00AC=event. These
+        take precedence over names from --symbols, if present. Has no effect
+        unless --decompile is specified.
 
     --aif <path>, -i <path>
         Adds an APP...ENDA block to the decompile output based on the given AIF
@@ -108,6 +116,10 @@ Options:
                 the way ELSE blocks are calculated requiring the WHILE transform
                 to have taken place, this option implies no-elses and
                 no-elseifs.
+            no-hex-literals
+                Do not attempt to convert integer literal arguments to certain
+                commands (like FONT) into hex constants, instead leaving them
+                as decimal.
 ]=])
         return os.exit(false)
     end
@@ -122,6 +134,7 @@ Options:
         ["no-merge-prints"] = true,
         ["no-whiles"] = true,
         ["show-elided"] = true,
+        ["no-hex-literals"] = true,
     }
     for _, option in ipairs(args.option) do
         if not knownOptions[option] then
@@ -157,23 +170,34 @@ Options:
     local rt = runtime.newRuntime(nil, prog.translatorVersion)
     rt:addModule("C:\\module", prog)
     if args.decompile then
-        local names = {} -- map of module name to table of name->newname
+        local decompiler = require("decompiler")
+        local renames = {} -- map of module name to table of index->newname
         for _, rename in ipairs(args.name) do
             local proc, oldName, newName = rename:match("(.*):([A-Za-z0-9_]+)%=(.*)")
             if not proc then
                 io.stderr:write("Syntax: --name PROCNAME:<oldname>=<newname>\n")
                 return os.exit(false)
             end
-            if not names[proc] then
-                names[proc] = {}
+            if not renames[proc] then
+                renames[proc] = {}
             end
-            names[proc][oldName] = newName
+
+            local localOffset = oldName:match("^local_([0-9A-Fa-f]+)$") or oldName:match("^loc([0-9A-Fa-f]+)$")
+            if localOffset then
+                oldName = localOffset
+            end
+            renames[proc][oldName] = newName
         end
 
         local aif = nil
         if args.aif then
             local aifData = readFile(args.aif)
             aif = require("aif").parseAif(aifData)
+        end
+
+        local symbols = nil
+        if args.symbols then
+            symbols = json.decode(readFile(args.symbols)).procs
         end
 
         local options = {
@@ -191,7 +215,9 @@ Options:
                 printf(...)
             end,
             format = prog.translatorVersion,
-            renames = names,
+            symbols = symbols,
+            symbolsPathHint = args.symbols,
+            renames = renames,
             aif = aif,
             showElided = hasOption("show-elided") or args.annotate,
         }
@@ -215,12 +241,15 @@ Options:
         if hasOption("no-elses") then
             options.addElses = false
         end
+        if hasOption("no-hex-literals") then
+            options.hexLiterals = false
+        end
 
         local ok, err
         if procName then
-            ok, err = require("decompiler").decompileProc(rt:findProc(procName:upper()), options)
+            ok, err = decompiler.decompileProc(rt:findProc(procName:upper()), options)
         else
-            ok, err = require("decompiler").decompile(prog.procTable, options)
+            ok, err = decompiler.decompile(prog.procTable, options)
         end
 
         if not ok then

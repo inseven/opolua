@@ -238,6 +238,8 @@
         <file alias="alert.opo">../examples/Tests/alert.opo</file>
         <file alias="bench.opo">../examples/Tests/bench.opo</file>
         <file alias="border.opo">../examples/Tests/border.opo</file>
+        <file alias="breaktest.opo">../examples/Tests/breaktest.opo</file>
+        <file alias="breaktest.json">../examples/Tests/breaktest.json</file>
         <file alias="busy.opo">../examples/Tests/busy.opo</file>
         <file alias="clock.opo">../examples/Tests/clock.opo</file>
         <file alias="cmd.opo">../examples/Tests/cmd.opo</file>
@@ -276,6 +278,7 @@
         <file alias="screeninfo.opo">../examples/Tests/screeninfo.opo</file>
         <file alias="sprite.oplsys/manifest.json">../examples/Tests/sprite.oplsys/manifest.json</file>
         <file alias="sprite.oplsys/m/APP/sprite.opa">../examples/Tests/sprite.oplsys/m/APP/sprite.opa</file>
+        <file alias="sprite.oplsys/m/APP/sprite.json">../examples/Tests/sprite.oplsys/m/APP/sprite.json</file>
         <file alias="sprite.oplsys/m/OPD/cross.pic">../examples/Tests/sprite.oplsys/m/OPD/cross.pic</file>
         <file alias="sprite.oplsys/m/OPD/box.pic">../examples/Tests/sprite.oplsys/m/OPD/box.pic</file>
         <file alias="statuswin.opo">../examples/Tests/statuswin.opo</file>

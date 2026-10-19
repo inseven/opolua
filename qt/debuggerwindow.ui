@@ -60,6 +60,7 @@
     <addaction name="windowFocusEnabled"/>
     <addaction name="actionFlush"/>
     <addaction name="heapCheckingEnabled"/>
+    <addaction name="actionClearAllBreakpoints"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -512,6 +513,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+K</string>
+   </property>
+  </action>
+  <action name="actionClearAllBreakpoints">
+   <property name="text">
+    <string>Clear All Breakpoints</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+F9</string>
    </property>
   </action>
  </widget>

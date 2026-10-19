@@ -103,7 +103,18 @@ void pushValue(lua_State* L, const QList<T>& value)
 }
 #endif
 
-template<typename T>
+template <typename K, typename V>
+void pushValue(lua_State* L, const QMap<K, V>& value)
+{
+    lua_createtable(L, 0, value.count());
+    for (auto i = value.cbegin(), end = value.cend(); i != end; i++) {
+        pushValue(L, i.key());
+        pushValue(L, i.value());
+        lua_rawset(L, -3);
+    }
+}
+
+template <typename T>
 T* makeUserData(lua_State* L, T data, const char* type_name)
 {
     T* ptr = static_cast<T*>(lua_newuserdata(L, sizeof(T)));

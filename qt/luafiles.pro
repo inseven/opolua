@@ -36,9 +36,11 @@ LUA_FILES = \
     ../core/src/editor.lua \
     ../core/src/fns.lua \
     ../core/src/font.lua \
-    ../core/src/init_dump.lua \
     ../core/src/init.lua \
+    ../core/src/init_dump.lua \
+    ../core/src/json.lua \
     ../core/src/launcher.lua \
+    ../core/src/lex.lua \
     ../core/src/mbm.lua \
     ../core/src/memory.lua \
     ../core/src/menu.lua \

@@ -3,7 +3,8 @@
 
 _ENV = module()
 
-function decompileFile(data, pathHint, renames, aifData)
+-- Entry point for native code
+function decompileFile(data, pathHint, symbols, renames, aifData)
     local opofile = require("opofile")
     local prog = opofile.parseOpo(data)
     local result = {}
@@ -16,6 +17,7 @@ function decompileFile(data, pathHint, renames, aifData)
             table.insert(result, { location, line })
         end,
         format = prog.translatorVersion,
+        symbolsPathHint = symbols and symbols.path,
         renames = renames,
     }
     if aifData then
@@ -24,6 +26,11 @@ function decompileFile(data, pathHint, renames, aifData)
         -- See if it has embedded AIF data
         options.aif = require("aif").parseAif(data)
     end
+
+    if symbols then
+        options.symbols = symbols.procs
+    end
+
     local ok, err = decompile(prog.procTable, options)
     if ok then
         return result
@@ -41,9 +48,13 @@ function decompile(procTable, options)
     }
 
     local nameArgs = {}
+    if options.symbolsPathHint then
+        table.insert(nameArgs, string.format(' --symbols "%s"', options.symbolsPathHint))
+    end
+
     for _, mod in ipairs(sortedKeys(options.renames or {})) do
-        for _, oldName in ipairs(sortedKeys(options.renames[mod])) do
-            table.insert(nameArgs, string.format(' --name "%s:%s=%s"', mod, oldName, options.renames[mod][oldName]))
+        for _, idx in ipairs(sortedKeys(options.renames[mod])) do
+            table.insert(nameArgs, string.format(' --name "%s:%s=%s"', mod, idx, options.renames[mod][idx]))
         end
     end
     local outputFn = options.outputFn
@@ -75,7 +86,8 @@ function decompile(procTable, options)
             end
         else
             if options.aif.opaType then
-                outputFn(nil, '    TYPE %d\n', options.aif.opaType)
+                local typeStr = string.format(options.aif.opaType <= 4 and "%d" or "$%04X", options.aif.opaType)
+                outputFn(nil, '    TYPE %s\n', typeStr)
             end
             if options.aif.defaultFile then
                 local path, name = oplpath.split(options.aif.defaultFile)
@@ -211,6 +223,27 @@ local prettyNames = {
     GY = "gY",
 }
 
+-- Map of cmd names to which of their arguments should be shown in hex if they are integer literals.
+local hexHints = {
+    CALL = { true },
+    CLEARFLAGS = { true },
+    FONT = { true },
+    IOOPEN = { false, false, true },
+    OS = { true },
+    SETFLAGS = { true },
+    USR = { true },
+    ["USR$"] = { true },
+    dINIT = { false, true },
+    dFILE = { false, false, true, true, true, true },
+    dTEXT = { false, false, true },
+    gBORDER = { true },
+    gBUTTON = { false, false, false, false, false, false, false, true },
+    gCREATE = { false, false, false, false, false, true },
+    gFONT = { true },
+    gSTYLE = { true },
+    gXBORDER = { false, true },
+}
+
 local endStatements = {
     ENDIF = true,
     ENDP = true,
@@ -244,7 +277,19 @@ function decompileProc(proc, options)
     local outputFn = options.outputFn
     local ip = proc.codeOffset
     local endIdx = proc.codeOffset + proc.codeSize
-    local renames = options.renames[proc.name] or {}
+    local renames = {}
+    if options.symbols then
+        for sym, name in pairs(options.symbols[proc.name] or {}) do
+            -- Symbols has type suffix, renames doesn't
+            local newName = name:match("(.-)[%$%%&]?$")
+            renames[sym] = newName
+        end
+    end
+    if options.renames then
+        for sym, name in pairs(options.renames[proc.name] or {}) do
+            renames[sym] = name
+        end
+    end
     local compiler = require("compiler")
     local era = oplFormat >= compiler.OplEr1 and "epoc32" or "sibo"
     local AddrType = era == "sibo" and EWord or ELong
@@ -349,16 +394,18 @@ function decompileProc(proc, options)
 
     local vars = proc.vars
     -- We don't necessarily have all the names yet (because of locals) but we need to process all the renames we can now
-    local varsByOldName = {} -- this uses undecorated names to match what renames does.
-    for _, var in pairs(vars) do
-        varsByOldName[var.name:match("[A-Za-z0-9_]+")] = var
-    end
     for oldName, newName in pairs(renames) do
-        local var = varsByOldName[oldName]
+        local idx = tonumber(oldName, 16)
+        local var = vars[idx]
         if var and var.type then
+            assert(not var.isGlobal, "Cannot apply a rename to a global declaration "..newName)
             var.name = newName..DataTypeSuffix[var.type & 0xF]
         else
-            -- Otherwise we wait until declareLocalVar to apply the rename
+            -- Otherwise we wait until declareLocalVar to apply the rename. If a local is completely unreferenced, then
+            -- we won't be able to show it at all. Even worse is an int/long array where we know it exists but cannot
+            -- know its full type - these we also have to just omit (although in both cases we could maybe infer from
+            -- surrounding offsets what size and thus type it is).
+            -- printf("No variable found for rename %s\n", oldName)
         end
     end
     local args = {}
@@ -436,7 +483,29 @@ function decompileProc(proc, options)
         return iterfn, initState
     end
 
-    local function eval(expr, needsBrackets)
+    local eval -- Forward decl for evalArgExpr
+
+    local function shouldHexArg(cmd, argIdx)
+        return options.hexLiterals ~= false and hexHints[cmd] and hexHints[cmd][argIdx]
+    end
+
+    local function evalArgExpr(cmd, argIdx, argExpr)
+        local result = eval(argExpr)
+        if shouldHexArg(cmd, argIdx) then
+            local intLiteral = tonumber(result:match("^%-?[0-9]+$"))
+            if intLiteral and (intLiteral < 0 or intLiteral >= 16) then
+                if argExpr.valType == EWord then
+                    result = string.format("$%X", touint16(intLiteral))
+                else
+                    -- There shouldn't be any other options at this point
+                    result = string.format("&%X", touint32(intLiteral))
+                end
+            end
+        end
+        return result
+    end
+    
+    function eval(expr, needsBrackets)
         -- needs brackets is more "needs brackets if it's a compound expression"
         if expr.operand then
             if expr.operand == "CAST" then
@@ -472,7 +541,7 @@ function decompileProc(proc, options)
             if #expr > 0 then
                 local params = {}
                 for i, arg in ipairs(expr) do
-                    params[i] = eval(arg)
+                    params[i] = evalArgExpr(expr.call, i, arg)
                 end
                 return fmt("%s(%s)", expr.call, table.concat(params, ", "))
             else
@@ -514,11 +583,9 @@ function decompileProc(proc, options)
         -- A non-array non-string local won't have a var from the proc metadata,
         -- but since indexes don't get reused for different vars we now know its
         -- type and can make a var entry.
+        local renameName = string.format("%04X", index)
         if vars[index] == nil then
-            local undecoratedName = opofile.makeLocalName(proc, index)
-            if renames[undecoratedName] then
-                undecoratedName = renames[undecoratedName]
-            end
+            local undecoratedName = renames[renameName] or opofile.makeLocalName(proc, index)
             vars[index] = {
                 directIdx = index,
                 type = type,
@@ -529,10 +596,7 @@ function decompileProc(proc, options)
             if isArrayType(type) and vars[index].type == nil then
                 vars[index].type = type
                 -- And recalculate name with the type suffix
-                local undecoratedName = opofile.makeLocalName(proc, index)
-                if renames[undecoratedName] then
-                    undecoratedName = renames[undecoratedName]
-                end
+                local undecoratedName = renames[renameName] or opofile.makeLocalName(proc, index)
                 local newName = undecoratedName..DataTypeSuffix[type]
                 vars[index].name = newName
             end
@@ -540,9 +604,16 @@ function decompileProc(proc, options)
         end
     end
 
-    local function getLabelName(dest)
-        local name = fmt("label_%04X", dest)
-        return (renames[name] or name).."::"
+    local function getLabelName(dest, decorated)
+        local name = compiler.getLabelName(dest, oplFormat)
+        local rename = renames[name]
+        if rename then
+            name = rename
+        end
+        if decorated then
+            name = name.."::"
+        end
+        return name
     end
 
     local function popExpr(type)
@@ -992,7 +1063,7 @@ function decompileProc(proc, options)
         if nargs > 0 then
             local argStrs = {}
             for i, expr in ipairs(args) do
-                argStrs[i] = eval(expr)
+                argStrs[i] = evalArgExpr(standardOp.name, i, expr)
             end
             s.value = fmt("%s %s", s.value, table.concat(argStrs, ", "))
         end
@@ -1548,8 +1619,7 @@ function decompileProc(proc, options)
                 addStatement(location, "ONERR OFF")
             else
                 local dest = location + offset
-                local label = fmt(era == "sibo" and "err_%04X" or "errhandler_%04X", dest)
-                label = renames[label] or label
+                local label = getLabelName(dest, false)
                 addNamedLabel(dest, label.."::")
                 addStatement(location, "ONERR %s", label)
             end
@@ -1622,7 +1692,7 @@ function decompileProc(proc, options)
             if itemType == dItemTypes.dTEXT then
                 local flagSuff = ""
                 if ip8() ~= 0 then
-                    flagSuff = fmt(", %s", eval(popExpr(EWord)))
+                    flagSuff = fmt(", %s", evalArgExpr("dTEXT", 3, popExpr(EWord)))
                 end
                 local body = popExpr(EString)
                 local prompt = popExpr(EString)
@@ -1678,7 +1748,10 @@ function decompileProc(proc, options)
                     if uid1.value == "0" and uid2.value == "0" and uid3.value == "0" then
                         -- epoc32 2-arg syntax just pushed 3 literal zeros onto the stack
                     else
-                        uidSuff = fmt(", %s, %s, %s", eval(uid1), eval(uid2), eval(uid3))
+                        uidSuff = fmt(", %s, %s, %s",
+                            evalArgExpr("dFILE", 4, uid1),
+                            evalArgExpr("dFILE", 5, uid2),
+                            evalArgExpr("dFILE", 6, uid3))
                     end
                 end
                 local flags = popExpr(EWord)
@@ -1960,7 +2033,15 @@ function decompileProc(proc, options)
         for _, index in ipairs(sortedVars) do
             local var = vars[index]
             if var.directIdx and not var.isGlobal then
-                table.insert(procBlock.statements, varIdx, { value = "LOCAL "..makeDecl(var) })
+                if var.type then
+                    table.insert(procBlock.statements, varIdx, { value = "LOCAL "..makeDecl(var) })
+                else
+                    -- Presumably an unused int/long array in that we have _some_ metadata for it but not enough to
+                    -- establish the full type
+                    table.insert(procBlock.statements, varIdx, {
+                        value = string.format("REM unused local variable at index %04X", var.directIdx)
+                    })
+                end
                 varIdx = varIdx + 1
             end
         end
@@ -2140,7 +2221,7 @@ function decompileProc(proc, options)
     -- Finally, print each statement
     for block, i, statement in allStatements() do
         if (gotoLabels[statement.location] or 0) > 0 then
-            emit(block, "%s", getLabelName(statement.location))
+            emit(block, "%s", getLabelName(statement.location, true))
             gotoLabels[statement.location] = nil
         end
         if namedLabels[statement.location] then

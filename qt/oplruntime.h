@@ -186,7 +186,10 @@ public: // Debugging APIs
     static QString varToStr(const opl::Variable& v, int idx = -1);
 
     typedef std::pair<uint32_t, QString> Line;
-    QVector<Line> decompile(const QString& path, const QVector<opl::NameOverride>& renames={});
+    QVector<Line> decompile(const QString& path, const QString& symbolsPath = {}, const QVector<opl::NameOverride>& renames={});
+
+    QMap<QString, QVector<uint32_t>> getBreakpoints() const;
+    QSet<uint32_t> getModuleBreakpoints(const QString& moduleNativePath) const;
 
 protected:
     bool event(QEvent* ev) override;
@@ -208,13 +211,17 @@ public slots: // Debugging-related slots
     void updateDebugInfoIfStale();
     void pause();
     void unpause();
-    void stepIn();
+    void stepIn(uint32_t limit);
     void stepOut();
+    void stepOver(uint32_t limit);
     void singleStep();
     void configureBreakpoint(const QString& moduleNativePath, uint32_t addr, bool set);
     void setBreakpoint(const QString& moduleNativePath, uint32_t addr);
     void clearBreakpoint(const QString& moduleNativePath, uint32_t addr);
+    void clearAllBreakpoints();
+    void renameVariable(const QString& moduleNativePath, const QString& proc, uint32_t index, const QString& newName);
     void renameVariable(const QString& proc, uint32_t index, const QString& newName);
+    void addSymbolsFromFile(const QString& moduleNativePath, const QString& path);
     void flushGraphicsOps();
     void stopDebugging();
 
@@ -349,11 +356,17 @@ private:
     bool mDebugging;
     bool mBreakOnErr;
     enum {
-        None,
-        NextReturn,
-        NextOp,
-        NextPushFrame
-    } mBreakOnNext;
+        NotStepping,
+        SteppingOut,
+        SteppingOver,
+        SteppingIn,
+        SingleStepping,
+    } mStepMode;
+    int mSteppingLevel;
+    int mCurrentLevel;
+    // When in step mode SteppingIn or SteppingOver, this is the range of instructions that are valid to be stepped over
+    // (while mCurrentLevel == mSteppingLevel) before an automatic break should be triggered
+    std::pair<uint32_t, uint32_t> mStepLimit;
     uint8_t mSpeed;
     QMap<uint32_t, AsyncHandle*> mPendingRequests;
     QVector<Completion> mPendingCompletions;
@@ -363,12 +376,10 @@ private:
     QElapsedTimer mLastDebugInfoTime;
     //// END protected by mMutex
     QElapsedTimer mLastOpTime;
-    struct IndexedNameOverride {
-        QString proc;
-        uint32_t index;
-        QString name;
-    };
-    QVector<IndexedNameOverride> mPendingVariableRenames;
+
+    // Map of module path -> proc name -> index -> new var name
+    QMap<QString, QMap<QString, QMap<uint32_t, QString>>> mPendingVariableRenames;
+
     int mRuntimeRef;
     std::function<void(void)> mRunNextFn;
     QSemaphore mWaitSemaphore;

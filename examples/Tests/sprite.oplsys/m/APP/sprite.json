@@ -1,0 +1,9 @@
+{
+    "procs": {
+        "CRBITS": {},
+        "SPRITE": {
+            "001D": "bit$",
+            "0047": "sprId%"
+        }
+    }
+}

@@ -417,6 +417,11 @@ void MainWindow::importApp()
 
 void MainWindow::openFile(const QString& path)
 {
+    openFileEx(path, false);
+}
+
+void MainWindow::openFileEx(const QString& path, bool debugger)
+{
     if (getRuntime().runningLauncherCommand() == "launcher") {
         getRuntime().interruptAndRun([this, path]() {
             openFile(path);
@@ -466,6 +471,10 @@ void MainWindow::openFile(const QString& path)
             }
 
             getRuntime().setDrive(mainDrv, drive);
+
+            if (debugger) {
+                showDebugger();
+            }
 
             QString appPath;
             if (extension == "app" && mainDrv == Drive::C) {
@@ -726,10 +735,24 @@ void MainWindow::showDebugger()
 {
     if (!mDebugWindow) {
         getRuntime().setIgnoreFocusEvents(true);
-        mDebugWindow = new DebuggerWindow(ui->screen->getRuntime());
+        QVariant debuggerInfo;
+        if (mManifest.debuggerInfo().isObject()) {
+            debuggerInfo = mManifest.debuggerInfo().toVariant();
+        }
+        mDebugWindow = new DebuggerWindow(ui->screen->getRuntime(), debuggerInfo);
         mDebugWindow->move(pos() + QPoint(100, 100));
+        connect(mDebugWindow, &DebuggerWindow::debuggerConfigChanged, this, &MainWindow::onDebuggerConfigChanged);
     }
     mDebugWindow->show();
     mDebugWindow->raise();
     mDebugWindow->activateWindow();
+}
+
+void MainWindow::onDebuggerConfigChanged()
+{
+    if (!mManifest.path().isEmpty()) {
+        auto config = mDebugWindow->getDebuggerConfig();
+        mManifest.setDebuggerInfo(QJsonValue::fromVariant(config));
+        mManifest.save();
+    }
 }

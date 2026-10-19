@@ -31,6 +31,9 @@ QJsonObject Manifest::toJson() const
     if (!mAppVersion.isEmpty()) {
         obj.insert("appVersion", mAppVersion);
     }
+    if (!mDebuggerInfo.isUndefined()) {
+        obj.insert("debugger", mDebuggerInfo);
+    }
     return obj;
 }
 
@@ -57,6 +60,7 @@ bool Manifest::load()
     mScale = manifest["scale"].toInt(1);
     mSourceUrl = manifest["sourceUrl"].toString();
     mAppVersion = manifest["appVersion"].toString();
+    mDebuggerInfo = manifest["debugger"];
     return true;
 }
 

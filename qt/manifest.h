@@ -35,13 +35,16 @@ public:
     QString appVersion() const { return mAppVersion; }
     void setAppVersion(const QString& appVersion) { mAppVersion = appVersion; }
 
+    QJsonValue debuggerInfo() const { return mDebuggerInfo; }
+    void setDebuggerInfo(const QJsonValue& info) { mDebuggerInfo = info; }
+
 private:
     QString mPath;
     OplDeviceType mDevice;
     int mScale;
     QString mSourceUrl;
     QString mAppVersion;
-
+    QJsonValue mDebuggerInfo;
 };
 
 #endif // MANIFEST_H

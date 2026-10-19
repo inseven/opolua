@@ -25,11 +25,18 @@ public:
     void scrollToAddress(uint32_t addr, bool selectLine = true);
 
     uint32_t lineAddressForAddress(uint32_t address) const;
+    uint32_t nextLineAddressForAddress(uint32_t address) const;
 
     int lineNumberAreaWidth();
     void lineNumberPaintEvent(QPaintEvent* event);
 
     void setBreak(std::optional<uint32_t> address);
+
+    void setShownBreakpoints(const QSet<uint32_t>& addresses);
+    void showBreakpoint(uint32_t address, bool show = true);
+
+    void setSymbolsPath(const QString& path);
+    QString symbolsPath() const;
 
 public slots:
     void toggleBreakpoint();
@@ -70,6 +77,7 @@ private:
     std::optional<uint32_t> mBreak;
     GotoPopup* mGotoPopup;
     QMap<QString, int> mSymbolToCharOffset;
+    QString mSymbolsPath;
 
 };
 
