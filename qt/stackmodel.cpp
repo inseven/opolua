@@ -508,6 +508,11 @@ bool StackModel::setData(const QModelIndex &index, const QVariant &value, int ro
 {
     Q_UNUSED(role);
     Q_ASSERT(isVariable(index) || isArrayMember(index));
+
+    if (!mRuntime) {
+        return false;
+    }
+
     const auto& var = variableForIndex(index);
     if (index.column() == 0) {
         // It's a variable rename

@@ -44,6 +44,7 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, const QVariant& config, QWid
     setAttribute(Qt::WA_DeleteOnClose);
     ui->setupUi(this);
     connect(mRuntime, &OplRuntime::debugInfoUpdated, this, &DebuggerWindow::debugInfoUpdated);
+    connect(mRuntime, &QObject::destroyed, this, &DebuggerWindow::runtimeDestroyed);
     gApp->updateWindowMenu(this, ui->menuWindow);
 
     // Toolbar/menu
@@ -128,11 +129,34 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, const QVariant& config, QWid
 
 DebuggerWindow::~DebuggerWindow()
 {
-    if (mPauseState.has_value()) {
-        mRuntime->unpause();
+    if (mRuntime) {
+        if (mPauseState.has_value()) {
+            mRuntime->unpause();
+        }
+        mRuntime->stopDebugging();
     }
     delete ui;
-    mRuntime->stopDebugging();
+}
+
+void DebuggerWindow::runtimeDestroyed()
+{
+    mRuntime = nullptr;
+    ui->actionPause->setEnabled(false);
+    ui->actionStop->setEnabled(false);
+    ui->actionRestart->setEnabled(false);
+    ui->actionContinue->setEnabled(false);
+    ui->actionStepInto->setEnabled(false);
+    ui->actionStepOver->setEnabled(false);
+    ui->actionStepOut->setEnabled(false);
+    ui->breakOnError->setEnabled(false);
+    ui->windowFocusEnabled->setEnabled(false);
+    ui->actionFlush->setEnabled(false);
+    ui->actionExportBitmap->setEnabled(false);
+    ui->actionGotoSymbol->setEnabled(false);
+    ui->heapCheckingEnabled->setEnabled(false);
+    ui->actionClearAllBreakpoints->setEnabled(false);
+    mPauseState = std::nullopt;
+    mStatusLabel->setText("Closed");
 }
 
 void DebuggerWindow::keyPressEvent(QKeyEvent *event)
@@ -473,6 +497,7 @@ void DebuggerWindow::spriteItemSelected()
 
 void DebuggerWindow::highlightWindow(int drawableId)
 {
+    if (!mRuntime) return;
     auto screen = static_cast<OplScreenWidget*>(mRuntime->getScreen());
     screen->highlightWindow(drawableId);
 }
@@ -527,7 +552,7 @@ CodeView* DebuggerWindow::getCodeView(const QString& path)
 DrawableView* DebuggerWindow::getDrawableView(const opl::Drawable& drawable)
 {
     auto view = mDrawableViews.value(drawable.id);
-    if (!view) {
+    if (!view && mRuntime) {
         view = new DrawableView(drawable, this);
         mDrawableViews[drawable.id] = view;
         ui->centralwidget->addWidget(view);
@@ -563,7 +588,12 @@ void DebuggerWindow::setCurrentDrawable(const opl::Drawable& drawable)
 {
     ui->modulesView->clearSelection();
     auto view = getDrawableView(drawable);
-    view->update(drawable, mRuntime);
+    if (!view) {
+        return;
+    }
+    if (mRuntime) {
+        view->update(drawable, mRuntime);
+    }
 
     ui->centralwidget->setCurrentWidget(view);
     setWindowTitle(QString("%1 %2 - OpoLua Debugger")
@@ -696,8 +726,10 @@ void DebuggerWindow::variableRenamed(const QString& module, const QString& proc,
 
 void DebuggerWindow::breakpointConfigured(const QString& module, uint32_t addr, bool set)
 {
-    mRuntime->configureBreakpoint(module, addr, set);
-    emit debuggerConfigChanged();
+    if (mRuntime) {
+        mRuntime->configureBreakpoint(module, addr, set);
+        emit debuggerConfigChanged();
+    }
 }
 
 void DebuggerWindow::exportBitmap()

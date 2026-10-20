@@ -7,6 +7,7 @@
 #include <memory>
 
 #include <QAbstractItemModel>
+#include <QPointer>
 #include <QTimer>
 #include "opldebug.h"
 
@@ -53,7 +54,7 @@ private:
     ModelIdx* modelIndexFor(int frameIndex, int variableIndex = -1, int arrayIndex = -1) const;
 
 private:
-    OplRuntime* mRuntime;
+    QPointer<OplRuntime> mRuntime;
     QVector<opl::Frame> mFrames;
     std::unique_ptr<ModelIdx> mRootIndex;
     bool mPaused;
