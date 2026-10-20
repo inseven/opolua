@@ -60,6 +60,7 @@ private slots:
     void highlightWindow(int drawableId);
     void copy();
     void flushGraphicsOps();
+    void runtimeDestroyed();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
