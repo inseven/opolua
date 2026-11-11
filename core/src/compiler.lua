@@ -1376,7 +1376,9 @@ function ProcState:emitExpression(exp, requiredType)
         local valType, val = literalToNumber(exp.val)
         self:emitNumberLiteral(valType, val)
     elseif exp.type == "string" then
-        self:emit("Bs1", opcodes.ConstantString, literalToString(exp.val))
+        local str = literalToString(exp.val)
+        synassert(#str <= 255, exp, "Literal string expression too long")
+        self:emit("Bs1", opcodes.ConstantString, str)
         self:pushStack(String)
     elseif exp.type == "identifier" or exp.type == "call" then
 
