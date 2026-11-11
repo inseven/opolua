@@ -1223,11 +1223,6 @@ function PRINT(str)
         local frag = str:sub(strPos, strPos + remaining - 1)
         strPos = strPos + #frag
         if #frag > 0 then
-            if charX == maxX then
-                -- Wrap to next line
-                charX = 0
-                charY = charY + 1
-            end
             while charY >= maxY do
                 gSCROLL(0, -screen.charh, screen.x, screen.y, screen.w * screen.charw, screen.h * screen.charh)
                 charY = charY - 1
@@ -1235,11 +1230,13 @@ function PRINT(str)
             drawText(frag, screen.x + charX * screen.charw, screen.y + charY * screen.charh, KtModeReplace)
             charX = charX + #frag
         end
-        if lineEnd and strPos == lineEnd then
-            -- newline
+        if strPos == lineEnd or charX == maxX then
             charX = 0
             charY = charY + 1
-            strPos = strPos + 1
+            if strPos == lineEnd then
+                -- Skip the newline char
+                strPos = strPos + 1
+            end
         end
     end
     screen.cursorx = charX
