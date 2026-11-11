@@ -1,5 +1,5 @@
 PROC main:
-	PRINT "012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
-	PRINT "Another line"
-	GET
+    PRINT "There once was a ship that set to sea, the name of the ship was the Billy O' Tea. The winds blew up, her bow dipped down. Oh blow, my bully boys, blow."
+    PRINT "Soon may the Wellerman come, to bring us sugar and tea and rum. One day, when the tonguing is done, we'll take our leave and go."
+    GET
 ENDP
