@@ -1164,6 +1164,31 @@ function SCREEN(widthInChars, heightInChars, xInChars, yInChars)
     screen.cursory = math.min(screen.cursory, screen.h - 1)
 end
 
+function SCREENINFO()
+    local screen = runtime:getGraphics().screen
+    local result = {
+        [1] = screen.x, -- Left margin in pixels
+        [2] = screen.y, -- Top margin in pixels
+        [3] = screen.w, -- text screen width in chars
+        [4] = screen.h, -- text screen height in chars
+        [5] = 1, -- text win window id (ie default window)
+        [7] = screen.charw, -- screen font char width
+        [8] = screen.charh, -- screen font char height
+    }
+
+    if runtime:isSibo() then
+        assert(screen.fontUid <= 0x7FFF) -- Font id must fit in a word in SIBO-land
+        result[6] = screen.fontUid
+        result[9] = 0 -- reserved
+        result[10] = 0 -- reserved
+    else
+        result[6] = 0 -- unused
+        result[9] = screen.fontUid & 0xFFFF
+        result[10] = (screen.fontUid >> 16) & 0xFFFF
+    end
+    return result
+end
+
 function AT(x, y)
     local screen = runtime:getGraphics().screen
     assert(x > 0 and y > 0, KErrInvalidArgs)
