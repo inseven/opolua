@@ -400,7 +400,13 @@ end
 
 function launcher(osName)
     runtime:iohandler().system("setAppTitle", "Launcher")
-    SCREEN(72, 20, 12, 1)
+
+    local info = SCREENINFO()
+    -- Inset by 80px and 10px (or nearest in characters)
+    local insetx = 80 // info[KSInfoAPixW]
+    local width = info[KSInfoAScrW] - insetx - (10 // info[KSInfoAPixW])
+    SCREEN(width, info[KSInfoAScrH], insetx, 1)
+
     local isMac = osName == "osx" or osName == "macos" -- Qt5 and Qt6 names respectively
     local mod = isMac and "Cmd" or "Ctrl-Alt"
     local function print(str)
