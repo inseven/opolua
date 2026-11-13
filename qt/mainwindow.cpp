@@ -28,7 +28,7 @@
 #include <QStandardPaths>
 #include <QUrlQuery>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include <sys/xattr.h>
 #include <CoreFoundation/CoreFoundation.h>
 #endif
@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
     setAcceptDrops(true);
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // This should be ctrl-esc on ALL platforms
     ui->actionStop->setShortcut(QCoreApplication::translate("MainWindow", "Meta+Esc", nullptr));
     // And these don't need to be ctrl-alt (-> cmd-alt on mac)
@@ -537,7 +537,7 @@ void MainWindow::updateManifest()
     mManifest.setScale(ui->screen->getScale());
     mManifest.save();
 
-#if !defined(Q_OS_MAC)
+#if !defined(Q_OS_MACOS)
     // Mac is the only OS with bundle support
     QFile launcherFile(QFileInfo(inf.dir(), "launch.oplsys").filePath());
     if (!launcherFile.exists()) {
@@ -596,7 +596,7 @@ void MainWindow::updateRecents(const QStringList& recentFiles)
         QAction* action = ui->menuOpenRecent->addAction(path);
         action->setData(path);
         if (i == 0) {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
             action->setShortcut(QString("Ctrl+Shift+T"));
 #else
             action->setShortcut(QString("Ctrl+Alt+T"));
@@ -646,7 +646,7 @@ void MainWindow::onSpeedChanged()
 QString MainWindow::getSourceUrlForPath(const QString& path)
 {
     QString result;
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     auto p = QDir::toNativeSeparators(path);
     auto buf = CFDataCreateMutable(NULL, 0);
     CFDataSetLength(buf, 2048);

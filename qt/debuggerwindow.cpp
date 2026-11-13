@@ -54,7 +54,7 @@ DebuggerWindow::DebuggerWindow(OplRuntime* runtime, const QVariant& config, QWid
     ui->breakOnError->setChecked(runtime->breakOnError());
     ui->windowFocusEnabled->setChecked(!runtime->ignoreFocusEvents());
     ui->actionExportBitmap->setVisible(false);
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     ui->actionDebugLog->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+D", nullptr));
     ui->actionRestart->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+R", nullptr));
     ui->actionClose->setShortcut(QCoreApplication::translate("DebuggerWindow", "Ctrl+W", nullptr));
@@ -814,7 +814,7 @@ void DebuggerWindow::useSelectionForFind()
 
 void DebuggerWindow::setSearchText(const QString& text)
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     qApp->clipboard()->setText(text, QClipboard::FindBuffer);
 #else
     mSearchText = text;
@@ -823,7 +823,7 @@ void DebuggerWindow::setSearchText(const QString& text)
 
 QString DebuggerWindow::getSearchText() const
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     return qApp->clipboard()->text(QClipboard::FindBuffer);
 #else
     return mSearchText;

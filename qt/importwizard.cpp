@@ -67,7 +67,7 @@ void ImportWizard::doInstall()
             ok = m.save();
         }
 
-#if !defined(Q_OS_MAC)
+#if !defined(Q_OS_MACOS)
         // Mac is the only OS with bundle support
         QFile launcherFile(QDir(installPath).filePath("launch.oplsys"));
         launcherFile.open(QFile::WriteOnly);
