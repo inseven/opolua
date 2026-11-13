@@ -76,9 +76,16 @@ function SPRITECREATE(runtime, winId, x, y, flags)
     local graphics = runtime:getGraphics()
     local context = runtime:getGraphicsContext(winId)
     -- winId zero means "the root window" which only really makes sense when combined with the ESpriteNoChildClip flag
-    local isGlobal = winId == 0 and (flags & 1) ~= 0 -- TSpriteFlags::ESpriteNoChildClip in epoc32 terms
+    -- Some programs however use winId=0 and flags=0 (eg 5outhPark) so... maybe just say either means global?
+    local isGlobal = winId == 0 or (flags & 1) ~= 0 -- TSpriteFlags::ESpriteNoChildClip in epoc32 terms
     -- printf("SPRITECREATE(winId=%d, x=%d, y=%d, flags=%X)", winId, x, y, flags)
     assert((context and context.isWindow) or isGlobal, "id is not a window")
+    if winId == 0 then
+        -- Strictly speaking, programs could close all OPL windows including the default window and still use sprite
+        -- APIs with winId == 0 because that maps to the root window which I think is technically the parent of all
+        -- OPL windows, but we don't currently make that distinction and assume the default window is still open.
+        winId = KDefaultWin
+    end
     local spriteId = #graphics.sprites + 1
     local sprite = {
         origin = { x = x, y = y },
