@@ -2718,19 +2718,7 @@ gXBorder_dump = qualifier_dump
 
 function ScreenInfo(stack, runtime) -- 0x114
     local addr = runtime:addrFromInt(stack:pop())
-    local screen = runtime:getGraphics().screen
-    local result = {
-        [1] = screen.x, -- Left margin in pixels
-        [2] = screen.y, -- Top margin in pixels
-        [3] = screen.w, -- text screen width in chars
-        [4] = screen.h, -- text screen height in chars
-        [5] = 1, -- text win window id (ie default window)
-        [6] = 0, -- unused
-        [7] = screen.charw, -- screen font char width
-        [8] = screen.charh, -- screen font char height
-        [9] = screen.fontUid & 0xFFFF,
-        [10] = (screen.fontUid >> 16) & 0xFFFF,
-    }
+    local result = runtime:SCREENINFO()
     addr:writeArray(result, DataTypes.EWord)
 end
 
