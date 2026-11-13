@@ -45,7 +45,7 @@ int qtKeyToOpl(int qtKey)
     case Qt::Key_PageUp: return opl::pgUp;
     case Qt::Key_PageDown: return opl::pgDn;
     case Qt::Key_Shift: return opl::leftShift;
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // case Qt::Key_Control: return opl::menu;
     case Qt::Key_Meta: return opl::control;
 #else
@@ -106,7 +106,7 @@ int qtKeyToOpl(int qtKey)
     }
 }
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 static const int kRealControlModifer = Qt::MetaModifier;
 #else
 static const int kRealControlModifer = Qt::ControlModifier;

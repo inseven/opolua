@@ -91,7 +91,7 @@ private:
     QMap<int, DrawableView*> mDrawableViews;
     std::optional<opl::ProgramInfo> mPauseState;
     QMap<QString, QVector<opl::NameOverride>> mNameOverrides; // Map key is module name same as for mCodeViews
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     QString mSearchText;
 #endif
 };
