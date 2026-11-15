@@ -203,6 +203,7 @@
         <file alias="clock_analogLargeS3a.png">../resources/clocks/analogLargeS3a.png</file>
         <file alias="clock_analogLargeS5.png">../resources/clocks/analogLargeS5.png</file>
         <file alias="clock_analogLargeColor.png">../resources/clocks/analogLargeColor.png</file>
+        <file alias="icon_unknown.png">../ios/OpoLua/Assets.xcassets/UnknownAppIcon.imageset/question.png</file>
         <file>opolua.png</file>
     </qresource>
 

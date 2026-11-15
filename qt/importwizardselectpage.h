@@ -6,11 +6,13 @@
 
 #include <QWizardPage>
 
+#include "choosywizardpage.h"
+
 namespace Ui {
 class ImportWizardSelectPage;
 }
 
-class ImportWizardSelectPage : public QWizardPage
+class ImportWizardSelectPage : public ChoosyWizardPage
 {
     Q_OBJECT
 
@@ -22,8 +24,6 @@ public:
 
 private slots:
     void chooseSource();
-    void chooseInstallPath();
-    void choosePackagePath();
 
 private:
     Ui::ImportWizardSelectPage *ui;

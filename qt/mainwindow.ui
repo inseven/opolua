@@ -45,6 +45,7 @@
     <addaction name="actionWelcome"/>
     <addaction name="actionInstall"/>
     <addaction name="actionImportApp"/>
+    <addaction name="actionSoftwareIndex"/>
     <addaction name="separator"/>
     <addaction name="actionDebugLog"/>
     <addaction name="actionOpenSharedFolder"/>
@@ -100,7 +101,7 @@
     </property>
     <addaction name="actionReportIssue"/>
     <addaction name="separator"/>
-    <addaction name="actionSoftwareIndex"/>
+    <addaction name="actionOpenSoftwareIndexUrl"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuInterpreter"/>
@@ -319,12 +320,12 @@
     <string>Ctrl+Alt+E</string>
    </property>
   </action>
-  <action name="actionSoftwareIndex">
+  <action name="actionOpenSoftwareIndexUrl">
    <property name="text">
     <string>Software Index...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Alt+B</string>
+    <string>Ctrl+Alt+Shift+B</string>
    </property>
   </action>
   <action name="actionSeries3">
@@ -445,6 +446,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+Shift+I</string>
+   </property>
+  </action>
+  <action name="actionSoftwareIndex">
+   <property name="text">
+    <string>Software Index...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+B</string>
    </property>
   </action>
  </widget>

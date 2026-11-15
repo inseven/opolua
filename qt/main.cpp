@@ -21,6 +21,7 @@
 #include "mainwindow.h"
 #include "oplapplication.h"
 #include "oplruntimegui.h"
+#include "softwareindexwizard.h"
 
 static int runCommand(const QStringList& args)
 {
@@ -75,6 +76,17 @@ int main(int argc, char *argv[])
     } else if (argc == 2 && strcmp(argv[1], "unregister") == 0) {
         OplApplication::unregisterApp();
         return 0;
+    } else if (argc == 2 && strcmp(argv[1], "swi") == 0) {
+        OplApplication a(argc, argv);
+
+        // Need a main window for the menu bar
+        MainWindow* w = new MainWindow();
+        w->showLauncher();
+        w->show();
+
+        auto wizard = new SoftwareIndexWizard();
+        wizard->show();
+        return a.exec();
     }
 
     if (argc > 1 && strcmp(argv[1], "open") != 0) {
@@ -86,6 +98,7 @@ int main(int argc, char *argv[])
             qDebug("    open");
             qDebug("    register");
             qDebug("    unregister");
+            qDebug("    swi");
             for (const QString& cmd : validCmds) {
                 qDebug("    %s", qPrintable(cmd));
             }

@@ -57,7 +57,7 @@ void ImportWizard::doInstall()
 
     if (field("install").toBool()) {
         auto installPath = field("installPath").toString();
-        bool ok = mRuntime.installSis("sis.sis", sisFile, installPath);
+        bool ok = mRuntime.quietInstallSis("sis.sis", sisFile, installPath);
 
         if (ok) {
             auto manifestPath = QDir(installPath).filePath("manifest.json");

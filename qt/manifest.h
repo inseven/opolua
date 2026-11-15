@@ -21,7 +21,7 @@ public:
     // accessors
 
     QString path() const { return mPath; }
-    void setPath(const QString& path) { mPath = path; }
+    void setPath(const QString& path);
 
     OplDeviceType device() const { return mDevice; }
     void setDevice(OplDeviceType device) { mDevice = device; }

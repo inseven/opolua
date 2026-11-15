@@ -19,6 +19,15 @@ Manifest::Manifest(const QString& path)
 {
 }
 
+void Manifest::setPath(const QString& path)
+{
+    mPath = path;
+    // Setting path also invalidates info that is app-specific (rather than window-specific like scale)
+    mSourceUrl = {};
+    mAppVersion = {};
+    mDebuggerInfo = {};
+}
+
 QJsonObject Manifest::toJson() const
 {
     QJsonObject obj;
