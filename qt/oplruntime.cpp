@@ -663,8 +663,14 @@ void OplRuntime::runOpo(const QString& path)
 // This fn overwrites the filesystem mappings
 void OplRuntime::runInstaller(const QString& file, const QString& sysDir)
 {
-    doRunInstaller(file, sysDir, QString());
+    doRunInstaller(file, QByteArray(), sysDir, QString());
 }
+
+void OplRuntime::runInstaller(const QString& fileName, const QByteArray& sisData, const QString& sysDir)
+{
+    doRunInstaller(fileName, sisData, sysDir, QString());
+}
+
 
 void OplRuntime::setDeviceTypeFromSisInfo(const std::optional<SisInfo>& sisinfo)
 {
@@ -677,7 +683,7 @@ void OplRuntime::setDeviceTypeFromSisInfo(const std::optional<SisInfo>& sisinfo)
     }
 }
 
-void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, const QString& lang)
+void OplRuntime::doRunInstaller(const QString& file, const QByteArray& sisData, const QString& sysDir, const QString& lang)
 {
     Q_ASSERT(!running());
 
@@ -686,7 +692,11 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, cons
     mLauncherCmd = "installSis";
     mFs->removeAllMappings();
 
-    mFs->addSimulatedDrive('I', {file});
+    // If sisData is provided, 'file' is just considered a name hint
+    if (sisData.isEmpty()) {
+        mFs->addSimulatedDrive('I', {file});
+    }
+
     QString drive = QString("%1").arg((char)mainDrive());
     QString drvPath = QFileInfo(QDir(sysDir), drive.toLower()).filePath();
     mFs->addMapping((char)mainDrive(), drvPath, true);
@@ -695,15 +705,22 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, cons
     lua_getfield(L, -1, "runLauncherCmd");
     lua_remove(L, -2); // runtime
     pushIohandler();
-    pushValue(L, mLauncherCmd);
-    pushValue(L, file);
-    pushValue(L, QString("I:\\" + QFileInfo(file).fileName()));
-    pushValue(L, sysDir);
-    pushValue(L, drive);
+    pushValue(L, mLauncherCmd); // "installSis"
+    pushValue(L, file); // hostPath
+    if (sisData.isEmpty()) {
+        pushValue(L, QString("I:\\" + QFileInfo(file).fileName())); // devicePath
+        lua_pushnil(L); // sisData
+    } else {
+        lua_pushnil(L); // devicePath
+        pushValue(L, sisData); // sisData
+    }
+
+    pushValue(L, sysDir); // hostDest
+    pushValue(L, drive); // drive
     if (!lang.isEmpty()) {
         pushValue(L, lang);
     }
-    mRunNextFn = [this, file, sysDir]() {
+    mRunNextFn = [this, file, sisData, sysDir]() {
         mFs->removeMapping('I');
         if (lua_type(L, -1) != LUA_TTABLE) {
             emit runComplete(QString(), QString());
@@ -717,12 +734,16 @@ void OplRuntime::doRunInstaller(const QString& file, const QString& sysDir, cons
             auto lang = to_string(L, -1, "lang");
             lua_pop(L, 1);
             setDeviceType(toDeviceType(changeDevice));
-            doRunInstaller(file, sysDir, lang);
+            doRunInstaller(file, sisData, sysDir, lang);
             return;
         }
 
         lua_pop(L, 1);
-        emit installationComplete(file, sisVersion);
+        QString fileNameForInstallComplete;
+        if (sisData.isEmpty()) {
+            fileNameForInstallComplete = file;
+        }
+        emit installationComplete(fileNameForInstallComplete, sisVersion);
         if (!launch.isEmpty()) {
             pushRunParams(launch);
             startThread();
@@ -3392,9 +3413,9 @@ int inst(lua_State* L) {
 
 } // end namespace
 
-// This is intended for quiet installs only; if the SIS might want to ask the user a question then use runInstaller()
+// This is intended for quiet (non-interactive) installs only; if the SIS might want to ask the user a question then use runInstaller()
 // instead.
-bool OplRuntime::installSis(const QString& sisFileName, const QByteArray& sisFile, const QString& sysPath)
+bool OplRuntime::quietInstallSis(const QString& sisFileName, const QByteArray& sisFile, const QString& sysPath)
 {
     Q_ASSERT(!running());
     CHECK_STACK_BALANCED(L);

@@ -151,7 +151,7 @@ local function sisInstallQuery(sisFile, text, queryType)
     return ret == KKeyEnter
 end
 
-function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
+function installSis(hostPath, devicePath, sisData, hostDest, drive, preselectedLang)
     runtime:iohandler().system("setAppTitle", "Installer")
 
     local sis = require("sis")
@@ -329,7 +329,7 @@ function installSis(hostPath, devicePath, hostDest, drive, preselectedLang)
         sisInstallComplete = function() end,
     }
 
-    local result = sis.installSis(devicePath, nil, iohandler, true)
+    local result = sis.installSis(devicePath or hostPath, sisData, iohandler, true)
 
     if result == nil then
         local items = {}
@@ -415,7 +415,8 @@ function launcher(osName)
     print("Welcome to OpoLua")
     print("")
     print("Install a SIS by:")
-    print(string.format("  * selecting File->Install SIS (%s-I)", mod))
+    print(string.format("  * selecting File->Install SIS (%s-I), or", mod))
+    print(string.format("  * browsing File->Software Index (%s-B), or", mod))
     print("  * double-clicking the SIS file, or")
     print("  * dragging it into this window.")
     print("")

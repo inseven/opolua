@@ -47,6 +47,8 @@ public:
     OplRuntimeGui& getRuntime();
     void showLauncher();
     void openFileEx(const QString& path, bool showDebugger);
+    void runInstallerWithSisData(const QString& sourceUrl, const QString& sisName, const QByteArray& data,
+        const QString& installPath);
 
     void setScale(int scale);
 
@@ -77,7 +79,8 @@ private slots:
     void onSpeedChanged();
     void onDeviceTypeChanged();
     void reportIssue();
-    void openSoftwareIndex();
+    void openSoftwareIndexUrl();
+    void openSoftwareIndexWizard();
     void onDebuggerConfigChanged();
 
 private:

@@ -40,6 +40,7 @@ public:
     void addRecentFile(const QString& path);
     const QStringList& getRecentFiles() const { return mRecentFiles; }
     QVector<MainWindow*> getMainWindows();
+    MainWindow* getUnusedWindow();
     void updateWindowMenu(QMainWindow* window, QMenu* menu);
 
 signals:

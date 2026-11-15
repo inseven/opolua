@@ -133,6 +133,7 @@ public:
     void run(const QDir& cDrive, const QString& devicePath); // convenience
     void runOpo(const QString& path); // convenience, sets up dummy C drive
     void runInstaller(const QString& file, const QString& sysDir);
+    void runInstaller(const QString& fileName, const QByteArray& sisData, const QString& sysDir);
     void runLauncher();
     void runAppSelector();
 
@@ -162,7 +163,7 @@ public:
     FolderAnalysis analyzeAppFolder(const QString& path);
     QString makePackageFile(const FolderAnalysis& info);
     QByteArray makeSis(const QString& packageFileData, const QString& baseDir);
-    bool installSis(const QString& sisFileName, const QByteArray& sisFile, const QString& sysPath);
+    bool quietInstallSis(const QString& sisFileName, const QByteArray& sisFile, const QString& sysPath);
 
     static void configureLuaResourceSearcher(lua_State *L);
     static int dofile(lua_State *L);
@@ -299,7 +300,7 @@ private:
     static OplRuntime* getSelf(lua_State *L);
     QString tolocalstring(lua_State *L, int index);
     void setEscape(bool flag);
-    void doRunInstaller(const QString& file, const QString& sysDir, const QString& lang);
+    void doRunInstaller(const QString& file, const QByteArray& sisData, const QString& sysDir, const QString& lang);
     void setDeviceTypeFromSisInfo(const std::optional<SisInfo>& sisInfo);
     bool debugInfoStale() const;
     void updateDebugInfo(lua_State* L, bool errOnStack = false);

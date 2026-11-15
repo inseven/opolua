@@ -110,6 +110,20 @@ QVector<MainWindow*> OplApplication::getMainWindows()
     return result;
 }
 
+MainWindow* OplApplication::getUnusedWindow()
+{
+    for (auto w : getMainWindows()) {
+        auto& runtime = w->getRuntime();
+        if (!runtime.running() && runtime.lastLauncherCommand() == "launcher") {
+            return w;
+        }
+    }
+
+    auto w = new MainWindow;
+    w->show();
+    return w;
+}
+
 void OplApplication::foreach_window_menu(std::function<void(QMainWindow*, QMenu*)> fn)
 {
     for (auto w : topLevelWidgets()) {

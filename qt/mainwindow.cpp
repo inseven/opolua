@@ -38,6 +38,7 @@
 #include "oplapplication.h"
 #include "oplruntimegui.h"
 #include "debuggerwindow.h"
+#include "softwareindexwizard.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -63,6 +64,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionForceClose->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Shift+W", nullptr));
     ui->actionRestart->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+R", nullptr));
     ui->actionReportIssue->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+P", nullptr));
+    ui->actionOpenSoftwareIndexUrl->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+Shift+B", nullptr));
     ui->actionSoftwareIndex->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+B", nullptr));
 
     ui->actionFaster->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+=", nullptr));
@@ -128,7 +130,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionScale3x, &QAction::triggered, this, [this] { setScale(3); });
     connect(ui->actionScale4x, &QAction::triggered, this, [this] { setScale(4); });
     connect(ui->actionReportIssue, &QAction::triggered, this, &MainWindow::reportIssue);
-    connect(ui->actionSoftwareIndex, &QAction::triggered, this, &MainWindow::openSoftwareIndex);
+    connect(ui->actionOpenSoftwareIndexUrl, &QAction::triggered, this, &MainWindow::openSoftwareIndexUrl);
+    connect(ui->actionSoftwareIndex, &QAction::triggered, this, &MainWindow::openSoftwareIndexWizard);
     connect(ui->actionOpenDebugger, &QAction::triggered, this, &MainWindow::showDebugger);
     connect(runtime, &OplRuntime::debugLog, gApp, &OplApplication::appendLogging);
     connect(runtime, &OplRuntimeGui::startedRunningApp, this, &MainWindow::startedRunning);
@@ -506,13 +509,29 @@ void MainWindow::openFileEx(const QString& path, bool debugger)
     }
 }
 
+void MainWindow::runInstallerWithSisData(const QString& sourceUrl, const QString& sisName, const QByteArray& data,
+    const QString& installPath)
+{
+    mManifest.setPath(QString());
+    // Save URL for later (in installationComplete)
+    mManifest.setSourceUrl(sourceUrl);
+    getRuntime().runInstaller(sisName, data, installPath);
+}
+
 void MainWindow::installationComplete(const QString& sisPath, const QString& sisVersion)
 {
     auto path = getRuntime().mappingForDrive(getRuntime().mainDrive());
     Q_ASSERT(!path.isEmpty());
+    auto currentUrl = mManifest.sourceUrl(); // Will be set and valid if runInstallerWithSisData was used
     mManifest.setPath(manifestForDrive(path));
     mManifest.setDevice(getRuntime().getDeviceType());
-    mManifest.setSourceUrl(getSourceUrlForPath(sisPath));
+    if (sisPath.isEmpty()) {
+        // Restore URL after setPath cleared it
+        mManifest.setSourceUrl(currentUrl);
+    } else {
+        // Get URL from the sisPath (if there is one)
+        mManifest.setSourceUrl(getSourceUrlForPath(sisPath));
+    }
     mManifest.setAppVersion(sisVersion);
     mManifest.save();
 }
@@ -725,7 +744,13 @@ _Please provide details of the program you were running, and what you were doing
     QDesktopServices::openUrl(githubUrl);
 }
 
-void MainWindow::openSoftwareIndex()
+void MainWindow::openSoftwareIndexWizard()
+{
+    auto wizard = new SoftwareIndexWizard();
+    wizard->show();
+}
+
+void MainWindow::openSoftwareIndexUrl()
 {
     QUrl indexUrl("https://software.psion.community/", QUrl::StrictMode);
     QDesktopServices::openUrl(indexUrl);
