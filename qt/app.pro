@@ -24,7 +24,7 @@ isEmpty(BUILD_NUMBER) {
     BUILD_NUMBER = 0
 }
 
-QT += core gui widgets multimedia
+QT += core gui widgets multimedia network
 
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
