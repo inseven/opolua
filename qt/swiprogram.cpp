@@ -5,6 +5,16 @@
 
 #include <QJsonArray>
 
+static QString iconPathFromObject(const QJsonObject& icon)
+{
+    auto iconPath = icon["path"].toString();
+    if (!iconPath.isEmpty() && icon["height"].toInt() != 0 && icon["width"].toInt() != 0) {
+        return iconPath;
+    } else {
+        return QString();
+    }
+}
+
 SwiProgramVariant::SwiProgramVariant(const QJsonObject& object)
 {
     name = object["name"].toString();
@@ -17,6 +27,7 @@ SwiProgramVariant::SwiProgramVariant(const QJsonObject& object)
     version = object["version"].toString();
     sha256 = object["sha256"].toString();
     size = object["size"].toInt();
+    iconPath = iconPathFromObject(object["icon"].toObject());
 
     auto platform = object["platform"].toString();
     if (platform == "epoc16") {
@@ -70,12 +81,7 @@ SwiProgram::SwiProgram(const QJsonObject& object)
 {
     mName = object["name"].toString();
     mId = object["id"].toString();
-
-    auto icon = object["icon"].toObject();
-    auto iconPath = icon["path"].toString();
-    if (!iconPath.isEmpty() && icon["height"].toInt() != 0 && icon["width"].toInt() != 0) {
-        mIconPath = iconPath;
-    }
+    mIconPath = iconPathFromObject(object["icon"].toObject());
 
     for (const auto& version : object["versions"].toArray()) {
         for (const auto variant : version.toObject()["variants"].toArray()) {

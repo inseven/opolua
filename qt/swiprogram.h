@@ -69,7 +69,7 @@ struct SwiProgramVariant
     QString version;
     QString sha256;
     int64_t size;
-    // TODO icons
+    QString iconPath;
     SwiFlags flags;
 
     QVector<SwiOrigin> origins;
