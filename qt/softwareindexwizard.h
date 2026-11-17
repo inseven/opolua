@@ -59,6 +59,12 @@ public:
     static std::optional<QDateTime> lastModified();
 
 private:
+    enum DialogState {
+        Idle,
+        CheckingIndex,
+        UpdatingIndex,
+        Downloading,
+    } mDialogState;
     QNetworkAccessManager mNetwork;
     QPointer<QNetworkReply> mFetchReply;
     QVector<SwiProgram> mPrograms;

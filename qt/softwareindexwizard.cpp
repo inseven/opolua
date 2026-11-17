@@ -20,6 +20,7 @@
 
 SoftwareIndexWizard::SoftwareIndexWizard(QWidget *parent)
     : QWizard(parent)
+    , mDialogState(Idle)
     , mFetchReply(nullptr)
     , mSelectedProgram(nullptr)
     , mSelectedVariant(nullptr)
@@ -78,10 +79,14 @@ void SoftwareIndexWizard::fetchIndex(bool forceRefresh)
     if (lastMod.has_value() && !forceRefresh) {
         // qDebug("Adding IfModifiedSinceHeader %s", qPrintable(lastMod->toString()));
         request.setHeader(QNetworkRequest::IfModifiedSinceHeader, *lastMod);
+        mProgressDialog->setLabelText("Checking index...");
+        mDialogState = CheckingIndex;
+    } else {
+        mProgressDialog->setLabelText("Updating index...");
+        mDialogState = UpdatingIndex;
     }
 
     mFetchReply = mNetwork.get(request);
-    mProgressDialog->setLabelText("Updating index...");
     mProgressDialog->setMaximum(40000000); // It's actually about 42MB at time of writing
     mProgressDialog->setValue(0);
     connect(mFetchReply, &QNetworkReply::downloadProgress, this, &SoftwareIndexWizard::downloadProgress);
@@ -90,6 +95,7 @@ void SoftwareIndexWizard::fetchIndex(bool forceRefresh)
 
 void SoftwareIndexWizard::gotIndex()
 {
+    mDialogState = Idle;
     mProgressDialog->reset();
     qDebug("gotIndex bytes = %d", (int)mFetchReply->bytesAvailable());
     if (mFetchReply->error() != QNetworkReply::NoError) {
@@ -276,6 +282,7 @@ void SoftwareIndexWizard::doInstall()
 {
     mProgressDialog->setMaximum((int)mSelectedVariant->size);
     mProgressDialog->setLabelText("Downloading...");
+    mDialogState = Downloading;
     mProgressDialog->setValue(0);
 
     QUrl url(QString("https://software.psion.community/files/") + mSelectedVariant->sha256);
@@ -295,14 +302,18 @@ void SoftwareIndexWizard::downloadProgress(qint64 bytesReceived, qint64 bytesTot
     // qDebug("Got %d bytes", (int)bytesReceived);
     Q_UNUSED(bytesTotal);
     if (mProgressDialog) {
+        if (mDialogState == CheckingIndex) {
+            mProgressDialog->setLabelText("Updating index...");
+            mDialogState = UpdatingIndex;
+        }
         mProgressDialog->setValue(bytesReceived);
     }
 }
 
 void SoftwareIndexWizard::gotInstaller()
 {
-    // delete mProgressDialog;
     mProgressDialog->reset();
+    mDialogState = Idle;
     auto err = mFetchReply->error();
     qDebug("installer download complete err=%d", (int)err);
 
