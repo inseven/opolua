@@ -8,6 +8,17 @@
 
 #define wiz static_cast<SoftwareIndexWizard*>(wizard())
 
+QString humanReadableSize(int64_t val)
+{
+    if (val < 1024) {
+        return QString("%1 B").arg(val);
+    } else if (val < 1024 * 1024) {
+        return QString("%1 KB").arg((val + 1023) / 1024);
+    } else {
+        return QString("%1 MB").arg((double)val / (1024 * 1024), 'f', 1);
+    }
+}
+
 SwiWizardInfoPage::SwiWizardInfoPage(QWidget *parent)
     : ChoosyWizardPage(parent)
     , ui(new Ui::SwiWizardInfoPage)
@@ -45,7 +56,7 @@ void SwiWizardInfoPage::initializePage()
         auto item = new QTreeWidgetItem(ui->variants, {
             variant.name,
             variant.version,
-            QString("%1").arg(variant.size),
+            humanReadableSize(variant.size),
             variant.filename,
         });
         item->setIcon(0, wiz->getIcon(variant));
