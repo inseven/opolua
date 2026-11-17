@@ -183,7 +183,28 @@ QIcon SoftwareIndexWizard::getIcon(const SwiProgram& program)
 
 QIcon SoftwareIndexWizard::getIcon(const SwiProgramVariant& variant)
 {
-    Q_UNUSED(variant);
+    const auto& iconPath = variant.iconPath;
+    if (!iconPath.isEmpty()) {
+        auto path = fileSystemPathForIconPath(iconPath);
+        if (QFileInfo(path).isFile()) {
+            return QIcon(path);
+        }
+
+        QUrl url(QString("https://software.psion.community/api/v1/") + iconPath);
+        QNetworkRequest request(url);
+        request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
+        QNetworkReply* reply = mNetwork.get(request);
+        const SwiProgramVariant* variantPtr = &variant;
+        connect(reply, &QNetworkReply::finished, this, [this, reply, variantPtr, iconPath] {
+            if (reply->error() == QNetworkReply::NoError) {
+                auto icon = gotIcon(iconPath, reply);
+                if (!icon.isNull()) {
+                    emit programVariantIconUpdated(variantPtr, icon);
+                }
+            }
+            reply->deleteLater();
+        });
+    }
     return QIcon(":/images/icon_unknown.png");
 }
 

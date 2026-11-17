@@ -36,7 +36,10 @@ void SwiWizardInfoPage::initializePage()
     setTitle(program->name());
     setSubTitle("Select a version to install:");
 
+    connect(wiz, &SoftwareIndexWizard::programVariantIconUpdated, this, &SwiWizardInfoPage::iconUpdated, Qt::UniqueConnection);
     ui->variants->clear();
+    ui->variants->setIconSize(QSize(32, 32));
+
     for (int i = 0, n = program->variants().count(); i < n; i++) {
         const auto& variant =  program->variants()[i];
         auto item = new QTreeWidgetItem(ui->variants, {
@@ -47,6 +50,7 @@ void SwiWizardInfoPage::initializePage()
         });
         item->setIcon(0, wiz->getIcon(variant));
         item->setData(0, Qt::UserRole, i);
+        mItems[&variant] = item;
     }
     ui->variants->resizeColumnToContents(0);
 }
@@ -66,4 +70,12 @@ void SwiWizardInfoPage::selectionChanged()
     }
     wiz->setSelectedVariant(variant);
     emit completeChanged();
+}
+
+void SwiWizardInfoPage::iconUpdated(const SwiProgramVariant* variant, const QIcon& icon)
+{
+    auto item = mItems.value(variant, nullptr);
+    if (item) {
+        item->setIcon(0, icon);
+    }
 }

@@ -6,6 +6,11 @@
 
 #include "choosywizardpage.h"
 
+#include <QMap>
+#include <QTreeWidgetItem>
+
+struct SwiProgramVariant;
+
 namespace Ui {
 class SwiWizardInfoPage;
 }
@@ -24,9 +29,11 @@ protected:
 
 private slots:
     void selectionChanged();
+    void iconUpdated(const SwiProgramVariant* variant, const QIcon& icon);
 
 private:
     Ui::SwiWizardInfoPage *ui;
+    QMap<const SwiProgramVariant*, QTreeWidgetItem*> mItems;
 };
 
 #endif // SWIWIZARDINFOPAGE_H
