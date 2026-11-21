@@ -58,6 +58,8 @@ enum NumState {
     NumDecimalExponent,
     NumLeadingHex,
     NumHex,
+    NumLeadingPercent,
+    NumPercentChar,
 };
 
 inline bool isDecimal(char ch)
@@ -90,6 +92,8 @@ static NumState isNumChar(char ch, NumState state=NumStart)
             return NumDecimal;
         } else if (ch == '&' || ch == '$') {
             return NumLeadingHex;
+        } else if (ch == '%') {
+            return NumLeadingPercent;
         } else {
             return NumFinished;
         }
@@ -124,6 +128,10 @@ static NumState isNumChar(char ch, NumState state=NumStart)
         return isHex(ch) ? NumHex : NumFinished;
     case NumHex:
         return isHex(ch) ? state : NumFinished;
+    case NumLeadingPercent:
+        return isIdentifierStart(ch) ? NumPercentChar : NumFinished;
+    case NumPercentChar:
+        return NumFinished;
     case NumFinished:
         return NumFinished;
     }
