@@ -4,6 +4,7 @@
 #include "highlighter.h"
 
 #include <QDebug>
+#include <QRegularExpression>
 
 static const QColor kHighlightBackgroundColor(0xff, 0x7e, 0x7e);
 
@@ -18,7 +19,13 @@ void Highlighter::highlightBlock(const QString& text)
     int state = previousBlockState();
     if (state == -1) state = 0;
 
-    QByteArray raw = text.toUtf8();
+    // Because the tokenizer works on byte offsets, we need to replace any characters that expand to more than one UTF-8
+    // byte in the text passed to the tokenizer, otherwise the resulting offsets can't be used to index a QString
+    QRegularExpression nonascii(QString::fromUtf16(u"[\u0080-\uFFFF]"));
+    QString demultibyted = text;
+    demultibyted.replace(nonascii, " ");
+
+    QByteArray raw = demultibyted.toUtf8();
     raw.append('\n'); // Tell tokenizer about the line ending, useful for things like unterminated strings
     raw.append('\0'); // Make null terminated
     auto& tok = *mTokenizer;
