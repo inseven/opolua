@@ -74,7 +74,8 @@ void OplScreenWidget::init()
     mLastSpriteTick = 0;
     mSpriteTimer.reset();
     if (mSpriteWidget) {
-        mSpriteWidget->renderSprites({}, mScale);
+        // Clear any old global sprites
+        mSpriteWidget->clear();
     }
 }
 
@@ -520,7 +521,9 @@ void OplScreenWidget::sprite(int drawableId, int spriteId, const OplScreen::Spri
     Window* w = mWindows.value(drawableId);
     if (w) {
         w->setSprite(spriteId, sprite);
-    } else {
+    } else if (sprite) {
+        // It shouldn't be considered an error to try and delete a sprite for a window that's
+        // already been closed
         qDebug("No window found for sprite drawable %d!", drawableId);
     }
 
@@ -529,11 +532,14 @@ void OplScreenWidget::sprite(int drawableId, int spriteId, const OplScreen::Spri
         mSpriteTimer->setTimerType(Qt::PreciseTimer);
         mLastSpriteTick = QDateTime::currentMSecsSinceEpoch();
         connect(mSpriteTimer.get(), &QTimer::timeout, this, &OplScreenWidget::spriteTimerTick);
+        mSpriteTimer->start(50);
+    }
+    
+    if (sprite && sprite->global && !mSpriteWidget) {
         // The only devices doing the grey plane thing are the ones that use 4 colour greyscale.
         // ie the 3c (and 3a if we ever distinguish them).
         bool hasGreyPlane = oplGetScreenMode(mRuntime->getDeviceType()) == KColorgCreate4GrayMode;
         mSpriteWidget = new SpriteWidget(this, hasGreyPlane);
-        mSpriteTimer->start(50);
     }
 }
 
@@ -546,10 +552,13 @@ void OplScreenWidget::spriteTimerTick()
     }
     mLastSpriteTick = now;
 
-    // An oddity of the sprite API is that they can appear anywhere on the screen, ie are not cropped to the Window they
-    // are associated with. For that reason, we need to keep a separate fullscreen transparent pixmap around to render
-    // them in to.
-    mSpriteWidget->renderSprites(mWindows.values(), mScale);
+    for (Window* w : mWindows) {
+        w->renderSprites(mSpriteWidget);
+    }
+
+    if (mSpriteWidget && mSpriteWidget->painting()) {
+        mSpriteWidget->endPaint();
+    }
 }
 
 QByteArray OplScreenWidget::peekLine(int drawableId, const QPoint& position, int numPixels, OplScreen::PeekMode mode)
@@ -1044,10 +1053,9 @@ void Window::updateSpritePlane(QPainter& painter, const WindowSprite& sprite, bo
     const auto& frame = sprite.frames[sprite.currentFrame];
     // painterPos is relative to painter, ie potentially a global position
     QPoint painterPos(sprite.origin + frame.offset);
-    // TODO support non-global sprites
-    // if (sprite.global) {
+    if (sprite.global) {
         painterPos += getPos();
-    // }
+    }
 
     if (setMask) {
         Drawable* src = screen->getBitmap(setMask);
@@ -1086,7 +1094,7 @@ void Window::updateSpritePlane(QPainter& painter, const WindowSprite& sprite, bo
     }
 }
 
-void Window::updateSprites(QPainter& painter, QPainter* greyPlanePainter)
+void Window::renderSprites(SpriteWidget* globalSpriteWidget)
 {
     auto screen = getScreen();
     for (const auto& sprite : mSprites) {
@@ -1095,6 +1103,15 @@ void Window::updateSprites(QPainter& painter, QPainter* greyPlanePainter)
             continue;
         }
 
+        SpriteWidget* spriteWidget = sprite.global ? globalSpriteWidget : mSpriteWidget.data();
+        Q_ASSERT(spriteWidget != nullptr);
+        if (!spriteWidget->painting()) {
+            spriteWidget->beginPaint(mScale);
+        }
+
+        QPainter& painter = spriteWidget->getPainter();
+        QPainter* greyPlanePainter = spriteWidget->getGreyPlanePainter();
+
         auto& frame = sprite.frames[sprite.currentFrame];
 
         updateSpritePlane(painter, sprite, false, frame.blackSetMask, frame.blackClearMask, frame.blackInvertMask);
@@ -1102,7 +1119,11 @@ void Window::updateSprites(QPainter& painter, QPainter* greyPlanePainter)
             updateSpritePlane(*greyPlanePainter, sprite, true, frame.greySetMask, frame.greyClearMask, frame.greyInvertMask);
         }
 
-        QPoint pos(getPos() + sprite.origin + frame.offset);
+        // pos is relative to painter, ie potentially a global position
+        QPoint pos(sprite.origin + frame.offset);
+        if (sprite.global) {
+            pos += getPos();
+        }
         if (frame.bitmap) {
             // qDebug("Rendering frame %d with bitmap %d invert %d", sprite.currentFrame, frame.bitmap, (int)frame.invertMask);
             Drawable* src = screen->getBitmap(frame.bitmap);
@@ -1131,6 +1152,10 @@ void Window::updateSprites(QPainter& painter, QPainter* greyPlanePainter)
                 painter.drawPixmap(pos, src->getPixmap(Plane::All));
             }
         }
+    }
+
+    if (mSpriteWidget && mSpriteWidget->painting()) {
+        mSpriteWidget->endPaint();
     }
 }
 
@@ -1165,6 +1190,17 @@ QPoint Window::getPos() const
 
 void Window::setPos(const QPoint& pos)
 {
+    if (!mSprites.isEmpty() && mSpriteWidget && pos != mUnscaledRect.topLeft()) {
+        // This is a workaround for programs like Castle III which uses a sprite for the main character which is kept in
+        // the centre of the screen while the window it's in moves around. So when you press the right arrow, the
+        // window is moved to the left then the character sprite is moved to the right (to keep it centered on the
+        // screen). Since window moves happen immediately it's impossible to sychronise the two operations to prevent
+        // the sprite briefly being moved with the window before being moved back. To workaround this, we will clear
+        // any non-global sprites in the window whenever the window is moved, relying on the spriteTimerTick to redraw
+        // them shortly afterwards (by which time any corrective sprite moves will hopefully have been processed).
+        // This appears to be very similar to what the Psion 5 does, so I don't feel _too_ guilty about this hack.
+        mSpriteWidget->clear();
+    }
     mUnscaledRect.moveTo(pos);
     auto scaledPos = scaledRect().topLeft();
     move(scaledPos); // in QWidget
@@ -1179,8 +1215,15 @@ void Window::setSize(const QSize& size)
     if (mGreyPlane) {
         mGreyPlane->setSize(size);
     }
+}
+
+void Window::resizeEvent(QResizeEvent* event)
+{
     if (mHighlight) {
-        mHighlight->resize(scaledSize);
+        mHighlight->resize(event->size());
+    }
+    if (mSpriteWidget) {
+        mSpriteWidget->resize(event->size());
     }
 }
 
@@ -1220,7 +1263,16 @@ void Window::setSprite(int spriteId, const OplScreen::Sprite* sprite)
         s.remainingFrameTime = sprite->frames[0].time;
     }
     mSprites[spriteId] = s;
+
+    if (!s.global && !mSpriteWidget) {
+        mSpriteWidget = new SpriteWidget(this, hasGreyPlane());
+    }
     update();
+}
+
+bool Window::hasGreyPlane() const
+{
+    return getMode() == OplScreen::monochromeWithGreyPlane;
 }
 
 void Window::animateSprites(int64_t interval_us)
@@ -1253,45 +1305,55 @@ void Window::setHighlighted(bool flag)
 
 //
 
-SpriteWidget::SpriteWidget(OplScreenWidget* screen, bool hasGreyPlane)
-    : QLabel(screen)
+SpriteWidget::SpriteWidget(QWidget* parent, bool hasGreyPlane)
+    : QLabel(parent)
 {
     if (hasGreyPlane) {
         mGreyPixmap.reset(new QPixmap);
     }
     setAttribute(Qt::WA_TransparentForMouseEvents);
-    resize(screen->size()); // This will configure mPixmap via resizeEvent
+    resize(parent->size()); // This will configure mPixmap via resizeEvent
     show();
 }
 
-void SpriteWidget::renderSprites(const QList<Window*>& windows, int scale)
+void SpriteWidget::clear()
 {
-    // The sprite widget follows the Qt size of OplScreenWidget (ie scaled)
     mPixmap.fill(Qt::transparent);
-    PAINTER_BEGIN(painter, &mPixmap);
-    painter.scale(scale, scale);
-    QPainter greyPainter;
-    QPainter* greyPainterPtr = nullptr;
+    setPixmap(mPixmap);
+}
+
+void SpriteWidget::beginPaint(int scale)
+{
+    // The sprite widget follows the Qt size of the parent (ie scaled)
+    mPixmap.fill(Qt::transparent);
+    Q_ASSERT(!mPixmap.isNull());
+    mPainter.begin(&mPixmap);
+    mPainter.scale(scale, scale);
     if (mGreyPixmap) {
         mGreyPixmap->fill(Qt::transparent);
-        greyPainter.begin(mGreyPixmap.get());
-        greyPainter.scale(scale, scale);
-        greyPainter.setPen(kGreyColour);
-        greyPainterPtr = &greyPainter;
+        mGreyPainter.begin(mGreyPixmap.get());
+        mGreyPainter.scale(scale, scale);
+        mGreyPainter.setPen(kGreyColour);
     }
-    for (Window* w : windows) {
-        w->updateSprites(painter, greyPainterPtr);
-    }
-    painter.end();
-    if (greyPainterPtr) {
+}
+
+void SpriteWidget::endPaint()
+{
+    mPainter.end();
+    if (mGreyPixmap) {
         // Draw black (mPixmap) on top of grey. mPixmap already has alpha set so we can just blat it
-        greyPainter.setTransform(QTransform()); // Undo the previous scale, go back to 1:1
-        greyPainter.drawPixmap(QPoint(0, 0), mPixmap);
-        greyPainter.end();
+        mGreyPainter.setTransform(QTransform()); // Undo the previous scale, go back to 1:1
+        mGreyPainter.drawPixmap(QPoint(0, 0), mPixmap);
+        mGreyPainter.end();
         setPixmap(*mGreyPixmap);
     } else {
         setPixmap(mPixmap);
     }
+}
+
+bool SpriteWidget::painting() const
+{
+    return mPainter.isActive();
 }
 
 void SpriteWidget::resizeEvent(QResizeEvent *event)

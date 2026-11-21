@@ -1139,7 +1139,6 @@ int OplRuntime::graphicsop(lua_State* L)
             constexpr int KCursorTypeNotFlashing = 2;
             constexpr int KCursorTypeGrey = 4;
             bool round = isSibo() && (flags & KCursorTypeObloid);
-            qDebug("round=%d", (int)round);
             // The grey cursor color doesn't really work with the invert drawing mode, never mind.
             rawgetfield(L, 2, "rect");
             mCursorDrawCmd = {

@@ -172,11 +172,13 @@ public:
     void draw(const OplScreen::DrawCmd& cmd) override;
     void drawSetPixels(const OplScreen::CopyMultipleCmd& cmd, Drawable& src, const QRect& srcRect, const QRect& destRect) override;
     void drawCopy(const OplScreen::DrawCmd& cmd, Drawable& src, Drawable* mask) override;
+    bool hasGreyPlane() const;
     Drawable* getGreyPlane() const override;
     void update() override;
     void setSprite(int spriteId, const OplScreen::Sprite* sprite);
     void animateSprites(int64_t interval_us);
     void updateSprites(QPainter& painter, QPainter* greyPlanePainter);
+    void renderSprites(SpriteWidget* globalSpriteWidget);
 
     void setHighlighted(bool flag);
 
@@ -185,6 +187,7 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event) override;
     virtual void mouseReleaseEvent(QMouseEvent *event) override;
     virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
 
 private:
     Drawable& greyPlane();
@@ -202,6 +205,7 @@ private:
     int mShadowSize;
     QScopedPointer<Drawable> mGreyPlane;
     WindowShadow* mHighlight;
+    QPointer<SpriteWidget> mSpriteWidget;
 };
 
 class SpriteWidget : public QLabel
@@ -209,15 +213,24 @@ class SpriteWidget : public QLabel
     Q_OBJECT
 
 public:
-    explicit SpriteWidget(OplScreenWidget* screen, bool hasGreyPLane);
-    void renderSprites(const QList<Window*>& windows, int scale);
+    explicit SpriteWidget(QWidget* parent, bool hasGreyPLane);
+
+    void clear();
+    void beginPaint(int scale);
+    bool painting() const;
+    void endPaint();
+
+    QPainter& getPainter() { return mPainter; }
+    QPainter* getGreyPlanePainter() { return mGreyPixmap ? &mGreyPainter : nullptr; }
 
 protected:
-    void resizeEvent(QResizeEvent *event);
+    virtual void resizeEvent(QResizeEvent *event) override;
 
 private:
     QPixmap mPixmap;
     QScopedPointer<QPixmap> mGreyPixmap;
+    QPainter mPainter;
+    QPainter mGreyPainter;
 };
 
 class WindowShadow : public QWidget
