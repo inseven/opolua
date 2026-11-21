@@ -4,7 +4,6 @@
 #include "softwareindexwizard.h"
 #include "swiwizardinfopage.h"
 #include "ui_swiwizardinfopage.h"
-#include "validators.h"
 
 #define wiz static_cast<SoftwareIndexWizard*>(wizard())
 
@@ -15,7 +14,7 @@ QString humanReadableSize(int64_t val)
     } else if (val < 1024 * 1024) {
         return QString("%1 KB").arg((val + 1023) / 1024);
     } else {
-        return QString("%1 MB").arg((double)val / (1024 * 1024), 'f', 1);
+        return QString("%1 MB").arg((double)val / (1024 * 1024), 0, 'f', 1);
     }
 }
 
