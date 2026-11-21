@@ -23,8 +23,8 @@ void Manifest::setPath(const QString& path)
 {
     mPath = path;
     // Setting path also invalidates info that is app-specific (rather than window-specific like scale)
-    mSourceUrl = {};
-    mAppVersion = {};
+    mSourceUrl = QString();
+    mAppVersion = QString();
     mDebuggerInfo = {};
 }
 
