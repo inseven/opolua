@@ -383,7 +383,7 @@ Callables = {
     GAT = Op("gAt", {Int, Int}),
     GBORDER = Op("gBorder", {Int, Int, Int, numParams = {1, 3}, qualifierRule = qN}),
     GBOX = Op("gBox", {Int, Int}),
-    GBUTTON = Op("gButton", {String, Int, Int, Int, Int, Long, Long, Int, numParams = {5, 6, 7, 8}, qualifierRule = fixed(5)}),
+    GBUTTON = SpecialOp(),
     GCIRCLE = Op("gCircle", {Int, Int, numParams = {1, 2}, qualifierRule = fixed(1)}),
     GCLOCK = SpecialOp(),
     GCLOSE = Op("gClose", {Int}),
@@ -577,6 +577,9 @@ Callables = {
     WEEK = Fn("Week", {Int, Int, Int}, Int),
     YEAR = Fn("Year", {}, Int),
 }
+
+Callable_gBUTTON_93 = Op("gButton", {String, Int, Int, Int, Int})
+Callable_gBUTTON_er1 = Op("gButton", {String, Int, Int, Int, Int, Long, Long, Int, numParams = {5, 6, 7, 8}, qualifierRule = fixed(5)})
 
 precedences = enum {
     noop = 0, -- Special placeholder operator for root node used during parseExpression only
@@ -2678,6 +2681,16 @@ function handleOp_GCLOCK(procState)
     if args then
         procState:popStack(#args)
     end
+end
+
+function handleOp_GBUTTON(procState)
+    local op
+    if procState.oplFormat >= OplEr1 then
+        op = Callable_gBUTTON_er1
+    else
+        op = Callable_gBUTTON_93
+    end
+    procState:handleOp(op, procState.tokens:current())
 end
 
 local function handlePrint(procState)

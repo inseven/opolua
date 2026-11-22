@@ -2683,15 +2683,17 @@ rCache_dump = qualifier_dump
 
 function gButton(stack, runtime) -- 0x10F
     local text, type, width, height, state, bitmap, mask, layout
-    local numParams = runtime:IP8()
-    if numParams == 3 then
-        layout = stack:pop()
-    end
-    if numParams >= 2 then
-        mask = stack:pop()
-    end
-    if numParams >= 1 then
-        bitmap = stack:pop()
+    if not runtime:isSibo() then
+        local numParams = runtime:IP8()
+        if numParams == 3 then
+            layout = stack:pop()
+        end
+        if numParams >= 2 then
+            mask = stack:pop()
+        end
+        if numParams >= 1 then
+            bitmap = stack:pop()
+        end
     end
     state = stack:pop()
     height = stack:pop()

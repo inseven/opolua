@@ -356,6 +356,17 @@ function decompileProc(proc, options)
         name = "SCREEN",
         args = { Int, Int, Int, Int },
     }
+    if oplFormat == compiler.Opl93 then
+        standardOps["gButton"] = {
+            name = "gBUTTON",
+            args = compiler.Callable_gBUTTON_93.args
+        }
+    elseif oplFormat >= compiler.OplEr1 then
+        standardOps["gButton"] = {
+            name = "gBUTTON",
+            args = compiler.Callable_gBUTTON_er1.args
+        }
+    end
     standardFns["gCreate"] = {
         name = "gCREATE",
         args = { Int, Int, Int, Int, Int },
