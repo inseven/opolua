@@ -641,6 +641,7 @@ function Runtime:saveGraphicsState()
     return {
         id = ctx.id,
         mode = ctx.mode,
+        greyMode = ctx.greyMode,
         tmode = ctx.tmode,
         color = ctx.color,
         bgcolor = ctx.bgcolor,
@@ -656,6 +657,7 @@ function Runtime:restoreGraphicsState(state)
     local graphics = self:getGraphics()
     local ctx = self:getGraphicsContext(state.id)
     ctx.mode = state.mode
+    ctx.greyMode = state.greyMode
     ctx.tmode = state.tmode
     ctx.color = state.color
     ctx.bgcolor = state.bgcolor

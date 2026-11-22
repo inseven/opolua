@@ -2336,8 +2336,10 @@ function DialogWindow.new(titleBar, items, x, y, w, h)
     local mode
     if runtime:isColor() then
         mode = KColorgCreate256ColorMode | KgCreateHasShadow | 0x200
-    elseif runtime:isSeries3() then
+    elseif runtime:getDeviceName() == "psion-series-3" then
         mode = KColorgCreate2GrayMode
+    elseif runtime:isSeries3() then
+        mode = KColorgCreate4GrayMode
     else
         mode = KColorgCreate4GrayMode | KgCreateHasShadow | 0x200
     end

@@ -56,7 +56,9 @@ function darkGrey()
 end
 
 function lightGrey()
-    gCOLOR(0xAA, 0xAA, 0xAA)
+    -- Use gGREY here rather than gCOLOR because everywhere we use lightGrey() we will want it to do grey plane drawing
+    -- if applicable
+    gGREY(1)
 end
 
 function black()
@@ -385,8 +387,9 @@ function gBUTTON(text, type, width, height, state, bmpId, maskId, layout)
         return
     elseif type == KButtS3a then
         -- There's no gXBORDER that exactly matches the S3a buttons either.
+        gGREY(2)
         gFILL(width, height, KgModeClear)
-        
+
         -- Button rect minus the corner pixels (except the bottom right one)
         black()
         gMOVE(1, 0)
@@ -545,12 +548,28 @@ function gLINETO(x, y)
 end
 
 function gCOLOR(red, green, blue)
-    -- printf("gCOLOR(id=%d, r=%x, g=%x, b=%x)\n", gIDENTITY(), red, green, blue) 
-    runtime:getGraphicsContext().color = { r = red, g = green, b = blue }
+    -- printf("gCOLOR(id=%d, r=%x, g=%x, b=%x)\n", gIDENTITY(), red, green, blue)
+    local ctx = runtime:getGraphicsContext()
+    -- Any call to gCOLOR should reset any grey mode
+    if ctx.greyMode then
+        ctx.greyMode = 0
+    end
+    ctx.color = { r = red, g = green, b = blue }
 end
 
 function gCOLORBACKGROUND(red, green, blue)
     runtime:getGraphicsContext().bgcolor = { r = red, g = green, b = blue }
+end
+
+function gGREY(mode)
+    if runtime:isSibo() then
+        local ctx = runtime:getGraphicsContext()
+        ctx.greyMode = mode
+        ctx.color = { r = 0, g = 0, b = 0 }
+    else
+        local val = mode == 1 and 0xAA or 0
+        runtime:gCOLOR(val, val, val)
+    end
 end
 
 function gSETWIN(x, y, w, h)

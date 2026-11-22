@@ -2514,11 +2514,9 @@ function gGrey(stack, runtime) -- 0x100
         local ctx = runtime:getGraphicsContext()
         assert(ctx.isWindow and ctx.displayMode == KColorgCreate4GrayMode,
             "Cannot call gGREY on anything other than a 2bpp window")
-        ctx.greyMode = mode
-    else
-        local val = mode == 1 and 0xAA or 0
-        runtime:gCOLOR(val, val, val)
     end
+
+    runtime:gGREY(mode)
 end
 
 function DefaultWin(stack, runtime) -- 0x101
