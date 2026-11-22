@@ -1127,6 +1127,26 @@ function decompileProc(proc, options)
         addStatement(path.location, "%s %s", name, table.concat(args, ", "))
     end
 
+    local function checkForEpilogJunk()
+        local maxEpilogSize = 64 -- Limit on how close we must be to the end of the proc
+        if ip >= endIdx - maxEpilogSize and ip < endIdx then
+            -- Check if there's any way the following code is reachable, and if not assume it is epilogue junk
+            local reachable = false
+            for offset = ip, endIdx - 1 do
+                if branchTargets[offset] then
+                    reachable = true
+                    break
+                end
+            end
+            if not reachable then
+                if annotate then
+                    addStatement(ip, "REM skipping epilogue junk of length %d", endIdx - ip)
+                end
+                ip = endIdx
+            end
+        end
+    end
+
     local function decodeNextStatement()
         local location = ip
         local opCode = ip8()
@@ -1465,24 +1485,7 @@ function decompileProc(proc, options)
             if ip == endIdx and options.elide ~= false then
                 s.elided = true
             end
-
-            local maxEpilogSize = 64 -- Arbitrary, just to limit search
-            if ip < endIdx then
-                -- Check if there's any way the following code is reachable, and if not assume it is epilogue junk
-                local reachable = false
-                for offset = ip, math.min(ip + maxEpilogSize, endIdx - 1) do
-                    if branchTargets[offset] then
-                        reachable = true
-                        break
-                    end
-                end
-                if not reachable then
-                    if annotate then
-                        addStatement(ip, "REM skipping epilogue junk of length %d", endIdx - ip)
-                    end
-                    ip = endIdx
-                end
-            end
+            checkForEpilogJunk()
         elseif op == "LongToInt" then
             pushUnaryExpr(ELong, "CAST", EWord)
         elseif op == "FloatToInt" then
@@ -1653,6 +1656,7 @@ function decompileProc(proc, options)
         elseif op == "Return" then
             local expr = popExpr()
             addStatement(expr.location, "RETURN %s", eval(expr))
+            checkForEpilogJunk()
         elseif op == "OpenR" then
             addDbStatement("OPENR")
         elseif op == "gVisible" then
@@ -1945,7 +1949,7 @@ function decompileProc(proc, options)
                 gotoLabels = {}
                 namedLabels = {}
                 procBlock.statements = {
-                    { value = "REM An error occurred during decode of the procedure:" }
+                    { value = string.format("REM An error occurred during decode of the procedure at IP 0x%04X:", initialIp) }
                 }
                 for line in err:gmatch("[^\n]+") do
                     table.insert(procBlock.statements, { value = "REM " .. line })
