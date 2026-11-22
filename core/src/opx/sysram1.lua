@@ -91,7 +91,6 @@ function LCLanguage(stack, runtime) -- 6
 end
 
 local osversion = { 1, 2, 166 } -- according to my Psion 5, this is a sane version
-local romversion = { 1, 5, 254 } -- according to my Psion 5, this is a sane version
 
 function OSVersionMajor(stack, runtime) -- 7
     stack:push(osversion[1])
@@ -106,15 +105,15 @@ function OSVersionBuild(stack, runtime) -- 9
 end
 
 function ROMVersionMajor(stack, runtime) -- 10
-    stack:push(romversion[1])
+    stack:push(runtime:getDeviceInfo().romVersion[1])
 end
 
 function ROMVersionMinor(stack, runtime) -- 11
-    stack:push(romversion[2])
+    stack:push(runtime:getDeviceInfo().romVersion[2])
 end
 
 function ROMVersionBuild(stack, runtime) -- 12
-    stack:push(romversion[3])
+    stack:push(runtime:getDeviceInfo().romVersion[3])
 end
 
 function GetFileSize(stack, runtime) -- 13

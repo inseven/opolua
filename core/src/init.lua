@@ -360,12 +360,16 @@ DeviceInfo = {
         defaultFont = KFontSysNorm,
         consoleFont = KFontSysNorm,
         iprintFont = KFontSysNorm,
+        kernelVersion = 0x236F,
+        romVersion = 0x191F,
         statusWinSizes = { 50 },
     },
     ["psion-series-3c"] = {
         defaultFont = KFontSwiss13,
         consoleFont = KFontMono8x8,
         iprintFont = KFontSwiss13,
+        kernelVersion = 0x391F,
+        romVersion = 0x520F,
         statusWinSizes = { 31, 63 },
         hasDiamondKey = true,
     },
@@ -373,6 +377,8 @@ DeviceInfo = {
         defaultFont = KFontSwiss11,
         consoleFont = KFontSysNorm,
         iprintFont = KFontSwiss11,
+        kernelVersion = 0x370F,
+        romVersion = 0x420F,
         statusWinSizes = { 35 },
         hasDiamondKey = true,
     },
@@ -381,26 +387,31 @@ DeviceInfo = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
         iprintFont = KFontArialNormal15,
+        romVersion = { 1, 5, 254 }, -- TODO
     },
     ["psion-series-5"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
         iprintFont = KFontArialNormal15,
+        romVersion = { 1, 5, 254 },
     },
     ["psion-revo"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
         iprintFont = KFontArialNormal15,
+        romVersion = { 1, 5, 254 }, -- TODO
     },
     ["psion-series-7"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
         iprintFont = KFontArialNormal15,
+        romVersion = { 1, 5, 254 }, -- TODO
     },
     ["geofox-one"] = {
         defaultFont = KFontArialNormal15,
         consoleFont = KFontCourierNormal11,
         iprintFont = KFontArialNormal15,
+        romVersion = { 1, 5, 254 }, -- TODO
     },
 }
 
