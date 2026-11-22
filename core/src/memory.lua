@@ -784,6 +784,12 @@ function Addr:read(len)
     return self.chunk:read(self.offset, len)
 end
 
+function Addr:readCStr(maxLen)
+    local data = self.chunk:read(self.offset, math.min(maxLen, self.chunk.size - self.offset))
+    local str = string.unpack("z", data)
+    return str
+end
+
 function Addr:write(data)
     return self.chunk:write(self.offset, data)
 end

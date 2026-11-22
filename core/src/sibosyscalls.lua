@@ -26,15 +26,20 @@ _ENV = module()
 
 fns = {
     [0x8000] = "SegFreeMemory",
+    [0x800C] = "SegRamDiskUsed",
     [0x861E] = "IoPlaySoundW",
     [0x861F] = "IoPlaySoundA",
     [0x8620] = "IoPlaySoundCancel",
+    [0x870A] = "FilStatusDevice",
     [0x8800] = "ProcId",
     [0x880C] = "ProcRename",
     [0x8B05] = "GenGetCountryData",
+    [0x8B0D] = "GenGetRamSizeInParas",
     [0x8B12] = "GenMarkActive",
     [0x8B13] = "GenMarkNonActive",
     [0x8B1B] = "GenGetLanguageCode",
+    [0x8B00] = "GenVersion",
+    [0x8B2A] = "GenRomVersion",
     [0x8D0E] = "wInquireWindow",
     [0x8D11] = "wFree",
     [0x8D5F] = "gSetOpenAddress",
@@ -42,6 +47,7 @@ fns = {
     [0x8D7E] = "wserv8D7E",
     [0x8DF5] = "wSetSprite",
     [0x8DF6] = "wCreateSprite",
+    [0x8E22] = "HwSupplyInfo",
     [0x8E28] = "HwGetScanCodes",
     [0xDB00] = "StringCapitalise",
 }
@@ -71,8 +77,12 @@ function syscall(runtime, fn, params)
     end
 end
 
-function SegFreeMemory(runtime, fn, params)
+function SegFreeMemory(runtime, fn, params) -- 0x8000
     return 60000 // 16
+end
+
+function SegRamDiskUsed(runtime, fn, params) -- 0x800C
+    return GenGetRamSizeInParas(runtime) - SegFreeMemory(runtime)
 end
 
 function IoPlaySoundW(runtime, params) -- 0x861E
@@ -91,7 +101,7 @@ function IoPlaySoundW(runtime, params) -- 0x861E
 end
 
 function IoPlaySoundA(runtime, params) -- 0x861F
-    local path = runtime:abs(string.unpack("z", runtime:addrFromInt(params.bx):read(255)))
+local path = runtime:abs(runtime:addrFromInt(params.bx):readCStr(255))
     if not runtime:EXIST(path) then
         path = path .. ".WVE"
     end
@@ -105,6 +115,12 @@ end
 function IoPlaySoundCancel(runtime, params) -- 0x8620
     print("IoPlaySoundCancel")
     runtime:StopSound()
+end
+
+function FilStatusDevice(runtime, params) -- 0x870A
+    local deviceName = runtime:addrFromInt(params.bx):readCStr(255)
+    -- printf("FilStatusDevice ax=%04X deviceName=%s cx=%04X dx=%04X\n", params.ax, deviceName, params.cx, params.dx)
+    return -1, 0, 0, 0, 0, 0, 1
 end
 
 function ProcId(runtime, params) -- 0x8800
@@ -189,6 +205,10 @@ function GenGetCountryData(runtime, params) -- 0x8B05
     addr:write(result)
 end
 
+function GenGetRamSizeInParas(runtime, params) -- 0x8B0D
+    return 0x8000
+end
+
 function GenMarkActive(runtime, params) -- 0x8B12
 end
 
@@ -197,6 +217,13 @@ end
 
 function GenGetLanguageCode(runtime, params) -- 0x8B1B
     return require("sis").Locales["en_GB"]
+end
+
+function GenVersion(runtime, params) -- 0x8B00
+    return runtime:getDeviceInfo().kernelVersion
+end
+function GenRomVersion(runtime, params) -- 0x8B2A
+    return runtime:getDeviceInfo().romVersion
 end
 
 function wInquireWindow(runtime, params) -- 0x8D0E
@@ -304,6 +331,20 @@ local function byte(bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7)
         (bit5 and 0x20 or 0) |
         (bit6 and 0x40 or 0) |
         (bit7 and 0x80 or 0)
+end
+
+function HwSupplyInfo(runtime, params) -- 0x8E22
+    local result = string.pack("<BBBBHI4I4I4I4",
+        3, -- main battery status (good)
+        3, -- worst main battery status since batteries last inserted
+        0, -- whether backup battery voltage is good
+        0, -- external supply is present
+        0, -- warning flags
+        0, -- abstime when batteries inserted
+        0, -- ticks running on battery
+        0, -- ticks running on external supply
+        0) -- mA-ticks
+    runtime:addrFromInt(params.bx):write(result)
 end
 
 function HwGetScanCodes(runtime, params) -- 0x8E28
