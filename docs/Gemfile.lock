@@ -120,9 +120,6 @@ DEPENDENCIES
   jekyll-gfm-admonitions
   jekyll-toc
   rexml (>= 3.3.3)
-  tzinfo (~> 1.2)
-  tzinfo-data
-  wdm (~> 0.1.1)
   webrick (~> 1.8.2)
 
 BUNDLED WITH
