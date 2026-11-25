@@ -51,7 +51,7 @@ jobs:
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
       with:
-        version: 2026.9.10
+        version: 2026.11.14
         cache: false
 
     - name: Generate version and build numbers
@@ -93,7 +93,7 @@ jobs:
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
       with:
-        version: 2026.9.10
+        version: 2026.11.14
         cache: false
 
     - name: Build and test
@@ -132,7 +132,7 @@ jobs:
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
       with:
-        version: 2026.9.10
+        version: 2026.11.14
         cache: false
 
     - name: Test Lua
@@ -365,7 +365,7 @@ jobs:
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
       with:
-        version: 2026.9.10
+        version: 2026.11.14
         cache: false
 
     - name: Install Qt
@@ -435,7 +435,7 @@ jobs:
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
       with:
-        version: 2026.9.10
+        version: 2026.11.14
         cache: false
 
     - uses: actions/download-artifact@v8
@@ -498,7 +498,7 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@v4.3.0
         with:
-          version: 2026.9.10
+          version: 2026.11.14
           cache: false
 
       - name: Cache the Jekyll dependencies
