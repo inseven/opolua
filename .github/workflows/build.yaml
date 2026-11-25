@@ -49,7 +49,7 @@ jobs:
         key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
     - name: Install mise
-      uses: jdx/mise-action@v4.3.0
+      uses: jdx/mise-action@v5.3.0
       with:
         version: 2026.9.10
         cache: false
@@ -91,7 +91,7 @@ jobs:
 
 
     - name: Install mise
-      uses: jdx/mise-action@v4.3.0
+      uses: jdx/mise-action@v5.3.0
       with:
         version: 2026.9.10
         cache: false
@@ -130,7 +130,7 @@ jobs:
         key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
     - name: Install mise
-      uses: jdx/mise-action@v4.3.0
+      uses: jdx/mise-action@v5.3.0
       with:
         version: 2026.9.10
         cache: false
@@ -363,7 +363,7 @@ jobs:
         key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
     - name: Install mise
-      uses: jdx/mise-action@v4.3.0
+      uses: jdx/mise-action@v5.3.0
       with:
         version: 2026.9.10
         cache: false
@@ -433,7 +433,7 @@ jobs:
         key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
     - name: Install mise
-      uses: jdx/mise-action@v4.3.0
+      uses: jdx/mise-action@v5.3.0
       with:
         version: 2026.9.10
         cache: false
@@ -496,7 +496,7 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
       - name: Install mise
-        uses: jdx/mise-action@v4.3.0
+        uses: jdx/mise-action@v5.3.0
         with:
           version: 2026.9.10
           cache: false
