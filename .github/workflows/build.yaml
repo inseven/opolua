@@ -6,9 +6,13 @@ on:
   push:
     branches: [ main ]
   schedule:
-    # 04:00 Monday in Hawaii (HST, UTC-10, no DST) — 14:00 Monday UTC.
     - cron: '0 14 * * 1'
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Release'
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -447,7 +451,7 @@ jobs:
 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        RELEASE: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/main' }}
+        RELEASE: ${{ (github.event_name == 'schedule' || inputs.release) && github.ref == 'refs/heads/main' }}
 
       run: scripts/release.sh
 
