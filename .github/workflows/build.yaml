@@ -500,8 +500,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: docs/vendor/bundle
-          key: ${{ runner.os }}-gems-${{ hashFiles('docs/Gemfile.lock') }}
-          restore-keys: ${{ runner.os }}-gems-
+          key: ${{ runner.os }}-${{ runner.arch }}-gems-${{ hashFiles('mise.toml', 'docs/Gemfile.lock') }}
 
       - name: Build website
         run: |
