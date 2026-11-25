@@ -447,7 +447,7 @@ jobs:
 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        RELEASE: ${{ github.ref == 'refs/heads/main' }}
+        RELEASE: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/main' }}
 
       run: scripts/release.sh
 
