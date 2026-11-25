@@ -17,7 +17,7 @@ concurrency:
 jobs:
 
   generate-version-number:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     outputs:
       version_number: ${{ steps.version.outputs.version_number }}
@@ -461,7 +461,7 @@ jobs:
         retention-days: 1
 
   website-build:
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-26.04
 
       needs:
       - generate-version-number
@@ -524,7 +524,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Deploy to GitHub Pages
@@ -535,7 +535,7 @@ jobs:
     needs: publish-release
     if: ${{ needs.publish-release.outputs.released == 'true' }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
 
     - name: Update releases repository
