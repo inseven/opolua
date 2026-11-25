@@ -21,7 +21,7 @@ concurrency:
 jobs:
 
   generate-version-number:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     outputs:
       version_number: ${{ steps.version.outputs.version_number }}
@@ -46,7 +46,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: .mise
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-mise-${{ github.workspace }}-${{ hashFiles('mise.toml') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
@@ -87,7 +87,8 @@ jobs:
       uses: actions/cache@v6
       with:
         path: .mise
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-mise-${{ github.workspace }}-${{ hashFiles('mise.toml') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
+
 
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
@@ -126,7 +127,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: .mise
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-mise-${{ github.workspace }}-${{ hashFiles('mise.toml') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
@@ -359,7 +360,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: .mise
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-mise-${{ github.workspace }}-${{ hashFiles('mise.toml') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
@@ -429,7 +430,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: .mise
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-mise-${{ github.workspace }}-${{ hashFiles('mise.toml') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
     - name: Install mise
       uses: jdx/mise-action@v4.3.0
@@ -464,7 +465,7 @@ jobs:
         retention-days: 1
 
   website-build:
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-26.04
 
       needs:
       - generate-version-number
@@ -492,7 +493,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .mise
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-mise-${{ github.workspace }}-${{ hashFiles('mise.toml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ github.workspace }}-mise-${{ hashFiles('mise.toml', '.github/workflows/build.yaml') }}
 
       - name: Install mise
         uses: jdx/mise-action@v4.3.0
@@ -527,7 +528,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Deploy to GitHub Pages
@@ -538,7 +539,7 @@ jobs:
     needs: publish-release
     if: ${{ needs.publish-release.outputs.released == 'true' }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
 
     - name: Update releases repository
