@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/inseven/licensable",
       "state" : {
-        "revision" : "a8ad62c6fde5aca29a47459b0687e580eee203dd",
-        "version" : "0.0.13"
+        "revision" : "093c4b45d83e133d214530ea711cb8b91074606b",
+        "version" : "0.1.0"
       }
     }
   ],

@@ -19,7 +19,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "dependencies/LuaSwift"),
-        .package(url: "https://github.com/inseven/licensable", from: "0.0.13"),
+        .package(url: "https://github.com/inseven/licensable", from: "0.1.0"),
     ],
     targets: [
         .target(
