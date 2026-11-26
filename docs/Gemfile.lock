@@ -54,7 +54,7 @@ GEM
       webrick (~> 1.7)
     jekyll-environment-variables (1.0.1)
       jekyll (>= 3.0, < 5.x)
-    jekyll-feed (0.17.0)
+    jekyll-feed (0.18.0)
       jekyll (>= 3.7, < 5.0)
     jekyll-gfm-admonitions (1.4.4)
       cssminify (~> 1.0)
