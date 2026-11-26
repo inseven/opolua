@@ -291,8 +291,6 @@ jobs:
 
   qt-windows-build:
     runs-on: windows-latest
-    concurrency:
-      group: "windows"
 
     needs:
     - generate-version-number
