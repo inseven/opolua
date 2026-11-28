@@ -25,7 +25,7 @@
 #include <QRect>
 #include <QVector>
 
-#include "opldevicetype.h"
+#include "opldefs.h"
 
 class AsyncHandle;
 class OplFontProvider;
@@ -153,6 +153,10 @@ public:
         // Note, some clock types ignore the following settings
         bool showSeconds;
         bool showDate;
+        // Following are only for type==customFormatXXX
+        QByteArray format;
+        uint32_t font; 
+        uint32_t style;
     };
 
     struct SpriteFrame {

@@ -999,6 +999,14 @@ QString OplRuntime::tolocalstring(lua_State *L, int index)
     return mStringCodec->toUnicode(str);
 }
 
+QString OplRuntime::tolocalstring(lua_State *L, int index, const char* name)
+{
+    rawgetfield(L, index, name);
+    auto result = tolocalstring(L, -1);
+    lua_pop(L, 1);
+    return result;
+}
+
 OplScreen::SpriteFrame OplRuntime::getSpriteFrame(lua_State* L)
 {
     OplScreen::SpriteFrame frame = {
@@ -1179,7 +1187,13 @@ int OplRuntime::graphicsop(lua_State* L)
                 .pos = QPoint(to_int(L, 4, "x"), to_int(L, 4, "y")),
                 .showSeconds = (mode & 0x20) != 0,
                 .showDate = (mode & 0x10) != 0,
+                .format = to_bytearray(L, 3, "format"),
+                .font = to_intt<uint32_t>(L, 3, "font"),
+                .style = to_intt<uint32_t>(L, 3, "style"),
             };
+            if (info.type == customFormatS3a || info.type == customFormatS5) {
+                info.showSeconds = oplClockFormatHasSeconds(info.format.data());
+            }
             mScreen->clock(drawableId, &info);
         } else {
             mScreen->clock(drawableId, nullptr);

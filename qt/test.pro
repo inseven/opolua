@@ -22,6 +22,7 @@ HEADERS += \
 
 SOURCES = \
     ../core/shared/src/oplfns.c \
+    ../core/shared/src/oplclockfmt.c \
     asynchandle.cpp \
     filesystem.cpp \
     lua.cpp \

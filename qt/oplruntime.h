@@ -299,6 +299,7 @@ private:
 
     static OplRuntime* getSelf(lua_State *L);
     QString tolocalstring(lua_State *L, int index);
+    QString tolocalstring(lua_State *L, int index, const char* name);
     void setEscape(bool flag);
     void doRunInstaller(const QString& file, const QByteArray& sisData, const QString& sysDir, const QString& lang);
     void setDeviceTypeFromSisInfo(const std::optional<SisInfo>& sisInfo);

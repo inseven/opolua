@@ -103,6 +103,9 @@ class ClockView: ViewBase {
         case .digitalFontShadowed:
             // mInfo.showSeconds = false; // This clock never shows seconds
             size = .init(width: 51, height: 51) // Same as analogMediumS5
+        case .customFormatS3a, .customFormatS5:
+            // Not handled yet
+            break
         }
 
         self.frame = CGRect(origin: clockInfo.position.cgPoint(), size: size.cgSize())
@@ -224,6 +227,9 @@ class ClockView: ViewBase {
             context.setLineWidth(7)
             context.setLineCap(.round)
             drawHands(context: context, hAngle: hAngle, mAngle: mAngle)
+        case .customFormatS3a, .customFormatS5:
+            // Not handled yet
+            break
         }
     }
 

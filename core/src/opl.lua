@@ -780,6 +780,14 @@ function gCLOCK(mode, offset, format, font, style)
     assert(context.isWindow, KErrInvalidWindow)
     local info = nil
     if mode then
+        if mode == 10 or mode == 11 then
+            if font == nil then
+                font = runtime:getDeviceInfo().defaultFont
+            end
+            if style == nil then
+                style = 0
+            end
+        end
         info = {
             mode = mode,
             offset = offset or 0,

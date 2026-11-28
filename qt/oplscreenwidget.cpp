@@ -452,9 +452,7 @@ void OplScreenWidget::clock(int drawableId, const OplScreen::ClockInfo* info)
         if (info && !win->mClock) {
             win->mClock = new ClockWidget(win, getRuntime());
             win->mClock->setScale(mScale);
-            // God DAMN that cast is nasty. Needed because QWidget has overloads of update making the slot kinda
-            // broken. In Qt 6 we can use qOverload<> but that's not available in Qt 5...
-            connect(this, &OplScreenWidget::clockTimeChanged, win->mClock, static_cast<void(QWidget::*)()>(&QWidget::update));
+            connect(this, &OplScreenWidget::clockTimeChanged, win->mClock, &ClockWidget::updateClock);
         } else if (win->mClock && !info) {
             win->mClock->hide();
         }
@@ -464,6 +462,16 @@ void OplScreenWidget::clock(int drawableId, const OplScreen::ClockInfo* info)
             startClockTimer();
         }
     }
+}
+
+bool OplScreenWidget::anyClockRequiresSeconds() const
+{
+    for (const Window* window : mWindows) {
+        if (window->mClock && window->mClock->getInfo().showSeconds) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void OplScreenWidget::startClockTimer()
@@ -477,12 +485,19 @@ void OplScreenWidget::startClockTimer()
         // I don't like the Qt date/time APIs much. Having QTime as a separate class is weird. This is the best way I
         // can think of to get the time until the next minute changes, that doesn't have unpleasant corner cases when
         // the time is close to midnight or a DST change.
+        bool needSeconds = anyClockRequiresSeconds();
         auto now = QDateTime::currentDateTime();
         auto t = now.time();
-        auto elapsedThisMinute = QTime(t.hour(), t.minute(), 0).msecsTo(t);
-        auto toNextMin = 60000 - elapsedThisMinute;
+        int nextTick = 0;
+        if (needSeconds) {
+            QTime nextSec = QTime(t.hour(), t.minute(), t.second(), 0).addSecs(1);
+            nextTick = t.msecsTo(nextSec);
+        } else {
+            auto elapsedThisMinute = QTime(t.hour(), t.minute(), 0).msecsTo(t);
+            nextTick = 60000 - elapsedThisMinute;
+        }
 
-        mClockTimer->start(toNextMin);
+        mClockTimer->start(nextTick);
     }
 }
 

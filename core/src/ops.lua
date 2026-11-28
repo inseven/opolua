@@ -2444,6 +2444,9 @@ function gClock(stack, runtime) -- 0xF5
     end
     if numParams >= 2 then
         mode = stack:pop()
+    elseif numParams == 1 then
+        -- gCLOCK ON without additional parameters
+        mode = runtime:isSeries3() and 1 or 6
     end
 
     runtime:gCLOCK(mode, offset, format, font, style)

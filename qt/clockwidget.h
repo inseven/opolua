@@ -19,6 +19,7 @@
 #ifndef CLOCKWIDGET_H
 #define CLOCKWIDGET_H
 
+#include <QByteArray>
 #include <QPainter>
 #include <QPen>
 #include <QPixmap>
@@ -36,12 +37,15 @@ public:
     const OplScreen::ClockInfo& getInfo() const { return mInfo; }
     void setScale(int scale);
 
+public slots:
+    void updateClock();
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    void drawText(QPainter& painter, int x, int y, const QString& text, const QPixmap& font, const OplScreen::FontMetrics& metrics);
-    void drawCenteredText(QPainter& painter, int y, const QString& text, const QPixmap& font, const OplScreen::FontMetrics& metrics);
+    void drawText(QPainter& painter, int x, int y, const QByteArray& text, const QPixmap& font, const OplScreen::FontMetrics& metrics);
+    void drawCenteredText(QPainter& painter, int y, const QByteArray& text, const QPixmap& font, const OplScreen::FontMetrics& metrics);
     void drawHands(QPainter& painter, double hAngle, double mAngle, QPen pen=QPen(), QColor shadow=Qt::transparent);
 
 private:
@@ -56,6 +60,7 @@ private:
     OplScreen::ClockInfo mInfo;
     double mHourHandLen;
     double mMinuteHandLen;
+    QByteArray mFormattedTime;
 
 };
 

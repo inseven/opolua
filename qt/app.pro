@@ -134,7 +134,8 @@ SOURCES += \
     swiwizardinfopage.cpp \
     swiwizardlistpage.cpp \
     updownlineedit.cpp \
-    ../core/shared/src/oplfns.c
+    ../core/shared/src/oplfns.c \
+    ../core/shared/src/oplclockfmt.c
 
 INCLUDEPATH += ../core/shared/include ../dependencies/LuaSwift/Sources/CLua/lua
 

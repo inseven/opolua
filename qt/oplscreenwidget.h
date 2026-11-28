@@ -100,6 +100,7 @@ private slots:
     void clockTick();
     void onDeviceTypeChanged();
     void onSystemClockChanged(bool digital);
+    bool anyClockRequiresSeconds() const;
 
 signals:
     void clockTimeChanged();

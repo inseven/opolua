@@ -589,6 +589,10 @@ OplClockType oplModeToClockType(int mode, OplDeviceType device, bool systemClock
         } else {
             return analogLargeS5;
         }
+    case 10:
+        return customFormatS3a;
+    case 11:
+        return customFormatS5;
     default:
         return invalidClock;
     }
@@ -678,6 +682,20 @@ static const OplClockMetrics metrics[] = {
         .dateFont = 0,
         .hourHandLen = 45,
         .minuteHandLen = 65,
+    },
+    { // customFormatS3a,
+        .name = NULL,
+        .timeFont = 0,
+        .dateFont = 0,
+        .hourHandLen = 0,
+        .minuteHandLen = 0,
+    },
+    { // customFormatS5,
+        .name = NULL,
+        .timeFont = 0,
+        .dateFont = 0,
+        .hourHandLen = 0,
+        .minuteHandLen = 0,
     },
 };
 

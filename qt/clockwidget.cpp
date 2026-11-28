@@ -20,6 +20,7 @@
 
 #include <QBitmap>
 #include <QDateTime>
+#include <QLocale>
 #include <QPainter>
 #include <QtMath>
 
@@ -36,11 +37,11 @@ static QRect rectForChar(char ch, const OplScreen::FontMetrics& metrics)
     }
 }
 
-static int textWidth(const QString& text, const OplScreen::FontMetrics& metrics)
+static int textWidth(const QByteArray& text, const OplScreen::FontMetrics& metrics)
 {
     int w = 0;
-    for (QChar ch : text) {
-        w += metrics.widths[(int)ch.toLatin1()];
+    for (char ch : text) {
+        w += metrics.widths[(int)ch];
     }
     return w;
 }
@@ -128,6 +129,10 @@ void ClockWidget::updateClockInfo(const OplScreen::ClockInfo& info)
                 mSize.rheight() += 1 + mDateFontMetrics.height;
             }
             break;
+        case customFormatS3a:
+        case customFormatS5:
+            mTimeFont = QPixmap(mFontProvider->getFont(info.font, mTimeFontMetrics));
+            break;
         case invalidClock:
             break;
         }
@@ -136,7 +141,7 @@ void ClockWidget::updateClockInfo(const OplScreen::ClockInfo& info)
     }
 
     setScale(mScale);
-    update();
+    updateClock();
     show();
 }
 
@@ -144,6 +149,44 @@ void ClockWidget::setScale(int scale)
 {
     mScale = scale;
     setGeometry(QRect(mInfo.pos.x() * mScale, mInfo.pos.y() * mScale, mSize.width() * mScale, mSize.height() * mScale));
+}
+
+void ClockWidget::updateClock()
+{
+    if (mInfo.type == customFormatS3a || mInfo.type == customFormatS5) {
+        mFormattedTime = QByteArray(256, '\0');
+        QDateTime now = QDateTime::currentDateTime().addSecs(mInfo.offset);
+        time_t t = (time_t)now.toSecsSinceEpoch();
+        struct tm timeParts{};
+        localtime_r(&t, &timeParts);
+
+        auto locale = QLocale::system();
+        // I'm not sure this is 100% correct but it seems to correctly reflect macOS System Settings's "24-hour time"
+        // setting.
+        bool system24hour = !locale.timeFormat(QLocale::LongFormat).contains("a", Qt::CaseInsensitive);
+        // On macOS at least, strftime's %p doesn't match the system's (it returns "a.m." not "am"
+        QByteArray amText = locale.amText().toLocal8Bit(); // TODO encoding issue!
+        QByteArray pmText = locale.pmText().toLocal8Bit(); // TODO encoding issue!
+
+        OplClockFormatSettings settings = {
+            .type = mInfo.type,
+            .dateFormat = EuropeanFormat,
+            .timeSeparator = ":",
+            .dateSeparator = "/",
+            .amText = amText.data(),
+            .pmText = pmText.data(),
+            .system24hour = system24hour,
+        };
+        oplFormatClock(mFormattedTime.data(), mFormattedTime.size(), mInfo.format.data(), &timeParts, &settings);
+        mFormattedTime.truncate(qstrnlen(mFormattedTime.data(), 255));
+        int w = textWidth(mFormattedTime, mTimeFontMetrics);
+        QSize sz(w, mTimeFontMetrics.height);
+        if (sz != mSize) {
+            mSize = sz;
+            setScale(mScale); // Recalculates size
+        }
+    }
+    update();
 }
 
 void ClockWidget::paintEvent(QPaintEvent* /*event*/)
@@ -163,13 +206,13 @@ void ClockWidget::paintEvent(QPaintEvent* /*event*/)
     double mAngle = 2 * M_PI * minFrac;
 
     int displayHours = (h == 12 ? 12 : h % 12);
-    auto timeStr = QString("%1:%2").arg(displayHours).arg(now.time().minute(), 2, 10, QLatin1Char('0'));
+    auto timeStr = QString("%1:%2").arg(displayHours).arg(now.time().minute(), 2, 10, QLatin1Char('0')).toLatin1();
     int leadingSpace = 0;
     if (displayHours < 10) {
         leadingSpace = textWidth("1", mTimeFontMetrics);
     }
 
-    auto dateStr = now.date().toString("ddd d");
+    auto dateStr = now.date().toString("ddd d").toLatin1();
 
     switch (mInfo.type) {
     case digitalSmall:
@@ -258,12 +301,16 @@ void ClockWidget::paintEvent(QPaintEvent* /*event*/)
         drawHands(painter, hAngle, mAngle, pen);
         break;
     }
+    case customFormatS3a:
+    case customFormatS5:
+        drawText(painter, 0, 0, mFormattedTime, mTimeFont, mTimeFontMetrics);
+        break;
     case invalidClock:
         break;
     }
 }
 
-void ClockWidget::drawCenteredText(QPainter& painter, int y, const QString& text, const QPixmap& font, const OplScreen::FontMetrics& metrics)
+void ClockWidget::drawCenteredText(QPainter& painter, int y, const QByteArray& text, const QPixmap& font, const OplScreen::FontMetrics& metrics)
 {
     int w = textWidth(text, metrics);
     int x = (mSize.width() - w) / 2;
@@ -271,13 +318,11 @@ void ClockWidget::drawCenteredText(QPainter& painter, int y, const QString& text
     drawText(painter, x, y, text, font, metrics);
 }
 
-void ClockWidget::drawText(QPainter& painter, int x, int y, const QString& text, const QPixmap& font, const OplScreen::FontMetrics& metrics)
+void ClockWidget::drawText(QPainter& painter, int x, int y, const QByteArray& text, const QPixmap& font, const OplScreen::FontMetrics& metrics)
 {
     QBitmap mask = font.createMaskFromColor(QColorConstants::White, Qt::MaskInColor);
-
-    // qDebug("draw %s", qPrintable(text));
-    for (QChar ch : text) {
-        QRect r = rectForChar(ch.toLatin1(), metrics);
+    for (char ch : text) {
+        QRect r = rectForChar(ch, metrics);
         painter.drawPixmap(QPoint(x, y), mask, r);
         x += r.width();
     }
