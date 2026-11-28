@@ -1025,12 +1025,22 @@ void Window::update()
         mComposite = mPixmap;
     }
 
+    QPixmap finalPixmap;
     if (mScale == 1) {
-        setPixmap(mComposite);
+        finalPixmap = mComposite;
     } else {
-        auto scaled = mComposite.scaled(scaledRect().size());
-        setPixmap(scaled);
+        finalPixmap = mComposite.scaled(scaledRect().size());
     }
+
+    // Dubious floating-point comparison but seems to work on macos.
+    qreal dpr = devicePixelRatio();
+    if (dpr != 1.0) {
+        // Scale it ourselves without any antialiasing...
+        finalPixmap = finalPixmap.scaled(scaledRect().size() * dpr);
+        // ...then tell Qt it is already native format so it doesn't antialias it itself
+        finalPixmap.setDevicePixelRatio(dpr);
+    }
+    setPixmap(finalPixmap);
 }
 
 Drawable& Window::greyPlane()
